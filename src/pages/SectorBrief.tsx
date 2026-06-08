@@ -17,6 +17,7 @@ import { SA_CITIES } from '@/lib/sa-cities';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { SectorWorksGallery, SECTOR_TO_CATEGORY_SLUGS as GALLERY_SECTOR_MAP } from '@/components/sectors/SectorWorksGallery';
 import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
+import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 
 // Featured cities surfaced on the brief landing (top markets).
 const FEATURED_CITY_SLUGS = ['riyadh', 'jeddah', 'dammam', 'khobar', 'makkah', 'madinah'];
@@ -269,7 +270,13 @@ const SectorBrief: React.FC = () => {
                               >
                                 <div className="w-9 h-9 rounded-lg bg-muted shrink-0 overflow-hidden flex items-center justify-center">
                                   {p.logo_url ? (
-                                    <img src={p.logo_url} alt={p.name_ar} className="w-full h-full object-cover" loading="lazy" />
+                                    <ResponsiveImage
+                                      originalUrl={p.logo_url}
+                                      alt={p.name_ar}
+                                      width={36}
+                                      height={36}
+                                      className="w-full h-full object-cover"
+                                    />
                                   ) : (
                                     <Building2 className="w-4 h-4 text-muted-foreground" />
                                   )}

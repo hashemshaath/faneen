@@ -25,6 +25,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useSeoPage } from '@/modules/seo/useSeoPage';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { listApprovedBrands, listSectorsLite } from '@/modules/brands';
+import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 
 const ALL = '__all__';
 const SITE = 'https://qitaat.com';
@@ -227,9 +228,13 @@ const BrandsCatalog: React.FC = () => {
                   <Card className="hover-lift h-full">
                     <CardContent className="p-4 flex gap-3 items-start">
                       {b.logo_url ? (
-                        <img src={b.logo_url} alt={display} loading="lazy" decoding="async"
-                             width={56} height={56}
-                             className="h-14 w-14 rounded-lg border bg-background object-cover" />
+                        <ResponsiveImage
+                          originalUrl={b.logo_url}
+                          alt={display}
+                          width={56}
+                          height={56}
+                          className="h-14 w-14 rounded-lg border bg-background object-cover"
+                        />
                       ) : (
                         <div className="h-14 w-14 rounded-lg bg-primary/10 grid place-items-center text-primary">
                           <Tag className="h-6 w-6" />

@@ -30,6 +30,7 @@ import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { track } from '@/lib/analytics-events';
 import { detectSectorFromCategorySlug } from '@/lib/sector-keywords';
 import { SA_CITIES } from '@/lib/sa-cities';
+import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -273,11 +274,13 @@ const ProjectDetail = () => {
             {/* Business Logo */}
             {project.businesses?.logo_url ? (
               <Link to={`/${project.businesses.username}`} className="shrink-0 hidden sm:block">
-                <img
-                  src={project.businesses.logo_url}
-                  alt={bizName || ''}
+                <ResponsiveImage
+                  originalUrl={project.businesses.logo_url}
+                  alt={bizName || (isRTL ? 'شعار المنشأة' : 'Business logo')}
+                  width={64}
+                  height={64}
                   className="w-14 h-14 md:w-16 md:h-16 rounded-xl object-cover border-2 border-primary-foreground/20 hover:border-primary-foreground/40 transition-colors"
-                loading="lazy" decoding="async"/>
+                />
               </Link>
             ) : project.businesses ? (
               <Link to={`/${project.businesses.username}`} className="shrink-0 hidden sm:block">

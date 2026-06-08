@@ -26,6 +26,7 @@ import { SectorFAQ } from '@/components/sector/SectorFAQ';
 import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
 import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
+import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 
 const PAGE_SIZE = 24;
 
@@ -620,13 +621,11 @@ const SectorLanding: React.FC = () => {
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
                       {b.logo_url ? (
-                        <img
-                          src={b.logo_url}
-                          alt={b.name_ar}
+                        <ResponsiveImage
+                          originalUrl={b.logo_url}
+                          alt={language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}
                           width={56}
                           height={56}
-                          loading="lazy"
-                          decoding="async"
                           className="w-full h-full object-cover"
                         />
                       ) : (

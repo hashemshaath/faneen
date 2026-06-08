@@ -27,6 +27,7 @@ import { SERVICES_CATALOG, UNIT_LABEL } from '@/lib/services-catalog';
 import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
 import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
+import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 
 type BizRow = {
   id: string;
@@ -533,7 +534,14 @@ const SectorCity: React.FC = () => {
                             <div className={`shrink-0 h-10 w-10 rounded-full grid place-items-center font-bold text-sm tech-content ${rankCls}`}>#{i + 1}</div>
                             <Link to={`/${b.username}`} className="h-14 w-14 md:h-16 md:w-16 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
                               {b.logo_url ? (
-                                <img src={b.logo_url} alt={dispName} width={64} height={64} loading={i < 4 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
+                                <ResponsiveImage
+                                  originalUrl={b.logo_url}
+                                  alt={dispName}
+                                  width={64}
+                                  height={64}
+                                  priority={i < 4}
+                                  className="h-full w-full object-cover"
+                                />
                               ) : (
                                 <Building2 className="h-6 w-6 text-muted-foreground" />
                               )}
@@ -607,7 +615,13 @@ const SectorCity: React.FC = () => {
                           <Link to={`/${b.username}`} className="flex items-start gap-3">
                             <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                               {b.logo_url ? (
-                                <img src={b.logo_url} alt={b.name_ar} width={40} height={40} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                                <ResponsiveImage
+                                  originalUrl={b.logo_url}
+                                  alt={language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}
+                                  width={40}
+                                  height={40}
+                                  className="h-full w-full object-cover"
+                                />
                               ) : (
                                 <Building2 className="h-4 w-4 text-muted-foreground" />
                               )}
