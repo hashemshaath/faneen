@@ -24,16 +24,24 @@ const PAGES = [
 ];
 
 describe('SEO-5 image quality on public pages', () => {
-  it.each(PAGES)('%s: every <img> declares alt= (meaningful or empty decorative)', (p) => {
+  it.each(PAGES)('%s: every <img>/<ResponsiveImage> declares alt= (meaningful or empty decorative)', (p) => {
     const src = read(p);
+    // Match either raw <img …> or <ResponsiveImage …/> usages. ResponsiveImage
+    // is the project's central wrapper around <img> and accepts the same
+    // a11y contract (alt is a required prop on the component itself).
     const imgTags = src.match(/<img\b[^>]*>/g) ?? [];
-    expect(imgTags.length).toBeGreaterThan(0);
+    const respTags = src.match(/<ResponsiveImage\b[^>]*\/?>/g) ?? [];
+    const all = [...imgTags, ...respTags];
+    expect(all.length).toBeGreaterThan(0);
     for (const tag of imgTags) {
       expect(tag).toMatch(/\balt=/);
       // Decorative imgs (alt="") must be hidden from AT
       if (/\balt=""/.test(tag) || /\balt=\{""\}/.test(tag)) {
         expect(tag).toMatch(/aria-hidden=("true"|\{true\})/);
       }
+    }
+    for (const tag of respTags) {
+      expect(tag).toMatch(/\balt=/);
     }
   });
 
