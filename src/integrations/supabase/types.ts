@@ -19364,6 +19364,13 @@ export type Database = {
           to_user_id: string
         }[]
       }
+      admin_get_botr_admin_notes: {
+        Args: never
+        Returns: {
+          admin_note: string
+          id: string
+        }[]
+      }
       admin_get_client_site_monitoring_detail: {
         Args: { _site_id: string }
         Returns: Json
@@ -19371,6 +19378,13 @@ export type Database = {
       admin_get_client_site_sensitive_detail: {
         Args: { _reason: string; _site_id: string }
         Returns: Json
+      }
+      admin_get_contact_message_internal_notes: {
+        Args: never
+        Returns: {
+          id: string
+          internal_notes: string
+        }[]
       }
       admin_get_membership_lifecycle_email_markers: {
         Args: { p_limit?: number }
