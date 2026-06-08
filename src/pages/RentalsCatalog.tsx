@@ -30,7 +30,7 @@ const RentalsCatalog: React.FC = () => {
   }, []);
 
   useSeoPage({
-    kind: 'page',
+    kind: 'service',
     lang: isRTL ? 'ar' : 'en',
     name: bi('تأجير معدات التشييد والبناء','Construction Equipment Rental'),
     customDescription: bi(

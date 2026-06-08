@@ -27,7 +27,7 @@ const RentalItemPublic: React.FC = () => {
 
   const name = item ? (isRTL ? item.name_ar : (item.name_en || item.name_ar)) : '';
   useSeoPage({
-    kind: 'page',
+    kind: 'service',
     lang: isRTL ? 'ar' : 'en',
     name: name || bi('عنصر تأجير','Rental item'),
     customDescription: item ? (isRTL ? (item.description_ar || '') : (item.description_en || '')) : '',
