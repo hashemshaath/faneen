@@ -235,7 +235,8 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   const [catalogQuery, setCatalogQuery] = useState('');
   const [catalogFilterCat, setCatalogFilterCat] = useState<string>('');
   const [selectedCatalogId, setSelectedCatalogId] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [form, setForm] = useState({
     name_ar: '',
     name_en: '',
@@ -247,6 +248,13 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     usage_terms: '',
     late_terms: '',
     penalty_terms: '',
+    brand: '',
+    country_of_manufacture: '',
+    condition: '' as '' | 'new' | 'like_new' | 'good' | 'medium' | 'used',
+    voltage: '',
+    current_amp: '',
+    wattage: '',
+    power_hp: '',
   });
 
   // Request form (when item is not in catalog)
