@@ -645,6 +645,7 @@ export type Database = {
       asset_categories: {
         Row: {
           created_at: string
+          default_image_url: string | null
           description_ar: string | null
           description_en: string | null
           icon: string | null
@@ -659,6 +660,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_image_url?: string | null
           description_ar?: string | null
           description_en?: string | null
           icon?: string | null
@@ -673,6 +675,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_image_url?: string | null
           description_ar?: string | null
           description_en?: string | null
           icon?: string | null

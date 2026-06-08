@@ -26,6 +26,10 @@ import {
   GripVertical, ChevronDown, ChevronUp, Eye, EyeOff, Pencil, Save, X, Plus,
   Image as ImageIcon, Loader2, Trash2, Package,
 } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { IconPicker, RenderIcon } from '@/components/admin/IconPicker';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 /* ------- types ------- */
 type CategoryTable = 'rental_categories' | 'asset_categories';
@@ -35,6 +39,9 @@ interface CategoryRow {
   id: string; ref_id?: string | null; slug: string;
   name_ar: string; name_en: string | null; icon: string | null;
   sort_order: number; is_active: boolean;
+  default_image_url?: string | null;
+  description_ar?: string | null;
+  description_en?: string | null;
 }
 interface ItemRow {
   id: string; name_ar: string; name_en: string | null;
@@ -110,10 +117,17 @@ const SortableCategory: React.FC<{
   const [draftAr, setDraftAr] = useState(cat.name_ar);
   const [draftEn, setDraftEn] = useState(cat.name_en ?? '');
   const [draftIcon, setDraftIcon] = useState(cat.icon ?? '');
+  const [draftDescAr, setDraftDescAr] = useState(cat.description_ar ?? '');
+  const [draftDescEn, setDraftDescEn] = useState(cat.description_en ?? '');
+  const [draftImage, setDraftImage] = useState<string>(cat.default_image_url ?? '');
   const [saving, setSaving] = useState(false);
   const bi = useBi();
 
-  useEffect(() => { setDraftAr(cat.name_ar); setDraftEn(cat.name_en ?? ''); setDraftIcon(cat.icon ?? ''); }, [cat.id, cat.name_ar, cat.name_en, cat.icon]);
+  useEffect(() => {
+    setDraftAr(cat.name_ar); setDraftEn(cat.name_en ?? ''); setDraftIcon(cat.icon ?? '');
+    setDraftDescAr(cat.description_ar ?? ''); setDraftDescEn(cat.description_en ?? '');
+    setDraftImage(cat.default_image_url ?? '');
+  }, [cat.id, cat.name_ar, cat.name_en, cat.icon, cat.description_ar, cat.description_en, cat.default_image_url]);
 
   const itemSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
@@ -132,40 +146,87 @@ const SortableCategory: React.FC<{
           <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none p-1" aria-label="drag category">
             <GripVertical className="size-5" />
           </button>
-          <button onClick={p.onToggleExpand} className="flex items-center gap-2 flex-1 min-w-0 text-start hover:text-primary transition-colors">
-            <span className="text-2xl shrink-0">{cat.icon || '📦'}</span>
-            {!editing ? (
-              <div className="min-w-0">
-                <div className="font-semibold truncate">{p.isRTL ? cat.name_ar : (cat.name_en || cat.name_ar)}</div>
-                <div className="text-xs text-muted-foreground tech-content truncate">/{cat.slug}{cat.ref_id ? ` · ${cat.ref_id}` : ''}</div>
-              </div>
+          <button onClick={p.onToggleExpand} className="flex items-center gap-3 flex-1 min-w-0 text-start hover:text-primary transition-colors">
+            {cat.default_image_url ? (
+              <img src={cat.default_image_url} alt="" className="size-10 rounded-lg object-cover shrink-0" loading="lazy" />
             ) : (
-              <div className="flex-1 grid grid-cols-3 gap-2" onClick={(e) => e.stopPropagation()}>
-                <Input dir="auto" value={draftAr} onChange={e => setDraftAr(e.target.value)} placeholder="عربي" className="h-9 rounded-lg" />
-                <Input dir="auto" value={draftEn} onChange={e => setDraftEn(e.target.value)} placeholder="English" className="h-9 rounded-lg" />
-                <Input dir="auto" value={draftIcon} onChange={e => setDraftIcon(e.target.value)} placeholder="🔧" className="h-9 rounded-lg text-center" />
+              <div className="size-10 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center shrink-0">
+                <RenderIcon value={cat.icon || '📦'} size={20} />
               </div>
             )}
+            <div className="min-w-0">
+              <div className="font-semibold truncate">{p.isRTL ? cat.name_ar : (cat.name_en || cat.name_ar)}</div>
+              <div className="text-xs text-muted-foreground tech-content truncate">/{cat.slug}{cat.ref_id ? ` · ${cat.ref_id}` : ''}</div>
+            </div>
           </button>
           <Badge variant="outline" className="tech-content shrink-0">{p.items.length}</Badge>
           <Switch checked={cat.is_active} onCheckedChange={(v) => p.onToggleVisible(cat.id, v)} aria-label="category visibility" />
-          {!editing ? (
-            <>
-              <Button size="sm" variant="ghost" onClick={() => setEditing(true)} className="h-8 w-8 p-0"><Pencil className="size-3.5" /></Button>
-              <Button size="sm" variant="ghost" onClick={p.onToggleExpand} className="h-8 w-8 p-0">
-                {p.expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button size="sm" onClick={async () => { setSaving(true); await p.onSave(cat.id, { name_ar: draftAr, name_en: draftEn || null, icon: draftIcon || null }); setSaving(false); setEditing(false); }} disabled={saving} className="h-8">
-                {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="h-8 w-8 p-0"><X className="size-3.5" /></Button>
-            </>
-          )}
+          <Button size="sm" variant={editing ? 'default' : 'ghost'} onClick={() => setEditing(e => !e)} className="h-8 w-8 p-0"><Pencil className="size-3.5" /></Button>
+          <Button size="sm" variant="ghost" onClick={p.onToggleExpand} className="h-8 w-8 p-0">
+            {p.expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => p.onDelete(cat.id)} className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"><Trash2 className="size-3.5" /></Button>
         </div>
+
+        {editing && (
+          <div className="mt-3 pt-3 border-t bg-muted/20 -mx-3 -mb-3 px-3 pb-3 rounded-b-xl space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الاسم بالعربية" en="Arabic name" /> <span className="text-red-500">*</span></Label>
+                <Input dir="auto" value={draftAr} onChange={e => setDraftAr(e.target.value)} className="h-11 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الاسم بالإنجليزية" en="English name" /></Label>
+                <Input dir="auto" value={draftEn} onChange={e => setDraftEn(e.target.value)} className="h-11 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الأيقونة" en="Icon" /></Label>
+                <IconPicker value={draftIcon} onChange={setDraftIcon} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الوصف بالعربية" en="Arabic description" /></Label>
+                <Textarea dir="auto" value={draftDescAr} onChange={e => setDraftDescAr(e.target.value)} rows={3} className="rounded-lg resize-none" placeholder={bi('وصف مختصر يظهر للزوار…', 'Short description shown to visitors…')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الوصف بالإنجليزية" en="English description" /></Label>
+                <Textarea dir="auto" value={draftDescEn} onChange={e => setDraftDescEn(e.target.value)} rows={3} className="rounded-lg resize-none" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium"><Bi ar="صورة غلاف التصنيف" en="Category cover image" /></Label>
+              <ImageUpload
+                bucket="business-assets"
+                folder={`categories/${cat.slug}`}
+                value={draftImage}
+                onChange={setDraftImage}
+                onRemove={() => setDraftImage('')}
+                aspectRatio="video"
+                maxSizeMB={3}
+                placeholder={bi('ارفع صورة (PNG/JPG/WebP, حتى 3 ميجابايت)', 'Upload an image (PNG/JPG/WebP, up to 3MB)')}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setEditing(false)} className="h-10 rounded-lg"><X className="size-4 me-1" /><Bi ar="إلغاء" en="Cancel" /></Button>
+              <Button onClick={async () => {
+                setSaving(true);
+                await p.onSave(cat.id, {
+                  name_ar: draftAr,
+                  name_en: draftEn || null,
+                  icon: draftIcon || null,
+                  description_ar: draftDescAr || null,
+                  description_en: draftDescEn || null,
+                  default_image_url: draftImage || null,
+                });
+                setSaving(false); setEditing(false);
+              }} disabled={saving || !draftAr.trim()} className="h-10 rounded-lg">
+                {saving ? <Loader2 className="size-4 me-1 animate-spin" /> : <Save className="size-4 me-1" />}
+                <Bi ar="حفظ التغييرات" en="Save changes" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {p.expanded && (
           <div className="mt-3 pt-3 border-t space-y-2">
@@ -210,6 +271,12 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
   const [itemsLoading, setItemsLoading] = useState<Set<string>>(new Set());
   const [newCatName, setNewCatName] = useState('');
   const [newCatSlug, setNewCatSlug] = useState('');
+  const [newCatNameEn, setNewCatNameEn] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState<string>('lucide:Package');
+  const [newCatImage, setNewCatImage] = useState<string>('');
+  const [newCatDescAr, setNewCatDescAr] = useState('');
+  const [newCatDescEn, setNewCatDescEn] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
   const [creating, setCreating] = useState(false);
 
   const sensors = useSensors(
@@ -219,7 +286,9 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from(categoryTable).select('id,ref_id,slug,name_ar,name_en,icon,sort_order,is_active').order('sort_order');
+    const { data } = await supabase.from(categoryTable)
+      .select('id,ref_id,slug,name_ar,name_en,icon,sort_order,is_active,default_image_url,description_ar,description_en')
+      .order('sort_order');
     setCats((data as unknown as CategoryRow[] | null) ?? []);
     setLoading(false);
   };
@@ -324,12 +393,25 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
     setCreating(true);
     const slug = newCatSlug.trim() || slugify(newCatName);
     const max = cats.reduce((m, c) => Math.max(m, c.sort_order), 0);
-    const payload = { slug, name_ar: newCatName.trim(), name_en: newCatName.trim(), sort_order: max + 10, is_active: true } as Record<string, unknown>;
+    const payload = {
+      slug,
+      name_ar: newCatName.trim(),
+      name_en: (newCatNameEn || newCatName).trim(),
+      icon: newCatIcon || null,
+      default_image_url: newCatImage || null,
+      description_ar: newCatDescAr || null,
+      description_en: newCatDescEn || null,
+      sort_order: max + 10,
+      is_active: true,
+    } as Record<string, unknown>;
     const { error } = await supabase.from(categoryTable).insert([payload] as never);
     setCreating(false);
     if (error) { toast.error(error.message); return; }
     toast.success(bi('تمت الإضافة', 'Added'));
-    setNewCatName(''); setNewCatSlug('');
+    setNewCatName(''); setNewCatSlug(''); setNewCatNameEn('');
+    setNewCatIcon('lucide:Package'); setNewCatImage('');
+    setNewCatDescAr(''); setNewCatDescEn('');
+    setShowAddForm(false);
     await load();
   };
 
@@ -353,14 +435,67 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
             {totalItems > 0 && <Badge variant="outline" className="tech-content">{totalItems} {bi('صنف محمّل', 'loaded')}</Badge>}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Input dir="auto" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder={bi('اسم تصنيف جديد…', 'New category name…')} className="h-10 rounded-lg flex-1 min-w-[200px]" />
-          <Input dir="auto" value={newCatSlug} onChange={e => setNewCatSlug(e.target.value)} placeholder="slug (auto)" className="h-10 rounded-lg w-[160px] tech-content" />
-          <Button onClick={createCategory} disabled={creating} className="h-10 rounded-lg">
-            {creating ? <Loader2 className="size-4 me-1 animate-spin" /> : <Plus className="size-4 me-1" />}
-            <Bi ar="إضافة تصنيف" en="Add category" />
+        {!showAddForm ? (
+          <Button onClick={() => setShowAddForm(true)} className="h-11 rounded-lg w-full sm:w-auto">
+            <Plus className="size-4 me-1" /><Bi ar="إضافة تصنيف جديد" en="Add new category" />
           </Button>
-        </div>
+        ) : (
+          <div className="rounded-xl border bg-background p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold"><Bi ar="تصنيف جديد" en="New category" /></div>
+              <Button size="sm" variant="ghost" onClick={() => setShowAddForm(false)} className="h-8 w-8 p-0"><X className="size-4" /></Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الاسم بالعربية" en="Arabic name" /> <span className="text-red-500">*</span></Label>
+                <Input dir="auto" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder={isRTL ? 'مثال: سقالات' : 'e.g. Scaffolding'} className="h-11 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الاسم بالإنجليزية" en="English name" /></Label>
+                <Input dir="ltr" value={newCatNameEn} onChange={e => setNewCatNameEn(e.target.value)} placeholder="e.g. Scaffolding" className="h-11 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Slug</Label>
+                <Input dir="ltr" value={newCatSlug} onChange={e => setNewCatSlug(e.target.value)} placeholder={bi('تلقائي', 'auto')} className="h-11 rounded-lg tech-content" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الأيقونة" en="Icon" /></Label>
+                <IconPicker value={newCatIcon} onChange={setNewCatIcon} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="صورة الغلاف" en="Cover image" /></Label>
+                <ImageUpload
+                  bucket="business-assets"
+                  folder={`categories/new-${Date.now()}`}
+                  value={newCatImage}
+                  onChange={setNewCatImage}
+                  onRemove={() => setNewCatImage('')}
+                  aspectRatio="video"
+                  maxSizeMB={3}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الوصف بالعربية" en="Arabic description" /></Label>
+                <Textarea dir="auto" value={newCatDescAr} onChange={e => setNewCatDescAr(e.target.value)} rows={3} className="rounded-lg resize-none" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الوصف بالإنجليزية" en="English description" /></Label>
+                <Textarea dir="ltr" value={newCatDescEn} onChange={e => setNewCatDescEn(e.target.value)} rows={3} className="rounded-lg resize-none" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setShowAddForm(false)} className="h-10 rounded-lg"><Bi ar="إلغاء" en="Cancel" /></Button>
+              <Button onClick={createCategory} disabled={creating || !newCatName.trim()} className="h-10 rounded-lg">
+                {creating ? <Loader2 className="size-4 me-1 animate-spin" /> : <Plus className="size-4 me-1" />}
+                <Bi ar="إنشاء التصنيف" en="Create category" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
