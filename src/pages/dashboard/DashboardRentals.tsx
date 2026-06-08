@@ -189,7 +189,7 @@ const DashboardRentals: React.FC = () => {
         />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatTile icon={Package} value={items.length} ar="عناصري" en="My items" tone="primary" />
+          <StatTile icon={Package} value={items.length} ar="الأصناف" en="My items" tone="primary" />
           <StatTile icon={CalendarClock} value={activeOrders.length} ar="نشطة" en="Active" tone="emerald" />
           <StatTile icon={CalendarClock} value={expiringOrders.length} ar="قريبة الانتهاء" en="Expiring" tone="amber" />
           <StatTile icon={AlertTriangle} value={overdueOrders.length} ar="متجاوزة" en="Overdue" tone="red" />
@@ -197,7 +197,7 @@ const DashboardRentals: React.FC = () => {
 
         <Tabs defaultValue="items" className="w-full">
           <TabsList className="bg-muted/40">
-            <TabsTrigger value="items"><Bi ar="عناصري" en="My items" /></TabsTrigger>
+            <TabsTrigger value="items"><Bi ar="الأصناف" en="My items" /></TabsTrigger>
             <TabsTrigger value="active"><Bi ar="عقود نشطة" en="Active orders" /></TabsTrigger>
             <TabsTrigger value="expiring"><Bi ar="قريبة الانتهاء" en="Expiring" /></TabsTrigger>
             <TabsTrigger value="overdue"><Bi ar="متجاوزة" en="Overdue" /></TabsTrigger>
