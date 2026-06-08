@@ -182,6 +182,13 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   const bi = useBi();
   const [adding, setAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [mode, setMode] = useState<'pick' | 'manual' | 'request'>('pick');
+  const [catalog, setCatalog] = useState<CatalogPick[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogQuery, setCatalogQuery] = useState('');
+  const [catalogFilterCat, setCatalogFilterCat] = useState<string>('all');
+  const [selectedCatalogId, setSelectedCatalogId] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [form, setForm] = useState({
     name_ar: '',
     name_en: '',
@@ -195,9 +202,67 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     penalty_terms: '',
   });
 
+  // Request form (when item is not in catalog)
+  const [reqForm, setReqForm] = useState({
+    name_ar: '',
+    name_en: '',
+    category_id: categories[0]?.id ?? '',
+    proposed_category_name_ar: '',
+    brand: '',
+    model: '',
+    suggested_unit: 'day',
+    suggested_price: '0',
+    description_ar: '',
+    notes: '',
+  });
+  const [reqSubmitting, setReqSubmitting] = useState(false);
+
   useEffect(() => {
     if (!form.category_id && categories[0]) setForm(f => ({ ...f, category_id: categories[0].id }));
   }, [categories, form.category_id]);
+
+  // Load catalog when opening the panel
+  useEffect(() => {
+    if (!adding || catalog.length > 0) return;
+    setCatalogLoading(true);
+    void supabase
+      .from('rental_equipment_catalog')
+      .select('id,name_ar,name_en,brand,model,category_id,estimated_daily_price,currency,image_url,description_ar,description_en')
+      .eq('is_active', true)
+      .order('name_ar', { ascending: true })
+      .limit(500)
+      .then(({ data }) => {
+        setCatalog((data ?? []) as CatalogPick[]);
+        setCatalogLoading(false);
+      });
+  }, [adding, catalog.length]);
+
+  const filteredCatalog = useMemo(() => {
+    const q = catalogQuery.trim().toLowerCase();
+    return catalog.filter(c => {
+      if (catalogFilterCat !== 'all' && c.category_id !== catalogFilterCat) return false;
+      if (!q) return true;
+      return (
+        c.name_ar?.toLowerCase().includes(q) ||
+        (c.name_en ?? '').toLowerCase().includes(q) ||
+        (c.brand ?? '').toLowerCase().includes(q) ||
+        (c.model ?? '').toLowerCase().includes(q)
+      );
+    }).slice(0, 60);
+  }, [catalog, catalogQuery, catalogFilterCat]);
+
+  const pickFromCatalog = (c: CatalogPick) => {
+    setSelectedCatalogId(c.id);
+    setImageUrl(c.image_url ?? null);
+    setForm(f => ({
+      ...f,
+      name_ar: c.name_ar,
+      name_en: c.name_en ?? '',
+      category_id: c.category_id ?? f.category_id,
+      base_price: String(c.estimated_daily_price ?? 0),
+    }));
+    setMode('manual');
+  };
 
   const submit = async () => {
     if (!form.name_ar.trim() || !form.category_id) {
@@ -217,13 +282,50 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
       usage_terms: form.usage_terms || undefined,
       late_terms: form.late_terms || undefined,
       penalty_terms: form.penalty_terms || undefined,
+      images: imageUrl ? [imageUrl] : undefined,
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
     toast.success(bi('تم إنشاء العنصر وبانتظار المراجعة','Item created — pending review'));
     setAdding(false);
+    setSelectedCatalogId(null);
+    setImageUrl(null);
+    setMode('pick');
     setForm(f => ({ ...f, name_ar: '', name_en: '', base_price: '0' }));
     await onChange();
+  };
+
+  const submitRequest = async () => {
+    if (!reqForm.name_ar.trim()) {
+      toast.error(bi('الرجاء كتابة اسم المعدة','Equipment name is required'));
+      return;
+    }
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) { toast.error(bi('يلزم تسجيل الدخول','Sign-in required')); return; }
+    setReqSubmitting(true);
+    const { error } = await supabase.from('rental_catalog_addition_requests').insert({
+      requester_user_id: user.id,
+      requester_business_id: businessId,
+      category_id: reqForm.category_id || null,
+      proposed_category_name_ar: reqForm.proposed_category_name_ar || null,
+      name_ar: reqForm.name_ar,
+      name_en: reqForm.name_en || null,
+      description_ar: reqForm.description_ar || null,
+      brand: reqForm.brand || null,
+      model: reqForm.model || null,
+      suggested_unit: reqForm.suggested_unit,
+      suggested_price: Number(reqForm.suggested_price) || 0,
+      notes: reqForm.notes || null,
+    });
+    setReqSubmitting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(bi('تم إرسال طلب إضافة المعدة للمراجعة','Request submitted for admin review'));
+    setReqForm({
+      name_ar: '', name_en: '', category_id: categories[0]?.id ?? '',
+      proposed_category_name_ar: '', brand: '', model: '',
+      suggested_unit: 'day', suggested_price: '0', description_ar: '', notes: '',
+    });
+    setMode('pick');
   };
 
   return (
@@ -238,6 +340,88 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 
       {adding && (
         <Card className="p-5 space-y-4">
+          {/* Mode switcher */}
+          <div className="flex flex-wrap gap-2 border-b pb-3">
+            <Button size="sm" variant={mode === 'pick' ? 'default' : 'outline'} onClick={() => setMode('pick')}>
+              <Search className="size-4 me-1" /><Bi ar="اختيار من الكتالوج" en="Pick from catalog" />
+            </Button>
+            <Button size="sm" variant={mode === 'manual' ? 'default' : 'outline'} onClick={() => setMode('manual')}>
+              <Plus className="size-4 me-1" /><Bi ar="إدخال يدوي" en="Manual entry" />
+            </Button>
+            <Button size="sm" variant={mode === 'request' ? 'default' : 'outline'} onClick={() => setMode('request')}>
+              <Sparkles className="size-4 me-1" /><Bi ar="طلب إضافة معدة جديدة" en="Request new equipment" />
+            </Button>
+          </div>
+
+          {mode === 'pick' && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <Input
+                  dir="auto"
+                  placeholder={bi('ابحث بالاسم أو الماركة أو الموديل…','Search by name, brand or model…')}
+                  value={catalogQuery}
+                  onChange={e => setCatalogQuery(e.target.value)}
+                  className="md:col-span-2"
+                />
+                <Select value={catalogFilterCat} onValueChange={setCatalogFilterCat}>
+                  <SelectTrigger><SelectValue placeholder={bi('كل التصنيفات','All categories')} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{bi('كل التصنيفات','All categories')}</SelectItem>
+                    {categories.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {catalogLoading ? (
+                <div className="flex items-center justify-center py-10"><Loader2 className="size-5 animate-spin" /></div>
+              ) : filteredCatalog.length === 0 ? (
+                <Card className="p-6 text-center text-sm text-muted-foreground space-y-3">
+                  <div><Bi ar="لم نجد معدة مطابقة في الكتالوج." en="No matching equipment in the catalog." /></div>
+                  <Button size="sm" variant="outline" onClick={() => setMode('request')}>
+                    <Sparkles className="size-4 me-1" /><Bi ar="اطلب إضافتها للكتالوج" en="Request to add it" />
+                  </Button>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-96 overflow-auto">
+                  {filteredCatalog.map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => pickFromCatalog(c)}
+                      className={`text-start p-3 rounded-xl border hover-lift transition ${selectedCatalogId === c.id ? 'border-primary bg-primary/5' : 'border-border'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {c.image_url ? (
+                          <img src={c.image_url} alt="" className="size-12 rounded-lg object-cover bg-muted" loading="lazy" />
+                        ) : (
+                          <div className="size-12 rounded-lg bg-muted flex items-center justify-center"><Package className="size-5 text-muted-foreground" /></div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium truncate">{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</div>
+                          <div className="text-xs text-muted-foreground truncate tech-content">
+                            {[c.brand, c.model].filter(Boolean).join(' · ') || '—'}
+                          </div>
+                          <div className="text-xs text-muted-foreground tech-content mt-0.5">
+                            ~ {c.estimated_daily_price ?? 0} {c.currency ?? 'SAR'} / {bi('يوم','day')}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground">
+                <Bi ar="اختر معدة لتعبئة الحقول تلقائيًا، يمكنك تعديل السعر والشروط قبل الحفظ." en="Pick to auto-fill fields. You can edit price & terms before saving." />
+              </div>
+            </div>
+          )}
+
+          {mode === 'manual' && (
+          <>
+          {selectedCatalogId && (
+            <div className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 rounded-lg px-3 py-2">
+              <Bi ar="تم تعبئة الحقول من الكتالوج. يمكنك التعديل ثم الحفظ." en="Fields pre-filled from catalog. Edit then save." />
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Input dir="auto" placeholder={bi('الاسم بالعربية','Name (Arabic)')} value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} />
             <Input dir="auto" placeholder={bi('الاسم بالإنجليزية (اختياري)','Name (English)')} value={form.name_en} onChange={e => setForm({ ...form, name_en: e.target.value })} />
@@ -268,6 +452,75 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
               <Bi ar="حفظ وإرسال للمراجعة" en="Save & submit for review" />
             </Button>
           </div>
+          </>
+          )}
+
+          {mode === 'request' && (
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                <Bi ar="املأ بيانات المعدة المطلوب إضافتها، وسيتم مراجعتها من الإدارة قبل إضافتها للكتالوج." en="Fill in the equipment details. An admin will review before adding it to the catalog." />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="اسم المعدة بالعربية *" en="Name (Arabic) *" /></Label>
+                  <Input dir="auto" value={reqForm.name_ar} onChange={e => setReqForm({ ...reqForm, name_ar: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="الاسم بالإنجليزية" en="Name (English)" /></Label>
+                  <Input dir="auto" value={reqForm.name_en} onChange={e => setReqForm({ ...reqForm, name_en: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="التصنيف الأقرب" en="Closest category" /></Label>
+                  <Select value={reqForm.category_id} onValueChange={v => setReqForm({ ...reqForm, category_id: v })}>
+                    <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="أو اقترح تصنيفًا جديدًا" en="Or propose a new category" /></Label>
+                  <Input dir="auto" value={reqForm.proposed_category_name_ar} onChange={e => setReqForm({ ...reqForm, proposed_category_name_ar: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="الماركة" en="Brand" /></Label>
+                  <Input dir="auto" value={reqForm.brand} onChange={e => setReqForm({ ...reqForm, brand: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="الموديل" en="Model" /></Label>
+                  <Input dir="auto" value={reqForm.model} onChange={e => setReqForm({ ...reqForm, model: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="الوحدة المقترحة" en="Suggested unit" /></Label>
+                  <Select value={reqForm.suggested_unit} onValueChange={v => setReqForm({ ...reqForm, suggested_unit: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {RENTAL_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{isRTL ? u.ar : u.en}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs"><Bi ar="السعر المقترح" en="Suggested price" /></Label>
+                  <Input type="number" inputMode="decimal" value={reqForm.suggested_price} onChange={e => setReqForm({ ...reqForm, suggested_price: e.target.value })} className="tech-content" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="وصف مختصر" en="Short description" /></Label>
+                <Textarea dir="auto" rows={2} value={reqForm.description_ar} onChange={e => setReqForm({ ...reqForm, description_ar: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="ملاحظات للإدارة" en="Notes for admin" /></Label>
+                <Textarea dir="auto" rows={2} value={reqForm.notes} onChange={e => setReqForm({ ...reqForm, notes: e.target.value })} />
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={submitRequest} disabled={reqSubmitting} className="hover-lift">
+                  {reqSubmitting && <Loader2 className="size-4 animate-spin me-1" />}
+                  <Sparkles className="size-4 me-1" />
+                  <Bi ar="إرسال طلب الإضافة" en="Submit request" />
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
