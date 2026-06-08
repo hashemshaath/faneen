@@ -575,8 +575,11 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="السعر للوحدة" en="Price per unit" /></Label>
+                <Label className="text-xs"><Bi ar="السعر للوحدة (بدون ضريبة القيمة المضافة) *" en="Price per unit (excl. VAT) *" /></Label>
                 <Input type="number" inputMode="decimal" value={form.base_price} onChange={e => setForm({ ...form, base_price: e.target.value })} className="tech-content" />
+                <div className="text-[10px] text-muted-foreground">
+                  <Bi ar="السعر قابل للتعديل ولا يشمل الضريبة (١٥٪) وتُضاف عند الفوترة." en="Editable. VAT (15%) is added at invoicing." />
+                </div>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="الحد الأدنى للمدة" en="Minimum duration" /></Label>
@@ -589,24 +592,122 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             </div>
           </div>
 
+          {/* Identification: brand / country / condition */}
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <Bi ar="التعريف والحالة" en="Identification & condition" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="الماركة / البراند" en="Brand" /></Label>
+                <Input dir="auto" placeholder={bi('مثال: Caterpillar','e.g. Caterpillar')} value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="بلد الصنع" en="Country of manufacture" /></Label>
+                <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
+                  <SelectTrigger><SelectValue placeholder={bi('اختر البلد','Select country')} /></SelectTrigger>
+                  <SelectContent>
+                    {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="حالة المعدة" en="Condition" /></Label>
+                <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
+                  <SelectTrigger><SelectValue placeholder={bi('اختر الحالة','Select condition')} /></SelectTrigger>
+                  <SelectContent>
+                    {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Electrical specs — conditional on category/name keywords */}
+          {(() => {
+            const cat = categories.find(c => c.id === form.category_id);
+            const haystack = `${cat?.name_ar ?? ''} ${cat?.name_en ?? ''} ${form.name_ar} ${form.name_en}`.toLowerCase();
+            const showElectrical = ELECTRICAL_KEYWORDS.some(k => haystack.includes(k));
+            if (!showElectrical) return null;
+            return (
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Bi ar="المواصفات الكهربائية" en="Electrical specs" />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs"><Bi ar="الجهد (فولت)" en="Voltage (V)" /></Label>
+                    <Input type="text" inputMode="decimal" placeholder="220" value={form.voltage} onChange={e => setForm({ ...form, voltage: e.target.value })} className="tech-content" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs"><Bi ar="التيار (أمبير)" en="Current (A)" /></Label>
+                    <Input type="text" inputMode="decimal" placeholder="10" value={form.current_amp} onChange={e => setForm({ ...form, current_amp: e.target.value })} className="tech-content" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs"><Bi ar="القدرة (واط)" en="Wattage (W)" /></Label>
+                    <Input type="text" inputMode="decimal" placeholder="1500" value={form.wattage} onChange={e => setForm({ ...form, wattage: e.target.value })} className="tech-content" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs"><Bi ar="القوة (HP/kVA)" en="Power (HP/kVA)" /></Label>
+                    <Input type="text" inputMode="decimal" placeholder="10 kVA" value={form.power_hp} onChange={e => setForm({ ...form, power_hp: e.target.value })} className="tech-content" />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Images: cover + gallery */}
+          {businessId && (
+            <div className="space-y-3">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <Bi ar="الصور" en="Images" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs"><Bi ar="صورة الغلاف (رئيسية)" en="Cover image (main)" /></Label>
+                  {coverUrl ? (
+                    <div className="relative">
+                      <img src={coverUrl} alt="cover" className="w-full h-40 rounded-lg object-cover border" />
+                      <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => setCoverUrl(null)}>
+                        <Bi ar="تغيير الغلاف" en="Replace cover" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <ImageUploader providerId={businessId} maxImages={1}
+                      onChange={(rows: UploadedImageRow[]) => setCoverUrl(rows[0]?.url_large ?? null)} />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs"><Bi ar="صور إضافية (حتى ٥ صور)" en="Additional images (up to 5)" /></Label>
+                  <ImageUploader providerId={businessId} maxImages={5}
+                    onChange={(rows: UploadedImageRow[]) => setGalleryUrls(rows.map(r => r.url_large))} />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               <Bi ar="الشروط والأحكام" en="Terms & conditions" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="شروط الاستخدام" en="Usage terms" /></Label>
-                <Input dir="auto" value={form.usage_terms} onChange={e => setForm({ ...form, usage_terms: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="شروط التأخير" en="Late terms" /></Label>
-                <Input dir="auto" value={form.late_terms} onChange={e => setForm({ ...form, late_terms: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="الشروط الجزائية" en="Penalty terms" /></Label>
-                <Input dir="auto" value={form.penalty_terms} onChange={e => setForm({ ...form, penalty_terms: e.target.value })} />
-              </div>
-            </div>
+            <TermsField
+              label={bi('شروط الاستخدام','Usage terms')}
+              presets={USAGE_PRESETS}
+              value={form.usage_terms}
+              onChange={v => setForm({ ...form, usage_terms: v })}
+            />
+            <TermsField
+              label={bi('شروط التأخير','Late terms')}
+              presets={LATE_PRESETS}
+              value={form.late_terms}
+              onChange={v => setForm({ ...form, late_terms: v })}
+            />
+            <TermsField
+              label={bi('الشروط الجزائية','Penalty terms')}
+              presets={PENALTY_PRESETS}
+              value={form.penalty_terms}
+              onChange={v => setForm({ ...form, penalty_terms: v })}
+            />
           </div>
           <div className="flex justify-end">
             <Button onClick={submit} disabled={submitting} className="hover-lift">
