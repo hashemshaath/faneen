@@ -83,6 +83,7 @@ const BrandDetail: React.FC = () => {
     canonical: brand?.slug ? `${SITE}/brands/${brand.slug}` : `${SITE}/brands`,
     ogType: 'website',
     ogImage: brand?.logo_url || undefined,
+    ogImageAlt: display || (isRTL ? 'علامة تجارية' : 'Brand'),
     noindex: !isLoading && !brand,
   });
 
