@@ -308,13 +308,14 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 
   const pickFromCatalog = (c: CatalogPick) => {
     setSelectedCatalogId(c.id);
-    setImageUrl(c.image_url ?? null);
+    setCoverUrl(c.image_url ?? null);
     setForm(f => ({
       ...f,
       name_ar: c.name_ar,
       name_en: c.name_en ?? '',
       category_id: c.category_id ?? f.category_id,
       base_price: String(c.estimated_daily_price ?? 0),
+      brand: c.brand ?? f.brand,
     }));
     setMode('manual');
   };
