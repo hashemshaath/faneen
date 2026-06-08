@@ -655,7 +655,7 @@ export default function DashboardSites() {
           eyebrow={isRTL ? 'المواقع' : 'Sites'}
           title={isRTL ? 'عناوين المواقع' : 'Site Addresses'}
           subtitle={isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
-          actions={businessId ? (
+          actions={user ? (
             <Button variant="hero" size="sm" className="h-8 text-xs" onClick={openCreate}>
               <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة موقع' : 'Add Site'}
             </Button>
@@ -685,10 +685,12 @@ export default function DashboardSites() {
         )}
 
         {!businessId && !isLoading && (
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-300/40 bg-amber-50/50 dark:bg-amber-950/20">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <p className="text-xs">
-              {isRTL ? 'تظهر لك هنا المواقع المرتبطة بحسابك فقط. لإضافة مواقع جديدة، يلزم ربط منشأة بحسابك.' : 'Showing sites linked to your account only. Link a business to add new sites.'}
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
+            <Info className="w-4 h-4 text-primary shrink-0" />
+            <p className="text-xs leading-relaxed">
+              {isRTL
+                ? 'وضع شخصي: مواقعك مربوطة بحسابك ورقم هويتك. يمكنك إضافة الرقم الضريبي اختيارياً لربطه بالفواتير والعقود.'
+                : 'Personal mode: your sites are linked to your account and ID. Tax number is optional and used on invoices/contracts.'}
             </p>
           </div>
         )}
