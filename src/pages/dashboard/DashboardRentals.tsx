@@ -612,21 +612,45 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               <Bi ar="التسعير" en="Pricing" />
             </div>
+            <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+              <Bi
+                ar="جميع الأسعار المُدخلة هنا بدون قيمة الضريبة (١٥٪). تُحتسب الضريبة تلقائيًا عند إصدار الفاتورة."
+                en="All prices entered here are excluding VAT (15%). VAT is added automatically at invoicing."
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="السعر للوحدة (بدون ضريبة القيمة المضافة) *" en="Price per unit (excl. VAT) *" /></Label>
-                <Input type="number" inputMode="decimal" value={form.base_price} onChange={e => setForm({ ...form, base_price: e.target.value })} className="tech-content" />
-                <div className="text-[10px] text-muted-foreground">
-                  <Bi ar="السعر قابل للتعديل ولا يشمل الضريبة (١٥٪) وتُضاف عند الفوترة." en="Editable. VAT (15%) is added at invoicing." />
-                </div>
+                <Label className="text-xs"><Bi ar="السعر للوحدة (بدون ضريبة) *" en="Price per unit (excl. VAT) *" /></Label>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  dir="ltr"
+                  value={form.base_price}
+                  onChange={e => {
+                    // Allow digits and a single dot only — keeps price freely editable even after catalog pick
+                    const v = e.target.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
+                    setForm({ ...form, base_price: v });
+                  }}
+                  className="tech-content"
+                  placeholder="0.00"
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="الحد الأدنى للمدة" en="Minimum duration" /></Label>
-                <Input type="number" inputMode="numeric" value={form.min_duration} onChange={e => setForm({ ...form, min_duration: e.target.value })} className="tech-content" />
+                <Input type="text" inputMode="numeric" dir="ltr"
+                  value={form.min_duration}
+                  onChange={e => setForm({ ...form, min_duration: e.target.value.replace(/\D/g,'') })}
+                  className="tech-content" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="مبلغ التأمين" en="Deposit amount" /></Label>
-                <Input type="number" inputMode="decimal" value={form.deposit_amount} onChange={e => setForm({ ...form, deposit_amount: e.target.value })} className="tech-content" />
+                <Input type="text" inputMode="decimal" dir="ltr"
+                  value={form.deposit_amount}
+                  onChange={e => {
+                    const v = e.target.value.replace(/[^\d.]/g,'').replace(/(\..*)\./g,'$1');
+                    setForm({ ...form, deposit_amount: v });
+                  }}
+                  className="tech-content" />
               </div>
             </div>
           </div>
