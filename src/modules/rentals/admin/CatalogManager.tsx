@@ -129,7 +129,7 @@ export const CatalogManager: React.FC = () => {
       base_price: r.estimated_daily_price ?? 0,
       currency: r.currency ?? 'SAR',
       deposit_amount: r.estimated_deposit ?? 0,
-      unit: 'day',
+      unit: 'day' as const,
       status: 'pending_review' as const,
       is_published: false,
       created_by: u.user.id,
