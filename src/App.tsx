@@ -367,6 +367,9 @@ const AppRoutes = () => (
           <Route path="/dashboard/diagnostics" element={<ProtectedRoute><DashboardAccountDiagnostics /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 4 — Contracts hub. */}
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContractsHub /></ProtectedRoute>} />
+          {/* RENTAL-MICROSERVICE-1 — provider + admin rental hubs */}
+          <Route path="/dashboard/rentals" element={<ProtectedRoute><DashboardRentals /></ProtectedRoute>} />
+          <Route path="/admin/rentals" element={<ProtectedRoute requireAdmin><AdminRentals /></ProtectedRoute>} />
           <Route path="/dashboard/contract-analytics" element={<Navigate to="/dashboard/contracts?tab=analytics" replace />} />
           <Route path="/dashboard/work-orders" element={<ProtectedRoute><DashboardWorkOrders /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 (group 5): legacy overview merged into main work-orders */}
