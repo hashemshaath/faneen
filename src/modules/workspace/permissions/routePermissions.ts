@@ -84,6 +84,10 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   '/dashboard/contract-analytics':           { permissions: ['contracts.view'],                         scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/warranties':                   { permissions: ['contracts.view'],                         scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
+  // Rentals & Assets — provider fleet & rental orders
+  '/dashboard/rentals':                      { permissions: ['services.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  '/dashboard/assets':                       { permissions: ['services.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+
   // Membership & billing — gated to owner / finance / explicit grant.
   // Personal /membership stays personal-scope; provider membership is entity-scope.
   '/membership':                             { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
