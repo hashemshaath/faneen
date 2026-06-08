@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff, Filter, X, CheckCircle2, AlertCircle, LayoutGrid, List, ArrowUpDown, Sparkles, ExternalLink, Activity, Clock } from 'lucide-react';
+import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff, Filter, X, AlertCircle, LayoutGrid, List, ArrowUpDown, Sparkles, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
