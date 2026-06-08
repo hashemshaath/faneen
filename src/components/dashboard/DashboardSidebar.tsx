@@ -49,6 +49,8 @@ import {
   FilePlus2,
   Files,
   FileBarChart,
+  Truck,
+  Package,
 } from 'lucide-react';
 
 interface MenuItem {
