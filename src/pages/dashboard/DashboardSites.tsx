@@ -684,14 +684,21 @@ export default function DashboardSites() {
           </div>
         )}
 
-        {!businessId && !isLoading && (
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
-            <Info className="w-4 h-4 text-primary shrink-0" />
-            <p className="text-xs leading-relaxed">
-              {isRTL
-                ? 'وضع شخصي: مواقعك مربوطة بحسابك ورقم هويتك. يمكنك إضافة الرقم الضريبي اختيارياً لربطه بالفواتير والعقود.'
-                : 'Personal mode: your sites are linked to your account and ID. Tax number is optional and used on invoices/contracts.'}
-            </p>
+        {!businessId && !isLoading && user && (
+          <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Info className="w-4 h-4 text-primary shrink-0" />
+              <p className="text-xs leading-relaxed">
+                {isRTL
+                  ? 'وضع شخصي: تُربط مواقعك تلقائياً بحسابك ورقم هويتك. الرقم الضريبي اختياري ويُستخدم على الفواتير والعقود.'
+                  : 'Personal mode: your sites are auto-linked to your account and national ID. Tax number is optional and used on invoices/contracts.'}
+              </p>
+            </div>
+            {profile?.ref_id && (
+              <span className="text-[11px] font-mono tech-content px-2 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+                {profile.ref_id}
+              </span>
+            )}
           </div>
         )}
 
