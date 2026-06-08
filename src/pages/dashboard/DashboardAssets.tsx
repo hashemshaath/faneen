@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,21 +7,22 @@ import { Bi, useBi } from '@/components/common/Bilingual';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Boxes, Wrench, ShieldAlert, X, Package, Info } from 'lucide-react';
+import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
-  AssetCategoriesApi, AssetsApi, AssetMaintenanceApi, AssetInspectionsApi,
-  AssetStatusBadge, AssetOpsCard, AssetRentalPanel,
+  AssetsApi, AssetMaintenanceApi, AssetInspectionsApi, AssetRentalLinksApi,
+  AssetStatusBadge, AssetOpsCard,
   AssetUtilizationSummary, AssetQrIdentity, AssetMaintenanceAlerts,
   MAINTENANCE_STATUS_LABELS, INSPECTION_FREQUENCY_LABELS,
 } from '@/modules/assets';
-import type { Asset, AssetCategory, AssetMaintenance, AssetInspection, AssetInspectionFrequency } from '@/modules/assets';
+import type { Asset, AssetMaintenance, AssetInspection, AssetInspectionFrequency } from '@/modules/assets';
+import { RentalItems as RentalItemsApi, RentalCategories as RentalCategoriesApi } from '@/modules/rentals';
+import type { RentalItem, RentalCategory } from '@/modules/rentals';
 
-/** Provider asset hub — inventory + maintenance + inspections. No popups. */
+/** Provider asset hub — units of activated rental items, with serial numbers, maintenance & inspections. */
 const DashboardAssets: React.FC = () => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
@@ -29,19 +30,28 @@ const DashboardAssets: React.FC = () => {
 
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<RentalItem[]>([]);
+  const [categories, setCategories] = useState<RentalCategory[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [categories, setCategories] = useState<AssetCategory[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showAdd, setShowAdd] = useState(false);
+  const [links, setLinks] = useState<{ asset_id: string; rental_item_id: string }[]>([]);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [query, setQuery] = useState('');
 
-  const refresh = async (bizId: string) => {
-    const [a, c] = await Promise.all([
+  const refresh = useCallback(async (bizId: string) => {
+    const [its, cats, asts] = await Promise.all([
+      RentalItemsApi.listProviderItems(bizId),
+      RentalCategoriesApi.listCategories(),
       AssetsApi.listAssetsForBusiness(bizId),
-      AssetCategoriesApi.listCategories(),
     ]);
-    setAssets(a.data ?? []);
-    setCategories(c.data ?? []);
-  };
+    const itemList = its.data ?? [];
+    setItems(itemList);
+    setCategories(cats.data ?? []);
+    setAssets(asts.data ?? []);
+    const lk = await AssetRentalLinksApi.listLinksForRentalItems(itemList.map(i => i.id));
+    setLinks((lk.data ?? []).map(l => ({ asset_id: l.asset_id, rental_item_id: l.rental_item_id })));
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -53,9 +63,34 @@ const DashboardAssets: React.FC = () => {
       if (bizId) await refresh(bizId);
       setLoading(false);
     })();
-  }, [user?.id]);
+  }, [user?.id, refresh]);
 
-  const selected = useMemo(() => assets.find(a => a.id === selectedId) ?? null, [assets, selectedId]);
+  const unitsByItem = useMemo(() => {
+    const map = new Map<string, Asset[]>();
+    const assetById = new Map(assets.map(a => [a.id, a]));
+    for (const l of links) {
+      const a = assetById.get(l.asset_id);
+      if (!a) continue;
+      const arr = map.get(l.rental_item_id) ?? [];
+      arr.push(a);
+      map.set(l.rental_item_id, arr);
+    }
+    return map;
+  }, [assets, links]);
+
+  const visibleItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items.filter(it => {
+      if (categoryFilter !== 'all' && it.category_id !== categoryFilter) return false;
+      if (!q) return true;
+      return [it.name_ar, it.name_en, it.ref_id, it.brand].some(v => (v ?? '').toLowerCase().includes(q));
+    });
+  }, [items, categoryFilter, query]);
+
+  const selectedAsset = useMemo(
+    () => assets.find(a => a.id === selectedAssetId) ?? null,
+    [assets, selectedAssetId]
+  );
 
   if (loading) {
     return <DashboardLayout><div className="flex justify-center py-20"><Loader2 className="size-6 animate-spin" /></div></DashboardLayout>;
@@ -72,150 +107,305 @@ const DashboardAssets: React.FC = () => {
     );
   }
 
+  const totalUnits = assets.length;
+  const visibleCategoryIds = new Set(items.map(i => i.category_id));
+  const activeCategories = categories.filter(c => visibleCategoryIds.has(c.id));
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-16 md:pb-20">
+      <div className="space-y-5 pb-16 md:pb-20">
         <PageHeader
           icon={Boxes}
           title={bi('إدارة الأصول','Asset Management')}
-          subtitle={bi('أسطول المعدات: الحالة، الصيانة، الفحوصات، الاستغلال والربط بالتأجير.','Fleet: status, maintenance, inspections, utilization & rental linkage.')}
+          subtitle={bi('وحدات أصنافك المنشورة في مركز التأجير: الأرقام التسلسلية، الصيانة، الفحوصات.','Units of your published rental items: serials, maintenance, inspections.')}
         />
 
         <AssetsIntroBanner />
-
         <AssetOpsCard />
 
+        {/* Category pills */}
+        <Card className="p-3 md:p-4 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setCategoryFilter('all')}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${categoryFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
+            >
+              <Bi ar="الكل" en="All" /> <span className="opacity-70 tech-content">({items.length})</span>
+            </button>
+            {activeCategories.map(c => {
+              const count = items.filter(i => i.category_id === c.id).length;
+              const active = categoryFilter === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setCategoryFilter(c.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
+                >
+                  {isRTL ? c.name_ar : c.name_en} <span className="opacity-70 tech-content">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="relative">
+            <Search className={`size-4 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} text-muted-foreground`} />
+            <Input
+              dir="auto"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={bi('ابحث باسم الصنف أو الماركة أو المعرف…','Search by item, brand or ref…')}
+              className={isRTL ? 'pr-9' : 'pl-9'}
+            />
+          </div>
+        </Card>
+
+        {/* Items grid */}
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-semibold"><Bi ar="الأصول لديك" en="Your assets" /> <span className="text-muted-foreground text-sm tech-content">({assets.length})</span></h2>
-          <Button onClick={() => { setShowAdd(s => !s); setSelectedId(null); }} className="gap-2">
-            {showAdd ? <X className="size-4" /> : <Plus className="size-4" />}
-            <Bi ar={showAdd ? 'إغلاق' : 'إضافة أصل'} en={showAdd ? 'Close' : 'Add asset'} />
-          </Button>
+          <h2 className="font-semibold">
+            <Bi ar="أصنافك المُفعّلة" en="Your activated items" />{' '}
+            <span className="text-muted-foreground text-sm tech-content">({visibleItems.length})</span>
+          </h2>
+          <span className="text-xs text-muted-foreground tech-content">
+            <Bi ar={`إجمالي الوحدات: ${totalUnits}`} en={`Total units: ${totalUnits}`} />
+          </span>
         </div>
 
-        {showAdd && (
-          <AssetCreateForm
-            businessId={businessId}
-            categories={categories}
-            onCreated={async () => { await refresh(businessId); setShowAdd(false); }}
-          />
-        )}
-
-        {assets.length === 0 && !showAdd ? (
-          <Card className="p-8 text-center text-muted-foreground">
-            <Bi ar="لا توجد أصول بعد. أضف أصلًا للبدء." en="No assets yet. Add one to get started." />
+        {items.length === 0 ? (
+          <Card className="p-8 text-center space-y-3">
+            <Package className="size-10 mx-auto text-muted-foreground" />
+            <div className="font-medium"><Bi ar="لا توجد أصناف مُفعّلة بعد" en="No activated items yet" /></div>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              <Bi ar="أضف صنفًا في مركز التأجير أولًا — ستجده هنا لإدارة وحداته وأرقامه التسلسلية." en="Add an item in the Rentals Center first — it will appear here to manage its units and serial numbers." />
+            </p>
+            <Button asChild className="gap-2"><a href="/dashboard/rentals"><Plus className="size-4" /><Bi ar="إضافة صنف تأجير" en="Add a rental item" /></a></Button>
+          </Card>
+        ) : visibleItems.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground text-sm">
+            <Bi ar="لا توجد نتائج مطابقة للبحث." en="No items match your filters." />
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 gap-3">
-            {assets.map(a => (
-              <button
-                key={a.id} onClick={() => setSelectedId(s => s === a.id ? null : a.id)}
-                className="text-start"
-              >
-                <Card className={`p-4 hover-lift ${selectedId === a.id ? 'ring-2 ring-primary' : ''}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="font-medium">{isRTL ? a.name_ar : (a.name_en || a.name_ar)}</div>
-                      <div className="text-xs text-muted-foreground tech-content">{a.ref_id}{a.serial_number ? ` · ${a.serial_number}` : ''}</div>
-                      {a.manufacturer && <div className="text-xs text-muted-foreground">{a.manufacturer}{a.model ? ` · ${a.model}` : ''}</div>}
-                    </div>
-                    <AssetStatusBadge status={a.status} />
-                  </div>
-                  <div className="mt-3">
-                    <AssetRentalPanel assetId={a.id} />
-                  </div>
-                </Card>
-              </button>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+            {visibleItems.map(it => (
+              <RentalItemCard
+                key={it.id}
+                item={it}
+                category={categories.find(c => c.id === it.category_id) ?? null}
+                units={unitsByItem.get(it.id) ?? []}
+                expanded={expandedItemId === it.id}
+                onToggle={() => { setExpandedItemId(p => p === it.id ? null : it.id); setSelectedAssetId(null); }}
+                onSelectAsset={setSelectedAssetId}
+                onChanged={() => refresh(businessId)}
+                businessId={businessId}
+              />
             ))}
           </div>
         )}
 
-        {selected && (
-          <AssetDetail asset={selected} onChanged={() => refresh(businessId)} />
+        {selectedAsset && (
+          <AssetDetail asset={selectedAsset} onChanged={() => refresh(businessId)} />
         )}
       </div>
     </DashboardLayout>
   );
 };
 
-const AssetCreateForm: React.FC<{
+/* ---------- Rental-item card with inline unit management ---------- */
+const RentalItemCard: React.FC<{
+  item: RentalItem;
+  category: RentalCategory | null;
+  units: Asset[];
+  expanded: boolean;
   businessId: string;
-  categories: AssetCategory[];
-  onCreated: () => void | Promise<void>;
-}> = ({ businessId, categories, onCreated }) => {
-  const bi = useBi();
+  onToggle: () => void;
+  onSelectAsset: (id: string) => void;
+  onChanged: () => void | Promise<void>;
+}> = ({ item, category, units, expanded, businessId, onToggle, onSelectAsset, onChanged }) => {
   const { isRTL } = useLanguage();
-  const [form, setForm] = useState({
-    name_ar: '', name_en: '', serial_number: '', manufacturer: '', model: '',
-    category_id: '', currency: 'SAR',
-  });
-  const [saving, setSaving] = useState(false);
-
-  const submit = async () => {
-    if (!form.name_ar.trim()) { toast.error(bi('اسم الأصل مطلوب','Asset name required')); return; }
-    setSaving(true);
-    const { error } = await AssetsApi.createAsset({
-      owner_business_id: businessId,
-      name_ar: form.name_ar.trim(),
-      name_en: form.name_en.trim() || undefined,
-      serial_number: form.serial_number.trim() || undefined,
-      manufacturer: form.manufacturer.trim() || undefined,
-      model: form.model.trim() || undefined,
-      category_id: form.category_id || undefined,
-      currency: form.currency,
-    });
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success(bi('تمت إضافة الأصل','Asset created'));
-    await onCreated();
-  };
+  const cover = item.cover_image_url || item.images?.[0] || null;
+  const name = isRTL ? item.name_ar : (item.name_en || item.name_ar);
+  const catName = category ? (isRTL ? category.name_ar : category.name_en) : null;
 
   return (
-    <Card className="p-4 space-y-3">
-      <div className="font-semibold"><Bi ar="أصل جديد" en="New asset" /></div>
-      <div className="grid md:grid-cols-2 gap-3">
-        <div>
-          <label className="text-xs text-muted-foreground"><Bi ar="الاسم (عربي) *" en="Name (Arabic) *" /></label>
-          <Input dir="auto" value={form.name_ar} onChange={e => setForm(f => ({...f, name_ar: e.target.value}))} />
+    <Card className="overflow-hidden hover-lift">
+      <button onClick={onToggle} className="w-full text-start">
+        <div className="relative aspect-[16/10] bg-muted overflow-hidden">
+          {cover ? (
+            <img src={cover} alt={name} loading="lazy" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              <ImageOff className="size-8" />
+            </div>
+          )}
+          <span className="absolute top-2 end-2 px-2 py-0.5 rounded-full text-[11px] font-medium bg-background/90 backdrop-blur border tech-content">
+            {units.length} <Bi ar="وحدة" en="units" />
+          </span>
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground"><Bi ar="الاسم (إنجليزي)" en="Name (English)" /></label>
-          <Input dir="auto" value={form.name_en} onChange={e => setForm(f => ({...f, name_en: e.target.value}))} />
+        <div className="p-3 space-y-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="font-medium leading-tight line-clamp-1">{name}</div>
+            {expanded ? <ChevronUp className="size-4 text-muted-foreground shrink-0" /> : <ChevronDown className="size-4 text-muted-foreground shrink-0" />}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+            {catName && <span className="px-1.5 py-0.5 rounded-md bg-muted">{catName}</span>}
+            <span className="tech-content">{item.ref_id}</span>
+            {item.brand && <span>· {item.brand}</span>}
+          </div>
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground"><Bi ar="الرقم التسلسلي" en="Serial number" /></label>
-          <Input className="tech-content" value={form.serial_number} onChange={e => setForm(f => ({...f, serial_number: e.target.value}))} />
+      </button>
+
+      {expanded && (
+        <div className="border-t p-3 space-y-3 bg-muted/30">
+          <UnitsList units={units} onSelect={onSelectAsset} onChanged={onChanged} />
+          <AddUnitsForm item={item} businessId={businessId} onAdded={onChanged} existingCount={units.length} />
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground"><Bi ar="التصنيف" en="Category" /></label>
-          <Select value={form.category_id} onValueChange={v => setForm(f => ({...f, category_id: v}))}>
-            <SelectTrigger><SelectValue placeholder={bi('اختر التصنيف','Select category')} /></SelectTrigger>
-            <SelectContent>
-              {categories.map(c => (
-                <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground"><Bi ar="الصانع" en="Manufacturer" /></label>
-          <Input dir="auto" value={form.manufacturer} onChange={e => setForm(f => ({...f, manufacturer: e.target.value}))} />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground"><Bi ar="الموديل" en="Model" /></label>
-          <Input dir="auto" value={form.model} onChange={e => setForm(f => ({...f, model: e.target.value}))} />
-        </div>
-      </div>
-      <div className="flex justify-end">
-        <Button onClick={submit} disabled={saving} className="gap-2">
-          {saving && <Loader2 className="size-4 animate-spin" />}
-          <Bi ar="حفظ" en="Save" />
-        </Button>
-      </div>
+      )}
     </Card>
   );
 };
 
+/* ---------- List of existing serial-numbered units ---------- */
+const UnitsList: React.FC<{
+  units: Asset[];
+  onSelect: (id: string) => void;
+  onChanged: () => void | Promise<void>;
+}> = ({ units, onSelect, onChanged }) => {
+  const bi = useBi();
+  if (units.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground rounded-lg border border-dashed p-3 text-center">
+        <Bi ar="لا توجد وحدات بعد — أضف أرقامًا تسلسلية لهذا الصنف بالأسفل." en="No units yet — add serial numbers for this item below." />
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-1.5">
+      <div className="text-xs font-medium text-muted-foreground"><Bi ar="الوحدات المُسجَّلة" en="Registered units" /></div>
+      <div className="space-y-1">
+        {units.map(u => (
+          <div key={u.id} className="flex items-center gap-2 rounded-lg border bg-background p-2">
+            <Hash className="size-3.5 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium tech-content truncate">{u.serial_number || u.ref_id}</div>
+              <div className="text-[11px] text-muted-foreground tech-content">{u.ref_id}</div>
+            </div>
+            <AssetStatusBadge status={u.status} />
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => onSelect(u.id)}>
+              <Bi ar="إدارة" en="Manage" />
+            </Button>
+            <Button
+              size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive"
+              onClick={async () => {
+                if (!confirm(bi('حذف هذه الوحدة؟','Delete this unit?'))) return;
+                const { error } = await AssetsApi.deleteAsset(u.id);
+                if (error) toast.error(error.message);
+                else { toast.success(bi('تم الحذف','Deleted')); await onChanged(); }
+              }}
+              aria-label="delete"
+            ><Trash2 className="size-3.5" /></Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ---------- Bulk-add serial-numbered units (inherits name/category from rental item) ---------- */
+const AddUnitsForm: React.FC<{
+  item: RentalItem;
+  businessId: string;
+  existingCount: number;
+  onAdded: () => void | Promise<void>;
+}> = ({ item, businessId, existingCount, onAdded }) => {
+  const bi = useBi();
+  const [count, setCount] = useState(1);
+  const [serials, setSerials] = useState<string[]>(['']);
+  const [saving, setSaving] = useState(false);
+
+  const setCountSafe = (n: number) => {
+    const v = Math.max(1, Math.min(50, Math.floor(n) || 1));
+    setCount(v);
+    setSerials(prev => {
+      const next = prev.slice(0, v);
+      while (next.length < v) next.push('');
+      return next;
+    });
+  };
+
+  const submit = async () => {
+    const cleaned = serials.map(s => s.trim());
+    setSaving(true);
+    let created = 0;
+    let failed = 0;
+    for (const sn of cleaned) {
+      const { data: asset, error } = await AssetsApi.createAsset({
+        owner_business_id: businessId,
+        name_ar: item.name_ar,
+        name_en: item.name_en || undefined,
+        serial_number: sn || undefined,
+        manufacturer: item.brand || undefined,
+        currency: item.currency,
+      });
+      if (error || !asset) { failed++; continue; }
+      const { error: linkErr } = await AssetRentalLinksApi.linkAssetToRental(asset.id, item.id);
+      if (linkErr) failed++;
+      else created++;
+    }
+    setSaving(false);
+    if (created) toast.success(bi(`تمت إضافة ${created} وحدة`, `${created} units added`));
+    if (failed) toast.error(bi(`فشلت إضافة ${failed} وحدة`, `${failed} units failed`));
+    setSerials(['']); setCount(1);
+    await onAdded();
+  };
+
+  return (
+    <div className="rounded-xl border bg-background p-3 space-y-3">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <Plus className="size-4 text-primary" />
+        <Bi ar="إضافة وحدات لهذا الصنف" en="Add units for this item" />
+      </div>
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
+        <Bi
+          ar="الاسم والتصنيف مأخوذان من الصنف في مركز التأجير. أدخل عدد القطع ثم الأرقام التسلسلية (اختيارية)."
+          en="Name & category are inherited from the rental item. Set the quantity, then enter serial numbers (optional)."
+        />
+      </p>
+      <div className="flex items-end gap-2">
+        <div className="w-32">
+          <label className="text-[11px] text-muted-foreground"><Bi ar="عدد القطع" en="Quantity" /></label>
+          <Input
+            type="number" min={1} max={50} value={count}
+            onChange={e => setCountSafe(Number(e.target.value))}
+            className="tech-content h-10"
+          />
+        </div>
+        <div className="text-[11px] text-muted-foreground pb-2.5">
+          <Bi ar={`الموجود حاليًا: ${existingCount}`} en={`Currently: ${existingCount}`} />
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-2">
+        {serials.map((s, i) => (
+          <div key={i} className="relative">
+            <Hash className="size-3.5 absolute top-1/2 -translate-y-1/2 start-2.5 text-muted-foreground" />
+            <Input
+              dir="ltr"
+              value={s}
+              onChange={e => setSerials(prev => prev.map((v, idx) => idx === i ? e.target.value : v))}
+              placeholder={`SN-${i + 1}`}
+              className="tech-content ps-8 h-10"
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-end">
+        <Button onClick={submit} disabled={saving} className="gap-2">
+          {saving && <Loader2 className="size-4 animate-spin" />}
+          <Bi ar={`حفظ ${count} وحدة`} en={`Save ${count} units`} />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- Asset detail (maintenance + inspections) ---------- */
 const AssetDetail: React.FC<{ asset: Asset; onChanged: () => void | Promise<void> }> = ({ asset, onChanged }) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
@@ -223,23 +413,23 @@ const AssetDetail: React.FC<{ asset: Asset; onChanged: () => void | Promise<void
   const [maint, setMaint] = useState<AssetMaintenance[]>([]);
   const [insp, setInsp] = useState<AssetInspection[]>([]);
 
-  const reload = async () => {
+  const reload = useCallback(async () => {
     const [m, i] = await Promise.all([
       AssetMaintenanceApi.listForAsset(asset.id),
       AssetInspectionsApi.listForAsset(asset.id),
     ]);
     setMaint(m.data ?? []);
     setInsp(i.data ?? []);
-  };
+  }, [asset.id]);
 
-  useEffect(() => { reload(); }, [asset.id]);
+  useEffect(() => { reload(); }, [reload]);
 
   return (
     <Card className="p-4 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="font-semibold">{isRTL ? asset.name_ar : (asset.name_en || asset.name_ar)}</div>
-          <div className="text-xs text-muted-foreground tech-content">{asset.ref_id}</div>
+          <div className="text-xs text-muted-foreground tech-content">{asset.ref_id}{asset.serial_number ? ` · ${asset.serial_number}` : ''}</div>
         </div>
         <div className="flex items-center gap-2">
           <AssetStatusBadge status={asset.status} />
@@ -390,7 +580,7 @@ const InspectionForm: React.FC<{ assetId: string; onCreated: () => void }> = ({ 
 
 export default DashboardAssets;
 
-/* ---------- Intro banner: clarifies Assets vs Rentals ---------- */
+/* ---------- Intro banner ---------- */
 const AssetsIntroBanner: React.FC = () => (
   <Card className="relative overflow-hidden border-primary/15 bg-gradient-to-br from-primary/[0.06] via-background to-sky-500/[0.05] p-5 md:p-6">
     <div className="absolute -top-10 -end-10 size-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" aria-hidden />
@@ -400,12 +590,12 @@ const AssetsIntroBanner: React.FC = () => (
       </div>
       <div className="flex-1 min-w-0 space-y-2">
         <h2 className="text-lg md:text-xl font-semibold">
-          <Bi ar="إدارة الأصول والمعدات (داخلي)" en="Assets & Equipment (internal)" />
+          <Bi ar="وحدات أصنافك (داخلي)" en="Your item units (internal)" />
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
           <Bi
-            ar="هذا سجل داخلي لما تملكه فعليًا — الأرقام التسلسلية، الصيانة، الفحوصات، والاستغلال. لا يظهر للعملاء. لنشر معداتك للإيجار استخدم مركز التأجير."
-            en="Internal ledger of what you actually own — serials, maintenance, inspections and utilization. Not visible to customers. To publish equipment for rent use the Rentals Center."
+            ar="هنا تظهر الأصناف التي فعّلتها في مركز التأجير. اختر صنفًا لإضافة الأرقام التسلسلية لكل قطعة — وعند التأجير ستظهر هذه الأرقام لاختيارها مباشرة. الاسم والتصنيف لا يُضافان هنا — يجب تفعيلهما أولًا من مركز التأجير."
+            en="Items you activated in the Rentals Center appear here. Pick one to add serial numbers for each physical unit — these serials become selectable when renting. Name & category are not added here; activate them first in the Rentals Center."
           />
         </p>
         <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -416,7 +606,7 @@ const AssetsIntroBanner: React.FC = () => (
           <span className="text-muted-foreground/40">•</span>
           <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Info className="size-3" />
-            <Bi ar="الأصل ≠ صنف تأجير — كل صنف تأجير هو أصل، لكن ليس كل أصل للإيجار." en="Asset ≠ rental item — every rental item is an asset, but not every asset is for rent." />
+            <Bi ar="كل وحدة = رقم تسلسلي مستقل قابل للصيانة والفحص." en="Each unit = an independent serial — maintained and inspected separately." />
           </span>
         </div>
       </div>

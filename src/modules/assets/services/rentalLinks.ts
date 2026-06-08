@@ -20,6 +20,13 @@ export async function listLinksForRentalItem(rentalItemId: string): Promise<Serv
   return { data: (data as AssetRentalLink[] | null) ?? [], error: error as Error | null };
 }
 
+export async function listLinksForRentalItems(rentalItemIds: string[]): Promise<ServiceResult<AssetRentalLink[]>> {
+  if (!rentalItemIds.length) return { data: [], error: null };
+  const { data, error } = await supabase
+    .from('asset_rental_links' as never).select('*').in('rental_item_id', rentalItemIds);
+  return { data: (data as AssetRentalLink[] | null) ?? [], error: error as Error | null };
+}
+
 export async function linkAssetToRental(assetId: string, rentalItemId: string): Promise<ServiceResult<AssetRentalLink>> {
   const { data, error } = await supabase
     .from('asset_rental_links' as never)
