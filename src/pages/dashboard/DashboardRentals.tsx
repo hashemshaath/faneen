@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles, Info, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -188,6 +188,8 @@ const DashboardRentals: React.FC = () => {
           subtitle={bi('إدارة عناصر التأجير والعقود النشطة، التمديد والإغلاق.','Manage rental items, active contracts, extensions and closure.')}
         />
 
+        <RentalsIntroBanner itemsCount={items.length} />
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatTile icon={Package} value={items.length} ar="الأصناف" en="My items" tone="primary" />
           <StatTile icon={CalendarClock} value={activeOrders.length} ar="نشطة" en="Active" tone="emerald" />
@@ -195,12 +197,26 @@ const DashboardRentals: React.FC = () => {
           <StatTile icon={AlertTriangle} value={overdueOrders.length} ar="متجاوزة" en="Overdue" tone="red" />
         </div>
 
+        <RentalsTipsStrip />
+
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="bg-muted/40">
-            <TabsTrigger value="items"><Bi ar="الأصناف" en="My items" /></TabsTrigger>
-            <TabsTrigger value="active"><Bi ar="عقود نشطة" en="Active orders" /></TabsTrigger>
-            <TabsTrigger value="expiring"><Bi ar="قريبة الانتهاء" en="Expiring" /></TabsTrigger>
-            <TabsTrigger value="overdue"><Bi ar="متجاوزة" en="Overdue" /></TabsTrigger>
+          <TabsList className="bg-muted/40 flex-wrap h-auto">
+            <TabsTrigger value="items" className="gap-2">
+              <Bi ar="الأصناف" en="My items" />
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{items.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="active" className="gap-2">
+              <Bi ar="عقود نشطة" en="Active orders" />
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{activeOrders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="expiring" className="gap-2">
+              <Bi ar="قريبة الانتهاء" en="Expiring" />
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300">{expiringOrders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="overdue" className="gap-2">
+              <Bi ar="متجاوزة" en="Overdue" />
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-red-500/15 text-red-700 dark:text-red-300">{overdueOrders.length}</Badge>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="items" className="mt-4">
@@ -252,6 +268,95 @@ const StatTile: React.FC<{ icon: React.ComponentType<{ className?: string }>; va
       </div>
     </div>
   </Card>
+);
+
+/* ---------- Intro banner + tips strip (RENTALS UX polish) ---------- */
+
+const RentalsIntroBanner: React.FC<{ itemsCount: number }> = ({ itemsCount }) => {
+  const isEmpty = itemsCount === 0;
+  return (
+    <Card className="relative overflow-hidden border-primary/15 bg-gradient-to-br from-primary/[0.06] via-background to-emerald-500/[0.05] p-5 md:p-6">
+      <div className="absolute -top-10 -end-10 size-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" aria-hidden />
+      <div className="relative flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+        <div className="size-12 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+          <Package className="size-6" />
+        </div>
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg md:text-xl font-semibold">
+              <Bi ar="مركز التأجير الخاص بك" en="Your Rentals Center" />
+            </h2>
+            <Badge variant="outline" className="text-[10px] bg-background/60">
+              <ShieldCheck className="size-3 me-1" />
+              <Bi ar="مراجعة قبل النشر" en="Reviewed before publish" />
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <Bi
+              ar="هنا تنشر معداتك للإيجار وتديرها للعملاء: أضف الصنف، حدد السعر والمدة والشروط، ثم انشر بعد الاعتماد. لإدارة ما تملكه داخليًا (الصيانة والمخزون) استخدم قسم الأصول والمعدات."
+              en="Publish and manage equipment you rent out to clients: add an item, set price, duration and terms, then publish after approval. To track what you internally own (maintenance & inventory), use the Assets & Equipment section."
+            />
+          </p>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <a
+              href="/dashboard/assets"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4"
+            >
+              <Boxes className="size-3.5" />
+              <Bi ar="الانتقال إلى الأصول والمعدات" en="Go to Assets & Equipment" />
+            </a>
+            <span className="text-muted-foreground/40">•</span>
+            <a
+              href="/rentals"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4"
+            >
+              <BookOpen className="size-3.5" />
+              <Bi ar="معاينة الكتالوج العام" en="Preview public catalog" />
+            </a>
+          </div>
+        </div>
+        {isEmpty && (
+          <div className="md:max-w-[260px] w-full rounded-xl border border-dashed border-primary/30 bg-background/60 p-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-primary mb-2">
+              <Rocket className="size-3.5" />
+              <Bi ar="ابدأ في 3 خطوات" en="Get started in 3 steps" />
+            </div>
+            <ol className="space-y-1.5 text-[12px] text-muted-foreground">
+              <li className="flex gap-2"><span className="size-4 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">1</span><Bi ar="اختر التصنيف وأضف الصنف" en="Pick category & add item" /></li>
+              <li className="flex gap-2"><span className="size-4 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">2</span><Bi ar="ارفع صور واضحة وحدد السعر والمدة" en="Upload clear photos, set price & duration" /></li>
+              <li className="flex gap-2"><span className="size-4 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">3</span><Bi ar="أرسل للمراجعة ثم انشر" en="Submit for review, then publish" /></li>
+            </ol>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+const RENTAL_TIPS: ReadonlyArray<{ icon: React.ComponentType<{ className?: string }>; ar: string; en: string; tone: string }> = [
+  { icon: ImagePlus,      ar: 'صور حقيقية وواضحة ترفع فرص التأجير 3 أضعاف',         en: 'Real, sharp photos triple your rental chances',        tone: 'text-sky-600 bg-sky-500/10' },
+  { icon: ClipboardCheck, ar: 'حدد شروط الاستخدام والتأخير بدقة لحماية معداتك',     en: 'Define usage & late terms clearly to protect your gear', tone: 'text-emerald-600 bg-emerald-500/10' },
+  { icon: CalendarClock,  ar: 'تابع التنبيهات قبل ٣ أيام من انتهاء العقد للتمديد',  en: 'Watch alerts 3 days before expiry to renew on time',   tone: 'text-amber-600 bg-amber-500/10' },
+  { icon: Lightbulb,      ar: 'سعر تنافسي + حد أدنى مرن = طلبات أكثر',              en: 'Competitive price + flexible minimum = more orders',    tone: 'text-fuchsia-600 bg-fuchsia-500/10' },
+];
+
+const RentalsTipsStrip: React.FC = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    {RENTAL_TIPS.map((t, i) => (
+      <Card key={i} className="p-3 hover-lift border-border/50">
+        <div className="flex items-start gap-2.5">
+          <div className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${t.tone}`}>
+            <t.icon className="size-4" />
+          </div>
+          <p className="text-[12.5px] leading-snug text-muted-foreground pt-0.5">
+            <Bi ar={t.ar} en={t.en} />
+          </p>
+        </div>
+      </Card>
+    ))}
+  </div>
 );
 
 /* ---------- Items panel (with inline add form) ---------- */
