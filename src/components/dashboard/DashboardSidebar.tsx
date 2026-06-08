@@ -46,6 +46,9 @@ import {
   Sparkles,
   Plug,
   Award,
+  FilePlus2,
+  Files,
+  FileBarChart,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -267,7 +270,11 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'طلبات العملاء', en: 'Customer Requests' }, url: '/admin/lead-requests', icon: Inbox },
       { label: { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' }, url: '/admin/quote-operations', icon: Activity },
-      { label: { ar: 'مركز إدارة العقود', en: 'Contracts Center' }, url: '/admin/contracts', icon: FileText },
+      { label: { ar: 'مركز إدارة العقود', en: 'Contracts Center' }, url: '/admin/contracts', icon: FileText, end: true },
+      { label: { ar: '— إنشاء عقد بالنيابة', en: '— Create on Behalf' }, url: '/admin/contracts?tab=create', icon: FilePlus2 },
+      { label: { ar: '— القوالب', en: '— Templates' }, url: '/admin/contracts?tab=templates', icon: Files },
+      { label: { ar: '— سجل التصدير', en: '— Export Audit' }, url: '/admin/contracts?tab=exports', icon: FileBarChart },
+      { label: { ar: '— التحليلات', en: '— Analytics' }, url: '/admin/contracts?tab=analytics', icon: BarChart3 },
       { label: { ar: 'مركز التقارير', en: 'Reports Center' }, url: '/admin/reports', icon: BarChart3 },
       { label: { ar: 'سجل التدقيق الموحّد', en: 'Unified Audit Log' }, url: '/admin/audit-log', icon: ShieldAlert },
     ],
