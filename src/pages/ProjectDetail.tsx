@@ -36,6 +36,7 @@ import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { isRTL, language } = useLanguage();
+  useImagePerfTracking('project_detail');
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project-detail', id],
