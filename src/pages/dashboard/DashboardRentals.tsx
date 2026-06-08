@@ -111,9 +111,21 @@ const DashboardRentals: React.FC = () => {
               }}
             />
           </TabsContent>
-          <TabsContent value="active" className="mt-4"><OrdersPanel orders={activeOrders} items={items} /></TabsContent>
-          <TabsContent value="expiring" className="mt-4"><OrdersPanel orders={expiringOrders} items={items} /></TabsContent>
-          <TabsContent value="overdue" className="mt-4"><OrdersPanel orders={overdueOrders} items={items} /></TabsContent>
+          <TabsContent value="active" className="mt-4">
+            <OrdersPanel orders={activeOrders} items={items} onChanged={async () => {
+              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
+            }} />
+          </TabsContent>
+          <TabsContent value="expiring" className="mt-4">
+            <OrdersPanel orders={expiringOrders} items={items} onChanged={async () => {
+              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
+            }} />
+          </TabsContent>
+          <TabsContent value="overdue" className="mt-4">
+            <OrdersPanel orders={overdueOrders} items={items} onChanged={async () => {
+              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
+            }} />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
