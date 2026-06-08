@@ -1012,6 +1012,7 @@ const RentalItemEditForm: React.FC<{
     current_amp: initialSpecs.current_amp ?? '',
     wattage: initialSpecs.wattage ?? '',
     power_hp: initialSpecs.power_hp ?? '',
+    provider_note: initialSpecs.provider_note ?? '',
   });
 
   const cat = categories.find(c => c.id === form.category_id);
@@ -1037,6 +1038,7 @@ const RentalItemEditForm: React.FC<{
       if (form.wattage)     specs.wattage = form.wattage;
       if (form.power_hp)    specs.power_hp = form.power_hp;
     }
+    if (form.provider_note.trim()) specs.provider_note = form.provider_note.trim();
     const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
     if (allImages.length > 6) { toast.error(bi('الحد الأقصى صورة غلاف + ٥ صور إضافية','Limit: 1 cover + 5 additional images')); return; }
     setSaving(true);
