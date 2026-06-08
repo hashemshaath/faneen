@@ -51,7 +51,6 @@ export default defineConfig(({ mode }) => ({
           'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           'vendor-sanitize': ['dompurify'],
           'vendor-charts': ['recharts'],
-          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
           'vendor-date': ['date-fns'],
           'vendor-icons': ['lucide-react'],
         },
