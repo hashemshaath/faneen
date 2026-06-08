@@ -21,7 +21,7 @@ interface CatalogRow {
   brand: string | null;
   model: string | null;
   category_id: string | null;
-  estimated_daily_rate: number | null;
+  estimated_daily_price: number | null;
   currency: string | null;
   is_active: boolean;
 }
@@ -42,7 +42,7 @@ const AdminRentals: React.FC = () => {
       RentalCategories.listCategories(),
       supabase.from('rental_items').select('*').eq('status', 'pending_review').order('created_at', { ascending: false }),
       supabase.from('rental_items').select('*').order('created_at', { ascending: false }).limit(100),
-      supabase.from('rental_equipment_catalog').select('id,name_ar,name_en,brand,model,category_id,estimated_daily_rate,currency,is_active').order('name_ar', { ascending: true }),
+      supabase.from('rental_equipment_catalog').select('id,name_ar,name_en,brand,model,category_id,estimated_daily_price,currency,is_active').order('name_ar', { ascending: true }),
     ]);
     setCategories(cats.data ?? []);
     setPending((pend.data as RentalItem[] | null) ?? []);
@@ -152,9 +152,9 @@ const AdminRentals: React.FC = () => {
                           {c.is_active ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'معطل' : 'Inactive')}
                         </span>
                       </div>
-                      {c.estimated_daily_rate != null && (
+                      {c.estimated_daily_price != null && (
                         <div className="text-xs tech-content text-muted-foreground mt-2">
-                          {c.estimated_daily_rate} {c.currency || 'SAR'} / {isRTL ? 'يوم' : 'day'}
+                          {c.estimated_daily_price} {c.currency || 'SAR'} / {isRTL ? 'يوم' : 'day'}
                         </div>
                       )}
                     </Card>
