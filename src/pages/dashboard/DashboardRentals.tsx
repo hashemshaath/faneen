@@ -294,6 +294,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     current_amp: '',
     wattage: '',
     power_hp: '',
+    provider_note: '',
   });
 
   // Request form (when item is not in catalog)
@@ -380,6 +381,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     if (form.current_amp) specs.current_amp = form.current_amp;
     if (form.wattage)     specs.wattage = form.wattage;
     if (form.power_hp)    specs.power_hp = form.power_hp;
+    if (form.provider_note.trim()) specs.provider_note = form.provider_note.trim();
     if (electricalErrors.length) {
       setSubmitting(false);
       toast.error(bi('قيمة غير صحيحة في: ','Invalid numeric value in: ') + electricalErrors.join(', '));
