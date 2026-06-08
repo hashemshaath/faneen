@@ -661,10 +661,10 @@ const AssetsIntroBanner: React.FC = () => (
           />
         </p>
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <a href="/dashboard/rentals" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
+          <Link to="/dashboard/rentals" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
             <Package className="size-3.5" />
             <Bi ar="الانتقال إلى مركز التأجير" en="Go to Rentals Center" />
-          </a>
+          </Link>
           <span className="text-muted-foreground/40">•</span>
           <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Info className="size-3" />
