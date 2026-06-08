@@ -411,6 +411,10 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   });
   const [reqSubmitting, setReqSubmitting] = useState(false);
 
+  // List toolbar state (search + status filter)
+  const [listQuery, setListQuery] = useState('');
+  const [listStatus, setListStatus] = useState<'all' | RentalItem['status']>('all');
+
   useEffect(() => {
     if (!form.category_id && categories[0]) setForm(f => ({ ...f, category_id: categories[0].id }));
   }, [categories, form.category_id]);
