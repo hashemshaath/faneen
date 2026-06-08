@@ -290,6 +290,17 @@ const adminBaseGroups: MenuGroup[] = [
     ],
   },
   {
+    // 5b) Rentals & Assets
+    groupLabel: { ar: 'التأجير والأصول', en: 'Rentals & Assets' },
+    icon: Truck,
+    description: { ar: 'إدارة عروض التأجير وأسطول المعدات', en: 'Manage rental offerings and equipment fleet' },
+    items: [
+      { label: { ar: 'مركز التأجير', en: 'Rentals Center' }, url: '/admin/rentals', icon: Truck, end: true },
+      { label: { ar: 'إدارة الأصول والمعدات', en: 'Assets & Equipment' }, url: '/admin/assets', icon: Package, end: true },
+      { label: { ar: '— سجل التجاوزات', en: '— Override Audit' }, url: '/admin/assets/overrides', icon: ShieldAlert },
+    ],
+  },
+  {
     // 6) Communications
     groupLabel: { ar: 'التواصل', en: 'Communications' },
     icon: Mail,
