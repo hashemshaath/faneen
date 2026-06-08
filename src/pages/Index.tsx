@@ -26,14 +26,82 @@ const FAQSection         = lazyRetry(() => import("@/components/home/v2/sections
 const FinalCTASection    = lazyRetry(() => import("@/components/home/v2/sections/FinalCTASection"));
 const PlatformFeaturesSection = lazyRetry(() => import("@/components/home/v2/sections/PlatformFeaturesSection"));
 
-const SectionFallback = ({ minH = 360 }: { minH?: number }) => (
-  <div
+/**
+ * Skeleton placeholder rendered while a lazy home section is loading.
+ * Mirrors the visual rhythm of `<Section>` + `<SectionCover>` + a 3-card
+ * grid so the page doesn't visibly collapse to a tiny pulse bar between
+ * the hero and the first scroll-in section.
+ *
+ * variant:
+ *  - "grid"   (default): eyebrow + title + 3 card tiles
+ *  - "split"           : eyebrow + title + 2-column (image + bullets) row
+ *  - "centered"        : eyebrow + title + sub + single CTA pill (final CTA)
+ */
+const SectionFallback = ({
+  minH = 360,
+  variant = "grid",
+}: {
+  minH?: number;
+  variant?: "grid" | "split" | "centered";
+}) => (
+  <section
     aria-hidden="true"
-    className="py-16 px-4 container"
+    className="py-14 sm:py-20"
     style={{ minHeight: minH, contain: "layout paint" }}
   >
-    <div className="h-8 w-48 bg-muted/60 animate-pulse rounded-lg mx-auto" />
-  </div>
+    <div className="container-app">
+      {/* Eyebrow + title block — matches SectionCover spacing */}
+      <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-14 space-y-4">
+        <div className="mx-auto h-5 w-32 rounded-full bg-muted/70 animate-pulse" />
+        <div className="mx-auto h-8 sm:h-10 w-3/4 rounded-lg bg-muted/70 animate-pulse" />
+        <div className="mx-auto h-4 w-2/3 rounded bg-muted/50 animate-pulse" />
+      </div>
+
+      {variant === "grid" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-border/60 bg-card overflow-hidden"
+            >
+              <div className="aspect-[4/3] sm:aspect-[16/10] bg-muted/70 animate-pulse" />
+              <div className="p-4 sm:p-5 md:p-6 space-y-3">
+                <div className="h-4 w-5/6 rounded bg-muted/60 animate-pulse" />
+                <div className="h-4 w-3/4 rounded bg-muted/50 animate-pulse" />
+                <div className="pt-3 border-t border-border/40">
+                  <div className="h-3 w-28 rounded bg-muted/50 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {variant === "split" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="space-y-3">
+            <div className="h-5 w-24 rounded-full bg-muted/70 animate-pulse" />
+            <div className="h-7 w-3/4 rounded bg-muted/70 animate-pulse" />
+            <div className="h-4 w-full rounded bg-muted/50 animate-pulse" />
+            <div className="h-4 w-5/6 rounded bg-muted/50 animate-pulse" />
+            <div className="pt-3 space-y-2">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-4 w-2/3 rounded bg-muted/40 animate-pulse" />
+              ))}
+            </div>
+            <div className="h-11 w-40 rounded-xl bg-muted/70 animate-pulse mt-4" />
+          </div>
+          <div className="aspect-[4/3] rounded-2xl bg-muted/70 animate-pulse border border-border/60" />
+        </div>
+      )}
+
+      {variant === "centered" && (
+        <div className="max-w-xl mx-auto flex flex-col items-center gap-4">
+          <div className="h-11 w-48 rounded-xl bg-muted/70 animate-pulse" />
+        </div>
+      )}
+    </div>
+  </section>
 );
 
 const Index = () => {
