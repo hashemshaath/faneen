@@ -280,7 +280,9 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from(categoryTable).select('id,ref_id,slug,name_ar,name_en,icon,sort_order,is_active').order('sort_order');
+    const { data } = await supabase.from(categoryTable)
+      .select('id,ref_id,slug,name_ar,name_en,icon,sort_order,is_active,default_image_url,description_ar,description_en')
+      .order('sort_order');
     setCats((data as unknown as CategoryRow[] | null) ?? []);
     setLoading(false);
   };
