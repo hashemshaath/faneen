@@ -702,7 +702,7 @@ export default function DashboardSites() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5">
+      <div className="space-y-5 pb-16 md:pb-20">
         <PageHeader
           icon={MapPin}
           tone="primary"
