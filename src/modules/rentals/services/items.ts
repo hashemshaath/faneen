@@ -64,7 +64,7 @@ export async function updateItem(id: string, patch: Partial<CreateItemInput> & {
 }
 
 export async function setItemStatus(id: string, status: RentalItemStatus, opts: { publish?: boolean; rejection_reason?: string } = {}): Promise<ServiceResult<RentalItem>> {
-  const patch: Record<string, unknown> = { status };
+  const patch: { status: RentalItemStatus; is_published?: boolean; rejection_reason?: string } = { status };
   if (typeof opts.publish === 'boolean') patch.is_published = opts.publish;
   if (opts.rejection_reason) patch.rejection_reason = opts.rejection_reason;
   const { data, error } = await supabase
