@@ -1116,8 +1116,11 @@ export default function DashboardSites() {
             <p className="text-sm text-muted-foreground max-w-xs mb-5">
               {isRTL ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفِرَق.' : 'Add execution sites to link them with contracts, work orders, and teams.'}
             </p>
-            {businessId && (
-              <Button variant="hero" size="sm" onClick={openCreate}><Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة أول موقع' : 'Add First Site'}</Button>
+            {user && (
+              <Button variant="hero" size="sm" onClick={openCreate}>
+                <Plus className="w-4 h-4 me-1" />
+                {isRTL ? 'إضافة أول موقع' : 'Add First Site'}
+              </Button>
             )}
           </div>
         ) : filtered.length === 0 ? (
