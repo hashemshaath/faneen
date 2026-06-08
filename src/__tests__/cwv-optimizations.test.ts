@@ -15,7 +15,11 @@ describe('Core Web Vitals optimizations for public routes', () => {
     expect(hero).toMatch(/link\.rel\s*=\s*['"]preload['"]/);
     expect(hero).toMatch(/link\.as\s*=\s*['"]image['"]/);
     expect(hero).toMatch(/fetchpriority/i);
-    expect(hero).toMatch(/import\s+heroSlide1\s+from\s+['"]@\/assets\/home\/hero-slide-1\.webp['"]/);
+    // Slide 1 (LCP) is served from /public/hero/* so the URL is stable and
+    // matches the static <img> inlined in index.html (Phase 3). The asset
+    // is still bundled (see the next test) but the LCP variant comes from
+    // /public so the pre-React hero shares the same cached decode.
+    expect(hero).toMatch(/heroSlide1\s*=\s*['"]\/hero\/slide-1-1920\.webp['"]/);
     // First slide must render eagerly; subsequent slides must lazy-load.
     expect(hero).toMatch(/loading=\{i === 0 \? ['"]eager['"] : ['"]lazy['"]\}/);
   });
