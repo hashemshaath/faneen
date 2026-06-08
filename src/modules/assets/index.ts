@@ -26,3 +26,17 @@ export { AssetOverridePanel } from './components/AssetOverridePanel';
 export * as AssetOverridesApi from './services/overrides';
 export { OVERRIDE_REASONS } from './services/overrides';
 export type { OverrideReason, AssetOverrideLogRow } from './services/overrides';
+// RENTAL-ASSET-FINAL-POLISH-3
+export {
+  getAssetUtilizationSummary,
+  getRentalAssetPolishCounts,
+} from './services/utilizationSummary';
+export type {
+  AssetUtilizationSummary as AssetUtilizationSummaryData,
+  RentalAssetPolishCounts,
+} from './services/utilizationSummary';
+export { AssetUtilizationSummary } from './components/AssetUtilizationSummary';
+export { AssetQrIdentity } from './components/AssetQrIdentity';
+export { AssetMaintenanceAlerts } from './components/AssetMaintenanceAlerts';
+export type { AssetAlertContext } from './components/AssetMaintenanceAlerts';
+export { RentalAssetPolishOpsCard } from './components/RentalAssetPolishOpsCard';
