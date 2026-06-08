@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff } from 'lucide-react';
+import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff, Filter, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -38,6 +39,7 @@ const DashboardAssets: React.FC = () => {
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'with_units' | 'without_units' | 'needs_attention'>('all');
 
   const refresh = useCallback(async (bizId: string) => {
     const [its, cats, asts] = await Promise.all([
@@ -82,10 +84,17 @@ const DashboardAssets: React.FC = () => {
     const q = query.trim().toLowerCase();
     return items.filter(it => {
       if (categoryFilter !== 'all' && it.category_id !== categoryFilter) return false;
+      const units = unitsByItem.get(it.id) ?? [];
+      if (statusFilter === 'with_units' && units.length === 0) return false;
+      if (statusFilter === 'without_units' && units.length > 0) return false;
+      if (statusFilter === 'needs_attention') {
+        const flagged = units.some(u => u.status === 'maintenance' || u.status === 'inspection');
+        if (!flagged) return false;
+      }
       if (!q) return true;
       return [it.name_ar, it.name_en, it.ref_id, it.brand].some(v => (v ?? '').toLowerCase().includes(q));
     });
-  }, [items, categoryFilter, query]);
+  }, [items, categoryFilter, query, statusFilter, unitsByItem]);
 
   const selectedAsset = useMemo(
     () => assets.find(a => a.id === selectedAssetId) ?? null,
@@ -110,6 +119,17 @@ const DashboardAssets: React.FC = () => {
   const totalUnits = assets.length;
   const visibleCategoryIds = new Set(items.map(i => i.category_id));
   const activeCategories = categories.filter(c => visibleCategoryIds.has(c.id));
+  const itemsWithUnits = items.filter(it => (unitsByItem.get(it.id)?.length ?? 0) > 0).length;
+  const attentionUnits = assets.filter(a => a.status === 'maintenance' || a.status === 'inspection').length;
+  const hasActiveFilter = categoryFilter !== 'all' || statusFilter !== 'all' || query.trim().length > 0;
+  const clearFilters = () => { setCategoryFilter('all'); setStatusFilter('all'); setQuery(''); };
+
+  const STATUS_PILLS: ReadonlyArray<{ id: typeof statusFilter; ar: string; en: string; count: number; tone: string }> = [
+    { id: 'all',             ar: 'الكل',                en: 'All',              count: items.length,     tone: 'bg-primary text-primary-foreground border-primary' },
+    { id: 'with_units',      ar: 'بها وحدات',           en: 'With units',       count: itemsWithUnits,   tone: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' },
+    { id: 'without_units',   ar: 'بدون وحدات',          en: 'No units yet',     count: items.length - itemsWithUnits, tone: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30' },
+    { id: 'needs_attention', ar: 'تحتاج انتباه',        en: 'Needs attention',  count: attentionUnits,   tone: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30' },
+  ];
 
   return (
     <DashboardLayout>
@@ -125,6 +145,33 @@ const DashboardAssets: React.FC = () => {
 
         {/* Category pills */}
         <Card className="p-3 md:p-4 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground me-1">
+              <Filter className="size-3.5" />
+              <Bi ar="حالة الأصناف" en="Item status" />
+            </div>
+            {STATUS_PILLS.map(p => {
+              const active = statusFilter === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setStatusFilter(p.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${active ? p.tone : 'bg-background hover:bg-muted'}`}
+                >
+                  {isRTL ? p.ar : p.en} <span className="opacity-70 tech-content">({p.count})</span>
+                </button>
+              );
+            })}
+            {hasActiveFilter && (
+              <button
+                onClick={clearFilters}
+                className="ms-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3" /><Bi ar="مسح الفلاتر" en="Clear filters" />
+              </button>
+            )}
+          </div>
+          <div className="h-px bg-border/60" />
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setCategoryFilter('all')}
@@ -164,9 +211,18 @@ const DashboardAssets: React.FC = () => {
             <Bi ar="أصنافك المُفعّلة" en="Your activated items" />{' '}
             <span className="text-muted-foreground text-sm tech-content">({visibleItems.length})</span>
           </h2>
-          <span className="text-xs text-muted-foreground tech-content">
-            <Bi ar={`إجمالي الوحدات: ${totalUnits}`} en={`Total units: ${totalUnits}`} />
-          </span>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-emerald-600" />
+              <span className="tech-content"><Bi ar={`${totalUnits} وحدة`} en={`${totalUnits} units`} /></span>
+            </span>
+            {attentionUnits > 0 && (
+              <span className="inline-flex items-center gap-1.5">
+                <AlertCircle className="size-3.5 text-rose-600" />
+                <span className="tech-content"><Bi ar={`${attentionUnits} تحتاج انتباه`} en={`${attentionUnits} need attention`} /></span>
+              </span>
+            )}
+          </div>
         </div>
 
         {items.length === 0 ? (
@@ -176,11 +232,17 @@ const DashboardAssets: React.FC = () => {
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
               <Bi ar="أضف صنفًا في مركز التأجير أولًا — ستجده هنا لإدارة وحداته وأرقامه التسلسلية." en="Add an item in the Rentals Center first — it will appear here to manage its units and serial numbers." />
             </p>
-            <Button asChild className="gap-2"><a href="/dashboard/rentals"><Plus className="size-4" /><Bi ar="إضافة صنف تأجير" en="Add a rental item" /></a></Button>
+            <Button asChild className="gap-2"><Link to="/dashboard/rentals"><Plus className="size-4" /><Bi ar="إضافة صنف تأجير" en="Add a rental item" /></Link></Button>
           </Card>
         ) : visibleItems.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground text-sm">
-            <Bi ar="لا توجد نتائج مطابقة للبحث." en="No items match your filters." />
+          <Card className="p-8 text-center space-y-3">
+            <Search className="size-8 mx-auto text-muted-foreground" />
+            <div className="text-sm text-muted-foreground">
+              <Bi ar="لا توجد نتائج مطابقة للفلاتر الحالية." en="No items match your filters." />
+            </div>
+            <Button variant="outline" size="sm" onClick={clearFilters} className="gap-1.5">
+              <X className="size-3.5" /><Bi ar="مسح الفلاتر" en="Clear filters" />
+            </Button>
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
