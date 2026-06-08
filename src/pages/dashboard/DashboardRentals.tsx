@@ -651,15 +651,6 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                   />
                 </p>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="وحدة التأجير" en="Rental unit" /></Label>
-                <Select value={form.unit} onValueChange={v => setForm({ ...form, unit: v as RentalUnit })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {RENTAL_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{isRTL ? u.ar : u.en}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">
@@ -691,7 +682,16 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                 en="All prices entered here are excluding VAT (15%). VAT is added automatically at invoicing."
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="وحدة التأجير" en="Rental unit" /></Label>
+                <Select value={form.unit} onValueChange={v => setForm({ ...form, unit: v as RentalUnit })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {RENTAL_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{isRTL ? u.ar : u.en}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="السعر للوحدة (بدون ضريبة) *" en="Price per unit (excl. VAT) *" /></Label>
                 <Input
