@@ -14933,6 +14933,7 @@ export type Database = {
           seo_keywords: string[]
           slug: string
           sort_order: number
+          taxonomy_category_id: string | null
           updated_at: string
           version: string | null
           voltage_v: number | null
@@ -14977,6 +14978,7 @@ export type Database = {
           seo_keywords?: string[]
           slug: string
           sort_order?: number
+          taxonomy_category_id?: string | null
           updated_at?: string
           version?: string | null
           voltage_v?: number | null
@@ -15021,6 +15023,7 @@ export type Database = {
           seo_keywords?: string[]
           slug?: string
           sort_order?: number
+          taxonomy_category_id?: string | null
           updated_at?: string
           version?: string | null
           voltage_v?: number | null
@@ -15032,6 +15035,20 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "rental_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_equipment_catalog_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "rental_equipment_catalog_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -15126,6 +15143,7 @@ export type Database = {
           seo_slug: string | null
           service_areas: Json
           status: Database["public"]["Enums"]["rental_item_status"]
+          taxonomy_category_id: string | null
           unit: Database["public"]["Enums"]["rental_unit"]
           updated_at: string
           usage_terms: string | null
@@ -15158,6 +15176,7 @@ export type Database = {
           seo_slug?: string | null
           service_areas?: Json
           status?: Database["public"]["Enums"]["rental_item_status"]
+          taxonomy_category_id?: string | null
           unit?: Database["public"]["Enums"]["rental_unit"]
           updated_at?: string
           usage_terms?: string | null
@@ -15190,6 +15209,7 @@ export type Database = {
           seo_slug?: string | null
           service_areas?: Json
           status?: Database["public"]["Enums"]["rental_item_status"]
+          taxonomy_category_id?: string | null
           unit?: Database["public"]["Enums"]["rental_unit"]
           updated_at?: string
           usage_terms?: string | null
@@ -15222,6 +15242,20 @@ export type Database = {
             columns: ["provider_business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_items_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "rental_items_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
         ]
