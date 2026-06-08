@@ -14,7 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft, MapPin, FileText, MessageSquareQuote, Inbox, Image as ImageIcon,
   Settings, Pencil, Phone, User, ImageOff, ClipboardList, Building2,
-  Milestone, Activity, CheckCircle2, Clock,
+  Milestone, Activity, CheckCircle2, Clock, Plus, Search as SearchIcon,
+  Send, Copy, Check, TrendingUp, CircleDollarSign,
 } from 'lucide-react';
 import SiteCoverUploader from '@/components/sites/SiteCoverUploader';
 import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGalleryManager';
@@ -73,6 +74,7 @@ const DashboardSiteDetail: React.FC = () => {
   const [tab, setTab] = useState('overview');
   const [localGallery, setLocalGallery] = useState<GalleryImage[] | null>(null);
   const [localCover, setLocalCover] = useState<string | null | undefined>(undefined);
+  const [refCopied, setRefCopied] = useState(false);
 
   const { data: site, isLoading, error, refetch } = useQuery({
     queryKey: ['client-site', id],
@@ -203,6 +205,35 @@ const DashboardSiteDetail: React.FC = () => {
     [milestones, isRTL]
   );
 
+  // Derived analytics for Overview
+  const stats = useMemo(() => {
+    const activeStatuses = new Set(['active', 'in_progress', 'pending', 'open', 'draft']);
+    const activeContracts = contracts.filter((c) => activeStatuses.has(String(c.status))).length;
+    const completedContracts = contracts.filter((c) => String(c.status) === 'completed').length;
+    const activeLeads = leads.filter((l) => activeStatuses.has(String(l.status))).length;
+    const activeRfqs = rfqs.filter((r) => activeStatuses.has(String(r.status))).length;
+    const totalValue = contracts.reduce((sum, c) => sum + (Number(c.total_amount) || 0), 0);
+    const currency = contracts.find((c) => c.currency_code)?.currency_code || 'SAR';
+    const providerIds = new Set<string>();
+    contracts.forEach((c) => { if (c.provider_id) providerIds.add(c.provider_id); });
+    leads.forEach((l) => { if (l.business_id) providerIds.add(l.business_id); });
+    const upcoming = milestones
+      .filter((m) => m.due_date && !(m.status === 'completed' || m.completed_at))
+      .sort((a, b) => String(a.due_date).localeCompare(String(b.due_date)))
+      .slice(0, 3);
+    return { activeContracts, completedContracts, activeLeads, activeRfqs, totalValue, currency, providers: providerIds.size, upcoming };
+  }, [contracts, leads, rfqs, milestones]);
+
+  const copyRef = async () => {
+    if (!site?.site_ref) return;
+    try { await navigator.clipboard.writeText(site.site_ref); setRefCopied(true); setTimeout(() => setRefCopied(false), 1500); } catch { /* noop */ }
+  };
+
+  const goCreateContract = () => navigate(`/dashboard/contracts?new=1&site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
+  const goRequestQuote = () => navigate(`/quote?site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
+  const goRequestRfq = () => navigate(`/dashboard/rfq?new=1&site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
+  const goFindProvider = () => navigate(`/search?site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -300,6 +331,43 @@ const DashboardSiteDetail: React.FC = () => {
           <KpiCard icon={ImageIcon} label={isRTL ? 'الصور' : 'Gallery'} value={gallery.length} loading={false} />
         </div>
 
+        {/* Quick Actions Bar — every action is linked to this site's ref */}
+        {canManage && (
+          <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.04] via-card to-card">
+            <CardContent className="p-4 md:p-5">
+              <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                    <Plus className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm leading-tight">{isRTL ? 'إجراءات سريعة لهذا الموقع' : 'Quick actions for this site'}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {isRTL ? 'كل طلب جديد سيُربط تلقائيًا برقم الموقع' : 'Every new request is auto-linked to this site ref'}
+                    </p>
+                  </div>
+                </div>
+                {site.site_ref && (
+                  <button
+                    onClick={copyRef}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background px-2.5 py-1 text-xs hover:border-primary/40 hover:text-primary transition tech-content"
+                    title={isRTL ? 'نسخ رقم الموقع' : 'Copy site ref'}
+                  >
+                    <span className="font-mono" dir="ltr">{site.site_ref}</span>
+                    {refCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                <QuickAction icon={FileText} label={isRTL ? 'إنشاء عقد' : 'Create contract'} onClick={goCreateContract} />
+                <QuickAction icon={MessageSquareQuote} label={isRTL ? 'طلب عرض سعر' : 'Request quote'} onClick={goRequestQuote} />
+                <QuickAction icon={Inbox} label={isRTL ? 'طلب RFQ' : 'New RFQ'} onClick={goRequestRfq} />
+                <QuickAction icon={SearchIcon} label={isRTL ? 'بحث عن مزود' : 'Find provider'} onClick={goFindProvider} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full overflow-x-auto no-scrollbar justify-start">
@@ -321,6 +389,43 @@ const DashboardSiteDetail: React.FC = () => {
 
           <TabsContent value="overview" className="mt-4">
             <div className="grid gap-4 md:grid-cols-2">
+              {/* Activity summary spanning full width */}
+              <Card className="md:col-span-2 overflow-hidden">
+                <CardContent className="p-5">
+                  <h3 className="font-semibold flex items-center gap-2 pb-3 mb-3 border-b border-border/40">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><TrendingUp className="h-4 w-4" /></span>
+                    {isRTL ? 'ملخص النشاط' : 'Activity summary'}
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <SummaryStat label={isRTL ? 'عقود نشطة' : 'Active contracts'} value={stats.activeContracts} sub={stats.completedContracts > 0 ? (isRTL ? `${stats.completedContracts} مكتمل` : `${stats.completedContracts} done`) : null} tone="primary" onClick={() => setTab('contracts')} />
+                    <SummaryStat label={isRTL ? 'عروض قيد المعالجة' : 'Open quotes'} value={stats.activeLeads} tone="amber" onClick={() => setTab('quotes')} />
+                    <SummaryStat label={isRTL ? 'طلبات RFQ نشطة' : 'Active RFQs'} value={stats.activeRfqs} tone="blue" onClick={() => setTab('rfq')} />
+                    <SummaryStat label={isRTL ? 'مزودون مرتبطون' : 'Linked providers'} value={stats.providers} tone="emerald" />
+                  </div>
+                  {stats.totalValue > 0 && (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl border border-border/40 bg-muted/30 px-3 py-2 text-sm">
+                      <CircleDollarSign className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">{isRTL ? 'إجمالي قيمة العقود:' : 'Total contracts value:'}</span>
+                      <span className="tech-content font-semibold ms-auto" dir="ltr">{stats.totalValue.toLocaleString()} {stats.currency}</span>
+                    </div>
+                  )}
+                  {stats.upcoming.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{isRTL ? 'مراحل قادمة' : 'Upcoming milestones'}</p>
+                      <ul className="space-y-1.5">
+                        {stats.upcoming.map((m) => (
+                          <li key={m.id} className="flex items-center gap-2 text-sm rounded-lg border border-border/40 px-3 py-2">
+                            <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="truncate flex-1" dir="auto">{(isRTL ? m.title_ar : m.title_en) || m.title_ar}</span>
+                            <span className="tech-content text-xs text-muted-foreground" dir="ltr">{m.due_date ? new Date(m.due_date).toLocaleDateString() : ''}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               <Card className="overflow-hidden">
                 <CardContent className="p-5 space-y-4">
                   <h3 className="font-semibold flex items-center gap-2 pb-2 border-b border-border/40">
@@ -402,6 +507,7 @@ const DashboardSiteDetail: React.FC = () => {
                 date: l.created_at,
               }))}
               isRTL={isRTL}
+              cta={canManage ? { label: isRTL ? 'طلب عرض سعر جديد' : 'Request a quote', onClick: goRequestQuote } : undefined}
             />
           </TabsContent>
 
@@ -419,6 +525,7 @@ const DashboardSiteDetail: React.FC = () => {
                 date: r.created_at,
               }))}
               isRTL={isRTL}
+              cta={canManage ? { label: isRTL ? 'إنشاء RFQ جديد' : 'New RFQ', onClick: goRequestRfq } : undefined}
             />
           </TabsContent>
 
@@ -567,6 +674,40 @@ const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; lab
     <div className={`mt-2 text-2xl font-bold tech-content ${tone === 'destructive' && value > 0 ? 'text-destructive' : ''}`}>{loading ? '—' : value}</div>
   </CardContent></Card>
 );
+
+const QuickAction: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-3 py-2.5 text-start text-sm font-medium hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm transition-all hover-lift"
+  >
+    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+      <Icon className="h-4 w-4" />
+    </span>
+    <span className="min-w-0 truncate">{label}</span>
+  </button>
+);
+
+const TONE_CLASSES: Record<string, string> = {
+  primary: 'text-primary',
+  amber: 'text-amber-600 dark:text-amber-400',
+  blue: 'text-blue-600 dark:text-blue-400',
+  emerald: 'text-emerald-600 dark:text-emerald-400',
+};
+
+const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null; tone?: keyof typeof TONE_CLASSES | string; onClick?: () => void }> = ({ label, value, sub, tone = 'primary', onClick }) => {
+  const Tag: React.ElementType = onClick ? 'button' : 'div';
+  return (
+    <Tag
+      onClick={onClick}
+      className={`text-start rounded-xl border border-border/40 bg-card/60 p-3 ${onClick ? 'hover:border-primary/40 hover:bg-primary/5 transition cursor-pointer' : ''}`}
+    >
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={`mt-1 text-2xl font-bold tech-content ${TONE_CLASSES[tone] || TONE_CLASSES.primary}`}>{value}</div>
+      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
+    </Tag>
+  );
+};
 
 interface ListItem { key: string; href: string; title: string; ref: string | null; status: string | null; meta: string | null; date: string }
 
