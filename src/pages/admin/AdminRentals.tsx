@@ -79,7 +79,7 @@ const AdminRentals: React.FC = () => {
         <Tabs defaultValue="pending">
           <TabsList>
             <TabsTrigger value="pending"><Bi ar="للمراجعة" en="Pending" /></TabsTrigger>
-            <TabsTrigger value="all"><Bi ar="جميع العناصر" en="All items" /></TabsTrigger>
+            <TabsTrigger value="all"><Bi ar="جميع العناصر" en="All items" /> ({allItems.length})</TabsTrigger>
             <TabsTrigger value="categories"><Bi ar="التصنيفات" en="Categories" /></TabsTrigger>
             <TabsTrigger value="catalog"><Bi ar="الكتالوج الرئيسي" en="Master Catalog" /> ({catalog.length})</TabsTrigger>
           </TabsList>
@@ -106,7 +106,21 @@ const AdminRentals: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="all" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {allItems.length === 0 ? (
+              <Card className="p-8 text-center space-y-3">
+                <Package className="size-10 mx-auto text-muted-foreground" />
+                <div className="font-semibold">
+                  <Bi ar="لا توجد عناصر مؤجَّرة منشورة بعد" en="No provider rental items yet" />
+                </div>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  <Bi
+                    ar={`هذا التبويب يعرض إعلانات التأجير المسندة لمزودين فعليين (جدول rental_items). الكتالوج الرئيسي يحتوي ${catalog.length} صنفًا قابلًا للإسناد — افتح تبويب «الكتالوج الرئيسي» ثم استخدم «إسناد لمزود» لإنشاء عنصر تأجير حقيقي.`}
+                    en={`This tab lists actual provider rental listings (rental_items). The master catalog has ${catalog.length} templates ready — open the “Master Catalog” tab and use “Assign provider” to spawn a real rental item.`}
+                  />
+                </p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {allItems.map(it => (
                 <Card key={it.id} className="p-4 hover-lift">
                   <div className="flex items-center justify-between">
@@ -116,7 +130,8 @@ const AdminRentals: React.FC = () => {
                   <div className="text-xs text-muted-foreground tech-content mt-1">{it.ref_id}</div>
                 </Card>
               ))}
-            </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="categories" className="mt-4">
