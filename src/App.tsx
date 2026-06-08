@@ -154,6 +154,7 @@ const QuoteRequestDetails = lazyRetry(() => import("./pages/dashboard/QuoteReque
 const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmailDeliverability"));
 const AdminEmailCenter = lazyRetry(() => import("./pages/admin/AdminEmailCenter"));
 const AdminSiteAudit = lazyRetry(() => import("./pages/admin/AdminSiteAudit"));
+const AdminPerformance = lazyRetry(() => import("./pages/admin/AdminPerformance"));
 const AdminDiagnostics = lazyRetry(() => import("./pages/admin/AdminDiagnostics"));
 const AdminDataEnrichment = lazyRetry(() => import("./pages/admin/AdminDataEnrichment"));
 const AdminDataEnrichmentGovernance = lazyRetry(() => import("./pages/admin/AdminDataEnrichmentGovernance"));
@@ -481,6 +482,7 @@ const AppRoutes = () => (
           <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><Navigate to="/admin/email-center?tab=deliverability" replace /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 16 — SEO hub. */}
           <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><Navigate to="/admin/sitemap-status?tab=audit" replace /></ProtectedRoute>} />
+          <Route path="/admin/performance" element={<ProtectedRoute requireAdmin><AdminPerformance /></ProtectedRoute>} />
           <Route path="/admin/diagnostics" element={<ProtectedRoute requireAdmin><AdminDiagnostics /></ProtectedRoute>} />
           <Route path="/admin/data-enrichment" element={<ProtectedRoute requireAdmin><AdminDataEnrichment /></ProtectedRoute>} />
           <Route path="/admin/data-enrichment-governance" element={<ProtectedRoute requireAdmin><AdminDataEnrichmentGovernance /></ProtectedRoute>} />
