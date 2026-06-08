@@ -13,6 +13,7 @@ import { RentalCategories, RentalItems, ITEM_STATUS_LABELS } from '@/modules/ren
 import type { RentalCategory, RentalItem } from '@/modules/rentals';
 import { RentalOpsQueueCard } from '@/modules/rentals';
 import { CatalogManager } from '@/modules/rentals/admin/CatalogManager';
+import { CategoryAdminPanel } from '@/components/admin/CategoryAdminPanel';
 import { toast } from 'sonner';
 
 interface CatalogRow {
@@ -119,17 +120,14 @@ const AdminRentals: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="categories" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {categories.map(c => (
-                <Card key={c.id} className="p-4 hover-lift">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{isRTL ? c.name_ar : c.name_en}</span>
-                    <span className="text-xs tech-content text-muted-foreground">{c.ref_id}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">/{c.slug}</div>
-                </Card>
-              ))}
-            </div>
+            <CategoryAdminPanel
+              categoryTable="rental_categories"
+              itemTable="rental_equipment_catalog"
+              itemImageField="image_url"
+              itemActiveField="is_active"
+              titleAr="تصنيفات التأجير"
+              titleEn="Rental categories"
+            />
           </TabsContent>
 
           <TabsContent value="catalog" className="mt-4">
