@@ -38,6 +38,7 @@ export interface CreateItemInput {
   name_ar: string;
   name_en?: string;
   description_ar?: string;
+  description_en?: string;
   unit: RentalItem['unit'];
   base_price: number;
   min_duration?: number;
@@ -47,6 +48,11 @@ export interface CreateItemInput {
   penalty_terms?: string;
   city_id?: string | null;
   images?: string[];
+  cover_image_url?: string | null;
+  brand?: string | null;
+  country_of_manufacture?: string | null;
+  condition?: 'new' | 'like_new' | 'good' | 'medium' | 'used' | null;
+  specs?: Record<string, unknown>;
 }
 
 export async function createItem(input: CreateItemInput): Promise<ServiceResult<RentalItem>> {
