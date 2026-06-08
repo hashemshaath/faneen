@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { RentalCategories, RentalItems, ITEM_STATUS_LABELS } from '@/modules/rentals';
 import type { RentalCategory, RentalItem } from '@/modules/rentals';
 import { RentalOpsQueueCard } from '@/modules/rentals';
+import { CatalogManager } from '@/modules/rentals/admin/CatalogManager';
 import { toast } from 'sonner';
 
 interface CatalogRow {
@@ -132,36 +133,7 @@ const AdminRentals: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="catalog" className="mt-4">
-            {catalog.length === 0 ? (
-              <Card className="p-8 text-center text-muted-foreground"><Bi ar="لا توجد عناصر في الكتالوج." en="Catalog is empty." /></Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {catalog.map(c => {
-                  const cat = categories.find(x => x.id === c.category_id);
-                  return (
-                    <Card key={c.id} className="p-4 hover-lift">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="font-medium truncate">{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</div>
-                          {(c.brand || c.model) && (
-                            <div className="text-xs text-muted-foreground tech-content truncate">{[c.brand, c.model].filter(Boolean).join(' · ')}</div>
-                          )}
-                          {cat && <div className="text-xs text-muted-foreground mt-0.5">{isRTL ? cat.name_ar : cat.name_en}</div>}
-                        </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted'}`}>
-                          {c.is_active ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'معطل' : 'Inactive')}
-                        </span>
-                      </div>
-                      {c.estimated_daily_price != null && (
-                        <div className="text-xs tech-content text-muted-foreground mt-2">
-                          {c.estimated_daily_price} {c.currency || 'SAR'} / {isRTL ? 'يوم' : 'day'}
-                        </div>
-                      )}
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+            <CatalogManager />
           </TabsContent>
         </Tabs>
       </div>
