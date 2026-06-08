@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import {
   AssetCategoriesApi, AssetsApi, AssetMaintenanceApi, AssetInspectionsApi,
   AssetStatusBadge, AssetOpsCard, AssetRentalPanel,
+  AssetUtilizationSummary, AssetQrIdentity, AssetMaintenanceAlerts,
   MAINTENANCE_STATUS_LABELS, INSPECTION_FREQUENCY_LABELS,
 } from '@/modules/assets';
 import type { Asset, AssetCategory, AssetMaintenance, AssetInspection, AssetInspectionFrequency } from '@/modules/assets';
