@@ -592,6 +592,438 @@ export type Database = {
         }
         Relationships: []
       }
+      asset_alerts: {
+        Row: {
+          alert_type: string
+          asset_id: string
+          created_at: string
+          id: string
+          is_resolved: boolean
+          message_ar: string | null
+          message_en: string | null
+          payload: Json
+          ref_id: string
+          resolved_at: string | null
+          severity: string
+        }
+        Insert: {
+          alert_type: string
+          asset_id: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          message_ar?: string | null
+          message_en?: string | null
+          payload?: Json
+          ref_id?: string
+          resolved_at?: string | null
+          severity?: string
+        }
+        Update: {
+          alert_type?: string
+          asset_id?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          message_ar?: string | null
+          message_en?: string | null
+          payload?: Json
+          ref_id?: string
+          resolved_at?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_alerts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_categories: {
+        Row: {
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          ref_id: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          ref_id?: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          ref_id?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      asset_inspections: {
+        Row: {
+          asset_id: string
+          attachments: Json
+          checklist: Json
+          created_at: string
+          created_by: string | null
+          frequency: Database["public"]["Enums"]["asset_inspection_frequency"]
+          id: string
+          inspected_at: string | null
+          inspector_name: string | null
+          next_due_at: string | null
+          notes: string | null
+          ref_id: string
+          result: Database["public"]["Enums"]["asset_inspection_result"]
+          scheduled_for: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          attachments?: Json
+          checklist?: Json
+          created_at?: string
+          created_by?: string | null
+          frequency?: Database["public"]["Enums"]["asset_inspection_frequency"]
+          id?: string
+          inspected_at?: string | null
+          inspector_name?: string | null
+          next_due_at?: string | null
+          notes?: string | null
+          ref_id?: string
+          result?: Database["public"]["Enums"]["asset_inspection_result"]
+          scheduled_for?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          attachments?: Json
+          checklist?: Json
+          created_at?: string
+          created_by?: string | null
+          frequency?: Database["public"]["Enums"]["asset_inspection_frequency"]
+          id?: string
+          inspected_at?: string | null
+          inspector_name?: string | null
+          next_due_at?: string | null
+          notes?: string | null
+          ref_id?: string
+          result?: Database["public"]["Enums"]["asset_inspection_result"]
+          scheduled_for?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_inspections_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_maintenance: {
+        Row: {
+          asset_id: string
+          attachments: Json
+          completed_at: string | null
+          cost: number | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          kind: Database["public"]["Enums"]["asset_maintenance_kind"]
+          next_due_at: string | null
+          performed_by: string | null
+          ref_id: string
+          scheduled_for: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["asset_maintenance_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          attachments?: Json
+          completed_at?: string | null
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["asset_maintenance_kind"]
+          next_due_at?: string | null
+          performed_by?: string | null
+          ref_id?: string
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["asset_maintenance_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          attachments?: Json
+          completed_at?: string | null
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["asset_maintenance_kind"]
+          next_due_at?: string | null
+          performed_by?: string | null
+          ref_id?: string
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["asset_maintenance_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_maintenance_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_rental_links: {
+        Row: {
+          asset_id: string
+          created_at: string
+          id: string
+          rental_item_id: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          id?: string
+          rental_item_id: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          id?: string
+          rental_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_rental_links_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_rental_links_rental_item_id_fkey"
+            columns: ["rental_item_id"]
+            isOneToOne: false
+            referencedRelation: "rental_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_utilization: {
+        Row: {
+          asset_id: string
+          created_at: string
+          currency: string
+          days_idle: number
+          days_maintenance: number
+          days_rented: number
+          id: string
+          period_end: string
+          period_start: string
+          revenue: number
+          updated_at: string
+          utilization_rate: number
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          currency?: string
+          days_idle?: number
+          days_maintenance?: number
+          days_rented?: number
+          id?: string
+          period_end: string
+          period_start: string
+          revenue?: number
+          updated_at?: string
+          utilization_rate?: number
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          currency?: string
+          days_idle?: number
+          days_maintenance?: number
+          days_rented?: number
+          id?: string
+          period_end?: string
+          period_start?: string
+          revenue?: number
+          updated_at?: string
+          utilization_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_utilization_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assets: {
+        Row: {
+          category_id: string | null
+          city_id: string | null
+          condition_rating: number | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          current_location: string | null
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          images: Json
+          is_active: boolean
+          manufacturer: string | null
+          model: string | null
+          name_ar: string
+          name_en: string | null
+          next_inspection_at: string | null
+          next_maintenance_at: string | null
+          notes: string | null
+          owner_business_id: string
+          purchase_cost: number | null
+          purchase_date: string | null
+          ref_id: string
+          retired_at: string | null
+          serial_number: string | null
+          status: Database["public"]["Enums"]["asset_status"]
+          updated_at: string
+          year_manufactured: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          city_id?: string | null
+          condition_rating?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          current_location?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          images?: Json
+          is_active?: boolean
+          manufacturer?: string | null
+          model?: string | null
+          name_ar: string
+          name_en?: string | null
+          next_inspection_at?: string | null
+          next_maintenance_at?: string | null
+          notes?: string | null
+          owner_business_id: string
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          ref_id?: string
+          retired_at?: string | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["asset_status"]
+          updated_at?: string
+          year_manufactured?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          city_id?: string | null
+          condition_rating?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          current_location?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          images?: Json
+          is_active?: boolean
+          manufacturer?: string | null
+          model?: string | null
+          name_ar?: string
+          name_en?: string | null
+          next_inspection_at?: string | null
+          next_maintenance_at?: string | null
+          notes?: string | null
+          owner_business_id?: string
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          ref_id?: string
+          retired_at?: string | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["asset_status"]
+          updated_at?: string
+          year_manufactured?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "asset_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_owner_business_id_fkey"
+            columns: ["owner_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_owner_business_id_fkey"
+            columns: ["owner_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auth_rate_limits: {
         Row: {
           attempt_type: string
@@ -19443,6 +19875,8 @@ export type Database = {
       }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
+      assets_ops_counts: { Args: never; Returns: Json }
+      assets_roll_status: { Args: never; Returns: Json }
       barcode_entity_prefix: { Args: { _entity_type: string }; Returns: string }
       build_execution_address_snapshot: {
         Args: { _site_id: string }
@@ -21632,6 +22066,35 @@ export type Database = {
       account_type: "individual" | "business" | "company" | "admin"
       admin_enrichment_status: "draft" | "reviewed" | "applied" | "discarded"
       app_role: "admin" | "moderator" | "user" | "super_admin"
+      asset_inspection_frequency:
+        | "daily"
+        | "weekly"
+        | "monthly"
+        | "quarterly"
+        | "annual"
+      asset_inspection_result:
+        | "pending"
+        | "passed"
+        | "failed"
+        | "needs_attention"
+      asset_maintenance_kind:
+        | "preventive"
+        | "corrective"
+        | "emergency"
+        | "calibration"
+      asset_maintenance_status:
+        | "planned"
+        | "in_progress"
+        | "completed"
+        | "overdue"
+        | "cancelled"
+      asset_status:
+        | "available"
+        | "rented"
+        | "reserved"
+        | "maintenance"
+        | "inspection"
+        | "retired"
       award_rank:
         | "winner"
         | "runner_up"
@@ -21923,6 +22386,40 @@ export const Constants = {
       account_type: ["individual", "business", "company", "admin"],
       admin_enrichment_status: ["draft", "reviewed", "applied", "discarded"],
       app_role: ["admin", "moderator", "user", "super_admin"],
+      asset_inspection_frequency: [
+        "daily",
+        "weekly",
+        "monthly",
+        "quarterly",
+        "annual",
+      ],
+      asset_inspection_result: [
+        "pending",
+        "passed",
+        "failed",
+        "needs_attention",
+      ],
+      asset_maintenance_kind: [
+        "preventive",
+        "corrective",
+        "emergency",
+        "calibration",
+      ],
+      asset_maintenance_status: [
+        "planned",
+        "in_progress",
+        "completed",
+        "overdue",
+        "cancelled",
+      ],
+      asset_status: [
+        "available",
+        "rented",
+        "reserved",
+        "maintenance",
+        "inspection",
+        "retired",
+      ],
       award_rank: [
         "winner",
         "runner_up",

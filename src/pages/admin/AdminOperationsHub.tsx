@@ -1,4 +1,4 @@
-import { Activity, ShieldCheck, Boxes } from 'lucide-react';
+import { Activity, ShieldCheck, Boxes, Wrench } from 'lucide-react';
 import { TabbedShell } from '@/components/dashboard/TabbedShell';
 
 /** NAVIGATION-CONSOLIDATION-1 group 9 — Operations + Console. */
@@ -15,6 +15,7 @@ const AdminOperationsHub = () => (
       { key: 'operations', label: { ar: 'العمليات', en: 'Operations' }, icon: Activity, loader: () => import('./AdminOperations') },
       { key: 'console', label: { ar: 'وحدة التحكم', en: 'Console' }, icon: ShieldCheck, loader: () => import('./AdminOperationsConsole') },
       { key: 'rentals', label: { ar: 'التأجير', en: 'Rentals' }, icon: Boxes, loader: () => import('./AdminOperationsRentals') },
+      { key: 'assets', label: { ar: 'الأصول', en: 'Assets' }, icon: Wrench, loader: () => import('./AdminOperationsAssets') },
     ]}
   />
 );
