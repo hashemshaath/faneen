@@ -21059,7 +21059,8 @@ export type Database = {
         Args: { p_business_id: string; p_sub_service_id: string }
         Returns: undefined
       }
-      rental_orders_roll_status: { Args: never; Returns: number }
+      rental_items_missing_data: { Args: never; Returns: Json }
+      rental_orders_roll_status: { Args: never; Returns: Json }
       request_client_site_access: {
         Args: {
           _provider_business_id: string
