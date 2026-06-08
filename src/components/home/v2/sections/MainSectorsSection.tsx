@@ -11,12 +11,33 @@ import sectorWood from '@/assets/home/sector-wood.webp';
 import sectorGlass from '@/assets/home/sector-glass.webp';
 import sectorStainless from '@/assets/home/sector-stainless.webp';
 import sectorFabrication from '@/assets/home/sector-fabrication.webp';
+// Smaller responsive variants (480/768/1024). Cards render at <=420px on
+// mobile and <=480px on desktop, so loading the full 1000–1200px source
+// wasted ~2–3× the bandwidth on every device. Imports are hashed by Vite
+// so cache-busting still works.
+import sectorAluminum480 from '@/assets/home/sector-aluminum-480.webp';
+import sectorAluminum768 from '@/assets/home/sector-aluminum-768.webp';
+import sectorAluminum1024 from '@/assets/home/sector-aluminum-1024.webp';
+import sectorIron480 from '@/assets/home/sector-iron-480.webp';
+import sectorIron768 from '@/assets/home/sector-iron-768.webp';
+import sectorWood480 from '@/assets/home/sector-wood-480.webp';
+import sectorWood768 from '@/assets/home/sector-wood-768.webp';
+import sectorWood1024 from '@/assets/home/sector-wood-1024.webp';
+import sectorGlass480 from '@/assets/home/sector-glass-480.webp';
+import sectorGlass768 from '@/assets/home/sector-glass-768.webp';
+import sectorGlass1024 from '@/assets/home/sector-glass-1024.webp';
+import sectorStainless480 from '@/assets/home/sector-stainless-480.webp';
+import sectorStainless768 from '@/assets/home/sector-stainless-768.webp';
+import sectorStainless1024 from '@/assets/home/sector-stainless-1024.webp';
+import sectorFabrication480 from '@/assets/home/sector-fabrication-480.webp';
+import sectorFabrication768 from '@/assets/home/sector-fabrication-768.webp';
 import { Section, SectionCover, SecondaryCTA, ROUTES } from './_shared';
 
 type SectorItem = {
   slug: string;
   icon: ComponentType<{ className?: string }>;
   image: string;
+  srcSet: string;
   accent: string;
   dot: string;
   titleAr: string;
@@ -38,6 +59,7 @@ const SectorCard = ({ s, idx }: { s: SectorItem; idx: number }) => {
       <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-muted">
         <img
           src={s.image}
+          srcSet={s.srcSet}
           alt={bi(`صورة قطاع ${s.titleAr}`, `${s.titleEn} sector cover`)}
           width={1280}
           height={800}
@@ -75,22 +97,22 @@ const SectorCard = ({ s, idx }: { s: SectorItem; idx: number }) => {
 const MainSectorsSection = () => {
   const bi = useBi();
   const sectors: SectorItem[] = [
-    { slug: 'aluminum', icon: Square, image: sectorAluminum, accent: 'from-sky-500/15 to-sky-500/0', dot: 'bg-sky-500',
+    { slug: 'aluminum', icon: Square, image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w`, accent: 'from-sky-500/15 to-sky-500/0', dot: 'bg-sky-500',
       titleAr: 'ألمنيوم', titleEn: 'Aluminum',
       bodyAr: 'أبواب، شبابيك، واجهات، مطابخ، وقواطع.', bodyEn: 'Doors, windows, facades, kitchens and partitions.' },
-    { slug: 'iron', icon: Wrench, image: sectorIron, accent: 'from-slate-500/15 to-slate-500/0', dot: 'bg-slate-500',
+    { slug: 'iron', icon: Wrench, image: sectorIron768, srcSet: `${sectorIron480} 480w, ${sectorIron768} 768w, ${sectorIron} 1000w`, accent: 'from-slate-500/15 to-slate-500/0', dot: 'bg-slate-500',
       titleAr: 'حديد', titleEn: 'Iron',
       bodyAr: 'أبواب، سلالم، هياكل، شبك، وأعمال معدنية.', bodyEn: 'Doors, stairs, frames, mesh and metalwork.' },
-    { slug: 'wood', icon: DoorClosed, image: sectorWood, accent: 'from-amber-600/15 to-amber-600/0', dot: 'bg-amber-600',
+    { slug: 'wood', icon: DoorClosed, image: sectorWood1024, srcSet: `${sectorWood480} 480w, ${sectorWood768} 768w, ${sectorWood1024} 1024w, ${sectorWood} 1200w`, accent: 'from-amber-600/15 to-amber-600/0', dot: 'bg-amber-600',
       titleAr: 'خشب', titleEn: 'Wood',
       bodyAr: 'أبواب، أثاث، ديكور، تفصيل، وتجهيزات داخلية.', bodyEn: 'Doors, furniture, décor, custom work and interiors.' },
-    { slug: 'glass', icon: Layers, image: sectorGlass, accent: 'from-cyan-500/15 to-cyan-500/0', dot: 'bg-cyan-500',
+    { slug: 'glass', icon: Layers, image: sectorGlass1024, srcSet: `${sectorGlass480} 480w, ${sectorGlass768} 768w, ${sectorGlass1024} 1024w, ${sectorGlass} 1200w`, accent: 'from-cyan-500/15 to-cyan-500/0', dot: 'bg-cyan-500',
       titleAr: 'زجاج', titleEn: 'Glass',
       bodyAr: 'واجهات، سيكوريت، قواطع، أبواب زجاجية، وتركيب.', bodyEn: 'Facades, tempered glass, partitions, doors and install.' },
-    { slug: 'stainless', icon: Boxes, image: sectorStainless, accent: 'from-zinc-500/15 to-zinc-500/0', dot: 'bg-zinc-500',
+    { slug: 'stainless', icon: Boxes, image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w`, accent: 'from-zinc-500/15 to-zinc-500/0', dot: 'bg-zinc-500',
       titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
       bodyAr: 'مطاعم، مطابخ، درابزين، تجهيزات، وأعمال خاصة.', bodyEn: 'Restaurants, kitchens, railings, fittings and custom work.' },
-    { slug: 'fabrication', icon: Hammer, image: sectorFabrication, accent: 'from-emerald-600/15 to-emerald-600/0', dot: 'bg-emerald-600',
+    { slug: 'fabrication', icon: Hammer, image: sectorFabrication768, srcSet: `${sectorFabrication480} 480w, ${sectorFabrication768} 768w, ${sectorFabrication} 1000w`, accent: 'from-emerald-600/15 to-emerald-600/0', dot: 'bg-emerald-600',
       titleAr: 'التصنيع والتركيب', titleEn: 'Fabrication & install',
       bodyAr: 'ورش ومصانع وفرق تنفيذ حسب احتياج المشروع.', bodyEn: 'Workshops, factories and install crews per project.' },
   ];
