@@ -135,6 +135,9 @@ export interface RentalAssetOpsCounts {
   overdue_with_assets: number;
   post_rental_inspections_pending: number;
   overlapping_assignments: number;
+  overrides_last_24h: number;
+  overrides_total: number;
+  blocked_assignments_today: number;
 }
 
 export async function getRentalAssetOpsCounts(): Promise<RentalAssetOpsCounts> {
@@ -147,5 +150,8 @@ export async function getRentalAssetOpsCounts(): Promise<RentalAssetOpsCounts> {
     overdue_with_assets: Number(r.overdue_with_assets ?? 0),
     post_rental_inspections_pending: Number(r.post_rental_inspections_pending ?? 0),
     overlapping_assignments: Number(r.overlapping_assignments ?? 0),
+    overrides_last_24h: Number(r.overrides_last_24h ?? 0),
+    overrides_total: Number(r.overrides_total ?? 0),
+    blocked_assignments_today: Number(r.blocked_assignments_today ?? 0),
   };
 }

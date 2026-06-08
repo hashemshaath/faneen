@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Loader2, AlertTriangle, Link2, Layers, Clock, ShieldAlert, RefreshCw } from 'lucide-react';
+import { Loader2, AlertTriangle, Link2, Layers, Clock, ShieldAlert, RefreshCw, History, Ban } from 'lucide-react';
+import { Link as RouterLink } from 'react-router-dom';
 import { Bi } from '@/components/common/Bilingual';
 import {
   getRentalAssetOpsCounts,
@@ -72,8 +73,16 @@ export const RentalAssetOpsCard: React.FC = () => {
           <Tile icon={Clock} ar="متأخرات بأصول مرتبطة" en="Overdue with assets" value={counts.overdue_with_assets} tone="danger" />
           <Tile icon={ShieldAlert} ar="فحوصات ما بعد التأجير" en="Post-rental inspections" value={counts.post_rental_inspections_pending} tone="warning" />
           <Tile icon={Layers} ar="تخصيصات متداخلة" en="Overlapping assignments" value={counts.overlapping_assignments} tone="danger" />
+          <Tile icon={History} ar="تجاوزات (آخر 24س)" en="Overrides (24h)" value={counts.overrides_last_24h} tone="warning" />
+          <Tile icon={ShieldAlert} ar="إجمالي التجاوزات" en="Total overrides" value={counts.overrides_total} />
+          <Tile icon={Ban} ar="محاولات تخصيص محجوبة اليوم" en="Blocked assignments today" value={counts.blocked_assignments_today} tone="warning" />
         </div>
       )}
+      <div className="text-xs">
+        <RouterLink to="/admin/assets/overrides" className="text-primary hover:underline">
+          <Bi ar="عرض سجل التجاوزات →" en="View overrides log →" />
+        </RouterLink>
+      </div>
     </Card>
   );
 };

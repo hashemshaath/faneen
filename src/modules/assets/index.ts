@@ -20,3 +20,9 @@ export type { AssetRentalAvailability } from './services/checkAssetRentalAvailab
 export { RentalAssetOpsCard } from './components/RentalAssetOpsCard';
 export { AssetRentalPanel } from './components/AssetRentalPanel';
 export { RentalOrderAssetLinks } from './components/RentalOrderAssetLinks';
+// RENTAL-ASSET-INTEGRATION-2
+export { AssetPicker } from './components/AssetPicker';
+export { AssetOverridePanel } from './components/AssetOverridePanel';
+export * as AssetOverridesApi from './services/overrides';
+export { OVERRIDE_REASONS } from './services/overrides';
+export type { OverrideReason, AssetOverrideLogRow } from './services/overrides';

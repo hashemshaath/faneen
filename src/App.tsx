@@ -66,6 +66,7 @@ const DashboardRentals = lazyRetry(() => import("./pages/dashboard/DashboardRent
 const AdminRentals = lazyRetry(() => import("./pages/admin/AdminRentals"));
 const DashboardAssets = lazyRetry(() => import("./pages/dashboard/DashboardAssets"));
 const AdminAssets = lazyRetry(() => import("./pages/admin/AdminAssets"));
+const AdminAssetOverrides = lazyRetry(() => import("./pages/admin/AdminAssetOverrides"));
 const RentalsCatalog = lazyRetry(() => import("./pages/RentalsCatalog"));
 const RentalItemPublic = lazyRetry(() => import("./pages/RentalItemPublic"));
 const DashboardSitePrint = lazyRetry(() => import("./pages/dashboard/DashboardSitePrint"));
@@ -375,6 +376,7 @@ const AppRoutes = () => (
           {/* ASSET-MANAGEMENT-MICROSERVICE-1 — provider + admin asset hubs (never public) */}
           <Route path="/dashboard/assets" element={<ProtectedRoute><DashboardAssets /></ProtectedRoute>} />
           <Route path="/admin/assets" element={<ProtectedRoute requireAdmin><AdminAssets /></ProtectedRoute>} />
+          <Route path="/admin/assets/overrides" element={<ProtectedRoute requireAdmin><AdminAssetOverrides /></ProtectedRoute>} />
           <Route path="/dashboard/contract-analytics" element={<Navigate to="/dashboard/contracts?tab=analytics" replace />} />
           <Route path="/dashboard/work-orders" element={<ProtectedRoute><DashboardWorkOrders /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 (group 5): legacy overview merged into main work-orders */}

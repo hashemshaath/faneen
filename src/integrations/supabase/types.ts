@@ -820,6 +820,70 @@ export type Database = {
           },
         ]
       }
+      asset_override_log: {
+        Row: {
+          actor_user_id: string
+          after_state: Json
+          asset_id: string
+          assignment_id: string | null
+          before_state: Json
+          created_at: string
+          id: string
+          note: string
+          reason: Database["public"]["Enums"]["asset_override_reason"]
+          ref_id: string
+          rental_order_id: string | null
+        }
+        Insert: {
+          actor_user_id?: string
+          after_state?: Json
+          asset_id: string
+          assignment_id?: string | null
+          before_state?: Json
+          created_at?: string
+          id?: string
+          note: string
+          reason: Database["public"]["Enums"]["asset_override_reason"]
+          ref_id?: string
+          rental_order_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          after_state?: Json
+          asset_id?: string
+          assignment_id?: string | null
+          before_state?: Json
+          created_at?: string
+          id?: string
+          note?: string
+          reason?: Database["public"]["Enums"]["asset_override_reason"]
+          ref_id?: string
+          rental_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_override_log_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_override_log_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "asset_rental_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_override_log_rental_order_id_fkey"
+            columns: ["rental_order_id"]
+            isOneToOne: false
+            referencedRelation: "rental_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_rental_assignments: {
         Row: {
           asset_id: string
@@ -19948,6 +20012,18 @@ export type Database = {
       }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
+      asset_apply_override: {
+        Args: {
+          _asset_id: string
+          _assignment_id?: string
+          _new_asset_status?: Database["public"]["Enums"]["asset_status"]
+          _new_assignment_status?: Database["public"]["Enums"]["asset_rental_assignment_status"]
+          _note: string
+          _reason: Database["public"]["Enums"]["asset_override_reason"]
+          _rental_order_id?: string
+        }
+        Returns: Json
+      }
       asset_current_rental_info: { Args: { _asset_id: string }; Returns: Json }
       asset_rental_check_availability: {
         Args: {
@@ -22172,6 +22248,11 @@ export type Database = {
         | "completed"
         | "overdue"
         | "cancelled"
+      asset_override_reason:
+        | "emergency_release"
+        | "manual_correction"
+        | "legacy_data_fix"
+        | "migration_repair"
       asset_rental_assignment_status:
         | "reserved"
         | "active"
@@ -22500,6 +22581,12 @@ export const Constants = {
         "completed",
         "overdue",
         "cancelled",
+      ],
+      asset_override_reason: [
+        "emergency_release",
+        "manual_correction",
+        "legacy_data_fix",
+        "migration_repair",
       ],
       asset_rental_assignment_status: [
         "reserved",
