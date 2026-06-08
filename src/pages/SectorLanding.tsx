@@ -234,6 +234,9 @@ const SectorLanding: React.FC = () => {
         : (meta?.name || (isRTL ? 'قطاع' : 'Sector')),
       subtitle: meta?.tagline || (isRTL ? 'دليل قِطاعات' : 'Qitaat directory'),
     }),
+    ogImageAlt: selectedCityName
+      ? `${meta?.name || ''} — ${selectedCityName}`
+      : (meta?.name || (isRTL ? 'قطاع' : 'Sector')),
     ogType: 'website',
     noindex: !meta,
   });
