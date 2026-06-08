@@ -117,10 +117,17 @@ const SortableCategory: React.FC<{
   const [draftAr, setDraftAr] = useState(cat.name_ar);
   const [draftEn, setDraftEn] = useState(cat.name_en ?? '');
   const [draftIcon, setDraftIcon] = useState(cat.icon ?? '');
+  const [draftDescAr, setDraftDescAr] = useState(cat.description_ar ?? '');
+  const [draftDescEn, setDraftDescEn] = useState(cat.description_en ?? '');
+  const [draftImage, setDraftImage] = useState<string>(cat.default_image_url ?? '');
   const [saving, setSaving] = useState(false);
   const bi = useBi();
 
-  useEffect(() => { setDraftAr(cat.name_ar); setDraftEn(cat.name_en ?? ''); setDraftIcon(cat.icon ?? ''); }, [cat.id, cat.name_ar, cat.name_en, cat.icon]);
+  useEffect(() => {
+    setDraftAr(cat.name_ar); setDraftEn(cat.name_en ?? ''); setDraftIcon(cat.icon ?? '');
+    setDraftDescAr(cat.description_ar ?? ''); setDraftDescEn(cat.description_en ?? '');
+    setDraftImage(cat.default_image_url ?? '');
+  }, [cat.id, cat.name_ar, cat.name_en, cat.icon, cat.description_ar, cat.description_en, cat.default_image_url]);
 
   const itemSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
@@ -139,40 +146,87 @@ const SortableCategory: React.FC<{
           <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none p-1" aria-label="drag category">
             <GripVertical className="size-5" />
           </button>
-          <button onClick={p.onToggleExpand} className="flex items-center gap-2 flex-1 min-w-0 text-start hover:text-primary transition-colors">
-            <span className="text-2xl shrink-0">{cat.icon || '📦'}</span>
-            {!editing ? (
-              <div className="min-w-0">
-                <div className="font-semibold truncate">{p.isRTL ? cat.name_ar : (cat.name_en || cat.name_ar)}</div>
-                <div className="text-xs text-muted-foreground tech-content truncate">/{cat.slug}{cat.ref_id ? ` · ${cat.ref_id}` : ''}</div>
-              </div>
+          <button onClick={p.onToggleExpand} className="flex items-center gap-3 flex-1 min-w-0 text-start hover:text-primary transition-colors">
+            {cat.default_image_url ? (
+              <img src={cat.default_image_url} alt="" className="size-10 rounded-lg object-cover shrink-0" loading="lazy" />
             ) : (
-              <div className="flex-1 grid grid-cols-3 gap-2" onClick={(e) => e.stopPropagation()}>
-                <Input dir="auto" value={draftAr} onChange={e => setDraftAr(e.target.value)} placeholder="عربي" className="h-9 rounded-lg" />
-                <Input dir="auto" value={draftEn} onChange={e => setDraftEn(e.target.value)} placeholder="English" className="h-9 rounded-lg" />
-                <Input dir="auto" value={draftIcon} onChange={e => setDraftIcon(e.target.value)} placeholder="🔧" className="h-9 rounded-lg text-center" />
+              <div className="size-10 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center shrink-0">
+                <RenderIcon value={cat.icon || '📦'} size={20} />
               </div>
             )}
+            <div className="min-w-0">
+              <div className="font-semibold truncate">{p.isRTL ? cat.name_ar : (cat.name_en || cat.name_ar)}</div>
+              <div className="text-xs text-muted-foreground tech-content truncate">/{cat.slug}{cat.ref_id ? ` · ${cat.ref_id}` : ''}</div>
+            </div>
           </button>
           <Badge variant="outline" className="tech-content shrink-0">{p.items.length}</Badge>
           <Switch checked={cat.is_active} onCheckedChange={(v) => p.onToggleVisible(cat.id, v)} aria-label="category visibility" />
-          {!editing ? (
-            <>
-              <Button size="sm" variant="ghost" onClick={() => setEditing(true)} className="h-8 w-8 p-0"><Pencil className="size-3.5" /></Button>
-              <Button size="sm" variant="ghost" onClick={p.onToggleExpand} className="h-8 w-8 p-0">
-                {p.expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button size="sm" onClick={async () => { setSaving(true); await p.onSave(cat.id, { name_ar: draftAr, name_en: draftEn || null, icon: draftIcon || null }); setSaving(false); setEditing(false); }} disabled={saving} className="h-8">
-                {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="h-8 w-8 p-0"><X className="size-3.5" /></Button>
-            </>
-          )}
+          <Button size="sm" variant={editing ? 'default' : 'ghost'} onClick={() => setEditing(e => !e)} className="h-8 w-8 p-0"><Pencil className="size-3.5" /></Button>
+          <Button size="sm" variant="ghost" onClick={p.onToggleExpand} className="h-8 w-8 p-0">
+            {p.expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => p.onDelete(cat.id)} className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"><Trash2 className="size-3.5" /></Button>
         </div>
+
+        {editing && (
+          <div className="mt-3 pt-3 border-t bg-muted/20 -mx-3 -mb-3 px-3 pb-3 rounded-b-xl space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الاسم بالعربية" en="Arabic name" /> <span className="text-red-500">*</span></Label>
+                <Input dir="auto" value={draftAr} onChange={e => setDraftAr(e.target.value)} className="h-11 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الاسم بالإنجليزية" en="English name" /></Label>
+                <Input dir="auto" value={draftEn} onChange={e => setDraftEn(e.target.value)} className="h-11 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الأيقونة" en="Icon" /></Label>
+                <IconPicker value={draftIcon} onChange={setDraftIcon} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الوصف بالعربية" en="Arabic description" /></Label>
+                <Textarea dir="auto" value={draftDescAr} onChange={e => setDraftDescAr(e.target.value)} rows={3} className="rounded-lg resize-none" placeholder={bi('وصف مختصر يظهر للزوار…', 'Short description shown to visitors…')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium"><Bi ar="الوصف بالإنجليزية" en="English description" /></Label>
+                <Textarea dir="auto" value={draftDescEn} onChange={e => setDraftDescEn(e.target.value)} rows={3} className="rounded-lg resize-none" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium"><Bi ar="صورة غلاف التصنيف" en="Category cover image" /></Label>
+              <ImageUpload
+                bucket="business-assets"
+                folder={`categories/${cat.slug}`}
+                value={draftImage}
+                onChange={setDraftImage}
+                onRemove={() => setDraftImage('')}
+                aspectRatio="video"
+                maxSizeMB={3}
+                placeholder={bi('ارفع صورة (PNG/JPG/WebP, حتى 3 ميجابايت)', 'Upload an image (PNG/JPG/WebP, up to 3MB)')}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setEditing(false)} className="h-10 rounded-lg"><X className="size-4 me-1" /><Bi ar="إلغاء" en="Cancel" /></Button>
+              <Button onClick={async () => {
+                setSaving(true);
+                await p.onSave(cat.id, {
+                  name_ar: draftAr,
+                  name_en: draftEn || null,
+                  icon: draftIcon || null,
+                  description_ar: draftDescAr || null,
+                  description_en: draftDescEn || null,
+                  default_image_url: draftImage || null,
+                });
+                setSaving(false); setEditing(false);
+              }} disabled={saving || !draftAr.trim()} className="h-10 rounded-lg">
+                {saving ? <Loader2 className="size-4 me-1 animate-spin" /> : <Save className="size-4 me-1" />}
+                <Bi ar="حفظ التغييرات" en="Save changes" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {p.expanded && (
           <div className="mt-3 pt-3 border-t space-y-2">
