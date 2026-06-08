@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles, Info, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles, Info, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -564,13 +564,15 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground"><Bi ar="عناصر التأجير المرتبطة بمنشأتك" en="Rental items linked to your business" /></div>
-        <Button onClick={() => setAdding(s => !s)} className="hover-lift">
-          <Plus className="size-4 me-1" />
-          <Bi ar={adding ? 'إلغاء' : 'إضافة عنصر'} en={adding ? 'Cancel' : 'Add item'} />
-        </Button>
-      </div>
+      <ItemsToolbar
+        total={items.length}
+        adding={adding}
+        onToggleAdd={() => setAdding(s => !s)}
+        query={listQuery}
+        onQueryChange={setListQuery}
+        statusFilter={listStatus}
+        onStatusChange={setListStatus}
+      />
 
       {adding && (
         <Card className="p-5 space-y-4">
@@ -1023,11 +1025,30 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
       )}
 
       {items.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          <Bi ar="لا توجد عناصر تأجير بعد." en="No rental items yet." />
-        </Card>
+        <ItemsEmptyState onAdd={() => setAdding(true)} />
       ) : (
-        <ItemsGrid items={items} categories={categories} businessId={businessId} onChange={onChange} />
+        (() => {
+          const q = listQuery.trim().toLowerCase();
+          const filtered = items.filter(it => {
+            if (listStatus !== 'all' && it.status !== listStatus) return false;
+            if (!q) return true;
+            return (
+              it.name_ar?.toLowerCase().includes(q) ||
+              (it.name_en ?? '').toLowerCase().includes(q) ||
+              (it.brand ?? '').toLowerCase().includes(q) ||
+              it.ref_id?.toLowerCase().includes(q)
+            );
+          });
+          if (filtered.length === 0) {
+            return (
+              <Card className="p-8 text-center text-muted-foreground border-dashed">
+                <Search className="size-6 mx-auto mb-2 opacity-60" />
+                <Bi ar="لا توجد أصناف مطابقة للبحث/التصفية." en="No items match your search/filter." />
+              </Card>
+            );
+          }
+          return <ItemsGrid items={filtered} categories={categories} businessId={businessId} onChange={onChange} />;
+        })()
       )}
     </div>
   );
