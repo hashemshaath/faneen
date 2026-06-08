@@ -7,6 +7,9 @@ interface PageMetaOptions {
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
+  ogImageAlt?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
   ogType?: string;
   noindex?: boolean;
   keywords?: string;
@@ -76,6 +79,9 @@ export function usePageMeta(options: PageMetaOptions) {
     setMeta('og:title', options.ogTitle || fullTitle, 'property');
     setMeta('og:description', options.ogDescription || options.description || '', 'property');
     setMeta('og:image', options.ogImage || DEFAULT_OG_IMAGE, 'property');
+    setMeta('og:image:alt', options.ogImageAlt || options.ogTitle || fullTitle, 'property');
+    setMeta('og:image:width', String(options.ogImageWidth ?? 1200), 'property');
+    setMeta('og:image:height', String(options.ogImageHeight ?? 630), 'property');
     setMeta('og:type', options.ogType || 'website', 'property');
     setMeta('og:url', canonicalUrl, 'property');
     setMeta('og:site_name', SITE_NAME, 'property');
@@ -86,6 +92,7 @@ export function usePageMeta(options: PageMetaOptions) {
     setMeta('twitter:title', options.ogTitle || fullTitle, 'name');
     setMeta('twitter:description', options.ogDescription || options.description || '', 'name');
     setMeta('twitter:image', options.ogImage || DEFAULT_OG_IMAGE, 'name');
+    setMeta('twitter:image:alt', options.ogImageAlt || options.ogTitle || fullTitle, 'name');
     setMeta('twitter:card', 'summary_large_image', 'name');
 
     // Robots
@@ -94,7 +101,7 @@ export function usePageMeta(options: PageMetaOptions) {
     } else {
       setMeta('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
     }
-  }, [options.title, options.description, options.canonical, options.ogTitle, options.ogDescription, options.ogImage, options.ogType, options.noindex, options.keywords]);
+  }, [options.title, options.description, options.canonical, options.ogTitle, options.ogDescription, options.ogImage, options.ogImageAlt, options.ogImageWidth, options.ogImageHeight, options.ogType, options.noindex, options.keywords]);
 }
 
 // JSON-LD helper
