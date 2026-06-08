@@ -259,7 +259,7 @@ const issueOf = (code: string, field: string, tab: FormTab, override?: Partial<F
 export default function DashboardSites() {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const formRef = useRef<HTMLDivElement>(null);
@@ -684,14 +684,21 @@ export default function DashboardSites() {
           </div>
         )}
 
-        {!businessId && !isLoading && (
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
-            <Info className="w-4 h-4 text-primary shrink-0" />
-            <p className="text-xs leading-relaxed">
-              {isRTL
-                ? 'وضع شخصي: مواقعك مربوطة بحسابك ورقم هويتك. يمكنك إضافة الرقم الضريبي اختيارياً لربطه بالفواتير والعقود.'
-                : 'Personal mode: your sites are linked to your account and ID. Tax number is optional and used on invoices/contracts.'}
-            </p>
+        {!businessId && !isLoading && user && (
+          <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Info className="w-4 h-4 text-primary shrink-0" />
+              <p className="text-xs leading-relaxed">
+                {isRTL
+                  ? 'وضع شخصي: تُربط مواقعك تلقائياً بحسابك ورقم هويتك. الرقم الضريبي اختياري ويُستخدم على الفواتير والعقود.'
+                  : 'Personal mode: your sites are auto-linked to your account and national ID. Tax number is optional and used on invoices/contracts.'}
+              </p>
+            </div>
+            {profile?.ref_id && (
+              <span className="text-[11px] font-mono tech-content px-2 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+                {profile.ref_id}
+              </span>
+            )}
           </div>
         )}
 
@@ -1116,8 +1123,11 @@ export default function DashboardSites() {
             <p className="text-sm text-muted-foreground max-w-xs mb-5">
               {isRTL ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفِرَق.' : 'Add execution sites to link them with contracts, work orders, and teams.'}
             </p>
-            {businessId && (
-              <Button variant="hero" size="sm" onClick={openCreate}><Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة أول موقع' : 'Add First Site'}</Button>
+            {user && (
+              <Button variant="hero" size="sm" onClick={openCreate}>
+                <Plus className="w-4 h-4 me-1" />
+                {isRTL ? 'إضافة أول موقع' : 'Add First Site'}
+              </Button>
             )}
           </div>
         ) : filtered.length === 0 ? (
