@@ -62,6 +62,10 @@ const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOve
 const DashboardServices = lazyRetry(() => import("./pages/dashboard/DashboardServices"));
 const DashboardPortfolio = lazyRetry(() => import("./pages/dashboard/DashboardPortfolio"));
 const DashboardSites = lazyRetry(() => import("./pages/dashboard/DashboardSites"));
+const DashboardRentals = lazyRetry(() => import("./pages/dashboard/DashboardRentals"));
+const AdminRentals = lazyRetry(() => import("./pages/admin/AdminRentals"));
+const RentalsCatalog = lazyRetry(() => import("./pages/RentalsCatalog"));
+const RentalItemPublic = lazyRetry(() => import("./pages/RentalItemPublic"));
 const DashboardSitePrint = lazyRetry(() => import("./pages/dashboard/DashboardSitePrint"));
 const DashboardSiteDetail = lazyRetry(() => import("./pages/dashboard/DashboardSiteDetail"));
 const DashboardReviews = lazyRetry(() => import("./pages/dashboard/DashboardReviews"));
@@ -344,6 +348,10 @@ const AppRoutes = () => (
           <Route path="/q/:code" element={<QSlugDispatcher />} />
           <Route path="/client/:refId" element={<CustomerProjectPortal />} />
           <Route path="/r/:refId" element={<ReferenceResolver />} />
+          {/* RENTAL-MICROSERVICE-1 — public rentals catalog */}
+          <Route path="/rentals" element={<RentalsCatalog />} />
+          <Route path="/rentals/category/:slug" element={<RentalsCatalog />} />
+          <Route path="/rentals/:slug" element={<RentalItemPublic />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/for-providers" element={<ForProviders />} />
           <Route path="/join-as-provider" element={<Navigate to="/for-providers" replace />} />
@@ -359,6 +367,9 @@ const AppRoutes = () => (
           <Route path="/dashboard/diagnostics" element={<ProtectedRoute><DashboardAccountDiagnostics /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 4 — Contracts hub. */}
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContractsHub /></ProtectedRoute>} />
+          {/* RENTAL-MICROSERVICE-1 — provider + admin rental hubs */}
+          <Route path="/dashboard/rentals" element={<ProtectedRoute><DashboardRentals /></ProtectedRoute>} />
+          <Route path="/admin/rentals" element={<ProtectedRoute requireAdmin><AdminRentals /></ProtectedRoute>} />
           <Route path="/dashboard/contract-analytics" element={<Navigate to="/dashboard/contracts?tab=analytics" replace />} />
           <Route path="/dashboard/work-orders" element={<ProtectedRoute><DashboardWorkOrders /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 (group 5): legacy overview merged into main work-orders */}

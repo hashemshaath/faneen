@@ -14273,6 +14273,396 @@ export type Database = {
         }
         Relationships: []
       }
+      rental_categories: {
+        Row: {
+          created_at: string
+          default_image_url: string | null
+          description_ar: string | null
+          description_en: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          ref_id: string
+          seo_keywords: string[] | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_image_url?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          ref_id?: string
+          seo_keywords?: string[] | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_image_url?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          ref_id?: string
+          seo_keywords?: string[] | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rental_extensions: {
+        Row: {
+          additional_days: number
+          additional_quantity: number
+          approved_by_customer: boolean
+          approved_by_provider: boolean
+          cost: number
+          created_at: string
+          created_by: string
+          effective_from: string | null
+          extension_type: Database["public"]["Enums"]["rental_extension_type"]
+          id: string
+          reason: string | null
+          ref_id: string
+          rental_order_id: string
+          status: Database["public"]["Enums"]["rental_extension_status"]
+          updated_at: string
+        }
+        Insert: {
+          additional_days?: number
+          additional_quantity?: number
+          approved_by_customer?: boolean
+          approved_by_provider?: boolean
+          cost?: number
+          created_at?: string
+          created_by?: string
+          effective_from?: string | null
+          extension_type: Database["public"]["Enums"]["rental_extension_type"]
+          id?: string
+          reason?: string | null
+          ref_id?: string
+          rental_order_id: string
+          status?: Database["public"]["Enums"]["rental_extension_status"]
+          updated_at?: string
+        }
+        Update: {
+          additional_days?: number
+          additional_quantity?: number
+          approved_by_customer?: boolean
+          approved_by_provider?: boolean
+          cost?: number
+          created_at?: string
+          created_by?: string
+          effective_from?: string | null
+          extension_type?: Database["public"]["Enums"]["rental_extension_type"]
+          id?: string
+          reason?: string | null
+          ref_id?: string
+          rental_order_id?: string
+          status?: Database["public"]["Enums"]["rental_extension_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_extensions_rental_order_id_fkey"
+            columns: ["rental_order_id"]
+            isOneToOne: false
+            referencedRelation: "rental_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_items: {
+        Row: {
+          availability_status: string
+          base_price: number
+          category_id: string
+          city_id: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          deposit_amount: number
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          images: Json
+          is_published: boolean
+          late_terms: string | null
+          min_duration: number
+          name_ar: string
+          name_en: string | null
+          penalty_terms: string | null
+          provider_business_id: string
+          ref_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seo_slug: string | null
+          service_areas: Json
+          status: Database["public"]["Enums"]["rental_item_status"]
+          unit: Database["public"]["Enums"]["rental_unit"]
+          updated_at: string
+          usage_terms: string | null
+          view_count: number
+        }
+        Insert: {
+          availability_status?: string
+          base_price?: number
+          category_id: string
+          city_id?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          deposit_amount?: number
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          images?: Json
+          is_published?: boolean
+          late_terms?: string | null
+          min_duration?: number
+          name_ar: string
+          name_en?: string | null
+          penalty_terms?: string | null
+          provider_business_id: string
+          ref_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seo_slug?: string | null
+          service_areas?: Json
+          status?: Database["public"]["Enums"]["rental_item_status"]
+          unit?: Database["public"]["Enums"]["rental_unit"]
+          updated_at?: string
+          usage_terms?: string | null
+          view_count?: number
+        }
+        Update: {
+          availability_status?: string
+          base_price?: number
+          category_id?: string
+          city_id?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          deposit_amount?: number
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          images?: Json
+          is_published?: boolean
+          late_terms?: string | null
+          min_duration?: number
+          name_ar?: string
+          name_en?: string | null
+          penalty_terms?: string | null
+          provider_business_id?: string
+          ref_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seo_slug?: string | null
+          service_areas?: Json
+          status?: Database["public"]["Enums"]["rental_item_status"]
+          unit?: Database["public"]["Enums"]["rental_unit"]
+          updated_at?: string
+          usage_terms?: string | null
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "rental_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_items_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_items_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_items_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_order_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          rental_order_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          rental_order_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          rental_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_order_events_rental_order_id_fkey"
+            columns: ["rental_order_id"]
+            isOneToOne: false
+            referencedRelation: "rental_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_orders: {
+        Row: {
+          client_site_id: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          customer_business_id: string | null
+          customer_user_id: string | null
+          deposit_amount: number
+          end_date: string
+          id: string
+          notes: string | null
+          project_id: string | null
+          provider_business_id: string
+          quantity: number
+          ref_id: string
+          rental_item_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["rental_order_status"]
+          terms_snapshot: Json
+          total_amount: number
+          total_days: number
+          unit_price: number
+          updated_at: string
+          work_order_id: string | null
+        }
+        Insert: {
+          client_site_id?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          customer_business_id?: string | null
+          customer_user_id?: string | null
+          deposit_amount?: number
+          end_date: string
+          id?: string
+          notes?: string | null
+          project_id?: string | null
+          provider_business_id: string
+          quantity?: number
+          ref_id?: string
+          rental_item_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["rental_order_status"]
+          terms_snapshot?: Json
+          total_amount?: number
+          total_days?: number
+          unit_price?: number
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Update: {
+          client_site_id?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          customer_business_id?: string | null
+          customer_user_id?: string | null
+          deposit_amount?: number
+          end_date?: string
+          id?: string
+          notes?: string | null
+          project_id?: string | null
+          provider_business_id?: string
+          quantity?: number
+          ref_id?: string
+          rental_item_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["rental_order_status"]
+          terms_snapshot?: Json
+          total_amount?: number
+          total_days?: number
+          unit_price?: number
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_orders_customer_business_id_fkey"
+            columns: ["customer_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_orders_customer_business_id_fkey"
+            columns: ["customer_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_orders_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_orders_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_orders_rental_item_id_fkey"
+            columns: ["rental_item_id"]
+            isOneToOne: false
+            referencedRelation: "rental_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reserved_usernames: {
         Row: {
           created_at: string
@@ -20669,6 +21059,7 @@ export type Database = {
         Args: { p_business_id: string; p_sub_service_id: string }
         Returns: undefined
       }
+      rental_orders_roll_status: { Args: never; Returns: number }
       request_client_site_access: {
         Args: {
           _provider_business_id: string
@@ -21370,6 +21761,28 @@ export type Database = {
         | "approved"
         | "rejected"
         | "converted_to_business"
+      rental_extension_status: "pending" | "approved" | "rejected" | "cancelled"
+      rental_extension_type:
+        | "full"
+        | "partial"
+        | "duration_only"
+        | "quantity_only"
+      rental_item_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "archived"
+      rental_order_status:
+        | "draft"
+        | "active"
+        | "expiring_soon"
+        | "expired"
+        | "extended"
+        | "renewed"
+        | "closed"
+        | "cancelled"
+      rental_unit: "day" | "hour" | "piece" | "m" | "m2" | "unit"
       service_request_status:
         | "pending"
         | "approved"
@@ -21650,6 +22063,31 @@ export const Constants = {
         "rejected",
         "converted_to_business",
       ],
+      rental_extension_status: ["pending", "approved", "rejected", "cancelled"],
+      rental_extension_type: [
+        "full",
+        "partial",
+        "duration_only",
+        "quantity_only",
+      ],
+      rental_item_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "rejected",
+        "archived",
+      ],
+      rental_order_status: [
+        "draft",
+        "active",
+        "expiring_soon",
+        "expired",
+        "extended",
+        "renewed",
+        "closed",
+        "cancelled",
+      ],
+      rental_unit: ["day", "hour", "piece", "m", "m2", "unit"],
       service_request_status: [
         "pending",
         "approved",
