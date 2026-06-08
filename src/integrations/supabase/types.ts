@@ -14893,6 +14893,149 @@ export type Database = {
         }
         Relationships: []
       }
+      rental_equipment_catalog: {
+        Row: {
+          amperage_a: number | null
+          brand: string | null
+          capacity: string | null
+          category_id: string
+          certifications_required: string[]
+          condition_options: string[]
+          created_at: string
+          currency: string
+          description_ar: string | null
+          description_en: string | null
+          dimensions_cm: string | null
+          estimated_daily_price: number | null
+          estimated_deposit: number | null
+          estimated_monthly_price: number | null
+          estimated_weekly_price: number | null
+          fuel_capacity_l: number | null
+          fuel_type: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          license_required: boolean
+          manufacturer_country: string | null
+          model: string | null
+          name_ar: string
+          name_en: string
+          noise_db: number | null
+          operator_required: boolean
+          power_hp: number | null
+          power_source: string | null
+          power_watts: number | null
+          release_year: number | null
+          requirements: Json
+          safety_instructions: Json
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_keywords: string[]
+          slug: string
+          sort_order: number
+          updated_at: string
+          version: string | null
+          voltage_v: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          amperage_a?: number | null
+          brand?: string | null
+          capacity?: string | null
+          category_id: string
+          certifications_required?: string[]
+          condition_options?: string[]
+          created_at?: string
+          currency?: string
+          description_ar?: string | null
+          description_en?: string | null
+          dimensions_cm?: string | null
+          estimated_daily_price?: number | null
+          estimated_deposit?: number | null
+          estimated_monthly_price?: number | null
+          estimated_weekly_price?: number | null
+          fuel_capacity_l?: number | null
+          fuel_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          license_required?: boolean
+          manufacturer_country?: string | null
+          model?: string | null
+          name_ar: string
+          name_en: string
+          noise_db?: number | null
+          operator_required?: boolean
+          power_hp?: number | null
+          power_source?: string | null
+          power_watts?: number | null
+          release_year?: number | null
+          requirements?: Json
+          safety_instructions?: Json
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_keywords?: string[]
+          slug: string
+          sort_order?: number
+          updated_at?: string
+          version?: string | null
+          voltage_v?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          amperage_a?: number | null
+          brand?: string | null
+          capacity?: string | null
+          category_id?: string
+          certifications_required?: string[]
+          condition_options?: string[]
+          created_at?: string
+          currency?: string
+          description_ar?: string | null
+          description_en?: string | null
+          dimensions_cm?: string | null
+          estimated_daily_price?: number | null
+          estimated_deposit?: number | null
+          estimated_monthly_price?: number | null
+          estimated_weekly_price?: number | null
+          fuel_capacity_l?: number | null
+          fuel_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          license_required?: boolean
+          manufacturer_country?: string | null
+          model?: string | null
+          name_ar?: string
+          name_en?: string
+          noise_db?: number | null
+          operator_required?: boolean
+          power_hp?: number | null
+          power_source?: string | null
+          power_watts?: number | null
+          release_year?: number | null
+          requirements?: Json
+          safety_instructions?: Json
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_keywords?: string[]
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+          version?: string | null
+          voltage_v?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_equipment_catalog_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "rental_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rental_extensions: {
         Row: {
           additional_days: number
