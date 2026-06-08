@@ -469,20 +469,21 @@ const KpiTile: React.FC<{
 }> = ({ icon: Icon, label, value, hint, tone = 'primary', progress }) => {
   const t = KPI_TONES[tone];
   return (
-    <Card className={`p-3.5 hover-lift ${t.ring}`}>
-      <div className="flex items-start gap-3">
-        <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${t.icon}`}>
+    <Card className={`relative overflow-hidden p-3.5 hover-lift transition ${t.ring}`}>
+      <div className={`pointer-events-none absolute -top-10 -end-10 size-28 rounded-full opacity-[0.18] blur-2xl ${t.bar}`} />
+      <div className="relative flex items-start gap-3">
+        <div className={`size-11 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-white/10 shadow-sm ${t.icon}`}>
           <Icon className="size-5" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[11px] uppercase tracking-wide text-muted-foreground line-clamp-1">{label}</div>
-          <div className={`text-2xl font-semibold leading-tight tech-content ${t.chip}`}>{value}</div>
+          <div className={`text-[26px] font-bold leading-tight tech-content ${t.chip}`}>{value}</div>
           {hint && <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 tech-content">{hint}</div>}
         </div>
       </div>
       {typeof progress === 'number' && (
-        <div className="mt-2.5 h-1.5 w-full rounded-full bg-muted overflow-hidden">
-          <div className={`h-full ${t.bar} transition-all`} style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+        <div className="relative mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div className={`h-full ${t.bar} transition-all duration-500`} style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
         </div>
       )}
     </Card>
