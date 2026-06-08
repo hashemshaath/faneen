@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react';
+import { memo, useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -256,6 +256,58 @@ const issueOf = (code: string, field: string, tab: FormTab, override?: Partial<F
   return { ...base, ...override, field, tab };
 };
 
+/* ─────────────────────────────────────────────────────────────────
+ * Presentational sub-components
+ * Extracted + memoized so changing form state (which mutates many
+ * times per keystroke) doesn't re-render the static banner/empty UI.
+ * ─────────────────────────────────────────────────────────────── */
+
+const PersonalModeBanner = memo(function PersonalModeBanner({
+  isRTL, refId,
+}: { isRTL: boolean; refId: string | null }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <Info className="w-4 h-4 text-primary shrink-0" />
+        <p className="text-xs leading-relaxed">
+          {isRTL
+            ? 'وضع شخصي: تُربط مواقعك تلقائياً بحسابك ورقم هويتك. الرقم الضريبي اختياري ويُستخدم على الفواتير والعقود.'
+            : 'Personal mode: your sites are auto-linked to your account and national ID. Tax number is optional and used on invoices/contracts.'}
+        </p>
+      </div>
+      {refId && (
+        <span className="text-[11px] font-mono tech-content px-2 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+          {refId}
+        </span>
+      )}
+    </div>
+  );
+});
+
+const SitesEmptyState = memo(function SitesEmptyState({
+  isRTL, canCreate, onCreate,
+}: { isRTL: boolean; canCreate: boolean; onCreate: () => void }) {
+  return (
+    <div className="flex flex-col items-center py-16 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+        <MapPin className="w-7 h-7 text-primary" />
+      </div>
+      <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد مواقع بعد' : 'No sites yet'}</h3>
+      <p className="text-sm text-muted-foreground max-w-xs mb-5">
+        {isRTL
+          ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفِرَق.'
+          : 'Add execution sites to link them with contracts, work orders, and teams.'}
+      </p>
+      {canCreate && (
+        <Button variant="hero" size="sm" onClick={onCreate}>
+          <Plus className="w-4 h-4 me-1" />
+          {isRTL ? 'إضافة أول موقع' : 'Add First Site'}
+        </Button>
+      )}
+    </div>
+  );
+});
+
 export default function DashboardSites() {
   useNoIndex();
   const { isRTL } = useLanguage();
@@ -405,7 +457,9 @@ export default function DashboardSites() {
       out.push(issueOf('INVALID_LICENSE_DATES', 'municipal_license_expiry_date', 'government'));
     }
     return out;
-  }, [businessId, editing, form, naf]);
+    // `businessId` / `editing` aren't read here — personal-mode binding
+    // is decided inside the save mutation, not during validation.
+  }, [form, naf]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
@@ -685,21 +739,7 @@ export default function DashboardSites() {
         )}
 
         {!businessId && !isLoading && user && (
-          <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Info className="w-4 h-4 text-primary shrink-0" />
-              <p className="text-xs leading-relaxed">
-                {isRTL
-                  ? 'وضع شخصي: تُربط مواقعك تلقائياً بحسابك ورقم هويتك. الرقم الضريبي اختياري ويُستخدم على الفواتير والعقود.'
-                  : 'Personal mode: your sites are auto-linked to your account and national ID. Tax number is optional and used on invoices/contracts.'}
-              </p>
-            </div>
-            {profile?.ref_id && (
-              <span className="text-[11px] font-mono tech-content px-2 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
-                {profile.ref_id}
-              </span>
-            )}
-          </div>
+          <PersonalModeBanner isRTL={isRTL} refId={profile?.ref_id ?? null} />
         )}
 
         {/* Form (inline) */}
@@ -1115,21 +1155,7 @@ export default function DashboardSites() {
             {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-44 rounded-xl" />)}
           </div>
         ) : sites.length === 0 && !showForm ? (
-          <div className="flex flex-col items-center py-16 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-              <MapPin className="w-7 h-7 text-primary" />
-            </div>
-            <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد مواقع بعد' : 'No sites yet'}</h3>
-            <p className="text-sm text-muted-foreground max-w-xs mb-5">
-              {isRTL ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفِرَق.' : 'Add execution sites to link them with contracts, work orders, and teams.'}
-            </p>
-            {user && (
-              <Button variant="hero" size="sm" onClick={openCreate}>
-                <Plus className="w-4 h-4 me-1" />
-                {isRTL ? 'إضافة أول موقع' : 'Add First Site'}
-              </Button>
-            )}
-          </div>
+          <SitesEmptyState isRTL={isRTL} canCreate={!!user} onCreate={openCreate} />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <Search className="w-7 h-7 mb-2" />
