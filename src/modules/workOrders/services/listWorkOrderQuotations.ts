@@ -10,7 +10,7 @@ export async function listWorkOrderQuotations(input: {
   const { data, error } = await supabase
     .from("work_order_quotations")
     .select(
-      "id, ref_id, work_order_id, boq_id, business_id, status, quotation_number, title, notes, subtotal, tax, total, currency, valid_until, sent_at, viewed_at, approved_at, rejected_at, rejection_reason, approval_token_hash, pdf_attachment_id, created_by, created_at, updated_at, deleted_at",
+      "id, ref_id, work_order_id, boq_id, business_id, status, quotation_number, title, notes, subtotal, tax, total, currency, valid_until, sent_at, viewed_at, approved_at, rejected_at, rejection_reason, pdf_attachment_id, created_by, created_at, updated_at, deleted_at",
     )
     .eq("work_order_id", input.workOrderId)
     .is("deleted_at", null)
