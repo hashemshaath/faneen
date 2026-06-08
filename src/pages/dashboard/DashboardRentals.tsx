@@ -18,6 +18,8 @@ import {
 import type { RentalCategory, RentalItem, RentalOrder, RentalUnit } from '@/modules/rentals';
 import { RentalStatusBadge } from '@/modules/rentals/components/RentalStatusBadge';
 import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter';
+import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
+import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { toast } from 'sonner';
 
 /** Provider rentals dashboard — items + orders + extensions in one shell. */
@@ -109,9 +111,21 @@ const DashboardRentals: React.FC = () => {
               }}
             />
           </TabsContent>
-          <TabsContent value="active" className="mt-4"><OrdersPanel orders={activeOrders} items={items} /></TabsContent>
-          <TabsContent value="expiring" className="mt-4"><OrdersPanel orders={expiringOrders} items={items} /></TabsContent>
-          <TabsContent value="overdue" className="mt-4"><OrdersPanel orders={overdueOrders} items={items} /></TabsContent>
+          <TabsContent value="active" className="mt-4">
+            <OrdersPanel orders={activeOrders} items={items} onChanged={async () => {
+              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
+            }} />
+          </TabsContent>
+          <TabsContent value="expiring" className="mt-4">
+            <OrdersPanel orders={expiringOrders} items={items} onChanged={async () => {
+              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
+            }} />
+          </TabsContent>
+          <TabsContent value="overdue" className="mt-4">
+            <OrdersPanel orders={overdueOrders} items={items} onChanged={async () => {
+              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
+            }} />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
@@ -245,35 +259,71 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
           <Bi ar="لا توجد عناصر تأجير بعد." en="No rental items yet." />
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {items.map(it => {
-            const cat = categories.find(c => c.id === it.category_id);
-            const stat = ITEM_STATUS_LABELS[it.status];
-            return (
-              <Card key={it.id} className="p-4 hover-lift">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-medium">{isRTL ? it.name_ar : (it.name_en || it.name_ar)}</div>
-                  <span className="text-xs tech-content text-muted-foreground">{it.ref_id}</span>
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {cat ? (isRTL ? cat.name_ar : cat.name_en) : '—'}
-                </div>
-                <div className="mt-3 flex items-center justify-between text-sm">
-                  <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}</span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-muted">{isRTL ? stat.ar : stat.en}</span>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+        <ItemsGrid items={items} categories={categories} businessId={businessId} onChange={onChange} />
       )}
     </div>
   );
 };
 
 /* ---------- Orders panel ---------- */
-const OrdersPanel: React.FC<{ orders: RentalOrder[]; items: RentalItem[] }> = ({ orders, items }) => {
+
+/* ---------- Items grid (with inline image manager) ---------- */
+const ItemsGrid: React.FC<{
+  items: RentalItem[];
+  categories: RentalCategory[];
+  businessId: string;
+  onChange: () => Promise<void>;
+}> = ({ items, categories, businessId, onChange }) => {
   const { isRTL } = useLanguage();
+  const [editingImagesFor, setEditingImagesFor] = useState<string | null>(null);
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {items.map(it => {
+        const cat = categories.find(c => c.id === it.category_id);
+        const stat = ITEM_STATUS_LABELS[it.status];
+        const editing = editingImagesFor === it.id;
+        return (
+          <Card key={it.id} className="p-4 hover-lift">
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-medium">{isRTL ? it.name_ar : (it.name_en || it.name_ar)}</div>
+              <span className="text-xs tech-content text-muted-foreground">{it.ref_id}</span>
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {cat ? (isRTL ? cat.name_ar : cat.name_en) : '—'}
+            </div>
+            <div className="mt-3 flex items-center justify-between text-sm">
+              <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}</span>
+              <span className="text-xs px-2 py-1 rounded-full bg-muted">{isRTL ? stat.ar : stat.en}</span>
+            </div>
+            <div className="mt-3">
+              <Button size="sm" variant="ghost" onClick={() => setEditingImagesFor(editing ? null : it.id)}>
+                <Bi ar={editing ? 'إخفاء الصور' : 'إدارة الصور'} en={editing ? 'Hide images' : 'Manage images'} />
+              </Button>
+            </div>
+            {editing && (
+              <div className="mt-3">
+                <RentalImageUploader
+                  itemId={it.id}
+                  providerId={businessId}
+                  initialUrls={Array.isArray(it.images) ? it.images : []}
+                  onSaved={() => { void onChange(); }}
+                />
+              </div>
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
+
+const OrdersPanel: React.FC<{
+  orders: RentalOrder[];
+  items: RentalItem[];
+  onChanged?: () => void | Promise<void>;
+}> = ({ orders, items, onChanged }) => {
+  const { isRTL } = useLanguage();
+  const [openId, setOpenId] = useState<string | null>(null);
   if (orders.length === 0) {
     return <Card className="p-8 text-center text-muted-foreground"><Bi ar="لا توجد طلبات في هذه الفئة." en="No orders in this bucket." /></Card>;
   }
@@ -281,20 +331,33 @@ const OrdersPanel: React.FC<{ orders: RentalOrder[]; items: RentalItem[] }> = ({
     <div className="space-y-3">
       {orders.map(o => {
         const it = items.find(i => i.id === o.rental_item_id);
+        const isOpen = openId === o.id;
         return (
-          <Card key={o.id} className="p-4 hover-lift flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium truncate">
-                  {it ? (isRTL ? it.name_ar : (it.name_en || it.name_ar)) : '—'}
-                </span>
-                <RentalStatusBadge status={o.status} />
+          <Card key={o.id} className="p-4 hover-lift">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium truncate">
+                    {it ? (isRTL ? it.name_ar : (it.name_en || it.name_ar)) : '—'}
+                  </span>
+                  <RentalStatusBadge status={o.status} />
+                </div>
+                <div className="text-xs text-muted-foreground tech-content mt-1">
+                  {o.ref_id} · {o.start_date} → {o.end_date} · {o.total_days}d · {o.total_amount} {o.currency}
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground tech-content mt-1">
-                {o.ref_id} · {o.start_date} → {o.end_date} · {o.total_days}d · {o.total_amount} {o.currency}
+              <div className="flex items-center gap-2">
+                <RentalDayCounter endDate={o.end_date} size="sm" />
+                <Button size="sm" variant="ghost" onClick={() => setOpenId(isOpen ? null : o.id)}>
+                  <Bi ar={isOpen ? 'إخفاء' : 'إجراءات'} en={isOpen ? 'Hide' : 'Actions'} />
+                </Button>
               </div>
             </div>
-            <RentalDayCounter endDate={o.end_date} size="sm" />
+            {isOpen && (
+              <div className="mt-3">
+                <RentalExtensionPanel order={o} asProvider onChanged={onChanged} />
+              </div>
+            )}
           </Card>
         );
       })}

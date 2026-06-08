@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Boxes, CheckCircle2, XCircle, Loader2, Package } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { RentalCategories, RentalItems, RentalOps, ITEM_STATUS_LABELS } from '@/modules/rentals';
+import { RentalCategories, RentalItems, ITEM_STATUS_LABELS } from '@/modules/rentals';
 import type { RentalCategory, RentalItem } from '@/modules/rentals';
-import type { RentalOpsCounts } from '@/modules/rentals/services/operationsHub';
+import { RentalOpsQueueCard } from '@/modules/rentals';
 import { toast } from 'sonner';
 
 /** Admin rentals — moderation + ops snapshot. AdminRoute pattern: inside DashboardLayout. */
@@ -23,17 +23,14 @@ const AdminRentals: React.FC = () => {
   const [pending, setPending] = useState<RentalItem[]>([]);
   const [allItems, setAllItems] = useState<RentalItem[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
-  const [counts, setCounts] = useState<RentalOpsCounts | null>(null);
 
   const refresh = async () => {
-    const [cats, ops, pend, all] = await Promise.all([
+    const [cats, pend, all] = await Promise.all([
       RentalCategories.listCategories(),
-      RentalOps.getRentalOpsCounts(),
       supabase.from('rental_items').select('*').eq('status', 'pending_review').order('created_at', { ascending: false }),
       supabase.from('rental_items').select('*').order('created_at', { ascending: false }).limit(100),
     ]);
     setCategories(cats.data ?? []);
-    setCounts(ops);
     setPending((pend.data as RentalItem[] | null) ?? []);
     setAllItems((all.data as RentalItem[] | null) ?? []);
     setLoading(false);
@@ -59,16 +56,8 @@ const AdminRentals: React.FC = () => {
       <div className="space-y-6 pb-16 md:pb-20">
         <PageHeader icon={Boxes} title={bi('مركز التأجير','Rental Center')} subtitle={bi('مراجعة العناصر، نظرة على العقود والتمديدات، تصنيفات وSEO.','Moderate items, review orders/extensions, manage categories & SEO.')} />
 
-        {counts && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <OpsTile value={counts.active} ar="نشطة" en="Active" />
-            <OpsTile value={counts.expiring_soon} ar="قريبة الانتهاء" en="Expiring" />
-            <OpsTile value={counts.expired} ar="متجاوزة" en="Overdue" />
-            <OpsTile value={counts.pending_extensions} ar="تمديدات معلقة" en="Pending ext." />
-            <OpsTile value={counts.items_pending_review} ar="عناصر للمراجعة" en="Pending review" />
-            <OpsTile value={counts.items_missing_images} ar="بدون صور" en="Missing images" />
-          </div>
-        )}
+        {/* RENTAL-MICROSERVICE-2 — unified ops queue (replaces ad-hoc tiles). */}
+        <RentalOpsQueueCard />
 
         <Tabs defaultValue="pending">
           <TabsList>
@@ -130,12 +119,5 @@ const AdminRentals: React.FC = () => {
     </DashboardLayout>
   );
 };
-
-const OpsTile: React.FC<{ value: number; ar: string; en: string }> = ({ value, ar, en }) => (
-  <Card className="p-4">
-    <div className="text-2xl font-semibold tech-content">{value}</div>
-    <div className="text-xs text-muted-foreground"><Bi ar={ar} en={en} /></div>
-  </Card>
-);
 
 export default AdminRentals;
