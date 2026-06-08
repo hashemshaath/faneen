@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles, Info, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -244,25 +244,6 @@ const DashboardRentals: React.FC = () => {
     </DashboardLayout>
   );
 };
-
-const TONE_BG: Record<string, string> = {
-  primary: 'bg-primary/10 text-primary',
-  emerald: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  amber: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  red: 'bg-red-500/10 text-red-700 dark:text-red-300',
-};
-
-const StatTile: React.FC<{ icon: React.ComponentType<{ className?: string }>; value: number; ar: string; en: string; tone: keyof typeof TONE_BG }> = ({ icon: Icon, value, ar, en, tone }) => (
-  <Card className="p-4 hover-lift">
-    <div className="flex items-center gap-3">
-      <div className={`size-10 rounded-xl flex items-center justify-center ${TONE_BG[tone]}`}><Icon className="size-5" /></div>
-      <div>
-        <div className="text-2xl font-semibold tech-content">{value}</div>
-        <div className="text-xs text-muted-foreground"><Bi ar={ar} en={en} /></div>
-      </div>
-    </div>
-  </Card>
-);
 
 /* ---------- Intro banner + tips strip (RENTALS UX polish) ---------- */
 
