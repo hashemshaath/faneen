@@ -46,6 +46,9 @@ import {
   Sparkles,
   Plug,
   Award,
+  FilePlus2,
+  Files,
+  FileBarChart,
 } from 'lucide-react';
 
 interface MenuItem {
