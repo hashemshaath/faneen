@@ -9,6 +9,10 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Pencil, Save, X, Power, Trash2, UserPlus, Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { IconPicker, RenderIcon } from '@/components/admin/IconPicker';
+import { Textarea } from '@/components/ui/textarea';
 
 interface TaxCat { id: string; slug: string; name_ar: string; name_en: string | null; }
 interface CatalogRow {
@@ -26,6 +30,10 @@ interface CatalogRow {
   estimated_deposit: number | null;
   currency: string | null;
   is_active: boolean;
+  image_url: string | null;
+  icon: string | null;
+  description_ar: string | null;
+  description_en: string | null;
 }
 interface Biz { id: string; name_ar: string; name_en: string | null; }
 
@@ -52,7 +60,7 @@ export const CatalogManager: React.FC = () => {
   const load = async () => {
     setLoading(true);
     const [c, t, b] = await Promise.all([
-      supabase.from('rental_equipment_catalog').select('id,slug,name_ar,name_en,brand,model,category_id,taxonomy_category_id,estimated_daily_price,estimated_weekly_price,estimated_monthly_price,estimated_deposit,currency,is_active').order('name_ar'),
+      supabase.from('rental_equipment_catalog').select('id,slug,name_ar,name_en,brand,model,category_id,taxonomy_category_id,estimated_daily_price,estimated_weekly_price,estimated_monthly_price,estimated_deposit,currency,is_active,image_url,icon,description_ar,description_en').order('name_ar'),
       supabase.from('taxonomy_categories').select('id,slug,name_ar,name_en').eq('taxonomy_type_id', EQUIPMENT_TYPE_ID).order('sort_order'),
       supabase.from('businesses').select('id,name_ar,name_en').eq('is_active', true).order('name_ar').limit(500),
     ]);
@@ -91,6 +99,10 @@ export const CatalogManager: React.FC = () => {
       estimated_monthly_price: draft.estimated_monthly_price,
       estimated_deposit: draft.estimated_deposit,
       currency: draft.currency,
+      image_url: draft.image_url ?? null,
+      icon: draft.icon ?? null,
+      description_ar: draft.description_ar ?? null,
+      description_en: draft.description_en ?? null,
     };
     const { error } = await supabase.from('rental_equipment_catalog').update(payload).eq('id', id);
     setSavingId(null);
@@ -179,7 +191,14 @@ export const CatalogManager: React.FC = () => {
               {!isEdit ? (
                 <>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
+                    <div className="size-14 rounded-lg overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                      {r.image_url ? (
+                        <img src={r.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <RenderIcon value={r.icon || 'lucide:Package'} size={22} />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <div className="font-semibold truncate">{isRTL ? r.name_ar : (r.name_en || r.name_ar)}</div>
                       <div className="text-xs text-muted-foreground tech-content truncate">
                         {[r.brand, r.model].filter(Boolean).join(' · ') || '—'}
@@ -220,26 +239,99 @@ export const CatalogManager: React.FC = () => {
                   )}
                 </>
               ) : (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input dir="auto" value={draft.name_ar ?? ''} onChange={e => setDraft(d => ({ ...d, name_ar: e.target.value }))} placeholder="الاسم العربي" className="h-10 rounded-lg" />
-                    <Input dir="auto" value={draft.name_en ?? ''} onChange={e => setDraft(d => ({ ...d, name_en: e.target.value }))} placeholder="English name" className="h-10 rounded-lg" />
-                    <Input dir="auto" value={draft.brand ?? ''} onChange={e => setDraft(d => ({ ...d, brand: e.target.value }))} placeholder={isRTL ? 'الماركة' : 'Brand'} className="h-10 rounded-lg" />
-                    <Input dir="auto" value={draft.model ?? ''} onChange={e => setDraft(d => ({ ...d, model: e.target.value }))} placeholder={isRTL ? 'الموديل' : 'Model'} className="h-10 rounded-lg" />
+                <div className="space-y-4">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <Bi ar="المعلومات الأساسية" en="Basic info" />
                   </div>
-                  <Select value={draft.taxonomy_category_id ?? ''} onValueChange={v => setDraft(d => ({ ...d, taxonomy_category_id: v }))}>
-                    <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder={isRTL ? 'التصنيف' : 'Category'} /></SelectTrigger>
-                    <SelectContent>
-                      {cats.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <div className="grid grid-cols-4 gap-2">
-                    <Input type="number" dir="ltr" value={draft.estimated_daily_price ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_daily_price: e.target.value === '' ? null : Number(e.target.value) }))} placeholder={isRTL ? 'يومي' : 'Daily'} className="h-10 rounded-lg tech-content" />
-                    <Input type="number" dir="ltr" value={draft.estimated_weekly_price ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_weekly_price: e.target.value === '' ? null : Number(e.target.value) }))} placeholder={isRTL ? 'أسبوعي' : 'Weekly'} className="h-10 rounded-lg tech-content" />
-                    <Input type="number" dir="ltr" value={draft.estimated_monthly_price ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_monthly_price: e.target.value === '' ? null : Number(e.target.value) }))} placeholder={isRTL ? 'شهري' : 'Monthly'} className="h-10 rounded-lg tech-content" />
-                    <Input type="number" dir="ltr" value={draft.estimated_deposit ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_deposit: e.target.value === '' ? null : Number(e.target.value) }))} placeholder={isRTL ? 'تأمين' : 'Deposit'} className="h-10 rounded-lg tech-content" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الاسم بالعربية" en="Arabic name" /> <span className="text-red-500">*</span></Label>
+                      <Input dir="auto" value={draft.name_ar ?? ''} onChange={e => setDraft(d => ({ ...d, name_ar: e.target.value }))} placeholder={isRTL ? 'مثال: مولد كهربائي 5 كيلو' : 'e.g. 5kW Generator'} className="h-11 rounded-lg" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الاسم بالإنجليزية" en="English name" /></Label>
+                      <Input dir="auto" value={draft.name_en ?? ''} onChange={e => setDraft(d => ({ ...d, name_en: e.target.value }))} placeholder="e.g. 5kW Generator" className="h-11 rounded-lg" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الماركة" en="Brand" /></Label>
+                      <Input dir="auto" value={draft.brand ?? ''} onChange={e => setDraft(d => ({ ...d, brand: e.target.value }))} placeholder={isRTL ? 'مثال: APC' : 'e.g. APC'} className="h-11 rounded-lg" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الموديل" en="Model" /></Label>
+                      <Input dir="auto" value={draft.model ?? ''} onChange={e => setDraft(d => ({ ...d, model: e.target.value }))} placeholder={isRTL ? 'مثال: SRT-10K' : 'e.g. SRT-10K'} className="h-11 rounded-lg" />
+                    </div>
                   </div>
-                  <div className="flex gap-2 pt-1">
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium"><Bi ar="التصنيف" en="Category" /></Label>
+                    <Select value={draft.taxonomy_category_id ?? ''} onValueChange={v => setDraft(d => ({ ...d, taxonomy_category_id: v }))}>
+                      <SelectTrigger className="h-11 rounded-lg"><SelectValue placeholder={isRTL ? 'اختر تصنيفًا' : 'Choose category'} /></SelectTrigger>
+                      <SelectContent>
+                        {cats.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">
+                    <Bi ar="المظهر" en="Appearance" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الصورة" en="Image" /></Label>
+                      <ImageUpload
+                        bucket="business-assets"
+                        folder={`catalog/${r.slug || r.id}`}
+                        value={draft.image_url ?? ''}
+                        onChange={(url) => setDraft(d => ({ ...d, image_url: url }))}
+                        onRemove={() => setDraft(d => ({ ...d, image_url: null }))}
+                        aspectRatio="square"
+                        maxSizeMB={3}
+                        placeholder={bi('ارفع صورة (PNG/JPG/WebP)', 'Upload (PNG/JPG/WebP)')}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الأيقونة (احتياطي عند غياب الصورة)" en="Icon (fallback when no image)" /></Label>
+                      <IconPicker value={draft.icon ?? ''} onChange={(v) => setDraft(d => ({ ...d, icon: v }))} />
+                    </div>
+                  </div>
+
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">
+                    <Bi ar="الأسعار التقديرية" en="Estimated prices" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="يومي" en="Daily" /></Label>
+                      <Input type="number" dir="ltr" value={draft.estimated_daily_price ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_daily_price: e.target.value === '' ? null : Number(e.target.value) }))} className="h-11 rounded-lg tech-content" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="أسبوعي" en="Weekly" /></Label>
+                      <Input type="number" dir="ltr" value={draft.estimated_weekly_price ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_weekly_price: e.target.value === '' ? null : Number(e.target.value) }))} className="h-11 rounded-lg tech-content" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="شهري" en="Monthly" /></Label>
+                      <Input type="number" dir="ltr" value={draft.estimated_monthly_price ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_monthly_price: e.target.value === '' ? null : Number(e.target.value) }))} className="h-11 rounded-lg tech-content" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="مبلغ التأمين" en="Deposit" /></Label>
+                      <Input type="number" dir="ltr" value={draft.estimated_deposit ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_deposit: e.target.value === '' ? null : Number(e.target.value) }))} className="h-11 rounded-lg tech-content" />
+                    </div>
+                  </div>
+
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">
+                    <Bi ar="الوصف" en="Description" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الوصف بالعربية" en="Arabic description" /></Label>
+                      <Textarea dir="auto" rows={3} value={draft.description_ar ?? ''} onChange={e => setDraft(d => ({ ...d, description_ar: e.target.value }))} className="rounded-lg resize-none" placeholder={bi('وصف موجز يظهر للزبائن…','Short description shown to customers…')} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium"><Bi ar="الوصف بالإنجليزية" en="English description" /></Label>
+                      <Textarea dir="ltr" rows={3} value={draft.description_en ?? ''} onChange={e => setDraft(d => ({ ...d, description_en: e.target.value }))} className="rounded-lg resize-none" />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2 border-t">
                     <Button size="sm" onClick={() => saveEdit(r.id)} disabled={savingId === r.id} className="h-9 rounded-lg">
                       {savingId === r.id ? <Loader2 className="size-3.5 me-1 animate-spin" /> : <Save className="size-3.5 me-1" />}
                       <Bi ar="حفظ" en="Save" />
