@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { RentalCategories, RentalItems, RentalOps, ITEM_STATUS_LABELS } from '@/modules/rentals';
 import type { RentalCategory, RentalItem } from '@/modules/rentals';
 import type { RentalOpsCounts } from '@/modules/rentals/services/operationsHub';
+import { RentalOpsQueueCard } from '@/modules/rentals';
 import { toast } from 'sonner';
 
 /** Admin rentals — moderation + ops snapshot. AdminRoute pattern: inside DashboardLayout. */
@@ -59,16 +60,8 @@ const AdminRentals: React.FC = () => {
       <div className="space-y-6 pb-16 md:pb-20">
         <PageHeader icon={Boxes} title={bi('مركز التأجير','Rental Center')} subtitle={bi('مراجعة العناصر، نظرة على العقود والتمديدات، تصنيفات وSEO.','Moderate items, review orders/extensions, manage categories & SEO.')} />
 
-        {counts && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <OpsTile value={counts.active} ar="نشطة" en="Active" />
-            <OpsTile value={counts.expiring_soon} ar="قريبة الانتهاء" en="Expiring" />
-            <OpsTile value={counts.expired} ar="متجاوزة" en="Overdue" />
-            <OpsTile value={counts.pending_extensions} ar="تمديدات معلقة" en="Pending ext." />
-            <OpsTile value={counts.items_pending_review} ar="عناصر للمراجعة" en="Pending review" />
-            <OpsTile value={counts.items_missing_images} ar="بدون صور" en="Missing images" />
-          </div>
-        )}
+        {/* RENTAL-MICROSERVICE-2 — unified ops queue (replaces ad-hoc tiles). */}
+        <RentalOpsQueueCard />
 
         <Tabs defaultValue="pending">
           <TabsList>
