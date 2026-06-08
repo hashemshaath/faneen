@@ -2,10 +2,14 @@ import { useMemo } from 'react';
 import { usePlatformSettingsCore } from '@/hooks/usePlatformSettingsCore';
 // Bundle the default brand assets so they are served from the hashed
 // /assets/* directory (long-cache immutable). Admin-uploaded URLs from
-// platform_settings still take precedence at runtime.
-import logoFullDefault from '@/assets/logo-full.png';
-import logoFullLightDefault from '@/assets/logo-full-light.png';
-import logoMarkDefault from '@/assets/logo-mark.png';
+// platform_settings still take precedence at runtime. We default to the
+// small variants — the navbar/footer never render the logo bigger than
+// ~140px, so the full-size 512/1449px sources used to ship 5–10× more
+// pixels than the screen consumed. Larger originals are still imported
+// where they are actually rendered big (auth, OG previews).
+import logoFullDefault from '@/assets/logo-full-320.png';
+import logoFullLightDefault from '@/assets/logo-full-light-320.png';
+import logoMarkDefault from '@/assets/logo-mark-128.png';
 
 export interface BrandingConfig {
   fullLightUrl: string;   // logo for light backgrounds (full color)
