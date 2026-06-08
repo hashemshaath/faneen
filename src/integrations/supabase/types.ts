@@ -1073,6 +1073,7 @@ export type Database = {
           ref_id: string
           retired_at: string | null
           serial_number: string | null
+          sort_order: number
           status: Database["public"]["Enums"]["asset_status"]
           updated_at: string
           year_manufactured: number | null
@@ -1103,6 +1104,7 @@ export type Database = {
           ref_id?: string
           retired_at?: string | null
           serial_number?: string | null
+          sort_order?: number
           status?: Database["public"]["Enums"]["asset_status"]
           updated_at?: string
           year_manufactured?: number | null
@@ -1133,6 +1135,7 @@ export type Database = {
           ref_id?: string
           retired_at?: string | null
           serial_number?: string | null
+          sort_order?: number
           status?: Database["public"]["Enums"]["asset_status"]
           updated_at?: string
           year_manufactured?: number | null
@@ -15142,6 +15145,7 @@ export type Database = {
           reviewed_by: string | null
           seo_slug: string | null
           service_areas: Json
+          sort_order: number
           status: Database["public"]["Enums"]["rental_item_status"]
           taxonomy_category_id: string | null
           unit: Database["public"]["Enums"]["rental_unit"]
@@ -15175,6 +15179,7 @@ export type Database = {
           reviewed_by?: string | null
           seo_slug?: string | null
           service_areas?: Json
+          sort_order?: number
           status?: Database["public"]["Enums"]["rental_item_status"]
           taxonomy_category_id?: string | null
           unit?: Database["public"]["Enums"]["rental_unit"]
@@ -15208,6 +15213,7 @@ export type Database = {
           reviewed_by?: string | null
           seo_slug?: string | null
           service_areas?: Json
+          sort_order?: number
           status?: Database["public"]["Enums"]["rental_item_status"]
           taxonomy_category_id?: string | null
           unit?: Database["public"]["Enums"]["rental_unit"]
