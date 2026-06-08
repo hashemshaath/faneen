@@ -4687,7 +4687,7 @@ export type Database = {
           archived_at: string | null
           block_number: string | null
           building_number: string | null
-          business_id: string
+          business_id: string | null
           city_id: string | null
           city_name: string | null
           client_user_id: string | null
@@ -4733,6 +4733,7 @@ export type Database = {
           site_type: string
           street_name: string | null
           street_name_en: string | null
+          tax_number: string | null
           title_deed_date: string | null
           title_deed_no: string | null
           updated_at: string
@@ -4747,7 +4748,7 @@ export type Database = {
           archived_at?: string | null
           block_number?: string | null
           building_number?: string | null
-          business_id: string
+          business_id?: string | null
           city_id?: string | null
           city_name?: string | null
           client_user_id?: string | null
@@ -4793,6 +4794,7 @@ export type Database = {
           site_type?: string
           street_name?: string | null
           street_name_en?: string | null
+          tax_number?: string | null
           title_deed_date?: string | null
           title_deed_no?: string | null
           updated_at?: string
@@ -4807,7 +4809,7 @@ export type Database = {
           archived_at?: string | null
           block_number?: string | null
           building_number?: string | null
-          business_id?: string
+          business_id?: string | null
           city_id?: string | null
           city_name?: string | null
           client_user_id?: string | null
@@ -4853,6 +4855,7 @@ export type Database = {
           site_type?: string
           street_name?: string | null
           street_name_en?: string | null
+          tax_number?: string | null
           title_deed_date?: string | null
           title_deed_no?: string | null
           updated_at?: string
