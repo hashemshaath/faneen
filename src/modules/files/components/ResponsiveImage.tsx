@@ -1,14 +1,14 @@
 /**
- * Central responsive image component (Phase 2 — used by Showcase only).
+ * Central responsive image component used across all public surfaces
+ * (Showcase, Projects, Businesses, Products, Brands, Sectors, Services).
  *
  * - Builds `srcset`/`sizes` from a `variants` map ({thumbnail, card,
  *   medium, hero}). Falls back to a single `src` URL when no variants
  *   are available (legacy rows).
  * - Lazy by default; pass `priority` for an LCP hero image.
  * - Never overrides `alt` — caller MUST pass meaningful text.
- *
- * TODO Phase 2.1: adopt this in projects, business logos, services,
- * products, articles. Today it is intentionally scoped to Showcase.
+ * - When not `priority`, sets `fetchpriority="low"` so below-the-fold
+ *   logos/thumbnails don't compete with the LCP image for bandwidth.
  */
 import type { ImgHTMLAttributes } from 'react';
 import {
@@ -83,7 +83,7 @@ export function ResponsiveImage({
       decoding={priority ? 'sync' : 'async'}
       // fetchpriority is camelCase in React 18+ types but lowercase in HTML;
       // cast keeps the prop available without enabling unknown DOM attribute warnings.
-      {...(priority ? ({ fetchpriority: 'high' } as unknown as Record<string, string>) : {})}
+      {...({ fetchpriority: priority ? 'high' : 'low' } as unknown as Record<string, string>)}
       className={className}
     />
   );

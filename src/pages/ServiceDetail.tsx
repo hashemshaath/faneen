@@ -14,6 +14,7 @@ import {
   getServiceBySlug, getRelatedServices, SECTOR_LABEL, QUALITY_LABEL, UNIT_LABEL,
 } from '@/lib/services-catalog';
 import { getServiceContent, SECTOR_HERO } from '@/lib/service-seo-content';
+import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 
 const ServiceDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -142,14 +143,12 @@ const ServiceDetail: React.FC = () => {
 
               {heroImg && (
                 <figure className="rounded-xl overflow-hidden border bg-muted">
-                  <img
-                    src={heroImg}
+                  <ResponsiveImage
+                    originalUrl={heroImg}
                     alt={isRTL ? `${name} — ${sectorName} في السعودية` : `${name} — ${sectorName} in Saudi Arabia`}
                     width={1280}
                     height={720}
-                    loading="eager"
-                    decoding="async"
-                    {...{ fetchpriority: 'high' }}
+                    priority
                     className="w-full h-auto object-cover aspect-[16/9]"
                   />
                   <figcaption className="sr-only">

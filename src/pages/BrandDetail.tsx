@@ -21,6 +21,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
+import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 import {
   getBrandBySlug,
   listBrandManufacturingCountries,
@@ -152,9 +153,14 @@ const BrandDetail: React.FC = () => {
             <section className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 md:p-8">
               <div className="flex flex-wrap gap-5 items-start">
                 {brand.logo_url ? (
-                  <img src={brand.logo_url} alt={display}
-                       width={80} height={80} decoding="async" loading="eager"
-                       className="h-20 w-20 rounded-2xl border bg-background object-cover" />
+                  <ResponsiveImage
+                    originalUrl={brand.logo_url}
+                    alt={display}
+                    width={80}
+                    height={80}
+                    priority
+                    className="h-20 w-20 rounded-2xl border bg-background object-cover"
+                  />
                 ) : (
                   <div className="h-20 w-20 rounded-2xl bg-primary/15 grid place-items-center text-primary">
                     <Tag className="h-8 w-8" />
