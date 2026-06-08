@@ -366,18 +366,44 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     }
     setSubmitting(true);
     const specs: Record<string, string> = {};
+    const electricalErrors: string[] = [];
+    const numericCheck = (label: string, raw: string) => {
+      if (!raw) return;
+      // Allow plain number; for power_hp allow trailing unit like "10 kVA"
+      const numeric = parseFloat(raw);
+      if (Number.isNaN(numeric) || numeric < 0) electricalErrors.push(label);
+    };
+    numericCheck(bi('الجهد','Voltage'), form.voltage);
+    numericCheck(bi('التيار','Current'), form.current_amp);
+    numericCheck(bi('الواط','Wattage'), form.wattage);
     if (form.voltage)     specs.voltage = form.voltage;
     if (form.current_amp) specs.current_amp = form.current_amp;
     if (form.wattage)     specs.wattage = form.wattage;
     if (form.power_hp)    specs.power_hp = form.power_hp;
+    if (electricalErrors.length) {
+      setSubmitting(false);
+      toast.error(bi('قيمة غير صحيحة في: ','Invalid numeric value in: ') + electricalErrors.join(', '));
+      return;
+    }
+    const priceNum = Number(form.base_price);
+    if (!Number.isFinite(priceNum) || priceNum < 0) {
+      setSubmitting(false);
+      toast.error(bi('السعر غير صحيح','Invalid price'));
+      return;
+    }
     const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
+    if (allImages.length > 6) {
+      setSubmitting(false);
+      toast.error(bi('الحد الأقصى صورة غلاف + ٥ صور إضافية','Limit: 1 cover + 5 additional images'));
+      return;
+    }
     const { error } = await RentalItems.createItem({
       provider_business_id: businessId,
       category_id: form.category_id,
       name_ar: form.name_ar,
       name_en: form.name_en || undefined,
       unit: form.unit,
-      base_price: Number(form.base_price) || 0,
+      base_price: priceNum,
       min_duration: Number(form.min_duration) || 1,
       deposit_amount: Number(form.deposit_amount) || 0,
       usage_terms: form.usage_terms || undefined,
@@ -612,21 +638,45 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               <Bi ar="التسعير" en="Pricing" />
             </div>
+            <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+              <Bi
+                ar="جميع الأسعار المُدخلة هنا بدون قيمة الضريبة (١٥٪). تُحتسب الضريبة تلقائيًا عند إصدار الفاتورة."
+                en="All prices entered here are excluding VAT (15%). VAT is added automatically at invoicing."
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="السعر للوحدة (بدون ضريبة القيمة المضافة) *" en="Price per unit (excl. VAT) *" /></Label>
-                <Input type="number" inputMode="decimal" value={form.base_price} onChange={e => setForm({ ...form, base_price: e.target.value })} className="tech-content" />
-                <div className="text-[10px] text-muted-foreground">
-                  <Bi ar="السعر قابل للتعديل ولا يشمل الضريبة (١٥٪) وتُضاف عند الفوترة." en="Editable. VAT (15%) is added at invoicing." />
-                </div>
+                <Label className="text-xs"><Bi ar="السعر للوحدة (بدون ضريبة) *" en="Price per unit (excl. VAT) *" /></Label>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  dir="ltr"
+                  value={form.base_price}
+                  onChange={e => {
+                    // Allow digits and a single dot only — keeps price freely editable even after catalog pick
+                    const v = e.target.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
+                    setForm({ ...form, base_price: v });
+                  }}
+                  className="tech-content"
+                  placeholder="0.00"
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="الحد الأدنى للمدة" en="Minimum duration" /></Label>
-                <Input type="number" inputMode="numeric" value={form.min_duration} onChange={e => setForm({ ...form, min_duration: e.target.value })} className="tech-content" />
+                <Input type="text" inputMode="numeric" dir="ltr"
+                  value={form.min_duration}
+                  onChange={e => setForm({ ...form, min_duration: e.target.value.replace(/\D/g,'') })}
+                  className="tech-content" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="مبلغ التأمين" en="Deposit amount" /></Label>
-                <Input type="number" inputMode="decimal" value={form.deposit_amount} onChange={e => setForm({ ...form, deposit_amount: e.target.value })} className="tech-content" />
+                <Input type="text" inputMode="decimal" dir="ltr"
+                  value={form.deposit_amount}
+                  onChange={e => {
+                    const v = e.target.value.replace(/[^\d.]/g,'').replace(/(\..*)\./g,'$1');
+                    setForm({ ...form, deposit_amount: v });
+                  }}
+                  className="tech-content" />
               </div>
             </div>
           </div>
@@ -847,13 +897,13 @@ const ItemsGrid: React.FC<{
   onChange: () => Promise<void>;
 }> = ({ items, categories, businessId, onChange }) => {
   const { isRTL } = useLanguage();
-  const [editingImagesFor, setEditingImagesFor] = useState<string | null>(null);
+  const [editingFor, setEditingFor] = useState<string | null>(null);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {items.map(it => {
         const cat = categories.find(c => c.id === it.category_id);
         const stat = ITEM_STATUS_LABELS[it.status];
-        const editing = editingImagesFor === it.id;
+        const editing = editingFor === it.id;
         return (
           <Card key={it.id} className="p-4 hover-lift">
             <div className="flex items-center justify-between gap-2">
@@ -864,27 +914,305 @@ const ItemsGrid: React.FC<{
               {cat ? (isRTL ? cat.name_ar : cat.name_en) : '—'}
             </div>
             <div className="mt-3 flex items-center justify-between text-sm">
-              <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}</span>
+              <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}
+                <span className="text-[10px] text-muted-foreground ms-1">({isRTL ? 'بدون ضريبة' : 'excl. VAT'})</span>
+              </span>
               <span className="text-xs px-2 py-1 rounded-full bg-muted">{isRTL ? stat.ar : stat.en}</span>
             </div>
-            <div className="mt-3">
-              <Button size="sm" variant="ghost" onClick={() => setEditingImagesFor(editing ? null : it.id)}>
-                <Bi ar={editing ? 'إخفاء الصور' : 'إدارة الصور'} en={editing ? 'Hide images' : 'Manage images'} />
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" variant={editing ? 'default' : 'outline'} onClick={() => setEditingFor(editing ? null : it.id)}>
+                <Bi ar={editing ? 'إغلاق التعديل' : 'تعديل البيانات'} en={editing ? 'Close' : 'Edit details'} />
               </Button>
             </div>
             {editing && (
               <div className="mt-3">
-                <RentalImageUploader
-                  itemId={it.id}
-                  providerId={businessId}
-                  initialUrls={Array.isArray(it.images) ? it.images : []}
-                  onSaved={() => { void onChange(); }}
+                <RentalItemEditForm
+                  item={it}
+                  categories={categories}
+                  businessId={businessId}
+                  onSaved={async () => { await onChange(); }}
                 />
               </div>
             )}
           </Card>
         );
       })}
+    </div>
+  );
+};
+
+/* ---------- Inline edit form for an existing rental item ---------- */
+const RentalItemEditForm: React.FC<{
+  item: RentalItem;
+  categories: RentalCategory[];
+  businessId: string;
+  onSaved: () => Promise<void> | void;
+}> = ({ item, categories, businessId, onSaved }) => {
+  const { isRTL } = useLanguage();
+  const bi = useBi();
+  const initialImages = Array.isArray(item.images) ? (item.images as string[]) : [];
+  const initialCover = item.cover_image_url ?? initialImages[0] ?? null;
+  const initialGallery = initialImages.filter(u => u !== initialCover).slice(0, 5);
+  const initialSpecs = (item.specs ?? {}) as Record<string, string>;
+
+  const [saving, setSaving] = useState(false);
+  const [coverUrl, setCoverUrl] = useState<string | null>(initialCover);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(initialGallery);
+  const [form, setForm] = useState({
+    name_ar: item.name_ar,
+    name_en: item.name_en ?? '',
+    category_id: item.category_id,
+    unit: item.unit,
+    base_price: String(item.base_price ?? 0),
+    min_duration: String(item.min_duration ?? 1),
+    deposit_amount: String(item.deposit_amount ?? 0),
+    usage_terms: item.usage_terms ?? '',
+    late_terms: item.late_terms ?? '',
+    penalty_terms: item.penalty_terms ?? '',
+    brand: item.brand ?? '',
+    country_of_manufacture: item.country_of_manufacture ?? '',
+    condition: (item.condition ?? '') as '' | 'new' | 'like_new' | 'good' | 'medium' | 'used',
+    voltage: initialSpecs.voltage ?? '',
+    current_amp: initialSpecs.current_amp ?? '',
+    wattage: initialSpecs.wattage ?? '',
+    power_hp: initialSpecs.power_hp ?? '',
+  });
+
+  const cat = categories.find(c => c.id === form.category_id);
+  const haystack = `${cat?.name_ar ?? ''} ${cat?.name_en ?? ''} ${form.name_ar} ${form.name_en}`.toLowerCase();
+  const showElectrical = ELECTRICAL_KEYWORDS.some(k => haystack.includes(k));
+
+  const handleSave = async () => {
+    const priceNum = Number(form.base_price);
+    if (!Number.isFinite(priceNum) || priceNum < 0) { toast.error(bi('السعر غير صحيح','Invalid price')); return; }
+    const specs: Record<string, string> = {};
+    if (showElectrical) {
+      const numCheck = (raw: string, label: string) => {
+        if (!raw) return true;
+        const n = parseFloat(raw);
+        if (Number.isNaN(n) || n < 0) { toast.error(bi('قيمة غير صحيحة: ','Invalid value: ') + label); return false; }
+        return true;
+      };
+      if (!numCheck(form.voltage, bi('الجهد','Voltage'))) return;
+      if (!numCheck(form.current_amp, bi('التيار','Current'))) return;
+      if (!numCheck(form.wattage, bi('الواط','Wattage'))) return;
+      if (form.voltage)     specs.voltage = form.voltage;
+      if (form.current_amp) specs.current_amp = form.current_amp;
+      if (form.wattage)     specs.wattage = form.wattage;
+      if (form.power_hp)    specs.power_hp = form.power_hp;
+    }
+    const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
+    if (allImages.length > 6) { toast.error(bi('الحد الأقصى صورة غلاف + ٥ صور إضافية','Limit: 1 cover + 5 additional images')); return; }
+    setSaving(true);
+    const { error } = await RentalItems.updateItem(item.id, {
+      name_ar: form.name_ar,
+      name_en: form.name_en || undefined,
+      category_id: form.category_id,
+      unit: form.unit,
+      base_price: priceNum,
+      min_duration: Number(form.min_duration) || 1,
+      deposit_amount: Number(form.deposit_amount) || 0,
+      usage_terms: form.usage_terms || undefined,
+      late_terms: form.late_terms || undefined,
+      penalty_terms: form.penalty_terms || undefined,
+      brand: form.brand || undefined,
+      country_of_manufacture: form.country_of_manufacture || undefined,
+      condition: form.condition || undefined,
+      cover_image_url: coverUrl ?? undefined,
+      images: allImages,
+      specs,
+    });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(bi('تم حفظ التعديلات','Changes saved'));
+    await onSaved();
+  };
+
+  return (
+    <div className="space-y-4 border-t pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="اسم المعدة بالعربية *" en="Name (Arabic) *" /></Label>
+          <Input dir="auto" value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="الاسم بالإنجليزية" en="Name (English)" /></Label>
+          <Input dir="auto" value={form.name_en} onChange={e => setForm({ ...form, name_en: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="التصنيف *" en="Category *" /></Label>
+          <Select value={form.category_id} onValueChange={v => setForm({ ...form, category_id: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {categories.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="وحدة التأجير" en="Rental unit" /></Label>
+          <Select value={form.unit} onValueChange={v => setForm({ ...form, unit: v as RentalUnit })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {RENTAL_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{isRTL ? u.ar : u.en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+        <Bi ar="السعر بدون قيمة الضريبة (١٥٪) — تُحتسب عند الفوترة." en="Price is excluding VAT (15%) — added at invoicing." />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="السعر للوحدة (بدون ضريبة) *" en="Price per unit (excl. VAT) *" /></Label>
+          <Input type="text" inputMode="decimal" dir="ltr"
+            value={form.base_price}
+            onChange={e => {
+              const v = e.target.value.replace(/[^\d.]/g,'').replace(/(\..*)\./g,'$1');
+              setForm({ ...form, base_price: v });
+            }}
+            className="tech-content" placeholder="0.00" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="الحد الأدنى للمدة" en="Minimum duration" /></Label>
+          <Input type="text" inputMode="numeric" dir="ltr"
+            value={form.min_duration}
+            onChange={e => setForm({ ...form, min_duration: e.target.value.replace(/\D/g,'') })}
+            className="tech-content" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="مبلغ التأمين" en="Deposit amount" /></Label>
+          <Input type="text" inputMode="decimal" dir="ltr"
+            value={form.deposit_amount}
+            onChange={e => {
+              const v = e.target.value.replace(/[^\d.]/g,'').replace(/(\..*)\./g,'$1');
+              setForm({ ...form, deposit_amount: v });
+            }}
+            className="tech-content" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="الماركة" en="Brand" /></Label>
+          <Input dir="auto" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="بلد الصنع" en="Country" /></Label>
+          <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
+            <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
+            <SelectContent>
+              {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="الحالة" en="Condition" /></Label>
+          <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
+            <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
+            <SelectContent>
+              {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {showElectrical && (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <Bi ar="المواصفات الكهربائية" en="Electrical specs" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs"><Bi ar="الجهد (V)" en="Voltage (V)" /></Label>
+              <Input type="text" inputMode="decimal" dir="ltr" value={form.voltage} onChange={e => setForm({ ...form, voltage: e.target.value.replace(/[^\d.]/g,'') })} className="tech-content" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs"><Bi ar="التيار (A)" en="Current (A)" /></Label>
+              <Input type="text" inputMode="decimal" dir="ltr" value={form.current_amp} onChange={e => setForm({ ...form, current_amp: e.target.value.replace(/[^\d.]/g,'') })} className="tech-content" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs"><Bi ar="الواط (W)" en="Wattage (W)" /></Label>
+              <Input type="text" inputMode="decimal" dir="ltr" value={form.wattage} onChange={e => setForm({ ...form, wattage: e.target.value.replace(/[^\d.]/g,'') })} className="tech-content" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs"><Bi ar="القوة (HP/kVA)" en="Power (HP/kVA)" /></Label>
+              <Input type="text" inputMode="decimal" dir="ltr" value={form.power_hp} onChange={e => setForm({ ...form, power_hp: e.target.value })} className="tech-content" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Images */}
+      <div className="space-y-3">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <Bi ar="الصور (غلاف + حتى ٥ إضافية)" en="Images (cover + up to 5 additional)" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs"><Bi ar="صورة الغلاف" en="Cover" /></Label>
+            {coverUrl ? (
+              <div>
+                <img src={coverUrl} alt="cover" className="w-full h-36 rounded-lg object-cover border" />
+                <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => setCoverUrl(null)}>
+                  <Bi ar="تغيير الغلاف" en="Replace cover" />
+                </Button>
+              </div>
+            ) : (
+              <ImageUploader providerId={businessId} maxImages={1}
+                onChange={(rows: UploadedImageRow[]) => setCoverUrl(rows[0]?.url_large ?? null)} />
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs"><Bi ar="صور إضافية" en="Additional images" /></Label>
+            {galleryUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {galleryUrls.map((u, idx) => (
+                  <div key={u} className="relative group">
+                    <img src={u} alt="" className="w-full h-20 object-cover rounded-md border" />
+                    <button type="button"
+                      onClick={() => setGalleryUrls(galleryUrls.filter((_, i) => i !== idx))}
+                      className="absolute top-1 end-1 bg-destructive text-destructive-foreground text-[10px] rounded px-1.5 py-0.5 opacity-0 group-hover:opacity-100">
+                      <Bi ar="حذف" en="Remove" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {galleryUrls.length < 5 ? (
+              <ImageUploader providerId={businessId} maxImages={5 - galleryUrls.length}
+                onChange={(rows: UploadedImageRow[]) => {
+                  const next = [...galleryUrls, ...rows.map(r => r.url_large)].slice(0, 5);
+                  setGalleryUrls(next);
+                }} />
+            ) : (
+              <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 rounded-md px-2 py-1.5">
+                <Bi ar="تم بلوغ الحد الأقصى (٥ صور). احذف صورة لإضافة أخرى." en="Limit reached (5 images). Remove one to add another." />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Terms */}
+      <div className="space-y-2">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <Bi ar="الشروط والأحكام" en="Terms & conditions" />
+        </div>
+        <TermsField label={bi('شروط الاستخدام','Usage terms')} presets={USAGE_PRESETS}
+          value={form.usage_terms} onChange={v => setForm({ ...form, usage_terms: v })} />
+        <TermsField label={bi('شروط التأخير','Late terms')} presets={LATE_PRESETS}
+          value={form.late_terms} onChange={v => setForm({ ...form, late_terms: v })} />
+        <TermsField label={bi('الشروط الجزائية','Penalty terms')} presets={PENALTY_PRESETS}
+          value={form.penalty_terms} onChange={v => setForm({ ...form, penalty_terms: v })} />
+      </div>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving} className="hover-lift">
+          {saving && <Loader2 className="size-4 animate-spin me-1" />}
+          <Bi ar="حفظ التعديلات" en="Save changes" />
+        </Button>
+      </div>
     </div>
   );
 };

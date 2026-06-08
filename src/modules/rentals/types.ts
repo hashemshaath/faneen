@@ -50,6 +50,11 @@ export interface RentalItem {
   view_count: number;
   created_at: string;
   updated_at: string;
+  brand: string | null;
+  country_of_manufacture: string | null;
+  condition: 'new' | 'like_new' | 'good' | 'medium' | 'used' | null;
+  cover_image_url: string | null;
+  specs: Record<string, string> | null;
 }
 
 export interface RentalOrder {
