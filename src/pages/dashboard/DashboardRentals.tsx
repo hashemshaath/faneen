@@ -897,13 +897,13 @@ const ItemsGrid: React.FC<{
   onChange: () => Promise<void>;
 }> = ({ items, categories, businessId, onChange }) => {
   const { isRTL } = useLanguage();
-  const [editingImagesFor, setEditingImagesFor] = useState<string | null>(null);
+  const [editingFor, setEditingFor] = useState<string | null>(null);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {items.map(it => {
         const cat = categories.find(c => c.id === it.category_id);
         const stat = ITEM_STATUS_LABELS[it.status];
-        const editing = editingImagesFor === it.id;
+        const editing = editingFor === it.id;
         return (
           <Card key={it.id} className="p-4 hover-lift">
             <div className="flex items-center justify-between gap-2">
@@ -914,21 +914,23 @@ const ItemsGrid: React.FC<{
               {cat ? (isRTL ? cat.name_ar : cat.name_en) : '—'}
             </div>
             <div className="mt-3 flex items-center justify-between text-sm">
-              <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}</span>
+              <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}
+                <span className="text-[10px] text-muted-foreground ms-1">({isRTL ? 'بدون ضريبة' : 'excl. VAT'})</span>
+              </span>
               <span className="text-xs px-2 py-1 rounded-full bg-muted">{isRTL ? stat.ar : stat.en}</span>
             </div>
-            <div className="mt-3">
-              <Button size="sm" variant="ghost" onClick={() => setEditingImagesFor(editing ? null : it.id)}>
-                <Bi ar={editing ? 'إخفاء الصور' : 'إدارة الصور'} en={editing ? 'Hide images' : 'Manage images'} />
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" variant={editing ? 'default' : 'outline'} onClick={() => setEditingFor(editing ? null : it.id)}>
+                <Bi ar={editing ? 'إغلاق التعديل' : 'تعديل البيانات'} en={editing ? 'Close' : 'Edit details'} />
               </Button>
             </div>
             {editing && (
               <div className="mt-3">
-                <RentalImageUploader
-                  itemId={it.id}
-                  providerId={businessId}
-                  initialUrls={Array.isArray(it.images) ? it.images : []}
-                  onSaved={() => { void onChange(); }}
+                <RentalItemEditForm
+                  item={it}
+                  categories={categories}
+                  businessId={businessId}
+                  onSaved={async () => { await onChange(); }}
                 />
               </div>
             )}
