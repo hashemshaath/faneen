@@ -918,6 +918,18 @@ export default function DashboardSites() {
                           <Label className="text-xs font-medium">{isRTL ? 'رقم هوية المالك' : 'Owner ID Number'}</Label>
                           <Input dir="ltr" value={form.owner_id_number} onChange={e => setForm(p => ({ ...p, owner_id_number: e.target.value }))} className="h-9 tech-content" />
                         </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">
+                            {isRTL ? 'الرقم الضريبي (اختياري)' : 'Tax Number (optional)'}
+                          </Label>
+                          <Input
+                            dir="ltr"
+                            value={form.tax_number}
+                            onChange={e => setForm(p => ({ ...p, tax_number: e.target.value }))}
+                            placeholder={isRTL ? 'يستخدم في الفواتير عند توفره' : 'Used on invoices when available'}
+                            className="h-9 tech-content"
+                          />
+                        </div>
                       </div>
                     </div>
 
