@@ -58,14 +58,14 @@ export interface CreateItemInput {
 export async function createItem(input: CreateItemInput): Promise<ServiceResult<RentalItem>> {
   const { data, error } = await supabase
     .from('rental_items')
-    .insert({ ...input, status: 'pending_review', is_published: false })
+    .insert({ ...input, status: 'pending_review', is_published: false } as never)
     .select('*').single();
   return { data: data as RentalItem | null, error: error as Error | null };
 }
 
 export async function updateItem(id: string, patch: Partial<CreateItemInput> & { availability_status?: string }): Promise<ServiceResult<RentalItem>> {
   const { data, error } = await supabase
-    .from('rental_items').update(patch).eq('id', id).select('*').single();
+    .from('rental_items').update(patch as never).eq('id', id).select('*').single();
   return { data: data as RentalItem | null, error: error as Error | null };
 }
 
