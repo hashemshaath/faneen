@@ -350,14 +350,62 @@ const RentalItemCard: React.FC<{
   units: Asset[];
   expanded: boolean;
   businessId: string;
+  view?: 'grid' | 'list';
   onToggle: () => void;
   onSelectAsset: (id: string) => void;
   onChanged: () => void | Promise<void>;
-}> = ({ item, category, units, expanded, businessId, onToggle, onSelectAsset, onChanged }) => {
+}> = ({ item, category, units, expanded, businessId, view = 'grid', onToggle, onSelectAsset, onChanged }) => {
   const { isRTL } = useLanguage();
   const cover = item.cover_image_url || item.images?.[0] || null;
   const name = isRTL ? item.name_ar : (item.name_en || item.name_ar);
   const catName = category ? (isRTL ? category.name_ar : category.name_en) : null;
+  const breakdown = {
+    available: units.filter(u => u.status === 'available').length,
+    rented:    units.filter(u => u.status === 'rented' || u.status === 'reserved').length,
+    attention: units.filter(u => u.status === 'maintenance' || u.status === 'inspection').length,
+    retired:   units.filter(u => u.status === 'retired').length,
+  };
+
+  if (view === 'list') {
+    return (
+      <Card className="overflow-hidden hover-lift">
+        <button onClick={onToggle} className="w-full flex items-stretch gap-3 text-start">
+          <div className="relative w-24 sm:w-32 shrink-0 bg-muted">
+            {cover ? (
+              <img src={cover} alt={name} loading="lazy" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <ImageOff className="size-6" />
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0 py-2.5 pe-3 space-y-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="font-medium leading-tight line-clamp-1">{name}</div>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted tech-content shrink-0">
+                {units.length} <Bi ar="وحدة" en="units" />
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+              {catName && <span className="px-1.5 py-0.5 rounded-md bg-muted">{catName}</span>}
+              <span className="tech-content">{item.ref_id}</span>
+              {item.brand && <span>· {item.brand}</span>}
+            </div>
+            <UnitsBreakdown b={breakdown} />
+          </div>
+          <div className="flex items-center pe-2">
+            {expanded ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
+          </div>
+        </button>
+        {expanded && (
+          <div className="border-t p-3 space-y-3 bg-muted/30">
+            <UnitsList units={units} onSelect={onSelectAsset} onChanged={onChanged} />
+            <AddUnitsForm item={item} businessId={businessId} onAdded={onChanged} existingCount={units.length} />
+          </div>
+        )}
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden hover-lift">
@@ -373,6 +421,11 @@ const RentalItemCard: React.FC<{
           <span className="absolute top-2 end-2 px-2 py-0.5 rounded-full text-[11px] font-medium bg-background/90 backdrop-blur border tech-content">
             {units.length} <Bi ar="وحدة" en="units" />
           </span>
+          {units.length === 0 && (
+            <span className="absolute bottom-2 start-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/95 text-white shadow-sm">
+              <Plus className="size-3" /><Bi ar="أضف وحدات" en="Add units" />
+            </span>
+          )}
         </div>
         <div className="p-3 space-y-1.5">
           <div className="flex items-start justify-between gap-2">
@@ -384,6 +437,7 @@ const RentalItemCard: React.FC<{
             <span className="tech-content">{item.ref_id}</span>
             {item.brand && <span>· {item.brand}</span>}
           </div>
+          {units.length > 0 && <UnitsBreakdown b={breakdown} />}
         </div>
       </button>
 
@@ -394,6 +448,62 @@ const RentalItemCard: React.FC<{
         </div>
       )}
     </Card>
+  );
+};
+
+/* ---------- Small KPI tile for the hero strip ---------- */
+const KPI_TONES: Record<string, { ring: string; icon: string; chip: string; bar: string }> = {
+  primary: { ring: 'border-primary/25', icon: 'bg-primary/10 text-primary',          chip: 'text-primary',          bar: 'bg-primary' },
+  sky:     { ring: 'border-sky-500/25', icon: 'bg-sky-500/10 text-sky-600 dark:text-sky-300', chip: 'text-sky-700 dark:text-sky-300', bar: 'bg-sky-500' },
+  emerald: { ring: 'border-emerald-500/25', icon: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300', chip: 'text-emerald-700 dark:text-emerald-300', bar: 'bg-emerald-500' },
+  rose:    { ring: 'border-rose-500/30', icon: 'bg-rose-500/10 text-rose-600 dark:text-rose-300', chip: 'text-rose-700 dark:text-rose-300', bar: 'bg-rose-500' },
+  muted:   { ring: 'border-border/60', icon: 'bg-muted text-muted-foreground', chip: 'text-muted-foreground', bar: 'bg-muted-foreground/40' },
+};
+const KpiTile: React.FC<{
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number | string;
+  hint?: string;
+  tone?: keyof typeof KPI_TONES;
+  progress?: number;
+}> = ({ icon: Icon, label, value, hint, tone = 'primary', progress }) => {
+  const t = KPI_TONES[tone];
+  return (
+    <Card className={`p-3.5 hover-lift ${t.ring}`}>
+      <div className="flex items-start gap-3">
+        <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${t.icon}`}>
+          <Icon className="size-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground line-clamp-1">{label}</div>
+          <div className={`text-2xl font-semibold leading-tight tech-content ${t.chip}`}>{value}</div>
+          {hint && <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 tech-content">{hint}</div>}
+        </div>
+      </div>
+      {typeof progress === 'number' && (
+        <div className="mt-2.5 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div className={`h-full ${t.bar} transition-all`} style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+        </div>
+      )}
+    </Card>
+  );
+};
+
+/* ---------- Units status breakdown chips on each item card ---------- */
+const UnitsBreakdown: React.FC<{ b: { available: number; rented: number; attention: number; retired: number } }> = ({ b }) => {
+  if (b.available + b.rented + b.attention + b.retired === 0) return null;
+  const pill = (cls: string, n: number, ar: string, en: string) => n > 0 && (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10.5px] font-medium ${cls}`}>
+      <span className="tech-content">{n}</span><Bi ar={ar} en={en} />
+    </span>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-1 pt-0.5">
+      {pill('bg-emerald-500/12 text-emerald-700 dark:text-emerald-300', b.available, 'متاح', 'avail')}
+      {pill('bg-sky-500/12 text-sky-700 dark:text-sky-300',             b.rented,    'مؤجَّر', 'rented')}
+      {pill('bg-amber-500/15 text-amber-700 dark:text-amber-300',       b.attention, 'انتباه', 'attn')}
+      {pill('bg-muted text-muted-foreground',                            b.retired,   'مُستبعد', 'retired')}
+    </div>
   );
 };
 
