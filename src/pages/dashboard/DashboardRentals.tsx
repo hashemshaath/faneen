@@ -286,8 +286,13 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 };
 
 /* ---------- Orders panel ---------- */
-const OrdersPanel: React.FC<{ orders: RentalOrder[]; items: RentalItem[] }> = ({ orders, items }) => {
+const OrdersPanel: React.FC<{
+  orders: RentalOrder[];
+  items: RentalItem[];
+  onChanged?: () => void | Promise<void>;
+}> = ({ orders, items, onChanged }) => {
   const { isRTL } = useLanguage();
+  const [openId, setOpenId] = useState<string | null>(null);
   if (orders.length === 0) {
     return <Card className="p-8 text-center text-muted-foreground"><Bi ar="لا توجد طلبات في هذه الفئة." en="No orders in this bucket." /></Card>;
   }
@@ -295,20 +300,33 @@ const OrdersPanel: React.FC<{ orders: RentalOrder[]; items: RentalItem[] }> = ({
     <div className="space-y-3">
       {orders.map(o => {
         const it = items.find(i => i.id === o.rental_item_id);
+        const isOpen = openId === o.id;
         return (
-          <Card key={o.id} className="p-4 hover-lift flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium truncate">
-                  {it ? (isRTL ? it.name_ar : (it.name_en || it.name_ar)) : '—'}
-                </span>
-                <RentalStatusBadge status={o.status} />
+          <Card key={o.id} className="p-4 hover-lift">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium truncate">
+                    {it ? (isRTL ? it.name_ar : (it.name_en || it.name_ar)) : '—'}
+                  </span>
+                  <RentalStatusBadge status={o.status} />
+                </div>
+                <div className="text-xs text-muted-foreground tech-content mt-1">
+                  {o.ref_id} · {o.start_date} → {o.end_date} · {o.total_days}d · {o.total_amount} {o.currency}
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground tech-content mt-1">
-                {o.ref_id} · {o.start_date} → {o.end_date} · {o.total_days}d · {o.total_amount} {o.currency}
+              <div className="flex items-center gap-2">
+                <RentalDayCounter endDate={o.end_date} size="sm" />
+                <Button size="sm" variant="ghost" onClick={() => setOpenId(isOpen ? null : o.id)}>
+                  <Bi ar={isOpen ? 'إخفاء' : 'إجراءات'} en={isOpen ? 'Hide' : 'Actions'} />
+                </Button>
               </div>
             </div>
-            <RentalDayCounter endDate={o.end_date} size="sm" />
+            {isOpen && (
+              <div className="mt-3">
+                <RentalExtensionPanel order={o} asProvider onChanged={onChanged} />
+              </div>
+            )}
           </Card>
         );
       })}
