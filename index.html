@@ -14,12 +14,19 @@
     <meta name="google-site-verification" content="EOUaCv0mQBIY7OI6" />
 
     <!-- Favicon & PWA Icons (Qitaat brand mark) -->
-    <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon" />
-    <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
-    <link rel="icon" type="image/png" href="/logo.png?v=3" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192.png?v=3" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512.png?v=3" />
-    <link rel="apple-touch-icon" href="/pwa-192.png?v=3" />
+    <!--
+      Google Favicon Guidelines (https://developers.google.com/search/docs/appearance/favicon-in-search):
+      - Must be square, multiples of 48px (48, 96, 144, 192).
+      - Same origin as the page; stable URL; cache-bust via filename, not query string.
+      - Multiple sizes give Google flexibility; ico fallback for legacy crawlers.
+    -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/icons-48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/icons-96.png" />
+    <link rel="icon" type="image/png" sizes="144x144" href="/icons-144.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons-192.png" />
 
     <!-- PWA / Browser identity (Qitaat brand) -->
     <link rel="manifest" href="/manifest.webmanifest" />
