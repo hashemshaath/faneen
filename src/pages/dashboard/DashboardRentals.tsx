@@ -66,7 +66,7 @@ const DashboardRentals: React.FC = () => {
   if (!businessId) {
     return (
       <DashboardLayout>
-        <PageHeader title={bi('التأجير','Rentals')} subtitle={bi('يلزم ربط منشأة بحسابك لإدارة عناصر التأجير.','Link a business to manage rental items.')} />
+        <PageHeader icon={Package} title={bi('التأجير','Rentals')} subtitle={bi('يلزم ربط منشأة بحسابك لإدارة عناصر التأجير.','Link a business to manage rental items.')} />
         <Card className="p-8 text-center text-muted-foreground">
           <Bi ar="لا يوجد ملف منشأة مرتبط بحسابك. اربط منشأة من إعدادات المنشأة لتفعيل التأجير." en="No linked business. Link one from business settings to enable rentals." />
         </Card>
