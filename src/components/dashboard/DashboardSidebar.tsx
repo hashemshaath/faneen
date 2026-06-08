@@ -122,6 +122,15 @@ const providerGroups: MenuGroup[] = [
     ],
   },
   {
+    groupLabel: { ar: 'التأجير والأصول', en: 'Rentals & Assets' },
+    icon: Truck,
+    description: { ar: 'عروض التأجير وأسطول المعدات', en: 'Rental offerings and equipment fleet' },
+    items: [
+      { label: { ar: 'مركز التأجير', en: 'Rentals' }, url: '/dashboard/rentals', icon: Truck, end: true, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: { ar: 'الأصول والمعدات', en: 'Assets & Equipment' }, url: '/dashboard/assets', icon: Package },
+    ],
+  },
+  {
     groupLabel: { ar: 'العضوية والفوترة', en: 'Membership & Billing' },
     icon: Crown,
     description: { ar: 'الاشتراكات والرصيد والأقساط', en: 'Subscriptions, credits, and installments' },
