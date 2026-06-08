@@ -820,6 +820,79 @@ export type Database = {
           },
         ]
       }
+      asset_rental_assignments: {
+        Row: {
+          asset_id: string
+          created_at: string
+          created_by: string
+          end_date: string
+          id: string
+          notes: string | null
+          post_rental_inspection_required: boolean
+          quantity: number
+          ref_id: string
+          rental_item_id: string
+          rental_order_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["asset_rental_assignment_status"]
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          created_by?: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          post_rental_inspection_required?: boolean
+          quantity?: number
+          ref_id?: string
+          rental_item_id: string
+          rental_order_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["asset_rental_assignment_status"]
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          created_by?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          post_rental_inspection_required?: boolean
+          quantity?: number
+          ref_id?: string
+          rental_item_id?: string
+          rental_order_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["asset_rental_assignment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_rental_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_rental_assignments_rental_item_id_fkey"
+            columns: ["rental_item_id"]
+            isOneToOne: false
+            referencedRelation: "rental_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_rental_assignments_rental_order_id_fkey"
+            columns: ["rental_order_id"]
+            isOneToOne: false
+            referencedRelation: "rental_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_rental_links: {
         Row: {
           asset_id: string
@@ -19875,6 +19948,16 @@ export type Database = {
       }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
+      asset_current_rental_info: { Args: { _asset_id: string }; Returns: Json }
+      asset_rental_check_availability: {
+        Args: {
+          _asset_id: string
+          _end: string
+          _ignore_assignment?: string
+          _start: string
+        }
+        Returns: Json
+      }
       assets_ops_counts: { Args: never; Returns: Json }
       assets_roll_status: { Args: never; Returns: Json }
       barcode_entity_prefix: { Args: { _entity_type: string }; Returns: string }
@@ -21493,6 +21576,7 @@ export type Database = {
         Args: { p_business_id: string; p_sub_service_id: string }
         Returns: undefined
       }
+      rental_asset_ops_counts: { Args: never; Returns: Json }
       rental_items_missing_data: { Args: never; Returns: Json }
       rental_orders_roll_status: { Args: never; Returns: Json }
       request_client_site_access: {
@@ -22088,6 +22172,11 @@ export type Database = {
         | "completed"
         | "overdue"
         | "cancelled"
+      asset_rental_assignment_status:
+        | "reserved"
+        | "active"
+        | "returned"
+        | "cancelled"
       asset_status:
         | "available"
         | "rented"
@@ -22410,6 +22499,12 @@ export const Constants = {
         "in_progress",
         "completed",
         "overdue",
+        "cancelled",
+      ],
+      asset_rental_assignment_status: [
+        "reserved",
+        "active",
+        "returned",
         "cancelled",
       ],
       asset_status: [

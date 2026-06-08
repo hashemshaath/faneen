@@ -19,6 +19,7 @@ import type { RentalCategory, RentalItem, RentalOrder, RentalUnit } from '@/modu
 import { RentalStatusBadge } from '@/modules/rentals/components/RentalStatusBadge';
 import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter';
 import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
+import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { toast } from 'sonner';
 
@@ -356,6 +357,9 @@ const OrdersPanel: React.FC<{
             {isOpen && (
               <div className="mt-3">
                 <RentalExtensionPanel order={o} asProvider onChanged={onChanged} />
+                <div className="mt-3">
+                  <RentalOrderAssetLinks rentalOrderId={o.id} canManage />
+                </div>
               </div>
             )}
           </Card>

@@ -13,3 +13,10 @@ export { canTransition, daysUntil, maintenanceTier } from './utils/lifecycle';
 export type { MaintenanceAlertTier } from './utils/lifecycle';
 export { AssetStatusBadge } from './components/AssetStatusBadge';
 export { AssetOpsCard } from './components/AssetOpsCard';
+// RENTAL-ASSET-INTEGRATION-1
+export * as AssetRentalAssignmentsApi from './services/rentalAssignments';
+export { checkAssetRentalAvailability, describeBlock } from './services/checkAssetRentalAvailability';
+export type { AssetRentalAvailability } from './services/checkAssetRentalAvailability';
+export { RentalAssetOpsCard } from './components/RentalAssetOpsCard';
+export { AssetRentalPanel } from './components/AssetRentalPanel';
+export { RentalOrderAssetLinks } from './components/RentalOrderAssetLinks';

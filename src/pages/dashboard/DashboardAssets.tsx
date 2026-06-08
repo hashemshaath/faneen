@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   AssetCategoriesApi, AssetsApi, AssetMaintenanceApi, AssetInspectionsApi,
-  AssetStatusBadge, AssetOpsCard,
+  AssetStatusBadge, AssetOpsCard, AssetRentalPanel,
   MAINTENANCE_STATUS_LABELS, INSPECTION_FREQUENCY_LABELS,
 } from '@/modules/assets';
 import type { Asset, AssetCategory, AssetMaintenance, AssetInspection, AssetInspectionFrequency } from '@/modules/assets';
@@ -117,6 +117,9 @@ const DashboardAssets: React.FC = () => {
                       {a.manufacturer && <div className="text-xs text-muted-foreground">{a.manufacturer}{a.model ? ` · ${a.model}` : ''}</div>}
                     </div>
                     <AssetStatusBadge status={a.status} />
+                  </div>
+                  <div className="mt-3">
+                    <AssetRentalPanel assetId={a.id} />
                   </div>
                 </Card>
               </button>
