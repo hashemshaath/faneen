@@ -294,6 +294,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     current_amp: '',
     wattage: '',
     power_hp: '',
+    provider_note: '',
   });
 
   // Request form (when item is not in catalog)
@@ -380,6 +381,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     if (form.current_amp) specs.current_amp = form.current_amp;
     if (form.wattage)     specs.wattage = form.wattage;
     if (form.power_hp)    specs.power_hp = form.power_hp;
+    if (form.provider_note.trim()) specs.provider_note = form.provider_note.trim();
     if (electricalErrors.length) {
       setSubmitting(false);
       toast.error(bi('قيمة غير صحيحة في: ','Invalid numeric value in: ') + electricalErrors.join(', '));
@@ -607,7 +609,23 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="اسم المعدة بالعربية *" en="Name (Arabic) *" /></Label>
-                <Input dir="auto" placeholder={bi('مثال: مولد كهرباء 10 ك.و.أ','e.g. Generator 10 kVA')} value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} />
+                <Input
+                  dir="auto"
+                  placeholder={bi('مثال: مولد كهرباء 10 ك.و.أ','e.g. Generator 10 kVA')}
+                  value={form.name_ar}
+                  readOnly={!!selectedCatalogId}
+                  onChange={e => setForm({ ...form, name_ar: e.target.value })}
+                  className={selectedCatalogId ? 'bg-muted cursor-not-allowed' : ''}
+                  title={selectedCatalogId ? bi('الاسم العربي ثابت من الكتالوج الرسمي. يمكنك إضافة ملاحظة أدناه.','Arabic name is locked from the official catalog. Add a note below if needed.') : undefined}
+                />
+                {selectedCatalogId && (
+                  <p className="text-[11px] text-muted-foreground">
+                    <Bi
+                      ar="اسم المعدة بالعربية مثبّت من الكتالوج الرسمي ولا يمكن تعديله. أضف ملاحظتك أدناه."
+                      en="Arabic name is fixed from the official catalog. Add your note below."
+                    />
+                  </p>
+                )}
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="الاسم بالإنجليزية (اختياري)" en="Name (English, optional)" /></Label>
@@ -631,6 +649,24 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">
+                <Bi ar="ملاحظة مزود الخدمة على الاسم (اختياري)" en="Provider note on the name (optional)" />
+              </Label>
+              <Textarea
+                dir="auto"
+                rows={2}
+                placeholder={bi('مثال: نفس الجهاز ولكن باللون الأصفر / موديل ٢٠٢٤','e.g. Same equipment but yellow / 2024 model')}
+                value={form.provider_note}
+                onChange={e => setForm({ ...form, provider_note: e.target.value })}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                <Bi
+                  ar="استخدم هذه الخانة لإضافة أي توضيح بشأن المعدة بدون تغيير اسمها الرسمي."
+                  en="Use this field to clarify details without changing the official name."
+                />
+              </p>
             </div>
           </div>
 
@@ -976,6 +1012,7 @@ const RentalItemEditForm: React.FC<{
     current_amp: initialSpecs.current_amp ?? '',
     wattage: initialSpecs.wattage ?? '',
     power_hp: initialSpecs.power_hp ?? '',
+    provider_note: initialSpecs.provider_note ?? '',
   });
 
   const cat = categories.find(c => c.id === form.category_id);
@@ -1001,6 +1038,7 @@ const RentalItemEditForm: React.FC<{
       if (form.wattage)     specs.wattage = form.wattage;
       if (form.power_hp)    specs.power_hp = form.power_hp;
     }
+    if (form.provider_note.trim()) specs.provider_note = form.provider_note.trim();
     const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
     if (allImages.length > 6) { toast.error(bi('الحد الأقصى صورة غلاف + ٥ صور إضافية','Limit: 1 cover + 5 additional images')); return; }
     setSaving(true);
@@ -1033,7 +1071,19 @@ const RentalItemEditForm: React.FC<{
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="text-xs"><Bi ar="اسم المعدة بالعربية *" en="Name (Arabic) *" /></Label>
-          <Input dir="auto" value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} />
+          <Input
+            dir="auto"
+            value={form.name_ar}
+            readOnly
+            className="bg-muted cursor-not-allowed"
+            title={bi('الاسم العربي ثابت من الكتالوج الرسمي. أضف ملاحظة أدناه.','Arabic name is locked from the official catalog. Add a note below.')}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            <Bi
+              ar="لا يمكن لمزود الخدمة تعديل الاسم العربي. استخدم ملاحظة المزود أدناه."
+              en="Providers cannot edit the Arabic name. Use the provider note below."
+            />
+          </p>
         </div>
         <div className="space-y-1">
           <Label className="text-xs"><Bi ar="الاسم بالإنجليزية" en="Name (English)" /></Label>
@@ -1057,6 +1107,19 @@ const RentalItemEditForm: React.FC<{
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">
+          <Bi ar="ملاحظة مزود الخدمة (اختياري)" en="Provider note (optional)" />
+        </Label>
+        <Textarea
+          dir="auto"
+          rows={2}
+          placeholder={bi('أي توضيح بشأن المعدة دون تغيير الاسم الرسمي','Any clarification about the equipment without changing the official name')}
+          value={form.provider_note}
+          onChange={e => setForm({ ...form, provider_note: e.target.value })}
+        />
       </div>
 
       <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
