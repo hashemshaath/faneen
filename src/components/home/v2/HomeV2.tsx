@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
-import heroSlide1 from '@/assets/home/hero-slide-1.webp';
 import heroSlide2 from '@/assets/home/hero-slide-2.webp';
 import heroSlide3 from '@/assets/home/hero-slide-3.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
@@ -21,9 +20,6 @@ import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 // browser always pulled the full 1920×1080 source even on a 412px mobile
 // viewport, which dominated LCP. Each slide builds its srcset from the
 // hashed variants below.
-import heroSlide1_768 from '@/assets/home/hero-slide-1-768.webp';
-import heroSlide1_1280 from '@/assets/home/hero-slide-1-1280.webp';
-import heroSlide1_1920 from '@/assets/home/hero-slide-1-1920.webp';
 import heroSlide2_768 from '@/assets/home/hero-slide-2-768.webp';
 import heroSlide2_1280 from '@/assets/home/hero-slide-2-1280.webp';
 import heroSlide2_1920 from '@/assets/home/hero-slide-2-1920.webp';
@@ -32,6 +28,15 @@ import heroSlide3_1280 from '@/assets/home/hero-slide-3-1280.webp';
 import heroSlide3_1920 from '@/assets/home/hero-slide-3-1920.webp';
 import heroSlide4_768 from '@/assets/home/hero-slide-4-768.webp';
 import heroSlide4_1280 from '@/assets/home/hero-slide-4-1280.webp';
+
+// Slide 1 (LCP) is served from /public/hero/* so the URL is stable and
+// matches the static <img> inlined in index.html. This lets the browser
+// reuse the same cached decode between the pre-React static hero and the
+// post-mount HeroV2 image — no duplicate network fetch.
+const heroSlide1 = '/hero/slide-1-1920.webp';
+const heroSlide1_768 = '/hero/slide-1-768.webp';
+const heroSlide1_1280 = '/hero/slide-1-1280.webp';
+const heroSlide1_1920 = '/hero/slide-1-1920.webp';
 
 const HERO_SRCSETS: Record<string, string> = {
   [heroSlide1]: `${heroSlide1_768} 768w, ${heroSlide1_1280} 1280w, ${heroSlide1_1920} 1920w`,
