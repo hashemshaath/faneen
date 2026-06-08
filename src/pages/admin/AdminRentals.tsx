@@ -14,6 +14,18 @@ import type { RentalCategory, RentalItem } from '@/modules/rentals';
 import { RentalOpsQueueCard } from '@/modules/rentals';
 import { toast } from 'sonner';
 
+interface CatalogRow {
+  id: string;
+  name_ar: string;
+  name_en: string | null;
+  brand: string | null;
+  model: string | null;
+  category_id: string | null;
+  estimated_daily_price: number | null;
+  currency: string | null;
+  is_active: boolean;
+}
+
 /** Admin rentals — moderation + ops snapshot. AdminRoute pattern: inside DashboardLayout. */
 const AdminRentals: React.FC = () => {
   useNoIndex();
@@ -23,16 +35,19 @@ const AdminRentals: React.FC = () => {
   const [pending, setPending] = useState<RentalItem[]>([]);
   const [allItems, setAllItems] = useState<RentalItem[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
+  const [catalog, setCatalog] = useState<CatalogRow[]>([]);
 
   const refresh = async () => {
-    const [cats, pend, all] = await Promise.all([
+    const [cats, pend, all, cat] = await Promise.all([
       RentalCategories.listCategories(),
       supabase.from('rental_items').select('*').eq('status', 'pending_review').order('created_at', { ascending: false }),
       supabase.from('rental_items').select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('rental_equipment_catalog').select('id,name_ar,name_en,brand,model,category_id,estimated_daily_price,currency,is_active').order('name_ar', { ascending: true }),
     ]);
     setCategories(cats.data ?? []);
     setPending((pend.data as RentalItem[] | null) ?? []);
     setAllItems((all.data as RentalItem[] | null) ?? []);
+    setCatalog(((cat.data as CatalogRow[] | null) ?? []));
     setLoading(false);
   };
 
@@ -64,6 +79,7 @@ const AdminRentals: React.FC = () => {
             <TabsTrigger value="pending"><Bi ar="للمراجعة" en="Pending" /></TabsTrigger>
             <TabsTrigger value="all"><Bi ar="جميع العناصر" en="All items" /></TabsTrigger>
             <TabsTrigger value="categories"><Bi ar="التصنيفات" en="Categories" /></TabsTrigger>
+            <TabsTrigger value="catalog"><Bi ar="الكتالوج الرئيسي" en="Master Catalog" /> ({catalog.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="mt-4">
@@ -113,6 +129,39 @@ const AdminRentals: React.FC = () => {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="catalog" className="mt-4">
+            {catalog.length === 0 ? (
+              <Card className="p-8 text-center text-muted-foreground"><Bi ar="لا توجد عناصر في الكتالوج." en="Catalog is empty." /></Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {catalog.map(c => {
+                  const cat = categories.find(x => x.id === c.category_id);
+                  return (
+                    <Card key={c.id} className="p-4 hover-lift">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</div>
+                          {(c.brand || c.model) && (
+                            <div className="text-xs text-muted-foreground tech-content truncate">{[c.brand, c.model].filter(Boolean).join(' · ')}</div>
+                          )}
+                          {cat && <div className="text-xs text-muted-foreground mt-0.5">{isRTL ? cat.name_ar : cat.name_en}</div>}
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted'}`}>
+                          {c.is_active ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'معطل' : 'Inactive')}
+                        </span>
+                      </div>
+                      {c.estimated_daily_price != null && (
+                        <div className="text-xs tech-content text-muted-foreground mt-2">
+                          {c.estimated_daily_price} {c.currency || 'SAR'} / {isRTL ? 'يوم' : 'day'}
+                        </div>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
