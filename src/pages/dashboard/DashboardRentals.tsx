@@ -72,6 +72,45 @@ const COUNTRY_OPTIONS = [
 
 const ELECTRICAL_KEYWORDS = ['كهرب','مولد','محول','شاحن','بطار','مضخ','electric','power','generator','ups','charger','battery','pump','motor'];
 
+/** Reusable terms field: free text + togglable preset chips. */
+const TermsField: React.FC<{
+  label: string;
+  presets: ReadonlyArray<{ ar: string; en: string }>;
+  value: string;
+  onChange: (v: string) => void;
+}> = ({ label, presets, value, onChange }) => {
+  const { isRTL } = useLanguage();
+  const lines = value.split('\n').map(s => s.trim()).filter(Boolean);
+  const togglePreset = (text: string) => {
+    const exists = lines.includes(text);
+    const next = exists ? lines.filter(l => l !== text) : [...lines, text];
+    onChange(next.join('\n'));
+  };
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex flex-wrap gap-1.5">
+        {presets.map(p => {
+          const text = isRTL ? p.ar : p.en;
+          const active = lines.includes(text);
+          return (
+            <Badge
+              key={text}
+              variant={active ? 'default' : 'outline'}
+              className="cursor-pointer hover-lift text-[11px]"
+              onClick={() => togglePreset(text)}
+            >
+              {active ? '✓ ' : '+ '}{text}
+            </Badge>
+          );
+        })}
+      </div>
+      <Textarea dir="auto" rows={2} value={value} onChange={e => onChange(e.target.value)}
+        placeholder={isRTL ? 'اختر من المقترحات أو اكتب نصًا خاصًا…' : 'Pick presets or type custom text…'} />
+    </div>
+  );
+};
+
 interface CatalogPick {
   id: string;
   name_ar: string;
