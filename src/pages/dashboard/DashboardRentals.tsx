@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles, Info, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles, Info, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -411,6 +411,10 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   });
   const [reqSubmitting, setReqSubmitting] = useState(false);
 
+  // List toolbar state (search + status filter)
+  const [listQuery, setListQuery] = useState('');
+  const [listStatus, setListStatus] = useState<'all' | RentalItem['status']>('all');
+
   useEffect(() => {
     if (!form.category_id && categories[0]) setForm(f => ({ ...f, category_id: categories[0].id }));
   }, [categories, form.category_id]);
@@ -564,13 +568,15 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground"><Bi ar="عناصر التأجير المرتبطة بمنشأتك" en="Rental items linked to your business" /></div>
-        <Button onClick={() => setAdding(s => !s)} className="hover-lift">
-          <Plus className="size-4 me-1" />
-          <Bi ar={adding ? 'إلغاء' : 'إضافة عنصر'} en={adding ? 'Cancel' : 'Add item'} />
-        </Button>
-      </div>
+      <ItemsToolbar
+        total={items.length}
+        adding={adding}
+        onToggleAdd={() => setAdding(s => !s)}
+        query={listQuery}
+        onQueryChange={setListQuery}
+        statusFilter={listStatus}
+        onStatusChange={setListStatus}
+      />
 
       {adding && (
         <Card className="p-5 space-y-4">
@@ -1023,17 +1029,165 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
       )}
 
       {items.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          <Bi ar="لا توجد عناصر تأجير بعد." en="No rental items yet." />
-        </Card>
+        <ItemsEmptyState onAdd={() => setAdding(true)} />
       ) : (
-        <ItemsGrid items={items} categories={categories} businessId={businessId} onChange={onChange} />
+        (() => {
+          const q = listQuery.trim().toLowerCase();
+          const filtered = items.filter(it => {
+            if (listStatus !== 'all' && it.status !== listStatus) return false;
+            if (!q) return true;
+            return (
+              it.name_ar?.toLowerCase().includes(q) ||
+              (it.name_en ?? '').toLowerCase().includes(q) ||
+              (it.brand ?? '').toLowerCase().includes(q) ||
+              it.ref_id?.toLowerCase().includes(q)
+            );
+          });
+          if (filtered.length === 0) {
+            return (
+              <Card className="p-8 text-center text-muted-foreground border-dashed">
+                <Search className="size-6 mx-auto mb-2 opacity-60" />
+                <Bi ar="لا توجد أصناف مطابقة للبحث/التصفية." en="No items match your search/filter." />
+              </Card>
+            );
+          }
+          return <ItemsGrid items={filtered} categories={categories} businessId={businessId} onChange={onChange} />;
+        })()
       )}
     </div>
   );
 };
 
 /* ---------- Orders panel ---------- */
+
+/* ---------- Items toolbar + empty state (professional, mobile-first) ---------- */
+
+const ITEM_STATUS_FILTERS: ReadonlyArray<{ value: 'all' | RentalItem['status']; ar: string; en: string; tone?: string }> = [
+  { value: 'all',            ar: 'الكل',         en: 'All' },
+  { value: 'approved',       ar: 'منشورة',       en: 'Published',     tone: 'data-[active=true]:bg-emerald-500/15 data-[active=true]:text-emerald-700 dark:data-[active=true]:text-emerald-300' },
+  { value: 'pending_review', ar: 'قيد المراجعة', en: 'Pending',       tone: 'data-[active=true]:bg-amber-500/15 data-[active=true]:text-amber-700 dark:data-[active=true]:text-amber-300' },
+  { value: 'rejected',       ar: 'مرفوضة',       en: 'Rejected',      tone: 'data-[active=true]:bg-red-500/15 data-[active=true]:text-red-700 dark:data-[active=true]:text-red-300' },
+  { value: 'draft',          ar: 'مسودة',        en: 'Draft' },
+  { value: 'archived',       ar: 'مؤرشفة',       en: 'Archived' },
+];
+
+const ItemsToolbar: React.FC<{
+  total: number;
+  adding: boolean;
+  onToggleAdd: () => void;
+  query: string;
+  onQueryChange: (v: string) => void;
+  statusFilter: 'all' | RentalItem['status'];
+  onStatusChange: (v: 'all' | RentalItem['status']) => void;
+}> = ({ total, adding, onToggleAdd, query, onQueryChange, statusFilter, onStatusChange }) => {
+  const bi = useBi();
+  return (
+    <Card className="p-3 md:p-4 border-border/60">
+      <div className="flex flex-col gap-3">
+        {/* Row 1: title + counter + CTA */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex items-center gap-2">
+            <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Package className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold truncate">
+                <Bi ar="أصناف التأجير" en="Rental items" />
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                <span className="tech-content">{total}</span>{' '}
+                <Bi ar="صنف مرتبط بمنشأتك" en="items linked to your business" />
+              </div>
+            </div>
+          </div>
+          <Button
+            onClick={onToggleAdd}
+            variant={adding ? 'outline' : 'default'}
+            className="hover-lift shrink-0 h-10 px-3 md:px-4"
+          >
+            {adding ? <X className="size-4 me-1" /> : <Plus className="size-4 me-1" />}
+            <span className="hidden xs:inline">
+              <Bi ar={adding ? 'إلغاء الإضافة' : 'إضافة صنف'} en={adding ? 'Cancel' : 'Add item'} />
+            </span>
+            <span className="xs:hidden">
+              <Bi ar={adding ? 'إلغاء' : 'إضافة'} en={adding ? 'Cancel' : 'Add'} />
+            </span>
+          </Button>
+        </div>
+
+        {total > 0 && (
+          <>
+            {/* Row 2: search */}
+            <div className="relative">
+              <Search className="size-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground pointer-events-none" />
+              <Input
+                dir="auto"
+                value={query}
+                onChange={e => onQueryChange(e.target.value)}
+                placeholder={bi('ابحث بالاسم، الماركة، أو المعرّف…', 'Search by name, brand, or ID…')}
+                className="ps-9 h-10"
+              />
+            </div>
+
+            {/* Row 3: status pills */}
+            <div className="flex flex-wrap gap-1.5 -mx-0.5">
+              {ITEM_STATUS_FILTERS.map(f => {
+                const active = statusFilter === f.value;
+                return (
+                  <button
+                    key={f.value}
+                    type="button"
+                    data-active={active}
+                    onClick={() => onStatusChange(f.value)}
+                    className={`px-2.5 h-7 rounded-full text-[11.5px] font-medium border transition ${
+                      active
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : `border-border bg-background hover:bg-muted ${f.tone ?? ''}`
+                    }`}
+                  >
+                    <Bi ar={f.ar} en={f.en} />
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+const ItemsEmptyState: React.FC<{ onAdd: () => void }> = ({ onAdd }) => (
+  <Card className="p-8 md:p-10 text-center border-dashed bg-gradient-to-br from-primary/[0.04] to-transparent">
+    <div className="mx-auto size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3">
+      <Package className="size-7" />
+    </div>
+    <h3 className="text-base md:text-lg font-semibold mb-1.5">
+      <Bi ar="ابدأ بإضافة أول صنف للتأجير" en="Add your first rental item" />
+    </h3>
+    <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+      <Bi
+        ar="اختر من كتالوج المعدات الجاهز، أو أدخل البيانات يدويًا. سنراجع الصنف ثم ينشر للعملاء مباشرة."
+        en="Pick from the ready equipment catalog or enter details manually. We review then publish to customers."
+      />
+    </p>
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+      <Button onClick={onAdd} className="hover-lift h-10">
+        <Plus className="size-4 me-1" />
+        <Bi ar="إضافة صنف الآن" en="Add item now" />
+      </Button>
+      <a
+        href="/rentals"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1.5 px-3 h-10 rounded-md text-sm font-medium text-primary hover:bg-primary/5"
+      >
+        <BookOpen className="size-4" />
+        <Bi ar="استكشف الكتالوج العام" en="Browse public catalog" />
+      </a>
+    </div>
+  </Card>
+);
 
 /* ---------- Items grid (with inline image manager) ---------- */
 const ItemsGrid: React.FC<{
@@ -1045,33 +1199,112 @@ const ItemsGrid: React.FC<{
   const { isRTL } = useLanguage();
   const [editingFor, setEditingFor] = useState<string | null>(null);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
       {items.map(it => {
         const cat = categories.find(c => c.id === it.category_id);
         const stat = ITEM_STATUS_LABELS[it.status];
         const editing = editingFor === it.id;
+        const cover = it.cover_image_url || (Array.isArray(it.images) && it.images[0]) || null;
+        const unitLabel = RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en'];
+        const statusTone =
+          it.status === 'approved' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/20' :
+          it.status === 'pending_review' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/20' :
+          it.status === 'rejected' ? 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/20' :
+          'bg-muted text-muted-foreground border-border';
         return (
-          <Card key={it.id} className="p-4 hover-lift">
-            <div className="flex items-center justify-between gap-2">
-              <div className="font-medium">{isRTL ? it.name_ar : (it.name_en || it.name_ar)}</div>
-              <span className="text-xs tech-content text-muted-foreground">{it.ref_id}</span>
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {cat ? (isRTL ? cat.name_ar : cat.name_en) : '—'}
-            </div>
-            <div className="mt-3 flex items-center justify-between text-sm">
-              <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}
-                <span className="text-[10px] text-muted-foreground ms-1">({isRTL ? 'بدون ضريبة' : 'excl. VAT'})</span>
+          <Card key={it.id} className="overflow-hidden hover-lift flex flex-col border-border/60">
+            {/* Cover */}
+            <div className="relative w-full aspect-[16/10] bg-muted/60 overflow-hidden">
+              {cover ? (
+                <img
+                  src={cover}
+                  alt={isRTL ? it.name_ar : (it.name_en || it.name_ar)}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/60 gap-1">
+                  <ImageOff className="size-7" />
+                  <span className="text-[11px]"><Bi ar="بدون صورة" en="No image" /></span>
+                </div>
+              )}
+              <span className={`absolute top-2 end-2 text-[10.5px] font-medium px-2 py-0.5 rounded-full border backdrop-blur-sm ${statusTone}`}>
+                {isRTL ? stat.ar : stat.en}
               </span>
-              <span className="text-xs px-2 py-1 rounded-full bg-muted">{isRTL ? stat.ar : stat.en}</span>
+              {cat && (
+                <span className="absolute bottom-2 start-2 text-[10.5px] font-medium px-2 py-0.5 rounded-full bg-background/85 backdrop-blur-sm border border-border/60 inline-flex items-center gap-1">
+                  <Tag className="size-3" />
+                  {isRTL ? cat.name_ar : cat.name_en}
+                </span>
+              )}
             </div>
-            <div className="mt-3 flex gap-2">
-              <Button size="sm" variant={editing ? 'default' : 'outline'} onClick={() => setEditingFor(editing ? null : it.id)}>
-                <Bi ar={editing ? 'إغلاق التعديل' : 'تعديل البيانات'} en={editing ? 'Close' : 'Edit details'} />
-              </Button>
+
+            {/* Body */}
+            <div className="p-3.5 md:p-4 flex-1 flex flex-col gap-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="font-semibold text-[14.5px] leading-tight line-clamp-2 min-w-0">
+                  {isRTL ? it.name_ar : (it.name_en || it.name_ar)}
+                </div>
+                <span className="text-[10px] tech-content text-muted-foreground shrink-0 rounded-md bg-muted px-1.5 py-0.5">
+                  {it.ref_id}
+                </span>
+              </div>
+
+              {it.brand && (
+                <div className="text-[11.5px] text-muted-foreground -mt-1">
+                  {it.brand}
+                </div>
+              )}
+
+              {/* Price + duration */}
+              <div className="grid grid-cols-2 gap-2 mt-auto pt-1">
+                <div className="rounded-lg bg-primary/5 border border-primary/10 px-2.5 py-1.5">
+                  <div className="text-[10px] text-muted-foreground"><Bi ar="السعر / الوحدة" en="Price / unit" /></div>
+                  <div className="text-[13px] font-semibold text-primary tech-content leading-tight">
+                    {it.base_price} <span className="text-[10px] font-normal opacity-80">{it.currency}</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">/ {unitLabel} · <Bi ar="بدون ض" en="excl. VAT" /></div>
+                </div>
+                <div className="rounded-lg bg-muted/60 border border-border/60 px-2.5 py-1.5">
+                  <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Timer className="size-3" /><Bi ar="الحد الأدنى" en="Min duration" />
+                  </div>
+                  <div className="text-[13px] font-semibold tech-content leading-tight">
+                    {it.min_duration} <span className="text-[10px] font-normal opacity-80">{unitLabel}</span>
+                  </div>
+                  {it.deposit_amount > 0 && (
+                    <div className="text-[10px] text-muted-foreground"><Bi ar="تأمين" en="Deposit" />: <span className="tech-content">{it.deposit_amount}</span></div>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  size="sm"
+                  variant={editing ? 'default' : 'outline'}
+                  onClick={() => setEditingFor(editing ? null : it.id)}
+                  className="flex-1 h-9"
+                >
+                  {editing ? <X className="size-3.5 me-1" /> : <Pencil className="size-3.5 me-1" />}
+                  <Bi ar={editing ? 'إغلاق' : 'تعديل'} en={editing ? 'Close' : 'Edit'} />
+                </Button>
+                {it.is_published && it.seo_slug && (
+                  <a
+                    href={`/rentals/${it.seo_slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-md text-xs font-medium border border-border hover:bg-muted"
+                  >
+                    <BookOpen className="size-3.5" />
+                    <Bi ar="عرض" en="View" />
+                  </a>
+                )}
+              </div>
             </div>
+
             {editing && (
-              <div className="mt-3">
+              <div className="px-3.5 md:px-4 pb-4 -mt-1">
                 <RentalItemEditForm
                   item={it}
                   categories={categories}
