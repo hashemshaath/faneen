@@ -25,6 +25,7 @@ import {
   ShieldCheck, MessageSquare
 } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { track } from '@/lib/analytics-events';
@@ -130,6 +131,7 @@ const ProjectDetail = () => {
         title: projectTitle,
         subtitle: projectDesc?.slice(0, 160) || undefined,
       }),
+    ogImageAlt: projectTitle || (isRTL ? 'تفاصيل المشروع' : 'Project'),
     ogType: 'article',
     canonical: id ? `https://qitaat.com/projects/${id}` : undefined,
     ogTitle: projectTitle || undefined,
