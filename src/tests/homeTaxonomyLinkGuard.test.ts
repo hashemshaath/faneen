@@ -117,6 +117,11 @@ const INDEX_PAGE_PATH = resolve(
   'src/pages/Index.tsx',
 );
 
+const HERO_PATH = resolve(
+  process.cwd(),
+  'src/components/home/v2/HomeV2.tsx',
+);
+
 describe('Home Taxonomy Link Guard', () => {
   describe('HomeSectorGrid sector tiles', () => {
     const source = readFileSync(SECTOR_GRID_PATH, 'utf8');
@@ -297,6 +302,28 @@ describe('Home Taxonomy Link Guard', () => {
       // Spec rule: prefer a TODO over linking to fake/empty categories.
       expect(rowIds).not.toContain('energy-sustainability');
       expect(rowIds).not.toContain('elevators-escalators');
+    });
+  });
+
+  describe('Hero TRENDING + slide copy (HomeV2.tsx)', () => {
+    const source = readFileSync(HERO_PATH, 'utf8');
+    const trendingCats = Array.from(source.matchAll(/cat:\s*'([^']+)'/g)).map((m) => m[1]);
+
+    it('extracts trending categories', () => {
+      expect(trendingCats.length).toBeGreaterThan(0);
+    });
+
+    it('TRENDING.cat values use only real taxonomy slugs (no legacy shorthand)', () => {
+      const leaked = trendingCats.filter((s) => FORBIDDEN_SLUGS.has(s));
+      expect(leaked, `Forbidden slugs leaked into hero TRENDING: ${leaked.join(', ')}`).toEqual([]);
+      const unknown = trendingCats.filter((s) => !ALLOWED_SLUGS.has(s));
+      expect(unknown, `Unknown slugs in hero TRENDING: ${unknown.join(', ')}`).toEqual([]);
+    });
+
+    it('slide 0 title no longer enumerates raw legacy category words', () => {
+      // The old copy "مزودو الألمنيوم والحديد والخشب والزجاج" leaks legacy
+      // sector names directly into the LCP element. Keep the headline generic.
+      expect(source).not.toMatch(/مزودو الألمنيوم والحديد والخشب والزجاج/);
     });
   });
 });
