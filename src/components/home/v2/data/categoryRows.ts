@@ -1,34 +1,28 @@
 /**
- * Home category rows — lightweight static data used by HomeCategoryRow.
- * Each item links to `/search?category=<slug>` when the slug matches a
- * known taxonomy slug, otherwise to `/search?q=<term>` which is always
- * safe (the search page treats unknown queries as text input).
+ * Home category rows — derived from the single homeTaxonomy source.
  *
- * Adding a new row doesn't require any DB change — but if you reference
- * a slug that doesn't exist in taxonomy, the search page will simply
- * return zero results rather than 404.
+ * Every taxonomy slug used in rows MUST come from `HOME_ROW_BINDINGS` /
+ * `HOME_TAXONOMY` in `homeTaxonomy.ts`. Components are forbidden from
+ * inlining `/search?category=<slug>` strings — use `homeCategoryHref()`.
  *
- * Known taxonomy slugs (kept in sync with MainSectors / SEO JSON-LD):
- *   aluminum-glass-facades, steel-metal-works, wood-carpentry,
- *   stainless-steel-fabrication, contracting-finishing,
- *   technology-systems, heavy-equipment-rental, lifting, scaffolding,
- *   equipment-rental-provider
+ * UI copy (titles, descriptions, chip labels, free-text queries) lives
+ * here. Taxonomy bindings (provider slugs, allHref slug) come from the
+ * single source.
  *
- * TODO (taxonomy gap — do NOT add a row until a real slug exists):
- *   - "الطاقة والاستدامة" (Energy & Sustainability) — no solar/energy
- *     taxonomy_categories slug exists yet. When added (e.g.
- *     `energy-sustainability`), reintroduce the row here and in the
- *     JSON-LD ItemList in src/pages/Index.tsx.
- *   - "المصاعد والسلالم الكهربائية" (Elevators & Escalators) — no
- *     elevators/escalators slug exists yet. Reintroduce once the
- *     taxonomy node is created.
+ * TODO — pending real taxonomy slugs:
+ *   - "الطاقة والاستدامة" (Energy & Sustainability)
+ *   - "المصاعد والسلالم الكهربائية" (Elevators & Escalators)
  */
+import {
+  HOME_ROW_BINDINGS,
+  homeCategoryHref,
+  HOME_ALLOWED_SLUGS,
+} from './homeTaxonomy';
 
 export interface CategoryRowItem {
-  /** UI label (AR/EN bilingual via useBi) */
   ar: string;
   en: string;
-  /** Either a taxonomy slug (?category=) or a free-text query (?q=) */
+  /** Either a taxonomy slug (?category=) or a free-text query (?q=). */
   slug?: string;
   query?: string;
 }
@@ -39,9 +33,9 @@ export interface CategoryRow {
   titleEn: string;
   subAr: string;
   subEn: string;
-  /** Where the "View all" CTA links to */
+  /** Where the "View all" CTA links to (always built via homeCategoryHref). */
   allHref: string;
-  /** Optional explicit taxonomy binding for provider cards when chips are query-based. */
+  /** Explicit taxonomy binding for provider cards. */
   providerSlugs?: string[];
   items: CategoryRowItem[];
 }
@@ -62,14 +56,21 @@ export const getCategoryRowTaxonomySlugs = (row: CategoryRow): string[] => {
   return Array.from(slugs);
 };
 
-export const HOME_CATEGORY_ROWS: CategoryRow[] = [
-  {
-    id: 'iron-stainless',
+/** Per-row UI copy + chip items. Taxonomy bindings come from HOME_ROW_BINDINGS. */
+interface RowCopy {
+  titleAr: string;
+  titleEn: string;
+  subAr: string;
+  subEn: string;
+  items: CategoryRowItem[];
+}
+
+const ROW_COPY: Record<string, RowCopy> = {
+  'iron-stainless': {
     titleAr: 'أعمال الحديد والستانلس ستيل',
     titleEn: 'Iron & stainless steel',
     subAr: 'درابزين، أبواب، هياكل معدنية وأعمال خاصة.',
     subEn: 'Railings, doors, frames and custom metalwork.',
-    allHref: '/search?category=steel-metal-works',
     items: [
       { ar: 'حديد', en: 'Iron', slug: 'steel-metal-works' },
       { ar: 'ستانلس ستيل', en: 'Stainless steel', slug: 'stainless-steel-fabrication' },
@@ -78,13 +79,11 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
       { ar: 'هياكل معدنية', en: 'Metal frames', query: 'هياكل معدنية' },
     ],
   },
-  {
-    id: 'aluminum-glass',
+  'aluminum-glass': {
     titleAr: 'الألمنيوم والزجاج والسيكوريت',
     titleEn: 'Aluminum, glass & tempered glass',
     subAr: 'واجهات، شبابيك، أبواب وقواطع.',
     subEn: 'Facades, windows, doors and partitions.',
-    allHref: '/search?category=aluminum-glass-facades',
     items: [
       { ar: 'ألمنيوم', en: 'Aluminum', slug: 'aluminum-glass-facades' },
       { ar: 'زجاج', en: 'Glass', slug: 'aluminum-glass-facades' },
@@ -93,14 +92,11 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
       { ar: 'شبابيك وأبواب', en: 'Windows & doors', query: 'شبابيك ألمنيوم' },
     ],
   },
-  {
-    id: 'facades-cladding',
+  'facades-cladding': {
     titleAr: 'الواجهات والكلادينج',
     titleEn: 'Facades & cladding',
     subAr: 'واجهات تجارية، زجاجية، كلادينج ومظلات.',
     subEn: 'Commercial fronts, glass facades, cladding and canopies.',
-    allHref: '/search?q=واجهات',
-    providerSlugs: ['aluminum-glass-facades'],
     items: [
       { ar: 'واجهات تجارية', en: 'Storefronts', query: 'واجهات تجارية' },
       { ar: 'واجهات زجاجية', en: 'Glass facades', query: 'واجهات زجاجية' },
@@ -108,13 +104,11 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
       { ar: 'مظلات', en: 'Canopies', query: 'مظلات' },
     ],
   },
-  {
-    id: 'kitchens-wood',
+  'kitchens-wood': {
     titleAr: 'المطابخ والخشب',
     titleEn: 'Kitchens & woodwork',
     subAr: 'مطابخ ألمنيوم وستانلس وخشب، أبواب وديكورات.',
     subEn: 'Aluminum / stainless / wood kitchens, doors and décor.',
-    allHref: '/search?category=wood-carpentry',
     items: [
       { ar: 'خشب', en: 'Wood', slug: 'wood-carpentry' },
       { ar: 'مطابخ ألمنيوم', en: 'Aluminum kitchens', query: 'مطابخ ألمنيوم' },
@@ -123,26 +117,22 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
       { ar: 'أبواب خشبية', en: 'Wood doors', query: 'أبواب خشبية' },
     ],
   },
-  {
-    id: 'fabrication',
+  fabrication: {
     titleAr: 'التصنيع والتركيب',
     titleEn: 'Fabrication & installation',
     subAr: 'ورش ومصانع وفرق تنفيذ متخصصة.',
     subEn: 'Workshops, factories and install crews.',
-    allHref: '/search?category=contracting-finishing',
     items: [
       { ar: 'تصنيع وتركيب', en: 'Fabrication & install', slug: 'contracting-finishing' },
       { ar: 'ورش تصنيع', en: 'Fabrication shops', query: 'ورش تصنيع' },
       { ar: 'فرق تركيب', en: 'Install crews', query: 'فرق تركيب' },
     ],
   },
-  {
-    id: 'technology-systems',
+  'technology-systems': {
     titleAr: 'التقنية والأنظمة الذكية',
     titleEn: 'Technology & smart systems',
     subAr: 'أنظمة ذكية، كاميرات، شبكات، تحكم، أمن، وحلول تقنية للمباني والمشاريع.',
     subEn: 'Smart systems, cameras, networks, controls, security and building tech.',
-    allHref: '/search?category=technology-systems',
     items: [
       { ar: 'تقنية وتجهيزات', en: 'Technology & systems', slug: 'technology-systems' },
       { ar: 'أنظمة ذكية', en: 'Smart systems', query: 'أنظمة ذكية' },
@@ -151,14 +141,11 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
       { ar: 'أنظمة أمن', en: 'Security systems', query: 'أنظمة أمن' },
     ],
   },
-  {
-    id: 'equipment-rental',
+  'equipment-rental': {
     titleAr: 'تأجير المعدات',
     titleEn: 'Equipment rental',
     subAr: 'معدات تشغيل، رافعات، سقالات، معدات موقع، وحلول تأجير للمشاريع.',
     subEn: 'Operating equipment, lifts, scaffolding, site gear and rental solutions.',
-    allHref: '/search?category=heavy-equipment-rental',
-    providerSlugs: ['heavy-equipment-rental', 'lifting', 'scaffolding', 'equipment-rental-provider'],
     items: [
       { ar: 'معدات ثقيلة وتأجير', en: 'Heavy equipment & rental', slug: 'heavy-equipment-rental' },
       { ar: 'معدات رفع ونقل', en: 'Lifting & transport', slug: 'lifting' },
@@ -167,4 +154,34 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
       { ar: 'رافعات', en: 'Cranes', query: 'رافعات' },
     ],
   },
-];
+};
+
+/** Derive rows from HOME_ROW_BINDINGS — single source of truth for slugs. */
+export const HOME_CATEGORY_ROWS: CategoryRow[] = HOME_ROW_BINDINGS.map((binding) => {
+  const copy = ROW_COPY[binding.rowId];
+  if (!copy) {
+    throw new Error(`categoryRows: missing ROW_COPY for "${binding.rowId}"`);
+  }
+  return {
+    id: binding.rowId,
+    titleAr: copy.titleAr,
+    titleEn: copy.titleEn,
+    subAr: copy.subAr,
+    subEn: copy.subEn,
+    allHref: homeCategoryHref(binding.primarySlug),
+    providerSlugs: binding.providerSlugs,
+    items: copy.items,
+  };
+});
+
+// Dev-time assertion: every chip slug must be an allowed taxonomy slug.
+if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
+  for (const row of HOME_CATEGORY_ROWS) {
+    for (const item of row.items) {
+      if (item.slug && !HOME_ALLOWED_SLUGS.has(item.slug)) {
+        // eslint-disable-next-line no-console
+        console.error(`[categoryRows] row "${row.id}" chip slug "${item.slug}" not in HOME_ALLOWED_SLUGS`);
+      }
+    }
+  }
+}

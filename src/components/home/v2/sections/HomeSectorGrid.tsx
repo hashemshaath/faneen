@@ -31,6 +31,7 @@ import sectorStainless1024 from '@/assets/home/sector-stainless-1024.webp';
 import sectorFabrication480 from '@/assets/home/sector-fabrication-480.webp';
 import sectorFabrication768 from '@/assets/home/sector-fabrication-768.webp';
 import { Section, SectionHead, SecondaryCTA, ROUTES } from './_shared';
+import { HOME_ALLOWED_SLUGS, homeCategoryHref } from '@/components/home/v2/data/homeTaxonomy';
 
 type Sector = {
   slug: string;
@@ -42,6 +43,11 @@ type Sector = {
   bodyEn: string;
 };
 
+// Tile rendering metadata (image + display copy). The `slug` of every
+// tile MUST exist in HOME_ALLOWED_SLUGS — enforced at module load and
+// by homeTaxonomyLinkGuard.test.ts. The list intentionally references
+// `aluminum-glass-facades` twice (Aluminum + Glass tiles) because the
+// taxonomy node groups both sectors together.
 const SECTORS: Sector[] = [
   { slug: 'aluminum-glass-facades', image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w`,
     titleAr: 'ألمنيوم', titleEn: 'Aluminum',
@@ -63,6 +69,16 @@ const SECTORS: Sector[] = [
     bodyAr: 'ورش ومصانع وفرق تنفيذ متخصصة.', bodyEn: 'Workshops, factories and install crews.' },
 ];
 
+// Module-load assertion: any unknown slug crashes early in dev.
+if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
+  for (const s of SECTORS) {
+    if (!HOME_ALLOWED_SLUGS.has(s.slug)) {
+      // eslint-disable-next-line no-console
+      console.error(`[HomeSectorGrid] slug "${s.slug}" not in HOME_ALLOWED_SLUGS`);
+    }
+  }
+}
+
 const HomeSectorGrid = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
@@ -78,7 +94,7 @@ const HomeSectorGrid = () => {
         {SECTORS.map((s) => (
           <Link
             key={`${s.slug}-${s.titleEn}`}
-            to={`/search?category=${s.slug}`}
+            to={homeCategoryHref(s.slug)}
             className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-muted">

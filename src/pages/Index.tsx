@@ -7,6 +7,7 @@ import { useImagePerfTracking } from "@/hooks/useImagePerfTracking";
 import { LazyOnView } from "@/components/LazyOnView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { lazyRetry } from "@/lib/lazyRetry";
+import { HOME_JSONLD_SLUGS, getHomeTaxonomyEntry } from "@/components/home/v2/data/homeTaxonomy";
 // Eager: above-the-fold + LCP hero, plus the chips bar (small, no images).
 import { HeroV2 } from "@/components/home/v2/HomeV2";
 // FAQ data is needed eagerly for JSON-LD; keep it in a tiny module so the
@@ -155,16 +156,13 @@ const Index = () => {
       name: 'قطاعات الصناعات الخفيفة',
       description: 'القطاعات الرئيسية المتاحة على منصة قِطاعات: ألمنيوم وزجاج وواجهات، حديد ومعادن، خشب ونجارة، ستانلس ستيل، مقاولات وتشطيبات، تقنية وأنظمة، وتأجير المعدات.',
       itemListOrder: 'https://schema.org/ItemListOrderAscending',
-      numberOfItems: 7,
-      itemListElement: [
-        { slug: 'aluminum-glass-facades',      name: 'ألمنيوم وزجاج وواجهات', nameEn: 'Aluminum, Glass & Facades', desc: 'ورش ومصانع الألمنيوم والزجاج: واجهات، نوافذ، أبواب، كيرتن وول، وسيكوريت.' },
-        { slug: 'steel-metal-works',           name: 'حديد ومعادن',           nameEn: 'Steel & Metal Works',       desc: 'أعمال الحديد والتصنيع المعدني: درابزين، أبواب، هياكل، وأعمال مخصصة.' },
-        { slug: 'wood-carpentry',              name: 'خشب ونجارة',            nameEn: 'Wood & Carpentry',          desc: 'النجارة والمطابخ والدواليب وأبواب الخشب بمقاسات مخصّصة.' },
-        { slug: 'stainless-steel-fabrication', name: 'ستانلس ستيل وتجهيزات',  nameEn: 'Stainless Steel & Fabrication', desc: 'تصنيع وتركيب الستانلس ستيل للمشاريع التجارية والصناعية والمطاعم.' },
-        { slug: 'contracting-finishing',       name: 'مقاولات وتشطيبات',      nameEn: 'Contracting & Finishing',   desc: 'مقاولات وتشطيبات داخلية وخارجية، ودهانات وعزل وأرضيات.' },
-        { slug: 'technology-systems',          name: 'تقنية وأنظمة ذكية',     nameEn: 'Technology & Smart Systems', desc: 'أنظمة ذكية، كاميرات، شبكات، تحكم وأمن، وحلول تقنية للمباني والمشاريع.' },
-        { slug: 'heavy-equipment-rental',      name: 'تأجير المعدات',         nameEn: 'Heavy Equipment & Rental',  desc: 'معدات ثقيلة، رافعات، سقالات، ومعدات موقع للتأجير.' },
-      ].map((s, i) => ({
+      numberOfItems: HOME_JSONLD_SLUGS.length,
+      // Derived from homeTaxonomy.ts — no slug strings in this file.
+      itemListElement: HOME_JSONLD_SLUGS.map((slug) => {
+        const e = getHomeTaxonomyEntry(slug);
+        if (!e) throw new Error(`Index.tsx JSON-LD: unknown home slug "${slug}"`);
+        return { slug: e.slug, name: e.labelAr, nameEn: e.labelEn, desc: e.descAr };
+      }).map((s, i) => ({
         '@type': 'ListItem',
         position: i + 1,
         name: s.name,
