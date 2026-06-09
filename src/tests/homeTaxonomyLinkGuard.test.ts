@@ -94,6 +94,12 @@ const ALLOWED_SLUGS = new Set([
   'wood-carpentry',
   'stainless-steel-fabrication',
   'contracting-finishing',
+  // New specialty rows added to the homepage:
+  'technology-systems',
+  'heavy-equipment-rental',
+  'lifting',
+  'scaffolding',
+  'equipment-rental-provider',
 ]);
 
 const SECTOR_GRID_PATH = resolve(
@@ -104,6 +110,11 @@ const SECTOR_GRID_PATH = resolve(
 const CATEGORY_ROW_PATH = resolve(
   process.cwd(),
   'src/components/home/v2/sections/HomeCategoryRow.tsx',
+);
+
+const INDEX_PAGE_PATH = resolve(
+  process.cwd(),
+  'src/pages/Index.tsx',
 );
 
 describe('Home Taxonomy Link Guard', () => {
@@ -236,6 +247,56 @@ describe('Home Taxonomy Link Guard', () => {
     });
     it('returns placeholder when nothing is available', () => {
       expect(pickCardImageSource(base).kind).toBe('placeholder');
+    });
+  });
+
+  describe('JSON-LD ItemList (Index.tsx) — taxonomy slugs', () => {
+    const source = readFileSync(INDEX_PAGE_PATH, 'utf8');
+    // Extract the ItemList block (between "ItemList" and the closing of itemListElement map)
+    const block = source.split('قطاعات الصناعات الخفيفة')[1] ?? '';
+    const slugs = Array.from(block.matchAll(/slug:\s*'([^']+)'/g)).map((m) => m[1]);
+
+    it('extracts slugs from the homepage JSON-LD ItemList', () => {
+      expect(slugs.length).toBeGreaterThan(0);
+    });
+
+    it('contains no forbidden legacy slugs', () => {
+      const leaked = slugs.filter((s) => FORBIDDEN_SLUGS.has(s));
+      expect(leaked, `Forbidden slugs leaked into Index.tsx JSON-LD: ${leaked.join(', ')}`).toEqual([]);
+    });
+
+    it('all JSON-LD slugs are in the allowed set', () => {
+      const unknown = slugs.filter((s) => !ALLOWED_SLUGS.has(s));
+      expect(unknown, `Unknown slugs in Index.tsx JSON-LD: ${unknown.join(', ')}`).toEqual([]);
+    });
+
+    it('includes the new specialty slugs (technology-systems, heavy-equipment-rental)', () => {
+      expect(slugs).toContain('technology-systems');
+      expect(slugs).toContain('heavy-equipment-rental');
+    });
+  });
+
+  describe('new homepage specialty rows', () => {
+    const rowIds = HOME_CATEGORY_ROWS.map((row) => row.id);
+
+    it('includes the technology / smart systems row', () => {
+      expect(rowIds).toContain('technology-systems');
+      const row = HOME_CATEGORY_ROWS.find((r) => r.id === 'technology-systems')!;
+      expect(getCategoryRowTaxonomySlugs(row)).toContain('technology-systems');
+    });
+
+    it('includes the equipment rental row bound to real rental taxonomy', () => {
+      expect(rowIds).toContain('equipment-rental');
+      const row = HOME_CATEGORY_ROWS.find((r) => r.id === 'equipment-rental')!;
+      const slugs = getCategoryRowTaxonomySlugs(row);
+      expect(slugs).toContain('heavy-equipment-rental');
+    });
+
+    it('does NOT add fake/empty rows for energy or elevators (taxonomy gap — TODO only)', () => {
+      // These categories have no corresponding taxonomy slug yet.
+      // Spec rule: prefer a TODO over linking to fake/empty categories.
+      expect(rowIds).not.toContain('energy-sustainability');
+      expect(rowIds).not.toContain('elevators-escalators');
     });
   });
 });
