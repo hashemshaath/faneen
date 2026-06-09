@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
+import { HOME_TRENDING, type HomeTrendingItem } from '@/components/home/v2/data/homeTaxonomy';
 import heroSlide2 from '@/assets/home/hero-slide-2.webp';
 import heroSlide3 from '@/assets/home/hero-slide-3.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
@@ -185,20 +186,9 @@ export const HeroV2 = () => {
   // O(MAX_SLIDE_TIMES) regardless of the filter window or change rate.
   const slideChangeTimesRef = useRef<number[]>([]);
 
-  // Top trending searches (manually curated based on industry priors)
-  // NOTE: `cat` MUST be a real taxonomy_categories.slug. Legacy shorthand
-  // (aluminum, iron, wood, glass, stainless, fabrication) is forbidden —
-  // it produces zero-result searches. Guarded by homeTaxonomyLinkGuard.
-  const TRENDING: { ar: string; en: string; cat?: string }[] = [
-    { ar: 'مصانع ألمنيوم في الرياض', en: 'Aluminum factories in Riyadh', cat: 'aluminum-glass-facades' },
-    { ar: 'تركيب نوافذ ألمنيوم',    en: 'Aluminum window installation',  cat: 'aluminum-glass-facades' },
-    { ar: 'بوابات حديدية',           en: 'Iron gates',                    cat: 'steel-metal-works' },
-    { ar: 'مطابخ خشبية',             en: 'Wooden kitchens',               cat: 'wood-carpentry' },
-    { ar: 'واجهات زجاجية',           en: 'Glass facades',                 cat: 'aluminum-glass-facades' },
-    { ar: 'درابزين ستانلس ستيل',     en: 'Stainless steel railings',      cat: 'stainless-steel-fabrication' },
-    { ar: 'أبواب خشبية داخلية',      en: 'Interior wooden doors',         cat: 'wood-carpentry' },
-    { ar: 'مظلات ألمنيوم',           en: 'Aluminum canopies',             cat: 'aluminum-glass-facades' },
-  ];
+  // Trending suggestions are derived from the single homeTaxonomy source.
+  // No hardcoded slugs in this file — every `cat` is a real taxonomy slug.
+  const TRENDING: HomeTrendingItem[] = HOME_TRENDING;
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
