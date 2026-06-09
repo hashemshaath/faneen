@@ -486,6 +486,88 @@ interface CatalogPick {
   description_en: string | null;
 }
 
+/* ---------- Accessible collapsible: Additional brand info ---------- */
+const BrandInfoDetails: React.FC<{
+  brand: string;
+  country: string;
+  condition: '' | 'new' | 'like_new' | 'good' | 'medium' | 'used';
+  onBrand: (v: string) => void;
+  onCountry: (v: string) => void;
+  onCondition: (v: '' | 'new' | 'like_new' | 'good' | 'medium' | 'used') => void;
+}> = ({ brand, country, condition, onBrand, onCountry, onCondition }) => {
+  const bi = useBi();
+  const { isRTL } = useLanguage();
+  const filledCount = [brand, country, condition].filter(Boolean).length;
+  const reactId = React.useId();
+  const panelId = `brand-info-${reactId}`;
+  return (
+    <details
+      className="group rounded-xl border border-border/60 bg-card/40 [&_summary::-webkit-details-marker]:hidden focus-within:border-primary/40 transition-colors"
+      open={filledCount > 0}
+    >
+      <summary
+        className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide rounded-xl hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+        aria-controls={panelId}
+        title={bi('اضغط Enter أو المسافة للتوسيع/الطي', 'Press Enter or Space to expand/collapse')}
+      >
+        <span className="inline-flex items-center gap-2 normal-case tracking-normal">
+          <Info className="size-3.5 text-primary/70" aria-hidden />
+          <Bi ar="معلومات إضافية عن العلامة" en="Additional brand info" />
+          <span
+            className={
+              filledCount > 0
+                ? 'inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2 py-0.5 text-[10px]'
+                : 'inline-flex items-center rounded-full bg-muted text-muted-foreground border border-border/60 px-2 py-0.5 text-[10px]'
+            }
+            aria-label={bi(`تم تعبئة ${filledCount} من 3`, `${filledCount} of 3 filled`)}
+          >
+            {filledCount}/3
+          </span>
+        </span>
+        <span className="inline-flex items-center gap-2 text-[10px] font-medium normal-case tracking-normal">
+          <span className="hidden sm:inline text-muted-foreground/70 group-open:hidden">
+            <Bi ar="توسيع" en="Expand" />
+          </span>
+          <span className="hidden sm:inline text-muted-foreground/70 hidden group-open:inline">
+            <Bi ar="طي" en="Collapse" />
+          </span>
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+        </span>
+      </summary>
+      <div id={panelId} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-1">
+        <p className="md:col-span-3 text-[11px] text-muted-foreground -mt-1">
+          <Bi
+            ar="حقول اختيارية تساعد على عرض هوية المعدة بوضوح أكبر للعميل."
+            en="Optional fields that help present the equipment's identity more clearly to the customer."
+          />
+        </p>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="الماركة / البراند" en="Brand" /></Label>
+          <Input dir="auto" placeholder={bi('مثال: Caterpillar', 'e.g. Caterpillar')} value={brand} onChange={e => onBrand(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="بلد الصنع" en="Country of manufacture" /></Label>
+          <Select value={country} onValueChange={onCountry}>
+            <SelectTrigger><SelectValue placeholder={bi('اختر البلد', 'Select country')} /></SelectTrigger>
+            <SelectContent>
+              {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="حالة المعدة" en="Condition" /></Label>
+          <Select value={condition} onValueChange={v => onCondition(v as '' | 'new' | 'like_new' | 'good' | 'medium' | 'used')}>
+            <SelectTrigger><SelectValue placeholder={bi('اختر الحالة', 'Select condition')} /></SelectTrigger>
+            <SelectContent>
+              {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </details>
+  );
+};
+
 /** Provider rentals dashboard — items + orders + extensions in one shell. */
 const DashboardRentals: React.FC = () => {
   const { user } = useAuth();
