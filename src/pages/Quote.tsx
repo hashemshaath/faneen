@@ -603,17 +603,27 @@ const Quote: React.FC = () => {
                       ar="ما نوع الخدمة التي تحتاجها؟"
                       en="What service do you need?"
                       help={{
-                        ar: 'اختر أقرب قطاع لاحتياجك. يمكنك توضيح التفاصيل في الخطوة التالية.',
-                        en: 'Pick the closest sector. You can add specifics in the next step.',
+                        ar: 'اختر النشاط الرئيسي، ثم تخصص فرعي إذا أحببت تحديده أكثر.',
+                        en: 'Pick the primary activity, then optionally a specialty.',
                       }}
                     />
                     <ChoiceGrid
-                      name={bi('القطاع', 'Sector')}
+                      name={bi('النشاط الرئيسي', 'Primary activity')}
                       options={SECTORS.map((s) => ({ value: s.value, ar: s.ar, en: s.en }))}
                       value={form.sector}
-                      onChange={(v) => update('sector', v as Sector)}
+                      onChange={(v) => {
+                        update('sector', v as Sector);
+                        if (form.specialty) update('specialty', '');
+                      }}
                     />
                     <FieldError message={errors.sector} />
+                    {form.sector && (
+                      <QuoteSpecialtyPicker
+                        primarySlug={form.sector}
+                        value={form.specialty}
+                        onChange={(v) => update('specialty', v)}
+                      />
+                    )}
                   </div>
                 )}
 
