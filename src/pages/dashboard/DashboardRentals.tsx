@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -47,6 +47,115 @@ const PENALTY_PRESETS = [
   { ar: 'غرامة سوء الاستخدام ٢٠٪ من قيمة العقد', en: 'Misuse penalty 20% of contract value' },
 ];
 
+/** Category-aware preset suggestions for terms (matched by Arabic/English keywords). */
+type Preset = { ar: string; en: string };
+type PresetGroup = { usage: Preset[]; late: Preset[]; penalty: Preset[] };
+const CATEGORY_PRESETS: ReadonlyArray<{
+  keywords: string[];
+  ar: string; en: string;
+  presets: PresetGroup;
+}> = [
+  {
+    keywords: ['سقال','scaffold'],
+    ar: 'السقالات', en: 'Scaffolding',
+    presets: {
+      usage: [
+        { ar: 'التركيب والفك بواسطة فني معتمد فقط', en: 'Erection/dismantle by certified technician only' },
+        { ar: 'فحص يومي قبل الاستخدام', en: 'Daily pre-use inspection required' },
+        { ar: 'ارتداء معدات الوقاية الشخصية إلزامي', en: 'PPE mandatory at all times' },
+      ],
+      late: [{ ar: 'رسوم تأخير ١٠٪ من السعر اليومي عن كل ساعة', en: 'Late fee 10% of daily rate per hour' }],
+      penalty: [
+        { ar: 'استبدال أي عنصر مفقود بقيمته الجديدة', en: 'Missing parts replaced at new value' },
+        { ar: 'غرامة عدم إعادة التركيب الأصلي', en: 'Penalty for not restoring original assembly' },
+      ],
+    },
+  },
+  {
+    keywords: ['مولد','generator'],
+    ar: 'المولدات', en: 'Generators',
+    presets: {
+      usage: [
+        { ar: 'التشغيل في منطقة جيدة التهوية فقط', en: 'Operate in well-ventilated areas only' },
+        { ar: 'التأريض إلزامي قبل التشغيل', en: 'Grounding required before operation' },
+        { ar: 'الوقود على المستأجر بنوع موصى به', en: 'Fuel by renter (recommended grade)' },
+      ],
+      late: [{ ar: 'رسوم تأخير يومية بنفس سعر الإيجار', en: 'Daily late fee equals rental rate' }],
+      penalty: [
+        { ar: 'غرامة تشغيل بوقود غير مناسب', en: 'Penalty for using improper fuel' },
+        { ar: 'تكلفة صيانة المحرك عند سوء الاستخدام', en: 'Engine service cost on misuse' },
+      ],
+    },
+  },
+  {
+    keywords: ['رافع','crane','ونش'],
+    ar: 'الرافعات', en: 'Cranes & Hoists',
+    presets: {
+      usage: [
+        { ar: 'يلزم مشغل معتمد ذو رخصة سارية', en: 'Certified, licensed operator required' },
+        { ar: 'يُمنع التشغيل عند سرعة رياح > ٣٢ كم/س', en: 'No operation when wind speed > 32 km/h' },
+        { ar: 'الالتزام بحدود الحمولة القصوى', en: 'Respect maximum load capacity' },
+      ],
+      late: [{ ar: 'رسوم تأخير ١٢٥٪ من السعر اليومي', en: 'Late fee 125% of daily rate' }],
+      penalty: [
+        { ar: 'غرامة التشغيل بدون مشغل معتمد', en: 'Penalty for operating without certified operator' },
+        { ar: 'تكلفة فحص الهيكل بعد أي حادث', en: 'Post-incident structural inspection cost' },
+      ],
+    },
+  },
+  {
+    keywords: ['ضاغط','compressor'],
+    ar: 'الضواغط', en: 'Compressors',
+    presets: {
+      usage: [
+        { ar: 'فحص الضغط يوميًا قبل البدء', en: 'Daily pressure check before use' },
+        { ar: 'تفريغ الخزان بعد كل يوم عمل', en: 'Drain tank after each work day' },
+      ],
+      late: [{ ar: 'فترة سماح ٣ ساعات ثم رسوم يومية كاملة', en: '3-hour grace then full daily fee' }],
+      penalty: [{ ar: 'استبدال الفلاتر التالفة بسعر السوق', en: 'Damaged filters replaced at market price' }],
+    },
+  },
+  {
+    keywords: ['قص','cutting','منشار','saw','جلخ'],
+    ar: 'أدوات القص', en: 'Cutting tools',
+    presets: {
+      usage: [
+        { ar: 'استخدام شفرات/أقراص أصلية فقط', en: 'Original blades/discs only' },
+        { ar: 'ارتداء نظارة ومعدات وقاية إلزامي', en: 'Safety glasses and PPE mandatory' },
+      ],
+      late: [{ ar: 'رسوم تأخير بالساعة عند تجاوز المدة', en: 'Hourly late fee after due time' }],
+      penalty: [{ ar: 'تكلفة استبدال الشفرات/الأقراص التالفة', en: 'Cost of replacing damaged blades/discs' }],
+    },
+  },
+  {
+    keywords: ['شاحن','vehicle','truck','سيارة','عربة','نقل'],
+    ar: 'المركبات والنقل', en: 'Vehicles & Transport',
+    presets: {
+      usage: [
+        { ar: 'يلزم رخصة قيادة سارية مناسبة للفئة', en: 'Valid driving license of the correct class required' },
+        { ar: 'الوقود على المستأجر', en: 'Fuel covered by renter' },
+        { ar: 'يُمنع استخدام المركبة خارج المنطقة المحددة', en: 'No use outside designated area' },
+      ],
+      late: [{ ar: 'رسوم تأخير بالساعة بحد أقصى يوم كامل', en: 'Hourly late fee, capped at one full day' }],
+      penalty: [
+        { ar: 'غرامة المخالفات المرورية على المستأجر', en: 'Traffic fines borne by the renter' },
+        { ar: 'خصم تكلفة التنظيف العميق عند الإرجاع متسخة', en: 'Deep-cleaning cost on dirty return' },
+      ],
+    },
+  },
+];
+
+const getCategoryPreset = (cat: RentalCategory | undefined, nameAr: string, nameEn: string) => {
+  const hay = `${cat?.name_ar ?? ''} ${cat?.name_en ?? ''} ${nameAr} ${nameEn}`.toLowerCase();
+  return CATEGORY_PRESETS.find(p => p.keywords.some(k => hay.includes(k.toLowerCase()))) ?? null;
+};
+
+const mergePresets = (base: ReadonlyArray<Preset>, extra?: ReadonlyArray<Preset>): Preset[] => {
+  if (!extra?.length) return [...base];
+  const seen = new Set(base.map(p => p.ar));
+  return [...extra.filter(p => !seen.has(p.ar)), ...base];
+};
+
 const CONDITION_OPTIONS = [
   { value: 'new',      ar: 'جديد',        en: 'New' },
   { value: 'like_new', ar: 'كالجديد',     en: 'Like new' },
@@ -79,7 +188,8 @@ const TermsField: React.FC<{
   presets: ReadonlyArray<{ ar: string; en: string }>;
   value: string;
   onChange: (v: string) => void;
-}> = ({ label, presets, value, onChange }) => {
+  hint?: string;
+}> = ({ label, presets, value, onChange, hint }) => {
   const { isRTL } = useLanguage();
   const lines = value.split('\n').map(s => s.trim()).filter(Boolean);
   const togglePreset = (text: string) => {
@@ -89,7 +199,14 @@ const TermsField: React.FC<{
   };
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs">{label}</Label>
+        {hint && (
+          <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+            <Sparkles className="size-3 text-primary/70" />{hint}
+          </span>
+        )}
+      </div>
       <div className="flex flex-wrap gap-1.5">
         {presets.map(p => {
           const text = isRTL ? p.ar : p.en;
@@ -108,6 +225,87 @@ const TermsField: React.FC<{
       </div>
       <Textarea dir="auto" rows={2} value={value} onChange={e => onChange(e.target.value)}
         placeholder={isRTL ? 'اختر من المقترحات أو اكتب نصًا خاصًا…' : 'Pick presets or type custom text…'} />
+    </div>
+  );
+};
+
+/** Terms block — category-aware presets + one-click apply-all. */
+const TermsBlock: React.FC<{
+  category: RentalCategory | undefined;
+  nameAr: string;
+  nameEn: string;
+  usage: string;
+  late: string;
+  penalty: string;
+  onChange: (next: { usage: string; late: string; penalty: string }) => void;
+}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange }) => {
+  const { isRTL } = useLanguage();
+  const bi = useBi();
+  const match = getCategoryPreset(category, nameAr, nameEn);
+  const usagePresets = mergePresets(USAGE_PRESETS, match?.presets.usage);
+  const latePresets = mergePresets(LATE_PRESETS, match?.presets.late);
+  const penaltyPresets = mergePresets(PENALTY_PRESETS, match?.presets.penalty);
+  const allEmpty = !usage.trim() && !late.trim() && !penalty.trim();
+  const tagLabel = match ? (isRTL ? match.ar : match.en) : '';
+
+  const applySuggested = () => {
+    if (!match) return;
+    const join = (arr: Preset[]) => arr.map(p => (isRTL ? p.ar : p.en)).join('\n');
+    onChange({
+      usage: usage.trim() ? usage : join(match.presets.usage),
+      late: late.trim() ? late : join(match.presets.late),
+      penalty: penalty.trim() ? penalty : join(match.presets.penalty),
+    });
+    toast.success(bi('تم تطبيق المقترحات', 'Suggestions applied'));
+  };
+
+  return (
+    <div className="space-y-3 rounded-xl border border-border/60 bg-card/40 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide inline-flex items-center gap-2">
+          <ShieldCheck className="size-3.5 text-primary/80" />
+          <Bi ar="الشروط والأحكام" en="Terms & conditions" />
+          {match && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-[10px] normal-case tracking-normal">
+              <Sparkles className="size-3" />
+              <Bi ar={`مقترح لـ ${tagLabel}`} en={`Suggested for ${tagLabel}`} />
+            </span>
+          )}
+        </div>
+        {match && allEmpty && (
+          <Button type="button" size="sm" variant="outline" onClick={applySuggested} className="gap-1.5 h-8">
+            <Wand2 className="size-3.5" />
+            <Bi ar="تطبيق المقترحات" en="Apply suggestions" />
+          </Button>
+        )}
+      </div>
+      <p className="text-[11px] text-muted-foreground -mt-1">
+        <Bi
+          ar="اختر شروطًا متوافقة مع تصنيف المعدة لحماية أعمالك وتوضيح المسؤوليات للعميل."
+          en="Pick terms that match the equipment category to protect your business and clarify responsibilities."
+        />
+      </p>
+      <TermsField
+        label={bi('شروط الاستخدام', 'Usage terms')}
+        presets={usagePresets}
+        value={usage}
+        onChange={v => onChange({ usage: v, late, penalty })}
+        hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+      />
+      <TermsField
+        label={bi('شروط التأخير', 'Late terms')}
+        presets={latePresets}
+        value={late}
+        onChange={v => onChange({ usage, late: v, penalty })}
+        hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+      />
+      <TermsField
+        label={bi('الشروط الجزائية', 'Penalty terms')}
+        presets={penaltyPresets}
+        value={penalty}
+        onChange={v => onChange({ usage, late, penalty: v })}
+        hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+      />
     </div>
   );
 };
@@ -835,12 +1033,21 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             </div>
           </div>
 
-          {/* Identification: brand / country / condition */}
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              <Bi ar="التعريف والحالة" en="Identification & condition" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Identification: brand / country / condition — collapsed as additional brand info */}
+          <details className="group rounded-xl border border-border/60 bg-card/40 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide rounded-xl hover:bg-muted/40 transition-colors">
+              <span className="inline-flex items-center gap-2 normal-case tracking-normal">
+                <Info className="size-3.5 text-primary/70" />
+                <Bi ar="معلومات إضافية عن العلامة" en="Additional brand info" />
+                {(form.brand || form.country_of_manufacture || form.condition) && (
+                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2 py-0.5 text-[10px]">
+                    <Bi ar="مكتمل" en="Filled" />
+                  </span>
+                )}
+              </span>
+              <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-1">
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="الماركة / البراند" en="Brand" /></Label>
                 <Input dir="auto" placeholder={bi('مثال: Caterpillar','e.g. Caterpillar')} value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
@@ -864,7 +1071,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                 </Select>
               </div>
             </div>
-          </div>
+          </details>
 
           {/* Electrical specs — conditional on category/name keywords */}
           {(() => {
@@ -929,29 +1136,17 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             </div>
           )}
 
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              <Bi ar="الشروط والأحكام" en="Terms & conditions" />
-            </div>
-            <TermsField
-              label={bi('شروط الاستخدام','Usage terms')}
-              presets={USAGE_PRESETS}
-              value={form.usage_terms}
-              onChange={v => setForm({ ...form, usage_terms: v })}
-            />
-            <TermsField
-              label={bi('شروط التأخير','Late terms')}
-              presets={LATE_PRESETS}
-              value={form.late_terms}
-              onChange={v => setForm({ ...form, late_terms: v })}
-            />
-            <TermsField
-              label={bi('الشروط الجزائية','Penalty terms')}
-              presets={PENALTY_PRESETS}
-              value={form.penalty_terms}
-              onChange={v => setForm({ ...form, penalty_terms: v })}
-            />
-          </div>
+          <TermsBlock
+            category={categories.find(c => c.id === form.category_id)}
+            nameAr={form.name_ar}
+            nameEn={form.name_en}
+            usage={form.usage_terms}
+            late={form.late_terms}
+            penalty={form.penalty_terms}
+            onChange={({ usage, late, penalty }) =>
+              setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty })
+            }
+          />
           <div className="flex justify-end">
             <Button onClick={submit} disabled={submitting} className="hover-lift">
               {submitting && <Loader2 className="size-4 animate-spin me-1" />}
@@ -1484,30 +1679,47 @@ const RentalItemEditForm: React.FC<{
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs"><Bi ar="الماركة" en="Brand" /></Label>
-          <Input dir="auto" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
+      <details
+        className="group rounded-xl border border-border/60 bg-card/40 [&_summary::-webkit-details-marker]:hidden"
+        open={Boolean(form.brand || form.country_of_manufacture || form.condition)}
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide rounded-xl hover:bg-muted/40 transition-colors">
+          <span className="inline-flex items-center gap-2 normal-case tracking-normal">
+            <Info className="size-3.5 text-primary/70" />
+            <Bi ar="معلومات إضافية عن العلامة" en="Additional brand info" />
+            {(form.brand || form.country_of_manufacture || form.condition) && (
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2 py-0.5 text-[10px]">
+                <Bi ar="مكتمل" en="Filled" />
+              </span>
+            )}
+          </span>
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-1">
+          <div className="space-y-1">
+            <Label className="text-xs"><Bi ar="الماركة" en="Brand" /></Label>
+            <Input dir="auto" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs"><Bi ar="بلد الصنع" en="Country" /></Label>
+            <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
+              <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
+              <SelectContent>
+                {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs"><Bi ar="الحالة" en="Condition" /></Label>
+            <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
+              <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
+              <SelectContent>
+                {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs"><Bi ar="بلد الصنع" en="Country" /></Label>
-          <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
-            <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
-            <SelectContent>
-              {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs"><Bi ar="الحالة" en="Condition" /></Label>
-          <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
-            <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
-            <SelectContent>
-              {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      </details>
 
       {showElectrical && (
         <div className="space-y-2">
@@ -1586,18 +1798,18 @@ const RentalItemEditForm: React.FC<{
         </div>
       </div>
 
-      {/* Terms */}
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <Bi ar="الشروط والأحكام" en="Terms & conditions" />
-        </div>
-        <TermsField label={bi('شروط الاستخدام','Usage terms')} presets={USAGE_PRESETS}
-          value={form.usage_terms} onChange={v => setForm({ ...form, usage_terms: v })} />
-        <TermsField label={bi('شروط التأخير','Late terms')} presets={LATE_PRESETS}
-          value={form.late_terms} onChange={v => setForm({ ...form, late_terms: v })} />
-        <TermsField label={bi('الشروط الجزائية','Penalty terms')} presets={PENALTY_PRESETS}
-          value={form.penalty_terms} onChange={v => setForm({ ...form, penalty_terms: v })} />
-      </div>
+      {/* Terms — category-aware */}
+      <TermsBlock
+        category={cat}
+        nameAr={form.name_ar}
+        nameEn={form.name_en}
+        usage={form.usage_terms}
+        late={form.late_terms}
+        penalty={form.penalty_terms}
+        onChange={({ usage, late, penalty }) =>
+          setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty })
+        }
+      />
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} className="hover-lift">
