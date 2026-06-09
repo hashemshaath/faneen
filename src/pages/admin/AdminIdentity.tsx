@@ -421,11 +421,11 @@ const AdminIdentity: React.FC = () => {
                   <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                       <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                      {isRTL ? `${kpis.totalUsers.toLocaleString('ar-SA')} حساب` : `${kpis.totalUsers.toLocaleString()} accounts`}
+                      {isRTL ? `${kpis.totalUsers.toLocaleString('ar-SA-u-nu-latn')} حساب` : `${kpis.totalUsers.toLocaleString()} accounts`}
                     </span>
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                       <Building2 className="w-3 h-3 text-success" />
-                      {isRTL ? `${kpis.totalBusinesses.toLocaleString('ar-SA')} منشأة` : `${kpis.totalBusinesses.toLocaleString()} businesses`}
+                      {isRTL ? `${kpis.totalBusinesses.toLocaleString('ar-SA-u-nu-latn')} منشأة` : `${kpis.totalBusinesses.toLocaleString()} businesses`}
                     </span>
                     {pendingTotal > 0 && (
                       <Link to="/admin/identity?tab=workspace" onClick={() => setTabSafe('workspace')}
@@ -691,7 +691,7 @@ const AdminIdentity: React.FC = () => {
                   <div className="flex items-center gap-1.5 ms-auto">
                     {typeof s.count === 'number' && !isLoading && (
                       <Badge variant="outline" className={`tech-content text-[10px] tabular-nums font-bold ${toneText[s.tone]} border-current/30`}>
-                        {s.count.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                        {s.count.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                       </Badge>
                     )}
                     <ArrowUpRight className={`w-4 h-4 text-muted-foreground/40 transition-all duration-300 group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRTL ? 'rtl-flip' : ''}`} />

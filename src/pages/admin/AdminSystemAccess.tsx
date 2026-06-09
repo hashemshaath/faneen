@@ -369,7 +369,7 @@ const AdminSystemAccess: React.FC = () => {
             <Check className="w-3.5 h-3.5" />
             <span>{isRTL ? ACCESS_LABELS.synced.ar : ACCESS_LABELS.synced.en}</span>
             <span className="text-success/70 tech-content">
-              · {new Date(lastSyncAt).toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US')}
+              · {new Date(lastSyncAt).toLocaleTimeString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
             </span>
           </div>
         )}

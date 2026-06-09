@@ -209,7 +209,7 @@ const AdminShowcase: React.FC = () => {
                         {row.kind === "logo" ? "شعار" : "عمل"}
                         {linked ? ` · ${linked.display_ar}` : " · غير مصنّف"}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">{new Date(row.created_at).toLocaleDateString("ar-SA")}</span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(row.created_at).toLocaleDateString("ar-SA-u-nu-latn")}</span>
                     </div>
                     <span className={`inline-flex items-center text-[10px] rounded-full px-2 py-0.5 ${linkStatusClass}`}>{linkStatusLabel}</span>
                     {row.title_ar && <p className="text-sm font-medium line-clamp-1" dir="auto">{row.title_ar}</p>}

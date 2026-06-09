@@ -513,7 +513,7 @@ export const ReviewsTab = ({ business }: { business: any }) => {
         {reviews.map((review, index) => {
           const profile = review.profiles as any;
           const reviewerName = profile?.full_name || (language === "ar" ? "مستخدم" : "User");
-          const reviewDate = new Date(review.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US", {
+          const reviewDate = new Date(review.created_at).toLocaleDateString(language === "ar" ? "ar-SA-u-nu-latn" : "en-US", {
             year: "numeric",
             month: "short",
             day: "numeric",

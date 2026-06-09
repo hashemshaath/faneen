@@ -650,7 +650,7 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
                         {it.secondary && <span className="truncate" dir="auto">{it.secondary}</span>}
                         {it.createdAt && (
                           <span className="tech-content">
-                            {new Date(it.createdAt).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                            {new Date(it.createdAt).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                           </span>
                         )}
                       </div>

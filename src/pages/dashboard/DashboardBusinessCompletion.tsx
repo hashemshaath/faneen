@@ -318,7 +318,7 @@ const DashboardBusinessCompletion: React.FC = () => {
   // Visibility boost is a friendly mapping of completion to expected uplift.
   const visibilityBoost = Math.round(pct * 1.4); // up to ~140% relative uplift at 100%
   const lastUpdated = business?.updated_at
-    ? new Date(business.updated_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' })
+    ? new Date(business.updated_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' })
     : null;
 
   // Recent activity — latest contracts & service requests for this business.
@@ -350,9 +350,9 @@ const DashboardBusinessCompletion: React.FC = () => {
   });
 
   const fmtDate = (iso?: string | null) =>
-    iso ? new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short' }) : '';
+    iso ? new Date(iso).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { day: '2-digit', month: 'short' }) : '';
   const fmtMoney = (n?: number | null, c?: string | null) =>
-    n != null ? `${Number(n).toLocaleString(isRTL ? 'ar-SA' : 'en-US')} ${c ?? 'SAR'}` : '';
+    n != null ? `${Number(n).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} ${c ?? 'SAR'}` : '';
 
   // Approval timeline steps — purely visual.
   const timelineSteps: Array<{ key: ApprovalStatus | 'start'; ar: string; en: string }> = [

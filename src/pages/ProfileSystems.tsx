@@ -348,7 +348,7 @@ const ProfileSystems = () => {
       name: seoTitle,
       description: seoDesc,
       url: canonical,
-      inLanguage: isRTL ? 'ar-SA' : 'en',
+      inLanguage: isRTL ? 'ar-SA-u-nu-latn' : 'en',
     });
     if (filtered.length) {
       blocks.push({

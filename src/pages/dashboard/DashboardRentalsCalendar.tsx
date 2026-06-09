@@ -404,7 +404,7 @@ const MonthView: React.FC<MonthViewProps> = ({ cursor, setCursor, orders, allOrd
           </Button>
         </div>
         <div className="text-sm font-semibold tech-content">
-          {cursor.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { month: 'long', year: 'numeric' })}
+          {cursor.toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'long', year: 'numeric' })}
         </div>
       </div>
 
@@ -523,9 +523,9 @@ const WeekView: React.FC<WeekViewProps> = ({ cursor, setCursor, orders, itemById
           </Button>
         </div>
         <div className="text-sm font-semibold tech-content">
-          {weekStart.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short' })}
+          {weekStart.toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { day: 'numeric', month: 'short' })}
           {' — '}
-          {weekEnd.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short' })}
+          {weekEnd.toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { day: 'numeric', month: 'short' })}
         </div>
       </div>
 
@@ -536,7 +536,7 @@ const WeekView: React.FC<WeekViewProps> = ({ cursor, setCursor, orders, itemById
             <div className="text-[11px] text-muted-foreground px-2"><Bi ar="الصنف" en="Item" /></div>
             {days.map(d => (
               <div key={ymd(d)} className="text-[11px] text-center text-muted-foreground tech-content">
-                {d.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { weekday: 'short', day: 'numeric' })}
+                {d.toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { weekday: 'short', day: 'numeric' })}
               </div>
             ))}
           </div>

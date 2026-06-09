@@ -894,7 +894,7 @@ const AdminBrandDetail: React.FC = () => {
                 {(auditQ.data ?? []).map((e) => (
                   <li key={e.id} className="flex items-center justify-between gap-2 border-b border-border/40 py-1.5">
                     <code className="tech-content">{e.action}</code>
-                    <span className="text-muted-foreground">{new Date(e.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                    <span className="text-muted-foreground">{new Date(e.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
                   </li>
                 ))}
               </ul>

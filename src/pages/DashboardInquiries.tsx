@@ -83,7 +83,7 @@ const DashboardInquiries: React.FC = () => {
                       {statusLabel(it.status)}
                     </Badge>
                     <span className="text-[11px] text-muted-foreground tech-content">
-                      {new Date(it.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                      {new Date(it.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                     </span>
                   </div>
                   <p className="text-sm" dir="auto">{it.message}</p>

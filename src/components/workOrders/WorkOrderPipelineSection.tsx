@@ -559,7 +559,7 @@ export function WorkOrderPipelineSection({
                   {pickLabel(ev.to_stage, isRTL)}
                 </span>
                 <time className="tech-content">
-                  {new Date(ev.created_at).toLocaleString(isRTL ? "ar-SA" : "en-US", {
+                  {new Date(ev.created_at).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en-US", {
                     month: "short",
                     day: "2-digit",
                     hour: "2-digit",

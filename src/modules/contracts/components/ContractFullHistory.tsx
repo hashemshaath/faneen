@@ -107,7 +107,7 @@ export function ContractFullHistory({ contractId }: ContractFullHistoryProps) {
                           </Badge>
                         </div>
                         <time className="text-xs text-muted-foreground tech-content shrink-0" dateTime={ev.at}>
-                          {when.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                          {when.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                         </time>
                       </div>
                       {formatPayload(ev, isRTL) && (

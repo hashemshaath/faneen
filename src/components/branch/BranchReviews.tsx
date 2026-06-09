@@ -151,7 +151,7 @@ export const BranchReviews: React.FC<BranchReviewsProps> = ({ branchId, business
                     )}
                   </div>
                   <span className="text-[11px] text-muted-foreground tech-content">
-                    {new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                    {new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                   </span>
                 </div>
                 {r.title && <p className="font-medium text-sm" dir="auto">{r.title}</p>}
