@@ -104,7 +104,7 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                   const city = business.cities
                     ? bi(business.cities.name_ar ?? '', business.cities.name_en ?? '')
                     : '';
-                  const href = business.username ? `/q/${business.username}` : `/q/${business.id}`;
+                  const href = business.username ? `/${business.username}` : `/businesses/${business.id}`;
                   const image = pickCardImageSource(business);
                   return (
                     <Link
