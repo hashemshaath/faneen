@@ -266,16 +266,41 @@ export const SECTORS_SEO_LIST: SectorSeo[] = Object.values(SECTORS_SEO);
 export const SEO_SECTOR_SLUGS: SeoSectorSlug[] = SECTORS_SEO_LIST.map((s) => s.slug);
 
 /** Map any inbound ?sector= value (Quote internal or SEO slug) to Quote internal Sector. */
-export function resolveQuoteSectorFromUrl(value: string | null | undefined): SectorSeo['quoteSector'] | null {
+/**
+ * Safe Batch 3 — Resolves any URL ?sector= value into a canonical primary
+ * taxonomy slug (the 13 from `CANONICAL_PRIMARY_SLUGS`). Accepts:
+ *   - SEO sector slugs (aluminum, steel, wood, glass, stainless-steel,
+ *     fabrication-installation)
+ *   - Legacy directory slugs via `LEGACY_SECTOR_TO_TAXONOMY_SLUG`
+ *   - Canonical primary slugs directly
+ */
+import {
+  CANONICAL_PRIMARY_SLUGS,
+  type CanonicalPrimarySlug,
+} from '@/modules/taxonomy/canonical-primaries';
+import { resolveLegacySectorToTaxonomy } from '@/modules/taxonomy/legacy-mapping';
+
+const CANONICAL_SET = new Set<string>(CANONICAL_PRIMARY_SLUGS);
+
+// Legacy SEO slug → canonical primary slug.
+const SEO_TO_CANONICAL: Record<SeoSectorSlug, CanonicalPrimarySlug> = {
+  aluminum: 'aluminum-works',
+  steel: 'steel-metal-works',
+  wood: 'wood-carpentry',
+  glass: 'glass-securit-works',
+  'stainless-steel': 'stainless-steel-works',
+  'fabrication-installation': 'contracting-finishing',
+};
+
+export function resolveQuoteSectorFromUrl(
+  value: string | null | undefined,
+): CanonicalPrimarySlug | null {
   if (!value) return null;
   const v = value.trim().toLowerCase();
-  const direct = SECTORS_SEO[v as SeoSectorSlug];
-  if (direct) return direct.quoteSector;
-  // Allow passing the internal Quote sector key directly.
-  const allowed: SectorSeo['quoteSector'][] = ['aluminum', 'iron', 'wood', 'glass', 'stainless', 'fabrication'];
-  if ((allowed as string[]).includes(v)) return v as SectorSeo['quoteSector'];
-  // Common aliases
-  if (v === 'metal' || v === 'iron-steel') return 'iron';
-  if (v === 'stainless-steel' || v === 'ss') return 'stainless';
+  if (!v) return null;
+  if (CANONICAL_SET.has(v)) return v as CanonicalPrimarySlug;
+  if (SEO_TO_CANONICAL[v as SeoSectorSlug]) return SEO_TO_CANONICAL[v as SeoSectorSlug];
+  const mapped = resolveLegacySectorToTaxonomy(v);
+  if (mapped && CANONICAL_SET.has(mapped)) return mapped as CanonicalPrimarySlug;
   return null;
 }
