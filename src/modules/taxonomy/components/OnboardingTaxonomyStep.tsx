@@ -84,13 +84,6 @@ interface Props {
   onLoadStatusChange?: (status: OnboardingTaxonomyLoadStatus) => void;
 }
 
-const t = (rtl: boolean, ar: string, en: string) => (rtl ? ar : en);
-
-function name(cat: TaxonomyCategory, isRTL: boolean): string {
-  if (isRTL) return cat.name_ar || cat.name_en || cat.slug;
-  return cat.name_en || cat.name_ar || cat.slug;
-}
-
 const tt = (rtl: boolean, ar: string, en: string) => (rtl ? ar : en);
 
 export const OnboardingTaxonomyStep: React.FC<Props> = ({ value, onChange, onLoadStatusChange }) => {
