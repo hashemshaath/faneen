@@ -1,64 +1,86 @@
+# Home Management P2 — المرحلة الأولى: Admin CMS للقطاعات
+
 ## الهدف
-تحويل `/` إلى واجهة سوق نظيفة بهوية قطاعات، بدون كسر static hero، ولا تحميل vendor-charts/pdf، ولا تعديل التصنيفات.
+السماح للمشرف بتعديل بلاطات قطاعات الصفحة الرئيسية (10 بلاطات في `HomeSectorGrid`) من واجهة admin، بدلاً من تعديل كود `HomeSectorGrid.tsx` و `homeTaxonomy.ts` يدويًا في كل مرة. مع الحفاظ على:
+- نظام الـ guard test الصارم (`HOME_ALLOWED_SLUGS`).
+- استقرار الـ LCP (لا صور، أيقونات Lucide فقط).
+- التوافق مع slugs الـ canonical الـ 13 لـ `primary_activity`.
 
-## ما سيُحذف من الصفحة الحالية (Index.tsx)
-الصفحة الحالية فيها 11 قسم متراكمة وتكرارات واضحة:
-- `WhoIsItForSection` — مكرّر مع `ForClients` + `ForProviders`.
-- `SolutionSection` — يكرر رسالة الـ Hero/Trust.
-- `PlatformFeaturesSection` — كرت كثير ورموز كثيرة.
-- `TrustSection` — يُدمج في Hero strip صغير بدل قسم كامل.
-- `FinalCTASection` — مكرّر مع CTA المزدوج.
-- `SectorChipsBar` — يُستبدل بشكل أنظف داخل Hero.
-- أيقونات الزينة الزائدة داخل كروت القطاعات (top-right icon badge).
+## ما لن يتغير الآن (مؤجل لمراحل لاحقة)
+- Partner Showcase CMS (P2.2)
+- Hero Slider CMS (P2.3)
+- ربط counts ديناميكية من `businesses` (P2.4)
+- إضافة قطاعات جديدة خارج الـ 13 canonical (يبقى عبر TaxonomyAdminPage الحالي)
 
-## البنية الجديدة (نفس Index.tsx، نفس HeroV2 الموجود — فقط تنظيم الـ sections)
+## النطاق الفعلي (P2.1)
+المشرف يستطيع من شاشة واحدة `/admin/home-sectors`:
+1. اختيار أيّ 10 من الـ 13 primary_activity الـ canonical تظهر على الصفحة الرئيسية.
+2. ترتيب البلاطات بالسحب والإفلات (dnd-kit، متّسق مع `Classification System`).
+3. تعديل اسم البلاطة (ar/en) ووصفها القصير (ar/en) وأيقونتها (اختيار من قائمة Lucide مدعومة).
+4. حفظ مباشر (inline) — بدون popups (التزامًا بـ UX Constraint).
 
-1. **HeroV2** (موجود، لا يُلمس — يحافظ على static hero + LCP).
-2. **HomeSectorGrid** *(جديد)* — يستبدل `MainSectorsSection`. شبكة قطاعات رئيسية من 6 بطاقات نظيفة، صورة + اسم + سطر واحد + سهم. يقرأ من taxonomy إن أمكن مع fallback ثابت للـ slugs الستة الحالية (`aluminum/iron/wood/glass/stainless/fabrication`) لضمان عدم كسر روابط `/search?category=...`.
-3. **HomeAudienceSplit** *(جديد)* — قسم واحد مقسوم نصفين (عميل / مزود) بدل قسمين منفصلين. يحل محل `ForClientsSection` + `ForProvidersSection` + `WhoIsItForSection`.
-4. **HomeCategoryRow** *(جديد، reusable)* — صفوف متخصصة على نمط سلة/نون:
-   - عنوان + عنوان فرعي + زر "عرض الكل"
-   - chips تصفية (subcategories)
-   - scroll أفقي على الجوال، grid على الديسكتوب
-   - كل chip = `/search?category=<slug>` أو `/search?q=<term>` إذا لا يوجد slug
-5. **Rows data** عبر ملف `src/components/home/v2/data/categoryRows.ts`:
-   - أ. الحديد والستانلس (`iron`, `stainless`, درابزين, أبواب حديد, هياكل)
-   - ب. الألمنيوم والزجاج والسيكوريت (`aluminum`, `glass`, سيكوريت, واجهات, شبابيك)
-   - ج. الواجهات والكلادينج (واجهات تجارية, زجاجية, كلادينج, مظلات)
-   - د. المطابخ والخشب (`wood`, مطابخ ألمنيوم/ستانلس/خشب, أبواب خشبية)
-   - هـ. الطاقة والاستدامة (طاقة شمسية, ترشيد, كهرباء, عزل) — Phase 2 إن لم تتوفر تصنيفات
-   - و. تأجير المعدات (يربط بـ `/rentals`)
-   - ز. المصاعد والصيانة
-   - كل صف يستهلك taxonomy عبر hook خفيف؛ ما لا يوجد له تصنيف لا يُعرض (لا روابط مكسورة).
-6. **HomeFeaturedShowcase** *(جديد)* — مزودون/أعمال مميزة من `businesses` (verified + featured flag إن وُجد) أو fallback لأحدث verified. لا dummy data. تعليق `TODO: connect to ads microservice / sponsored placements`.
-7. **HowItWorksV2** (موجود، يبقى — مفيد وقصير).
-8. **FAQSection** (يبقى — مهم لـ JSON-LD).
-9. **Footer**.
+## التصميم التقني
 
-## التنفيذ
-- ملفات جديدة تحت `src/components/home/v2/sections/`:
-  - `HomeSectorGrid.tsx`
-  - `HomeAudienceSplit.tsx`
-  - `HomeCategoryRow.tsx`
-  - `HomeFeaturedShowcase.tsx`
-  - `data/categoryRows.ts` (mapping خفيف — taxonomy slugs → row group)
-- تعديل `src/pages/Index.tsx`: تقليل الـ sections من 11 إلى 7، نفس نمط `lazyRetry` + `LazyOnView` + `Suspense`.
-- لا تغيير على `HeroV2`, `SectorChipsBar` (سيُحذف من Index لكن يبقى الملف)، taxonomy، image pipeline، vite.config.
-- النصوص: H1 واحد في الهيرو، H2 لكل صف، لغة عربية بيضاء بدون "أفضل/حلول مبتكرة".
-- الصور: استخدام نفس `sector-*-{480,768,1024}.webp` الموجودة. لا صور جديدة كبيرة.
+### 1) تخزين بدون migration جديدة
+نستخدم العمود الموجود `taxonomy_categories.metadata jsonb` لتخزين إعدادات الصفحة الرئيسية:
+```jsonc
+// metadata.home_grid
+{
+  "home_grid": {
+    "show": true,           // يظهر في HomeSectorGrid
+    "position": 1,          // ترتيب البلاطة (1..10)
+    "icon": "Square",       // اسم Lucide icon
+    "title_ar": "الألمنيوم",          // override للاسم في البلاطة
+    "title_en": "Aluminum",
+    "body_ar": "نوافذ وأبواب…",        // النص القصير الظاهر تحت العنوان
+    "body_en": "Windows, doors…"
+  }
+}
+```
+المزايا: لا migration، RLS الحالي لـ `taxonomy_categories` يكفي (admin only writes)، الـ guard test يبقى يتحقق من الـ slugs.
 
-## ما لن يتغير
-- `index.html` (static hero / preload / critical CSS).
-- `vite.config.ts` (chunking).
-- `MainSectorsSection.tsx` (سيُترك ولكن لن يُستورد — حذف لاحقًا).
-- نظام التصنيفات، الإعلانات، التسجيل، Dashboard.
-- meta/JSON-LD/canonical/hreflang.
+### 2) Hook موحد
+`useHomeSectorTiles()` في `src/modules/home/hooks/`:
+- يجلب الـ primary_activity rows عبر `taxonomy_categories` حيث `metadata->home_grid->>show = 'true'`.
+- يرتّب حسب `metadata->home_grid->>position`.
+- ينقص أو يزيد عن 10 → يكمل من الـ hardcoded `SECTORS` كـ fallback.
+- يفشل الـ fetch → يستخدم الـ hardcoded fully (الصفحة لا تتعطل).
 
-## مخاطر
-- بعض الصفوف (الطاقة، المصاعد، المعدات) قد لا توجد لها taxonomy → سأخفيها بدلاً من عرض روابط مكسورة، وأضع TODO.
-- الصفحة ستصبح أطول؛ كل صف lazy تحت الـfold لمنع تراجع LCP.
+### 3) تعديل `HomeSectorGrid.tsx`
+- يستهلك `useHomeSectorTiles()`.
+- يحوّل `icon: string` إلى مكوّن Lucide عبر `iconRegistry.ts` (whitelist محدود ~30 أيقونة).
+- الـ guard assertion يبقى يتحقق من أن كل slug ضمن `HOME_ALLOWED_SLUGS`.
 
-## التقرير بعد التنفيذ
-- ما حُذف / ما أُضيف / mapping الصفوف / مصدر "مميز" / responsive images / build status.
+### 4) شاشة admin جديدة
+`src/pages/admin/AdminHomeSectors.tsx` + route `/admin/home-sectors` داخل `<AdminRoute>` (التزامًا بـ AdminRoute Wrapper memory):
+- كاردات قابلة للسحب (dnd-kit).
+- inline fields: title_ar, title_en, body_ar (140 char max), body_en, icon picker (combobox).
+- toggle "إظهار على الرئيسية" لكل قطاع من الـ 13.
+- Save فوري بـ React Query mutation → invalidate `home-sector-tiles` query.
+- معاينة مباشرة لصفّ البلاطات أعلى الشاشة.
 
-أكمل بالتنفيذ؟
+### 5) ربط بالـ navigation
+إضافة لينك "قطاعات الصفحة الرئيسية" داخل مجموعة "إدارة المحتوى" في dashboard sidebar.
+
+## ملفات سيتم إنشاؤها / تعديلها
+- جديد: `src/modules/home/hooks/useHomeSectorTiles.ts`
+- جديد: `src/modules/home/data/iconRegistry.ts`
+- جديد: `src/pages/admin/AdminHomeSectors.tsx`
+- جديد: `src/components/admin/home-sectors/SectorTileEditor.tsx`
+- تعديل: `src/components/home/v2/sections/HomeSectorGrid.tsx` (يستهلك الـ hook + fallback)
+- تعديل: `src/App.tsx` أو `routes` (إضافة route)
+- تعديل: dashboard navigation config (لينك جديد)
+- تعديل: `mem://index.md` (إضافة memory جديدة `home-sectors-cms`)
+
+## التحقق بعد التنفيذ
+- `homeTaxonomyLinkGuard.test.ts` يجب أن يبقى أخضر.
+- بدون DB overrides → الصفحة الرئيسية مطابقة 100% للوضع الحالي.
+- مع override واحد (مثلاً تغيير ترتيب الألمنيوم من 1 إلى 3) → ينعكس فورًا بعد invalidate.
+- لا أخطاء console، لا regressions في Hero/Search/RFQ/Onboarding.
+- النشر، ثم Post-Publish Home Check.
+
+## ما خارج النطاق (تأكيد)
+- لا تغيير على `homeTaxonomy.ts` (يبقى source of truth للـ slugs والـ guard).
+- لا تغيير على `taxonomy_categories` schema (نستخدم `metadata` jsonb).
+- لا فتح Partner Showcase / Hero / counts ديناميكية الآن.
+- لا migrations جديدة.
