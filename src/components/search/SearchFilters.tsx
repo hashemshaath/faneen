@@ -17,6 +17,10 @@ import { SA_REGIONS } from '@/data/sa-regions';
 import type { SearchFilterValues } from '@/services/search/useSearch';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
 import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
+import {
+  CANONICAL_PRIMARY_SLUGS,
+  isCanonicalPrimarySlug,
+} from '@/modules/taxonomy/canonical-primaries';
 export type { SearchFilterValues };
 
 interface SearchFiltersProps {
