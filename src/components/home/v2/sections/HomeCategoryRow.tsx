@@ -67,8 +67,8 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
       className="py-8 sm:py-10 border-t border-border/40"
     >
       <div className="container-app">
-        <div className="flex items-end justify-between gap-4 mb-4 sm:mb-5">
-          <div className="min-w-0">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 lg:gap-6 mb-4 sm:mb-5">
+          <div className="min-w-0 lg:max-w-md">
             <h2
               id={`row-${row.id}`}
               className="font-heading font-bold text-lg sm:text-xl md:text-2xl text-foreground leading-tight"
@@ -79,20 +79,31 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
               {bi(row.subAr, row.subEn)}
             </p>
           </div>
-          <Link
-            to={row.allHref}
-            className="shrink-0 inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-primary hover:underline whitespace-nowrap"
-          >
-            {bi('عرض الكل', 'View all')}
-            <Arrow className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap lg:justify-end snap-x snap-mandatory">
+            {row.items.map((item) => (
+              <Link
+                key={`${row.id}-${item.ar}`}
+                to={chipHref(item)}
+                className="shrink-0 snap-start inline-flex items-center px-3 py-1.5 rounded-full border border-border/70 bg-card text-xs sm:text-[13px] font-medium text-foreground hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                {bi(item.ar, item.en)}
+              </Link>
+            ))}
+            <Link
+              to={row.allHref}
+              className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-[13px] font-semibold text-primary hover:underline whitespace-nowrap"
+            >
+              {bi('عرض الكل', 'View all')}
+              <Arrow className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
-        <div className="mb-4 sm:mb-5 flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
           {providersLoading
             ? Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={`${row.id}-provider-skeleton-${index}`}
-                  className="shrink-0 snap-start w-[76%] sm:w-[280px] rounded-xl border border-border/60 bg-card p-4 h-[112px] animate-pulse"
+                  className="shrink-0 snap-start w-[76%] sm:w-[280px] rounded-2xl border border-border/60 bg-card h-[230px] animate-pulse"
                 />
               ))
             : providers.length > 0
@@ -110,19 +121,20 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                     <Link
                       key={`${row.id}-${business.id}`}
                       to={href}
-                      className="group shrink-0 snap-start w-[76%] sm:w-[280px] rounded-xl border border-border/60 bg-card overflow-hidden hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      className="group shrink-0 snap-start w-[76%] sm:w-[280px] rounded-2xl border border-border/60 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-[var(--elev-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      aria-label={name || bi('مزوّد', 'Provider')}
                     >
-                      <div className="relative w-full bg-gradient-to-br from-muted to-muted/40 border-b border-border/40" style={{ aspectRatio: '16 / 9' }}>
+                      <div className="relative w-full overflow-hidden bg-gradient-to-br from-muted to-muted/40" style={{ aspectRatio: '16 / 10' }}>
                         {image.kind === 'cover' ? (
                           <ResponsiveImage
                             originalUrl={image.url ?? undefined}
                             variants={image.variants}
                             alt={name || bi('مزوّد', 'Provider')}
                             sizes="(max-width: 640px) 76vw, 280px"
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                           />
                         ) : image.kind === 'logo' ? (
-                          <div className="absolute inset-0 flex items-center justify-center p-6">
+                          <div className="absolute inset-0 flex items-center justify-center p-6 transition-transform duration-500 group-hover:scale-[1.04]">
                             <ResponsiveImage
                               originalUrl={image.url ?? undefined}
                               variants={image.variants}
@@ -133,24 +145,24 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                           </div>
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="font-heading font-bold text-3xl text-muted-foreground/60 select-none" aria-hidden="true">
+                            <span className="font-heading font-bold text-4xl text-muted-foreground/50 select-none tracking-wide" aria-hidden="true">
                               {initialsOf(name)}
                             </span>
                           </div>
                         )}
+                        {business.is_verified ? (
+                          <div className="absolute top-2 end-2 z-10">
+                            <VerifiedBadge size="xs" className="backdrop-blur-sm bg-success/15" />
+                          </div>
+                        ) : null}
                       </div>
-                      <div className="p-3 sm:p-4">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <h3 className="font-heading font-semibold text-sm text-foreground truncate">
-                            {name || bi('مزوّد', 'Provider')}
-                          </h3>
-                          {business.is_verified ? <VerifiedBadge size="xs" /> : null}
-                        </div>
-                        {city ? <p className="text-xs text-muted-foreground truncate mt-0.5">{city}</p> : null}
-                        <div className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:underline">
-                          {bi('عرض الملف', 'View profile')}
-                          <Arrow className="w-3.5 h-3.5" />
-                        </div>
+                      <div className="px-3.5 py-3 sm:px-4 sm:py-3.5 border-t border-border/40">
+                        <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors">
+                          {name || bi('مزوّد', 'Provider')}
+                        </h3>
+                        {city ? (
+                          <p className="text-xs text-muted-foreground truncate mt-1">{city}</p>
+                        ) : null}
                       </div>
                     </Link>
                   );
@@ -166,17 +178,6 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                   </Link>
                 </div>
               )}
-        </div>
-        <div className="flex gap-2 sm:gap-2.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap snap-x snap-mandatory">
-          {row.items.map((item) => (
-            <Link
-              key={`${row.id}-${item.ar}`}
-              to={chipHref(item)}
-              className="shrink-0 snap-start inline-flex items-center px-3.5 py-2 rounded-full border border-border/70 bg-card text-sm font-medium text-foreground hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              {bi(item.ar, item.en)}
-            </Link>
-          ))}
         </div>
       </div>
     </section>
