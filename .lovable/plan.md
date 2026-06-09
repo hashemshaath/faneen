@@ -1,113 +1,64 @@
-
-# إعادة تصميم مركز التصنيفات بشكل احترافي
-
 ## الهدف
-تحويل مركز التصنيفات من واجهة "تابات تقنية" إلى **مركز قطاعي احترافي** يعكس تخصص قِطاعات: قسم مستقل لكل قطاع (ألمنيوم، زجاج، خشب/مطابخ، حديد/ستيل، UPVC، واجهات، أبواب حريق…) مع فصل واضح بين:
-- **أنواع الجهات والتأسيس** (تصنيف الشركات والمؤسسات والأفراد)
-- **التخصصات الفنية** (نشاطات وخدمات داخل كل قطاع)
-- **العلامات التجارية** (ربط مع قطاع/تخصص)
+تحويل `/` إلى واجهة سوق نظيفة بهوية قطاعات، بدون كسر static hero، ولا تحميل vendor-charts/pdf، ولا تعديل التصنيفات.
 
-## الهيكل الجديد للواجهة
+## ما سيُحذف من الصفحة الحالية (Index.tsx)
+الصفحة الحالية فيها 11 قسم متراكمة وتكرارات واضحة:
+- `WhoIsItForSection` — مكرّر مع `ForClients` + `ForProviders`.
+- `SolutionSection` — يكرر رسالة الـ Hero/Trust.
+- `PlatformFeaturesSection` — كرت كثير ورموز كثيرة.
+- `TrustSection` — يُدمج في Hero strip صغير بدل قسم كامل.
+- `FinalCTASection` — مكرّر مع CTA المزدوج.
+- `SectorChipsBar` — يُستبدل بشكل أنظف داخل Hero.
+- أيقونات الزينة الزائدة داخل كروت القطاعات (top-right icon badge).
 
-شريط جانبي عمودي (داخل المركز) يحتوي 4 مجموعات رئيسية:
+## البنية الجديدة (نفس Index.tsx، نفس HeroV2 الموجود — فقط تنظيم الـ sections)
 
-```text
-مركز التصنيفات
-├── 1. الجهات والتأسيس
-│      ├── أنواع الحسابات (فرد / منشأة / حكومي)
-│      ├── أنواع الجهات (شركة / مؤسسة / مكتب / مصنع …)
-│      └── أنواع العضويات
-│
-├── 2. القطاعات الصناعية  ← قلب المركز
-│      ├── الألمنيوم
-│      ├── الزجاج والسيكوريت
-│      ├── الحديد والستيل
-│      ├── الستانلس ستيل
-│      ├── الخشب والأبواب الخشبية
-│      ├── المطابخ
-│      │     ├── مطابخ خشبية
-│      │     ├── مطابخ ألمنيوم
-│      │     ├── مطابخ ستانلس ستيل
-│      │     └── مطابخ بولي لاك
-│      ├── UPVC
-│      ├── الواجهات
-│      ├── أبواب الحريق
-│      ├── البوابات والمظلات والهناجر
-│      └── خزائن ودواليب
-│
-├── 3. التخصصات والخدمات
-│      ├── تخصصات فنية لكل قطاع
-│      ├── خدمات (تركيب، صيانة، تصنيع، قياس…)
-│      └── أنشطة فرعية
-│
-└── 4. العلامات التجارية والمواد
-       ├── ماركات عالمية مرتبطة بقطاع
-       ├── ماركات محلية
-       ├── أنواع المواد الخام
-       └── منشأ التصنيع
-```
+1. **HeroV2** (موجود، لا يُلمس — يحافظ على static hero + LCP).
+2. **HomeSectorGrid** *(جديد)* — يستبدل `MainSectorsSection`. شبكة قطاعات رئيسية من 6 بطاقات نظيفة، صورة + اسم + سطر واحد + سهم. يقرأ من taxonomy إن أمكن مع fallback ثابت للـ slugs الستة الحالية (`aluminum/iron/wood/glass/stainless/fabrication`) لضمان عدم كسر روابط `/search?category=...`.
+3. **HomeAudienceSplit** *(جديد)* — قسم واحد مقسوم نصفين (عميل / مزود) بدل قسمين منفصلين. يحل محل `ForClientsSection` + `ForProvidersSection` + `WhoIsItForSection`.
+4. **HomeCategoryRow** *(جديد، reusable)* — صفوف متخصصة على نمط سلة/نون:
+   - عنوان + عنوان فرعي + زر "عرض الكل"
+   - chips تصفية (subcategories)
+   - scroll أفقي على الجوال، grid على الديسكتوب
+   - كل chip = `/search?category=<slug>` أو `/search?q=<term>` إذا لا يوجد slug
+5. **Rows data** عبر ملف `src/components/home/v2/data/categoryRows.ts`:
+   - أ. الحديد والستانلس (`iron`, `stainless`, درابزين, أبواب حديد, هياكل)
+   - ب. الألمنيوم والزجاج والسيكوريت (`aluminum`, `glass`, سيكوريت, واجهات, شبابيك)
+   - ج. الواجهات والكلادينج (واجهات تجارية, زجاجية, كلادينج, مظلات)
+   - د. المطابخ والخشب (`wood`, مطابخ ألمنيوم/ستانلس/خشب, أبواب خشبية)
+   - هـ. الطاقة والاستدامة (طاقة شمسية, ترشيد, كهرباء, عزل) — Phase 2 إن لم تتوفر تصنيفات
+   - و. تأجير المعدات (يربط بـ `/rentals`)
+   - ز. المصاعد والصيانة
+   - كل صف يستهلك taxonomy عبر hook خفيف؛ ما لا يوجد له تصنيف لا يُعرض (لا روابط مكسورة).
+6. **HomeFeaturedShowcase** *(جديد)* — مزودون/أعمال مميزة من `businesses` (verified + featured flag إن وُجد) أو fallback لأحدث verified. لا dummy data. تعليق `TODO: connect to ads microservice / sponsored placements`.
+7. **HowItWorksV2** (موجود، يبقى — مفيد وقصير).
+8. **FAQSection** (يبقى — مهم لـ JSON-LD).
+9. **Footer**.
 
-## التفاصيل الوظيفية
+## التنفيذ
+- ملفات جديدة تحت `src/components/home/v2/sections/`:
+  - `HomeSectorGrid.tsx`
+  - `HomeAudienceSplit.tsx`
+  - `HomeCategoryRow.tsx`
+  - `HomeFeaturedShowcase.tsx`
+  - `data/categoryRows.ts` (mapping خفيف — taxonomy slugs → row group)
+- تعديل `src/pages/Index.tsx`: تقليل الـ sections من 11 إلى 7، نفس نمط `lazyRetry` + `LazyOnView` + `Suspense`.
+- لا تغيير على `HeroV2`, `SectorChipsBar` (سيُحذف من Index لكن يبقى الملف)، taxonomy، image pipeline، vite.config.
+- النصوص: H1 واحد في الهيرو، H2 لكل صف، لغة عربية بيضاء بدون "أفضل/حلول مبتكرة".
+- الصور: استخدام نفس `sector-*-{480,768,1024}.webp` الموجودة. لا صور جديدة كبيرة.
 
-### قسم القطاعات الصناعية (الجديد كليًا)
-لكل قطاع بطاقة احترافية تعرض:
-- أيقونة + لون مميز + اسم عربي/إنجليزي
-- وصف قصير يشرح ما يندرج تحته
-- عدد التخصصات الفرعية والخدمات والماركات المرتبطة
-- شريط جودة المحتوى (وصف، SEO، كلمات مفتاحية)
-- زر "إدارة" يفتح صفحة القطاع: شجرة التخصصات + الماركات + المنتجات
-- زر "إضافة تخصص فرعي" مباشرة
+## ما لن يتغير
+- `index.html` (static hero / preload / critical CSS).
+- `vite.config.ts` (chunking).
+- `MainSectorsSection.tsx` (سيُترك ولكن لن يُستورد — حذف لاحقًا).
+- نظام التصنيفات، الإعلانات، التسجيل، Dashboard.
+- meta/JSON-LD/canonical/hreflang.
 
-### ربط العلامات التجارية بالقطاعات
-عند إنشاء/تعديل علامة تجارية:
-- اختيار **القطاع** (ألمنيوم/زجاج/…)
-- اختيار **التخصصات** (متعدد) داخل القطاع
-- نوع العلامة (عالمية / محلية / حصرية)
-- بلد المنشأ
+## مخاطر
+- بعض الصفوف (الطاقة، المصاعد، المعدات) قد لا توجد لها taxonomy → سأخفيها بدلاً من عرض روابط مكسورة، وأضع TODO.
+- الصفحة ستصبح أطول؛ كل صف lazy تحت الـfold لمنع تراجع LCP.
 
-استخدام جدول `brand_sector_links` الموجود + ربطه بالشجرة التصنيفية الجديدة.
+## التقرير بعد التنفيذ
+- ما حُذف / ما أُضيف / mapping الصفوف / مصدر "مميز" / responsive images / build status.
 
-### فصل "الجهات والتأسيس" عن "التخصصات"
-- "الجهات والتأسيس" يستخدم `taxonomy_types`: `account_type`, `entity_type`, `membership_type`.
-- "التخصصات" يستخدم: `primary_activity`, `secondary_activity`, `service`.
-- "القطاعات" يستخدم: `sector` + `product_category` + `material_type` (يتم تصنيف الشجرة تحت كل قطاع رئيسي).
-
-### إثراء محتوى القطاعات (Notes للمنصة)
-لكل قطاع رئيسي سيُملأ تلقائيًا عبر migration:
-- وصف عربي/إنجليزي كامل (2-3 أسطر)
-- SEO title و description
-- كلمات مفتاحية عربية وإنجليزية (8-12 كلمة)
-- أيقونة Lucide + لون
-- شجرة تخصصات فرعية موصى بها
-
-## التغييرات التقنية
-
-### قاعدة البيانات (Migration)
-1. إضافة قطاعات/تخصصات أساسية مفقودة في `taxonomy_categories` تحت النوع `sector`:
-   - aluminum, glass-securit, iron-steel, stainless-steel, wood-doors, kitchens (+ children), upvc, facades, fire-doors, gates-structures, wardrobes-closets.
-2. إثراء حقول `description_ar/en`, `seo_title_*`, `seo_description_*`, `keywords_*`, `icon`, `color` لكل قطاع رئيسي.
-3. تعزيز جدول الربط `brand_sector_links` (إن لزم) لربط `brand_catalog.id` ↔ `taxonomy_categories.id` (sector + specialization).
-4. لا تغييرات RLS — استخدام السياسات الحالية.
-
-### الواجهة (Frontend)
-- **جديد**: `src/modules/taxonomy/components/SectorsHub.tsx` — بطاقات القطاعات الاحترافية.
-- **جديد**: `src/modules/taxonomy/components/SectorDetailPanel.tsx` — صفحة قطاع واحد (تخصصات + ماركات + إحصاءات).
-- **جديد**: `src/modules/taxonomy/components/EntitiesAndFoundationPanel.tsx` — قسم الجهات والتأسيس.
-- **جديد**: `src/modules/taxonomy/components/SpecializationsPanel.tsx` — قسم التخصصات والخدمات.
-- **جديد**: `src/modules/taxonomy/components/BrandsTaxonomyPanel.tsx` — ربط الماركات بالقطاعات.
-- **إعادة هيكلة**: `TaxonomyAdminPage.tsx` ليصبح Shell بشريط جانبي + Outlet للأقسام الأربعة بدلًا من 4 تابات.
-- **جديد**: `src/modules/taxonomy/constants/industrialSectors.ts` — كتالوج ثابت بالأيقونات والألوان لكل قطاع.
-
-### تنظيم الكود
-- استخراج المنطق المشترك في `src/modules/taxonomy/hooks/useTaxonomyData.ts`.
-- توحيد المفاتيح: `taxonomy/keys.ts`.
-- تقسيم `TaxonomyAdminPage` إلى مكونات أصغر (<200 سطر لكل ملف).
-
-## ما يبقى كما هو
-- لوحة الجودة (Quality) والاستخدام (Usage) والهجرة (Migration) — تبقى كأقسام داخل الشريط الجانبي السفلي.
-- خدمات `services.ts` والـ RPC — لا تتغير، يُعاد ترتيب الاستيرادات فقط.
-
-## ملاحظات
-- لن نلمس قاعدة بيانات الـ RLS ولا الجداول الحساسة.
-- العمل **واجهة + محتوى تصنيفي** فقط (Frontend + Seed/Enrichment Migration). لا تغييرات على منطق الأعمال.
-- بعد التنفيذ سيظهر للمدير "مركز قطاعي حقيقي" يعكس تخصص قِطاعات بدل قائمة جنرك.
+أكمل بالتنفيذ؟
