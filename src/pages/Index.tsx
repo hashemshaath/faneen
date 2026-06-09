@@ -9,22 +9,18 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { lazyRetry } from "@/lib/lazyRetry";
 // Eager: above-the-fold + LCP hero, plus the chips bar (small, no images).
 import { HeroV2 } from "@/components/home/v2/HomeV2";
-import SectorChipsBar from "@/components/home/v2/sections/SectorChipsBar";
 // FAQ data is needed eagerly for JSON-LD; keep it in a tiny module so the
 // FAQSection component itself can stay lazy-loaded.
 import { FAQ_ITEMS_BI } from "@/components/home/v2/sections/faqItems";
 // Below-the-fold sections — each one ships as its own chunk so HomeV2 no
 // longer carries every image import in the eager bundle (PERF-1C).
-const MainSectorsSection = lazyRetry(() => import("@/components/home/v2/sections/MainSectorsSection"));
-const HowItWorksV2       = lazyRetry(() => import("@/components/home/v2/sections/HowItWorksV2"));
-const SolutionSection    = lazyRetry(() => import("@/components/home/v2/sections/SolutionSection"));
-const WhoIsItForSection  = lazyRetry(() => import("@/components/home/v2/sections/WhoIsItForSection"));
-const TrustSection       = lazyRetry(() => import("@/components/home/v2/sections/TrustSection"));
-const ForProvidersSection = lazyRetry(() => import("@/components/home/v2/sections/ForProvidersSection"));
-const ForClientsSection  = lazyRetry(() => import("@/components/home/v2/sections/ForClientsSection"));
-const FAQSection         = lazyRetry(() => import("@/components/home/v2/sections/FAQSection"));
-const FinalCTASection    = lazyRetry(() => import("@/components/home/v2/sections/FinalCTASection"));
-const PlatformFeaturesSection = lazyRetry(() => import("@/components/home/v2/sections/PlatformFeaturesSection"));
+// HomeV2 rebuild (marketplace layout): 11 sections → 6 sections.
+const HomeSectorGrid       = lazyRetry(() => import("@/components/home/v2/sections/HomeSectorGrid"));
+const HomeAudienceSplit    = lazyRetry(() => import("@/components/home/v2/sections/HomeAudienceSplit"));
+const HomeCategoryRows     = lazyRetry(() => import("@/components/home/v2/sections/HomeCategoryRows"));
+const HomeFeaturedShowcase = lazyRetry(() => import("@/components/home/v2/sections/HomeFeaturedShowcase"));
+const HowItWorksV2         = lazyRetry(() => import("@/components/home/v2/sections/HowItWorksV2"));
+const FAQSection           = lazyRetry(() => import("@/components/home/v2/sections/FAQSection"));
 
 /**
  * Skeleton placeholder rendered while a lazy home section is loading.
@@ -233,57 +229,34 @@ const Index = () => {
         {/* 1. Hero — above the fold, eager */}
         <HeroV2 />
 
-        {/* 2. Quick sectors — keeps users moving immediately */}
-        <SectorChipsBar />
-
-        {/* 3. Featured sectors (acts as featured-providers entry point) */}
+        {/* 2. Main sectors — clean visual grid, 6 taxonomy-stable tiles */}
         <LazyOnView minHeight={520} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="grid" minH={520} />}><MainSectorsSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={520} />}><HomeSectorGrid /></Suspense>
         </LazyOnView>
 
-        {/* 4. Platform capabilities — exposes brands/services/showcase/projects/compare */}
-        <LazyOnView minHeight={520} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="grid" minH={520} />}><PlatformFeaturesSection /></Suspense>
+        {/* 3. Audience split — customer | provider in one row */}
+        <LazyOnView minHeight={360} className="cv-auto">
+          <Suspense fallback={<SectionFallback variant="split" minH={360} />}><HomeAudienceSplit /></Suspense>
         </LazyOnView>
 
-        {/* 5. How it works */}
-        <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="grid" minH={460} />}><HowItWorksV2 /></Suspense>
+        {/* 4. Marketplace rows — specialised category clusters with chips */}
+        <LazyOnView minHeight={600} className="cv-auto">
+          <Suspense fallback={<SectionFallback variant="grid" minH={600} />}><HomeCategoryRows /></Suspense>
         </LazyOnView>
 
-        {/* 5. Why Qitaat */}
-        <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="split" minH={460} />}><SolutionSection /></Suspense>
-        </LazyOnView>
-
-        {/* 6. Who it's for */}
+        {/* 5. Featured providers (TODO: ads/sponsored placements) */}
         <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="grid" minH={420} />}><WhoIsItForSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={420} />}><HomeFeaturedShowcase /></Suspense>
         </LazyOnView>
 
-        {/* 7. Trust / verification */}
-        <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="grid" minH={460} />}><TrustSection /></Suspense>
-        </LazyOnView>
-
-        {/* 8. Provider CTA */}
+        {/* 6. How it works — concise 3-step explainer */}
         <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="split" minH={420} />}><ForProvidersSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={420} />}><HowItWorksV2 /></Suspense>
         </LazyOnView>
 
-        {/* 9. Customer CTA */}
-        <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="split" minH={420} />}><ForClientsSection /></Suspense>
-        </LazyOnView>
-
-        {/* 10. FAQ */}
+        {/* 7. FAQ — also feeds FAQPage JSON-LD above */}
         <LazyOnView minHeight={460} className="cv-auto">
           <Suspense fallback={<SectionFallback variant="grid" minH={460} />}><FAQSection /></Suspense>
-        </LazyOnView>
-
-        {/* 11. Final CTA */}
-        <LazyOnView minHeight={360} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="centered" minH={360} />}><FinalCTASection /></Suspense>
         </LazyOnView>
       </main>
       <Footer />
