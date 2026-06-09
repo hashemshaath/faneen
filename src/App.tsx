@@ -55,6 +55,7 @@ const AdminServiceActivations = lazyRetry(() => import("./pages/admin/AdminServi
 const AdminAbExperiments = lazyRetry(() => import("./pages/admin/AdminAbExperiments"));
 const AdminShowcase = lazyRetry(() => import("./pages/admin/AdminShowcase"));
 const AdminPartnerShowcase = lazyRetry(() => import("./pages/admin/AdminPartnerShowcase"));
+const AdminHomeFaq = lazyRetry(() => import("./pages/admin/AdminHomeFaq"));
 const DashboardShowcase = lazyRetry(() => import("./pages/dashboard/DashboardShowcase"));
 const Showcase = lazyRetry(() => import("./pages/Showcase"));
 const Contracts = lazyRetry(() => import("./pages/Contracts"));
