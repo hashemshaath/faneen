@@ -1,187 +1,82 @@
-# RENTAL-MICROSERVICE-1 — Implementation Plan
+# خطة التطوير — 4 ميزات احترافية للتأجير/الأصول
 
-نظام تأجير مستقل ومتكامل لخدمات ومعدات التشييد داخل قطاعات. مايكروسيرفيس منفصل تماماً عن المشتريات والعقود الحالية لكنه يتكامل معها عبر روابط مرجعية.
+نظراً لاتساع النطاق، سأنفّذ الميزات على 4 مراحل متتالية، كل مرحلة قابلة للاستخدام بمفردها. هذه هي الخطة الكاملة — أكّد لأبدأ بالمرحلة 1.
 
-## 1. Database (migration واحد)
+---
 
-جداول جديدة تحت prefix `rental_*`:
+## المرحلة 1 — تقويم توفّر الأصول (Availability Calendar)
 
-- **rental_categories** — تصنيفات (سقالات/حاويات/مولدات/...). seed لـ 12 تصنيف أساسي. حقول: ref_id (RCAT-), slug, name_ar/en, description_ar/en, icon, seo_keywords, default_image_url, sort_order, is_active.
-- **rental_items** — العنصر القابل للتأجير. ref_id (RENT-), category_id, provider_business_id, name_ar/en, description_ar/en, unit (enum: day/hour/piece/m/m2/unit), base_price, currency, min_duration, deposit_amount, usage_terms, late_terms, penalty_terms, status (draft/pending_review/approved/rejected/archived), city_id, service_areas jsonb, images jsonb, availability_status, is_published, seo_slug, view_count, created_by.
-- **rental_orders** — عقد/طلب تأجير. ref_id (RORD-), provider_business_id, customer_user_id, customer_business_id (nullable), project_id (nullable), work_order_id (nullable), client_site_id (nullable), rental_item_id, quantity, start_date, end_date, total_days, unit_price, total_amount, deposit_amount, currency, status (draft/active/expiring_soon/expired/extended/renewed/closed/cancelled), notes, terms_snapshot jsonb, created_by.
-- **rental_extensions** — REXT-, rental_order_id, extension_type (full/partial/duration_only/quantity_only), additional_days, additional_quantity, reason, cost, approved_by_provider, approved_by_customer, status, effective_from, created_by.
-- **rental_order_events** — audit log (created/approved/started/expiring/expired/overdue/extended/renewed/closed/cancelled) — للإشعارات ومركز العمليات.
+**القيمة**: رؤية بصرية فورية لكل حجوزات الأصناف، منع التعارضات، تعديل سريع للمواعيد.
 
-Sequences تبدأ من 1000000. مولّد ref_id عبر trigger موحّد كباقي النظام.
+- عرض شهري/أسبوعي/قائمة (Tabs) لكل صنف تأجير أو كل الأصناف.
+- شرائط ملوّنة لكل حجز (مؤكد/معلّق/منتهي) مع اسم العميل ورقم الطلب.
+- سحب وإفلات على الشريط لتعديل تاريخ البداية/النهاية (مع تأكيد inline قبل الحفظ).
+- كشف التعارضات تلقائياً مع تنبيه بصري أحمر وقائمة بالحلول المقترحة (تمديد، تأجيل، استبدال أصل).
+- فلاتر: الصنف، التصنيف، الحالة، الفرع.
+- شريط جانبي يعرض تفاصيل الحجز عند النقر (بدون Popup — استخدام SidePanel inline).
 
-RLS:
-- categories: قراءة عامة للمعتمد، كتابة admin فقط.
-- items: provider يدير عناصره (user_id من businesses). admin كامل. قراءة عامة فقط لـ `is_published=true AND status='approved'`.
-- orders: provider يرى طلباته، customer يرى طلباته، admin كامل. لا قراءة عامة.
-- extensions: تابعة لصلاحية الـ order.
-- GRANT + service_role لكل جدول.
+**ملفات**: صفحة جديدة `src/pages/dashboard/DashboardRentalsCalendar.tsx` + رابط في القائمة + استعلام مدمج عبر `rental_orders` و `rental_items`.
 
-Trigger يومي (pg_cron أو computed) لتحديث `status` إلى expiring_soon/expired/overdue بناءً على end_date.
+---
 
-## 2. Module (`src/modules/rentals/`)
+## المرحلة 2 — لوحة تحليلات الأداء والإيرادات
 
-ميكروسيرفيس مستقل تحت `src/modules/rentals/`:
+**القيمة**: قرارات تشغيلية مبنية على بيانات حقيقية.
 
-```
-src/modules/rentals/
-  index.ts                    # barrel
-  types.ts
-  constants.ts                # UNITS, STATUSES, TONE_MAP
-  services/
-    categories.ts             # listCategories, getCategoryBySlug
-    items.ts                  # listItems, getItem, createItem, updateItem, publishItem
-    orders.ts                 # listOrders, getOrder, createOrder, updateStatus, closeOrder, cancelOrder
-    extensions.ts             # listExtensions, createExtension, approveExtension
-    publicCatalog.ts          # public approved-only reads
-    operationsHub.ts          # counts for ops center
-  hooks/
-    useRentalCounters.ts      # days-left, overdue, badge tone
-    useRentalItems.ts
-    useRentalOrders.ts
-  utils/
-    dayCounter.ts             # totalDays, daysLeft, overdueDays, alertTier
-    pricing.ts                # calcTotal(unit, qty, days, price)
-  components/
-    RentalStatusBadge.tsx
-    RentalDayCounter.tsx
-    RentalItemCard.tsx
-    RentalOrderRow.tsx
-    RentalExtensionDialog.tsx (inline panel, NO popup — per memory)
-```
+- KPIs علوية: إيرادات الشهر، معدّل الإشغال %، عدد الحجوزات النشطة، متوسط مدة الإيجار، أعلى أصل دخلاً.
+- 4 رسوم Recharts: إيرادات شهرية (Line)، الإشغال لكل صنف (Bar)، توزيع الحجوزات حسب التصنيف (Pie)، اتجاه الطلب (Area آخر 90 يوم).
+- جدول "Top 10 أصناف" قابل للفرز مع مؤشرات صحة (نسبة الإشغال، الإيراد، التقييم).
+- فلاتر فترة زمنية (آخر 7/30/90 يوم، أو نطاق مخصص) + فلتر الفرع.
+- تصدير CSV/PDF للتقرير.
 
-Wrappers ترجع `{ data, error }` بدون throw، تطابق نمط `service-boundary-audit`. ممنوع استدعاء supabase مباشرة من الصفحات.
+**ملفات**: `src/modules/rentals/analytics/RentalAnalytics.tsx` + خدمة `rentalAnalyticsService.ts` + tab جديد داخل `DashboardRentals`.
 
-## 3. Provider Dashboard — `/dashboard/rentals`
+---
 
-صفحات جديدة تحت `src/pages/dashboard/`:
+## المرحلة 3 — فحوصات الاستلام والتسليم بالصور
 
-- `DashboardRentalsHub.tsx` — tabs: عناصري | الطلبات النشطة | قريبة الانتهاء | متجاوزة | تمديدات
-- `DashboardRentalItems.tsx` — grid 4-col (16:11)، فلاتر، bulk actions لتغيير التوفر فقط (لا bulk publish).
-- `DashboardRentalItemDetail.tsx` — تحرير inline، رفع صور (bucket business-assets الموجود)، اختيار المدن/المناطق، أسعار، شروط جزائية.
-- `DashboardRentalOrderDetail.tsx` — تفاصيل الطلب + عداد أيام كبير + أزرار تمديد/تجديد/إغلاق inline.
+**القيمة**: حماية المؤجِّر، توثيق قانوني، ربط واضح بالخصومات من التأمين.
 
-كلها داخل `DashboardLayout`. ربط بـ client_sites/work_orders/projects عبر site_id/work_order_id query params.
+- جدول جديد `rental_inspections` (نوع: checkout/checkin، صور[]، ملاحظات، حالة، توقيع رقمي، روابط أضرار).
+- نموذج inline داخل تفاصيل الطلب: قائمة فحص قابلة للتخصيص (8-12 بند افتراضي حسب التصنيف)، رفع صور (حتى 10) لكل بند، حقل ملاحظات.
+- توقيع رقمي بـ canvas (المؤجِّر + المستأجر).
+- توثيق الأضرار: بند منفصل بصور + تقدير تكلفة + ربط بخصم التأمين تلقائياً.
+- مقارنة جنباً إلى جنب بين فحص الاستلام والتسليم.
+- توليد PDF موقّع للفحص (بـ jsPDF + Amiri).
 
-## 4. Admin — `/admin/rentals`
+**Storage**: bucket جديد `rental-inspections` (خاص، RLS).
+**ملفات**: migration + `InspectionForm.tsx` + `InspectionCompare.tsx` + خدمة.
 
-`AdminRentalsHub.tsx` (TabbedShell):
-- العناصر | تحتاج مراجعة | عقود نشطة | قريبة الانتهاء | متجاوزة | تمديدات معلقة | التصنيفات | جودة البيانات | SEO readiness
+---
 
-داخل `<DashboardLayout>` عبر `<AdminRoute>` (per memory).
+## المرحلة 4 — تسعير ديناميكي وباقات وخصومات
 
-## 5. Day Counter + Alerts
+**القيمة**: مرونة تسعير، زيادة الإيراد، تشجيع الحجوزات الطويلة.
 
-`dayCounter.ts`:
-- `totalDays(start, end)`, `daysLeft(end, now)`, `overdueDays(end, now)`
-- `alertTier`: `safe | t7 | t3 | t1 | expired | overdue`
+- جدول `rental_pricing_tiers` (per item): يومي/أسبوعي/شهري + سعر لكل شريحة.
+- جدول `rental_promo_codes`: كود، نسبة/مبلغ، تاريخ صلاحية، حد استخدام، أصناف مستهدفة.
+- جدول `rental_bundles`: باقة من عدة أصناف بسعر إجمالي مخفّض.
+- حاسبة تسعير inline في نموذج الصنف: إدخال المدة → عرض السعر التلقائي مع التفاصيل.
+- في صفحة طلب التأجير: إدخال كود ترويجي + اقتراح الباقات ذات الصلة.
+- لوحة إدارة الباقات والأكواد (tab جديد في `DashboardRentals`).
 
-`RentalDayCounter` يعرض circular badge + tone (emerald/amber/red).
+**ملفات**: migration للجداول الثلاثة + `PricingCalculator.tsx` + `BundlesPanel.tsx` + `PromoCodesPanel.tsx`.
 
-Edge function يومي `rental-expiry-scan`:
-- يحدّث statuses
-- يكتب events في `rental_order_events`
-- ينشئ `notifications` rows عبر wrapper موجود (لا direct insert)
+---
 
-## 6. Renewal / Extension
+## تفاصيل تقنية
 
-inline panel (لا dialog) داخل `DashboardRentalOrderDetail`:
-- 4 أنواع (full/partial/duration/quantity)
-- يكتب `rental_extensions` row + event
-- يحدّث order.status='extended' عند الاعتماد
+- **قاعدة البيانات**: 5 جداول جديدة + bucket + RLS بـ `has_role` و `is_business_staff`.
+- **GRANT**: على كل جدول جديد لـ `authenticated` و `service_role`.
+- **i18n**: عربي/إنجليزي عبر `<Bi>` و `pickBi()`.
+- **التزام بالقواعد**: لا Popups، inline forms، `rounded-xl`، `h-12`، tech-content للأرقام.
+- **التحقق**: React Query + invalidation بعد كل mutation، Realtime على `rental_orders` للتقويم.
+- **الأمان**: كل الدوال بـ `SET search_path = public`، توقيع PDF محفوظ كـ hash للتحقق.
 
-## 7. Public SEO Pages
+---
 
-- `/rentals` — `RentalsPublicCatalog.tsx`
-- `/rentals/:slug` — `RentalItemPublic.tsx` (slug = seo_slug)
-- `/rentals/category/:slug` — `RentalCategoryPublic.tsx`
+## التسليم
 
-استخدام `useSeoPage` + `buildBreadcrumbList` + `buildService` JSON-LD + `ogImageFor({type:'category', title, subtitle})`.
-يعرض فقط `is_published && status='approved'`.
-Bilingual عبر `<Bi>` و `useBi()` (per memory).
-صور WebP < 80KB عبر pipeline الموجود؛ تسمية: `{category}-rental-{city}.webp`.
+سأبدأ بـ **المرحلة 1 (التقويم)** بعد التأكيد، وسأخبرك عند اكتمالها لتختار: المتابعة للمرحلة التالية أو التعديل/الترتيب.
 
-إضافة المسارات إلى sitemap عبر edge function `sitemap-generator` الحالي.
-
-## 8. Notifications
-
-استخدام `@/modules/notifications` wrapper. أضف 9 أنواع جديدة + ترجمات AR/EN في `i18n/notificationLabels`. in-app + email عبر البنية الحالية. لا WhatsApp/SMS.
-
-## 9. Operations Center
-
-أضف بطاقات داخل `AdminOperationsHub`:
-- عقود نشطة / قريبة / متجاوزة
-- تمديدات معلقة
-- عناصر بلا صور / غير مصنفة / ناقصة البيانات
-
-عبر `services/operationsHub.ts` (counts فقط، لا PII).
-
-## 10. Permissions
-
-- استخدام `user_roles` + `has_role` الموجود
-- provider scoping عبر business ownership (نفس نمط `businesses` wrappers)
-- public reads gated في RLS بـ `is_published AND status='approved'`
-- لا anon GRANT على orders/extensions
-
-## 11. Reference Resolver
-
-تحديث `lookup_by_reference` RPC + `reference-id-architecture.md`:
-- RCAT → `/admin/rentals?tab=categories`
-- RENT → `/rentals/{slug}` (public) أو dashboard
-- RORD → `/dashboard/rentals/orders/{id}`
-- REXT → safe null (no standalone route)
-
-## 12. Tests
-
-`src/__tests__/rentalMicroservice1.test.ts`:
-- وجود الـ wrappers في barrel
-- صحة `dayCounter` (totalDays/daysLeft/overdue/alertTier)
-- `pricing.calcTotal` لكل وحدة
-- صفحات `/dashboard/rentals` و `/admin/rentals` mounted في `App.tsx`
-- public catalog يفلتر `is_published && approved`
-- لا `supabase.from('rental_` داخل `src/pages/**` (regex)
-- لا UUID-shaped strings تظهر في item/order card render
-- SEO: `useSeoPage` مستدعى في public pages
-- no bulk publish action
-
-## 13. Validation Steps
-
-- `tsc` (مؤتمت)
-- targeted vitest run
-- broken-links audit (`scripts/broken-links-audit.mjs`)
-- sitemap audit (edge function)
-- supabase linter بعد migration
-- credits/edge isolation audits غير متأثرة (no credit calls)
-
-## Files (new)
-
-**Migration**: `supabase/migrations/<ts>_rental_microservice.sql`
-
-**Module**: ~16 files تحت `src/modules/rentals/**`
-
-**Pages**: 4 dashboard + 1 admin hub + 3 public = 8
-
-**Tests**: 1 file
-
-**Routing**: تحديث `src/App.tsx` للمسارات + `AdminRoute` wrapper
-
-**Docs**: `docs/rentals-system-overview.md` + تحديث `docs/reference-id-architecture.md`
-
-**Memory**: `mem://features/rentals-microservice`
-
-## Out of Scope (صراحة)
-
-- لا دمج تلقائي مع `procurement_*`
-- لا تعديل على `contracts` schema
-- لا تعديل على `work_orders` schema (نقرأ ربط فقط)
-- لا WhatsApp/SMS
-- لا bulk publish
-- لا payment/invoice integration هذه المرحلة (deposit field فقط، بدون gateway)
-
-## Deliverable
-
-نظام تأجير شغّال end-to-end: provider يضيف عنصر → admin يعتمد → ينشر في `/rentals` → عميل/مزود ينشئ RORD → عداد أيام + تنبيهات → تمديد/تجديد → إغلاق. جاهزية ≈ MVP قابل للإطلاق التجريبي.
+أكّد لأبدأ، أو حدد المراحل التي تريد تنفيذها أولاً.

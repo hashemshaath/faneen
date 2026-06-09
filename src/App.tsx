@@ -63,6 +63,7 @@ const DashboardServices = lazyRetry(() => import("./pages/dashboard/DashboardSer
 const DashboardPortfolio = lazyRetry(() => import("./pages/dashboard/DashboardPortfolio"));
 const DashboardSites = lazyRetry(() => import("./pages/dashboard/DashboardSites"));
 const DashboardRentals = lazyRetry(() => import("./pages/dashboard/DashboardRentals"));
+const DashboardRentalsCalendar = lazyRetry(() => import("./pages/dashboard/DashboardRentalsCalendar"));
 const AdminRentals = lazyRetry(() => import("./pages/admin/AdminRentals"));
 const DashboardAssets = lazyRetry(() => import("./pages/dashboard/DashboardAssets"));
 const AdminAssets = lazyRetry(() => import("./pages/admin/AdminAssets"));
@@ -372,6 +373,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContractsHub /></ProtectedRoute>} />
           {/* RENTAL-MICROSERVICE-1 — provider + admin rental hubs */}
           <Route path="/dashboard/rentals" element={<ProtectedRoute><DashboardRentals /></ProtectedRoute>} />
+          <Route path="/dashboard/rentals/calendar" element={<ProtectedRoute><DashboardRentalsCalendar /></ProtectedRoute>} />
           <Route path="/admin/rentals" element={<ProtectedRoute requireAdmin><AdminRentals /></ProtectedRoute>} />
           {/* ASSET-MANAGEMENT-MICROSERVICE-1 — provider + admin asset hubs (never public) */}
           <Route path="/dashboard/assets" element={<ProtectedRoute><DashboardAssets /></ProtectedRoute>} />
