@@ -21,7 +21,6 @@ import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRul
 import {
   CANONICAL_PRIMARY_SLUGS,
   CANONICAL_PRIMARY_LABELS,
-  isCanonicalPrimarySlug,
   type CanonicalPrimarySlug,
 } from '@/modules/taxonomy/canonical-primaries';
 import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
