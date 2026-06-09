@@ -86,6 +86,15 @@ async function collectCandidateSlugs(input: string): Promise<string[]> {
   } catch {
     /* static fallback already applied */
   }
+  // Safe Batch 3 — When a legacy → canonical mapping exists AND it points
+  // to a *different* slug than the raw input, prefer the mapped slug
+  // exclusively. This guarantees `?category=aluminum-glass-facades` resolves
+  // to the new `aluminum-works` row instead of accidentally matching the
+  // obsolete `aluminum-glass-facades` row that still exists in DB for
+  // back-compat.
+  if (mapped && mapped !== n && mapped !== raw) {
+    return [mapped];
+  }
   return Array.from(new Set([raw, n, mapped].filter(Boolean) as string[]));
 }
 
