@@ -77,7 +77,7 @@ const HomeSectorGrid = () => {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
         {SECTORS.map((s) => (
           <Link
-            key={s.slug}
+            key={`${s.slug}-${s.titleEn}`}
             to={`/search?category=${s.slug}`}
             className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >

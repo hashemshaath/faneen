@@ -12,10 +12,71 @@
  * Scope: homepage v2 data only. Does not touch taxonomy DB, does not
  * forbid these strings elsewhere in the app.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { HOME_CATEGORY_ROWS } from '@/components/home/v2/data/categoryRows';
+import { HOME_CATEGORY_ROWS, getCategoryRowTaxonomySlugs } from '@/components/home/v2/data/categoryRows';
+import { listPublicBusinessesByTaxonomySlugs } from '@/modules/taxonomy/search-integration';
+
+const { fromMock } = vi.hoisted(() => {
+  type QueryResult = { data: unknown; error: null };
+
+  const createQueryChain = (result: QueryResult) => {
+    const chain = {
+      select: vi.fn(() => chain),
+      eq: vi.fn(() => chain),
+      in: vi.fn(() => chain),
+      order: vi.fn(() => chain),
+      limit: vi.fn(() => chain),
+      maybeSingle: vi.fn(() => chain),
+      then: (resolvePromise: (value: QueryResult) => void) => Promise.resolve(resolvePromise(result)),
+    };
+    return chain;
+  };
+
+  const mock = vi.fn((table: string) => {
+    if (table === 'taxonomy_categories') {
+      return createQueryChain({
+        data: [
+          { id: 'cat-aluminum-glass', slug: 'aluminum-glass-facades', parent_id: null },
+          { id: 'cat-steel', slug: 'steel-metal-works', parent_id: null },
+          { id: 'cat-wood', slug: 'wood-carpentry', parent_id: null },
+          { id: 'cat-stainless', slug: 'stainless-steel-fabrication', parent_id: null },
+          { id: 'cat-contracting', slug: 'contracting-finishing', parent_id: null },
+        ],
+        error: null,
+      });
+    }
+    if (table === 'business_taxonomy_categories') {
+      return createQueryChain({
+        data: [
+          { category_id: 'cat-aluminum-glass', business_id: 'biz-1' },
+          { category_id: 'cat-aluminum-glass', business_id: 'biz-2' },
+          { category_id: 'cat-aluminum-glass', business_id: 'biz-3' },
+          { category_id: 'cat-steel', business_id: 'biz-4' },
+          { category_id: 'cat-wood', business_id: 'biz-5' },
+        ],
+        error: null,
+      });
+    }
+    return createQueryChain({
+      data: [
+        { id: 'biz-1', username: 'alu-1', name_ar: 'شركة ألمنيوم ١', name_en: 'Aluminum 1', logo_url: null, rating_avg: 5, rating_count: 3, is_verified: true, cities: { name_ar: 'الرياض', name_en: 'Riyadh' } },
+        { id: 'biz-2', username: 'alu-2', name_ar: 'شركة ألمنيوم ٢', name_en: 'Aluminum 2', logo_url: null, rating_avg: 4, rating_count: 2, is_verified: true, cities: null },
+        { id: 'biz-3', username: 'alu-3', name_ar: 'شركة ألمنيوم ٣', name_en: 'Aluminum 3', logo_url: null, rating_avg: 3, rating_count: 1, is_verified: false, cities: null },
+        { id: 'biz-4', username: 'steel-1', name_ar: 'شركة حديد', name_en: 'Steel', logo_url: null, rating_avg: 4, rating_count: 1, is_verified: true, cities: null },
+        { id: 'biz-5', username: 'wood-1', name_ar: 'شركة خشب', name_en: 'Wood', logo_url: null, rating_avg: 4, rating_count: 1, is_verified: false, cities: null },
+      ],
+      error: null,
+    });
+  });
+
+  return { fromMock: mock };
+});
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: { from: fromMock },
+}));
 
 const FORBIDDEN_SLUGS = new Set([
   'aluminum',
@@ -37,6 +98,11 @@ const ALLOWED_SLUGS = new Set([
 const SECTOR_GRID_PATH = resolve(
   process.cwd(),
   'src/components/home/v2/sections/HomeSectorGrid.tsx',
+);
+
+const CATEGORY_ROW_PATH = resolve(
+  process.cwd(),
+  'src/components/home/v2/sections/HomeCategoryRow.tsx',
 );
 
 describe('Home Taxonomy Link Guard', () => {
@@ -122,6 +188,30 @@ describe('Home Taxonomy Link Guard', () => {
         }
       }
       expect(bad).toEqual([]);
+    });
+
+    it('every row has at least one real taxonomy slug or an explicit providerSlugs fallback', () => {
+      const bad = HOME_CATEGORY_ROWS
+        .filter((row) => getCategoryRowTaxonomySlugs(row).length === 0)
+        .map((row) => row.id);
+      expect(bad).toEqual([]);
+    });
+
+    it('renders an empty state branch for rows with no linked businesses', () => {
+      const source = readFileSync(CATEGORY_ROW_PATH, 'utf8');
+      expect(source).toContain('لا توجد شركات مرتبطة بهذا القطاع حاليًا');
+      expect(source).toMatch(/providers\.length\s*>\s*0/);
+    });
+  });
+
+  describe('home row taxonomy business loader', () => {
+    it('returns the three aluminum/glass providers through the shared taxonomy binding', async () => {
+      const data = await listPublicBusinessesByTaxonomySlugs(['aluminum-glass-facades'], 6);
+      expect(data['aluminum-glass-facades']).toHaveLength(3);
+      expect(data['aluminum-glass-facades'].map((business) => business.id)).toEqual(['biz-1', 'biz-2', 'biz-3']);
+      expect(fromMock).toHaveBeenCalledWith('business_taxonomy_categories');
+      expect(fromMock).toHaveBeenCalledWith('businesses_public');
+      expect(fromMock).not.toHaveBeenCalledWith('businesses');
     });
   });
 });

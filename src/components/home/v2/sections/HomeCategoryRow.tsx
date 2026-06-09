@@ -1,14 +1,16 @@
 /**
  * HomeCategoryRow — reusable horizontal row for a category cluster.
- * Marketplace pattern: H2 + subtitle + "View all" + filter chips.
+ * Marketplace pattern: H2 + subtitle + "View all" + provider cards + filter chips.
  * Chips scroll horizontally on mobile, wrap on desktop.
- * No DB call — pure data from `categoryRows.ts`. Each chip links
- * to `/search?category=<slug>` or `/search?q=<term>`.
+ * Data is injected from the parent row loader; each chip links to
+ * `/search?category=<slug>` or `/search?q=<term>`.
  */
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
+import type { PublicTaxonomyBusiness } from '@/modules/taxonomy/search-integration';
 import type { CategoryRow } from '../data/categoryRows';
 
 const chipHref = (item: CategoryRow['items'][number]): string => {
@@ -19,9 +21,11 @@ const chipHref = (item: CategoryRow['items'][number]): string => {
 
 interface Props {
   row: CategoryRow;
+  providers?: PublicTaxonomyBusiness[];
+  providersLoading?: boolean;
 }
 
-const HomeCategoryRow = ({ row }: Props) => {
+const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Props) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
@@ -50,6 +54,73 @@ const HomeCategoryRow = ({ row }: Props) => {
             {bi('عرض الكل', 'View all')}
             <Arrow className="w-3.5 h-3.5" />
           </Link>
+        </div>
+        <div className="mb-4 sm:mb-5 flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+          {providersLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={`${row.id}-provider-skeleton-${index}`}
+                  className="shrink-0 snap-start w-[76%] sm:w-[280px] rounded-xl border border-border/60 bg-card p-4 h-[112px] animate-pulse"
+                />
+              ))
+            : providers.length > 0
+              ? providers.map((business) => {
+                  const name = bi(
+                    business.name_ar ?? business.name_en ?? '',
+                    business.name_en ?? business.name_ar ?? '',
+                  );
+                  const city = business.cities
+                    ? bi(business.cities.name_ar ?? '', business.cities.name_en ?? '')
+                    : '';
+                  const href = business.username ? `/q/${business.username}` : `/q/${business.id}`;
+                  return (
+                    <Link
+                      key={`${row.id}-${business.id}`}
+                      to={href}
+                      className="shrink-0 snap-start w-[76%] sm:w-[280px] rounded-xl border border-border/60 bg-card p-4 hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 border border-border/60">
+                          {business.logo_url ? (
+                            <img
+                              src={business.logo_url}
+                              alt=""
+                              width={48}
+                              height={48}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <h3 className="font-heading font-semibold text-sm text-foreground truncate">
+                              {name || bi('مزوّد', 'Provider')}
+                            </h3>
+                            {business.is_verified ? <VerifiedBadge size="xs" /> : null}
+                          </div>
+                          {city ? <p className="text-xs text-muted-foreground truncate mt-0.5">{city}</p> : null}
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-border/40 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                        {bi('عرض الملف', 'View profile')}
+                        <Arrow className="w-3.5 h-3.5" />
+                      </div>
+                    </Link>
+                  );
+                })
+              : (
+                <div className="w-full rounded-xl border border-border/60 bg-muted/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    {bi('لا توجد شركات مرتبطة بهذا القطاع حاليًا', 'No providers are linked to this sector yet')}
+                  </p>
+                  <Link to={row.allHref} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                    {bi('استكشف القطاع', 'Explore sector')}
+                    <Arrow className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              )}
         </div>
         <div className="flex gap-2 sm:gap-2.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap snap-x snap-mandatory">
           {row.items.map((item) => (
