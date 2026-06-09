@@ -379,7 +379,13 @@ const Quote: React.FC = () => {
       budget_note: form.budgetMode === 'after-quotes'
         ? 'after-quotes'
         : form.budgetMode === 'no' ? 'no-budget' : null,
-      metadata: { locale: isRTL ? 'ar' : 'en' },
+      metadata: {
+        locale: isRTL ? 'ar' : 'en',
+        // Safe Batch 3 — Persist the canonical taxonomy slugs in metadata so
+        // the matcher / future analytics never have to re-resolve.
+        taxonomy_primary_slug: form.sector || null,
+        taxonomy_specialty_slug: form.specialty || null,
+      },
       preferred_brand_ids: form.preferredBrandIds.length ? form.preferredBrandIds : null,
       brand_preference_mode: form.preferredBrandIds.length && form.brandPreferenceMode
         ? form.brandPreferenceMode
