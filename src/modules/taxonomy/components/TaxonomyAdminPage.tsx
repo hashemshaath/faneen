@@ -91,7 +91,10 @@ const SECTIONS: readonly SectionDef[] = [
     desc_ar: 'الألمنيوم، الزجاج، الحديد، الستانلس، الخشب، المطابخ، الواجهات، أبواب الحريق…',
     desc_en: 'Aluminum, glass, steel, stainless, wood, kitchens, façades, fire doors…',
     icon: Factory, color: '#3B82F6',
-    typeCodes: ['sector'],
+    // The hub now sources from `primary_activity` (where the 129 real
+    // sub-specialties live). We keep `sector` in the scope so the count
+    // chip stays accurate if any legacy `sector` rows remain.
+    typeCodes: ['primary_activity', 'sector'],
   },
   {
     key: 'specializations',

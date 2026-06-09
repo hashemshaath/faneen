@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { ChevronLeft, ChevronRight, Plus, Edit, Sparkles, Tag, FolderTree, Search } from 'lucide-react';
 import { getTaxonomyIcon } from '../icon-map';
 import type { TaxonomyCategory, TaxonomyType } from '../types';
+import { isLegacyPrimarySlug } from '../canonical-primaries';
 
 /**
  * Industrial Sectors Hub — the heart of the new taxonomy center.
@@ -42,13 +43,21 @@ export const IndustrialSectorsHub: React.FC<Props> = ({ types, categories, onEdi
   const [openId, setOpenId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
-  const sectorType = types.find((t) => t.code === 'sector');
+  // Real "sectors" in this platform live under `primary_activity` (25 rows,
+  // 129 children = the actual sub-specialties). The legacy `sector` type
+  // exists for back-compat but holds almost no children, which is why the
+  // hub used to look empty. We now source from primary_activity and hide
+  // legacy/merged slugs (`aluminum`, `glass-securit`, …) the same way the
+  // public UI does, so admins see the same 13 canonical sectors plus any
+  // remaining active primaries with their full sub-specialty trees.
+  const sectorType = types.find((t) => t.code === 'primary_activity');
 
   const roots = useMemo(() => {
     if (!sectorType) return [];
     const q = query.trim().toLowerCase();
     return categories
       .filter((c) => c.taxonomy_type_id === sectorType.id && !c.parent_id && !c.is_archived)
+      .filter((c) => !isLegacyPrimarySlug(c.slug))
       .filter((c) => !q || c.name_ar.toLowerCase().includes(q) || (c.name_en ?? '').toLowerCase().includes(q) || c.slug.includes(q))
       .sort((a, b) => a.sort_order - b.sort_order);
   }, [categories, sectorType, query]);
