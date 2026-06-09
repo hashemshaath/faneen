@@ -69,12 +69,12 @@ const HomeFeaturedShowcase = () => {
           'Verified providers with strong ratings from past clients.',
         )}
       />
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 animate-pulse h-[140px]"
+                className="shrink-0 snap-start w-[78%] sm:w-auto rounded-2xl border border-border/60 bg-card p-4 sm:p-5 animate-pulse h-[140px]"
               />
             ))
           : items.map((b) => {
@@ -85,7 +85,7 @@ const HomeFeaturedShowcase = () => {
                 <Link
                   key={b.id}
                   to={href}
-                  className="group relative rounded-2xl border border-border/60 bg-card p-4 sm:p-5 hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 flex flex-col gap-3"
+                  className="shrink-0 snap-start w-[78%] sm:w-auto group relative rounded-2xl border border-border/60 bg-card p-4 sm:p-5 hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 flex flex-col gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 border border-border/60">
