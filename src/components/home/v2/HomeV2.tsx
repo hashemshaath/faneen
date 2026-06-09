@@ -104,11 +104,11 @@ export const HeroV2 = () => {
   const SLIDES = [
     {
       img: heroSlide1,
-      tagAr: 'الصناعات الخفيفة', tagEn: 'Light industries',
-      titleAr: 'مزودو الألمنيوم والحديد والخشب والزجاج في مكان واحد',
-      titleEn: 'Aluminum, iron, wood and glass providers — in one place',
-      subAr: 'ابحث عن ورش ومصانع للألمنيوم، الحديد، الزجاج، الخشب، المطابخ، الواجهات والبوابات — واطلب عرض سعر في خطوات بسيطة.',
-      subEn: 'Find workshops and factories for aluminum, iron, glass, wood, kitchens, facades and gates — and request a quote in a few simple steps.',
+      tagAr: 'منصة قِطاعات', tagEn: 'Qitaat platform',
+      titleAr: 'مزودو الخدمات الصناعية والتشطيبات في مكان واحد',
+      titleEn: 'Industrial and finishing service providers — in one place',
+      subAr: 'ابحث عن ورش ومصانع ومقاولين موثوقين، واطلب عرض سعر في خطوات بسيطة.',
+      subEn: 'Find trusted workshops, factories and contractors — and request a quote in a few simple steps.',
     },
     {
       img: heroSlide2,
@@ -186,15 +186,18 @@ export const HeroV2 = () => {
   const slideChangeTimesRef = useRef<number[]>([]);
 
   // Top trending searches (manually curated based on industry priors)
+  // NOTE: `cat` MUST be a real taxonomy_categories.slug. Legacy shorthand
+  // (aluminum, iron, wood, glass, stainless, fabrication) is forbidden —
+  // it produces zero-result searches. Guarded by homeTaxonomyLinkGuard.
   const TRENDING: { ar: string; en: string; cat?: string }[] = [
-    { ar: 'مصانع ألمنيوم في الرياض', en: 'Aluminum factories in Riyadh', cat: 'aluminum' },
-    { ar: 'تركيب نوافذ ألمنيوم',    en: 'Aluminum window installation',  cat: 'aluminum' },
-    { ar: 'بوابات حديدية',           en: 'Iron gates',                    cat: 'iron' },
-    { ar: 'مطابخ خشبية',             en: 'Wooden kitchens',               cat: 'wood' },
-    { ar: 'واجهات زجاجية',           en: 'Glass facades',                 cat: 'glass' },
-    { ar: 'درابزين ستانلس ستيل',     en: 'Stainless steel railings',      cat: 'stainless' },
-    { ar: 'أبواب خشبية داخلية',      en: 'Interior wooden doors',         cat: 'wood' },
-    { ar: 'مظلات ألمنيوم',           en: 'Aluminum canopies',             cat: 'aluminum' },
+    { ar: 'مصانع ألمنيوم في الرياض', en: 'Aluminum factories in Riyadh', cat: 'aluminum-glass-facades' },
+    { ar: 'تركيب نوافذ ألمنيوم',    en: 'Aluminum window installation',  cat: 'aluminum-glass-facades' },
+    { ar: 'بوابات حديدية',           en: 'Iron gates',                    cat: 'steel-metal-works' },
+    { ar: 'مطابخ خشبية',             en: 'Wooden kitchens',               cat: 'wood-carpentry' },
+    { ar: 'واجهات زجاجية',           en: 'Glass facades',                 cat: 'aluminum-glass-facades' },
+    { ar: 'درابزين ستانلس ستيل',     en: 'Stainless steel railings',      cat: 'stainless-steel-fabrication' },
+    { ar: 'أبواب خشبية داخلية',      en: 'Interior wooden doors',         cat: 'wood-carpentry' },
+    { ar: 'مظلات ألمنيوم',           en: 'Aluminum canopies',             cat: 'aluminum-glass-facades' },
   ];
 
   useEffect(() => {
