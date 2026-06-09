@@ -266,6 +266,12 @@ export const CatalogManager: React.FC = () => {
                         <Badge className={`text-xs ${r.is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' : 'bg-muted text-muted-foreground hover:bg-muted'}`}>
                           {r.is_active ? bi('نشط', 'Active') : bi('معطل', 'Inactive')}
                         </Badge>
+                        {!r.image_url && (
+                          <Badge variant="outline" className="text-xs gap-1 border-amber-300 text-amber-700 bg-amber-50">
+                            <AlertTriangle className="size-3" />
+                            <Bi ar="بدون صورة" en="No image" />
+                          </Badge>
+                        )}
                         {r.estimated_daily_price != null && (
                           <span className="text-xs tech-content text-muted-foreground">
                             {r.estimated_daily_price} {r.currency || 'SAR'} / {bi('يوم', 'day')}
