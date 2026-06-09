@@ -131,6 +131,23 @@ export async function getChildCategoriesGrouped(
   return grouped;
 }
 
+/**
+ * Fetch taxonomy categories by id list. Used as a fallback so persisted
+ * primary IDs that are not in the curated `getRegistrationPrimaryActivities`
+ * subset still resolve to a human-readable label instead of leaking the UUID.
+ */
+export async function getTaxonomyCategoriesByIds(
+  ids: string[],
+): Promise<TaxonomyCategory[]> {
+  if (!ids.length) return [];
+  const { data, error } = await supabase
+    .from('taxonomy_categories')
+    .select('*')
+    .in('id', ids);
+  if (error) fail(error, 'getTaxonomyCategoriesByIds');
+  return (data ?? []) as TaxonomyCategory[];
+}
+
 export async function getBusinessTaxonomyCategories(
   businessId: string,
 ): Promise<BusinessTaxonomyLink[]> {
