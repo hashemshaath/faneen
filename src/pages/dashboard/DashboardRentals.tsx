@@ -23,6 +23,11 @@ import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensi
 import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { ImageUploader, type UploadedImageRow } from '@/components/common/ImageUploader';
+import {
+  listActiveTermTemplates,
+  indexByCategory,
+  type RentalTermTemplate,
+} from '@/modules/rentals/services/termTemplates';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
@@ -148,6 +153,30 @@ const CATEGORY_PRESETS: ReadonlyArray<{
 const getCategoryPreset = (cat: RentalCategory | undefined, nameAr: string, nameEn: string) => {
   const hay = `${cat?.name_ar ?? ''} ${cat?.name_en ?? ''} ${nameAr} ${nameEn}`.toLowerCase();
   return CATEGORY_PRESETS.find(p => p.keywords.some(k => hay.includes(k.toLowerCase()))) ?? null;
+};
+
+/** Resolves the effective preset for a category — admin-defined template wins over keyword fallback. */
+type ResolvedPreset = { keywords: string[]; ar: string; en: string; presets: PresetGroup } | null;
+const resolveCategoryPreset = (
+  cat: RentalCategory | undefined,
+  nameAr: string,
+  nameEn: string,
+  templates?: Record<string, RentalTermTemplate>,
+): ResolvedPreset => {
+  if (cat && templates && templates[cat.id]) {
+    const t = templates[cat.id];
+    return {
+      keywords: [],
+      ar: cat.name_ar,
+      en: cat.name_en ?? cat.name_ar,
+      presets: {
+        usage: t.usage_terms,
+        late: t.late_terms,
+        penalty: t.penalty_terms,
+      },
+    };
+  }
+  return getCategoryPreset(cat, nameAr, nameEn);
 };
 
 const mergePresets = (base: ReadonlyArray<Preset>, extra?: ReadonlyArray<Preset>): Preset[] => {
