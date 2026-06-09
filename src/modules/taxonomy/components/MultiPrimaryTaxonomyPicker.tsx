@@ -305,7 +305,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
               ) : (
                 <div className="space-y-2">
                   {selectedPrimaryIds.map((pid) => {
-                    const primary = primariesById[pid];
+                    const primary = primariesByIdMerged[pid];
                     const children = childrenByPrimary[pid] ?? [];
                     const isOpen = expanded[pid] ?? true;
                     const count = secondaryCountByPrimary[pid] ?? 0;
@@ -323,7 +323,11 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                         >
                           <span className="flex items-center gap-2">
                             <Layers className="w-3.5 h-3.5 text-primary" />
-                            {primary ? labelOf(primary, isRTL) : pid}
+                            {primary
+                              ? labelOf(primary, isRTL)
+                              : missingPrimariesQ.isLoading
+                                ? t(isRTL, 'جارٍ التحميل…', 'Loading…')
+                                : t(isRTL, 'نشاط محدد', 'Selected activity')}
                             {!empty && (
                               <Badge variant="secondary" className="text-[10px]">
                                 {count} / {children.length}
