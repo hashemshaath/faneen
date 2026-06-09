@@ -61,6 +61,8 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
   const bi = useBi();
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const hasLogo = (b: PublicTaxonomyBusiness): boolean =>
+    Boolean(b.logo_url) || isVariantUrls(b.logo_image_variants);
   return (
     <section
       aria-labelledby={`row-${row.id}`}
@@ -117,6 +119,7 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                     : '';
                   const href = `/${business.username ?? business.id}`;
                   const image = pickCardImageSource(business);
+                  const showLogoBadge = image.kind === 'cover' && hasLogo(business);
                   return (
                     <Link
                       key={`${row.id}-${business.id}`}
@@ -170,8 +173,22 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                           </div>
                         ) : null}
                       </div>
-                      <div className="px-3.5 py-3 sm:px-4 sm:py-3.5 border-t border-border/40">
-                        <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="relative px-3.5 pt-3 pb-3 sm:px-4 sm:pt-3.5 sm:pb-3.5 border-t border-border/40">
+                        {showLogoBadge ? (
+                          <div
+                            className="absolute -top-7 sm:-top-8 end-3.5 sm:end-4 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-background ring-2 ring-background shadow-[var(--elev-2)] overflow-hidden flex items-center justify-center p-1.5 z-20"
+                            aria-hidden="true"
+                          >
+                            <ResponsiveImage
+                              originalUrl={business.logo_url ?? undefined}
+                              variants={business.logo_image_variants}
+                              alt=""
+                              sizes="64px"
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                        ) : null}
+                        <div className={`flex items-center gap-1.5 min-w-0 ${showLogoBadge ? 'pe-16 sm:pe-20' : ''}`}>
                           <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors">
                             {name || bi('مزوّد', 'Provider')}
                           </h3>
@@ -179,7 +196,7 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                             <VerifiedBadge size="xs" iconOnly className="text-success" />
                           ) : null}
                         </div>
-                        <div className="mt-1 flex items-center justify-between gap-2">
+                        <div className={`mt-1 flex items-center justify-between gap-2 ${showLogoBadge ? 'pe-16 sm:pe-20' : ''}`}>
                           <span className="text-[11px] text-muted-foreground truncate">
                             {business.is_verified
                               ? bi('شركة موثّقة', 'Verified company')
