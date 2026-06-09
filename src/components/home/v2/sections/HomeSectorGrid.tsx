@@ -44,29 +44,27 @@ type Sector = {
 };
 
 // Tile rendering metadata (image + display copy). The `slug` of every
-// tile MUST exist in HOME_ALLOWED_SLUGS — enforced at module load and
-// by homeTaxonomyLinkGuard.test.ts. The list intentionally references
-// `aluminum-glass-facades` twice (Aluminum + Glass tiles) because the
-// taxonomy node groups both sectors together.
+// tile MUST be one of the 13 canonical primary activities in
+// HOME_ALLOWED_SLUGS — enforced at module load and by the guard test.
 const SECTORS: Sector[] = [
-  { slug: 'aluminum-glass-facades', image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w`,
+  { slug: 'aluminum-works', image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w`,
     titleAr: 'ألمنيوم', titleEn: 'Aluminum',
-    bodyAr: 'واجهات وشبابيك وأبواب ومطابخ.', bodyEn: 'Facades, windows, doors and kitchens.' },
-  { slug: 'steel-metal-works', image: sectorIron768, srcSet: `${sectorIron480} 480w, ${sectorIron768} 768w, ${sectorIron} 1000w`,
-    titleAr: 'حديد', titleEn: 'Iron',
-    bodyAr: 'أبواب وسلالم وهياكل وأعمال معدنية.', bodyEn: 'Doors, stairs, frames and metalwork.' },
-  { slug: 'wood-carpentry', image: sectorWood1024, srcSet: `${sectorWood480} 480w, ${sectorWood768} 768w, ${sectorWood1024} 1024w, ${sectorWood} 1200w`,
-    titleAr: 'خشب', titleEn: 'Wood',
-    bodyAr: 'أبواب وأثاث وتفصيل داخلي.', bodyEn: 'Doors, furniture and custom interiors.' },
-  { slug: 'aluminum-glass-facades', image: sectorGlass1024, srcSet: `${sectorGlass480} 480w, ${sectorGlass768} 768w, ${sectorGlass1024} 1024w, ${sectorGlass} 1200w`,
-    titleAr: 'زجاج', titleEn: 'Glass',
+    bodyAr: 'نوافذ وأبواب ومطابخ ومظلات ألمنيوم.', bodyEn: 'Windows, doors, kitchens and canopies.' },
+  { slug: 'glass-securit-works', image: sectorGlass1024, srcSet: `${sectorGlass480} 480w, ${sectorGlass768} 768w, ${sectorGlass1024} 1024w, ${sectorGlass} 1200w`,
+    titleAr: 'زجاج وسيكوريت', titleEn: 'Glass & tempered',
     bodyAr: 'سيكوريت وواجهات وقواطع وأبواب.', bodyEn: 'Tempered glass, facades, partitions and doors.' },
-  { slug: 'stainless-steel-fabrication', image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w`,
+  { slug: 'steel-metal-works', image: sectorIron768, srcSet: `${sectorIron480} 480w, ${sectorIron768} 768w, ${sectorIron} 1000w`,
+    titleAr: 'حديد ومعادن', titleEn: 'Steel & metals',
+    bodyAr: 'أبواب وسلالم وهياكل وأعمال معدنية.', bodyEn: 'Doors, stairs, frames and metalwork.' },
+  { slug: 'stainless-steel-works', image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w`,
     titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
     bodyAr: 'مطابخ ومطاعم ودرابزين وتجهيزات.', bodyEn: 'Kitchens, restaurants, railings and fittings.' },
+  { slug: 'wood-carpentry', image: sectorWood1024, srcSet: `${sectorWood480} 480w, ${sectorWood768} 768w, ${sectorWood1024} 1024w, ${sectorWood} 1200w`,
+    titleAr: 'خشب ونجارة', titleEn: 'Wood & carpentry',
+    bodyAr: 'أبواب وأثاث وتفصيل داخلي.', bodyEn: 'Doors, furniture and custom interiors.' },
   { slug: 'contracting-finishing', image: sectorFabrication768, srcSet: `${sectorFabrication480} 480w, ${sectorFabrication768} 768w, ${sectorFabrication} 1000w`,
-    titleAr: 'تصنيع وتركيب', titleEn: 'Fabrication & install',
-    bodyAr: 'ورش ومصانع وفرق تنفيذ متخصصة.', bodyEn: 'Workshops, factories and install crews.' },
+    titleAr: 'مقاولات وتشطيبات', titleEn: 'Contracting & finishing',
+    bodyAr: 'مقاولات وتشطيبات داخلية وخارجية.', bodyEn: 'Interior and exterior finishing.' },
 ];
 
 // Module-load assertion: any unknown slug crashes early in dev.

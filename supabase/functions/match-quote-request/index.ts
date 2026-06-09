@@ -19,29 +19,61 @@ const SECTOR_ALIASES: Record<string, string[]> = {
   other: [],
 };
 
-// Phase 4 — legacy sector → taxonomy slug.
+// Phase 4 — legacy sector → canonical primary-activity taxonomy slug.
 // KEEP IN SYNC with src/modules/taxonomy/legacy-mapping.ts.
+// Targets are the 13 canonical primaries from Taxonomy Restructure P1.
 const LEGACY_SECTOR_TO_TAXONOMY_SLUG: Record<string, string> = {
-  aluminum: 'aluminum-glass-facades',
-  glass: 'aluminum-glass-facades',
-  aluminum_glass: 'aluminum-glass-facades',
-  storefronts: 'aluminum-glass-facades',
+  // Aluminum
+  aluminum: 'aluminum-works',
+  alumnium: 'aluminum-works',
+  aluminum_glass: 'aluminum-works',
+  'aluminum-glass': 'aluminum-works',
+  'aluminum-glass-facades': 'aluminum-works',
+  // Glass
+  glass: 'glass-securit-works',
+  'glass-securit': 'glass-securit-works',
+  // Facades
+  storefronts: 'facades-cladding',
+  facades: 'facades-cladding',
+  cladding: 'facades-cladding',
+  // Steel
   steel: 'steel-metal-works',
   iron: 'steel-metal-works',
   'iron-steel': 'steel-metal-works',
+  // Stainless
+  stainless: 'stainless-steel-works',
+  'stainless-steel': 'stainless-steel-works',
+  stainless_steel: 'stainless-steel-works',
+  'stainless-steel-fabrication': 'stainless-steel-works',
+  // Wood / kitchens
   wood: 'wood-carpentry',
   cabinets: 'wood-carpentry',
-  stainless: 'stainless-steel-fabrication',
-  'stainless-steel': 'stainless-steel-fabrication',
-  stainless_steel: 'stainless-steel-fabrication',
+  kitchens: 'kitchens-works',
+  // Contracting / fabrication / construction
   fabrication: 'contracting-finishing',
   'fabrication-installation': 'contracting-finishing',
   finishing: 'contracting-finishing',
   'project-fitout': 'contracting-finishing',
-  construction: 'construction-building',
+  construction: 'contracting-finishing',
+  // Elevators / maintenance
+  elevators: 'elevators-maintenance',
+  maintenance: 'elevators-maintenance',
+  // Energy
+  energy: 'energy-sustainability',
+  solar: 'energy-sustainability',
+  // Technology
+  technology: 'technology-networks',
+  'technology-systems': 'technology-networks',
+  // Security
+  security: 'security-control-systems',
+  surveillance: 'security-control-systems',
+  // Equipment
+  equipment: 'equipment-rental',
+  'heavy-equipment-rental': 'equipment-rental',
+  lifting: 'equipment-rental',
+  scaffolding: 'equipment-rental',
+  // Materials (kept on legacy target — out of Home scope)
   materials: 'building-materials-supply',
-  equipment: 'heavy-equipment-rental',
-  maintenance: 'operations-maintenance',
 };
 
 interface MatchInput { quote_request_id: string; limit?: number }

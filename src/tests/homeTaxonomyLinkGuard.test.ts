@@ -57,13 +57,19 @@ const { fromMock } = vi.hoisted(() => {
     if (table === 'taxonomy_categories') {
       return createQueryChain({
         data: [
-          { id: 'cat-aluminum-glass', slug: 'aluminum-glass-facades', parent_id: null },
+          { id: 'cat-aluminum', slug: 'aluminum-works', parent_id: null },
+          { id: 'cat-glass', slug: 'glass-securit-works', parent_id: null },
           { id: 'cat-steel', slug: 'steel-metal-works', parent_id: null },
+          { id: 'cat-stainless', slug: 'stainless-steel-works', parent_id: null },
           { id: 'cat-wood', slug: 'wood-carpentry', parent_id: null },
-          { id: 'cat-stainless', slug: 'stainless-steel-fabrication', parent_id: null },
+          { id: 'cat-kitchens', slug: 'kitchens-works', parent_id: null },
+          { id: 'cat-facades', slug: 'facades-cladding', parent_id: null },
           { id: 'cat-contracting', slug: 'contracting-finishing', parent_id: null },
-          { id: 'cat-tech', slug: 'technology-systems', parent_id: null },
-          { id: 'cat-rental', slug: 'heavy-equipment-rental', parent_id: null },
+          { id: 'cat-elevators', slug: 'elevators-maintenance', parent_id: null },
+          { id: 'cat-energy', slug: 'energy-sustainability', parent_id: null },
+          { id: 'cat-tech', slug: 'technology-networks', parent_id: null },
+          { id: 'cat-security', slug: 'security-control-systems', parent_id: null },
+          { id: 'cat-rental', slug: 'equipment-rental', parent_id: null },
         ],
         error: null,
       });
@@ -71,9 +77,9 @@ const { fromMock } = vi.hoisted(() => {
     if (table === 'business_taxonomy_categories') {
       return createQueryChain({
         data: [
-          { category_id: 'cat-aluminum-glass', business_id: 'biz-1' },
-          { category_id: 'cat-aluminum-glass', business_id: 'biz-2' },
-          { category_id: 'cat-aluminum-glass', business_id: 'biz-3' },
+          { category_id: 'cat-aluminum', business_id: 'biz-1' },
+          { category_id: 'cat-aluminum', business_id: 'biz-2' },
+          { category_id: 'cat-aluminum', business_id: 'biz-3' },
           { category_id: 'cat-steel', business_id: 'biz-4' },
           { category_id: 'cat-wood', business_id: 'biz-5' },
         ],
@@ -141,13 +147,28 @@ describe('Home Taxonomy Link Guard', () => {
 
     it('exposes derived lists for every consumer', () => {
       expect(HOME_SECTOR_GRID_SLUGS.length).toBe(6);
-      expect(HOME_ROW_BINDINGS.length).toBe(7);
-      expect(HOME_JSONLD_SLUGS.length).toBe(7);
+      expect(HOME_ROW_BINDINGS.length).toBe(8);
+      expect(HOME_JSONLD_SLUGS.length).toBe(13);
       expect(HOME_TRENDING.length).toBeGreaterThan(0);
     });
 
     it('homeCategoryHref returns canonical /search?category= URLs', () => {
-      expect(homeCategoryHref('aluminum-glass-facades')).toBe('/search?category=aluminum-glass-facades');
+      expect(homeCategoryHref('aluminum-works')).toBe('/search?category=aluminum-works');
+    });
+
+    it('contains all 13 canonical primary activities', () => {
+      const required = [
+        'aluminum-works','glass-securit-works','steel-metal-works','stainless-steel-works',
+        'wood-carpentry','kitchens-works','facades-cladding','contracting-finishing',
+        'elevators-maintenance','energy-sustainability','technology-networks',
+        'security-control-systems','equipment-rental',
+      ];
+      for (const slug of required) expect(HOME_ALLOWED_SLUGS.has(slug)).toBe(true);
+    });
+
+    it('does not expose `aluminum-glass-facades` as a Home primary', () => {
+      expect(HOME_ALLOWED_SLUGS.has('aluminum-glass-facades')).toBe(false);
+      expect(HOME_FORBIDDEN_SLUGS.has('aluminum-glass-facades')).toBe(true);
     });
   });
 
@@ -185,8 +206,8 @@ describe('Home Taxonomy Link Guard', () => {
       expect(legacy, `Forbidden sector slugs: ${legacy.join(', ')}`).toEqual([]);
     });
 
-    it('aluminum tile binds to `aluminum-glass-facades`', () => {
-      expect(files.sectorGrid).toMatch(/slug:\s*'aluminum-glass-facades'[\s\S]+titleAr:\s*'ألمنيوم'/);
+    it('aluminum tile binds to `aluminum-works`', () => {
+      expect(files.sectorGrid).toMatch(/slug:\s*'aluminum-works'[\s\S]+titleAr:\s*'ألمنيوم'/);
     });
   });
 
@@ -232,24 +253,24 @@ describe('Home Taxonomy Link Guard', () => {
       expect(bad).toEqual([]);
     });
 
-    it('the seven approved rows exist; no energy or elevators row leaked in', () => {
+    it('the eight approved rows exist (canonical primary activities)', () => {
       const ids = HOME_CATEGORY_ROWS.map((r) => r.id);
       expect(ids).toEqual([
-        'iron-stainless',
         'aluminum-glass',
-        'facades-cladding',
-        'kitchens-wood',
-        'fabrication',
-        'technology-systems',
+        'steel-stainless',
+        'wood-kitchens',
+        'elevators-maintenance',
+        'energy-sustainability',
+        'technology-networks',
+        'security-control-systems',
         'equipment-rental',
       ]);
-      expect(ids).not.toContain('energy-sustainability');
-      expect(ids).not.toContain('elevators-escalators');
     });
 
-    it('aluminum/glass row binds to `aluminum-glass-facades`', () => {
+    it('aluminum/glass row binds to `aluminum-works`', () => {
       const row = HOME_CATEGORY_ROWS.find((r) => r.id === 'aluminum-glass')!;
-      expect(getCategoryRowTaxonomySlugs(row)).toContain('aluminum-glass-facades');
+      expect(getCategoryRowTaxonomySlugs(row)).toContain('aluminum-works');
+      expect(getCategoryRowTaxonomySlugs(row)).toContain('glass-securit-works');
     });
 
     it('renders an empty-state branch in HomeCategoryRow', () => {
@@ -317,11 +338,11 @@ describe('Home Taxonomy Link Guard', () => {
     });
   });
 
-  describe('Provider loader — aluminum/glass yields three businesses', () => {
+  describe('Provider loader — aluminum-works yields three businesses', () => {
     it('returns the three providers via the shared taxonomy binding', async () => {
-      const data = await listPublicBusinessesByTaxonomySlugs(['aluminum-glass-facades'], 6);
-      expect(data['aluminum-glass-facades']).toHaveLength(3);
-      expect(data['aluminum-glass-facades'].map((b) => b.id)).toEqual(['biz-1', 'biz-2', 'biz-3']);
+      const data = await listPublicBusinessesByTaxonomySlugs(['aluminum-works'], 6);
+      expect(data['aluminum-works']).toHaveLength(3);
+      expect(data['aluminum-works'].map((b) => b.id)).toEqual(['biz-1', 'biz-2', 'biz-3']);
       expect(fromMock).toHaveBeenCalledWith('businesses_public');
       expect(fromMock).not.toHaveBeenCalledWith('businesses');
     });
