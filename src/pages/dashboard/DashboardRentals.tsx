@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -156,6 +156,41 @@ const mergePresets = (base: ReadonlyArray<Preset>, extra?: ReadonlyArray<Preset>
   return [...extra.filter(p => !seen.has(p.ar)), ...base];
 };
 
+/** Field-level validator that ensures terms match the chosen category. */
+type RentalTermErrors = { usage?: string; late?: string; penalty?: string };
+const validateRentalTerms = (
+  match: { presets: PresetGroup } | null,
+  fields: { usage: string; late: string; penalty: string },
+  isRTL: boolean,
+): RentalTermErrors => {
+  if (!match) return {};
+  const errors: RentalTermErrors = {};
+  const labels = {
+    usage: { ar: 'شروط الاستخدام', en: 'usage terms' },
+    late: { ar: 'شروط التأخير', en: 'late terms' },
+    penalty: { ar: 'الشروط الجزائية', en: 'penalty terms' },
+  } as const;
+  (['usage', 'late', 'penalty'] as const).forEach(key => {
+    const value = fields[key].trim();
+    const presets = match.presets[key];
+    const lbl = labels[key];
+    if (!value) {
+      errors[key] = isRTL
+        ? `يلزم تحديد ${lbl.ar} متوافقة مع التصنيف.`
+        : `${lbl.en[0].toUpperCase() + lbl.en.slice(1)} are required and must match the category.`;
+      return;
+    }
+    const lines = value.split('\n').map(l => l.trim()).filter(Boolean);
+    const hasMatched = presets.some(p => lines.some(l => l === p.ar || l === p.en));
+    if (!hasMatched && value.length < 40) {
+      errors[key] = isRTL
+        ? `أضف بندًا موصى به من قائمة ${lbl.ar} للتصنيف، أو اكتب نصًا تفصيليًا أطول.`
+        : `Add a recommended ${lbl.en} clause for this category, or write a longer custom note.`;
+    }
+  });
+  return errors;
+};
+
 const CONDITION_OPTIONS = [
   { value: 'new',      ar: 'جديد',        en: 'New' },
   { value: 'like_new', ar: 'كالجديد',     en: 'Like new' },
@@ -189,8 +224,13 @@ const TermsField: React.FC<{
   value: string;
   onChange: (v: string) => void;
   hint?: string;
-}> = ({ label, presets, value, onChange, hint }) => {
+  error?: string;
+  fieldId?: string;
+}> = ({ label, presets, value, onChange, hint, error, fieldId }) => {
   const { isRTL } = useLanguage();
+  const reactId = React.useId();
+  const id = fieldId ?? reactId;
+  const errId = `${id}-err`;
   const lines = value.split('\n').map(s => s.trim()).filter(Boolean);
   const togglePreset = (text: string) => {
     const exists = lines.includes(text);
@@ -200,7 +240,7 @@ const TermsField: React.FC<{
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <Label className="text-xs">{label}</Label>
+        <Label htmlFor={id} className="text-xs">{label}</Label>
         {hint && (
           <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
             <Sparkles className="size-3 text-primary/70" />{hint}
@@ -215,16 +255,37 @@ const TermsField: React.FC<{
             <Badge
               key={text}
               variant={active ? 'default' : 'outline'}
+              role="button"
+              tabIndex={0}
+              aria-pressed={active}
               className="cursor-pointer hover-lift text-[11px]"
               onClick={() => togglePreset(text)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePreset(text); }
+              }}
             >
               {active ? '✓ ' : '+ '}{text}
             </Badge>
           );
         })}
       </div>
-      <Textarea dir="auto" rows={2} value={value} onChange={e => onChange(e.target.value)}
-        placeholder={isRTL ? 'اختر من المقترحات أو اكتب نصًا خاصًا…' : 'Pick presets or type custom text…'} />
+      <Textarea
+        id={id}
+        dir="auto"
+        rows={2}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errId : undefined}
+        className={error ? 'border-destructive focus-visible:ring-destructive/40' : ''}
+        placeholder={isRTL ? 'اختر من المقترحات أو اكتب نصًا خاصًا…' : 'Pick presets or type custom text…'}
+      />
+      {error && (
+        <p id={errId} role="alert" className="text-[11px] text-destructive inline-flex items-start gap-1.5">
+          <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </p>
+      )}
     </div>
   );
 };
@@ -238,24 +299,49 @@ const TermsBlock: React.FC<{
   late: string;
   penalty: string;
   onChange: (next: { usage: string; late: string; penalty: string }) => void;
-}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange }) => {
+  errors?: RentalTermErrors;
+}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange, errors }) => {
   const { isRTL } = useLanguage();
   const bi = useBi();
   const match = getCategoryPreset(category, nameAr, nameEn);
   const usagePresets = mergePresets(USAGE_PRESETS, match?.presets.usage);
   const latePresets = mergePresets(LATE_PRESETS, match?.presets.late);
   const penaltyPresets = mergePresets(PENALTY_PRESETS, match?.presets.penalty);
-  const allEmpty = !usage.trim() && !late.trim() && !penalty.trim();
   const tagLabel = match ? (isRTL ? match.ar : match.en) : '';
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  const applySuggested = () => {
-    if (!match) return;
-    const join = (arr: Preset[]) => arr.map(p => (isRTL ? p.ar : p.en)).join('\n');
+  // Compute diff between current value and category suggestions (merge — never replaces user text).
+  const buildDiff = (currentText: string, presets: ReadonlyArray<Preset>) => {
+    const lines = currentText.split('\n').map(s => s.trim()).filter(Boolean);
+    const adding = presets
+      .map(p => (isRTL ? p.ar : p.en))
+      .filter(text => !lines.includes(text));
+    return { existing: lines, adding };
+  };
+
+  const diff = match
+    ? {
+        usage: buildDiff(usage, match.presets.usage),
+        late: buildDiff(late, match.presets.late),
+        penalty: buildDiff(penalty, match.presets.penalty),
+      }
+    : null;
+  const totalAdding = diff
+    ? diff.usage.adding.length + diff.late.adding.length + diff.penalty.adding.length
+    : 0;
+
+  const confirmApply = () => {
+    if (!match || !diff) return;
+    const mergeText = (current: string, adding: string[]) => {
+      const existing = current.split('\n').map(s => s.trim()).filter(Boolean);
+      return [...existing, ...adding].join('\n');
+    };
     onChange({
-      usage: usage.trim() ? usage : join(match.presets.usage),
-      late: late.trim() ? late : join(match.presets.late),
-      penalty: penalty.trim() ? penalty : join(match.presets.penalty),
+      usage: mergeText(usage, diff.usage.adding),
+      late: mergeText(late, diff.late.adding),
+      penalty: mergeText(penalty, diff.penalty.adding),
     });
+    setPreviewOpen(false);
     toast.success(bi('تم تطبيق المقترحات', 'Suggestions applied'));
   };
 
@@ -272,10 +358,19 @@ const TermsBlock: React.FC<{
             </span>
           )}
         </div>
-        {match && allEmpty && (
-          <Button type="button" size="sm" variant="outline" onClick={applySuggested} className="gap-1.5 h-8">
+        {match && totalAdding > 0 && (
+          <Button
+            type="button" size="sm" variant="outline"
+            onClick={() => setPreviewOpen(o => !o)}
+            className="gap-1.5 h-8"
+            aria-expanded={previewOpen}
+            aria-controls="terms-diff-preview"
+          >
             <Wand2 className="size-3.5" />
-            <Bi ar="تطبيق المقترحات" en="Apply suggestions" />
+            <Bi
+              ar={previewOpen ? 'إخفاء المعاينة' : `معاينة ${totalAdding} مقترحًا`}
+              en={previewOpen ? 'Hide preview' : `Preview ${totalAdding} suggestion${totalAdding === 1 ? '' : 's'}`}
+            />
           </Button>
         )}
       </div>
@@ -285,12 +380,77 @@ const TermsBlock: React.FC<{
           en="Pick terms that match the equipment category to protect your business and clarify responsibilities."
         />
       </p>
+
+      {previewOpen && diff && match && (
+        <div
+          id="terms-diff-preview"
+          role="region"
+          aria-label={bi('معاينة مقترحات التصنيف', 'Category suggestions preview')}
+          className="rounded-lg border border-primary/25 bg-primary/[0.03] p-3 space-y-3"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[11px] font-semibold inline-flex items-center gap-1.5">
+              <Sparkles className="size-3.5 text-primary" />
+              <Bi
+                ar={`سيتم إضافة ${totalAdding} بندًا (دون استبدال ما أدخلته)`}
+                en={`${totalAdding} clause${totalAdding === 1 ? '' : 's'} will be added (your text is preserved)`}
+              />
+            </div>
+          </div>
+          {(['usage', 'late', 'penalty'] as const).map(key => {
+            const d = diff[key];
+            const titles = {
+              usage: { ar: 'الاستخدام', en: 'Usage' },
+              late: { ar: 'التأخير', en: 'Late' },
+              penalty: { ar: 'الجزاءات', en: 'Penalty' },
+            } as const;
+            if (!d.adding.length && !d.existing.length) return null;
+            return (
+              <div key={key} className="text-[11px] space-y-1">
+                <div className="font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Bi ar={titles[key].ar} en={titles[key].en} />
+                </div>
+                <ul className="space-y-0.5">
+                  {d.existing.map(line => (
+                    <li key={`e-${line}`} className="flex items-start gap-1.5 text-muted-foreground line-clamp-1">
+                      <Check className="size-3 mt-0.5 shrink-0 text-emerald-500/60" />
+                      <span className="truncate">{line}</span>
+                    </li>
+                  ))}
+                  {d.adding.map(line => (
+                    <li key={`a-${line}`} className="flex items-start gap-1.5 text-foreground">
+                      <Plus className="size-3 mt-0.5 shrink-0 text-primary" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                  {!d.adding.length && (
+                    <li className="text-[10px] text-muted-foreground italic">
+                      <Bi ar="لا توجد مقترحات جديدة" en="No new suggestions" />
+                    </li>
+                  )}
+                </ul>
+              </div>
+            );
+          })}
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button type="button" size="sm" variant="ghost" onClick={() => setPreviewOpen(false)}>
+              <Bi ar="إلغاء" en="Cancel" />
+            </Button>
+            <Button type="button" size="sm" onClick={confirmApply} className="gap-1.5">
+              <Check className="size-3.5" />
+              <Bi ar="تطبيق المقترحات" en="Apply suggestions" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <TermsField
         label={bi('شروط الاستخدام', 'Usage terms')}
         presets={usagePresets}
         value={usage}
         onChange={v => onChange({ usage: v, late, penalty })}
         hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+        error={errors?.usage}
       />
       <TermsField
         label={bi('شروط التأخير', 'Late terms')}
@@ -298,6 +458,7 @@ const TermsBlock: React.FC<{
         value={late}
         onChange={v => onChange({ usage, late: v, penalty })}
         hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+        error={errors?.late}
       />
       <TermsField
         label={bi('الشروط الجزائية', 'Penalty terms')}
@@ -305,6 +466,7 @@ const TermsBlock: React.FC<{
         value={penalty}
         onChange={v => onChange({ usage, late, penalty: v })}
         hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+        error={errors?.penalty}
       />
     </div>
   );
