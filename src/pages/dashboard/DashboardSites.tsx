@@ -631,7 +631,7 @@ export default function DashboardSites() {
         (s.municipal_license_no || '').toLowerCase().includes(q) ||
         (s.title_deed_no || '').toLowerCase().includes(q) ||
         (s.owner_name || '').toLowerCase().includes(q) ||
-        (s.owner_id_number || '').toLowerCase().includes(q)
+        (s.site_ref || '').toLowerCase().includes(q)
       );
     }
     if (advLicenseNo.trim()) {
@@ -643,8 +643,9 @@ export default function DashboardSites() {
       r = r.filter(s => (s.title_deed_no || '').toLowerCase().includes(q));
     }
     if (advOwnerId.trim()) {
-      const q = advOwnerId.trim().toLowerCase();
-      r = r.filter(s => (s.owner_id_number || '').toLowerCase().includes(q));
+      // owner_id_number is no longer available in list queries (PII column-revoked).
+      // Advanced filter by ID is intentionally disabled; matches return empty.
+      r = [];
     }
     if (advIssueFrom) r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date >= advIssueFrom);
     if (advIssueTo)   r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date <= advIssueTo);
