@@ -99,20 +99,20 @@ export const ActiveFilterChips = ({
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-in">
-      <span className="text-[11px] font-heading font-bold text-muted-foreground uppercase tracking-wide">
+    <div className="flex flex-wrap items-center justify-center gap-2 animate-fade-in">
+      <span className="text-[11px] font-heading font-bold text-surface-nav-foreground/65 uppercase tracking-wide">
         {isRTL ? 'الفلاتر النشطة' : 'Active filters'}
       </span>
       {chips.map(chip => (
         <Badge
           key={chip.key}
           variant="secondary"
-          className="gap-1.5 ps-3 pe-1 py-1 h-8 bg-accent/10 text-accent border border-accent/25 hover:bg-accent/15 transition-colors cursor-default text-xs font-body font-medium rounded-full"
+          className="gap-1.5 ps-3 pe-1 py-1 h-8 bg-surface-nav-foreground/10 text-surface-nav-foreground border border-surface-nav-foreground/20 hover:bg-surface-nav-foreground/15 transition-colors cursor-default text-xs font-body font-medium rounded-full"
         >
           <span className="truncate max-w-[180px]">{chip.label}</span>
           <button
             onClick={chip.onRemove}
-            className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-accent/25 transition-colors"
+            className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-surface-nav-foreground/20 transition-colors"
             aria-label={`Remove ${chip.label}`}
           >
             <X className="w-3 h-3" />
@@ -122,7 +122,7 @@ export const ActiveFilterChips = ({
       {chips.length > 1 && (
         <button
           onClick={onClearAll}
-          className="ms-auto flex items-center gap-1.5 text-[11px] text-destructive hover:bg-destructive/10 font-body font-medium px-3 py-1.5 rounded-full border border-destructive/30 transition-colors"
+          className="flex items-center gap-1.5 text-[11px] text-surface-nav-foreground/80 hover:text-surface-nav-foreground hover:bg-surface-nav-foreground/10 font-body font-medium px-3 py-1.5 rounded-full border border-surface-nav-foreground/25 transition-colors"
         >
           <RotateCcw className="w-3 h-3" />
           {isRTL ? 'مسح الكل' : 'Clear all'}
