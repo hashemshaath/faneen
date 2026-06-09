@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { HOME_CATEGORY_ROWS, getCategoryRowTaxonomySlugs } from '@/components/home/v2/data/categoryRows';
 import { listPublicBusinessesByTaxonomySlugs } from '@/modules/taxonomy/search-integration';
+import { pickCardImageSource } from '@/components/home/v2/sections/HomeCategoryRow';
 
 const { fromMock } = vi.hoisted(() => {
   type QueryResult = { data: unknown; error: null };
@@ -61,11 +62,11 @@ const { fromMock } = vi.hoisted(() => {
     }
     return createQueryChain({
       data: [
-        { id: 'biz-1', username: 'alu-1', name_ar: 'شركة ألمنيوم ١', name_en: 'Aluminum 1', logo_url: null, rating_avg: 5, rating_count: 3, is_verified: true, cities: { name_ar: 'الرياض', name_en: 'Riyadh' } },
-        { id: 'biz-2', username: 'alu-2', name_ar: 'شركة ألمنيوم ٢', name_en: 'Aluminum 2', logo_url: null, rating_avg: 4, rating_count: 2, is_verified: true, cities: null },
-        { id: 'biz-3', username: 'alu-3', name_ar: 'شركة ألمنيوم ٣', name_en: 'Aluminum 3', logo_url: null, rating_avg: 3, rating_count: 1, is_verified: false, cities: null },
-        { id: 'biz-4', username: 'steel-1', name_ar: 'شركة حديد', name_en: 'Steel', logo_url: null, rating_avg: 4, rating_count: 1, is_verified: true, cities: null },
-        { id: 'biz-5', username: 'wood-1', name_ar: 'شركة خشب', name_en: 'Wood', logo_url: null, rating_avg: 4, rating_count: 1, is_verified: false, cities: null },
+        { id: 'biz-1', username: 'alu-1', name_ar: 'شركة ألمنيوم ١', name_en: 'Aluminum 1', logo_url: null, logo_image_variants: null, cover_url: null, cover_image_variants: null, rating_avg: 5, rating_count: 3, is_verified: true, cities: { name_ar: 'الرياض', name_en: 'Riyadh' } },
+        { id: 'biz-2', username: 'alu-2', name_ar: 'شركة ألمنيوم ٢', name_en: 'Aluminum 2', logo_url: null, logo_image_variants: null, cover_url: null, cover_image_variants: null, rating_avg: 4, rating_count: 2, is_verified: true, cities: null },
+        { id: 'biz-3', username: 'alu-3', name_ar: 'شركة ألمنيوم ٣', name_en: 'Aluminum 3', logo_url: null, logo_image_variants: null, cover_url: null, cover_image_variants: null, rating_avg: 3, rating_count: 1, is_verified: false, cities: null },
+        { id: 'biz-4', username: 'steel-1', name_ar: 'شركة حديد', name_en: 'Steel', logo_url: null, logo_image_variants: null, cover_url: null, cover_image_variants: null, rating_avg: 4, rating_count: 1, is_verified: true, cities: null },
+        { id: 'biz-5', username: 'wood-1', name_ar: 'شركة خشب', name_en: 'Wood', logo_url: null, logo_image_variants: null, cover_url: null, cover_image_variants: null, rating_avg: 4, rating_count: 1, is_verified: false, cities: null },
       ],
       error: null,
     });
@@ -212,6 +213,29 @@ describe('Home Taxonomy Link Guard', () => {
       expect(fromMock).toHaveBeenCalledWith('business_taxonomy_categories');
       expect(fromMock).toHaveBeenCalledWith('businesses_public');
       expect(fromMock).not.toHaveBeenCalledWith('businesses');
+    });
+  });
+
+  describe('card image fallback chain', () => {
+    const base = { logo_url: null, logo_image_variants: null, cover_url: null, cover_image_variants: null };
+    const variants = { thumbnail: 'https://cdn/t.webp', card: 'https://cdn/c.webp', medium: 'https://cdn/m.webp', hero: 'https://cdn/h.webp' };
+
+    it('prefers cover_image_variants', () => {
+      expect(pickCardImageSource({ ...base, cover_image_variants: variants, cover_url: 'x', logo_url: 'y' }).kind).toBe('cover');
+    });
+    it('falls back to cover_url when no cover variants', () => {
+      const s = pickCardImageSource({ ...base, cover_url: 'https://cdn/c.jpg', logo_url: 'https://cdn/l.jpg' });
+      expect(s.kind).toBe('cover');
+      expect(s.kind === 'cover' && s.url).toBe('https://cdn/c.jpg');
+    });
+    it('falls back to logo_image_variants when no cover', () => {
+      expect(pickCardImageSource({ ...base, logo_image_variants: variants }).kind).toBe('logo');
+    });
+    it('falls back to logo_url when no cover and no logo variants', () => {
+      expect(pickCardImageSource({ ...base, logo_url: 'https://cdn/l.jpg' }).kind).toBe('logo');
+    });
+    it('returns placeholder when nothing is available', () => {
+      expect(pickCardImageSource(base).kind).toBe('placeholder');
     });
   });
 });
