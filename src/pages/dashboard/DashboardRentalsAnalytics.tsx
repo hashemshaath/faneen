@@ -312,6 +312,249 @@ const DashboardRentalsAnalytics: React.FC = () => {
     toast.success(bi('تم تصدير الملف', 'CSV exported'));
   };
 
+  /* -------- Excel export (with KPIs + Orders + Top Items + Status) -------- */
+  const exportExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const kpiRows = [
+      [bi('المقياس', 'Metric'), bi('القيمة الحالية', 'Current'), bi('القيمة السابقة', 'Previous'), bi('التغير %', 'Delta %')],
+      [bi('الإيرادات', 'Revenue'), Math.round(cur.revenue), Math.round(prv.revenue), delta(cur.revenue, prv.revenue)],
+      [bi('الطلبات', 'Orders'), cur.count, prv.count, delta(cur.count, prv.count)],
+      [bi('الإشغال %', 'Occupancy %'), occupancyPct, prevOccupancyPct, delta(occupancyPct, prevOccupancyPct)],
+      [bi('متوسط المدة (يوم)', 'Avg duration (d)'), +cur.avgDuration.toFixed(2), +prv.avgDuration.toFixed(2), delta(Math.round(cur.avgDuration), Math.round(prv.avgDuration))],
+      [bi('متوسط الطلب', 'Avg ticket'), Math.round(cur.avgTicket), Math.round(prv.avgTicket), delta(Math.round(cur.avgTicket), Math.round(prv.avgTicket))],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(kpiRows), 'KPIs');
+
+    const ordersHead = ['Ref', 'Item', 'Start', 'End', 'Days', 'Status', 'Amount', 'Currency'];
+    const ordersRows = scoped.map(o => {
+      const it = items.find(i => i.id === o.rental_item_id);
+      return [o.ref_id, it ? (it.name_en || it.name_ar) : '', o.start_date, o.end_date, o.total_days, o.status, Number(o.total_amount || 0), o.currency];
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([ordersHead, ...ordersRows]), 'Orders');
+
+    const topHead = ['Rank', 'Item', 'Orders', 'Revenue', 'Days'];
+    const topRows = topItems.map((r, i) => [i + 1, r.name, r.orders, r.revenue, r.days]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([topHead, ...topRows]), 'TopItems');
+
+    const statusHead = ['Status', 'Orders', 'Revenue'];
+    const statusRows = statusData.map(s => [s.status, s.count, s.revenue]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([statusHead, ...statusRows]), 'StatusBreakdown');
+
+    const trendHead = ['Date', 'Revenue', 'Orders', 'PreviousRevenue'];
+    const trendRows = trend.map(t => [t.date, Math.round(t.revenue), t.orders, Math.round(t.previous)]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([trendHead, ...trendRows]), 'Trend');
+
+    XLSX.writeFile(wb, `rentals-analytics-${range}d-${ymd(new Date())}.xlsx`);
+    toast.success(bi('تم تصدير ملف Excel', 'Excel exported'));
+  };
+
+  /* -------- PDF export (KPIs + tables + chart snapshots) -------- */
+  const captureChartPng = async (selector: string): Promise<string | null> => {
+    const svg = document.querySelector(selector) as SVGSVGElement | null;
+    if (!svg) return null;
+    try {
+      const xml = new XMLSerializer().serializeToString(svg);
+      const svg64 = btoa(unescape(encodeURIComponent(xml)));
+      const img = new Image();
+      img.src = `data:image/svg+xml;base64,${svg64}`;
+      await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(); });
+      const c = document.createElement('canvas');
+      const w = svg.clientWidth || 800;
+      const h = svg.clientHeight || 300;
+      c.width = w * 2; c.height = h * 2;
+      const ctx = c.getContext('2d');
+      if (!ctx) return null;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.scale(2, 2);
+      ctx.drawImage(img, 0, 0, w, h);
+      return c.toDataURL('image/png');
+    } catch { return null; }
+  };
+
+  const exportPdf = async () => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 14;
+
+    doc.setFontSize(16);
+    doc.text('Rentals Performance & Revenue', 14, y); y += 6;
+    doc.setFontSize(10); doc.setTextColor(120);
+    doc.text(`Range: ${range}d  |  Generated: ${new Date().toLocaleString('en-US')}`, 14, y); y += 6;
+    doc.setTextColor(0);
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Metric', 'Current', 'Previous', 'Delta %']],
+      body: [
+        ['Revenue', `${Math.round(cur.revenue).toLocaleString()} ${currency}`, `${Math.round(prv.revenue).toLocaleString()} ${currency}`, `${delta(cur.revenue, prv.revenue)}%`],
+        ['Orders', String(cur.count), String(prv.count), `${delta(cur.count, prv.count)}%`],
+        ['Occupancy', `${occupancyPct}%`, `${prevOccupancyPct}%`, `${delta(occupancyPct, prevOccupancyPct)}pp`],
+        ['Avg Duration', `${cur.avgDuration.toFixed(1)}d`, `${prv.avgDuration.toFixed(1)}d`, `${delta(Math.round(cur.avgDuration), Math.round(prv.avgDuration))}%`],
+        ['Avg Ticket', `${Math.round(cur.avgTicket).toLocaleString()} ${currency}`, `${Math.round(prv.avgTicket).toLocaleString()} ${currency}`, `${delta(Math.round(cur.avgTicket), Math.round(prv.avgTicket))}%`],
+      ],
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [16, 185, 129] },
+    });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
+
+    const charts = [
+      { sel: '[data-chart="trend"] svg', label: 'Revenue Trend' },
+      { sel: '[data-chart="status-bar"] svg', label: 'Revenue by Status' },
+      { sel: '[data-chart="status-pie"] svg', label: 'Orders Distribution' },
+      { sel: '[data-chart="daily"] svg', label: 'Daily Bookings' },
+    ];
+    for (const c of charts) {
+      const png = await captureChartPng(c.sel);
+      if (!png) continue;
+      if (y > 220) { doc.addPage(); y = 14; }
+      doc.setFontSize(11); doc.text(c.label, 14, y); y += 4;
+      const w = pageW - 28; const h = 60;
+      doc.addImage(png, 'PNG', 14, y, w, h);
+      y += h + 6;
+    }
+
+    doc.addPage(); y = 14;
+    doc.setFontSize(13); doc.text('Top Items', 14, y); y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [['#', 'Item', 'Orders', 'Revenue', 'Days']],
+      body: topItems.map((r, i) => [i + 1, r.name, r.orders, `${r.revenue.toLocaleString()} ${currency}`, r.days]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [14, 165, 233] },
+    });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
+
+    if (alerts.length) {
+      if (y > 240) { doc.addPage(); y = 14; }
+      doc.setFontSize(13); doc.text('Alerts', 14, y); y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Severity', 'Title', 'Detail']],
+        body: alerts.map(a => [a.severity, a.title.en, a.detail.en]),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [245, 158, 11] },
+      });
+    }
+
+    doc.save(`rentals-analytics-${range}d-${ymd(new Date())}.pdf`);
+    toast.success(bi('تم تصدير ملف PDF', 'PDF exported'));
+  };
+
+  /* -------- Alerts (conflicts, big revenue/occupancy swings) -------- */
+  const alerts = useMemo<AlertItem[]>(() => {
+    const out: AlertItem[] = [];
+
+    // 1) Overlapping active/extended bookings on same item = conflict
+    const liveStatuses: RentalOrderStatus[] = ['active', 'extended', 'renewed', 'expiring_soon'];
+    const byItem = new Map<string, RentalOrder[]>();
+    scoped.filter(o => liveStatuses.includes(o.status)).forEach(o => {
+      const arr = byItem.get(o.rental_item_id) ?? [];
+      arr.push(o); byItem.set(o.rental_item_id, arr);
+    });
+    let conflicts = 0;
+    const conflictItems: string[] = [];
+    byItem.forEach((list, itemId) => {
+      const sorted = list.slice().sort((a, b) => a.start_date.localeCompare(b.start_date));
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (sorted[i].end_date >= sorted[i + 1].start_date) {
+          conflicts++;
+          const it = items.find(x => x.id === itemId);
+          conflictItems.push(it ? bi(it.name_ar, it.name_en || it.name_ar) : itemId);
+          break;
+        }
+      }
+    });
+    if (conflicts > 0) {
+      out.push({
+        id: 'conflicts',
+        severity: 'critical',
+        title: { ar: `تعارض في ${conflicts} أصل`, en: `${conflicts} item(s) with booking conflicts` },
+        detail: {
+          ar: `أصول متأثرة: ${conflictItems.slice(0, 3).join('، ')}${conflictItems.length > 3 ? '…' : ''}`,
+          en: `Affected: ${conflictItems.slice(0, 3).join(', ')}${conflictItems.length > 3 ? '…' : ''}`,
+        },
+      });
+    }
+
+    // 2) Revenue change > 25%
+    const dRev = delta(cur.revenue, prv.revenue);
+    if (prv.revenue > 0 && Math.abs(dRev) >= 25) {
+      out.push({
+        id: 'revenue-swing',
+        severity: dRev < 0 ? 'critical' : 'info',
+        title: {
+          ar: dRev < 0 ? `هبوط حاد في الإيرادات ${Math.abs(dRev)}%` : `نمو قوي في الإيرادات +${dRev}%`,
+          en: dRev < 0 ? `Sharp revenue drop ${Math.abs(dRev)}%` : `Strong revenue growth +${dRev}%`,
+        },
+        detail: {
+          ar: `الحالية ${fmtMoney(cur.revenue, currency)} مقابل ${fmtMoney(prv.revenue, currency)}`,
+          en: `Current ${fmtMoney(cur.revenue, currency)} vs ${fmtMoney(prv.revenue, currency)}`,
+        },
+      });
+    }
+
+    // 3) Occupancy change >= 15pp
+    const dOcc = occupancyPct - prevOccupancyPct;
+    if (Math.abs(dOcc) >= 15) {
+      out.push({
+        id: 'occupancy-swing',
+        severity: dOcc < 0 ? 'warning' : 'info',
+        title: {
+          ar: dOcc < 0 ? `انخفاض في الإشغال ${Math.abs(dOcc)} نقطة` : `ارتفاع في الإشغال +${dOcc} نقطة`,
+          en: dOcc < 0 ? `Occupancy down ${Math.abs(dOcc)}pp` : `Occupancy up +${dOcc}pp`,
+        },
+        detail: {
+          ar: `${occupancyPct}% الآن مقابل ${prevOccupancyPct}% سابقًا`,
+          en: `${occupancyPct}% now vs ${prevOccupancyPct}% before`,
+        },
+      });
+    }
+
+    // 4) Idle assets (0 orders this period but exist)
+    if (items.length > 0) {
+      const usedIds = new Set(scoped.map(o => o.rental_item_id));
+      const idle = items.filter(i => !usedIds.has(i.id));
+      if (idle.length >= Math.max(1, Math.ceil(items.length * 0.3))) {
+        out.push({
+          id: 'idle',
+          severity: 'warning',
+          title: { ar: `${idle.length} أصل بدون حجوزات`, en: `${idle.length} idle asset(s)` },
+          detail: {
+            ar: 'لا توجد طلبات خلال الفترة المحددة. راجع التسعير أو الترويج.',
+            en: 'No orders in the selected period. Review pricing or promotion.',
+          },
+        });
+      }
+    }
+
+    return out;
+  }, [scoped, items, cur, prv, occupancyPct, prevOccupancyPct, currency, bi]);
+
+  const toggleAlertsMute = () => {
+    const v = !alertsMuted;
+    setAlertsMuted(v);
+    try { localStorage.setItem(ALERTS_MUTED_KEY, v ? '1' : '0'); } catch { /* ignore */ }
+  };
+
+  /* -------- Detail panel data -------- */
+  const detailData = useMemo(() => {
+    if (!detail) return null;
+    const list = scoped.filter(o =>
+      detail.kind === 'item' ? o.rental_item_id === detail.id : o.status === detail.status,
+    );
+    const k = calcKpis(list);
+    const statusBreakdown = STATUS_KEYS.map(s => ({
+      status: s,
+      count: list.filter(o => o.status === s).length,
+    })).filter(x => x.count > 0);
+    const label = detail.kind === 'item'
+      ? (() => { const it = items.find(i => i.id === detail.id); return it ? bi(it.name_ar, it.name_en || it.name_ar) : detail.id; })()
+      : bi(STATUS_LABEL[detail.status].ar, STATUS_LABEL[detail.status].en);
+    return { list, k, statusBreakdown, label };
+  }, [detail, scoped, items, bi]);
+
   const resetFilters = () => { setItemFilter('all'); setStatusFilter('all'); setSearch(''); };
   const hasActiveFilters = itemFilter !== 'all' || statusFilter !== 'all' || search.trim().length > 0;
 
