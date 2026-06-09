@@ -101,6 +101,32 @@ export async function getChildCategories(parentId: string): Promise<TaxonomyCate
   return (data ?? []) as TaxonomyCategory[];
 }
 
+/**
+ * Safe Batch 2 — fetch children for multiple parent categories in one round
+ * trip and return them grouped by parent_id. Used by the multi-primary picker.
+ */
+export async function getChildCategoriesGrouped(
+  parentIds: string[],
+): Promise<Record<string, TaxonomyCategory[]>> {
+  if (!parentIds.length) return {};
+  const { data, error } = await supabase
+    .from('taxonomy_categories')
+    .select('*')
+    .in('parent_id', parentIds)
+    .eq('is_active', true)
+    .eq('is_archived', false)
+    .eq('show_in_registration', true)
+    .order('sort_order', { ascending: true });
+  if (error) fail(error, 'getChildCategoriesGrouped');
+  const grouped: Record<string, TaxonomyCategory[]> = {};
+  for (const id of parentIds) grouped[id] = [];
+  for (const row of (data ?? []) as TaxonomyCategory[]) {
+    const pid = row.parent_id as string | null;
+    if (pid && grouped[pid]) grouped[pid].push(row);
+  }
+  return grouped;
+}
+
 export async function getBusinessTaxonomyCategories(
   businessId: string,
 ): Promise<BusinessTaxonomyLink[]> {
