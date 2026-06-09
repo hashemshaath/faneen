@@ -86,12 +86,20 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
   const initial = name?.charAt(0) || 'ف';
   const hasBnpl = Array.isArray((b as any).business_bnpl_providers) && (b as any).business_bnpl_providers.length > 0;
 
-  // Phase 10 — taxonomy display (taxonomy-first, legacy fallback).
+  // Phase 10 / Safe Batch 4 — taxonomy display (multi-primary aware,
+  // canonical labels only — legacy slugs are normalized upstream).
   const tx = taxonomyDisplay;
-  const hasTaxonomy = !!(tx?.hasModernTaxonomy && (tx.primaryLabel || tx.secondaryLabels.length || tx.serviceLabels.length));
-  const taxonomyChips = hasTaxonomy
-    ? [...tx!.secondaryLabels, ...tx!.serviceLabels].slice(0, 3)
-    : [];
+  const primaryChips = tx?.primaries ?? [];
+  const hasTaxonomy = !!(
+    tx?.hasModernTaxonomy &&
+    (primaryChips.length || tx.secondaryLabels.length || tx.serviceLabels.length)
+  );
+  const visiblePrimaries = primaryChips.slice(0, 3);
+  // Up to 2 important sub-specialties drawn from the first group(s) so
+  // the chip row stays compact on small viewports.
+  const subSpecialtyChips = (tx?.groups ?? [])
+    .flatMap((g) => g.secondaries)
+    .slice(0, 2);
 
   // "Update taxonomy" hint — strictly visible to admins only. Never shown to
   // public visitors. Owner-level visibility is handled elsewhere (dashboard).
@@ -102,22 +110,23 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
     const pad = size === 'sm' ? 'px-1.5 py-0 text-[10px]' : 'px-2 py-0.5 text-[10px] sm:text-[11px]';
     return (
       <div className="flex flex-wrap items-center gap-1 mt-1">
-        {tx?.primaryLabel && (
+        {visiblePrimaries.map((chip, i) => (
           <span
+            key={`p-${chip.id ?? chip.slug ?? i}`}
             className={`inline-flex items-center gap-1 rounded-md bg-accent/12 text-accent border border-accent/25 font-body font-semibold ${pad}`}
-            title={tx.primaryLabel}
+            title={chip.label}
           >
             <Layers className="w-2.5 h-2.5 shrink-0" />
-            <span className="truncate max-w-[140px]">{tx.primaryLabel}</span>
+            <span className="truncate max-w-[140px]">{chip.label}</span>
           </span>
-        )}
-        {taxonomyChips.map((label, i) => (
+        ))}
+        {subSpecialtyChips.map((chip, i) => (
           <span
-            key={`${label}-${i}`}
+            key={`s-${chip.id ?? chip.slug ?? i}`}
             className={`inline-flex items-center rounded-md bg-primary/5 text-primary border border-primary/15 font-body ${pad}`}
-            title={label}
+            title={chip.label}
           >
-            <span className="truncate max-w-[120px]">{label}</span>
+            <span className="truncate max-w-[120px]">{chip.label}</span>
           </span>
         ))}
       </div>
