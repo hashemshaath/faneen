@@ -24,7 +24,7 @@ export const TaxonomySearchBar: React.FC<Props> = ({ value, onChange }) => {
     onChange({ ...value, [k]: v });
 
   const activeAdvanced =
-    value.visibility !== '' || value.missing !== '' || value.status !== 'all';
+    value.visibility !== '' || value.missing !== '' || value.status !== 'all' || value.showLegacy === true;
 
   return (
     <div className="space-y-2">
@@ -122,13 +122,23 @@ export const TaxonomySearchBar: React.FC<Props> = ({ value, onChange }) => {
                 {isRTL ? 'عرض المؤرشف فقط' : 'Show archived only'}
               </Label>
             </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={value.showLegacy}
+                onCheckedChange={(v) => set('showLegacy', v)}
+                id="tx-show-legacy"
+              />
+              <Label htmlFor="tx-show-legacy" className="text-xs cursor-pointer">
+                {isRTL ? 'إظهار التصنيفات القديمة' : 'Show legacy categories'}
+              </Label>
+            </div>
             {activeAdvanced && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-8 text-xs"
                 onClick={() =>
-                  onChange({ ...value, status: 'all', visibility: '', missing: '' })
+                  onChange({ ...value, status: 'all', visibility: '', missing: '', showLegacy: false })
                 }
               >
                 {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
