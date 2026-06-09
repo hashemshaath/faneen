@@ -1070,6 +1070,13 @@ const SectionHead: React.FC<{
   </div>
 );
 
+const MiniStat: React.FC<{ label: React.ReactNode; value: React.ReactNode }> = ({ label, value }) => (
+  <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5">
+    <div className="text-[11px] text-muted-foreground truncate">{label}</div>
+    <div className="text-sm font-semibold leading-tight truncate">{value}</div>
+  </div>
+);
+
 const PageSkeleton: React.FC = () => (
   <DashboardLayout>
     <div className="space-y-3">
