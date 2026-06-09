@@ -130,7 +130,7 @@ const HomeFeaturedShowcase = () => {
             })}
       </div>
       <div className="text-center mt-8 sm:mt-10">
-        <SecondaryCTA to="/search?verified=1" label={bi('عرض كل المزوّدين الموثّقين', 'See all verified providers')} />
+        <SecondaryCTA to="/search" label={bi('عرض كل المزوّدين الموثّقين', 'See all verified providers')} />
       </div>
     </Section>
   );
