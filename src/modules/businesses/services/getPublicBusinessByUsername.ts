@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { assertSafeJoinedSelect } from '@/lib/supabase/assertSafeJoinedSelect';
 
 /**
  * Canonical wrapper for the public business profile read by username.
@@ -27,6 +28,9 @@ export async function getPublicBusinessByUsername<T = unknown>(
   // `activeOnly` flag is therefore redundant here but kept for callers that
   // depend on the option shape.
   void activeOnly;
+  // SAFE-SELECT: guard against embedded relations referencing unknown / reserved
+  // columns (e.g. `cities.slug`) which would crash every profile fetch.
+  assertSafeJoinedSelect(select, undefined, 'getPublicBusinessByUsername');
   const q = supabase.from('businesses_public').select(select).eq('username', username);
   const { data, error } = terminal === 'single' ? await q.single() : await q.maybeSingle();
   return { data: (data as unknown as T | null), error };
