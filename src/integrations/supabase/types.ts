@@ -8419,6 +8419,27 @@ export type Database = {
           },
         ]
       }
+      directory_sync_events: {
+        Row: {
+          created_at: string
+          id: string
+          operation: string
+          source_table: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          operation: string
+          source_table: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          operation?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
       districts: {
         Row: {
           city: string
