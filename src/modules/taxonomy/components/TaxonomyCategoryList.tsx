@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { TaxonomyCategory, TaxonomyType } from '../types';
+import { isLegacyPrimarySlug } from '../canonical-primaries';
 
 interface Props {
   rows: TaxonomyCategory[];
@@ -51,6 +52,15 @@ export const TaxonomyCategoryList: React.FC<Props> = ({
             {isRTL ? 'نشط' : 'active'}
           </Badge>
         );
+        const legacyBadge = isLegacyPrimarySlug(c.slug) ? (
+          <Badge
+            variant="outline"
+            className="text-[10px] border-amber-400 text-amber-700 bg-amber-50"
+            title={isRTL ? 'مخفي من الواجهات العامة' : 'Hidden from public UI'}
+          >
+            {isRTL ? 'قديم' : 'Legacy'}
+          </Badge>
+        ) : null;
         return (
           <li key={c.id}>
             <Card
@@ -77,6 +87,7 @@ export const TaxonomyCategoryList: React.FC<Props> = ({
                   <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
                     <span className="truncate">{t ? (isRTL ? t.name_ar : t.name_en ?? t.name_ar) : '—'}</span>
                     {statusBadge}
+                    {legacyBadge}
                   </div>
                 </div>
                 <Chevron className="w-4 h-4 text-muted-foreground/60 shrink-0" />
