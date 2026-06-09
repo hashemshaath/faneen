@@ -178,28 +178,64 @@ export const CatalogManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
-      <Card className="p-3 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute top-1/2 -translate-y-1/2 start-3 size-4 text-muted-foreground" />
-          <Input dir="auto" value={q} onChange={e => setQ(e.target.value)} placeholder={isRTL ? 'بحث بالاسم/الماركة/الموديل…' : 'Search name/brand/model…'} className="h-11 ps-9 rounded-xl" />
+      {/* Toolbar — hierarchical: parent → subcategory → search → status → missing-image */}
+      <Card className="p-3 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="absolute top-1/2 -translate-y-1/2 start-3 size-4 text-muted-foreground" />
+            <Input dir="auto" value={q} onChange={e => setQ(e.target.value)} placeholder={isRTL ? 'بحث بالاسم/الماركة/الموديل…' : 'Search name/brand/model…'} className="h-11 ps-9 rounded-xl" />
+          </div>
+          <Select value={filterStatus} onValueChange={(v: 'all' | 'active' | 'inactive') => setFilterStatus(v)}>
+            <SelectTrigger className="h-11 rounded-xl w-[150px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{bi('كل الحالات', 'All status')}</SelectItem>
+              <SelectItem value="active">{bi('نشط', 'Active')}</SelectItem>
+              <SelectItem value="inactive">{bi('معطل', 'Inactive')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            size="sm"
+            variant={onlyMissingImage ? 'default' : 'outline'}
+            onClick={() => setOnlyMissingImage(v => !v)}
+            className="h-11 rounded-xl"
+            aria-pressed={onlyMissingImage}
+          >
+            <ImageOff className="size-4 me-1.5" />
+            <Bi ar="بدون صورة" en="Missing image" />
+            <Badge variant="secondary" className="ms-2 tech-content">{missingImageCount}</Badge>
+          </Button>
+          <Badge variant="secondary" className="ms-auto tech-content">{filtered.length} / {rows.length}</Badge>
         </div>
-        <Select value={filterCat} onValueChange={setFilterCat}>
-          <SelectTrigger className="h-11 rounded-xl w-[200px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{bi('كل التصنيفات', 'All categories')}</SelectItem>
-            {cats.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterStatus} onValueChange={(v: 'all' | 'active' | 'inactive') => setFilterStatus(v)}>
-          <SelectTrigger className="h-11 rounded-xl w-[150px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{bi('كل الحالات', 'All status')}</SelectItem>
-            <SelectItem value="active">{bi('نشط', 'Active')}</SelectItem>
-            <SelectItem value="inactive">{bi('معطل', 'Inactive')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Badge variant="secondary" className="ms-auto">{filtered.length} / {rows.length}</Badge>
+        {/* Step 1: parent group → Step 2: subcategory (scoped to parent) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[11px] text-muted-foreground"><Bi ar="١) التصنيف الرئيسي" en="1) Main category" /></Label>
+            <Select value={filterParent} onValueChange={(v) => { setFilterParent(v); setFilterCat('all'); }}>
+              <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{bi('كل التصنيفات الرئيسية', 'All main categories')}</SelectItem>
+                {parents.map(p => <SelectItem key={p.id} value={p.id}>{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px] text-muted-foreground"><Bi ar="٢) التصنيف الفرعي" en="2) Subcategory" /></Label>
+            <Select
+              value={filterCat}
+              onValueChange={setFilterCat}
+              disabled={filterParent === 'all'}
+            >
+              <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={bi('اختر التصنيف الرئيسي أولًا', 'Pick main category first')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{bi('كل التصنيفات الفرعية', 'All subcategories')}</SelectItem>
+                {(filterParent === 'all' ? [] : childrenOf(filterParent)).map(c => (
+                  <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </Card>
 
       {/* List */}
