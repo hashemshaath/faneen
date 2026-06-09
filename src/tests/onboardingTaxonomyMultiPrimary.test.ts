@@ -21,7 +21,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // ─────────────── Supabase RPC mock (records calls) ───────────────
-const rpcMock = vi.fn(async () => ({ data: null, error: null }));
+const { rpcMock } = vi.hoisted(() => ({
+  rpcMock: vi.fn(async () => ({ data: null, error: null })),
+}));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     rpc: rpcMock,
