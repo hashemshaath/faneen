@@ -456,6 +456,7 @@ const AppRoutes = () => (
           <Route path="/admin/ab-experiments" element={<ProtectedRoute requireAdmin><AdminAbExperiments /></ProtectedRoute>} />
           <Route path="/admin/showcase" element={<ProtectedRoute requireAdmin><AdminShowcase /></ProtectedRoute>} />
           <Route path="/admin/partner-showcase" element={<ProtectedRoute requireAdmin><AdminPartnerShowcase /></ProtectedRoute>} />
+          <Route path="/admin/home-faq" element={<ProtectedRoute requireAdmin><AdminHomeFaq /></ProtectedRoute>} />
           <Route path="/dashboard/showcase" element={<ProtectedRoute><DashboardShowcase /></ProtectedRoute>} />
           <Route path="/showcase" element={<Showcase />} />
           <Route path="/admin/api-docs" element={<ProtectedRoute requireAdmin><AdminApiDocs /></ProtectedRoute>} />
