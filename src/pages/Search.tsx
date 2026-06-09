@@ -463,28 +463,10 @@ const SearchPage = () => {
         query={query}
         onQueryChange={handleQueryChange}
         onSearch={handleSearch}
-        totalResults={deferredFiltered.length}
         categories={categories}
-        onCategoryClick={handleCategoryClick}
         businesses={businesses}
-        verifiedOnly={filters.verifiedOnly}
-        onToggleVerified={() => handleFilterChange('verifiedOnly', !filters.verifiedOnly)}
-        minRating={filters.minRating}
-        onSetMinRating={(r) => handleFilterChange('minRating', r)}
-        favoritesOnly={favoritesOnly}
-        onToggleFavoritesOnly={() => {
-          const next = !favoritesOnly;
-          setFavoritesOnly(next);
-          setCurrentPage(1);
-          const params = new URLSearchParams(searchParams);
-          if (next) params.set('fav', '1'); else params.delete('fav');
-          setSearchParams(params, { replace: true });
-        }}
-      />
-
-      <div className="container-app page-shell">
-        {/* Active filter chips */}
-        {showChips && (
+      >
+        {showChips ? (
           <ActiveFilterChips
             filters={filters}
             query={query}
@@ -494,8 +476,10 @@ const SearchPage = () => {
             onQueryChange={handleQueryChange}
             onClearAll={clearFilters}
           />
-        )}
+        ) : null}
+      </SearchHeader>
 
+      <div className="container-app page-shell">
         <SavedSearchesBar
           currentQs={currentQs}
           suggestedName={suggestedName}
