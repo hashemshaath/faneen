@@ -10,7 +10,18 @@
  *
  * Known taxonomy slugs (kept in sync with MainSectors / SEO JSON-LD):
  *   aluminum-glass-facades, steel-metal-works, wood-carpentry,
- *   stainless-steel-fabrication, contracting-finishing
+ *   stainless-steel-fabrication, contracting-finishing,
+ *   technology-systems, heavy-equipment-rental, lifting, scaffolding,
+ *   equipment-rental-provider
+ *
+ * TODO (taxonomy gap — do NOT add a row until a real slug exists):
+ *   - "الطاقة والاستدامة" (Energy & Sustainability) — no solar/energy
+ *     taxonomy_categories slug exists yet. When added (e.g.
+ *     `energy-sustainability`), reintroduce the row here and in the
+ *     JSON-LD ItemList in src/pages/Index.tsx.
+ *   - "المصاعد والسلالم الكهربائية" (Elevators & Escalators) — no
+ *     elevators/escalators slug exists yet. Reintroduce once the
+ *     taxonomy node is created.
  */
 
 export interface CategoryRowItem {
@@ -123,6 +134,37 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
       { ar: 'تصنيع وتركيب', en: 'Fabrication & install', slug: 'contracting-finishing' },
       { ar: 'ورش تصنيع', en: 'Fabrication shops', query: 'ورش تصنيع' },
       { ar: 'فرق تركيب', en: 'Install crews', query: 'فرق تركيب' },
+    ],
+  },
+  {
+    id: 'technology-systems',
+    titleAr: 'التقنية والأنظمة الذكية',
+    titleEn: 'Technology & smart systems',
+    subAr: 'أنظمة ذكية، كاميرات، شبكات، تحكم، أمن، وحلول تقنية للمباني والمشاريع.',
+    subEn: 'Smart systems, cameras, networks, controls, security and building tech.',
+    allHref: '/search?category=technology-systems',
+    items: [
+      { ar: 'تقنية وتجهيزات', en: 'Technology & systems', slug: 'technology-systems' },
+      { ar: 'أنظمة ذكية', en: 'Smart systems', query: 'أنظمة ذكية' },
+      { ar: 'كاميرات مراقبة', en: 'Surveillance cameras', query: 'كاميرات مراقبة' },
+      { ar: 'شبكات', en: 'Networks', query: 'شبكات' },
+      { ar: 'أنظمة أمن', en: 'Security systems', query: 'أنظمة أمن' },
+    ],
+  },
+  {
+    id: 'equipment-rental',
+    titleAr: 'تأجير المعدات',
+    titleEn: 'Equipment rental',
+    subAr: 'معدات تشغيل، رافعات، سقالات، معدات موقع، وحلول تأجير للمشاريع.',
+    subEn: 'Operating equipment, lifts, scaffolding, site gear and rental solutions.',
+    allHref: '/search?category=heavy-equipment-rental',
+    providerSlugs: ['heavy-equipment-rental', 'lifting', 'scaffolding', 'equipment-rental-provider'],
+    items: [
+      { ar: 'معدات ثقيلة وتأجير', en: 'Heavy equipment & rental', slug: 'heavy-equipment-rental' },
+      { ar: 'معدات رفع ونقل', en: 'Lifting & transport', slug: 'lifting' },
+      { ar: 'سقالات', en: 'Scaffolding', slug: 'scaffolding' },
+      { ar: 'مزود معدات / تأجير', en: 'Rental provider', slug: 'equipment-rental-provider' },
+      { ar: 'رافعات', en: 'Cranes', query: 'رافعات' },
     ],
   },
 ];
