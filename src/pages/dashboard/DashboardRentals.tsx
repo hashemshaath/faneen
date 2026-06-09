@@ -1505,7 +1505,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
           <Bi ar="لا توجد أصناف مطابقة للبحث/التصفية." en="No items match your search/filter." />
         </Card>
       ) : (
-        <ItemsGrid items={filteredItems} categories={categories} businessId={businessId} onChange={onChange} />
+        <ItemsGrid items={filteredItems} categories={categories} businessId={businessId} onChange={onChange} termTemplates={termTemplates} />
       )}
     </div>
   );
@@ -1648,7 +1648,8 @@ const ItemsGrid: React.FC<{
   categories: RentalCategory[];
   businessId: string;
   onChange: () => Promise<void>;
-}> = ({ items, categories, businessId, onChange }) => {
+  termTemplates?: Record<string, RentalTermTemplate>;
+}> = ({ items, categories, businessId, onChange, termTemplates }) => {
   const { isRTL } = useLanguage();
   const [editingFor, setEditingFor] = useState<string | null>(null);
   return (
@@ -1763,6 +1764,7 @@ const ItemsGrid: React.FC<{
                   categories={categories}
                   businessId={businessId}
                   onSaved={async () => { await onChange(); }}
+                  termTemplates={termTemplates}
                 />
               </div>
             )}
