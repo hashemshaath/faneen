@@ -146,7 +146,9 @@ describe('Home Taxonomy Link Guard', () => {
     });
 
     it('exposes derived lists for every consumer', () => {
-      expect(HOME_SECTOR_GRID_SLUGS.length).toBe(6);
+      // HomeSectorGrid renders 10 tiles (5 cols × 2 rows on desktop).
+      // The remaining canonical primaries stay reachable via "View all sectors".
+      expect(HOME_SECTOR_GRID_SLUGS.length).toBe(10);
       expect(HOME_ROW_BINDINGS.length).toBe(8);
       expect(HOME_JSONLD_SLUGS.length).toBe(13);
       expect(HOME_TRENDING.length).toBeGreaterThan(0);
