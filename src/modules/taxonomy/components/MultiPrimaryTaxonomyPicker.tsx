@@ -35,6 +35,7 @@ import {
   getRegistrationEntityTypes,
   getRegistrationPrimaryActivities,
   getChildCategoriesGrouped,
+  getTaxonomyCategoriesByIds,
 } from '../business-services';
 import type { TaxonomyCategory } from '../types';
 
@@ -161,6 +162,25 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
     for (const p of primariesQ.data ?? []) m[p.id] = p;
     return m;
   }, [primariesQ.data]);
+
+  // Fallback: if any selected primary id is NOT in the curated registration
+  // list (e.g. persisted from an older taxonomy snapshot), fetch its label by
+  // id so the UI never leaks a raw UUID like `113133fc-…`.
+  const missingPrimaryIds = useMemo(
+    () => selectedPrimaryIds.filter((id) => !primariesById[id]),
+    [selectedPrimaryIds, primariesById],
+  );
+  const missingPrimariesQ = useQuery({
+    queryKey: ['tx:primary-fallback', [...missingPrimaryIds].sort()],
+    queryFn: () => getTaxonomyCategoriesByIds(missingPrimaryIds),
+    enabled: missingPrimaryIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+  const primariesByIdMerged: Record<string, TaxonomyCategory> = useMemo(() => {
+    const m = { ...primariesById };
+    for (const p of missingPrimariesQ.data ?? []) m[p.id] = p;
+    return m;
+  }, [primariesById, missingPrimariesQ.data]);
 
   // A primary with no children at all gets a "no specialties" hint instead
   // of the empty-required warning.
