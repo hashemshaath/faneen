@@ -461,6 +461,11 @@ const SearchPage = () => {
         onSearch={handleSearch}
         categories={categories}
         businesses={businesses}
+        sortBy={filters.sortBy}
+        onSortChange={(s) => handleFilterChange('sortBy', s)}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        totalResults={deferredFiltered.length}
       >
         {showChips ? (
           <ActiveFilterChips
@@ -476,22 +481,6 @@ const SearchPage = () => {
       </SearchHeader>
 
       <div className="container-app page-shell">
-        <SavedSearchesBar
-          currentQs={currentQs}
-          suggestedName={suggestedName}
-          hasContext={!!showChips}
-          totalResults={deferredFiltered.length}
-          onApply={handleApplySavedSearch}
-        />
-
-        <SearchInsightsBar
-          businesses={deferredFiltered}
-          totalDirectory={businesses?.length ?? 0}
-          taxonomyDisplayMap={taxonomyDisplayMap}
-        />
-
-        <RecentlyViewedStrip businesses={businesses} />
-
         <div className="flex flex-col lg:flex-row gap-5 sm:gap-6">
           <SearchFilters
             filters={filters}
