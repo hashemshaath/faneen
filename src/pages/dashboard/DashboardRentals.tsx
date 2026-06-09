@@ -822,9 +822,10 @@ interface ItemsPanelProps {
   categories: RentalCategory[];
   items: RentalItem[];
   onChange: () => Promise<void>;
+  termTemplates?: Record<string, RentalTermTemplate>;
 }
 
-const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, onChange }) => {
+const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, onChange, termTemplates }) => {
   const { isRTL } = useLanguage();
   const bi = useBi();
   const [adding, setAdding] = useState(false);
