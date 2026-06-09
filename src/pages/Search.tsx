@@ -8,9 +8,6 @@ import { SearchHeader } from '@/components/search/SearchHeader';
 import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchResults, type ViewMode } from '@/components/search/SearchResults';
 import { ActiveFilterChips } from '@/components/search/ActiveFilterChips';
-import { RecentlyViewedStrip } from '@/components/search/RecentlyViewedStrip';
-import { SavedSearchesBar } from '@/components/search/SavedSearchesBar';
-import { SearchInsightsBar } from '@/components/search/SearchInsightsBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useDebouncedValue,
