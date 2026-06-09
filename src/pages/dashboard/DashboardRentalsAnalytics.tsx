@@ -20,7 +20,8 @@ import {
 import {
   BarChart3, TrendingUp, TrendingDown, DollarSign, Clock, Package,
   Download, Loader2, Percent, ShoppingCart, Search, RefreshCw,
-  Printer, ArrowUpRight, Sparkles, X,
+  Printer, ArrowUpRight, Sparkles, X, AlertTriangle, FileText,
+  FileSpreadsheet, Bell, BellOff,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
@@ -31,6 +32,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -38,6 +40,9 @@ import { useBi } from '@/components/common/Bilingual';
 import { RentalItems, RentalOrders } from '@/modules/rentals';
 import type { RentalItem, RentalOrder, RentalOrderStatus } from '@/modules/rentals';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 /* ---------------- helpers ---------------- */
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
