@@ -104,7 +104,7 @@ const PUBLIC_BUSINESS_SELECT =
   'latitude, longitude, ' +
   // trimmed joins (FK columns exposed by the view enable PostgREST embedding)
   'city_id, ' +
-  'cities(id, name_ar, name_en, slug), ' +
+  'cities(id, name_ar, name_en), ' +
   'countries(name_ar, name_en, code)';
 
 // Public profile data rarely changes between visits; a 5-minute stale window
