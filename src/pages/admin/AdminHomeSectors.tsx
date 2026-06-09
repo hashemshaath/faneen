@@ -12,6 +12,7 @@ import React, { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, Save, ArrowUp, ArrowDown, Eye, EyeOff, RotateCcw } from 'lucide-react';
+import { Square as FallbackIcon } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
@@ -199,7 +200,8 @@ const AdminHomeSectors: React.FC = () => {
               .sort((a, b) => stateFor(a).position - stateFor(b).position)
               .map((row) => {
                 const s = stateFor(row);
-                const Icon = resolveSectorIcon(s.icon, resolveSectorIcon(defaultsFor(row.slug)?.iconName, defaultsFor(row.slug)?.Icon ?? resolveSectorIcon('Square', defaultsFor('aluminum-works')!.Icon)));
+                const def = defaultsFor(row.slug);
+                const Icon = resolveSectorIcon(s.icon, def?.Icon ?? FallbackIcon);
                 const posInVisible = visible.findIndex((r) => r.id === row.id);
                 const canUp = s.show && posInVisible > 0;
                 const canDown = s.show && posInVisible >= 0 && posInVisible < visible.length - 1;
