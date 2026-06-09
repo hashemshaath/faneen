@@ -80,6 +80,7 @@ function flush() {
       headers: {
         "Content-Type": "application/json",
         apikey: ANON_KEY,
+        Authorization: `Bearer ${ANON_KEY}`,
       },
       body,
       keepalive: true,
