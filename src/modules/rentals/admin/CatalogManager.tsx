@@ -326,14 +326,39 @@ export const CatalogManager: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium"><Bi ar="التصنيف" en="Category" /></Label>
-                    <Select value={draft.taxonomy_category_id ?? ''} onValueChange={v => setDraft(d => ({ ...d, taxonomy_category_id: v }))}>
-                      <SelectTrigger className="h-11 rounded-lg"><SelectValue placeholder={isRTL ? 'اختر تصنيفًا' : 'Choose category'} /></SelectTrigger>
-                      <SelectContent>
-                        {cats.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                  {/* Hierarchical: pick main category → then subcategory (services list follows) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">
+                        <Bi ar="١) التصنيف الرئيسي" en="1) Main category" /> <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={draftParent}
+                        onValueChange={(v) => { setDraftParent(v); setDraft(d => ({ ...d, taxonomy_category_id: null })); }}
+                      >
+                        <SelectTrigger className="h-11 rounded-lg"><SelectValue placeholder={bi('اختر التصنيف الرئيسي', 'Pick main category')} /></SelectTrigger>
+                        <SelectContent>
+                          {parents.map(p => <SelectItem key={p.id} value={p.id}>{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">
+                        <Bi ar="٢) التصنيف الفرعي" en="2) Subcategory" /> <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={draft.taxonomy_category_id ?? ''}
+                        onValueChange={v => setDraft(d => ({ ...d, taxonomy_category_id: v }))}
+                        disabled={!draftParent}
+                      >
+                        <SelectTrigger className="h-11 rounded-lg"><SelectValue placeholder={bi('اختر التصنيف الرئيسي أولًا', 'Pick main category first')} /></SelectTrigger>
+                        <SelectContent>
+                          {(draftParent ? childrenOf(draftParent) : []).map(c => (
+                            <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">
