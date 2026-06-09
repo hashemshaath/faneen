@@ -21,7 +21,6 @@ const HomeAudienceSplit    = lazyRetry(() => import("@/components/home/v2/sectio
 const HomeCategoryRows     = lazyRetry(() => import("@/components/home/v2/sections/HomeCategoryRows"));
 const HowItWorksV2         = lazyRetry(() => import("@/components/home/v2/sections/HowItWorksV2"));
 const FAQSection           = lazyRetry(() => import("@/components/home/v2/sections/FAQSection"));
-const PartnerShowcaseSection = lazyRetry(() => import("@/components/home/v2/sections/PartnerShowcaseSection"));
 
 /**
  * Skeleton placeholder rendered while a lazy home section is loading.
@@ -252,11 +251,6 @@ const Index = () => {
         {/* 5. How it works — concise 3-step explainer */}
         <LazyOnView minHeight={420} className="cv-auto">
           <Suspense fallback={<SectionFallback variant="grid" minH={420} />}><HowItWorksV2 /></Suspense>
-        </LazyOnView>
-
-        {/* 6b. Partner showcase — admin-controlled logo marquee */}
-        <LazyOnView minHeight={220} className="cv-auto">
-          <Suspense fallback={<div className="min-h-[220px]" />}><PartnerShowcaseSection /></Suspense>
         </LazyOnView>
 
         {/* 7. FAQ — also feeds FAQPage JSON-LD above */}
