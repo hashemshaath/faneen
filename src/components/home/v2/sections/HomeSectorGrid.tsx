@@ -5,6 +5,7 @@
  * and via HomeCategoryRows further down.
  */
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import {
   ArrowLeft, ArrowRight,
   Square, Layers, Hammer, Sparkles, TreePine, ChefHat,
@@ -104,6 +105,7 @@ const HomeSectorGrid = () => {
   // — so the rendered output is byte-identical to the current homepage
   // until an admin actively edits a tile.
   const { tiles } = useHomeSectorTiles(SECTORS);
+  const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   return (
     <Section id="sectors" ariaLabelledBy="sectors-heading" className="bg-muted/20">
       <SectionHead
@@ -111,41 +113,54 @@ const HomeSectorGrid = () => {
         title={bi('القطاعات الرئيسية', 'Main sectors')}
         sub={bi('اختر القطاع وابدأ تصفّح المزودين.', 'Pick a sector and browse providers.')}
       />
-      <div className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-3 lg:gap-4">
+      <div className="grid grid-cols-4 grid-rows-2 gap-[clamp(0.375rem,1vw,1rem)]">
         {tiles.map((s) => {
           const img = IMG[s.slug];
+          const isLoaded = loaded[s.slug];
           return (
             <Link
               key={s.slug}
               to={homeCategoryHref(s.slug)}
               aria-label={bi(s.titleAr, s.titleEn)}
-              className="group relative overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="group relative overflow-hidden rounded-[clamp(0.5rem,1vw,1rem)] border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              <div className="relative aspect-square sm:aspect-[4/3] lg:aspect-[16/10] overflow-hidden bg-muted">
+              <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-muted">
+                {!isLoaded && (
+                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-muted via-muted/70 to-muted" aria-hidden="true" />
+                )}
                 {img && (
                   <img
                     src={img.image}
                     srcSet={img.srcSet}
-                    sizes="(min-width: 1024px) 25vw, 25vw"
+                    sizes="25vw"
                     alt={bi(s.titleAr, s.titleEn)}
                     width={1024}
                     height={640}
                     loading="lazy"
                     decoding="async"
                     {...{ fetchpriority: 'low' }}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    onLoad={() => setLoaded((p) => ({ ...p, [s.slug]: true }))}
+                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.06] ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent pointer-events-none" />
-                <h3 className="absolute bottom-1.5 start-1.5 end-1.5 sm:bottom-2 sm:start-3 sm:end-3 font-heading font-bold text-[11px] xs:text-xs sm:text-sm md:text-base lg:text-lg text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-tight line-clamp-2">
+                {/* Base gradient + title (always visible) */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
+                <h3 className="absolute bottom-[clamp(0.375rem,1vw,0.75rem)] start-[clamp(0.375rem,1.2vw,1rem)] end-[clamp(0.375rem,1.2vw,1rem)] font-heading font-bold text-[clamp(0.7rem,1.4vw,1.125rem)] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] leading-tight line-clamp-2 transition-opacity duration-300 group-hover:opacity-0">
                   {bi(s.titleAr, s.titleEn)}
                 </h3>
-              </div>
-              <div className="hidden sm:flex p-2.5 sm:p-3 items-center justify-between gap-2">
-                <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">
-                  {bi(s.bodyAr, s.bodyEn)}
-                </p>
-                <Arrow className="w-3.5 h-3.5 text-primary shrink-0 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" aria-hidden="true" />
+                {/* Hover preview overlay — contained within image, no layout shift */}
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/80 to-primary/40 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-[clamp(0.5rem,1.4vw,1rem)]">
+                  <h4 className="font-heading font-bold text-[clamp(0.75rem,1.5vw,1.125rem)] text-primary-foreground leading-tight line-clamp-1">
+                    {bi(s.titleAr, s.titleEn)}
+                  </h4>
+                  <p className="mt-1 text-[clamp(0.625rem,1.1vw,0.8rem)] text-primary-foreground/90 leading-snug line-clamp-2">
+                    {bi(s.bodyAr, s.bodyEn)}
+                  </p>
+                  <div className="mt-1.5 inline-flex items-center gap-1 text-[clamp(0.625rem,1vw,0.75rem)] font-medium text-primary-foreground">
+                    <span>{bi('استعراض', 'Explore')}</span>
+                    <Arrow className="w-3 h-3 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" aria-hidden="true" />
+                  </div>
+                </div>
               </div>
             </Link>
           );
