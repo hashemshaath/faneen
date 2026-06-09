@@ -15525,6 +15525,56 @@ export type Database = {
           },
         ]
       }
+      rental_term_templates: {
+        Row: {
+          category_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          late_terms: Json
+          notes: string | null
+          penalty_terms: Json
+          updated_at: string
+          updated_by: string | null
+          usage_terms: Json
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          late_terms?: Json
+          notes?: string | null
+          penalty_terms?: Json
+          updated_at?: string
+          updated_by?: string | null
+          usage_terms?: Json
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          late_terms?: Json
+          notes?: string | null
+          penalty_terms?: Json
+          updated_at?: string
+          updated_by?: string | null
+          usage_terms?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_term_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "rental_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reserved_usernames: {
         Row: {
           created_at: string

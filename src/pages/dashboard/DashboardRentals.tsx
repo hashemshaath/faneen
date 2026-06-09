@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -23,6 +23,11 @@ import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensi
 import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { ImageUploader, type UploadedImageRow } from '@/components/common/ImageUploader';
+import {
+  listActiveTermTemplates,
+  indexByCategory,
+  type RentalTermTemplate,
+} from '@/modules/rentals/services/termTemplates';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
@@ -150,10 +155,69 @@ const getCategoryPreset = (cat: RentalCategory | undefined, nameAr: string, name
   return CATEGORY_PRESETS.find(p => p.keywords.some(k => hay.includes(k.toLowerCase()))) ?? null;
 };
 
+/** Resolves the effective preset for a category — admin-defined template wins over keyword fallback. */
+type ResolvedPreset = { keywords: string[]; ar: string; en: string; presets: PresetGroup } | null;
+const resolveCategoryPreset = (
+  cat: RentalCategory | undefined,
+  nameAr: string,
+  nameEn: string,
+  templates?: Record<string, RentalTermTemplate>,
+): ResolvedPreset => {
+  if (cat && templates && templates[cat.id]) {
+    const t = templates[cat.id];
+    return {
+      keywords: [],
+      ar: cat.name_ar,
+      en: cat.name_en ?? cat.name_ar,
+      presets: {
+        usage: t.usage_terms,
+        late: t.late_terms,
+        penalty: t.penalty_terms,
+      },
+    };
+  }
+  return getCategoryPreset(cat, nameAr, nameEn);
+};
+
 const mergePresets = (base: ReadonlyArray<Preset>, extra?: ReadonlyArray<Preset>): Preset[] => {
   if (!extra?.length) return [...base];
   const seen = new Set(base.map(p => p.ar));
   return [...extra.filter(p => !seen.has(p.ar)), ...base];
+};
+
+/** Field-level validator that ensures terms match the chosen category. */
+type RentalTermErrors = { usage?: string; late?: string; penalty?: string };
+const validateRentalTerms = (
+  match: { presets: PresetGroup } | null,
+  fields: { usage: string; late: string; penalty: string },
+  isRTL: boolean,
+): RentalTermErrors => {
+  if (!match) return {};
+  const errors: RentalTermErrors = {};
+  const labels = {
+    usage: { ar: 'شروط الاستخدام', en: 'usage terms' },
+    late: { ar: 'شروط التأخير', en: 'late terms' },
+    penalty: { ar: 'الشروط الجزائية', en: 'penalty terms' },
+  } as const;
+  (['usage', 'late', 'penalty'] as const).forEach(key => {
+    const value = fields[key].trim();
+    const presets = match.presets[key];
+    const lbl = labels[key];
+    if (!value) {
+      errors[key] = isRTL
+        ? `يلزم تحديد ${lbl.ar} متوافقة مع التصنيف.`
+        : `${lbl.en[0].toUpperCase() + lbl.en.slice(1)} are required and must match the category.`;
+      return;
+    }
+    const lines = value.split('\n').map(l => l.trim()).filter(Boolean);
+    const hasMatched = presets.some(p => lines.some(l => l === p.ar || l === p.en));
+    if (!hasMatched && value.length < 40) {
+      errors[key] = isRTL
+        ? `أضف بندًا موصى به من قائمة ${lbl.ar} للتصنيف، أو اكتب نصًا تفصيليًا أطول.`
+        : `Add a recommended ${lbl.en} clause for this category, or write a longer custom note.`;
+    }
+  });
+  return errors;
 };
 
 const CONDITION_OPTIONS = [
@@ -189,8 +253,13 @@ const TermsField: React.FC<{
   value: string;
   onChange: (v: string) => void;
   hint?: string;
-}> = ({ label, presets, value, onChange, hint }) => {
+  error?: string;
+  fieldId?: string;
+}> = ({ label, presets, value, onChange, hint, error, fieldId }) => {
   const { isRTL } = useLanguage();
+  const reactId = React.useId();
+  const id = fieldId ?? reactId;
+  const errId = `${id}-err`;
   const lines = value.split('\n').map(s => s.trim()).filter(Boolean);
   const togglePreset = (text: string) => {
     const exists = lines.includes(text);
@@ -200,7 +269,7 @@ const TermsField: React.FC<{
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <Label className="text-xs">{label}</Label>
+        <Label htmlFor={id} className="text-xs">{label}</Label>
         {hint && (
           <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
             <Sparkles className="size-3 text-primary/70" />{hint}
@@ -215,16 +284,37 @@ const TermsField: React.FC<{
             <Badge
               key={text}
               variant={active ? 'default' : 'outline'}
+              role="button"
+              tabIndex={0}
+              aria-pressed={active}
               className="cursor-pointer hover-lift text-[11px]"
               onClick={() => togglePreset(text)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePreset(text); }
+              }}
             >
               {active ? '✓ ' : '+ '}{text}
             </Badge>
           );
         })}
       </div>
-      <Textarea dir="auto" rows={2} value={value} onChange={e => onChange(e.target.value)}
-        placeholder={isRTL ? 'اختر من المقترحات أو اكتب نصًا خاصًا…' : 'Pick presets or type custom text…'} />
+      <Textarea
+        id={id}
+        dir="auto"
+        rows={2}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errId : undefined}
+        className={error ? 'border-destructive focus-visible:ring-destructive/40' : ''}
+        placeholder={isRTL ? 'اختر من المقترحات أو اكتب نصًا خاصًا…' : 'Pick presets or type custom text…'}
+      />
+      {error && (
+        <p id={errId} role="alert" className="text-[11px] text-destructive inline-flex items-start gap-1.5">
+          <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </p>
+      )}
     </div>
   );
 };
@@ -238,24 +328,50 @@ const TermsBlock: React.FC<{
   late: string;
   penalty: string;
   onChange: (next: { usage: string; late: string; penalty: string }) => void;
-}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange }) => {
+  errors?: RentalTermErrors;
+  templates?: Record<string, RentalTermTemplate>;
+}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange, errors, templates }) => {
   const { isRTL } = useLanguage();
   const bi = useBi();
-  const match = getCategoryPreset(category, nameAr, nameEn);
+  const match = resolveCategoryPreset(category, nameAr, nameEn, templates);
   const usagePresets = mergePresets(USAGE_PRESETS, match?.presets.usage);
   const latePresets = mergePresets(LATE_PRESETS, match?.presets.late);
   const penaltyPresets = mergePresets(PENALTY_PRESETS, match?.presets.penalty);
-  const allEmpty = !usage.trim() && !late.trim() && !penalty.trim();
   const tagLabel = match ? (isRTL ? match.ar : match.en) : '';
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  const applySuggested = () => {
-    if (!match) return;
-    const join = (arr: Preset[]) => arr.map(p => (isRTL ? p.ar : p.en)).join('\n');
+  // Compute diff between current value and category suggestions (merge — never replaces user text).
+  const buildDiff = (currentText: string, presets: ReadonlyArray<Preset>) => {
+    const lines = currentText.split('\n').map(s => s.trim()).filter(Boolean);
+    const adding = presets
+      .map(p => (isRTL ? p.ar : p.en))
+      .filter(text => !lines.includes(text));
+    return { existing: lines, adding };
+  };
+
+  const diff = match
+    ? {
+        usage: buildDiff(usage, match.presets.usage),
+        late: buildDiff(late, match.presets.late),
+        penalty: buildDiff(penalty, match.presets.penalty),
+      }
+    : null;
+  const totalAdding = diff
+    ? diff.usage.adding.length + diff.late.adding.length + diff.penalty.adding.length
+    : 0;
+
+  const confirmApply = () => {
+    if (!match || !diff) return;
+    const mergeText = (current: string, adding: string[]) => {
+      const existing = current.split('\n').map(s => s.trim()).filter(Boolean);
+      return [...existing, ...adding].join('\n');
+    };
     onChange({
-      usage: usage.trim() ? usage : join(match.presets.usage),
-      late: late.trim() ? late : join(match.presets.late),
-      penalty: penalty.trim() ? penalty : join(match.presets.penalty),
+      usage: mergeText(usage, diff.usage.adding),
+      late: mergeText(late, diff.late.adding),
+      penalty: mergeText(penalty, diff.penalty.adding),
     });
+    setPreviewOpen(false);
     toast.success(bi('تم تطبيق المقترحات', 'Suggestions applied'));
   };
 
@@ -272,10 +388,19 @@ const TermsBlock: React.FC<{
             </span>
           )}
         </div>
-        {match && allEmpty && (
-          <Button type="button" size="sm" variant="outline" onClick={applySuggested} className="gap-1.5 h-8">
+        {match && totalAdding > 0 && (
+          <Button
+            type="button" size="sm" variant="outline"
+            onClick={() => setPreviewOpen(o => !o)}
+            className="gap-1.5 h-8"
+            aria-expanded={previewOpen}
+            aria-controls="terms-diff-preview"
+          >
             <Wand2 className="size-3.5" />
-            <Bi ar="تطبيق المقترحات" en="Apply suggestions" />
+            <Bi
+              ar={previewOpen ? 'إخفاء المعاينة' : `معاينة ${totalAdding} مقترحًا`}
+              en={previewOpen ? 'Hide preview' : `Preview ${totalAdding} suggestion${totalAdding === 1 ? '' : 's'}`}
+            />
           </Button>
         )}
       </div>
@@ -285,12 +410,77 @@ const TermsBlock: React.FC<{
           en="Pick terms that match the equipment category to protect your business and clarify responsibilities."
         />
       </p>
+
+      {previewOpen && diff && match && (
+        <div
+          id="terms-diff-preview"
+          role="region"
+          aria-label={bi('معاينة مقترحات التصنيف', 'Category suggestions preview')}
+          className="rounded-lg border border-primary/25 bg-primary/[0.03] p-3 space-y-3"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[11px] font-semibold inline-flex items-center gap-1.5">
+              <Sparkles className="size-3.5 text-primary" />
+              <Bi
+                ar={`سيتم إضافة ${totalAdding} بندًا (دون استبدال ما أدخلته)`}
+                en={`${totalAdding} clause${totalAdding === 1 ? '' : 's'} will be added (your text is preserved)`}
+              />
+            </div>
+          </div>
+          {(['usage', 'late', 'penalty'] as const).map(key => {
+            const d = diff[key];
+            const titles = {
+              usage: { ar: 'الاستخدام', en: 'Usage' },
+              late: { ar: 'التأخير', en: 'Late' },
+              penalty: { ar: 'الجزاءات', en: 'Penalty' },
+            } as const;
+            if (!d.adding.length && !d.existing.length) return null;
+            return (
+              <div key={key} className="text-[11px] space-y-1">
+                <div className="font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Bi ar={titles[key].ar} en={titles[key].en} />
+                </div>
+                <ul className="space-y-0.5">
+                  {d.existing.map(line => (
+                    <li key={`e-${line}`} className="flex items-start gap-1.5 text-muted-foreground line-clamp-1">
+                      <Check className="size-3 mt-0.5 shrink-0 text-emerald-500/60" />
+                      <span className="truncate">{line}</span>
+                    </li>
+                  ))}
+                  {d.adding.map(line => (
+                    <li key={`a-${line}`} className="flex items-start gap-1.5 text-foreground">
+                      <Plus className="size-3 mt-0.5 shrink-0 text-primary" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                  {!d.adding.length && (
+                    <li className="text-[10px] text-muted-foreground italic">
+                      <Bi ar="لا توجد مقترحات جديدة" en="No new suggestions" />
+                    </li>
+                  )}
+                </ul>
+              </div>
+            );
+          })}
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button type="button" size="sm" variant="ghost" onClick={() => setPreviewOpen(false)}>
+              <Bi ar="إلغاء" en="Cancel" />
+            </Button>
+            <Button type="button" size="sm" onClick={confirmApply} className="gap-1.5">
+              <Check className="size-3.5" />
+              <Bi ar="تطبيق المقترحات" en="Apply suggestions" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <TermsField
         label={bi('شروط الاستخدام', 'Usage terms')}
         presets={usagePresets}
         value={usage}
         onChange={v => onChange({ usage: v, late, penalty })}
         hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+        error={errors?.usage}
       />
       <TermsField
         label={bi('شروط التأخير', 'Late terms')}
@@ -298,6 +488,7 @@ const TermsBlock: React.FC<{
         value={late}
         onChange={v => onChange({ usage, late: v, penalty })}
         hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+        error={errors?.late}
       />
       <TermsField
         label={bi('الشروط الجزائية', 'Penalty terms')}
@@ -305,6 +496,7 @@ const TermsBlock: React.FC<{
         value={penalty}
         onChange={v => onChange({ usage, late, penalty: v })}
         hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+        error={errors?.penalty}
       />
     </div>
   );
@@ -324,6 +516,88 @@ interface CatalogPick {
   description_en: string | null;
 }
 
+/* ---------- Accessible collapsible: Additional brand info ---------- */
+const BrandInfoDetails: React.FC<{
+  brand: string;
+  country: string;
+  condition: '' | 'new' | 'like_new' | 'good' | 'medium' | 'used';
+  onBrand: (v: string) => void;
+  onCountry: (v: string) => void;
+  onCondition: (v: '' | 'new' | 'like_new' | 'good' | 'medium' | 'used') => void;
+}> = ({ brand, country, condition, onBrand, onCountry, onCondition }) => {
+  const bi = useBi();
+  const { isRTL } = useLanguage();
+  const filledCount = [brand, country, condition].filter(Boolean).length;
+  const reactId = React.useId();
+  const panelId = `brand-info-${reactId}`;
+  return (
+    <details
+      className="group rounded-xl border border-border/60 bg-card/40 [&_summary::-webkit-details-marker]:hidden focus-within:border-primary/40 transition-colors"
+      open={filledCount > 0}
+    >
+      <summary
+        className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide rounded-xl hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+        aria-controls={panelId}
+        title={bi('اضغط Enter أو المسافة للتوسيع/الطي', 'Press Enter or Space to expand/collapse')}
+      >
+        <span className="inline-flex items-center gap-2 normal-case tracking-normal">
+          <Info className="size-3.5 text-primary/70" aria-hidden />
+          <Bi ar="معلومات إضافية عن العلامة" en="Additional brand info" />
+          <span
+            className={
+              filledCount > 0
+                ? 'inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2 py-0.5 text-[10px]'
+                : 'inline-flex items-center rounded-full bg-muted text-muted-foreground border border-border/60 px-2 py-0.5 text-[10px]'
+            }
+            aria-label={bi(`تم تعبئة ${filledCount} من 3`, `${filledCount} of 3 filled`)}
+          >
+            {filledCount}/3
+          </span>
+        </span>
+        <span className="inline-flex items-center gap-2 text-[10px] font-medium normal-case tracking-normal">
+          <span className="hidden sm:inline text-muted-foreground/70 group-open:hidden">
+            <Bi ar="توسيع" en="Expand" />
+          </span>
+          <span className="hidden text-muted-foreground/70 group-open:sm:inline">
+            <Bi ar="طي" en="Collapse" />
+          </span>
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+        </span>
+      </summary>
+      <div id={panelId} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-1">
+        <p className="md:col-span-3 text-[11px] text-muted-foreground -mt-1">
+          <Bi
+            ar="حقول اختيارية تساعد على عرض هوية المعدة بوضوح أكبر للعميل."
+            en="Optional fields that help present the equipment's identity more clearly to the customer."
+          />
+        </p>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="الماركة / البراند" en="Brand" /></Label>
+          <Input dir="auto" placeholder={bi('مثال: Caterpillar', 'e.g. Caterpillar')} value={brand} onChange={e => onBrand(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="بلد الصنع" en="Country of manufacture" /></Label>
+          <Select value={country} onValueChange={onCountry}>
+            <SelectTrigger><SelectValue placeholder={bi('اختر البلد', 'Select country')} /></SelectTrigger>
+            <SelectContent>
+              {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs"><Bi ar="حالة المعدة" en="Condition" /></Label>
+          <Select value={condition} onValueChange={v => onCondition(v as '' | 'new' | 'like_new' | 'good' | 'medium' | 'used')}>
+            <SelectTrigger><SelectValue placeholder={bi('اختر الحالة', 'Select condition')} /></SelectTrigger>
+            <SelectContent>
+              {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </details>
+  );
+};
+
 /** Provider rentals dashboard — items + orders + extensions in one shell. */
 const DashboardRentals: React.FC = () => {
   const { user } = useAuth();
@@ -335,6 +609,7 @@ const DashboardRentals: React.FC = () => {
   const [items, setItems] = useState<RentalItem[]>([]);
   const [orders, setOrders] = useState<RentalOrder[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
+  const [termTemplates, setTermTemplates] = useState<Record<string, RentalTermTemplate>>({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -343,14 +618,16 @@ const DashboardRentals: React.FC = () => {
         .from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle();
       const bizId = biz?.id ?? null;
       setBusinessId(bizId);
-      const [cats, it, ord] = await Promise.all([
+      const [cats, it, ord, tpl] = await Promise.all([
         RentalCategories.listCategories(),
         bizId ? RentalItems.listProviderItems(bizId) : Promise.resolve({ data: [], error: null }),
         bizId ? RentalOrders.listOrdersForProvider(bizId) : Promise.resolve({ data: [], error: null }),
+        listActiveTermTemplates(),
       ]);
       setCategories(cats.data ?? []);
       setItems(it.data ?? []);
       setOrders(ord.data ?? []);
+      setTermTemplates(indexByCategory(tpl.data ?? []));
       setLoading(false);
     })();
   }, [user?.id]);
@@ -430,6 +707,7 @@ const DashboardRentals: React.FC = () => {
               categories={categories}
               items={items}
               onChange={refreshItems}
+              termTemplates={termTemplates}
               />
             </div>
           </TabsContent>
@@ -544,9 +822,10 @@ interface ItemsPanelProps {
   categories: RentalCategory[];
   items: RentalItem[];
   onChange: () => Promise<void>;
+  termTemplates?: Record<string, RentalTermTemplate>;
 }
 
-const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, onChange }) => {
+const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, onChange, termTemplates }) => {
   const { isRTL } = useLanguage();
   const bi = useBi();
   const [adding, setAdding] = useState(false);
@@ -594,6 +873,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     notes: '',
   });
   const [reqSubmitting, setReqSubmitting] = useState(false);
+  const [termErrors, setTermErrors] = useState<RentalTermErrors>({});
 
   // List toolbar state (search + status filter)
   const [listQuery, setListQuery] = useState('');
@@ -667,6 +947,25 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     if (!form.name_ar.trim() || !form.category_id) {
       toast.error(bi('الرجاء تعبئة الاسم والتصنيف','Name and category are required'));
       return;
+    }
+    // Category-aware terms validation — block save when terms don't match the category.
+    {
+      const cat = categories.find(c => c.id === form.category_id);
+      const match = resolveCategoryPreset(cat, form.name_ar, form.name_en, termTemplates);
+      const errs = validateRentalTerms(
+        match,
+        { usage: form.usage_terms, late: form.late_terms, penalty: form.penalty_terms },
+        isRTL,
+      );
+      if (errs.usage || errs.late || errs.penalty) {
+        setTermErrors(errs);
+        toast.error(bi(
+          'الشروط لا تتوافق مع تصنيف المعدة. راجع الحقول المظللة.',
+          'Terms do not match the equipment category. Review highlighted fields.',
+        ));
+        return;
+      }
+      setTermErrors({});
     }
     setSubmitting(true);
     const specs: Record<string, string> = {};
@@ -1034,44 +1333,14 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
           </div>
 
           {/* Identification: brand / country / condition — collapsed as additional brand info */}
-          <details className="group rounded-xl border border-border/60 bg-card/40 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide rounded-xl hover:bg-muted/40 transition-colors">
-              <span className="inline-flex items-center gap-2 normal-case tracking-normal">
-                <Info className="size-3.5 text-primary/70" />
-                <Bi ar="معلومات إضافية عن العلامة" en="Additional brand info" />
-                {(form.brand || form.country_of_manufacture || form.condition) && (
-                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2 py-0.5 text-[10px]">
-                    <Bi ar="مكتمل" en="Filled" />
-                  </span>
-                )}
-              </span>
-              <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-1">
-              <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="الماركة / البراند" en="Brand" /></Label>
-                <Input dir="auto" placeholder={bi('مثال: Caterpillar','e.g. Caterpillar')} value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="بلد الصنع" en="Country of manufacture" /></Label>
-                <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
-                  <SelectTrigger><SelectValue placeholder={bi('اختر البلد','Select country')} /></SelectTrigger>
-                  <SelectContent>
-                    {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs"><Bi ar="حالة المعدة" en="Condition" /></Label>
-                <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
-                  <SelectTrigger><SelectValue placeholder={bi('اختر الحالة','Select condition')} /></SelectTrigger>
-                  <SelectContent>
-                    {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </details>
+          <BrandInfoDetails
+            brand={form.brand}
+            country={form.country_of_manufacture}
+            condition={form.condition}
+            onBrand={v => setForm({ ...form, brand: v })}
+            onCountry={v => setForm({ ...form, country_of_manufacture: v })}
+            onCondition={v => setForm({ ...form, condition: v })}
+          />
 
           {/* Electrical specs — conditional on category/name keywords */}
           {(() => {
@@ -1143,9 +1412,12 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             usage={form.usage_terms}
             late={form.late_terms}
             penalty={form.penalty_terms}
-            onChange={({ usage, late, penalty }) =>
-              setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty })
-            }
+            errors={termErrors}
+            templates={termTemplates}
+            onChange={({ usage, late, penalty }) => {
+              setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty });
+              if (termErrors.usage || termErrors.late || termErrors.penalty) setTermErrors({});
+            }}
           />
           <div className="flex justify-end">
             <Button onClick={submit} disabled={submitting} className="hover-lift">
@@ -1233,7 +1505,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
           <Bi ar="لا توجد أصناف مطابقة للبحث/التصفية." en="No items match your search/filter." />
         </Card>
       ) : (
-        <ItemsGrid items={filteredItems} categories={categories} businessId={businessId} onChange={onChange} />
+        <ItemsGrid items={filteredItems} categories={categories} businessId={businessId} onChange={onChange} termTemplates={termTemplates} />
       )}
     </div>
   );
@@ -1376,7 +1648,8 @@ const ItemsGrid: React.FC<{
   categories: RentalCategory[];
   businessId: string;
   onChange: () => Promise<void>;
-}> = ({ items, categories, businessId, onChange }) => {
+  termTemplates?: Record<string, RentalTermTemplate>;
+}> = ({ items, categories, businessId, onChange, termTemplates }) => {
   const { isRTL } = useLanguage();
   const [editingFor, setEditingFor] = useState<string | null>(null);
   return (
@@ -1491,6 +1764,7 @@ const ItemsGrid: React.FC<{
                   categories={categories}
                   businessId={businessId}
                   onSaved={async () => { await onChange(); }}
+                  termTemplates={termTemplates}
                 />
               </div>
             )}
@@ -1507,7 +1781,8 @@ const RentalItemEditForm: React.FC<{
   categories: RentalCategory[];
   businessId: string;
   onSaved: () => Promise<void> | void;
-}> = ({ item, categories, businessId, onSaved }) => {
+  termTemplates?: Record<string, RentalTermTemplate>;
+}> = ({ item, categories, businessId, onSaved, termTemplates }) => {
   const { isRTL } = useLanguage();
   const bi = useBi();
   const initialImages = Array.isArray(item.images) ? (item.images as string[]) : [];
@@ -1518,6 +1793,7 @@ const RentalItemEditForm: React.FC<{
   const [saving, setSaving] = useState(false);
   const [coverUrl, setCoverUrl] = useState<string | null>(initialCover);
   const [galleryUrls, setGalleryUrls] = useState<string[]>(initialGallery);
+  const [termErrors, setTermErrors] = useState<RentalTermErrors>({});
   const [form, setForm] = useState({
     name_ar: item.name_ar,
     name_en: item.name_en ?? '',
@@ -1546,6 +1822,24 @@ const RentalItemEditForm: React.FC<{
   const handleSave = async () => {
     const priceNum = Number(form.base_price);
     if (!Number.isFinite(priceNum) || priceNum < 0) { toast.error(bi('السعر غير صحيح','Invalid price')); return; }
+    // Category-aware terms validation.
+    {
+      const match = resolveCategoryPreset(cat, form.name_ar, form.name_en, termTemplates);
+      const errs = validateRentalTerms(
+        match,
+        { usage: form.usage_terms, late: form.late_terms, penalty: form.penalty_terms },
+        isRTL,
+      );
+      if (errs.usage || errs.late || errs.penalty) {
+        setTermErrors(errs);
+        toast.error(bi(
+          'الشروط لا تتوافق مع تصنيف المعدة. راجع الحقول المظللة.',
+          'Terms do not match the equipment category. Review highlighted fields.',
+        ));
+        return;
+      }
+      setTermErrors({});
+    }
     const specs: Record<string, string> = {};
     if (showElectrical) {
       const numCheck = (raw: string, label: string) => {
@@ -1679,47 +1973,14 @@ const RentalItemEditForm: React.FC<{
         </div>
       </div>
 
-      <details
-        className="group rounded-xl border border-border/60 bg-card/40 [&_summary::-webkit-details-marker]:hidden"
-        open={Boolean(form.brand || form.country_of_manufacture || form.condition)}
-      >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide rounded-xl hover:bg-muted/40 transition-colors">
-          <span className="inline-flex items-center gap-2 normal-case tracking-normal">
-            <Info className="size-3.5 text-primary/70" />
-            <Bi ar="معلومات إضافية عن العلامة" en="Additional brand info" />
-            {(form.brand || form.country_of_manufacture || form.condition) && (
-              <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2 py-0.5 text-[10px]">
-                <Bi ar="مكتمل" en="Filled" />
-              </span>
-            )}
-          </span>
-          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-        </summary>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-1">
-          <div className="space-y-1">
-            <Label className="text-xs"><Bi ar="الماركة" en="Brand" /></Label>
-            <Input dir="auto" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs"><Bi ar="بلد الصنع" en="Country" /></Label>
-            <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
-              <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
-              <SelectContent>
-                {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs"><Bi ar="الحالة" en="Condition" /></Label>
-            <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
-              <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
-              <SelectContent>
-                {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </details>
+      <BrandInfoDetails
+        brand={form.brand}
+        country={form.country_of_manufacture}
+        condition={form.condition}
+        onBrand={v => setForm({ ...form, brand: v })}
+        onCountry={v => setForm({ ...form, country_of_manufacture: v })}
+        onCondition={v => setForm({ ...form, condition: v })}
+      />
 
       {showElectrical && (
         <div className="space-y-2">
@@ -1806,9 +2067,12 @@ const RentalItemEditForm: React.FC<{
         usage={form.usage_terms}
         late={form.late_terms}
         penalty={form.penalty_terms}
-        onChange={({ usage, late, penalty }) =>
-          setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty })
-        }
+        errors={termErrors}
+        templates={termTemplates}
+        onChange={({ usage, late, penalty }) => {
+          setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty });
+          if (termErrors.usage || termErrors.late || termErrors.penalty) setTermErrors({});
+        }}
       />
 
       <div className="flex justify-end">

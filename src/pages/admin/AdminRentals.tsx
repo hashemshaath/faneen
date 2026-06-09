@@ -14,6 +14,7 @@ import type { RentalCategory, RentalItem } from '@/modules/rentals';
 import { RentalOpsQueueCard } from '@/modules/rentals';
 import { CatalogManager } from '@/modules/rentals/admin/CatalogManager';
 import { CatalogRequestsPanel } from '@/modules/rentals/admin/CatalogRequestsPanel';
+import { TermTemplatesPanel } from '@/modules/rentals/admin/TermTemplatesPanel';
 import { CategoryAdminPanel } from '@/components/admin/CategoryAdminPanel';
 import { toast } from 'sonner';
 
@@ -84,6 +85,7 @@ const AdminRentals: React.FC = () => {
             <TabsTrigger value="categories"><Bi ar="التصنيفات" en="Categories" /></TabsTrigger>
             <TabsTrigger value="catalog"><Bi ar="الكتالوج الرئيسي" en="Master Catalog" /> ({catalog.length})</TabsTrigger>
             <TabsTrigger value="requests"><Bi ar="طلبات إضافة معدات" en="Addition requests" /></TabsTrigger>
+            <TabsTrigger value="terms"><Bi ar="قوالب الشروط" en="Term templates" /></TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="mt-4">
@@ -153,6 +155,10 @@ const AdminRentals: React.FC = () => {
 
           <TabsContent value="requests" className="mt-4">
             <CatalogRequestsPanel />
+          </TabsContent>
+
+          <TabsContent value="terms" className="mt-4">
+            <TermTemplatesPanel />
           </TabsContent>
         </Tabs>
       </div>
