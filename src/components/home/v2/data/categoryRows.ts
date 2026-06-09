@@ -30,8 +30,26 @@ export interface CategoryRow {
   subEn: string;
   /** Where the "View all" CTA links to */
   allHref: string;
+  /** Optional explicit taxonomy binding for provider cards when chips are query-based. */
+  providerSlugs?: string[];
   items: CategoryRowItem[];
 }
+
+const categorySlugFromHref = (href: string): string | null => {
+  const match = href.match(/[?&]category=([^&]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+export const getCategoryRowTaxonomySlugs = (row: CategoryRow): string[] => {
+  const slugs = new Set<string>();
+  row.providerSlugs?.forEach((slug) => slugs.add(slug));
+  const hrefSlug = categorySlugFromHref(row.allHref);
+  if (hrefSlug) slugs.add(hrefSlug);
+  row.items.forEach((item) => {
+    if (item.slug) slugs.add(item.slug);
+  });
+  return Array.from(slugs);
+};
 
 export const HOME_CATEGORY_ROWS: CategoryRow[] = [
   {
@@ -71,6 +89,7 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
     subAr: 'واجهات تجارية، زجاجية، كلادينج ومظلات.',
     subEn: 'Commercial fronts, glass facades, cladding and canopies.',
     allHref: '/search?q=واجهات',
+    providerSlugs: ['aluminum-glass-facades'],
     items: [
       { ar: 'واجهات تجارية', en: 'Storefronts', query: 'واجهات تجارية' },
       { ar: 'واجهات زجاجية', en: 'Glass facades', query: 'واجهات زجاجية' },

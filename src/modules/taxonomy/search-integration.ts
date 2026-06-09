@@ -39,6 +39,31 @@ export interface SearchTaxonomyContext {
   activeFilterLabel: string | null;
 }
 
+export interface PublicTaxonomyBusiness {
+  id: string;
+  username: string | null;
+  name_ar: string | null;
+  name_en: string | null;
+  logo_url: string | null;
+  rating_avg: number | null;
+  rating_count: number | null;
+  is_verified: boolean | null;
+  cities: { name_ar: string | null; name_en: string | null } | null;
+}
+
+export type TaxonomySlugBusinessMap = Record<string, PublicTaxonomyBusiness[]>;
+
+interface LightweightTaxonomyCategory {
+  id: string;
+  slug: string;
+  parent_id: string | null;
+}
+
+interface TaxonomyBusinessLink {
+  category_id: string | null;
+  business_id: string | null;
+}
+
 function norm(v: string | null | undefined): string {
   return (v ?? '').trim().toLowerCase();
 }
@@ -150,6 +175,104 @@ export async function getTaxonomyBusinessIdsForCategory(
     if (l.business_id) unique.add(l.business_id);
   });
   return Array.from(unique);
+}
+
+/**
+ * Homepage/search shared taxonomy loader.
+ * Resolves real taxonomy slugs to provider ids through
+ * `business_taxonomy_categories`, then reads display-safe rows from
+ * `businesses_public`. It never reads legacy `businesses.category_id`.
+ */
+export async function listPublicBusinessesByTaxonomySlugs(
+  slugs: readonly string[],
+  limitPerSlug = 6,
+): Promise<TaxonomySlugBusinessMap> {
+  const uniqueSlugs = Array.from(new Set(slugs.map((s) => s.trim()).filter(Boolean)));
+  const empty: TaxonomySlugBusinessMap = {};
+  uniqueSlugs.forEach((slug) => { empty[slug] = []; });
+  if (uniqueSlugs.length === 0) return empty;
+
+  const { data: categories, error: categoryError } = await supabase
+    .from('taxonomy_categories')
+    .select('id, slug, parent_id')
+    .eq('is_active', true)
+    .eq('is_public', true)
+    .eq('is_archived', false);
+  if (categoryError) return empty;
+
+  const taxonomyRows = (categories ?? []) as LightweightTaxonomyCategory[];
+  const directBySlug = new Map(taxonomyRows.map((category) => [category.slug, category]));
+  const categoryIdsBySlug = new Map<string, Set<string>>();
+
+  for (const slug of uniqueSlugs) {
+    const direct = directBySlug.get(slug);
+    if (!direct) continue;
+    const ids = new Set<string>([direct.id]);
+    taxonomyRows.forEach((category) => {
+      if (category.parent_id === direct.id) ids.add(category.id);
+    });
+    categoryIdsBySlug.set(slug, ids);
+  }
+
+  const allCategoryIds = Array.from(
+    new Set(Array.from(categoryIdsBySlug.values()).flatMap((ids) => Array.from(ids))),
+  );
+  if (allCategoryIds.length === 0) return empty;
+
+  const { data: links, error: linksError } = await supabase
+    .from('business_taxonomy_categories')
+    .select('business_id, category_id')
+    .in('category_id', allCategoryIds);
+  if (linksError) return empty;
+
+  const linkRows = (links ?? []) as TaxonomyBusinessLink[];
+  const candidateIdsBySlug = new Map<string, string[]>();
+  const candidateLimit = Math.max(limitPerSlug * 10, 30);
+  for (const [slug, categoryIds] of categoryIdsBySlug.entries()) {
+    const ids: string[] = [];
+    const seen = new Set<string>();
+    for (const link of linkRows) {
+      if (!link.category_id || !link.business_id || !categoryIds.has(link.category_id)) continue;
+      if (seen.has(link.business_id)) continue;
+      seen.add(link.business_id);
+      ids.push(link.business_id);
+      if (ids.length >= candidateLimit) break;
+    }
+    candidateIdsBySlug.set(slug, ids);
+  }
+
+  const selectedBusinessIds = Array.from(
+    new Set(Array.from(candidateIdsBySlug.values()).flat()),
+  );
+  if (selectedBusinessIds.length === 0) return empty;
+
+  const { data: businesses, error: businessesError } = await supabase
+    .from('businesses_public')
+    .select('id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, cities(name_ar, name_en)')
+    .eq('is_active', true)
+    .in('id', selectedBusinessIds)
+    .order('rating_avg', { ascending: false })
+    .order('rating_count', { ascending: false });
+  if (businessesError) return empty;
+
+  const businessRows = ((businesses ?? []) as unknown as PublicTaxonomyBusiness[])
+    .filter((business) => Boolean(business.id));
+  const businessById = new Map(businessRows.map((business) => [business.id, business]));
+  const out: TaxonomySlugBusinessMap = { ...empty };
+
+  for (const [slug, candidateIds] of candidateIdsBySlug.entries()) {
+    out[slug] = candidateIds
+      .map((id) => businessById.get(id))
+      .filter((business): business is PublicTaxonomyBusiness => Boolean(business))
+      .sort((a, b) => {
+        const ratingDiff = Number(b.rating_avg ?? 0) - Number(a.rating_avg ?? 0);
+        if (ratingDiff !== 0) return ratingDiff;
+        return Number(b.rating_count ?? 0) - Number(a.rating_count ?? 0);
+      })
+      .slice(0, limitPerSlug);
+  }
+
+  return out;
 }
 
 /** Merge two id collections preserving order of the first, no duplicates. */
