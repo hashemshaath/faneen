@@ -4,14 +4,9 @@ import { BusinessCard } from './BusinessCard';
 import { SearchPagination } from './SearchPagination';
 import { SearchResultsSkeleton } from './SearchResultsSkeleton';
 import {
-  Search as SearchIcon, LayoutGrid, List, Map, Columns,
-  Share2,
+  Search as SearchIcon,
 } from 'lucide-react';
-import { Suspense, useState } from 'react';
-import { toast } from 'sonner';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { Suspense } from 'react';
 import { lazyRetry } from '@/lib/lazyRetry';
 import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
@@ -65,86 +60,13 @@ export const SearchResults = ({
   sortBy, onSortChange, directoryIsEmpty, taxonomyDisplayMap,
 }: SearchResultsProps) => {
   const { t, isRTL } = useLanguage();
-
-  const viewButtons: { mode: ViewMode; icon: typeof LayoutGrid; label: string; labelAr: string }[] = [
-    { mode: 'grid', icon: LayoutGrid, label: 'Grid', labelAr: 'شبكة' },
-    { mode: 'list', icon: List, label: 'List', labelAr: 'قائمة' },
-    { mode: 'split', icon: Columns, label: 'Split', labelAr: 'مقسم' },
-    { mode: 'map', icon: Map, label: 'Map', labelAr: 'خريطة' },
-  ];
-
+  // Toolbar (sort/view/share/count) is now rendered by SearchHeader.
+  // Keep the unused props for backward compat; reference them as no-ops.
+  void onViewModeChange; void sortBy; void onSortChange;
   const isSplit = viewMode === 'split';
-
-  const handleShareSearch = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success(isRTL ? 'تم نسخ رابط البحث' : 'Search link copied');
-  };
 
   return (
     <div className="flex-1 min-w-0">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between mb-5 pb-3 border-b border-border/15 dark:border-border/10">
-        <div className="flex items-center gap-3">
-          <div>
-            <p className="font-heading font-bold text-lg sm:text-xl text-foreground">
-              {totalCount.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">{t('search.results')}</span>
-            </p>
-            {totalCount > 0 && (
-              <p className="text-[11px] text-muted-foreground mt-0.5 font-body">
-                {isRTL
-                  ? `عرض ${Math.min(businesses.length, itemsPerPage)} من ${totalCount}`
-                  : `Showing ${Math.min(businesses.length, itemsPerPage)} of ${totalCount}`}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Quick sort */}
-          {sortBy && onSortChange && totalCount > 0 && (
-            <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortKey)}>
-              <SelectTrigger className="h-9 rounded-xl text-xs bg-muted/40 dark:bg-muted/15 border-border/20 px-3 gap-1.5 w-auto min-w-[110px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectItem value="relevance">{isRTL ? 'الأكثر صلة' : 'Relevance'}</SelectItem>
-                <SelectItem value="rating">{isRTL ? 'الأعلى تقييماً' : 'Top rated'}</SelectItem>
-                <SelectItem value="newest">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
-                <SelectItem value="name">{isRTL ? 'الاسم' : 'Name'}</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-
-          {/* Share button */}
-          {totalCount > 0 && (
-            <button
-              onClick={handleShareSearch}
-              className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all"
-              title={isRTL ? 'مشاركة البحث' : 'Share search'}
-              aria-label={isRTL ? 'مشاركة البحث' : 'Share search'}
-            >
-              <Share2 className="w-4 h-4" aria-hidden="true" />
-            </button>
-          )}
-
-          {/* View toggles */}
-          <div className="flex items-center gap-0.5 p-1 rounded-xl bg-muted/40 dark:bg-muted/15 border border-border/15 dark:border-border/10">
-            {viewButtons.map(({ mode, icon: Icon, label, labelAr }) => (
-              <button
-                key={mode}
-                onClick={() => onViewModeChange(mode)}
-                className={`p-1.5 sm:p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg transition-all duration-200 ${viewMode === mode ? 'bg-card dark:bg-card/80 shadow-sm text-accent ring-1 ring-accent/20' : 'text-muted-foreground hover:text-foreground'}`}
-                title={isRTL ? labelAr : label}
-                aria-label={isRTL ? `عرض النتائج: ${labelAr}` : `View as ${label}`}
-                aria-pressed={viewMode === mode}
-              >
-                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
       {isLoading ? (
         <SearchResultsSkeleton viewMode={viewMode} />
