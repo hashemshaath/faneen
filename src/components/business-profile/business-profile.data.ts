@@ -111,6 +111,21 @@ const PUBLIC_BUSINESS_SELECT =
 // keeps tab switches and revisits instant while still picking up edits.
 const PROFILE_STALE_MS = 5 * 60 * 1000;
 
+/**
+ * Whitelisted columns for embedded `cities` / `countries` relations.
+ * The public select string is asserted against this list in
+ * `business-profile-select.test.ts` — adding a column here that doesn't
+ * exist on the underlying table will surface as a PostgREST 400 at
+ * runtime, so keep this in sync with the actual `cities` / `countries`
+ * schema.
+ */
+export const BUSINESS_PROFILE_JOIN_WHITELIST = {
+  cities: ['id', 'name_ar', 'name_en'] as const,
+  countries: ['name_ar', 'name_en', 'code'] as const,
+};
+
+export const BUSINESS_PROFILE_SELECT = PUBLIC_BUSINESS_SELECT;
+
 export const useBusinessByUsername = (username: string) =>
   useQuery({
     queryKey: ["business", username],
@@ -120,7 +135,15 @@ export const useBusinessByUsername = (username: string) =>
         select: PUBLIC_BUSINESS_SELECT,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Surface the underlying PostgREST reason so analytics / Sentry-style
+        // listeners can catch profile-load regressions (e.g. an embed referring
+        // to a column that no longer exists on `cities` or `countries`).
+        const reason = error instanceof Error ? error.message : JSON.stringify(error);
+        // eslint-disable-next-line no-console
+        console.error('[business-profile] fetch failed', { username, reason });
+        throw error;
+      }
       return data;
     },
     enabled: !!username,
