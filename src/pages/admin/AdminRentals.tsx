@@ -7,7 +7,7 @@ import { Bi, useBi } from '@/components/common/Bilingual';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Boxes, CheckCircle2, XCircle, Loader2, Package } from 'lucide-react';
+import { Boxes, CheckCircle2, XCircle, Loader2, Package, ImageOff, Clock, ListChecks } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { RentalCategories, RentalItems, ITEM_STATUS_LABELS } from '@/modules/rentals';
 import type { RentalCategory, RentalItem } from '@/modules/rentals';
@@ -30,6 +30,13 @@ interface CatalogRow {
   is_active: boolean;
 }
 
+interface CountsByStatus {
+  pending: number;
+  approved: number;
+  rejected: number;
+  draft: number;
+}
+
 /** Admin rentals — moderation + ops snapshot. AdminRoute pattern: inside DashboardLayout. */
 const AdminRentals: React.FC = () => {
   useNoIndex();
@@ -40,18 +47,31 @@ const AdminRentals: React.FC = () => {
   const [allItems, setAllItems] = useState<RentalItem[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
   const [catalog, setCatalog] = useState<CatalogRow[]>([]);
+  const [counts, setCounts] = useState<CountsByStatus>({ pending: 0, approved: 0, rejected: 0, draft: 0 });
+  const [missingImages, setMissingImages] = useState(0);
 
   const refresh = async () => {
-    const [cats, pend, all, cat] = await Promise.all([
+    const [cats, pend, all, cat, statusAgg, missImg] = await Promise.all([
       RentalCategories.listCategories(),
       supabase.from('rental_items').select('*').eq('status', 'pending_review').order('created_at', { ascending: false }),
       supabase.from('rental_items').select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('rental_equipment_catalog').select('id,name_ar,name_en,brand,model,category_id,estimated_daily_price,currency,is_active').order('name_ar', { ascending: true }),
+      supabase.from('rental_items').select('status'),
+      supabase.from('rental_equipment_catalog').select('id', { count: 'exact', head: true }).is('image_url', null),
     ]);
     setCategories(cats.data ?? []);
     setPending((pend.data as RentalItem[] | null) ?? []);
     setAllItems((all.data as RentalItem[] | null) ?? []);
     setCatalog(((cat.data as CatalogRow[] | null) ?? []));
+    const c: CountsByStatus = { pending: 0, approved: 0, rejected: 0, draft: 0 };
+    ((statusAgg.data as Array<{ status: string }> | null) ?? []).forEach(r => {
+      if (r.status === 'pending_review') c.pending++;
+      else if (r.status === 'approved') c.approved++;
+      else if (r.status === 'rejected') c.rejected++;
+      else if (r.status === 'draft') c.draft++;
+    });
+    setCounts(c);
+    setMissingImages(missImg.count ?? 0);
     setLoading(false);
   };
 
@@ -78,9 +98,41 @@ const AdminRentals: React.FC = () => {
         {/* RENTAL-MICROSERVICE-2 — unified ops queue (replaces ad-hoc tiles). */}
         <RentalOpsQueueCard />
 
+        {/* Quick status counters */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="p-3 flex items-center gap-3 hover-lift">
+            <Clock className="size-5 text-amber-600 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground"><Bi ar="بانتظار المراجعة" en="Pending review" /></div>
+              <div className="text-xl font-semibold tech-content">{counts.pending}</div>
+            </div>
+          </Card>
+          <Card className="p-3 flex items-center gap-3 hover-lift">
+            <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground"><Bi ar="معتمدة" en="Approved" /></div>
+              <div className="text-xl font-semibold tech-content">{counts.approved}</div>
+            </div>
+          </Card>
+          <Card className="p-3 flex items-center gap-3 hover-lift">
+            <XCircle className="size-5 text-red-600 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground"><Bi ar="مرفوضة" en="Rejected" /></div>
+              <div className="text-xl font-semibold tech-content">{counts.rejected}</div>
+            </div>
+          </Card>
+          <Card className="p-3 flex items-center gap-3 hover-lift">
+            <ImageOff className="size-5 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground"><Bi ar="أصناف بدون صورة" en="Catalog items missing image" /></div>
+              <div className="text-xl font-semibold tech-content">{missingImages} / {catalog.length}</div>
+            </div>
+          </Card>
+        </div>
+
         <Tabs defaultValue="pending">
           <TabsList>
-            <TabsTrigger value="pending"><Bi ar="للمراجعة" en="Pending" /></TabsTrigger>
+            <TabsTrigger value="pending"><Bi ar="للمراجعة" en="Pending" /> ({pending.length})</TabsTrigger>
             <TabsTrigger value="all"><Bi ar="جميع العناصر" en="All items" /> ({allItems.length})</TabsTrigger>
             <TabsTrigger value="categories"><Bi ar="التصنيفات" en="Categories" /></TabsTrigger>
             <TabsTrigger value="catalog"><Bi ar="الكتالوج الرئيسي" en="Master Catalog" /> ({catalog.length})</TabsTrigger>

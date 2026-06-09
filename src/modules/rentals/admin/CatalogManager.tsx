@@ -8,13 +8,13 @@ import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Pencil, Save, X, Power, Trash2, UserPlus, Loader2 } from 'lucide-react';
+import { Search, Pencil, Save, X, Power, Trash2, UserPlus, Loader2, ImageOff, AlertTriangle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { IconPicker, RenderIcon } from '@/components/admin/IconPicker';
 import { Textarea } from '@/components/ui/textarea';
 
-interface TaxCat { id: string; slug: string; name_ar: string; name_en: string | null; }
+interface TaxCat { id: string; slug: string; name_ar: string; name_en: string | null; parent_id: string | null; sort_order: number | null; }
 interface CatalogRow {
   id: string;
   slug: string;
@@ -40,6 +40,7 @@ interface Biz { id: string; name_ar: string; name_en: string | null; }
 type Draft = Partial<CatalogRow>;
 
 const EQUIPMENT_TYPE_ID = '069e30de-e312-479f-8efa-84fc8251bfaf';
+const CURRENCIES = ['SAR', 'AED', 'USD', 'EUR'] as const;
 
 export const CatalogManager: React.FC = () => {
   const { isRTL } = useLanguage();
@@ -49,10 +50,13 @@ export const CatalogManager: React.FC = () => {
   const [cats, setCats] = useState<TaxCat[]>([]);
   const [businesses, setBusinesses] = useState<Biz[]>([]);
   const [q, setQ] = useState('');
+  const [filterParent, setFilterParent] = useState<string>('all');
   const [filterCat, setFilterCat] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [onlyMissingImage, setOnlyMissingImage] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>({});
+  const [draftParent, setDraftParent] = useState<string>('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [assignFor, setAssignFor] = useState<string | null>(null);
   const [assignBiz, setAssignBiz] = useState<string>('');
@@ -61,7 +65,7 @@ export const CatalogManager: React.FC = () => {
     setLoading(true);
     const [c, t, b] = await Promise.all([
       supabase.from('rental_equipment_catalog').select('id,slug,name_ar,name_en,brand,model,category_id,taxonomy_category_id,estimated_daily_price,estimated_weekly_price,estimated_monthly_price,estimated_deposit,currency,is_active,image_url,icon,description_ar,description_en').order('name_ar'),
-      supabase.from('taxonomy_categories').select('id,slug,name_ar,name_en').eq('taxonomy_type_id', EQUIPMENT_TYPE_ID).order('sort_order'),
+      supabase.from('taxonomy_categories').select('id,slug,name_ar,name_en,parent_id,sort_order').eq('taxonomy_type_id', EQUIPMENT_TYPE_ID).eq('is_archived', false).order('sort_order'),
       supabase.from('businesses').select('id,name_ar,name_en').eq('is_active', true).order('name_ar').limit(500),
     ]);
     setRows((c.data as CatalogRow[] | null) ?? []);
@@ -72,19 +76,35 @@ export const CatalogManager: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
+  const parents = useMemo(() => cats.filter(c => !c.parent_id), [cats]);
+  const childrenOf = (parentId: string) => cats.filter(c => c.parent_id === parentId);
+  const parentIdOf = (catId: string | null) => {
+    if (!catId) return null;
+    return cats.find(c => c.id === catId)?.parent_id ?? null;
+  };
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return rows.filter(r => {
+      if (filterParent !== 'all') {
+        const pid = parentIdOf(r.taxonomy_category_id);
+        if (pid !== filterParent) return false;
+      }
       if (filterCat !== 'all' && r.taxonomy_category_id !== filterCat) return false;
       if (filterStatus === 'active' && !r.is_active) return false;
       if (filterStatus === 'inactive' && r.is_active) return false;
+      if (onlyMissingImage && r.image_url) return false;
       if (!needle) return true;
       return [r.name_ar, r.name_en, r.brand, r.model, r.slug].filter(Boolean).some(v => String(v).toLowerCase().includes(needle));
     });
-  }, [rows, q, filterCat, filterStatus]);
+  }, [rows, q, filterParent, filterCat, filterStatus, onlyMissingImage, cats]);
 
-  const startEdit = (r: CatalogRow) => { setEditingId(r.id); setDraft({ ...r }); };
-  const cancelEdit = () => { setEditingId(null); setDraft({}); };
+  const startEdit = (r: CatalogRow) => {
+    setEditingId(r.id);
+    setDraft({ ...r });
+    setDraftParent(parentIdOf(r.taxonomy_category_id) ?? '');
+  };
+  const cancelEdit = () => { setEditingId(null); setDraft({}); setDraftParent(''); };
 
   const saveEdit = async (id: string) => {
     setSavingId(id);
@@ -127,6 +147,8 @@ export const CatalogManager: React.FC = () => {
     await load();
   };
 
+  const missingImageCount = useMemo(() => rows.filter(r => !r.image_url).length, [rows]);
+
   const assignToProvider = async (r: CatalogRow) => {
     if (!assignBiz) { toast.error(bi('اختر المزود', 'Select a provider')); return; }
     if (!r.category_id) { toast.error(bi('تصنيف الصنف غير محدد', 'Category missing')); return; }
@@ -156,28 +178,64 @@ export const CatalogManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
-      <Card className="p-3 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute top-1/2 -translate-y-1/2 start-3 size-4 text-muted-foreground" />
-          <Input dir="auto" value={q} onChange={e => setQ(e.target.value)} placeholder={isRTL ? 'بحث بالاسم/الماركة/الموديل…' : 'Search name/brand/model…'} className="h-11 ps-9 rounded-xl" />
+      {/* Toolbar — hierarchical: parent → subcategory → search → status → missing-image */}
+      <Card className="p-3 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="absolute top-1/2 -translate-y-1/2 start-3 size-4 text-muted-foreground" />
+            <Input dir="auto" value={q} onChange={e => setQ(e.target.value)} placeholder={isRTL ? 'بحث بالاسم/الماركة/الموديل…' : 'Search name/brand/model…'} className="h-11 ps-9 rounded-xl" />
+          </div>
+          <Select value={filterStatus} onValueChange={(v: 'all' | 'active' | 'inactive') => setFilterStatus(v)}>
+            <SelectTrigger className="h-11 rounded-xl w-[150px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{bi('كل الحالات', 'All status')}</SelectItem>
+              <SelectItem value="active">{bi('نشط', 'Active')}</SelectItem>
+              <SelectItem value="inactive">{bi('معطل', 'Inactive')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            size="sm"
+            variant={onlyMissingImage ? 'default' : 'outline'}
+            onClick={() => setOnlyMissingImage(v => !v)}
+            className="h-11 rounded-xl"
+            aria-pressed={onlyMissingImage}
+          >
+            <ImageOff className="size-4 me-1.5" />
+            <Bi ar="بدون صورة" en="Missing image" />
+            <Badge variant="secondary" className="ms-2 tech-content">{missingImageCount}</Badge>
+          </Button>
+          <Badge variant="secondary" className="ms-auto tech-content">{filtered.length} / {rows.length}</Badge>
         </div>
-        <Select value={filterCat} onValueChange={setFilterCat}>
-          <SelectTrigger className="h-11 rounded-xl w-[200px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{bi('كل التصنيفات', 'All categories')}</SelectItem>
-            {cats.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterStatus} onValueChange={(v: 'all' | 'active' | 'inactive') => setFilterStatus(v)}>
-          <SelectTrigger className="h-11 rounded-xl w-[150px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{bi('كل الحالات', 'All status')}</SelectItem>
-            <SelectItem value="active">{bi('نشط', 'Active')}</SelectItem>
-            <SelectItem value="inactive">{bi('معطل', 'Inactive')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Badge variant="secondary" className="ms-auto">{filtered.length} / {rows.length}</Badge>
+        {/* Step 1: parent group → Step 2: subcategory (scoped to parent) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[11px] text-muted-foreground"><Bi ar="١) التصنيف الرئيسي" en="1) Main category" /></Label>
+            <Select value={filterParent} onValueChange={(v) => { setFilterParent(v); setFilterCat('all'); }}>
+              <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{bi('كل التصنيفات الرئيسية', 'All main categories')}</SelectItem>
+                {parents.map(p => <SelectItem key={p.id} value={p.id}>{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px] text-muted-foreground"><Bi ar="٢) التصنيف الفرعي" en="2) Subcategory" /></Label>
+            <Select
+              value={filterCat}
+              onValueChange={setFilterCat}
+              disabled={filterParent === 'all'}
+            >
+              <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={bi('اختر التصنيف الرئيسي أولًا', 'Pick main category first')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{bi('كل التصنيفات الفرعية', 'All subcategories')}</SelectItem>
+                {(filterParent === 'all' ? [] : childrenOf(filterParent)).map(c => (
+                  <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </Card>
 
       {/* List */}
@@ -208,6 +266,12 @@ export const CatalogManager: React.FC = () => {
                         <Badge className={`text-xs ${r.is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' : 'bg-muted text-muted-foreground hover:bg-muted'}`}>
                           {r.is_active ? bi('نشط', 'Active') : bi('معطل', 'Inactive')}
                         </Badge>
+                        {!r.image_url && (
+                          <Badge variant="outline" className="text-xs gap-1 border-amber-300 text-amber-700 bg-amber-50">
+                            <AlertTriangle className="size-3" />
+                            <Bi ar="بدون صورة" en="No image" />
+                          </Badge>
+                        )}
                         {r.estimated_daily_price != null && (
                           <span className="text-xs tech-content text-muted-foreground">
                             {r.estimated_daily_price} {r.currency || 'SAR'} / {bi('يوم', 'day')}
@@ -262,14 +326,39 @@ export const CatalogManager: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium"><Bi ar="التصنيف" en="Category" /></Label>
-                    <Select value={draft.taxonomy_category_id ?? ''} onValueChange={v => setDraft(d => ({ ...d, taxonomy_category_id: v }))}>
-                      <SelectTrigger className="h-11 rounded-lg"><SelectValue placeholder={isRTL ? 'اختر تصنيفًا' : 'Choose category'} /></SelectTrigger>
-                      <SelectContent>
-                        {cats.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                  {/* Hierarchical: pick main category → then subcategory (services list follows) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">
+                        <Bi ar="١) التصنيف الرئيسي" en="1) Main category" /> <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={draftParent}
+                        onValueChange={(v) => { setDraftParent(v); setDraft(d => ({ ...d, taxonomy_category_id: null })); }}
+                      >
+                        <SelectTrigger className="h-11 rounded-lg"><SelectValue placeholder={bi('اختر التصنيف الرئيسي', 'Pick main category')} /></SelectTrigger>
+                        <SelectContent>
+                          {parents.map(p => <SelectItem key={p.id} value={p.id}>{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">
+                        <Bi ar="٢) التصنيف الفرعي" en="2) Subcategory" /> <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={draft.taxonomy_category_id ?? ''}
+                        onValueChange={v => setDraft(d => ({ ...d, taxonomy_category_id: v }))}
+                        disabled={!draftParent}
+                      >
+                        <SelectTrigger className="h-11 rounded-lg"><SelectValue placeholder={bi('اختر التصنيف الرئيسي أولًا', 'Pick main category first')} /></SelectTrigger>
+                        <SelectContent>
+                          {(draftParent ? childrenOf(draftParent) : []).map(c => (
+                            <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">
@@ -286,8 +375,16 @@ export const CatalogManager: React.FC = () => {
                         onRemove={() => setDraft(d => ({ ...d, image_url: null }))}
                         aspectRatio="square"
                         maxSizeMB={3}
+                        pipeline="business"
+                        businessKind="logo"
                         placeholder={bi('ارفع صورة (PNG/JPG/WebP)', 'Upload (PNG/JPG/WebP)')}
                       />
+                      <p className="text-[10px] text-muted-foreground">
+                        <Bi
+                          ar="يتم ضغط الصورة تلقائيًا وإنشاء نسخ مصغّرة (thumbnail/card/medium) لتسريع التحميل."
+                          en="Auto-compressed; thumbnail/card/medium variants generated for fast loading."
+                        />
+                      </p>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium"><Bi ar="الأيقونة (احتياطي عند غياب الصورة)" en="Icon (fallback when no image)" /></Label>
@@ -316,6 +413,15 @@ export const CatalogManager: React.FC = () => {
                       <Input type="number" dir="ltr" value={draft.estimated_deposit ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_deposit: e.target.value === '' ? null : Number(e.target.value) }))} className="h-11 rounded-lg tech-content" />
                     </div>
                   </div>
+                  <div className="space-y-1.5 max-w-xs">
+                    <Label className="text-xs font-medium"><Bi ar="العملة" en="Currency" /></Label>
+                    <Select value={draft.currency ?? 'SAR'} onValueChange={v => setDraft(d => ({ ...d, currency: v }))}>
+                      <SelectTrigger className="h-11 rounded-lg tech-content"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map(cur => <SelectItem key={cur} value={cur} className="tech-content">{cur}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">
                     <Bi ar="الوصف" en="Description" />
@@ -327,7 +433,7 @@ export const CatalogManager: React.FC = () => {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium"><Bi ar="الوصف بالإنجليزية" en="English description" /></Label>
-                      <Textarea dir="ltr" rows={3} value={draft.description_en ?? ''} onChange={e => setDraft(d => ({ ...d, description_en: e.target.value }))} className="rounded-lg resize-none" />
+                      <Textarea dir="auto" rows={3} value={draft.description_en ?? ''} onChange={e => setDraft(d => ({ ...d, description_en: e.target.value }))} className="rounded-lg resize-none" />
                     </div>
                   </div>
 

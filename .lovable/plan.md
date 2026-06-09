@@ -1,86 +1,96 @@
-# Home Management P2 — المرحلة الأولى: Admin CMS للقطاعات
 
-## الهدف
-السماح للمشرف بتعديل بلاطات قطاعات الصفحة الرئيسية (10 بلاطات في `HomeSectorGrid`) من واجهة admin، بدلاً من تعديل كود `HomeSectorGrid.tsx` و `homeTaxonomy.ts` يدويًا في كل مرة. مع الحفاظ على:
-- نظام الـ guard test الصارم (`HOME_ALLOWED_SLUGS`).
-- استقرار الـ LCP (لا صور، أيقونات Lucide فقط).
-- التوافق مع slugs الـ canonical الـ 13 لـ `primary_activity`.
+# خطة إصلاح صفحة `/admin/rentals` بشكل احترافي
 
-## ما لن يتغير الآن (مؤجل لمراحل لاحقة)
-- Partner Showcase CMS (P2.2)
-- Hero Slider CMS (P2.3)
-- ربط counts ديناميكية من `businesses` (P2.4)
-- إضافة قطاعات جديدة خارج الـ 13 canonical (يبقى عبر TaxonomyAdminPage الحالي)
+## الوضع الحالي (بعد فحص قاعدة البيانات والكود)
 
-## النطاق الفعلي (P2.1)
-المشرف يستطيع من شاشة واحدة `/admin/home-sectors`:
-1. اختيار أيّ 10 من الـ 13 primary_activity الـ canonical تظهر على الصفحة الرئيسية.
-2. ترتيب البلاطات بالسحب والإفلات (dnd-kit، متّسق مع `Classification System`).
-3. تعديل اسم البلاطة (ar/en) ووصفها القصير (ar/en) وأيقونتها (اختيار من قائمة Lucide مدعومة).
-4. حفظ مباشر (inline) — بدون popups (التزامًا بـ UX Constraint).
+| العنصر | الحالة |
+|---|---|
+| تصنيفات المعدات في `taxonomy_categories` (نوع equipment) | 12 تصنيف مسطّح بدون أبناء |
+| `rental_equipment_catalog` (الكتالوج الرئيسي) | 248 صنف، 100% مربوطة بتصنيف ✓، 100% لها وصف عربي/إنجليزي ✓ |
+| الصور في الكتالوج | **0 من 248** لها صورة (المشكلة الرئيسية) |
+| التكرارات | زوج واحد فقط: "حاوية تبريد 20 قدم" بسلاجَين مختلفَين |
+| الصفحة | `useNoIndex` فعّال (لا تظهر في محركات البحث — وهذا صحيح لصفحة إدارية) |
+| اتجاه النصوص | `CatalogManager` يستخدم `dir="auto"` ✓ — لكن `TermTemplatesPanel` يفرض `dir="rtl"`/`dir="ltr"` بشكل صلب ✗ |
+| ضغط الصور | `ImageUpload` العام يستخدم `compressImage` لكن `CatalogManager` لا يفعّل خط أنابيب الـ variants (thumbnail/card/medium) |
 
-## التصميم التقني
+---
 
-### 1) تخزين بدون migration جديدة
-نستخدم العمود الموجود `taxonomy_categories.metadata jsonb` لتخزين إعدادات الصفحة الرئيسية:
-```jsonc
-// metadata.home_grid
-{
-  "home_grid": {
-    "show": true,           // يظهر في HomeSectorGrid
-    "position": 1,          // ترتيب البلاطة (1..10)
-    "icon": "Square",       // اسم Lucide icon
-    "title_ar": "الألمنيوم",          // override للاسم في البلاطة
-    "title_en": "Aluminum",
-    "body_ar": "نوافذ وأبواب…",        // النص القصير الظاهر تحت العنوان
-    "body_en": "Windows, doors…"
-  }
-}
+## ملاحظة مهمة قبل التنفيذ
+صفحة `/admin/rentals` صفحة **إدارية** ومُعلَّمة بـ `useNoIndex`، فهي خارج فهرسة Google عمداً (وهذا هو السلوك الصحيح لجميع صفحات الإدارة). تحسين «محركات البحث» هنا يعني **تحسين بحث الإدارة الداخلي** (تسلسل التصنيفات، فلاتر، نتائج) وليس SEO لـ Google. سأنفّذ ذلك على هذا الأساس.
+
+---
+
+## الخطة
+
+### 1. تسلسل اختيار التصنيف الهرمي (الأولوية القصوى)
+الحالة الحالية: قائمة واحدة بكل التصنيفات الـ12 معاً.
+الهدف:
+```text
+[التصنيف الرئيسي] → [التصنيف الفرعي] → [قائمة الخدمات]
 ```
-المزايا: لا migration، RLS الحالي لـ `taxonomy_categories` يكفي (admin only writes)، الـ guard test يبقى يتحقق من الـ slugs.
 
-### 2) Hook موحد
-`useHomeSectorTiles()` في `src/modules/home/hooks/`:
-- يجلب الـ primary_activity rows عبر `taxonomy_categories` حيث `metadata->home_grid->>show = 'true'`.
-- يرتّب حسب `metadata->home_grid->>position`.
-- ينقص أو يزيد عن 10 → يكمل من الـ hardcoded `SECTORS` كـ fallback.
-- يفشل الـ fetch → يستخدم الـ hardcoded fully (الصفحة لا تتعطل).
+سأنفّذها على مستويَين:
 
-### 3) تعديل `HomeSectorGrid.tsx`
-- يستهلك `useHomeSectorTiles()`.
-- يحوّل `icon: string` إلى مكوّن Lucide عبر `iconRegistry.ts` (whitelist محدود ~30 أيقونة).
-- الـ guard assertion يبقى يتحقق من أن كل slug ضمن `HOME_ALLOWED_SLUGS`.
+**أ. على مستوى البيانات** — تجميع التصنيفات الـ12 الحالية تحت 4 مجموعات أم (كآباء جدد في نفس جدول `taxonomy_categories`):
+- **معدات بناء وإنشاءات ثقيلة** ← سقالات، حاويات، رفع ونقل
+- **آلات وطاقة** ← مولدات، كهربائية، قص، حفر
+- **أدوات تشطيب وتصنيع** ← نجارة، حدادة، تشطيب
+- **خدمات موقع وسلامة** ← سلامة، خدمات موقع مساندة
 
-### 4) شاشة admin جديدة
-`src/pages/admin/AdminHomeSectors.tsx` + route `/admin/home-sectors` داخل `<AdminRoute>` (التزامًا بـ AdminRoute Wrapper memory):
-- كاردات قابلة للسحب (dnd-kit).
-- inline fields: title_ar, title_en, body_ar (140 char max), body_en, icon picker (combobox).
-- toggle "إظهار على الرئيسية" لكل قطاع من الـ 13.
-- Save فوري بـ React Query mutation → invalidate `home-sector-tiles` query.
-- معاينة مباشرة لصفّ البلاطات أعلى الشاشة.
+**ب. على مستوى الواجهة في `CatalogManager`** — تحويل الفلتر الواحد إلى ثلاث قوائم منسدلة متتابعة:
+1. التصنيف الرئيسي (4 خيارات)
+2. التصنيف الفرعي (يظهر بعد اختيار الرئيسي)
+3. قائمة الخدمات/الكتالوج (تظهر مفلترة)
 
-### 5) ربط بالـ navigation
-إضافة لينك "قطاعات الصفحة الرئيسية" داخل مجموعة "إدارة المحتوى" في dashboard sidebar.
+نفس التسلسل الهرمي يُطبَّق على نموذج التحرير (Edit form) ونموذج الإسناد لمزود (Assign provider) بدل القائمة المسطّحة الحالية.
 
-## ملفات سيتم إنشاؤها / تعديلها
-- جديد: `src/modules/home/hooks/useHomeSectorTiles.ts`
-- جديد: `src/modules/home/data/iconRegistry.ts`
-- جديد: `src/pages/admin/AdminHomeSectors.tsx`
-- جديد: `src/components/admin/home-sectors/SectorTileEditor.tsx`
-- تعديل: `src/components/home/v2/sections/HomeSectorGrid.tsx` (يستهلك الـ hook + fallback)
-- تعديل: `src/App.tsx` أو `routes` (إضافة route)
-- تعديل: dashboard navigation config (لينك جديد)
-- تعديل: `mem://index.md` (إضافة memory جديدة `home-sectors-cms`)
+### 2. ضغط الصور وربط خط الأنابيب
+- ترقية `<ImageUpload>` داخل `CatalogManager` إلى `pipeline="business"` لإنشاء variants تلقائية (thumbnail/card/medium/hero) وتخفيض الحجم تحت 80KB لكل variant.
+- إضافة دعم رفع متعدد للصور في الكتالوج (الصورة الأساسية + معرض).
+- إضافة badge "بدون صورة" واضح على البطاقات في الكتالوج (248 صنف بحاجة لصور حالياً) لتسهيل الفرز.
+- فلتر جديد: «بدون صورة فقط» لتسريع المعالجة الجماعية.
 
-## التحقق بعد التنفيذ
-- `homeTaxonomyLinkGuard.test.ts` يجب أن يبقى أخضر.
-- بدون DB overrides → الصفحة الرئيسية مطابقة 100% للوضع الحالي.
-- مع override واحد (مثلاً تغيير ترتيب الألمنيوم من 1 إلى 3) → ينعكس فورًا بعد invalidate.
-- لا أخطاء console، لا regressions في Hero/Search/RFQ/Onboarding.
-- النشر، ثم Post-Publish Home Check.
+### 3. توحيد البيانات ومنع التكرار
+- دمج التكرار الوحيد: `refrigerated-container-20ft` و `cold-storage-container-20ft` → الاحتفاظ بأحدهما وأرشفة الثاني مع إعادة توجيه أي `rental_items` معتمدة عليه.
+- إضافة فحص live في نموذج التحرير: تحذير عند إدخال اسم عربي مطابق لصنف موجود في نفس التصنيف.
+- مزامنة `rental_categories` (12 صف) مع `taxonomy_categories` لضمان عدم وجود تصنيف يتيم.
 
-## ما خارج النطاق (تأكيد)
-- لا تغيير على `homeTaxonomy.ts` (يبقى source of truth للـ slugs والـ guard).
-- لا تغيير على `taxonomy_categories` schema (نستخدم `metadata` jsonb).
-- لا فتح Partner Showcase / Hero / counts ديناميكية الآن.
-- لا migrations جديدة.
+### 4. توحيد اتجاه النصوص
+- استبدال `dir="rtl"` / `dir="ltr"` الصلبة في `TermTemplatesPanel` بـ `dir="auto"` لتتبع محتوى الحقل تلقائياً.
+- التأكد من أن كل حقول الأرقام والأسعار تبقى `dir="ltr"` مع `.tech-content` (سلوك صحيح حالياً ✓).
+- إضافة `dir="auto"` للحقول المفقودة في `CatalogRequestsPanel` (موجودة بشكل جزئي).
+
+### 5. تحسينات تبويب «للمراجعة» (Pending Review)
+- إظهار صورة العنصر، التصنيف الكامل (رئيسي → فرعي)، وسعر العقد بشكل واضح بدل السطر النصي الحالي.
+- زر «معاينة كامل البيانات» يفتح بطاقة inline (بدون نوافذ منبثقة، وفقاً لقاعدة المشروع).
+- عدّاد لكل حالة (Pending / Approved / Rejected) فوق التبويبات.
+
+### 6. تحسينات إضافية للتبويبات الأخرى
+- **«جميع العناصر»**: إضافة فلتر بالحالة + التصنيف، وعرض الصورة المصغّرة.
+- **«التصنيفات»**: استخدام `CategoryAdminPanel` الموجود — إضافة عمود «عدد العناصر» الفعلي.
+- **«طلبات إضافة معدات»**: عرض الصورة المقترحة + قبول/رفض inline.
+- **«قوالب الشروط»**: إصلاح اتجاه النصوص + إضافة معاينة قبل الحفظ.
+
+---
+
+## التفاصيل التقنية
+
+**ملفات ستُعدَّل:**
+- `src/modules/rentals/admin/CatalogManager.tsx` — التسلسل الهرمي، خط أنابيب الصور، فلتر «بدون صورة»
+- `src/modules/rentals/admin/TermTemplatesPanel.tsx` — `dir="auto"`
+- `src/modules/rentals/admin/CatalogRequestsPanel.tsx` — تحسين عرض الطلب
+- `src/pages/admin/AdminRentals.tsx` — تبويب «للمراجعة» الموسَّع + عدّادات
+
+**ترحيلات قاعدة بيانات:**
+- ترحيل واحد: إنشاء 4 تصنيفات أم جديدة + ربط الـ12 الحالية بها (`UPDATE ... SET parent_id`).
+- تحديث بيانات: دمج زوج «حاوية تبريد 20 قدم» المكرر.
+
+**ما لا سيُعدَّل:**
+- ملفات `src/integrations/supabase/*` (تلقائية).
+- منطق `rental_orders` / `contracts` / الدفع.
+- صفحات التأجير العامة (`/rentals/*`) — خارج نطاق هذا الطلب.
+
+---
+
+## نقطة قرار قبل البدء
+هل توافق على إنشاء **4 تصنيفات أم جديدة** لتجميع الـ12 الحالية تحتها (لتمكين التسلسل الهرمي الذي طلبته)؟ أم تفضّل أن أعرض الـ12 الحالية كأبناء افتراضيين تحت تصنيف وحيد «معدات تأجير» وأترك لك إضافة الآباء يدوياً لاحقاً؟
