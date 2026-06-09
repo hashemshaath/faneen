@@ -375,8 +375,16 @@ export const CatalogManager: React.FC = () => {
                         onRemove={() => setDraft(d => ({ ...d, image_url: null }))}
                         aspectRatio="square"
                         maxSizeMB={3}
+                        pipeline="business"
+                        businessKind="logo"
                         placeholder={bi('ارفع صورة (PNG/JPG/WebP)', 'Upload (PNG/JPG/WebP)')}
                       />
+                      <p className="text-[10px] text-muted-foreground">
+                        <Bi
+                          ar="يتم ضغط الصورة تلقائيًا وإنشاء نسخ مصغّرة (thumbnail/card/medium) لتسريع التحميل."
+                          en="Auto-compressed; thumbnail/card/medium variants generated for fast loading."
+                        />
+                      </p>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium"><Bi ar="الأيقونة (احتياطي عند غياب الصورة)" en="Icon (fallback when no image)" /></Label>
