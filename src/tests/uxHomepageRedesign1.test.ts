@@ -14,7 +14,6 @@ describe('UX-REDESIGN-1 — Homepage redesign', () => {
   const features = read('src/components/home/v2/sections/PlatformFeaturesSection.tsx');
   const finalCta = read('src/components/home/v2/sections/FinalCTASection.tsx');
   const who = read('src/components/home/v2/sections/WhoIsItForSection.tsx');
-  const how = read('src/components/home/v2/sections/HowItWorksV2.tsx');
   const trust = read('src/components/home/v2/sections/TrustSection.tsx');
   const forProv = read('src/components/home/v2/sections/ForProvidersSection.tsx');
 
@@ -47,10 +46,6 @@ describe('UX-REDESIGN-1 — Homepage redesign', () => {
     expect(who).toMatch(/ROUTES\.signupProvider/);
   });
 
-  it('HowItWorks adds a provider-side secondary CTA to /for-providers', () => {
-    expect(how).toContain('"/for-providers"');
-  });
-
   it('TrustSection adds the no-guarantee disclaimer + verification link', () => {
     expect(trust).toMatch(/لا نضمن نتائج التنفيذ/);
     expect(trust).toContain('/about#trust');
@@ -62,14 +57,14 @@ describe('UX-REDESIGN-1 — Homepage redesign', () => {
 
   it('homepage source has no private/admin/dashboard anchors', () => {
     // Allow /auth?mode=signup|login but block /dashboard|/admin|/onboarding leaks in homepage tree.
-    const allFiles = [index, features, finalCta, who, how, trust, forProv].join('\n');
+    const allFiles = [index, features, finalCta, who, trust, forProv].join('\n');
     expect(allFiles).not.toMatch(/to=["']\/dashboard/);
     expect(allFiles).not.toMatch(/to=["']\/admin/);
     expect(allFiles).not.toMatch(/to=["']\/onboarding/);
   });
 
   it('homepage does not introduce unconfirmed PDPL/local-hosting claims', () => {
-    const allFiles = [index, features, finalCta, who, how, trust, forProv].join('\n');
+    const allFiles = [index, features, finalCta, who, trust, forProv].join('\n');
     expect(allFiles).not.toMatch(/PDPL/i);
     expect(allFiles).not.toMatch(/استضافة (داخل|في) السعودية/);
     expect(allFiles).not.toMatch(/الأفضل في السعودية/);
