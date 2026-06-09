@@ -11,6 +11,8 @@ export interface TaxonomyFilterState {
   status: 'all' | 'active' | 'hidden' | 'archived';
   visibility: '' | 'show_in_registration' | 'show_in_search' | 'show_in_seo' | 'show_in_showcase' | 'show_in_products' | 'show_in_contracts' | 'show_in_quotes';
   missing: '' | 'description' | 'seo';
+  /** Safe Batch 5 — when false (default), legacy/merged primary slugs are hidden from the admin list. */
+  showLegacy: boolean;
 }
 
 export const defaultTaxonomyFilters: TaxonomyFilterState = {
@@ -19,6 +21,7 @@ export const defaultTaxonomyFilters: TaxonomyFilterState = {
   status: 'all',
   visibility: '',
   missing: '',
+  showLegacy: false,
 };
 
 interface Props {
