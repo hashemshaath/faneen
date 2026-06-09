@@ -48,7 +48,7 @@ const HomeCategoryRows = () => {
   // row visibility, grouping, logos, ratings, or city labels without reloads.
   useEffect(() => {
     const invalidateHomeRows = () => queryClient.invalidateQueries({ queryKey });
-    const tables = ['business_taxonomy_categories', 'businesses', 'taxonomy_categories', 'cities'] as const;
+    const tables = ['directory_sync_events'] as const;
     let channel = supabase.channel('home-category-rows-sync');
     for (const table of tables) {
       channel = channel.on(

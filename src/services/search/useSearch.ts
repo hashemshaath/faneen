@@ -264,13 +264,7 @@ export const useBusinesses = () =>
   });
 
 const DIRECTORY_REALTIME_TABLES = [
-  'businesses',
-  'business_taxonomy_categories',
-  'business_service_taxonomy_categories',
-  'taxonomy_categories',
-  'cities',
-  'business_services',
-  'promotions',
+  'directory_sync_events',
 ] as const;
 
 const DIRECTORY_QUERY_KEYS: ReadonlyArray<ReadonlyArray<unknown>> = [
