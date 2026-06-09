@@ -28,7 +28,10 @@ export interface OnboardingDraft {
    */
   taxonomy?: {
     entityTypeCategoryId: string | null;
-    primaryActivityCategoryId: string | null;
+    /** Safe Batch 2 — multi-primary. Kept alongside legacy field for back-compat. */
+    primaryActivityCategoryIds?: string[];
+    /** Legacy single-primary field — still accepted by the shim on read. */
+    primaryActivityCategoryId?: string | null;
     secondaryActivityCategoryIds: string[];
   };
   /** ISO timestamp set by save(). */
