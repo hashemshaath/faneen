@@ -44,7 +44,8 @@ import {
   EMPTY_ONBOARDING_TAXONOMY,
   type OnboardingTaxonomyValue,
 } from '@/modules/taxonomy';
-import { setBusinessTaxonomyCategories } from '@/modules/taxonomy/business-services';
+import { setBusinessTaxonomyCategoriesV2 } from '@/modules/taxonomy/business-services';
+import { normalizeOnboardingTaxonomyDraft } from '@/modules/taxonomy/components/OnboardingTaxonomyStep';
 
 // ──────────────────────────────────────────────────────────────────────────
 // New simplified flow (2026-05-29):
@@ -214,13 +215,9 @@ const Onboarding = () => {
       if (d.sectors?.length) setSectors(d.sectors as SectorId[]);
       if (d.subServices?.length) setSubServices(d.subServices);
       if (d.taxonomy && typeof d.taxonomy === 'object') {
-        setTaxonomy({
-          entityTypeCategoryId: d.taxonomy.entityTypeCategoryId ?? null,
-          primaryActivityCategoryId: d.taxonomy.primaryActivityCategoryId ?? null,
-          secondaryActivityCategoryIds: Array.isArray(d.taxonomy.secondaryActivityCategoryIds)
-            ? d.taxonomy.secondaryActivityCategoryIds
-            : [],
-        });
+        // Safe Batch 2 — back-compat shim: old drafts may carry
+        // `primaryActivityCategoryId` (single). Normalize to array form.
+        setTaxonomy(normalizeOnboardingTaxonomyDraft(d.taxonomy));
       }
       if (d.step && STEP_ORDER.includes(d.step as OnboardingStep)) {
         const draftStep = d.step as OnboardingStep;
@@ -328,13 +325,13 @@ const Onboarding = () => {
           // update the classification later from the dashboard.
           if (businessId && (
             taxonomy.entityTypeCategoryId ||
-            taxonomy.primaryActivityCategoryId ||
+            taxonomy.primaryActivityCategoryIds.length > 0 ||
             taxonomy.secondaryActivityCategoryIds.length > 0
           )) {
             try {
-              await setBusinessTaxonomyCategories(businessId, {
+              await setBusinessTaxonomyCategoriesV2(businessId, {
                 entityTypeCategoryId: taxonomy.entityTypeCategoryId,
-                primaryActivityCategoryId: taxonomy.primaryActivityCategoryId,
+                primaryActivityCategoryIds: taxonomy.primaryActivityCategoryIds,
                 secondaryActivityCategoryIds: taxonomy.secondaryActivityCategoryIds,
               });
             } catch (taxErr) {
@@ -666,7 +663,7 @@ const Onboarding = () => {
       // entity type + primary activity. When taxonomy is loading/failed we
       // never block the user (legacy SectorPicker is no longer shown).
       (taxonomyStatus === 'ok'
-        ? (!!taxonomy.entityTypeCategoryId && !!taxonomy.primaryActivityCategoryId)
+        ? (!!taxonomy.entityTypeCategoryId && taxonomy.primaryActivityCategoryIds.length > 0)
         : true);
 
     const onContinue = () => {
