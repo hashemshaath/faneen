@@ -609,6 +609,7 @@ const DashboardRentals: React.FC = () => {
   const [items, setItems] = useState<RentalItem[]>([]);
   const [orders, setOrders] = useState<RentalOrder[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
+  const [termTemplates, setTermTemplates] = useState<Record<string, RentalTermTemplate>>({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -617,14 +618,16 @@ const DashboardRentals: React.FC = () => {
         .from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle();
       const bizId = biz?.id ?? null;
       setBusinessId(bizId);
-      const [cats, it, ord] = await Promise.all([
+      const [cats, it, ord, tpl] = await Promise.all([
         RentalCategories.listCategories(),
         bizId ? RentalItems.listProviderItems(bizId) : Promise.resolve({ data: [], error: null }),
         bizId ? RentalOrders.listOrdersForProvider(bizId) : Promise.resolve({ data: [], error: null }),
+        listActiveTermTemplates(),
       ]);
       setCategories(cats.data ?? []);
       setItems(it.data ?? []);
       setOrders(ord.data ?? []);
+      setTermTemplates(indexByCategory(tpl.data ?? []));
       setLoading(false);
     })();
   }, [user?.id]);
