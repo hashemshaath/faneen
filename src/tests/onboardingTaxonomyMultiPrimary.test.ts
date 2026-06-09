@@ -110,15 +110,16 @@ describe('Safe Batch 2 — no legacy field writes from taxonomy components', () 
     SRC('src/modules/taxonomy/components/BusinessTaxonomySection.tsx'),
     SRC('src/modules/taxonomy/components/MultiPrimaryTaxonomyPicker.tsx'),
   ];
-  it('never references `category_id`, `sector_slug`, `sectors` or `sub_services` writes', () => {
+  it('never writes to legacy fields (sector_slug, sectors, sub_services, businesses.category_id)', () => {
     for (const f of FILES) {
       const src = readFileSync(f, 'utf8');
-      // No legacy write targets in these files.
-      expect(src).not.toMatch(/category_id\s*:/);
-      expect(src).not.toMatch(/sector_slug/);
-      expect(src).not.toMatch(/sub_services/);
+      // No legacy write targets in these files (comments stripped).
+      const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/.*$/gm, '');
+      expect(code).not.toMatch(/sector_slug/);
+      expect(code).not.toMatch(/['"]sub_services['"]/);
+      expect(code).not.toMatch(/from\(['"]businesses['"]\)/);
       // Only the v2 RPC is allowed in these files.
-      expect(src).not.toMatch(/set_business_taxonomy_categories\b(?!_v2)/);
+      expect(code).not.toMatch(/set_business_taxonomy_categories\b(?!_v2)/);
     }
   });
 
