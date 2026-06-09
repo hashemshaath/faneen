@@ -1413,6 +1413,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             late={form.late_terms}
             penalty={form.penalty_terms}
             errors={termErrors}
+            templates={termTemplates}
             onChange={({ usage, late, penalty }) => {
               setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty });
               if (termErrors.usage || termErrors.late || termErrors.penalty) setTermErrors({});
