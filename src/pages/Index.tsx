@@ -19,7 +19,6 @@ import { useHomeFaq } from "@/modules/home";
 const HomeSectorGrid       = lazyRetry(() => import("@/components/home/v2/sections/HomeSectorGrid"));
 const HomeAudienceSplit    = lazyRetry(() => import("@/components/home/v2/sections/HomeAudienceSplit"));
 const HomeCategoryRows     = lazyRetry(() => import("@/components/home/v2/sections/HomeCategoryRows"));
-const HowItWorksV2         = lazyRetry(() => import("@/components/home/v2/sections/HowItWorksV2"));
 const FAQSection           = lazyRetry(() => import("@/components/home/v2/sections/FAQSection"));
 
 /**
@@ -191,7 +190,6 @@ const Index = () => {
         { name: 'الرئيسية',     url: 'https://qitaat.com/' },
         { name: 'القطاعات',     url: 'https://qitaat.com/categories' },
         { name: 'البحث',         url: 'https://qitaat.com/search' },
-        { name: 'كيف يعمل',      url: 'https://qitaat.com/#how-it-works' },
         { name: 'القطاعات الرئيسية', url: 'https://qitaat.com/#sectors' },
         { name: 'الأسئلة الشائعة', url: 'https://qitaat.com/#faq' },
       ].map((n, i) => ({
