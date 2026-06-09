@@ -152,7 +152,16 @@ describe('BusinessCard service-category diversity pill', () => {
   // Phase 18c — diversity is now derived from
   // `taxonomyDisplay.serviceLabels` (taxonomy join), NOT from the legacy
   // `business_services.category_id` column.
-  const tx = (serviceLabels: string[]) => ({
+  const tx = (serviceLabels: string[]): BusinessTaxonomyDisplay => ({
+    primaries: [],
+    groups: [
+      {
+        primary: null,
+        inferred: false,
+        secondaries: [],
+        services: serviceLabels.map((label, i) => ({ id: `s${i}`, slug: `s${i}`, label })),
+      },
+    ],
     primaryLabel: null,
     primarySlug: null,
     secondaryLabels: [],
