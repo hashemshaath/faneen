@@ -19,13 +19,24 @@ import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
 import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
 import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
 import {
+  CANONICAL_PRIMARY_SLUGS,
+  CANONICAL_PRIMARY_LABELS,
+  isCanonicalPrimarySlug,
+  type CanonicalPrimarySlug,
+} from '@/modules/taxonomy/canonical-primaries';
+import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
+import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
   ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle,
 } from 'lucide-react';
 
-type Sector =
-  | 'aluminum' | 'iron' | 'wood' | 'glass' | 'stainless'
-  | 'fabrication' | 'storefronts' | 'project-fitout' | 'other';
+/**
+ * Safe Batch 3 — Sector is now any canonical primary-activity taxonomy slug
+ * (the 13 from `CANONICAL_PRIMARY_SLUGS`). Legacy slugs arriving via
+ * `?sector=…` are normalized in `resolveQuoteSectorFromUrl` before reaching
+ * the form.
+ */
+type Sector = CanonicalPrimarySlug | '';
 
 type ServiceLocation = 'on-site' | 'at-provider' | 'unsure';
 type Timeline = 'week' | 'two-weeks' | 'month' | 'flexible' | 'ask-provider';
@@ -34,7 +45,9 @@ type ClientType = 'individual' | 'contractor' | 'engineering' | 'company' | 'gov
 type ContactPref = 'whatsapp' | 'call' | 'email';
 
 interface QuoteForm {
-  sector: Sector | '';
+  sector: Sector;
+  /** Optional canonical sub-specialty slug (child of `sector`). */
+  specialty: string;
   city: string;
   district: string;
   serviceLocation: ServiceLocation | '';
@@ -59,24 +72,24 @@ interface QuoteForm {
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
 
 const emptyForm: QuoteForm = {
-  sector: '', city: '', district: '', serviceLocation: '',
+  sector: '', specialty: '', city: '', district: '', serviceLocation: '',
   description: '', measurements: '', quantity: '', files: [],
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
   preferredBrandIds: [], brandPreferenceMode: '', brandNotes: '',
 };
 
-const SECTORS: { value: Sector; ar: string; en: string }[] = [
-  { value: 'aluminum',       ar: 'ألمنيوم',         en: 'Aluminum' },
-  { value: 'iron',           ar: 'حديد',            en: 'Iron' },
-  { value: 'wood',           ar: 'خشب',             en: 'Wood' },
-  { value: 'glass',          ar: 'زجاج',            en: 'Glass' },
-  { value: 'stainless',      ar: 'ستانلس ستيل',     en: 'Stainless steel' },
-  { value: 'fabrication',    ar: 'تصنيع وتركيب',    en: 'Fabrication & install' },
-  { value: 'storefronts',    ar: 'واجهات ومحلات',   en: 'Storefronts & shops' },
-  { value: 'project-fitout', ar: 'تجهيزات مشاريع',  en: 'Project fit-out' },
-  { value: 'other',          ar: 'أخرى',            en: 'Other' },
-];
+/**
+ * Safe Batch 3 — The 13 canonical primaries are the ONLY sector options
+ * the user can pick. Labels come from `CANONICAL_PRIMARY_LABELS` so the
+ * picker is renderable instantly without waiting on a network round-trip.
+ */
+const SECTORS: { value: CanonicalPrimarySlug; ar: string; en: string }[] =
+  CANONICAL_PRIMARY_SLUGS.map((slug) => ({
+    value: slug,
+    ar: CANONICAL_PRIMARY_LABELS[slug].ar,
+    en: CANONICAL_PRIMARY_LABELS[slug].en,
+  }));
 
 const SAUDI_PHONE = /^(?:\+?966|0)?5\d{8}$/;
 
