@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -46,6 +46,115 @@ const PENALTY_PRESETS = [
   { ar: 'استبدال القطع المفقودة بسعر السوق', en: 'Lost parts replaced at market price' },
   { ar: 'غرامة سوء الاستخدام ٢٠٪ من قيمة العقد', en: 'Misuse penalty 20% of contract value' },
 ];
+
+/** Category-aware preset suggestions for terms (matched by Arabic/English keywords). */
+type Preset = { ar: string; en: string };
+type PresetGroup = { usage: Preset[]; late: Preset[]; penalty: Preset[] };
+const CATEGORY_PRESETS: ReadonlyArray<{
+  keywords: string[];
+  ar: string; en: string;
+  presets: PresetGroup;
+}> = [
+  {
+    keywords: ['سقال','scaffold'],
+    ar: 'السقالات', en: 'Scaffolding',
+    presets: {
+      usage: [
+        { ar: 'التركيب والفك بواسطة فني معتمد فقط', en: 'Erection/dismantle by certified technician only' },
+        { ar: 'فحص يومي قبل الاستخدام', en: 'Daily pre-use inspection required' },
+        { ar: 'ارتداء معدات الوقاية الشخصية إلزامي', en: 'PPE mandatory at all times' },
+      ],
+      late: [{ ar: 'رسوم تأخير ١٠٪ من السعر اليومي عن كل ساعة', en: 'Late fee 10% of daily rate per hour' }],
+      penalty: [
+        { ar: 'استبدال أي عنصر مفقود بقيمته الجديدة', en: 'Missing parts replaced at new value' },
+        { ar: 'غرامة عدم إعادة التركيب الأصلي', en: 'Penalty for not restoring original assembly' },
+      ],
+    },
+  },
+  {
+    keywords: ['مولد','generator'],
+    ar: 'المولدات', en: 'Generators',
+    presets: {
+      usage: [
+        { ar: 'التشغيل في منطقة جيدة التهوية فقط', en: 'Operate in well-ventilated areas only' },
+        { ar: 'التأريض إلزامي قبل التشغيل', en: 'Grounding required before operation' },
+        { ar: 'الوقود على المستأجر بنوع موصى به', en: 'Fuel by renter (recommended grade)' },
+      ],
+      late: [{ ar: 'رسوم تأخير يومية بنفس سعر الإيجار', en: 'Daily late fee equals rental rate' }],
+      penalty: [
+        { ar: 'غرامة تشغيل بوقود غير مناسب', en: 'Penalty for using improper fuel' },
+        { ar: 'تكلفة صيانة المحرك عند سوء الاستخدام', en: 'Engine service cost on misuse' },
+      ],
+    },
+  },
+  {
+    keywords: ['رافع','crane','ونش'],
+    ar: 'الرافعات', en: 'Cranes & Hoists',
+    presets: {
+      usage: [
+        { ar: 'يلزم مشغل معتمد ذو رخصة سارية', en: 'Certified, licensed operator required' },
+        { ar: 'يُمنع التشغيل عند سرعة رياح > ٣٢ كم/س', en: 'No operation when wind speed > 32 km/h' },
+        { ar: 'الالتزام بحدود الحمولة القصوى', en: 'Respect maximum load capacity' },
+      ],
+      late: [{ ar: 'رسوم تأخير ١٢٥٪ من السعر اليومي', en: 'Late fee 125% of daily rate' }],
+      penalty: [
+        { ar: 'غرامة التشغيل بدون مشغل معتمد', en: 'Penalty for operating without certified operator' },
+        { ar: 'تكلفة فحص الهيكل بعد أي حادث', en: 'Post-incident structural inspection cost' },
+      ],
+    },
+  },
+  {
+    keywords: ['ضاغط','compressor'],
+    ar: 'الضواغط', en: 'Compressors',
+    presets: {
+      usage: [
+        { ar: 'فحص الضغط يوميًا قبل البدء', en: 'Daily pressure check before use' },
+        { ar: 'تفريغ الخزان بعد كل يوم عمل', en: 'Drain tank after each work day' },
+      ],
+      late: [{ ar: 'فترة سماح ٣ ساعات ثم رسوم يومية كاملة', en: '3-hour grace then full daily fee' }],
+      penalty: [{ ar: 'استبدال الفلاتر التالفة بسعر السوق', en: 'Damaged filters replaced at market price' }],
+    },
+  },
+  {
+    keywords: ['قص','cutting','منشار','saw','جلخ'],
+    ar: 'أدوات القص', en: 'Cutting tools',
+    presets: {
+      usage: [
+        { ar: 'استخدام شفرات/أقراص أصلية فقط', en: 'Original blades/discs only' },
+        { ar: 'ارتداء نظارة ومعدات وقاية إلزامي', en: 'Safety glasses and PPE mandatory' },
+      ],
+      late: [{ ar: 'رسوم تأخير بالساعة عند تجاوز المدة', en: 'Hourly late fee after due time' }],
+      penalty: [{ ar: 'تكلفة استبدال الشفرات/الأقراص التالفة', en: 'Cost of replacing damaged blades/discs' }],
+    },
+  },
+  {
+    keywords: ['شاحن','vehicle','truck','سيارة','عربة','نقل'],
+    ar: 'المركبات والنقل', en: 'Vehicles & Transport',
+    presets: {
+      usage: [
+        { ar: 'يلزم رخصة قيادة سارية مناسبة للفئة', en: 'Valid driving license of the correct class required' },
+        { ar: 'الوقود على المستأجر', en: 'Fuel covered by renter' },
+        { ar: 'يُمنع استخدام المركبة خارج المنطقة المحددة', en: 'No use outside designated area' },
+      ],
+      late: [{ ar: 'رسوم تأخير بالساعة بحد أقصى يوم كامل', en: 'Hourly late fee, capped at one full day' }],
+      penalty: [
+        { ar: 'غرامة المخالفات المرورية على المستأجر', en: 'Traffic fines borne by the renter' },
+        { ar: 'خصم تكلفة التنظيف العميق عند الإرجاع متسخة', en: 'Deep-cleaning cost on dirty return' },
+      ],
+    },
+  },
+];
+
+const getCategoryPreset = (cat: RentalCategory | undefined, nameAr: string, nameEn: string) => {
+  const hay = `${cat?.name_ar ?? ''} ${cat?.name_en ?? ''} ${nameAr} ${nameEn}`.toLowerCase();
+  return CATEGORY_PRESETS.find(p => p.keywords.some(k => hay.includes(k.toLowerCase()))) ?? null;
+};
+
+const mergePresets = (base: ReadonlyArray<Preset>, extra?: ReadonlyArray<Preset>): Preset[] => {
+  if (!extra?.length) return [...base];
+  const seen = new Set(base.map(p => p.ar));
+  return [...extra.filter(p => !seen.has(p.ar)), ...base];
+};
 
 const CONDITION_OPTIONS = [
   { value: 'new',      ar: 'جديد',        en: 'New' },
