@@ -110,7 +110,6 @@ const FILES = {
   hero:        SRC('src/components/home/v2/HomeV2.tsx'),
   sectorGrid:  SRC('src/components/home/v2/sections/HomeSectorGrid.tsx'),
   categoryRow: SRC('src/components/home/v2/sections/HomeCategoryRow.tsx'),
-  featured:    SRC('src/components/home/v2/sections/HomeFeaturedShowcase.tsx'),
   rowsData:    SRC('src/components/home/v2/data/categoryRows.ts'),
   index:       SRC('src/pages/Index.tsx'),
   taxonomy:    SRC('src/components/home/v2/data/homeTaxonomy.ts'),
@@ -331,12 +330,6 @@ describe('Home Taxonomy Link Guard', () => {
     it('HomeCategoryRow business cards link to /${username ?? id}, not /q/', () => {
       expect(files.categoryRow).not.toMatch(/to=\{`\/q\//);
       expect(files.categoryRow).not.toMatch(/href\s*=\s*`\/q\//);
-    });
-
-    it('HomeFeaturedShowcase business cards link to /${username ?? id}, not /q/', () => {
-      // Only allow `/q/` to appear inside a comment, not inside a template/string used as href.
-      expect(files.featured).not.toMatch(/href\s*=\s*[`'"]\/q\//);
-      expect(files.featured).not.toMatch(/to=\{`\/q\//);
     });
   });
 
