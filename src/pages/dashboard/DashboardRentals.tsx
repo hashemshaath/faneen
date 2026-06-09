@@ -707,6 +707,7 @@ const DashboardRentals: React.FC = () => {
               categories={categories}
               items={items}
               onChange={refreshItems}
+              termTemplates={termTemplates}
               />
             </div>
           </TabsContent>
