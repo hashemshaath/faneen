@@ -19,13 +19,23 @@ import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
 import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
 import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
 import {
+  CANONICAL_PRIMARY_SLUGS,
+  CANONICAL_PRIMARY_LABELS,
+  type CanonicalPrimarySlug,
+} from '@/modules/taxonomy/canonical-primaries';
+import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
+import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
   ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle,
 } from 'lucide-react';
 
-type Sector =
-  | 'aluminum' | 'iron' | 'wood' | 'glass' | 'stainless'
-  | 'fabrication' | 'storefronts' | 'project-fitout' | 'other';
+/**
+ * Safe Batch 3 — Sector is now any canonical primary-activity taxonomy slug
+ * (the 13 from `CANONICAL_PRIMARY_SLUGS`). Legacy slugs arriving via
+ * `?sector=…` are normalized in `resolveQuoteSectorFromUrl` before reaching
+ * the form.
+ */
+type Sector = CanonicalPrimarySlug | '';
 
 type ServiceLocation = 'on-site' | 'at-provider' | 'unsure';
 type Timeline = 'week' | 'two-weeks' | 'month' | 'flexible' | 'ask-provider';
@@ -34,7 +44,9 @@ type ClientType = 'individual' | 'contractor' | 'engineering' | 'company' | 'gov
 type ContactPref = 'whatsapp' | 'call' | 'email';
 
 interface QuoteForm {
-  sector: Sector | '';
+  sector: Sector;
+  /** Optional canonical sub-specialty slug (child of `sector`). */
+  specialty: string;
   city: string;
   district: string;
   serviceLocation: ServiceLocation | '';
@@ -59,24 +71,24 @@ interface QuoteForm {
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
 
 const emptyForm: QuoteForm = {
-  sector: '', city: '', district: '', serviceLocation: '',
+  sector: '', specialty: '', city: '', district: '', serviceLocation: '',
   description: '', measurements: '', quantity: '', files: [],
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
   preferredBrandIds: [], brandPreferenceMode: '', brandNotes: '',
 };
 
-const SECTORS: { value: Sector; ar: string; en: string }[] = [
-  { value: 'aluminum',       ar: 'ألمنيوم',         en: 'Aluminum' },
-  { value: 'iron',           ar: 'حديد',            en: 'Iron' },
-  { value: 'wood',           ar: 'خشب',             en: 'Wood' },
-  { value: 'glass',          ar: 'زجاج',            en: 'Glass' },
-  { value: 'stainless',      ar: 'ستانلس ستيل',     en: 'Stainless steel' },
-  { value: 'fabrication',    ar: 'تصنيع وتركيب',    en: 'Fabrication & install' },
-  { value: 'storefronts',    ar: 'واجهات ومحلات',   en: 'Storefronts & shops' },
-  { value: 'project-fitout', ar: 'تجهيزات مشاريع',  en: 'Project fit-out' },
-  { value: 'other',          ar: 'أخرى',            en: 'Other' },
-];
+/**
+ * Safe Batch 3 — The 13 canonical primaries are the ONLY sector options
+ * the user can pick. Labels come from `CANONICAL_PRIMARY_LABELS` so the
+ * picker is renderable instantly without waiting on a network round-trip.
+ */
+const SECTORS: { value: CanonicalPrimarySlug; ar: string; en: string }[] =
+  CANONICAL_PRIMARY_SLUGS.map((slug) => ({
+    value: slug,
+    ar: CANONICAL_PRIMARY_LABELS[slug].ar,
+    en: CANONICAL_PRIMARY_LABELS[slug].en,
+  }));
 
 const SAUDI_PHONE = /^(?:\+?966|0)?5\d{8}$/;
 
@@ -159,6 +171,61 @@ const FieldError: React.FC<{ message?: string }> = ({ message }) =>
       <span>{message}</span>
     </p>
   ) : null;
+
+/**
+ * Safe Batch 3 — Sub-specialty picker. Fetches taxonomy categories via the
+ * cached `useSearchableTaxonomyCategories` hook (single round-trip shared
+ * with SearchFilters) and renders the direct children of the chosen primary
+ * activity. Optional — user can leave the specialty unselected.
+ */
+const QuoteSpecialtyPicker: React.FC<{
+  primarySlug: string;
+  value: string;
+  onChange: (slug: string) => void;
+}> = ({ primarySlug, value, onChange }) => {
+  const { isRTL, language } = useLanguage();
+  const { data: taxonomy, isLoading } = useSearchableTaxonomyCategories();
+  const primary = taxonomy?.find((c) => c.slug === primarySlug);
+  const subs = primary
+    ? (taxonomy ?? []).filter((c) => c.parent_id === primary.id)
+    : [];
+  if (isLoading || subs.length === 0) return null;
+  return (
+    <div className="mt-5 pt-4 border-t border-border/40">
+      <div className="mb-2 text-sm font-semibold text-foreground">
+        <Bi ar="التخصص الفرعي (اختياري)" en="Specialty (optional)" />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {subs.map((c) => {
+          const active = value === c.slug;
+          const label = language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onChange(active ? '' : c.slug)}
+              aria-pressed={active}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
+                active
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-foreground/80 border-border hover:border-primary/40 hover:text-primary'
+              }`}
+              dir="auto"
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        <Bi
+          ar={isRTL ? 'سيساعد المزودين على فهم احتياجك بدقة أكبر.' : ''}
+          en="Helps providers understand your need more precisely."
+        />
+      </p>
+    </div>
+  );
+};
 
 /* ---------------- main page ---------------- */
 
@@ -366,7 +433,13 @@ const Quote: React.FC = () => {
       budget_note: form.budgetMode === 'after-quotes'
         ? 'after-quotes'
         : form.budgetMode === 'no' ? 'no-budget' : null,
-      metadata: { locale: isRTL ? 'ar' : 'en' },
+      metadata: {
+        locale: isRTL ? 'ar' : 'en',
+        // Safe Batch 3 — Persist the canonical taxonomy slugs in metadata so
+        // the matcher / future analytics never have to re-resolve.
+        taxonomy_primary_slug: form.sector || null,
+        taxonomy_specialty_slug: form.specialty || null,
+      },
       preferred_brand_ids: form.preferredBrandIds.length ? form.preferredBrandIds : null,
       brand_preference_mode: form.preferredBrandIds.length && form.brandPreferenceMode
         ? form.brandPreferenceMode
@@ -584,17 +657,27 @@ const Quote: React.FC = () => {
                       ar="ما نوع الخدمة التي تحتاجها؟"
                       en="What service do you need?"
                       help={{
-                        ar: 'اختر أقرب قطاع لاحتياجك. يمكنك توضيح التفاصيل في الخطوة التالية.',
-                        en: 'Pick the closest sector. You can add specifics in the next step.',
+                        ar: 'اختر النشاط الرئيسي، ثم تخصص فرعي إذا أحببت تحديده أكثر.',
+                        en: 'Pick the primary activity, then optionally a specialty.',
                       }}
                     />
                     <ChoiceGrid
-                      name={bi('القطاع', 'Sector')}
+                      name={bi('النشاط الرئيسي', 'Primary activity')}
                       options={SECTORS.map((s) => ({ value: s.value, ar: s.ar, en: s.en }))}
                       value={form.sector}
-                      onChange={(v) => update('sector', v as Sector)}
+                      onChange={(v) => {
+                        update('sector', v as Sector);
+                        if (form.specialty) update('specialty', '');
+                      }}
                     />
                     <FieldError message={errors.sector} />
+                    {form.sector && (
+                      <QuoteSpecialtyPicker
+                        primarySlug={form.sector}
+                        value={form.specialty}
+                        onChange={(v) => update('specialty', v)}
+                      />
+                    )}
                   </div>
                 )}
 
