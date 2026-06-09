@@ -157,7 +157,7 @@ const Index = () => {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
       name: 'قطاعات الصناعات الخفيفة',
-      description: 'القطاعات الرئيسية المتاحة على منصة قِطاعات: ألمنيوم وزجاج وواجهات، حديد ومعادن، خشب ونجارة، ستانلس ستيل، مقاولات وتشطيبات، تقنية وأنظمة، وتأجير المعدات.',
+      description: 'الأنشطة الرئيسية على منصة قِطاعات: ألمنيوم، زجاج وسيكوريت، حديد ومعادن، ستانلس ستيل، خشب ونجارة، مطابخ، واجهات وكلادينج، مقاولات وتشطيبات، مصاعد وصيانة، طاقة واستدامة، تقنية وشبكات، أنظمة حماية وتحكم، وتأجير المعدات.',
       itemListOrder: 'https://schema.org/ItemListOrderAscending',
       numberOfItems: HOME_JSONLD_SLUGS.length,
       // Derived from homeTaxonomy.ts — no slug strings in this file.
