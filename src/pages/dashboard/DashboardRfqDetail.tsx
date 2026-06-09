@@ -208,7 +208,7 @@ const DashboardRfqDetail: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-xs text-muted-foreground tech-content flex-shrink-0">
-                      {new Date(ev.at).toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', {
+                      {new Date(ev.at).toLocaleTimeString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
                         hour: '2-digit',
                         minute: '2-digit',
                         second: '2-digit',

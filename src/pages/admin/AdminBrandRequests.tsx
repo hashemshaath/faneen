@@ -316,7 +316,7 @@ function RequestRow(props: {
             {r.proposed_sector_ids?.length > 0 && (
               <span>{isRTL ? 'القطاعات:' : 'Sectors:'} {r.proposed_sector_ids.length}</span>
             )}
-            <span>{new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
+            <span>{new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">

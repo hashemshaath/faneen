@@ -496,14 +496,14 @@ const AdminOwnershipTransferRequests: React.FC = () => {
                       <Badge variant="outline" className={`rounded-lg gap-1 ${STATUS_STYLE[r.status]}`}>
                         <StatusIcon className="w-3 h-3" /> {isRTL ? STATUS_LABEL[r.status].ar : STATUS_LABEL[r.status].en}
                       </Badge>
-                      <span className="text-[10px] text-muted-foreground tech-content">{new Date(r.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-GB')}</span>
+                      <span className="text-[10px] text-muted-foreground tech-content">{new Date(r.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-GB')}</span>
                     </div>
                   </div>
 
                   {r.status !== 'pending' && r.admin_note && (
                     <div className="text-[11.5px] text-muted-foreground border-t border-border/60 pt-2">
                       <span className="font-semibold text-foreground">{isRTL ? 'ملاحظة الادمن:' : 'Admin note:'}</span> {r.admin_note}
-                      {r.reviewed_at && <span className="ms-2 tech-content opacity-70">· {new Date(r.reviewed_at).toLocaleString(isRTL ? 'ar-SA' : 'en-GB')}</span>}
+                      {r.reviewed_at && <span className="ms-2 tech-content opacity-70">· {new Date(r.reviewed_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-GB')}</span>}
                     </div>
                   )}
 

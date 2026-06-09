@@ -131,7 +131,7 @@ export const BusinessProfileHeader = ({
         : language === "ar"
           ? "غير مصنّف"
           : "Unclassified";
-  const memberDate = new Date(business.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US", {
+  const memberDate = new Date(business.created_at).toLocaleDateString(language === "ar" ? "ar-SA-u-nu-latn" : "en-US", {
     year: "numeric",
     month: "long",
   });

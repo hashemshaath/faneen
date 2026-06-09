@@ -30,7 +30,7 @@ function summarizeMetadata(metadata: Record<string, unknown> | null): string {
 
 function formatDate(iso: string, isRTL: boolean): string {
   try {
-    return new Date(iso).toLocaleString(isRTL ? "ar-SA" : "en-US", {
+    return new Date(iso).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en-US", {
       year: "numeric",
       month: "short",
       day: "2-digit",

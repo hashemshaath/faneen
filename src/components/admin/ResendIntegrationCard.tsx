@@ -263,7 +263,7 @@ export function ResendIntegrationCard() {
         {/* Footer links */}
         <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground">
-            {s?.checkedAt && (isRTL ? 'آخر فحص: ' : 'Last checked: ') + new Date(s.checkedAt).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+            {s?.checkedAt && (isRTL ? 'آخر فحص: ' : 'Last checked: ') + new Date(s.checkedAt).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
           </p>
           <div className="flex items-center gap-1">
             <a href="https://resend.com/api-keys" target="_blank" rel="noopener" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">

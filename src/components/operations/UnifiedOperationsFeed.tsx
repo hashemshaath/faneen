@@ -92,7 +92,7 @@ export function UnifiedOperationsFeed({
   function formatDay(day: string): string {
     try {
       const d = new Date(`${day}T00:00:00`);
-      return d.toLocaleDateString(isRTL ? "ar-SA" : "en-US", {
+      return d.toLocaleDateString(isRTL ? "ar-SA-u-nu-latn" : "en-US", {
         year: "numeric", month: "short", day: "2-digit", weekday: "short",
       });
     } catch {
@@ -102,7 +102,7 @@ export function UnifiedOperationsFeed({
 
   function formatTime(iso: string): string {
     try {
-      return new Date(iso).toLocaleTimeString(isRTL ? "ar-SA" : "en-US", {
+      return new Date(iso).toLocaleTimeString(isRTL ? "ar-SA-u-nu-latn" : "en-US", {
         hour: "2-digit", minute: "2-digit",
       });
     } catch {

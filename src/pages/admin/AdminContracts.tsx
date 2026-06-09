@@ -159,7 +159,7 @@ export default function AdminContracts() {
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 tech-content" dir="ltr">
                         {(c.total_amount ?? 0).toLocaleString()} {c.currency_code} •{' '}
-                        {new Date(c.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                        {new Date(c.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                       </p>
                     </div>
                     <Button asChild variant="ghost" size="sm" className="gap-1">

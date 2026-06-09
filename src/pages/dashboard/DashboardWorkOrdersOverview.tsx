@@ -118,7 +118,7 @@ export default function DashboardWorkOrdersOverview() {
   function formatDate(iso: string | null): string {
     if (!iso) return tx.noDue;
     try {
-      return new Date(iso).toLocaleDateString(isRTL ? "ar-SA" : "en-US", {
+      return new Date(iso).toLocaleDateString(isRTL ? "ar-SA-u-nu-latn" : "en-US", {
         year: "numeric", month: "short", day: "2-digit",
       });
     } catch {

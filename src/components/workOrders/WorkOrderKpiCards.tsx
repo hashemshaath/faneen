@@ -50,7 +50,7 @@ export function WorkOrderKpiCards({ kpis, isRTL }: Props) {
                 </div>
                 <div className="min-w-0">
                   <p className="text-lg sm:text-xl font-bold tech-content leading-tight">
-                    {t.value.toLocaleString(isRTL ? "ar-SA" : "en-US")}
+                    {t.value.toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en-US")}
                   </p>
                   <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">
                     {t.label}

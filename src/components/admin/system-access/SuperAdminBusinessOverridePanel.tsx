@@ -278,7 +278,7 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
                 </span>
                 {a.reason && <span className="text-muted-foreground">· {a.reason}</span>}
                 <span className="text-muted-foreground ms-auto tech-content">
-                  {new Date(a.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                  {new Date(a.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                 </span>
               </li>
             ))}

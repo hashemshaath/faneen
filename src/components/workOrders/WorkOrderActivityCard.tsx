@@ -52,7 +52,7 @@ export function WorkOrderActivityCard({ businessId, isRTL, limit = 100 }: Props)
 
   function formatDate(iso: string): string {
     try {
-      return new Date(iso).toLocaleString(isRTL ? "ar-SA" : "en-US", {
+      return new Date(iso).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en-US", {
         month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit",
       });
     } catch {
