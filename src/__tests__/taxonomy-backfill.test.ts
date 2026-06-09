@@ -81,7 +81,7 @@ describe('Phase 9 — taxonomy backfill & runtime mapping', () => {
   });
 
   it('static fallback still resolves canonical sectors', () => {
-    expect(LEGACY_SECTOR_TO_TAXONOMY_SLUG.aluminum).toBe('aluminum-glass-facades');
+    expect(LEGACY_SECTOR_TO_TAXONOMY_SLUG.aluminum).toBe('aluminum-works');
     expect(LEGACY_SECTOR_TO_TAXONOMY_SLUG.steel).toBe('steel-metal-works');
   });
 });
