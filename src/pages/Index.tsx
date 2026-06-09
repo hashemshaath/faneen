@@ -10,9 +10,9 @@ import { lazyRetry } from "@/lib/lazyRetry";
 import { HOME_JSONLD_SLUGS, getHomeTaxonomyEntry } from "@/components/home/v2/data/homeTaxonomy";
 // Eager: above-the-fold + LCP hero, plus the chips bar (small, no images).
 import { HeroV2 } from "@/components/home/v2/HomeV2";
-// FAQ data is needed eagerly for JSON-LD; keep it in a tiny module so the
-// FAQSection component itself can stay lazy-loaded.
-import { FAQ_ITEMS_BI } from "@/components/home/v2/sections/faqItems";
+// FAQ JSON-LD reads from the same source as <FAQSection>: DB first
+// (home_faq_items), with a static fallback baked into useHomeFaq.
+import { useHomeFaq } from "@/modules/home";
 // Below-the-fold sections — each one ships as its own chunk so HomeV2 no
 // longer carries every image import in the eager bundle (PERF-1C).
 // HomeV2 rebuild (marketplace layout): 11 sections → 6 sections.
@@ -104,6 +104,7 @@ const SectionFallback = ({
 
 const Index = () => {
   useImagePerfTracking('home');
+  const { items: faqItems } = useHomeFaq();
   usePageMeta({
     title: 'قطاعات | مزودو خدمات الألمنيوم والحديد والخشب والزجاج في السعودية',
     description:
@@ -118,7 +119,8 @@ const Index = () => {
   });
 
   // WebSite + Organization + FAQPage JSON-LD (all rendered as separate <script> tags)
-  useMultiJsonLd(useMemo(() => ([
+  useMultiJsonLd(useMemo(() => {
+    const blocks: Array<Record<string, unknown>> = [
     {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
@@ -210,16 +212,20 @@ const Index = () => {
         { '@type': 'ListItem', position: 3, name: 'البحث', item: 'https://qitaat.com/search' },
       ],
     },
-    {
+  ];
+  if (faqItems.length > 0) {
+    blocks.push({
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
-      mainEntity: FAQ_ITEMS_BI.map((it) => ({
+      mainEntity: faqItems.map((it) => ({
         '@type': 'Question',
-        name: it.qAr,
-        acceptedAnswer: { '@type': 'Answer', text: it.aAr },
+        name: it.question_ar,
+        acceptedAnswer: { '@type': 'Answer', text: it.answer_ar },
       })),
-    },
-  ]), []));
+    });
+  }
+  return blocks;
+  }, [faqItems]));
 
   return (
     <ErrorBoundary>
