@@ -26,6 +26,7 @@ import {
   type HomeSectorRow, type HomeSectorOverride,
 } from '../services/homeSectors';
 import { resolveSectorIcon } from '../data/sectorIconRegistry';
+import { Square as FallbackIcon } from 'lucide-react';
 import {
   HOME_ALLOWED_SLUGS, HOME_SECTOR_GRID_SLUGS,
 } from '@/components/home/v2/data/homeTaxonomy';
@@ -61,6 +62,24 @@ function buildTile(def: DefaultTile, row: HomeSectorRow | undefined): SectorTile
     titleEn: o.title_en?.trim() || def.titleEn,
     bodyAr: o.body_ar?.trim() || def.bodyAr,
     bodyEn: o.body_en?.trim() || def.bodyEn,
+  };
+}
+
+/** Build a tile entirely from DB row + admin overrides (no hardcoded default). */
+function buildTileFromRow(row: HomeSectorRow): SectorTile | null {
+  const o = row.override;
+  const titleAr = (o.title_ar ?? row.name_ar)?.trim();
+  const titleEn = (o.title_en ?? row.name_en ?? row.name_ar)?.trim();
+  const bodyAr = (o.body_ar ?? row.short_description_ar ?? '').trim();
+  const bodyEn = (o.body_en ?? row.short_description_en ?? '').trim();
+  if (!titleAr || !bodyAr) return null; // require Arabic title + body
+  return {
+    slug: row.slug,
+    Icon: resolveSectorIcon(o.icon, FallbackIcon),
+    titleAr,
+    titleEn: titleEn || titleAr,
+    bodyAr,
+    bodyEn: bodyEn || bodyAr,
   };
 }
 
@@ -105,8 +124,10 @@ export function useHomeSectorTiles(defaults: DefaultTile[]) {
     .slice(0, 10)
     .map((slug) => {
       const def = defaultBySlug.get(slug);
-      if (!def) return null;
-      return buildTile(def, rowBySlug.get(slug));
+      const row = rowBySlug.get(slug);
+      if (def) return buildTile(def, row);
+      if (row) return buildTileFromRow(row);
+      return null;
     })
     .filter((t): t is SectorTile => t !== null);
 
