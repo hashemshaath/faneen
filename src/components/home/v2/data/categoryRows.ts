@@ -9,7 +9,8 @@
  * return zero results rather than 404.
  *
  * Known taxonomy slugs (kept in sync with MainSectors / SEO JSON-LD):
- *   aluminum, iron, wood, glass, stainless, fabrication
+ *   aluminum-glass-facades, steel-metal-works, wood-carpentry,
+ *   stainless-steel-fabrication, contracting-finishing
  */
 
 export interface CategoryRowItem {
@@ -39,10 +40,10 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
     titleEn: 'Iron & stainless steel',
     subAr: 'درابزين، أبواب، هياكل معدنية وأعمال خاصة.',
     subEn: 'Railings, doors, frames and custom metalwork.',
-    allHref: '/search?category=iron',
+    allHref: '/search?category=steel-metal-works',
     items: [
-      { ar: 'حديد', en: 'Iron', slug: 'iron' },
-      { ar: 'ستانلس ستيل', en: 'Stainless steel', slug: 'stainless' },
+      { ar: 'حديد', en: 'Iron', slug: 'steel-metal-works' },
+      { ar: 'ستانلس ستيل', en: 'Stainless steel', slug: 'stainless-steel-fabrication' },
       { ar: 'درابزين', en: 'Railings', query: 'درابزين' },
       { ar: 'أبواب حديد', en: 'Iron doors', query: 'أبواب حديد' },
       { ar: 'هياكل معدنية', en: 'Metal frames', query: 'هياكل معدنية' },
@@ -54,10 +55,10 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
     titleEn: 'Aluminum, glass & tempered glass',
     subAr: 'واجهات، شبابيك، أبواب وقواطع.',
     subEn: 'Facades, windows, doors and partitions.',
-    allHref: '/search?category=aluminum',
+    allHref: '/search?category=aluminum-glass-facades',
     items: [
-      { ar: 'ألمنيوم', en: 'Aluminum', slug: 'aluminum' },
-      { ar: 'زجاج', en: 'Glass', slug: 'glass' },
+      { ar: 'ألمنيوم', en: 'Aluminum', slug: 'aluminum-glass-facades' },
+      { ar: 'زجاج', en: 'Glass', slug: 'aluminum-glass-facades' },
       { ar: 'سيكوريت', en: 'Tempered glass', query: 'سيكوريت' },
       { ar: 'واجهات', en: 'Facades', query: 'واجهات' },
       { ar: 'شبابيك وأبواب', en: 'Windows & doors', query: 'شبابيك ألمنيوم' },
@@ -83,9 +84,9 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
     titleEn: 'Kitchens & woodwork',
     subAr: 'مطابخ ألمنيوم وستانلس وخشب، أبواب وديكورات.',
     subEn: 'Aluminum / stainless / wood kitchens, doors and décor.',
-    allHref: '/search?category=wood',
+    allHref: '/search?category=wood-carpentry',
     items: [
-      { ar: 'خشب', en: 'Wood', slug: 'wood' },
+      { ar: 'خشب', en: 'Wood', slug: 'wood-carpentry' },
       { ar: 'مطابخ ألمنيوم', en: 'Aluminum kitchens', query: 'مطابخ ألمنيوم' },
       { ar: 'مطابخ ستانلس', en: 'Stainless kitchens', query: 'مطابخ ستانلس' },
       { ar: 'مطابخ خشب', en: 'Wood kitchens', query: 'مطابخ خشب' },
@@ -98,9 +99,9 @@ export const HOME_CATEGORY_ROWS: CategoryRow[] = [
     titleEn: 'Fabrication & installation',
     subAr: 'ورش ومصانع وفرق تنفيذ متخصصة.',
     subEn: 'Workshops, factories and install crews.',
-    allHref: '/search?category=fabrication',
+    allHref: '/search?category=contracting-finishing',
     items: [
-      { ar: 'تصنيع وتركيب', en: 'Fabrication & install', slug: 'fabrication' },
+      { ar: 'تصنيع وتركيب', en: 'Fabrication & install', slug: 'contracting-finishing' },
       { ar: 'ورش تصنيع', en: 'Fabrication shops', query: 'ورش تصنيع' },
       { ar: 'فرق تركيب', en: 'Install crews', query: 'فرق تركيب' },
     ],
