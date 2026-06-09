@@ -258,8 +258,6 @@ export const HOME_SECTOR_GRID_SLUGS = [
   'kitchens-works',
   'facades-cladding',
   'elevators-maintenance',
-  'energy-sustainability',
-  'technology-networks',
 ] as const;
 
 /** Row id -> primary + provider slugs. Consumed by categoryRows.ts. */
