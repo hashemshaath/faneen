@@ -391,7 +391,25 @@ export default function DashboardSites() {
     queryKey: ['dashboard-sites', businessId, user?.id, showArchived],
     queryFn: async () => {
       if (!user) return [];
-      let q = supabase.from('client_sites').select('*').order('is_default', { ascending: false }).order('created_at', { ascending: false });
+      // owner_id_number and tax_number are column-revoked from `authenticated`
+      // for PII protection — fetched on demand via `get_client_site_sensitive`
+      // RPC only by the site's client owner or an admin.
+      let q = supabase
+        .from('client_sites')
+        .select(`
+          id, business_id, client_user_id, site_ref, label, site_name, site_type, visibility,
+          contact_name, contact_phone, country_id, country_code, city_id, city_name,
+          region, region_en, district, district_en, street_name, street_name_en,
+          building_number, additional_number, post_code, short_address, address_en,
+          address_line1, address_line2, map_url, latitude, longitude, access_notes,
+          is_default, archived_at, created_at,
+          municipal_license_no, municipal_license_issue_date, municipal_license_expiry_date,
+          title_deed_no, title_deed_date, owner_name,
+          land_use_type, plot_number, block_number, plan_number, government_notes,
+          cover_image_url, gallery_images
+        `)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
       if (!showArchived) q = q.is('archived_at', null);
       // Provider with a linked business → only their business sites.
       // Individual users (no business) → RLS already restricts to client_user_id = auth.uid().
