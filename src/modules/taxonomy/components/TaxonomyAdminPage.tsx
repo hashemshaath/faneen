@@ -28,7 +28,7 @@ import type { TaxonomyCategory } from '../types';
 import { TaxonomySummaryCards } from './TaxonomySummaryCards';
 import { defaultTaxonomyFilters, type TaxonomyFilterState } from './TaxonomyFilters';
 import { TaxonomySearchBar } from './TaxonomySearchBar';
-import { classifyTaxonomyType } from './TaxonomyTypeChips';
+// TaxonomyTypeChips replaced by the vertical section sidebar (Phase 21).
 import { TaxonomyCategoryList } from './TaxonomyCategoryList';
 import { TaxonomyCategoryDetails } from './TaxonomyCategoryDetails';
 import { TaxonomyTreeView } from './TaxonomyTreeView';
@@ -161,11 +161,6 @@ export const TaxonomyAdminPage: React.FC = () => {
     staleTime: 60_000,
   });
   const usage = usageQ.data;
-
-  const groupByTypeId = useMemo(
-    () => new Map(types.map((t) => [t.id, classifyTaxonomyType(t.code)] as const)),
-    [types],
-  );
 
   const filtered = useMemo<TaxonomyCategory[]>(() => {
     const q = normalizeTaxonomyLabel(filters.query);
