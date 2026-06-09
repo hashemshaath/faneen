@@ -119,9 +119,18 @@ export const BusinessProfileHeader = ({
   // name is intentionally not used for display. When no modern taxonomy is
   // available we show a localized "Unclassified" label.
   const taxonomy = useBusinessTaxonomyDisplay(business.id, language);
-  const categoryName = taxonomy.hasModernTaxonomy && taxonomy.primaryLabel
-    ? taxonomy.primaryLabel
-    : (language === "ar" ? "غير مصنّف" : "Unclassified");
+  // Safe Batch 4 — multi-primary aware. Render up to 3 primaries joined
+  // by a thin separator; fall back to the canonical legacy primaryLabel
+  // (already normalized upstream) or "Unclassified".
+  const primaryChips = taxonomy.primaries.slice(0, 3);
+  const categoryName =
+    primaryChips.length > 0
+      ? primaryChips.map((p) => p.label).join(" · ")
+      : taxonomy.hasModernTaxonomy && taxonomy.primaryLabel
+        ? taxonomy.primaryLabel
+        : language === "ar"
+          ? "غير مصنّف"
+          : "Unclassified";
   const memberDate = new Date(business.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US", {
     year: "numeric",
     month: "long",
