@@ -20,7 +20,6 @@ interface SiteGov {
   title_deed_no: string | null;
   title_deed_date: string | null;
   owner_name: string | null;
-  owner_id_number: string | null;
   land_use_type: string | null;
   plot_number: string | null;
   block_number: string | null;
@@ -33,7 +32,7 @@ export function SiteGovernmentDataPanel({ siteId, isRTL }: { siteId: string; isR
     queryFn: async () => {
       const { data, error } = await supabase
         .from('client_sites')
-        .select('id, site_ref, municipal_license_no, municipal_license_issue_date, municipal_license_expiry_date, title_deed_no, title_deed_date, owner_name, owner_id_number, land_use_type, plot_number, block_number, plan_number')
+        .select('id, site_ref, municipal_license_no, municipal_license_issue_date, municipal_license_expiry_date, title_deed_no, title_deed_date, owner_name, land_use_type, plot_number, block_number, plan_number')
         .eq('id', siteId)
         .maybeSingle();
       if (error) throw error;
@@ -55,7 +54,7 @@ export function SiteGovernmentDataPanel({ siteId, isRTL }: { siteId: string; isR
 
   const hasAny = !!(
     data.municipal_license_no || data.title_deed_no || data.owner_name ||
-    data.owner_id_number || data.land_use_type || data.plot_number ||
+    data.land_use_type || data.plot_number ||
     data.block_number || data.plan_number
   );
 
@@ -121,7 +120,6 @@ export function SiteGovernmentDataPanel({ siteId, isRTL }: { siteId: string; isR
           <Row label={isRTL ? 'رقم الصك' : 'Deed No.'} value={data.title_deed_no} mono />
           <Row label={isRTL ? 'تاريخ الصك' : 'Deed Date'} value={data.title_deed_date} mono />
           <Row label={isRTL ? 'المالك' : 'Owner'} value={data.owner_name} />
-          <Row label={isRTL ? 'هوية المالك' : 'Owner ID'} value={data.owner_id_number} mono />
         </div>
 
         <div className="rounded-lg bg-background/60 border border-border/40 p-2.5 space-y-0.5">

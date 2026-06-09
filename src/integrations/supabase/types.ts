@@ -19096,8 +19096,6 @@ export type Database = {
           city_id: string | null
           city_name_ar: string | null
           city_name_en: string | null
-          contact_email: string | null
-          contact_phone: string | null
           country_id: string | null
           cover_url: string | null
           created_at: string | null
@@ -20936,6 +20934,13 @@ export type Database = {
         Args: { _site_id: string }
         Returns: Json
       }
+      get_client_site_sensitive: {
+        Args: { _site_id: string }
+        Returns: {
+          owner_id_number: string
+          tax_number: string
+        }[]
+      }
       get_client_site_timeline: {
         Args: { _limit?: number; _site_id: string }
         Returns: {
@@ -21089,6 +21094,7 @@ export type Database = {
         Returns: string
       }
       get_home_stats: { Args: never; Returns: Json }
+      get_lead_internal_notes: { Args: { _lead_id: string }; Returns: string }
       get_loyalty_summary: {
         Args: { _user_id: string }
         Returns: {

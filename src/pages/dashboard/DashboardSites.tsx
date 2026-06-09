@@ -76,7 +76,11 @@ interface ClientSite {
   title_deed_no: string | null;
   title_deed_date: string | null;
   owner_name: string | null;
-  owner_id_number: string | null;
+  /** Column-revoked for non-owners; loaded on-demand via RPC for the site's
+   *  client owner and admins only. Always null in the list query. */
+  owner_id_number?: string | null;
+  /** Same protection as owner_id_number. */
+  tax_number?: string | null;
   land_use_type: string | null;
   plot_number: string | null;
   block_number: string | null;
@@ -391,7 +395,25 @@ export default function DashboardSites() {
     queryKey: ['dashboard-sites', businessId, user?.id, showArchived],
     queryFn: async () => {
       if (!user) return [];
-      let q = supabase.from('client_sites').select('*').order('is_default', { ascending: false }).order('created_at', { ascending: false });
+      // owner_id_number and tax_number are column-revoked from `authenticated`
+      // for PII protection — fetched on demand via `get_client_site_sensitive`
+      // RPC only by the site's client owner or an admin.
+      let q = supabase
+        .from('client_sites')
+        .select(`
+          id, business_id, client_user_id, owner_user_id, site_ref, label, site_name, site_type, visibility,
+          contact_name, contact_phone, country_id, city_id, city_name,
+          region, region_en, district, district_en, street_name, street_name_en,
+          building_number, additional_number, post_code, short_address, address_en,
+          address_line1, address_line2, map_url, latitude, longitude, access_notes,
+          is_default, archived_at, created_at,
+          municipal_license_no, municipal_license_issue_date, municipal_license_expiry_date,
+          title_deed_no, title_deed_date, owner_name,
+          land_use_type, plot_number, block_number, plan_number, government_notes,
+          cover_image_url, gallery_images
+        `)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
       if (!showArchived) q = q.is('archived_at', null);
       // Provider with a linked business → only their business sites.
       // Individual users (no business) → RLS already restricts to client_user_id = auth.uid().
@@ -609,7 +631,7 @@ export default function DashboardSites() {
         (s.municipal_license_no || '').toLowerCase().includes(q) ||
         (s.title_deed_no || '').toLowerCase().includes(q) ||
         (s.owner_name || '').toLowerCase().includes(q) ||
-        (s.owner_id_number || '').toLowerCase().includes(q)
+        (s.site_ref || '').toLowerCase().includes(q)
       );
     }
     if (advLicenseNo.trim()) {
@@ -621,8 +643,9 @@ export default function DashboardSites() {
       r = r.filter(s => (s.title_deed_no || '').toLowerCase().includes(q));
     }
     if (advOwnerId.trim()) {
-      const q = advOwnerId.trim().toLowerCase();
-      r = r.filter(s => (s.owner_id_number || '').toLowerCase().includes(q));
+      // owner_id_number is no longer available in list queries (PII column-revoked).
+      // Advanced filter by ID is intentionally disabled; matches return empty.
+      r = [];
     }
     if (advIssueFrom) r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date >= advIssueFrom);
     if (advIssueTo)   r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date <= advIssueTo);
@@ -655,8 +678,20 @@ export default function DashboardSites() {
     setIssues([]); setActiveTab('general'); setShowForm(true);
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, []);
-  const openEdit = useCallback((s: ClientSite) => {
+  const openEdit = useCallback(async (s: ClientSite) => {
     setEditing(s);
+    // Pull owner_id_number / tax_number through the secure RPC. RLS column
+    // grants block reading them via `.select()`, so we never include them in
+    // the list query above. The RPC only returns values to the site's
+    // client owner or an admin.
+    let sensitive: { owner_id_number: string | null; tax_number: string | null } | null = null;
+    try {
+      const { data: rows } = await supabase.rpc('get_client_site_sensitive', { _site_id: s.id });
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row) sensitive = { owner_id_number: row.owner_id_number ?? null, tax_number: row.tax_number ?? null };
+    } catch {
+      sensitive = null;
+    }
     setForm({
       label: s.label, site_name: s.site_name || '', site_type: s.site_type, visibility: s.visibility,
       contact_name: s.contact_name || '', contact_phone: s.contact_phone || '',
@@ -669,8 +704,8 @@ export default function DashboardSites() {
       title_deed_no:                  s.title_deed_no || '',
       title_deed_date:                s.title_deed_date || '',
       owner_name:                     s.owner_name || '',
-      owner_id_number:                s.owner_id_number || '',
-      tax_number:                     (s as ClientSite & { tax_number?: string | null }).tax_number || '',
+      owner_id_number:                sensitive?.owner_id_number || '',
+      tax_number:                     sensitive?.tax_number || '',
       land_use_type:                  s.land_use_type || '',
       plot_number:                    s.plot_number || '',
       block_number:                   s.block_number || '',
