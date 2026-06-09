@@ -54,6 +54,7 @@ const AdminProviderSubscriptions = lazyRetry(() => import("./pages/admin/AdminPr
 const AdminServiceActivations = lazyRetry(() => import("./pages/admin/AdminServiceActivations"));
 const AdminAbExperiments = lazyRetry(() => import("./pages/admin/AdminAbExperiments"));
 const AdminShowcase = lazyRetry(() => import("./pages/admin/AdminShowcase"));
+const AdminPartnerShowcase = lazyRetry(() => import("./pages/admin/AdminPartnerShowcase"));
 const DashboardShowcase = lazyRetry(() => import("./pages/dashboard/DashboardShowcase"));
 const Showcase = lazyRetry(() => import("./pages/Showcase"));
 const Contracts = lazyRetry(() => import("./pages/Contracts"));
@@ -453,6 +454,7 @@ const AppRoutes = () => (
           <Route path="/admin/integrations" element={<ProtectedRoute requireAdmin><AdminIntegrations /></ProtectedRoute>} />
           <Route path="/admin/ab-experiments" element={<ProtectedRoute requireAdmin><AdminAbExperiments /></ProtectedRoute>} />
           <Route path="/admin/showcase" element={<ProtectedRoute requireAdmin><AdminShowcase /></ProtectedRoute>} />
+          <Route path="/admin/partner-showcase" element={<ProtectedRoute requireAdmin><AdminPartnerShowcase /></ProtectedRoute>} />
           <Route path="/dashboard/showcase" element={<ProtectedRoute><DashboardShowcase /></ProtectedRoute>} />
           <Route path="/showcase" element={<Showcase />} />
           <Route path="/admin/api-docs" element={<ProtectedRoute requireAdmin><AdminApiDocs /></ProtectedRoute>} />
