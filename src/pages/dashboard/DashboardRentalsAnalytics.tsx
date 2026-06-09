@@ -779,7 +779,7 @@ const DashboardRentalsAnalytics: React.FC = () => {
               title={bi('اتجاه الإيرادات', 'Revenue trend')}
               hint={bi('الفترة الحالية مقابل السابقة', 'Current vs previous period')}
             />
-            <div className="h-64">
+            <div className="h-64" data-chart="trend">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trend} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -806,7 +806,7 @@ const DashboardRentalsAnalytics: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             <Card className="p-4 rounded-xl">
               <SectionHead title={bi('الإيرادات حسب الحالة', 'Revenue by status')} />
-              <div className="h-64">
+              <div className="h-64" data-chart="status-bar">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={statusData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -816,7 +816,8 @@ const DashboardRentalsAnalytics: React.FC = () => {
                       contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 12, color: 'hsl(var(--popover-foreground))' }}
                       formatter={(v: number) => fmtMoney(v, currency)}
                     />
-                    <Bar dataKey="revenue" name={bi('الإيرادات', 'Revenue')} radius={[6, 6, 0, 0]}>
+                    <Bar dataKey="revenue" name={bi('الإيرادات', 'Revenue')} radius={[6, 6, 0, 0]} cursor="pointer"
+                      onClick={(d: { status?: RentalOrderStatus }) => d?.status && setDetail({ kind: 'status', status: d.status })}>
                       {statusData.map((s, i) => <Cell key={i} fill={s.color} />)}
                     </Bar>
                   </BarChart>
@@ -826,10 +827,12 @@ const DashboardRentalsAnalytics: React.FC = () => {
 
             <Card className="p-4 rounded-xl">
               <SectionHead title={bi('توزيع الطلبات', 'Orders distribution')} />
-              <div className="h-64">
+              <div className="h-64" data-chart="status-pie">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={statusData} dataKey="count" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
+                    <Pie data={statusData} dataKey="count" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}
+                      cursor="pointer"
+                      onClick={(d: { status?: RentalOrderStatus }) => d?.status && setDetail({ kind: 'status', status: d.status })}>
                       {statusData.map((s, i) => <Cell key={i} fill={s.color} />)}
                     </Pie>
                     <Legend />
@@ -845,7 +848,7 @@ const DashboardRentalsAnalytics: React.FC = () => {
           {/* Daily bookings */}
           <Card className="p-4 rounded-xl mb-4">
             <SectionHead title={bi('الحجوزات اليومية', 'Daily bookings')} />
-            <div className="h-56">
+            <div className="h-56" data-chart="daily">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={daily} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <defs>
