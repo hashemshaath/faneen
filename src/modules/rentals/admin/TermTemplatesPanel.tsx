@@ -235,13 +235,13 @@ export const TermTemplatesPanel: React.FC = () => {
                 {draft[group].map((item, idx) => (
                   <div key={idx} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
                     <Input
-                      dir="rtl" lang="ar"
+                      dir="auto" lang="ar"
                       placeholder={bi('النص بالعربية', 'Arabic text')}
                       value={item.ar}
                       onChange={e => updateItem(group, idx, { ar: e.target.value })}
                     />
                     <Input
-                      dir="ltr" lang="en"
+                      dir="auto" lang="en"
                       placeholder={bi('النص بالإنجليزية', 'English text')}
                       value={item.en}
                       onChange={e => updateItem(group, idx, { en: e.target.value })}
