@@ -608,40 +608,6 @@ html { transition: none; }
   50% { transform: translateY(-10px); }
 }
 
-/* Partner showcase marquee — uses translateX only (no width/left) */
-@keyframes partner-marquee-ltr {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-@keyframes partner-marquee-rtl {
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0); }
-}
-.partner-marquee-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation-name: partner-marquee-ltr;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-play-state: running;
-}
-.partner-marquee-track[data-direction="rtl"] {
-  animation-name: partner-marquee-rtl;
-}
-.partner-marquee-track[data-paused="true"] {
-  animation-play-state: paused;
-}
-.partner-marquee-wrap:hover .partner-marquee-track[data-pause-on-hover="true"] {
-  animation-play-state: paused;
-}
-@media (prefers-reduced-motion: reduce) {
-  .partner-marquee-track {
-    animation: none !important;
-    transform: none !important;
-  }
-}
-
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
