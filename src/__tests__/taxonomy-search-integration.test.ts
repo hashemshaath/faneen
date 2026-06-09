@@ -11,10 +11,11 @@ import {
 describe('Phase 7 — taxonomy/search integration', () => {
   describe('legacy sector → taxonomy slug', () => {
     it.each([
-      ['aluminum', 'aluminum-glass-facades'],
+      ['aluminum', 'aluminum-works'],
+      ['glass', 'glass-securit-works'],
       ['steel', 'steel-metal-works'],
       ['wood', 'wood-carpentry'],
-      ['stainless-steel', 'stainless-steel-fabrication'],
+      ['stainless-steel', 'stainless-steel-works'],
       ['fabrication-installation', 'contracting-finishing'],
     ])('resolves "%s" → "%s"', (input, expected) => {
       expect(resolveLegacySectorToTaxonomy(input)).toBe(expected);
