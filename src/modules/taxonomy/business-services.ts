@@ -37,6 +37,13 @@ export interface SetBusinessTaxonomyPayload {
   secondaryActivityCategoryIds: string[];
 }
 
+/** Safe Batch 2 — multi-primary payload. */
+export interface SetBusinessTaxonomyPayloadV2 {
+  entityTypeCategoryId: string | null;
+  primaryActivityCategoryIds: string[];
+  secondaryActivityCategoryIds: string[];
+}
+
 function fail(error: unknown, ctx: string): never {
   const msg = error instanceof Error ? error.message : String(error);
   throw new Error(`[taxonomy:${ctx}] ${msg}`);
@@ -182,4 +189,22 @@ export async function setBusinessTaxonomyCategories(
     p_secondary_activity_category_ids: payload.secondaryActivityCategoryIds,
   });
   if (error) fail(error, 'setBusinessTaxonomyCategories');
+}
+
+/**
+ * Safe Batch 2 — atomically replace entity_type + primary_activity (multiple)
+ * + secondary_activity links. Calls the v2 RPC, which leaves any other
+ * `business_taxonomy_categories` rows (e.g. service, product_category) intact.
+ */
+export async function setBusinessTaxonomyCategoriesV2(
+  businessId: string,
+  payload: SetBusinessTaxonomyPayloadV2,
+): Promise<void> {
+  const { error } = await supabase.rpc('set_business_taxonomy_categories_v2', {
+    p_business_id: businessId,
+    p_entity_type_category_id: payload.entityTypeCategoryId,
+    p_primary_activity_category_ids: payload.primaryActivityCategoryIds,
+    p_secondary_activity_category_ids: payload.secondaryActivityCategoryIds,
+  });
+  if (error) fail(error, 'setBusinessTaxonomyCategoriesV2');
 }
