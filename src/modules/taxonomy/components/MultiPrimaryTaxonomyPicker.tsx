@@ -96,6 +96,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
   });
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const childrenByPrimary: Record<string, TaxonomyCategory[]> = childrenQ.data ?? {};
 
   // Drop secondary selections whose parent primary is no longer selected
   // or whose child rows no longer exist.
@@ -129,11 +130,18 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
 
   const togglePrimary = (id: string) => {
     const exists = selectedPrimaryIds.includes(id);
+    const nextPrimaryIds = exists
+      ? selectedPrimaryIds.filter((x) => x !== id)
+      : [...selectedPrimaryIds, id];
+    const removedChildIds = exists
+      ? new Set((childrenByPrimary[id] ?? []).map((child) => child.id))
+      : null;
     onChange({
       ...value,
-      primaryActivityCategoryIds: exists
-        ? selectedPrimaryIds.filter((x) => x !== id)
-        : [...selectedPrimaryIds, id],
+      primaryActivityCategoryIds: nextPrimaryIds,
+      secondaryActivityCategoryIds: removedChildIds
+        ? value.secondaryActivityCategoryIds.filter((childId) => !removedChildIds.has(childId))
+        : value.secondaryActivityCategoryIds,
     });
   };
 
@@ -147,7 +155,6 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
     });
   };
 
-  const childrenByPrimary: Record<string, TaxonomyCategory[]> = childrenQ.data ?? {};
   const secondaryCountByPrimary = useMemo(() => {
     const out: Record<string, number> = {};
     for (const pid of selectedPrimaryIds) {
@@ -181,6 +188,15 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
     for (const p of missingPrimariesQ.data ?? []) m[p.id] = p;
     return m;
   }, [primariesById, missingPrimariesQ.data]);
+
+  const primaryOptions = useMemo(() => {
+    const base = primariesQ.data ?? [];
+    const seen = new Set(base.map((p) => p.id));
+    const missingSelected = selectedPrimaryIds
+      .map((id) => primariesByIdMerged[id])
+      .filter((p): p is TaxonomyCategory => !!p && !seen.has(p.id));
+    return [...base, ...missingSelected];
+  }, [primariesQ.data, primariesByIdMerged, selectedPrimaryIds]);
 
   // A primary with no children at all gets a "no specialties" hint instead
   // of the empty-required warning.
@@ -251,7 +267,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
               aria-label={t(isRTL, 'الأنشطة الرئيسية', 'Primary activities')}
               className="flex flex-wrap gap-2"
             >
-              {(primariesQ.data ?? []).map((p) => {
+              {primaryOptions.map((p) => {
                 const active = selectedPrimaryIds.includes(p.id);
                 return (
                   <button
