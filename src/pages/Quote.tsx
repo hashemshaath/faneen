@@ -173,6 +173,61 @@ const FieldError: React.FC<{ message?: string }> = ({ message }) =>
     </p>
   ) : null;
 
+/**
+ * Safe Batch 3 — Sub-specialty picker. Fetches taxonomy categories via the
+ * cached `useSearchableTaxonomyCategories` hook (single round-trip shared
+ * with SearchFilters) and renders the direct children of the chosen primary
+ * activity. Optional — user can leave the specialty unselected.
+ */
+const QuoteSpecialtyPicker: React.FC<{
+  primarySlug: string;
+  value: string;
+  onChange: (slug: string) => void;
+}> = ({ primarySlug, value, onChange }) => {
+  const { isRTL, language } = useLanguage();
+  const { data: taxonomy, isLoading } = useSearchableTaxonomyCategories();
+  const primary = taxonomy?.find((c) => c.slug === primarySlug);
+  const subs = primary
+    ? (taxonomy ?? []).filter((c) => c.parent_id === primary.id)
+    : [];
+  if (isLoading || subs.length === 0) return null;
+  return (
+    <div className="mt-5 pt-4 border-t border-border/40">
+      <div className="mb-2 text-sm font-semibold text-foreground">
+        <Bi ar="التخصص الفرعي (اختياري)" en="Specialty (optional)" />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {subs.map((c) => {
+          const active = value === c.slug;
+          const label = language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onChange(active ? '' : c.slug)}
+              aria-pressed={active}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
+                active
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-foreground/80 border-border hover:border-primary/40 hover:text-primary'
+              }`}
+              dir="auto"
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        <Bi
+          ar={isRTL ? 'سيساعد المزودين على فهم احتياجك بدقة أكبر.' : ''}
+          en="Helps providers understand your need more precisely."
+        />
+      </p>
+    </div>
+  );
+};
+
 /* ---------------- main page ---------------- */
 
 const TOTAL_STEPS = 5;
