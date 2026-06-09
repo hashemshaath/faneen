@@ -10,6 +10,8 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
+import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
+import { isVariantUrls } from '@/modules/files/services/image-pipeline';
 import type { PublicTaxonomyBusiness } from '@/modules/taxonomy/search-integration';
 import type { CategoryRow } from '../data/categoryRows';
 
@@ -18,6 +20,36 @@ const chipHref = (item: CategoryRow['items'][number]): string => {
   if (item.query) return `/search?q=${encodeURIComponent(item.query)}`;
   return '/search';
 };
+
+type CardImageSource =
+  | { kind: 'cover'; variants?: unknown; url?: string | null }
+  | { kind: 'logo'; variants?: unknown; url?: string | null }
+  | { kind: 'placeholder' };
+
+/**
+ * Fallback order for the card cover image:
+ *   1. cover_image_variants
+ *   2. cover_url
+ *   3. logo_image_variants
+ *   4. logo_url
+ *   5. placeholder (initials)
+ */
+export function pickCardImageSource(b: Pick<PublicTaxonomyBusiness, 'cover_url' | 'cover_image_variants' | 'logo_url' | 'logo_image_variants'>): CardImageSource {
+  if (isVariantUrls(b.cover_image_variants)) return { kind: 'cover', variants: b.cover_image_variants, url: b.cover_url };
+  if (b.cover_url) return { kind: 'cover', url: b.cover_url };
+  if (isVariantUrls(b.logo_image_variants)) return { kind: 'logo', variants: b.logo_image_variants, url: b.logo_url };
+  if (b.logo_url) return { kind: 'logo', url: b.logo_url };
+  return { kind: 'placeholder' };
+}
+
+function initialsOf(name: string): string {
+  const cleaned = name.trim();
+  if (!cleaned) return '•';
+  const parts = cleaned.split(/\s+/);
+  const first = parts[0]?.[0] ?? '';
+  const second = parts[1]?.[0] ?? '';
+  return (first + second).slice(0, 2);
+}
 
 interface Props {
   row: CategoryRow;
@@ -73,39 +105,52 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                     ? bi(business.cities.name_ar ?? '', business.cities.name_en ?? '')
                     : '';
                   const href = business.username ? `/q/${business.username}` : `/q/${business.id}`;
+                  const image = pickCardImageSource(business);
                   return (
                     <Link
                       key={`${row.id}-${business.id}`}
                       to={href}
-                      className="shrink-0 snap-start w-[76%] sm:w-[280px] rounded-xl border border-border/60 bg-card p-4 hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      className="group shrink-0 snap-start w-[76%] sm:w-[280px] rounded-xl border border-border/60 bg-card overflow-hidden hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 border border-border/60">
-                          {business.logo_url ? (
-                            <img
-                              src={business.logo_url}
-                              alt=""
-                              width={48}
-                              height={48}
-                              loading="lazy"
-                              decoding="async"
-                              className="w-full h-full object-cover"
+                      <div className="relative w-full bg-gradient-to-br from-muted to-muted/40 border-b border-border/40" style={{ aspectRatio: '16 / 9' }}>
+                        {image.kind === 'cover' ? (
+                          <ResponsiveImage
+                            originalUrl={image.url ?? undefined}
+                            variants={image.variants}
+                            alt={name || bi('مزوّد', 'Provider')}
+                            sizes="(max-width: 640px) 76vw, 280px"
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : image.kind === 'logo' ? (
+                          <div className="absolute inset-0 flex items-center justify-center p-6">
+                            <ResponsiveImage
+                              originalUrl={image.url ?? undefined}
+                              variants={image.variants}
+                              alt={name || bi('مزوّد', 'Provider')}
+                              sizes="(max-width: 640px) 50vw, 200px"
+                              className="max-w-full max-h-full object-contain"
                             />
-                          ) : null}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <h3 className="font-heading font-semibold text-sm text-foreground truncate">
-                              {name || bi('مزوّد', 'Provider')}
-                            </h3>
-                            {business.is_verified ? <VerifiedBadge size="xs" /> : null}
                           </div>
-                          {city ? <p className="text-xs text-muted-foreground truncate mt-0.5">{city}</p> : null}
-                        </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="font-heading font-bold text-3xl text-muted-foreground/60 select-none" aria-hidden="true">
+                              {initialsOf(name)}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <div className="mt-3 pt-3 border-t border-border/40 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                        {bi('عرض الملف', 'View profile')}
-                        <Arrow className="w-3.5 h-3.5" />
+                      <div className="p-3 sm:p-4">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <h3 className="font-heading font-semibold text-sm text-foreground truncate">
+                            {name || bi('مزوّد', 'Provider')}
+                          </h3>
+                          {business.is_verified ? <VerifiedBadge size="xs" /> : null}
+                        </div>
+                        {city ? <p className="text-xs text-muted-foreground truncate mt-0.5">{city}</p> : null}
+                        <div className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:underline">
+                          {bi('عرض الملف', 'View profile')}
+                          <Arrow className="w-3.5 h-3.5" />
+                        </div>
                       </div>
                     </Link>
                   );
