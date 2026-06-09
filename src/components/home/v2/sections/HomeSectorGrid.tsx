@@ -43,22 +43,22 @@ type Sector = {
 };
 
 const SECTORS: Sector[] = [
-  { slug: 'aluminum', image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w`,
+  { slug: 'aluminum-glass-facades', image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w`,
     titleAr: 'ألمنيوم', titleEn: 'Aluminum',
     bodyAr: 'واجهات وشبابيك وأبواب ومطابخ.', bodyEn: 'Facades, windows, doors and kitchens.' },
-  { slug: 'iron', image: sectorIron768, srcSet: `${sectorIron480} 480w, ${sectorIron768} 768w, ${sectorIron} 1000w`,
+  { slug: 'steel-metal-works', image: sectorIron768, srcSet: `${sectorIron480} 480w, ${sectorIron768} 768w, ${sectorIron} 1000w`,
     titleAr: 'حديد', titleEn: 'Iron',
     bodyAr: 'أبواب وسلالم وهياكل وأعمال معدنية.', bodyEn: 'Doors, stairs, frames and metalwork.' },
-  { slug: 'wood', image: sectorWood1024, srcSet: `${sectorWood480} 480w, ${sectorWood768} 768w, ${sectorWood1024} 1024w, ${sectorWood} 1200w`,
+  { slug: 'wood-carpentry', image: sectorWood1024, srcSet: `${sectorWood480} 480w, ${sectorWood768} 768w, ${sectorWood1024} 1024w, ${sectorWood} 1200w`,
     titleAr: 'خشب', titleEn: 'Wood',
     bodyAr: 'أبواب وأثاث وتفصيل داخلي.', bodyEn: 'Doors, furniture and custom interiors.' },
-  { slug: 'glass', image: sectorGlass1024, srcSet: `${sectorGlass480} 480w, ${sectorGlass768} 768w, ${sectorGlass1024} 1024w, ${sectorGlass} 1200w`,
+  { slug: 'aluminum-glass-facades', image: sectorGlass1024, srcSet: `${sectorGlass480} 480w, ${sectorGlass768} 768w, ${sectorGlass1024} 1024w, ${sectorGlass} 1200w`,
     titleAr: 'زجاج', titleEn: 'Glass',
     bodyAr: 'سيكوريت وواجهات وقواطع وأبواب.', bodyEn: 'Tempered glass, facades, partitions and doors.' },
-  { slug: 'stainless', image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w`,
+  { slug: 'stainless-steel-fabrication', image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w`,
     titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
     bodyAr: 'مطابخ ومطاعم ودرابزين وتجهيزات.', bodyEn: 'Kitchens, restaurants, railings and fittings.' },
-  { slug: 'fabrication', image: sectorFabrication768, srcSet: `${sectorFabrication480} 480w, ${sectorFabrication768} 768w, ${sectorFabrication} 1000w`,
+  { slug: 'contracting-finishing', image: sectorFabrication768, srcSet: `${sectorFabrication480} 480w, ${sectorFabrication768} 768w, ${sectorFabrication} 1000w`,
     titleAr: 'تصنيع وتركيب', titleEn: 'Fabrication & install',
     bodyAr: 'ورش ومصانع وفرق تنفيذ متخصصة.', bodyEn: 'Workshops, factories and install crews.' },
 ];
