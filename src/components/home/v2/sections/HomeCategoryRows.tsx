@@ -4,8 +4,9 @@
  * dynamic imports — the data is tiny and the component is purely
  * presentational.
  */
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import HomeCategoryRow from './HomeCategoryRow';
 import { HOME_CATEGORY_ROWS, getCategoryRowTaxonomySlugs } from '../data/categoryRows';
 import { listPublicBusinessesByTaxonomySlugs, type PublicTaxonomyBusiness } from '@/modules/taxonomy/search-integration';
@@ -22,13 +23,39 @@ const HomeCategoryRows = () => {
     [rowSlugs],
   );
 
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(
+    () => ['home-category-row-businesses', allSlugs.join('|')] as const,
+    [allSlugs],
+  );
+
   const { data: businessesBySlug = {}, isLoading } = useQuery({
-    queryKey: ['home-category-row-businesses', allSlugs.join('|')],
+    queryKey,
     enabled: allSlugs.length > 0,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    // Shorter window so transient empty/error states recover quickly.
+    // Errors now throw (see search-integration.ts) and React Query will
+    // retry automatically instead of caching an empty map.
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: () => listPublicBusinessesByTaxonomySlugs(allSlugs, HOME_ROW_PROVIDER_LIMIT),
   });
+
+  // Realtime: invalidate when business↔taxonomy links or public business
+  // rows change so the homepage reflects edits without a hard reload.
+  useEffect(() => {
+    const channel = supabase
+      .channel('home-category-rows-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_taxonomy_categories' },
+        () => queryClient.invalidateQueries({ queryKey }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' },
+        () => queryClient.invalidateQueries({ queryKey }))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient, queryKey]);
 
   const providersByRow = useMemo(() => {
     const out = new Map<string, PublicTaxonomyBusiness[]>();
