@@ -1781,7 +1781,8 @@ const RentalItemEditForm: React.FC<{
   categories: RentalCategory[];
   businessId: string;
   onSaved: () => Promise<void> | void;
-}> = ({ item, categories, businessId, onSaved }) => {
+  termTemplates?: Record<string, RentalTermTemplate>;
+}> = ({ item, categories, businessId, onSaved, termTemplates }) => {
   const { isRTL } = useLanguage();
   const bi = useBi();
   const initialImages = Array.isArray(item.images) ? (item.images as string[]) : [];
