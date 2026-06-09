@@ -421,7 +421,6 @@ const TaxonomyCategoryFilter = ({
 }) => {
   const { language, isRTL } = useLanguage();
   const { data: taxonomy, isLoading, isError } = useSearchableTaxonomyCategories();
-  const [showAll, setShowAll] = useState(false);
   const [query, setQuery] = useState('');
 
   if (isLoading) {
@@ -444,25 +443,49 @@ const TaxonomyCategoryFilter = ({
     );
   }
 
-  const q = query.trim().toLowerCase();
-  const filtered = q
-    ? taxonomy.filter((c) =>
-        (c.name_ar || '').toLowerCase().includes(q) ||
-        (c.name_en || '').toLowerCase().includes(q) ||
-        (c.slug || '').toLowerCase().includes(q),
-      )
-    : taxonomy;
+  // Safe Batch 3 — UI exposes ONLY the 13 canonical primaries; legacy /
+  // pre-restructure primaries (aluminum-glass-facades, technology-systems,
+  // heavy-equipment-rental, stainless-steel-fabrication, …) are intentionally
+  // hidden from this chooser. They still work as legacy *inputs* via the
+  // shared mapping resolver in search-integration.ts.
+  const bySlug = new Map(taxonomy.map((c) => [c.slug, c]));
+  const primaries = CANONICAL_PRIMARY_SLUGS
+    .map((slug) => bySlug.get(slug))
+    .filter((c): c is NonNullable<typeof c> => Boolean(c));
 
-  const COLLAPSED = 8;
-  const visible = showAll || q ? filtered : filtered.slice(0, COLLAPSED);
-  const more = filtered.length - visible.length;
+  const q = query.trim().toLowerCase();
+  const matchesQuery = (slug: string) => {
+    if (!q) return true;
+    const c = bySlug.get(slug);
+    if (!c) return false;
+    return (
+      (c.name_ar || '').toLowerCase().includes(q) ||
+      (c.name_en || '').toLowerCase().includes(q) ||
+      (c.slug || '').toLowerCase().includes(q)
+    );
+  };
+  const visiblePrimaries = primaries.filter((c) => matchesQuery(c.slug));
+
+  // Determine the active primary (either selected directly or selected via
+  // one of its children). Used to render the sub-row.
+  const activeSlugLower = (value || '').toLowerCase();
+  const activePrimary = primaries.find((p) => p.slug === activeSlugLower)
+    ?? (() => {
+      const child = taxonomy.find((c) => c.slug === activeSlugLower || c.id === value);
+      if (!child || !child.parent_id) return undefined;
+      return primaries.find((p) => p.id === child.parent_id);
+    })();
+
+  const subs = activePrimary
+    ? taxonomy.filter((c) => c.parent_id === activePrimary.id).filter((c) => matchesQuery(c.slug))
+    : [];
 
   return (
     <div>
       <Input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={isRTL ? 'ابحث عن نشاط، تخصص أو خدمة...' : 'Search for an activity, specialty or service...'}
+        placeholder={isRTL ? 'ابحث عن نشاط أو تخصص...' : 'Search for an activity or specialty...'}
         className="mb-2 h-9 rounded-xl text-xs bg-background border-border/60"
         dir="auto"
       />
@@ -479,7 +502,7 @@ const TaxonomyCategoryFilter = ({
         >
           {isRTL ? 'الكل' : 'All'}
         </button>
-        {visible.map((c) => {
+        {visiblePrimaries.map((c) => {
           const active = value === c.slug || value === c.id;
           const label = language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
           return (
@@ -499,21 +522,41 @@ const TaxonomyCategoryFilter = ({
             </button>
           );
         })}
-        {more > 0 && !showAll && (
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="px-2.5 py-1 rounded-full text-[11px] font-body bg-muted/40 text-muted-foreground border border-border/60 hover:text-foreground"
-          >
-            {isRTL ? `+${more} المزيد` : `+${more} more`}
-          </button>
-        )}
-        {q && filtered.length === 0 && (
+        {q && visiblePrimaries.length === 0 && subs.length === 0 && (
           <span className="text-[11px] text-muted-foreground py-1">
             {isRTL ? 'لا توجد نتائج' : 'No results'}
           </span>
         )}
       </div>
+      {activePrimary && subs.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-border/40">
+          <div className="text-[10px] uppercase font-heading font-bold text-muted-foreground mb-1.5">
+            {isRTL ? 'التخصصات الفرعية' : 'Specialties'}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {subs.map((c) => {
+              const active = value === c.slug || value === c.id;
+              const label = language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => onChange(active ? activePrimary.slug : c.slug)}
+                  aria-pressed={active}
+                  className={`px-2 py-0.5 rounded-full text-[10.5px] font-body transition-colors border ${
+                    active
+                      ? 'bg-accent/90 text-accent-foreground border-accent'
+                      : 'bg-muted/30 text-foreground/70 border-border/50 hover:border-accent/40 hover:text-accent'
+                  }`}
+                  title={label}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
