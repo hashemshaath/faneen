@@ -35,6 +35,7 @@ import {
   getRegistrationEntityTypes,
   getRegistrationPrimaryActivities,
   getChildCategoriesGrouped,
+  getTaxonomyCategoriesByIds,
 } from '../business-services';
 import type { TaxonomyCategory } from '../types';
 
@@ -162,6 +163,25 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
     return m;
   }, [primariesQ.data]);
 
+  // Fallback: if any selected primary id is NOT in the curated registration
+  // list (e.g. persisted from an older taxonomy snapshot), fetch its label by
+  // id so the UI never leaks a raw UUID like `113133fc-…`.
+  const missingPrimaryIds = useMemo(
+    () => selectedPrimaryIds.filter((id) => !primariesById[id]),
+    [selectedPrimaryIds, primariesById],
+  );
+  const missingPrimariesQ = useQuery({
+    queryKey: ['tx:primary-fallback', [...missingPrimaryIds].sort()],
+    queryFn: () => getTaxonomyCategoriesByIds(missingPrimaryIds),
+    enabled: missingPrimaryIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+  const primariesByIdMerged: Record<string, TaxonomyCategory> = useMemo(() => {
+    const m = { ...primariesById };
+    for (const p of missingPrimariesQ.data ?? []) m[p.id] = p;
+    return m;
+  }, [primariesById, missingPrimariesQ.data]);
+
   // A primary with no children at all gets a "no specialties" hint instead
   // of the empty-required warning.
   const primaryHasChildren = (pid: string) =>
@@ -285,7 +305,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
               ) : (
                 <div className="space-y-2">
                   {selectedPrimaryIds.map((pid) => {
-                    const primary = primariesById[pid];
+                    const primary = primariesByIdMerged[pid];
                     const children = childrenByPrimary[pid] ?? [];
                     const isOpen = expanded[pid] ?? true;
                     const count = secondaryCountByPrimary[pid] ?? 0;
@@ -303,7 +323,11 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                         >
                           <span className="flex items-center gap-2">
                             <Layers className="w-3.5 h-3.5 text-primary" />
-                            {primary ? labelOf(primary, isRTL) : pid}
+                            {primary
+                              ? labelOf(primary, isRTL)
+                              : missingPrimariesQ.isLoading
+                                ? t(isRTL, 'جارٍ التحميل…', 'Loading…')
+                                : t(isRTL, 'نشاط محدد', 'Selected activity')}
                             {!empty && (
                               <Badge variant="secondary" className="text-[10px]">
                                 {count} / {children.length}
