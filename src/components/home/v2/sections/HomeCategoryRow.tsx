@@ -174,35 +174,39 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                         ) : null}
                       </div>
                       <div className="relative px-3.5 pt-3 pb-3 sm:px-4 sm:pt-3.5 sm:pb-3.5 border-t border-border/40">
-                        {showLogoBadge ? (
-                          <div
-                            className="absolute -top-7 sm:-top-8 end-3.5 sm:end-4 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-background ring-2 ring-background shadow-[var(--elev-2)] overflow-hidden flex items-center justify-center p-1.5 z-20"
-                            aria-hidden="true"
-                          >
-                            <ResponsiveImage
-                              originalUrl={business.logo_url ?? undefined}
-                              variants={business.logo_image_variants}
-                              alt=""
-                              sizes="64px"
-                              className="max-w-full max-h-full object-contain"
-                            />
-                          </div>
-                        ) : null}
-                        <div className={`flex items-center gap-1.5 min-w-0 ${showLogoBadge ? 'pe-16 sm:pe-20' : ''}`}>
-                          <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors">
-                            {name || bi('مزوّد', 'Provider')}
-                          </h3>
-                          {business.is_verified ? (
-                            <VerifiedBadge size="xs" iconOnly className="text-success" />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {showLogoBadge ? (
+                            <div
+                              className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-background ring-1 ring-border/60 shadow-sm overflow-hidden flex items-center justify-center p-1"
+                              aria-hidden="true"
+                            >
+                              <ResponsiveImage
+                                originalUrl={business.logo_url ?? undefined}
+                                variants={business.logo_image_variants}
+                                alt=""
+                                sizes="44px"
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            </div>
                           ) : null}
-                        </div>
-                        <div className={`mt-1 flex items-center justify-between gap-2 ${showLogoBadge ? 'pe-16 sm:pe-20' : ''}`}>
-                          <span className="text-[11px] text-muted-foreground truncate">
-                            {business.is_verified
-                              ? bi('شركة موثّقة', 'Verified company')
-                              : bi('عرض الملف', 'View profile')}
-                          </span>
-                          <Arrow className="w-3.5 h-3.5 text-primary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors">
+                                {name || bi('مزوّد', 'Provider')}
+                              </h3>
+                              {business.is_verified ? (
+                                <VerifiedBadge size="xs" iconOnly className="text-success shrink-0" />
+                              ) : null}
+                            </div>
+                            <div className="mt-0.5 flex items-center justify-between gap-2">
+                              <span className="text-[11px] text-muted-foreground truncate">
+                                {business.is_verified
+                                  ? bi('شركة موثّقة', 'Verified company')
+                                  : bi('عرض الملف', 'View profile')}
+                              </span>
+                              <Arrow className="w-3.5 h-3.5 text-primary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shrink-0" />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </Link>
