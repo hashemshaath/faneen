@@ -87,6 +87,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   // Rentals & Assets — provider fleet & rental orders
   '/dashboard/rentals':                      { permissions: ['services.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/rentals/calendar':             { permissions: ['services.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  '/dashboard/rentals/analytics':            { permissions: ['services.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/assets':                       { permissions: ['services.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
   // Membership & billing — gated to owner / finance / explicit grant.
