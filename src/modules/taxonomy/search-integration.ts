@@ -532,7 +532,7 @@ function canonicalizePrimary(
     if (!fallbackLabel) return null;
     return { slug: '', label: fallbackLabel };
   }
-  const forbidden = UI_FORBIDDEN_PRIMARY_SLUGS.includes(raw);
+  const forbidden = (UI_FORBIDDEN_PRIMARY_SLUGS as readonly string[]).includes(raw);
   const canonical = LEGACY_SECTOR_TO_TAXONOMY_SLUG[raw];
   if (forbidden || canonical) {
     const target = (canonical ?? raw) as string;
