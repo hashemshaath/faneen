@@ -80,7 +80,10 @@ const HomeFeaturedShowcase = () => {
           : items.map((b) => {
               const name = bi(b.name_ar ?? b.name_en ?? '', b.name_en ?? b.name_ar ?? '');
               const city = b.cities ? bi(b.cities.name_ar ?? '', b.cities.name_en ?? '') : '';
-              const href = b.username ? `/q/${b.username}` : `/q/${b.id}`;
+              // Route to the public business profile via UsernameResolver
+              // (`/:username`), NOT `/q/:code` which is the barcode/quotation
+              // dispatcher and shows "code unavailable" for usernames.
+              const href = `/${b.username ?? b.id}`;
               return (
                 <Link
                   key={b.id}
