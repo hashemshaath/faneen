@@ -5,7 +5,7 @@
  * and via HomeCategoryRows further down.
  */
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ArrowLeft, ArrowRight,
   Square, Layers, Hammer, Sparkles, TreePine, ChefHat,
@@ -106,6 +106,14 @@ const HomeSectorGrid = () => {
   // until an admin actively edits a tile.
   const { tiles } = useHomeSectorTiles(SECTORS);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
+  // Ref callback: if image is already cached by the browser, the `load`
+  // event may not fire — flip the loaded flag synchronously so we avoid
+  // a one-frame skeleton flash on repeat visits / back-forward cache.
+  const markIfCached = useCallback((slug: string) => (el: HTMLImageElement | null) => {
+    if (el && el.complete && el.naturalWidth > 0) {
+      setLoaded((p) => (p[slug] ? p : { ...p, [slug]: true }));
+    }
+  }, []);
   return (
     <Section id="sectors" ariaLabelledBy="sectors-heading" className="bg-muted/20">
       <SectionHead
@@ -125,9 +133,13 @@ const HomeSectorGrid = () => {
               className="group relative overflow-hidden rounded-[clamp(0.5rem,1vw,1rem)] border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-muted">
-                {!isLoaded && (
-                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-muted via-muted/70 to-muted" aria-hidden="true" />
-                )}
+                {/* Skeleton: same box as the image (absolute inset-0), fades
+                    out on load instead of being unmounted — eliminates the
+                    flicker caused by swapping nodes. */}
+                <div
+                  aria-hidden="true"
+                  className={`absolute inset-0 bg-muted transition-opacity duration-500 ease-out ${isLoaded ? 'opacity-0' : 'opacity-100 animate-pulse'}`}
+                />
                 {img && (
                   <img
                     src={img.image}
@@ -139,8 +151,9 @@ const HomeSectorGrid = () => {
                     loading="lazy"
                     decoding="async"
                     {...{ fetchpriority: 'low' }}
+                    ref={markIfCached(s.slug)}
                     onLoad={() => setLoaded((p) => ({ ...p, [s.slug]: true }))}
-                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.06] ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-[opacity,transform] duration-500 ease-out group-hover:scale-[1.06] ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                   />
                 )}
                 {/* Base gradient + title (always visible) */}
