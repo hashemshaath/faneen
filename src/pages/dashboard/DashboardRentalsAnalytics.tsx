@@ -71,6 +71,22 @@ const STATUS_KEYS: RentalOrderStatus[] =
 type Range = '30' | '90' | '180' | '365';
 const RANGE_DAYS: Record<Range, number> = { '30': 30, '90': 90, '180': 180, '365': 365 };
 
+/* ---------- persisted filter state ---------- */
+const FILTERS_KEY = 'qitaat_rentals_analytics_filters_v1';
+const ALERTS_MUTED_KEY = 'qitaat_rentals_analytics_alerts_muted_v1';
+type PersistedFilters = { range: Range; itemFilter: string; statusFilter: 'all' | RentalOrderStatus; search: string };
+const loadFilters = (): Partial<PersistedFilters> => {
+  try { return JSON.parse(localStorage.getItem(FILTERS_KEY) || '{}'); } catch { return {}; }
+};
+
+/* ---------- alert type ---------- */
+type AlertItem = {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  title: { ar: string; en: string };
+  detail: { ar: string; en: string };
+};
+
 /* ---------------- page ---------------- */
 const DashboardRentalsAnalytics: React.FC = () => {
   const { user } = useAuth();
@@ -83,10 +99,26 @@ const DashboardRentalsAnalytics: React.FC = () => {
   const [items, setItems] = useState<RentalItem[]>([]);
   const [orders, setOrders] = useState<RentalOrder[]>([]);
 
-  const [range, setRange] = useState<Range>('90');
-  const [itemFilter, setItemFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | RentalOrderStatus>('all');
-  const [search, setSearch] = useState('');
+  const initial = loadFilters();
+  const [range, setRange] = useState<Range>((initial.range as Range) ?? '90');
+  const [itemFilter, setItemFilter] = useState<string>(initial.itemFilter ?? 'all');
+  const [statusFilter, setStatusFilter] = useState<'all' | RentalOrderStatus>(initial.statusFilter ?? 'all');
+  const [search, setSearch] = useState<string>(initial.search ?? '');
+  const [alertsMuted, setAlertsMuted] = useState<boolean>(() => {
+    try { return localStorage.getItem(ALERTS_MUTED_KEY) === '1'; } catch { return false; }
+  });
+  const [detail, setDetail] = useState<
+    | { kind: 'item'; id: string }
+    | { kind: 'status'; status: RentalOrderStatus }
+    | null
+  >(null);
+
+  /* persist filters */
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTERS_KEY, JSON.stringify({ range, itemFilter, statusFilter, search }));
+    } catch { /* ignore */ }
+  }, [range, itemFilter, statusFilter, search]);
 
   const fetchAll = async (bizId: string) => {
     const [it, ord] = await Promise.all([
