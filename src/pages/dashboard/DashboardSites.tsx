@@ -76,7 +76,11 @@ interface ClientSite {
   title_deed_no: string | null;
   title_deed_date: string | null;
   owner_name: string | null;
-  owner_id_number: string | null;
+  /** Column-revoked for non-owners; loaded on-demand via RPC for the site's
+   *  client owner and admins only. Always null in the list query. */
+  owner_id_number?: string | null;
+  /** Same protection as owner_id_number. */
+  tax_number?: string | null;
   land_use_type: string | null;
   plot_number: string | null;
   block_number: string | null;
@@ -397,7 +401,7 @@ export default function DashboardSites() {
       let q = supabase
         .from('client_sites')
         .select(`
-          id, business_id, client_user_id, site_ref, label, site_name, site_type, visibility,
+          id, business_id, client_user_id, owner_user_id, site_ref, label, site_name, site_type, visibility,
           contact_name, contact_phone, country_id, city_id, city_name,
           region, region_en, district, district_en, street_name, street_name_en,
           building_number, additional_number, post_code, short_address, address_en,
