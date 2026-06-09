@@ -77,12 +77,18 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
   // `business.categories.name_*` for display; when no modern taxonomy is
   // present we show a localized "Unclassified" label.
   const taxonomy = useBusinessTaxonomyDisplay(business.id, language);
+  // Safe Batch 4 — multi-primary aware label for the small stats grid.
+  const primaryChips = taxonomy.primaries;
   const categoryName =
-    (taxonomy.hasModernTaxonomy && taxonomy.primaryLabel) ||
-    bi("غير مصنّف", "Unclassified");
-  const taxonomyChips = taxonomy.hasModernTaxonomy
-    ? [...taxonomy.secondaryLabels, ...taxonomy.serviceLabels].slice(0, 4)
-    : [];
+    primaryChips.length > 0
+      ? primaryChips.map((p) => p.label).join(" · ")
+      : (taxonomy.hasModernTaxonomy && taxonomy.primaryLabel) ||
+        bi("غير مصنّف", "Unclassified");
+  // Grouped specialties: one block per primary activity → secondaries + services nested.
+  const taxonomyGroups = taxonomy.groups;
+  const hasAnySpecialties = taxonomyGroups.some(
+    (g) => g.secondaries.length > 0 || g.services.length > 0 || g.primary,
+  );
   const memberYear = new Date(business.created_at).getFullYear();
   const yearsActive = Math.max(1, new Date().getFullYear() - memberYear + 1);
 
