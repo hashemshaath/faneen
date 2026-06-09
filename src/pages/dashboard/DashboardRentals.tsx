@@ -951,7 +951,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     // Category-aware terms validation — block save when terms don't match the category.
     {
       const cat = categories.find(c => c.id === form.category_id);
-      const match = getCategoryPreset(cat, form.name_ar, form.name_en);
+      const match = resolveCategoryPreset(cat, form.name_ar, form.name_en, termTemplates);
       const errs = validateRentalTerms(
         match,
         { usage: form.usage_terms, late: form.late_terms, penalty: form.penalty_terms },
