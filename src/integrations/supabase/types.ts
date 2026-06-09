@@ -11606,6 +11606,132 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_showcase_items: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_image_asset_id: string | null
+          logo_url: string
+          metadata: Json
+          name_ar: string
+          name_en: string
+          sort_order: number
+          source_type: string
+          target_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_image_asset_id?: string | null
+          logo_url: string
+          metadata?: Json
+          name_ar: string
+          name_en: string
+          sort_order?: number
+          source_type?: string
+          target_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_image_asset_id?: string | null
+          logo_url?: string
+          metadata?: Json
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+          source_type?: string
+          target_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_showcase_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_showcase_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_showcase_settings: {
+        Row: {
+          created_at: string
+          description_ar: string
+          description_en: string
+          direction: string
+          display_mode: string
+          gap_size: string
+          grayscale: boolean
+          id: string
+          is_enabled: boolean
+          logo_size: string
+          open_in_new_tab: boolean
+          pause_on_hover: boolean
+          show_arrows: boolean
+          speed: number
+          style_variant: string
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_ar?: string
+          description_en?: string
+          direction?: string
+          display_mode?: string
+          gap_size?: string
+          grayscale?: boolean
+          id?: string
+          is_enabled?: boolean
+          logo_size?: string
+          open_in_new_tab?: boolean
+          pause_on_hover?: boolean
+          show_arrows?: boolean
+          speed?: number
+          style_variant?: string
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_ar?: string
+          description_en?: string
+          direction?: string
+          display_mode?: string
+          gap_size?: string
+          grayscale?: boolean
+          id?: string
+          is_enabled?: boolean
+          logo_size?: string
+          open_in_new_tab?: boolean
+          pause_on_hover?: boolean
+          show_arrows?: boolean
+          speed?: number
+          style_variant?: string
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       password_reset_log: {
         Row: {
           created_at: string
