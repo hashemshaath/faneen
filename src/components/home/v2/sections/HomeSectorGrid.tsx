@@ -1,20 +1,14 @@
 /**
- * HomeSectorGrid — clean icon-based tile grid for the top 10 industrial
- * sectors. 5 columns on desktop (2 rows = 10 tiles), 3 on tablet, 2 on
- * mobile. The remaining canonical primaries (contracting-finishing,
- * security-control-systems, equipment-rental) stay reachable via the
- * "Explore all sectors" link and via HomeCategoryRows further down.
- *
- * Visual = subtle tinted card + single sector icon + Arabic title + one-line
- * descriptor + directional arrow on hover. No images = zero LCP impact,
- * zero CLS, and consistent visual rhythm even when a sector lacks a hero
- * photo.
+ * HomeSectorGrid — image-cover tile grid for the top 8 industrial sectors.
+ * Responsive: 2 cols (mobile) → 3 (sm) → 4 (lg) ⇒ 2 rows on desktop.
+ * Remaining canonical primaries stay reachable via "View all sectors"
+ * and via HomeCategoryRows further down.
  */
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight,
   Square, Layers, Hammer, Sparkles, TreePine, ChefHat,
-  Building2, MoveVertical, SunMedium, Wifi,
+  Building2, MoveVertical,
 } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -23,6 +17,40 @@ import {
   HOME_ALLOWED_SLUGS, HOME_SECTOR_GRID_SLUGS, homeCategoryHref,
 } from '@/components/home/v2/data/homeTaxonomy';
 import { useHomeSectorTiles, type DefaultTile } from '@/modules/home';
+import sectorAluminum from '@/assets/home/sector-aluminum.webp';
+import sectorIron from '@/assets/home/sector-iron.webp';
+import sectorWood from '@/assets/home/sector-wood.webp';
+import sectorGlass from '@/assets/home/sector-glass.webp';
+import sectorStainless from '@/assets/home/sector-stainless.webp';
+import sectorFabrication from '@/assets/home/sector-fabrication.webp';
+import sectorAluminum480 from '@/assets/home/sector-aluminum-480.webp';
+import sectorAluminum768 from '@/assets/home/sector-aluminum-768.webp';
+import sectorAluminum1024 from '@/assets/home/sector-aluminum-1024.webp';
+import sectorIron480 from '@/assets/home/sector-iron-480.webp';
+import sectorIron768 from '@/assets/home/sector-iron-768.webp';
+import sectorWood480 from '@/assets/home/sector-wood-480.webp';
+import sectorWood768 from '@/assets/home/sector-wood-768.webp';
+import sectorWood1024 from '@/assets/home/sector-wood-1024.webp';
+import sectorGlass480 from '@/assets/home/sector-glass-480.webp';
+import sectorGlass768 from '@/assets/home/sector-glass-768.webp';
+import sectorGlass1024 from '@/assets/home/sector-glass-1024.webp';
+import sectorStainless480 from '@/assets/home/sector-stainless-480.webp';
+import sectorStainless768 from '@/assets/home/sector-stainless-768.webp';
+import sectorStainless1024 from '@/assets/home/sector-stainless-1024.webp';
+import sectorFabrication480 from '@/assets/home/sector-fabrication-480.webp';
+import sectorFabrication768 from '@/assets/home/sector-fabrication-768.webp';
+
+type ImageSet = { image: string; srcSet: string };
+const IMG: Record<string, ImageSet> = {
+  'aluminum-works':        { image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w` },
+  'glass-securit-works':   { image: sectorGlass1024,    srcSet: `${sectorGlass480} 480w, ${sectorGlass768} 768w, ${sectorGlass1024} 1024w, ${sectorGlass} 1200w` },
+  'steel-metal-works':     { image: sectorIron768,      srcSet: `${sectorIron480} 480w, ${sectorIron768} 768w, ${sectorIron} 1000w` },
+  'stainless-steel-works': { image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w` },
+  'wood-carpentry':        { image: sectorWood1024,     srcSet: `${sectorWood480} 480w, ${sectorWood768} 768w, ${sectorWood1024} 1024w, ${sectorWood} 1200w` },
+  'kitchens-works':        { image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w` },
+  'facades-cladding':      { image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w` },
+  'elevators-maintenance': { image: sectorFabrication768, srcSet: `${sectorFabrication480} 480w, ${sectorFabrication768} 768w, ${sectorFabrication} 1000w` },
+};
 
 // DEFAULT tile metadata. These remain the hardcoded baseline rendered when
 // the DB has no `metadata.home_grid` overrides — which keeps the homepage
@@ -46,10 +74,6 @@ const SECTORS: DefaultTile[] = [
     bodyAr: 'واجهات تجارية وكلادينج ومداخل.',             bodyEn: 'Storefronts, cladding and entrances.' },
   { slug: 'elevators-maintenance', Icon: MoveVertical,  iconName: 'MoveVertical',   titleAr: 'المصاعد والصيانة',    titleEn: 'Elevators & Maintenance',
     bodyAr: 'مصاعد وسلالم كهربائية وصيانة دورية.',         bodyEn: 'Elevators, escalators and maintenance.' },
-  { slug: 'energy-sustainability', Icon: SunMedium,     iconName: 'SunMedium',      titleAr: 'الطاقة والاستدامة',   titleEn: 'Energy & Sustainability',
-    bodyAr: 'طاقة شمسية وعزل حراري واستدامة.',            bodyEn: 'Solar, insulation and sustainability.' },
-  { slug: 'technology-networks',   Icon: Wifi,          iconName: 'Wifi',           titleAr: 'التقنية والشبكات',    titleEn: 'Technology & Networks',
-    bodyAr: 'شبكات وأنظمة ذكية وبنية اتصالات.',            bodyEn: 'Networks, smart systems and comms.' },
 ];
 
 // Exposed so the admin page can show the same baseline copy + icons as
@@ -87,31 +111,42 @@ const HomeSectorGrid = () => {
         title={bi('القطاعات الرئيسية', 'Main sectors')}
         sub={bi('اختر القطاع وابدأ تصفّح المزودين.', 'Pick a sector and browse providers.')}
       />
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {tiles.map((s) => {
-          const Icon = s.Icon;
+          const img = IMG[s.slug];
           return (
             <Link
               key={s.slug}
               to={homeCategoryHref(s.slug)}
-              className="group relative flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-card p-4 sm:p-5 min-h-[148px] sm:min-h-[160px] transition-all duration-200 hover:border-primary/40 hover:shadow-[var(--elev-1)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={bi(s.titleAr, s.titleEn)}
+              className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              <span
-                className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/8 text-primary ring-1 ring-primary/15 transition-colors group-hover:bg-primary/12"
-                aria-hidden="true"
-              >
-                <Icon className="w-5 h-5 sm:w-[22px] sm:h-[22px]" strokeWidth={1.75} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground leading-snug">
+              <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-muted">
+                {img && (
+                  <img
+                    src={img.image}
+                    srcSet={img.srcSet}
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                    alt={bi(s.titleAr, s.titleEn)}
+                    width={1024}
+                    height={640}
+                    loading="lazy"
+                    decoding="async"
+                    {...{ fetchpriority: 'low' }}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent pointer-events-none" />
+                <h3 className="absolute bottom-2 start-3 end-3 sm:bottom-2.5 font-heading font-bold text-sm sm:text-base md:text-lg text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-tight">
                   {bi(s.titleAr, s.titleEn)}
                 </h3>
-                <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">
+              </div>
+              <div className="p-2.5 sm:p-3 flex items-center justify-between gap-2">
+                <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">
                   {bi(s.bodyAr, s.bodyEn)}
                 </p>
+                <Arrow className="w-3.5 h-3.5 text-primary shrink-0 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" aria-hidden="true" />
               </div>
-              <Arrow className="absolute bottom-3 end-3 w-3.5 h-3.5 text-primary/60 transition-all opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" aria-hidden="true" />
             </Link>
           );
         })}
