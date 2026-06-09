@@ -883,18 +883,22 @@ const DashboardRentalsAnalytics: React.FC = () => {
             ) : (
               <ul className="divide-y divide-border/60">
                 {topItems.map((row, i) => (
-                  <li key={row.id} className="py-3 flex items-center gap-3 hover-lift rounded-lg px-2 -mx-2">
+                  <li
+                    key={row.id}
+                    className="py-3 flex items-center gap-3 hover-lift rounded-lg px-2 -mx-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setDetail({ kind: 'item', id: row.id })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetail({ kind: 'item', id: row.id }); } }}
+                    aria-label={bi(`فتح تفاصيل ${row.name}`, `Open details for ${row.name}`)}
+                  >
                     <div className="size-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center text-xs font-semibold tech-content">
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-3 mb-1">
                         <div className="font-medium truncate">
-                          {row.slug ? (
-                            <Link to={`/rentals/${row.slug}`} className="hover:underline focus-visible:underline focus-visible:outline-none">
-                              {row.name}
-                            </Link>
-                          ) : row.name}
+                          {row.name}
                         </div>
                         <div className="text-sm font-semibold tech-content whitespace-nowrap">
                           {fmtMoney(row.revenue, currency)}
@@ -907,6 +911,18 @@ const DashboardRentalsAnalytics: React.FC = () => {
                         <span className="tech-content">{row.orders} {bi('طلب', 'orders')}</span>
                         <span>·</span>
                         <span className="tech-content">{row.days} {bi('يوم', 'days')}</span>
+                        {row.slug && (
+                          <>
+                            <span>·</span>
+                            <Link
+                              to={`/rentals/${row.slug}`}
+                              className="hover:underline tech-content"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {bi('فتح الصفحة', 'Open page')}
+                            </Link>
+                          </>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -914,6 +930,86 @@ const DashboardRentalsAnalytics: React.FC = () => {
               </ul>
             )}
           </Card>
+
+          {/* Inline interactive detail panel (no popup) */}
+          {detail && detailData && (
+            <Card className="p-4 rounded-xl mt-4 border-l-4 border-l-primary/70 animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant="secondary" className="rounded-full">
+                    {detail.kind === 'item' ? bi('أصل', 'Asset') : bi('حالة', 'Status')}
+                  </Badge>
+                  <h3 className="font-semibold text-base truncate">{detailData.label}</h3>
+                  <span className="text-xs text-muted-foreground tech-content">· {range}d</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setDetail(null)} className="h-8 rounded-lg" aria-label={bi('إغلاق', 'Close')}>
+                  <X className="size-4" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                <MiniStat label={bi('الإيرادات', 'Revenue')} value={<span className="tech-content">{fmtMoney(detailData.k.revenue, currency)}</span>} />
+                <MiniStat label={bi('الطلبات', 'Orders')} value={<span className="tech-content">{detailData.k.count}</span>} />
+                <MiniStat label={bi('إجمالي الأيام', 'Total days')} value={<span className="tech-content">{detailData.k.days}</span>} />
+                <MiniStat label={bi('متوسط الطلب', 'Avg ticket')} value={<span className="tech-content">{fmtMoney(detailData.k.avgTicket, currency)}</span>} />
+              </div>
+
+              {detailData.statusBreakdown.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-xs text-muted-foreground mb-2">{bi('توزيع الحالات', 'Status breakdown')}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {detailData.statusBreakdown.map(s => (
+                      <Badge key={s.status} variant="outline" className="rounded-full" style={{ borderColor: STATUS_LABEL[s.status].color, color: STATUS_LABEL[s.status].color }}>
+                        {bi(STATUS_LABEL[s.status].ar, STATUS_LABEL[s.status].en)}
+                        <span className="ms-1 tech-content opacity-80">{s.count}</span>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="text-xs text-muted-foreground mb-2">{bi('الحجوزات', 'Bookings')} ({detailData.list.length})</div>
+              {detailData.list.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">{bi('لا توجد حجوزات', 'No bookings')}</p>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-border/60">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/40 text-xs text-muted-foreground">
+                      <tr>
+                        <th className="text-start p-2 font-medium">{bi('المرجع', 'Ref')}</th>
+                        <th className="text-start p-2 font-medium">{bi('من', 'From')}</th>
+                        <th className="text-start p-2 font-medium">{bi('إلى', 'To')}</th>
+                        <th className="text-start p-2 font-medium">{bi('أيام', 'Days')}</th>
+                        <th className="text-start p-2 font-medium">{bi('الحالة', 'Status')}</th>
+                        <th className="text-end p-2 font-medium">{bi('المبلغ', 'Amount')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailData.list.slice(0, 25).map(o => (
+                        <tr key={o.id} className="border-t border-border/40">
+                          <td className="p-2 tech-content">{o.ref_id}</td>
+                          <td className="p-2 tech-content">{o.start_date}</td>
+                          <td className="p-2 tech-content">{o.end_date}</td>
+                          <td className="p-2 tech-content">{o.total_days}</td>
+                          <td className="p-2">
+                            <Badge variant="outline" className="rounded-full text-[10px]" style={{ borderColor: STATUS_LABEL[o.status].color, color: STATUS_LABEL[o.status].color }}>
+                              {bi(STATUS_LABEL[o.status].ar, STATUS_LABEL[o.status].en)}
+                            </Badge>
+                          </td>
+                          <td className="p-2 text-end tech-content font-semibold">{fmtMoney(Number(o.total_amount || 0), o.currency)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {detailData.list.length > 25 && (
+                    <div className="p-2 text-xs text-muted-foreground text-center bg-muted/20">
+                      {bi(`+${detailData.list.length - 25} حجز إضافي`, `+${detailData.list.length - 25} more bookings`)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          )}
         </>
       )}
     </DashboardLayout>
