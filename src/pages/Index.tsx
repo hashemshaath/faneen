@@ -8,6 +8,7 @@ import { LazyOnView } from "@/components/LazyOnView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { lazyRetry } from "@/lib/lazyRetry";
 import { HOME_JSONLD_SLUGS, getHomeTaxonomyEntry } from "@/components/home/v2/data/homeTaxonomy";
+import { useFeaturedProviders } from "@/components/home/v2/data/useFeaturedProviders";
 // Eager: above-the-fold + LCP hero, plus the chips bar (small, no images).
 import { HeroV2 } from "@/components/home/v2/HomeV2";
 // FAQ JSON-LD reads from the same source as <FAQSection>: DB first
@@ -119,6 +120,7 @@ const Index = () => {
   });
 
   // WebSite + Organization + FAQPage JSON-LD (all rendered as separate <script> tags)
+  const { data: featuredProviders = [] } = useFeaturedProviders();
   useMultiJsonLd(useMemo(() => {
     const blocks: Array<Record<string, unknown>> = [
     {
@@ -224,8 +226,53 @@ const Index = () => {
       })),
     });
   }
+  if (featuredProviders.length > 0) {
+    blocks.push({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'مزوّدون مميّزون — قِطاعات',
+      description: 'مزوّدون موثّقون بأعلى التقييمات على منصة قِطاعات.',
+      numberOfItems: featuredProviders.length,
+      itemListOrder: 'https://schema.org/ItemListOrderDescending',
+      itemListElement: featuredProviders.map((b, i) => {
+        const name = b.name_ar ?? b.name_en ?? 'مزوّد';
+        const url = `https://qitaat.com/${b.username ?? b.id}`;
+        const business: Record<string, unknown> = {
+          '@type': 'LocalBusiness',
+          '@id': `${url}#localbusiness`,
+          name,
+          alternateName: b.name_en ?? undefined,
+          url,
+          image: b.cover_url ?? b.logo_url ?? undefined,
+          logo: b.logo_url ?? undefined,
+          address: b.cities?.name_ar
+            ? {
+                '@type': 'PostalAddress',
+                addressLocality: b.cities.name_ar,
+                addressCountry: 'SA',
+              }
+            : undefined,
+        };
+        if (b.rating_avg && b.rating_count) {
+          business.aggregateRating = {
+            '@type': 'AggregateRating',
+            ratingValue: Number(b.rating_avg).toFixed(1),
+            reviewCount: b.rating_count,
+            bestRating: '5',
+            worstRating: '1',
+          };
+        }
+        return {
+          '@type': 'ListItem',
+          position: i + 1,
+          url,
+          item: business,
+        };
+      }),
+    });
+  }
   return blocks;
-  }, [faqItems]));
+  }, [faqItems, featuredProviders]));
 
   return (
     <ErrorBoundary>
