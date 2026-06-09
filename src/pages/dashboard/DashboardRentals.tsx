@@ -1702,6 +1702,7 @@ const RentalItemEditForm: React.FC<{
   const [saving, setSaving] = useState(false);
   const [coverUrl, setCoverUrl] = useState<string | null>(initialCover);
   const [galleryUrls, setGalleryUrls] = useState<string[]>(initialGallery);
+  const [termErrors, setTermErrors] = useState<RentalTermErrors>({});
   const [form, setForm] = useState({
     name_ar: item.name_ar,
     name_en: item.name_en ?? '',
@@ -1730,6 +1731,24 @@ const RentalItemEditForm: React.FC<{
   const handleSave = async () => {
     const priceNum = Number(form.base_price);
     if (!Number.isFinite(priceNum) || priceNum < 0) { toast.error(bi('السعر غير صحيح','Invalid price')); return; }
+    // Category-aware terms validation.
+    {
+      const match = getCategoryPreset(cat, form.name_ar, form.name_en);
+      const errs = validateRentalTerms(
+        match,
+        { usage: form.usage_terms, late: form.late_terms, penalty: form.penalty_terms },
+        isRTL,
+      );
+      if (errs.usage || errs.late || errs.penalty) {
+        setTermErrors(errs);
+        toast.error(bi(
+          'الشروط لا تتوافق مع تصنيف المعدة. راجع الحقول المظللة.',
+          'Terms do not match the equipment category. Review highlighted fields.',
+        ));
+        return;
+      }
+      setTermErrors({});
+    }
     const specs: Record<string, string> = {};
     if (showElectrical) {
       const numCheck = (raw: string, label: string) => {
