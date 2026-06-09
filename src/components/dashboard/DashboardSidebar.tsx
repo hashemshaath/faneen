@@ -333,6 +333,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/admin/private-sectors', icon: Layers },
       { label: { ar: 'مركز SEO', en: 'SEO Center' }, url: '/admin/sitemap-status', icon: SearchIcon },
       { label: { ar: 'شركاء الصفحة الرئيسية', en: 'Partner Showcase' }, url: '/admin/partner-showcase', icon: Award },
+      { label: { ar: 'أسئلة الصفحة الرئيسية', en: 'Homepage FAQ' }, url: '/admin/home-faq', icon: PenSquare },
     ],
   },
   {

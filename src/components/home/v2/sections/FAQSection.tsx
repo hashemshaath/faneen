@@ -2,19 +2,24 @@ import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { Section, SectionHead, SecondaryCTA } from './_shared';
-import { FAQ_ITEMS_BI } from './faqItems';
+import { useHomeFaq } from '@/modules/home';
 
 const FAQSection = () => {
   const bi = useBi();
   const [open, setOpen] = useState<number | null>(0);
+  const { items } = useHomeFaq();
   return (
     <Section id="faq" ariaLabelledBy="faq-heading">
       <SectionHead headingId="faq-heading" title={bi('أسئلة قد تساعدك قبل أن تبدأ', 'Questions that might help before you start')} />
       <div className="max-w-2xl mx-auto space-y-3">
-        {FAQ_ITEMS_BI.map((item, i) => {
+        {items.map((item, i) => {
           const isOpen = open === i;
+          const qAr = item.question_ar;
+          const aAr = item.answer_ar;
+          const qEn = item.question_en || item.question_ar;
+          const aEn = item.answer_en || item.answer_ar;
           return (
-            <div key={item.qEn} className="rounded-xl border border-border/60 bg-card overflow-hidden">
+            <div key={item.id} className="rounded-xl border border-border/60 bg-card overflow-hidden">
               <button
                 type="button"
                 onClick={() => setOpen(isOpen ? null : i)}
@@ -22,13 +27,13 @@ const FAQSection = () => {
                 className="w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-start hover:bg-secondary/5 transition-colors"
               >
                 <span className="font-heading font-semibold text-sm sm:text-base text-foreground">
-                  {bi(item.qAr, item.qEn)}
+                  {bi(qAr, qEn)}
                 </span>
                 {isOpen ? <Minus className="w-4 h-4 text-primary shrink-0" /> : <Plus className="w-4 h-4 text-primary shrink-0" />}
               </button>
               {isOpen && (
                 <div className="px-4 sm:px-5 pb-4 sm:pb-5 -mt-1 text-sm text-muted-foreground leading-relaxed">
-                  {bi(item.aAr, item.aEn)}
+                  {bi(aAr, aEn)}
                 </div>
               )}
             </div>

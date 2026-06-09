@@ -9173,6 +9173,48 @@ export type Database = {
           },
         ]
       }
+      home_faq_items: {
+        Row: {
+          answer_ar: string
+          answer_en: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_enabled: boolean
+          question_ar: string
+          question_en: string | null
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          answer_ar: string
+          answer_en?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_enabled?: boolean
+          question_ar: string
+          question_en?: string | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          answer_ar?: string
+          answer_en?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_enabled?: boolean
+          question_ar?: string
+          question_en?: string | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       image_assets: {
         Row: {
           alt: string | null
