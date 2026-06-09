@@ -17,6 +17,7 @@ import {
   CircleEllipsis, Paintbrush, PanelsTopLeft, Grid3X3, Hammer, Trees,
   Utensils, Package, Cpu, Layers, DoorOpen, Square, PaintBucket, Zap,
   Droplets, Tag, Folder, FolderTree, Boxes, BookOpen, FileText,
+  PanelTop, GlassWater, TreePine, Flame, Home,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -31,6 +32,8 @@ export const TAXONOMY_ICONS: Readonly<Record<string, LucideIcon>> = Object.freez
   Paintbrush, PanelsTopLeft, Grid3X3, Hammer, Trees, Package, Cpu,
   // Services / specialties
   Utensils, Layers, DoorOpen, Square, PaintBucket, Zap, Droplets,
+  // Industrial sectors (Phase 21 — Sectors Hub)
+  PanelTop, GlassWater, TreePine, Flame, Home,
 });
 
 export type TaxonomyIconKey = keyof typeof TAXONOMY_ICONS;
