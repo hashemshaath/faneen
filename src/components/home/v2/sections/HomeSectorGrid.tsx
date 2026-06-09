@@ -1,79 +1,77 @@
 /**
- * HomeSectorGrid — clean replacement for MainSectorsSection.
- * Same 6 sectors (taxonomy-stable slugs), same responsive images,
- * but no decorative icon badges, no dual gradients, no "Sector"
- * chip. Visual = image + title + one-line description + arrow.
+ * HomeSectorGrid — clean icon-based tile grid for the top 10 industrial
+ * sectors. 5 columns on desktop (2 rows = 10 tiles), 3 on tablet, 2 on
+ * mobile. The remaining canonical primaries (contracting-finishing,
+ * security-control-systems, equipment-rental) stay reachable via the
+ * "Explore all sectors" link and via HomeCategoryRows further down.
+ *
+ * Visual = subtle tinted card + single sector icon + Arabic title + one-line
+ * descriptor + directional arrow on hover. No images = zero LCP impact,
+ * zero CLS, and consistent visual rhythm even when a sector lacks a hero
+ * photo.
  */
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight,
+  Square, Layers, Hammer, Sparkles, TreePine, ChefHat,
+  Building2, MoveVertical, SunMedium, Wifi,
+  type LucideIcon,
+} from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
-import sectorAluminum from '@/assets/home/sector-aluminum.webp';
-import sectorIron from '@/assets/home/sector-iron.webp';
-import sectorWood from '@/assets/home/sector-wood.webp';
-import sectorGlass from '@/assets/home/sector-glass.webp';
-import sectorStainless from '@/assets/home/sector-stainless.webp';
-import sectorFabrication from '@/assets/home/sector-fabrication.webp';
-import sectorAluminum480 from '@/assets/home/sector-aluminum-480.webp';
-import sectorAluminum768 from '@/assets/home/sector-aluminum-768.webp';
-import sectorAluminum1024 from '@/assets/home/sector-aluminum-1024.webp';
-import sectorIron480 from '@/assets/home/sector-iron-480.webp';
-import sectorIron768 from '@/assets/home/sector-iron-768.webp';
-import sectorWood480 from '@/assets/home/sector-wood-480.webp';
-import sectorWood768 from '@/assets/home/sector-wood-768.webp';
-import sectorWood1024 from '@/assets/home/sector-wood-1024.webp';
-import sectorGlass480 from '@/assets/home/sector-glass-480.webp';
-import sectorGlass768 from '@/assets/home/sector-glass-768.webp';
-import sectorGlass1024 from '@/assets/home/sector-glass-1024.webp';
-import sectorStainless480 from '@/assets/home/sector-stainless-480.webp';
-import sectorStainless768 from '@/assets/home/sector-stainless-768.webp';
-import sectorStainless1024 from '@/assets/home/sector-stainless-1024.webp';
-import sectorFabrication480 from '@/assets/home/sector-fabrication-480.webp';
-import sectorFabrication768 from '@/assets/home/sector-fabrication-768.webp';
 import { Section, SectionHead, SecondaryCTA, ROUTES } from './_shared';
-import { HOME_ALLOWED_SLUGS, homeCategoryHref } from '@/components/home/v2/data/homeTaxonomy';
+import {
+  HOME_ALLOWED_SLUGS, HOME_SECTOR_GRID_SLUGS, homeCategoryHref,
+} from '@/components/home/v2/data/homeTaxonomy';
 
 type Sector = {
   slug: string;
-  image: string;
-  srcSet: string;
+  Icon: LucideIcon;
   titleAr: string;
   titleEn: string;
   bodyAr: string;
   bodyEn: string;
 };
 
-// Tile rendering metadata (image + display copy). The `slug` of every
-// tile MUST be one of the 13 canonical primary activities in
-// HOME_ALLOWED_SLUGS — enforced at module load and by the guard test.
+// Tile metadata. The `slug` of every tile MUST be one of the canonical
+// primary activities in HOME_ALLOWED_SLUGS — enforced at module load and
+// by the guard test. Order mirrors HOME_SECTOR_GRID_SLUGS.
 const SECTORS: Sector[] = [
-  { slug: 'aluminum-works', image: sectorAluminum1024, srcSet: `${sectorAluminum480} 480w, ${sectorAluminum768} 768w, ${sectorAluminum1024} 1024w, ${sectorAluminum} 1200w`,
-    titleAr: 'ألمنيوم', titleEn: 'Aluminum',
-    bodyAr: 'نوافذ وأبواب ومطابخ ومظلات ألمنيوم.', bodyEn: 'Windows, doors, kitchens and canopies.' },
-  { slug: 'glass-securit-works', image: sectorGlass1024, srcSet: `${sectorGlass480} 480w, ${sectorGlass768} 768w, ${sectorGlass1024} 1024w, ${sectorGlass} 1200w`,
-    titleAr: 'زجاج وسيكوريت', titleEn: 'Glass & tempered',
-    bodyAr: 'سيكوريت وواجهات وقواطع وأبواب.', bodyEn: 'Tempered glass, facades, partitions and doors.' },
-  { slug: 'steel-metal-works', image: sectorIron768, srcSet: `${sectorIron480} 480w, ${sectorIron768} 768w, ${sectorIron} 1000w`,
-    titleAr: 'حديد ومعادن', titleEn: 'Steel & metals',
-    bodyAr: 'أبواب وسلالم وهياكل وأعمال معدنية.', bodyEn: 'Doors, stairs, frames and metalwork.' },
-  { slug: 'stainless-steel-works', image: sectorStainless1024, srcSet: `${sectorStainless480} 480w, ${sectorStainless768} 768w, ${sectorStainless1024} 1024w, ${sectorStainless} 1200w`,
-    titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
-    bodyAr: 'مطابخ ومطاعم ودرابزين وتجهيزات.', bodyEn: 'Kitchens, restaurants, railings and fittings.' },
-  { slug: 'wood-carpentry', image: sectorWood1024, srcSet: `${sectorWood480} 480w, ${sectorWood768} 768w, ${sectorWood1024} 1024w, ${sectorWood} 1200w`,
-    titleAr: 'خشب ونجارة', titleEn: 'Wood & carpentry',
-    bodyAr: 'أبواب وأثاث وتفصيل داخلي.', bodyEn: 'Doors, furniture and custom interiors.' },
-  { slug: 'contracting-finishing', image: sectorFabrication768, srcSet: `${sectorFabrication480} 480w, ${sectorFabrication768} 768w, ${sectorFabrication} 1000w`,
-    titleAr: 'مقاولات وتشطيبات', titleEn: 'Contracting & finishing',
-    bodyAr: 'مقاولات وتشطيبات داخلية وخارجية.', bodyEn: 'Interior and exterior finishing.' },
+  { slug: 'aluminum-works',        Icon: Square,        titleAr: 'الألمنيوم',           titleEn: 'Aluminum',
+    bodyAr: 'نوافذ وأبواب ومطابخ ومظلات.',                bodyEn: 'Windows, doors, kitchens and canopies.' },
+  { slug: 'glass-securit-works',   Icon: Layers,        titleAr: 'الزجاج والسيكوريت',  titleEn: 'Glass & Tempered',
+    bodyAr: 'واجهات وقواطع وأبواب زجاجية.',               bodyEn: 'Facades, partitions and glass doors.' },
+  { slug: 'steel-metal-works',     Icon: Hammer,        titleAr: 'الحديد والمعادن',     titleEn: 'Steel & Metals',
+    bodyAr: 'أبواب وسلالم وهياكل ودرابزين.',              bodyEn: 'Doors, stairs, frames and railings.' },
+  { slug: 'stainless-steel-works', Icon: Sparkles,      titleAr: 'الستانلس ستيل',       titleEn: 'Stainless Steel',
+    bodyAr: 'مطابخ ومطاعم وتجهيزات صناعية.',              bodyEn: 'Kitchens, F&B and industrial fittings.' },
+  { slug: 'wood-carpentry',        Icon: TreePine,      titleAr: 'الخشب والنجارة',      titleEn: 'Wood & Carpentry',
+    bodyAr: 'أبواب وأثاث وتفصيل داخلي.',                  bodyEn: 'Doors, furniture and custom interiors.' },
+  { slug: 'kitchens-works',        Icon: ChefHat,       titleAr: 'المطابخ',              titleEn: 'Kitchens',
+    bodyAr: 'تصميم وتنفيذ وتركيب المطابخ.',               bodyEn: 'Kitchen design, build and install.' },
+  { slug: 'facades-cladding',      Icon: Building2,     titleAr: 'الواجهات والكلادينج', titleEn: 'Facades & Cladding',
+    bodyAr: 'واجهات تجارية وكلادينج ومداخل.',             bodyEn: 'Storefronts, cladding and entrances.' },
+  { slug: 'elevators-maintenance', Icon: MoveVertical,  titleAr: 'المصاعد والصيانة',    titleEn: 'Elevators & Maintenance',
+    bodyAr: 'مصاعد وسلالم كهربائية وصيانة دورية.',         bodyEn: 'Elevators, escalators and maintenance.' },
+  { slug: 'energy-sustainability', Icon: SunMedium,     titleAr: 'الطاقة والاستدامة',   titleEn: 'Energy & Sustainability',
+    bodyAr: 'طاقة شمسية وعزل حراري واستدامة.',            bodyEn: 'Solar, insulation and sustainability.' },
+  { slug: 'technology-networks',   Icon: Wifi,          titleAr: 'التقنية والشبكات',    titleEn: 'Technology & Networks',
+    bodyAr: 'شبكات وأنظمة ذكية وبنية اتصالات.',            bodyEn: 'Networks, smart systems and comms.' },
 ];
 
-// Module-load assertion: any unknown slug crashes early in dev.
+// Module-load assertion: order + membership match HOME_SECTOR_GRID_SLUGS.
 if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
   for (const s of SECTORS) {
     if (!HOME_ALLOWED_SLUGS.has(s.slug)) {
       // eslint-disable-next-line no-console
       console.error(`[HomeSectorGrid] slug "${s.slug}" not in HOME_ALLOWED_SLUGS`);
     }
+  }
+  const expected = [...HOME_SECTOR_GRID_SLUGS];
+  const actual = SECTORS.map((s) => s.slug);
+  if (expected.join(',') !== actual.join(',')) {
+    // eslint-disable-next-line no-console
+    console.error('[HomeSectorGrid] SECTORS order must match HOME_SECTOR_GRID_SLUGS', { expected, actual });
   }
 }
 
@@ -82,46 +80,43 @@ const HomeSectorGrid = () => {
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   return (
-    <Section id="sectors" ariaLabelledBy="sectors-heading">
+    <Section id="sectors" ariaLabelledBy="sectors-heading" className="bg-muted/20">
       <SectionHead
         headingId="sectors-heading"
         title={bi('القطاعات الرئيسية', 'Main sectors')}
         sub={bi('اختر القطاع وابدأ تصفّح المزودين.', 'Pick a sector and browse providers.')}
       />
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
-        {SECTORS.map((s) => (
-          <Link
-            key={`${s.slug}-${s.titleEn}`}
-            to={homeCategoryHref(s.slug)}
-            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-          >
-            <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-muted">
-              <img
-                src={s.image}
-                srcSet={s.srcSet}
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 50vw"
-                alt={bi(s.titleAr, s.titleEn)}
-                width={1024}
-                height={640}
-                loading="lazy"
-                decoding="async"
-                {...{ fetchpriority: 'low' }}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent pointer-events-none" />
-              <h3 className="absolute bottom-2.5 start-3 end-3 sm:bottom-3 font-heading font-bold text-base sm:text-lg md:text-xl text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-tight">
-                {bi(s.titleAr, s.titleEn)}
-              </h3>
-            </div>
-            <div className="p-3 sm:p-4 flex items-center justify-between gap-2">
-              <p className="text-xs sm:text-sm text-muted-foreground leading-snug line-clamp-2">{bi(s.bodyAr, s.bodyEn)}</p>
-              <Arrow className="w-4 h-4 text-primary shrink-0 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
-            </div>
-          </Link>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        {SECTORS.map((s) => {
+          const Icon = s.Icon;
+          return (
+            <Link
+              key={s.slug}
+              to={homeCategoryHref(s.slug)}
+              className="group relative flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-card p-4 sm:p-5 min-h-[148px] sm:min-h-[160px] transition-all duration-200 hover:border-primary/40 hover:shadow-[var(--elev-1)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label={bi(s.titleAr, s.titleEn)}
+            >
+              <span
+                className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/8 text-primary ring-1 ring-primary/15 transition-colors group-hover:bg-primary/12"
+                aria-hidden="true"
+              >
+                <Icon className="w-5 h-5 sm:w-[22px] sm:h-[22px]" strokeWidth={1.75} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground leading-snug">
+                  {bi(s.titleAr, s.titleEn)}
+                </h3>
+                <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">
+                  {bi(s.bodyAr, s.bodyEn)}
+                </p>
+              </div>
+              <Arrow className="absolute bottom-3 end-3 w-3.5 h-3.5 text-primary/60 transition-all opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" aria-hidden="true" />
+            </Link>
+          );
+        })}
       </div>
-      <div className="text-center mt-10 sm:mt-12">
-        <SecondaryCTA to={ROUTES.categories} label={bi('استكشف كل القطاعات', 'Explore all sectors')} />
+      <div className="text-center mt-8 sm:mt-10">
+        <SecondaryCTA to={ROUTES.categories} label={bi('عرض جميع القطاعات', 'View all sectors')} />
       </div>
     </Section>
   );
