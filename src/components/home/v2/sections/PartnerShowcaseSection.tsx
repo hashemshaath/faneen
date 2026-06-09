@@ -76,8 +76,15 @@ const VARIANT_BG: Record<Settings['style_variant'], string> = {
 export function buildMarqueeSets(items: Item[]): { primary: Item[]; mirror: Item[] } {
   if (items.length === 0) return { primary: [], mirror: [] };
   let primary = items;
-  // Ensure at least 6 logos in the primary copy so the strip feels dense.
-  while (primary.length < 6) {
+  // The marquee animates from translateX(0) to translateX(-50%), which
+  // loops seamlessly only if BOTH the primary copy is wider than the
+  // viewport AND mirror[0] visually equals primary[0]. With a small list
+  // (1–5 logos) the primary copy was narrower than a 1440px desktop, so
+  // the strip exposed empty space at -50% and logos visibly "disappeared".
+  // Duplicating until we reach at least 16 logical items keeps the strip
+  // wider than any realistic viewport while staying cheap (≤16 <img> in
+  // each copy, lazy-loaded).
+  while (primary.length < 16) {
     primary = [...primary, ...items];
   }
   return { primary, mirror: primary };

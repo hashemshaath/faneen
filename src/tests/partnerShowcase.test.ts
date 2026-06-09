@@ -34,14 +34,18 @@ describe('PartnerShowcase: buildMarqueeSets', () => {
     expect(mirror).toEqual([]);
   });
 
-  it('duplicates short lists so the marquee is dense (≥6 logos)', () => {
+  it('duplicates short lists so the marquee is dense (≥16 logos)', () => {
+    // The track loops via translateX(-50%); the primary copy must be
+    // wider than a desktop viewport, otherwise logos visibly disappear
+    // at the seam. 16 is enough to cover a 1920px viewport at typical
+    // logo widths and still cheap to render.
     const { primary } = buildMarqueeSets(sample(2));
-    expect(primary.length).toBeGreaterThanOrEqual(6);
+    expect(primary.length).toBeGreaterThanOrEqual(16);
   });
 
-  it('keeps long lists at their original length', () => {
-    const { primary } = buildMarqueeSets(sample(10));
-    expect(primary.length).toBe(10);
+  it('keeps long lists (≥16) at their original length', () => {
+    const { primary } = buildMarqueeSets(sample(20));
+    expect(primary.length).toBe(20);
   });
 
   it('mirror copy length exactly matches primary so -50% translate loops seamlessly', () => {
