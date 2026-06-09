@@ -323,7 +323,7 @@ const AdminAnalyticsSettings = () => {
               </Badge>
               {stored?.ts ? (
                 <Badge variant="outline" className="gap-1 tech-content">
-                  {tx.savedAt}: {new Date(stored.ts).toLocaleString(isRTL ? "ar" : "en")}
+                  {tx.savedAt}: {new Date(stored.ts).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en")}
                 </Badge>
               ) : null}
             </div>
@@ -390,7 +390,7 @@ const AdminAnalyticsSettings = () => {
                 label={tx.lastResync}
                 value={
                   health.lastResyncAt
-                    ? <span className="tech-content text-xs">{new Date(health.lastResyncAt).toLocaleString(isRTL ? "ar" : "en")}</span>
+                    ? <span className="tech-content text-xs">{new Date(health.lastResyncAt).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en")}</span>
                     : <span className="text-muted-foreground">{tx.nope}</span>
                 }
               />
@@ -482,7 +482,7 @@ const AdminAnalyticsSettings = () => {
                 value={
                   lastUpdate ? (
                     <span className="tech-content text-xs">
-                      {new Date(lastUpdate.ts).toLocaleString(isRTL ? "ar" : "en")}
+                      {new Date(lastUpdate.ts).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en")}
                       {" · "}
                       <code>{lastUpdate.correlationId}</code>
                     </span>
@@ -519,7 +519,7 @@ const AdminAnalyticsSettings = () => {
                         : tx.kind_custom}
                     </Badge>
                     <span className="text-muted-foreground tech-content">
-                      {new Date(e.ts).toLocaleTimeString(isRTL ? "ar" : "en")}
+                      {new Date(e.ts).toLocaleTimeString(isRTL ? "ar-SA-u-nu-latn" : "en")}
                     </span>
                     <span className="font-medium">{e.reason}</span>
                     {e.decision ? (

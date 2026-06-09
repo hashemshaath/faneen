@@ -101,7 +101,7 @@ export const SiteAuditLog: React.FC<{ siteId: string }> = ({ siteId }) => {
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <Badge variant="secondary" className="text-[11px]">{fl ? (isRTL ? fl.ar : fl.en) : r.field}</Badge>
                     <span className="text-[11px] text-muted-foreground tech-content" dir="ltr">
-                      {new Date(r.changed_at).toLocaleString(isRTL ? 'ar' : 'en')}
+                      {new Date(r.changed_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-sm flex-wrap">

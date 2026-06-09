@@ -94,7 +94,7 @@ const DashboardLoyalty: React.FC = () => {
                     <div>
                       <div className="font-medium">{e.reason}</div>
                       <div className="text-xs text-muted-foreground tech-content">
-                        {new Date(e.created_at).toLocaleString(isRTL ? 'ar' : 'en')}
+                        {new Date(e.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}
                       </div>
                     </div>
                     <div className={`font-bold tech-content ${e.points >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>

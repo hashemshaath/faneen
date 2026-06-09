@@ -331,7 +331,7 @@ export default function DashboardWorkOrders() {
                       {o.title}
                     </p>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
-                      <span>{new Date(o.updated_at).toLocaleString(isRTL ? "ar" : "en")}</span>
+                      <span>{new Date(o.updated_at).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en")}</span>
                       <WorkOrderSourceBadge
                         sourceType={o.source_type ?? "manual"}
                         sourceRefId={o.source_ref_id}
@@ -647,7 +647,7 @@ function WorkOrderDetailPanel({ tx, statusLabel, priorityLabel, workOrder, actor
               <li key={c.id} className="rounded-lg border border-border/50 p-2">
                 <p className="text-sm whitespace-pre-wrap break-words" dir="auto">{c.body}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  {new Date(c.created_at).toLocaleString(isRTL ? "ar" : "en")}
+                  {new Date(c.created_at).toLocaleString(isRTL ? "ar-SA-u-nu-latn" : "en")}
                 </p>
               </li>
             ))}
