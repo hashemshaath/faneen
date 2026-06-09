@@ -831,6 +831,25 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
       toast.error(bi('الرجاء تعبئة الاسم والتصنيف','Name and category are required'));
       return;
     }
+    // Category-aware terms validation — block save when terms don't match the category.
+    {
+      const cat = categories.find(c => c.id === form.category_id);
+      const match = getCategoryPreset(cat, form.name_ar, form.name_en);
+      const errs = validateRentalTerms(
+        match,
+        { usage: form.usage_terms, late: form.late_terms, penalty: form.penalty_terms },
+        isRTL,
+      );
+      if (errs.usage || errs.late || errs.penalty) {
+        setTermErrors(errs);
+        toast.error(bi(
+          'الشروط لا تتوافق مع تصنيف المعدة. راجع الحقول المظللة.',
+          'Terms do not match the equipment category. Review highlighted fields.',
+        ));
+        return;
+      }
+      setTermErrors({});
+    }
     setSubmitting(true);
     const specs: Record<string, string> = {};
     const electricalErrors: string[] = [];
