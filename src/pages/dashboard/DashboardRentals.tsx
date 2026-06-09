@@ -329,10 +329,11 @@ const TermsBlock: React.FC<{
   penalty: string;
   onChange: (next: { usage: string; late: string; penalty: string }) => void;
   errors?: RentalTermErrors;
-}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange, errors }) => {
+  templates?: Record<string, RentalTermTemplate>;
+}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange, errors, templates }) => {
   const { isRTL } = useLanguage();
   const bi = useBi();
-  const match = getCategoryPreset(category, nameAr, nameEn);
+  const match = resolveCategoryPreset(category, nameAr, nameEn, templates);
   const usagePresets = mergePresets(USAGE_PRESETS, match?.presets.usage);
   const latePresets = mergePresets(LATE_PRESETS, match?.presets.late);
   const penaltyPresets = mergePresets(PENALTY_PRESETS, match?.presets.penalty);
