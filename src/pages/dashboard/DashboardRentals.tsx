@@ -1325,9 +1325,11 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             usage={form.usage_terms}
             late={form.late_terms}
             penalty={form.penalty_terms}
-            onChange={({ usage, late, penalty }) =>
-              setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty })
-            }
+            errors={termErrors}
+            onChange={({ usage, late, penalty }) => {
+              setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty });
+              if (termErrors.usage || termErrors.late || termErrors.penalty) setTermErrors({});
+            }}
           />
           <div className="flex justify-end">
             <Button onClick={submit} disabled={submitting} className="hover-lift">
