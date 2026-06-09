@@ -246,12 +246,7 @@ const Index = () => {
           <Suspense fallback={<SectionFallback variant="grid" minH={600} />}><HomeCategoryRows /></Suspense>
         </LazyOnView>
 
-        {/* 5. How it works — concise 3-step explainer */}
-        <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback variant="grid" minH={420} />}><HowItWorksV2 /></Suspense>
-        </LazyOnView>
-
-        {/* 7. FAQ — also feeds FAQPage JSON-LD above */}
+        {/* FAQ — also feeds FAQPage JSON-LD above */}
         <LazyOnView minHeight={460} className="cv-auto">
           <Suspense fallback={<SectionFallback variant="grid" minH={460} />}><FAQSection /></Suspense>
         </LazyOnView>
