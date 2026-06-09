@@ -14,6 +14,7 @@ import {
   useCategories,
   useCities,
   useBusinesses,
+  useDirectoryRealtimeInvalidation,
   useServiceCategoryBusinessIds,
   filterAndSort,
   getDidYouMean,
@@ -52,6 +53,7 @@ const SearchPage = () => {
   const { data: categories } = useCategories();
   const { data: cities } = useCities();
   const { data: businesses, isLoading } = useBusinesses();
+  useDirectoryRealtimeInvalidation();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
   React.useEffect(() => {
