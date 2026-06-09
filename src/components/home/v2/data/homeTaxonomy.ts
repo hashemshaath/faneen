@@ -5,30 +5,36 @@
  *
  * Hard rules — enforced by `homeTaxonomyLinkGuard.test.ts`:
  *   1. Every slug here MUST exist in `public.taxonomy_categories.slug`
- *      with `is_active = true`. Do NOT add a slug that returns zero
- *      results in /search.
+ *      with `is_active = true` AND `type = 'primary_activity'`.
  *   2. Legacy shorthand slugs (`aluminum`, `iron`, `wood`, `glass`,
- *      `stainless`, `fabrication`) are FORBIDDEN — they don't exist
- *      in the taxonomy and produce dead links.
+ *      `stainless`, `fabrication`) and merged/archived slugs like
+ *      `aluminum-glass-facades`, `stainless-steel-fabrication`,
+ *      `technology-systems`, `heavy-equipment-rental` are FORBIDDEN
+ *      as Home primaries — use the 13 canonical primary activities.
  *   3. No homepage component may hardcode `/search?category=<slug>`
- *      without going through `homeCategoryHref(slug)` or one of the
- *      derived lists below.
- *   4. To add a new specialty: append a `HomeTaxonomyEntry`, add it
- *      to the relevant group(s), and update the guard test's
- *      ALLOWED_SLUGS only if it represents a brand-new sector.
+ *      without going through `homeCategoryHref(slug)`.
  *
- * TODO — pending real taxonomy slugs (do NOT add rows until DB exists):
- *   - "الطاقة والاستدامة" (Energy & Sustainability)
- *   - "المصاعد والسلالم الكهربائية" (Elevators & Escalators)
+ * The 13 canonical primary activities (Taxonomy Restructure P1):
+ *   aluminum-works, glass-securit-works, steel-metal-works,
+ *   stainless-steel-works, wood-carpentry, kitchens-works,
+ *   facades-cladding, contracting-finishing, elevators-maintenance,
+ *   energy-sustainability, technology-networks,
+ *   security-control-systems, equipment-rental.
  */
 
 export type HomeTaxonomyGroup =
-  | 'aluminum-glass'
+  | 'aluminum'
+  | 'glass'
   | 'steel'
-  | 'wood'
   | 'stainless'
+  | 'wood'
+  | 'kitchens'
+  | 'facades'
   | 'contracting'
+  | 'elevators'
+  | 'energy'
   | 'technology'
+  | 'security'
   | 'rental';
 
 export interface HomeTaxonomyEntry {
@@ -45,17 +51,28 @@ export interface HomeTaxonomyEntry {
 
 export const HOME_TAXONOMY: HomeTaxonomyEntry[] = [
   {
-    slug: 'aluminum-glass-facades',
-    labelAr: 'ألمنيوم وزجاج وواجهات',
-    labelEn: 'Aluminum, Glass & Facades',
-    descAr: 'ورش ومصانع الألمنيوم والزجاج: واجهات، نوافذ، أبواب، كيرتن وول، وسيكوريت.',
-    descEn: 'Aluminum and glass workshops: facades, windows, doors, curtain walls and tempered glass.',
-    group: 'aluminum-glass',
+    slug: 'aluminum-works',
+    labelAr: 'أعمال الألمنيوم',
+    labelEn: 'Aluminum Works',
+    descAr: 'ورش ومصانع الألمنيوم: نوافذ، أبواب، مطابخ ومظلات ألمنيوم.',
+    descEn: 'Aluminum workshops and factories: windows, doors, kitchens and canopies.',
+    group: 'aluminum',
     keywords: [
       { ar: 'مصانع ألمنيوم في الرياض', en: 'Aluminum factories in Riyadh' },
       { ar: 'تركيب نوافذ ألمنيوم', en: 'Aluminum window installation' },
-      { ar: 'واجهات زجاجية', en: 'Glass facades' },
       { ar: 'مظلات ألمنيوم', en: 'Aluminum canopies' },
+    ],
+  },
+  {
+    slug: 'glass-securit-works',
+    labelAr: 'أعمال الزجاج والسيكوريت',
+    labelEn: 'Glass & Tempered Glass',
+    descAr: 'زجاج وسيكوريت: واجهات زجاجية، قواطع، أبواب وحمامات زجاج.',
+    descEn: 'Glass and tempered glass: facades, partitions, doors and shower enclosures.',
+    group: 'glass',
+    keywords: [
+      { ar: 'واجهات زجاجية', en: 'Glass facades' },
+      { ar: 'سيكوريت', en: 'Tempered glass' },
     ],
   },
   {
@@ -71,6 +88,17 @@ export const HOME_TAXONOMY: HomeTaxonomyEntry[] = [
     ],
   },
   {
+    slug: 'stainless-steel-works',
+    labelAr: 'ستانلس ستيل',
+    labelEn: 'Stainless Steel Works',
+    descAr: 'تصنيع وتركيب الستانلس ستيل للمشاريع التجارية والصناعية والمطاعم.',
+    descEn: 'Stainless steel fabrication and install for commercial, industrial and F&B projects.',
+    group: 'stainless',
+    keywords: [
+      { ar: 'درابزين ستانلس ستيل', en: 'Stainless steel railings' },
+    ],
+  },
+  {
     slug: 'wood-carpentry',
     labelAr: 'خشب ونجارة',
     labelEn: 'Wood & Carpentry',
@@ -78,19 +106,31 @@ export const HOME_TAXONOMY: HomeTaxonomyEntry[] = [
     descEn: 'Carpentry, kitchens, wardrobes and wood doors — built to spec.',
     group: 'wood',
     keywords: [
-      { ar: 'مطابخ خشبية', en: 'Wooden kitchens' },
       { ar: 'أبواب خشبية داخلية', en: 'Interior wooden doors' },
     ],
   },
   {
-    slug: 'stainless-steel-fabrication',
-    labelAr: 'ستانلس ستيل وتجهيزات',
-    labelEn: 'Stainless Steel & Fabrication',
-    descAr: 'تصنيع وتركيب الستانلس ستيل للمشاريع التجارية والصناعية والمطاعم.',
-    descEn: 'Stainless steel fabrication and install for commercial, industrial and F&B projects.',
-    group: 'stainless',
+    slug: 'kitchens-works',
+    labelAr: 'المطابخ',
+    labelEn: 'Kitchens',
+    descAr: 'مطابخ ألمنيوم وستانلس وخشب — تصميم وتنفيذ وتركيب.',
+    descEn: 'Aluminum, stainless and wood kitchens — design, build and install.',
+    group: 'kitchens',
     keywords: [
-      { ar: 'درابزين ستانلس ستيل', en: 'Stainless steel railings' },
+      { ar: 'مطابخ ألمنيوم', en: 'Aluminum kitchens' },
+      { ar: 'مطابخ خشبية', en: 'Wooden kitchens' },
+    ],
+  },
+  {
+    slug: 'facades-cladding',
+    labelAr: 'الواجهات والكلادينج',
+    labelEn: 'Facades & Cladding',
+    descAr: 'واجهات تجارية وزجاجية وكلادينج ومظلات ومداخل.',
+    descEn: 'Commercial fronts, glass facades, cladding, canopies and entrances.',
+    group: 'facades',
+    keywords: [
+      { ar: 'كلادينج', en: 'Cladding' },
+      { ar: 'واجهات تجارية', en: 'Storefronts' },
     ],
   },
   {
@@ -102,52 +142,64 @@ export const HOME_TAXONOMY: HomeTaxonomyEntry[] = [
     group: 'contracting',
   },
   {
-    slug: 'technology-systems',
-    labelAr: 'تقنية وأنظمة ذكية',
-    labelEn: 'Technology & Smart Systems',
-    descAr: 'أنظمة ذكية، كاميرات، شبكات، تحكم وأمن، وحلول تقنية للمباني والمشاريع.',
-    descEn: 'Smart systems, cameras, networks, controls, security and building tech.',
-    group: 'technology',
+    slug: 'elevators-maintenance',
+    labelAr: 'المصاعد والصيانة',
+    labelEn: 'Elevators & Maintenance',
+    descAr: 'مصاعد، سلالم كهربائية، تركيب وصيانة دورية للمباني والمنشآت.',
+    descEn: 'Elevators, escalators, installation and periodic maintenance.',
+    group: 'elevators',
     keywords: [
-      { ar: 'أنظمة ذكية', en: 'Smart systems' },
-      { ar: 'كاميرات مراقبة', en: 'Surveillance cameras' },
+      { ar: 'مصاعد', en: 'Elevators' },
+      { ar: 'صيانة مصاعد', en: 'Elevator maintenance' },
     ],
   },
   {
-    slug: 'heavy-equipment-rental',
+    slug: 'energy-sustainability',
+    labelAr: 'الطاقة والاستدامة',
+    labelEn: 'Energy & Sustainability',
+    descAr: 'طاقة شمسية، عزل حراري، وحلول استدامة للمباني والمشاريع.',
+    descEn: 'Solar energy, thermal insulation and sustainability solutions.',
+    group: 'energy',
+    keywords: [
+      { ar: 'طاقة شمسية', en: 'Solar energy' },
+      { ar: 'عزل حراري', en: 'Thermal insulation' },
+    ],
+  },
+  {
+    slug: 'technology-networks',
+    labelAr: 'التقنية والشبكات',
+    labelEn: 'Technology & Networks',
+    descAr: 'حلول تقنية، شبكات، أنظمة ذكية وبنية تحتية للاتصالات.',
+    descEn: 'Tech solutions, networks, smart systems and communications infrastructure.',
+    group: 'technology',
+    keywords: [
+      { ar: 'أنظمة ذكية', en: 'Smart systems' },
+      { ar: 'شبكات', en: 'Networks' },
+    ],
+  },
+  {
+    slug: 'security-control-systems',
+    labelAr: 'أنظمة الحماية والتحكم',
+    labelEn: 'Security & Control Systems',
+    descAr: 'كاميرات مراقبة، إنذار، تحكم بالدخول وأنظمة أمنية متكاملة.',
+    descEn: 'Surveillance cameras, alarms, access control and integrated security.',
+    group: 'security',
+    keywords: [
+      { ar: 'كاميرات مراقبة', en: 'Surveillance cameras' },
+      { ar: 'أنظمة أمن', en: 'Security systems' },
+    ],
+  },
+  {
+    slug: 'equipment-rental',
     labelAr: 'تأجير المعدات',
-    labelEn: 'Heavy Equipment & Rental',
+    labelEn: 'Equipment Rental',
     descAr: 'معدات ثقيلة، رافعات، سقالات، ومعدات موقع للتأجير.',
     descEn: 'Heavy equipment, cranes, scaffolding and site gear for rental.',
     group: 'rental',
     keywords: [
       { ar: 'رافعات', en: 'Cranes' },
+      { ar: 'سقالات', en: 'Scaffolding' },
     ],
-  },
-  // Supporting rental slugs — used only for row provider binding fallback.
-  {
-    slug: 'lifting',
-    labelAr: 'معدات رفع ونقل',
-    labelEn: 'Lifting & Transport',
-    descAr: 'معدات الرفع والنقل لمواقع المشاريع.',
-    descEn: 'Lifting and transport equipment for project sites.',
-    group: 'rental',
-  },
-  {
-    slug: 'scaffolding',
-    labelAr: 'سقالات',
-    labelEn: 'Scaffolding',
-    descAr: 'سقالات ومنصات عمل آمنة للمواقع.',
-    descEn: 'Scaffolding and safe work platforms.',
-    group: 'rental',
-  },
-  {
-    slug: 'equipment-rental-provider',
-    labelAr: 'مزود معدات / تأجير',
-    labelEn: 'Equipment / Rental Provider',
-    descAr: 'مزودو معدات وتأجير للمشاريع والمنشآت.',
-    descEn: 'Equipment and rental providers for projects and facilities.',
-    group: 'rental',
   },
 ];
 
@@ -162,12 +214,20 @@ const HOME_TAXONOMY_BY_SLUG: Record<string, HomeTaxonomyEntry> = HOME_TAXONOMY.r
 export const HOME_ALLOWED_SLUGS: ReadonlySet<string> = new Set(HOME_TAXONOMY.map((e) => e.slug));
 
 export const HOME_FORBIDDEN_SLUGS: ReadonlySet<string> = new Set([
+  // Legacy shorthand
   'aluminum',
   'iron',
   'wood',
   'glass',
   'stainless',
   'fabrication',
+  // Archived / merged taxonomy slugs replaced by the 13 primary activities
+  'aluminum-glass-facades',
+  'stainless-steel-fabrication',
+  'technology-systems',
+  'heavy-equipment-rental',
+  'iron-steel',
+  'glass-securit',
 ]);
 
 export const homeCategoryHref = (slug: string): string => {
@@ -185,11 +245,11 @@ export const getHomeTaxonomyEntry = (slug: string): HomeTaxonomyEntry | undefine
 
 /** The 6 sector tiles shown in HomeSectorGrid (image assets bound by consumer). */
 export const HOME_SECTOR_GRID_SLUGS = [
-  'aluminum-glass-facades',
+  'aluminum-works',
+  'glass-securit-works',
   'steel-metal-works',
+  'stainless-steel-works',
   'wood-carpentry',
-  'aluminum-glass-facades',
-  'stainless-steel-fabrication',
   'contracting-finishing',
 ] as const;
 
@@ -199,24 +259,31 @@ export const HOME_ROW_BINDINGS: ReadonlyArray<{
   primarySlug: string;
   providerSlugs: string[];
 }> = [
-  { rowId: 'iron-stainless',     primarySlug: 'steel-metal-works',      providerSlugs: ['steel-metal-works', 'stainless-steel-fabrication'] },
-  { rowId: 'aluminum-glass',     primarySlug: 'aluminum-glass-facades', providerSlugs: ['aluminum-glass-facades'] },
-  { rowId: 'facades-cladding',   primarySlug: 'aluminum-glass-facades', providerSlugs: ['aluminum-glass-facades'] },
-  { rowId: 'kitchens-wood',      primarySlug: 'wood-carpentry',         providerSlugs: ['wood-carpentry'] },
-  { rowId: 'fabrication',        primarySlug: 'contracting-finishing',  providerSlugs: ['contracting-finishing'] },
-  { rowId: 'technology-systems', primarySlug: 'technology-systems',     providerSlugs: ['technology-systems'] },
-  { rowId: 'equipment-rental',   primarySlug: 'heavy-equipment-rental', providerSlugs: ['heavy-equipment-rental', 'lifting', 'scaffolding', 'equipment-rental-provider'] },
+  { rowId: 'aluminum-glass',           primarySlug: 'aluminum-works',            providerSlugs: ['aluminum-works', 'glass-securit-works', 'facades-cladding'] },
+  { rowId: 'steel-stainless',          primarySlug: 'steel-metal-works',         providerSlugs: ['steel-metal-works', 'stainless-steel-works'] },
+  { rowId: 'wood-kitchens',            primarySlug: 'wood-carpentry',            providerSlugs: ['wood-carpentry', 'kitchens-works'] },
+  { rowId: 'elevators-maintenance',    primarySlug: 'elevators-maintenance',     providerSlugs: ['elevators-maintenance'] },
+  { rowId: 'energy-sustainability',    primarySlug: 'energy-sustainability',     providerSlugs: ['energy-sustainability'] },
+  { rowId: 'technology-networks',      primarySlug: 'technology-networks',       providerSlugs: ['technology-networks'] },
+  { rowId: 'security-control-systems', primarySlug: 'security-control-systems',  providerSlugs: ['security-control-systems'] },
+  { rowId: 'equipment-rental',         primarySlug: 'equipment-rental',          providerSlugs: ['equipment-rental'] },
 ];
 
 /** Slugs that appear in JSON-LD ItemList on the homepage (Index.tsx). */
 export const HOME_JSONLD_SLUGS = [
-  'aluminum-glass-facades',
+  'aluminum-works',
+  'glass-securit-works',
   'steel-metal-works',
+  'stainless-steel-works',
   'wood-carpentry',
-  'stainless-steel-fabrication',
+  'kitchens-works',
+  'facades-cladding',
   'contracting-finishing',
-  'technology-systems',
-  'heavy-equipment-rental',
+  'elevators-maintenance',
+  'energy-sustainability',
+  'technology-networks',
+  'security-control-systems',
+  'equipment-rental',
 ] as const;
 
 export interface HomeTrendingItem {
