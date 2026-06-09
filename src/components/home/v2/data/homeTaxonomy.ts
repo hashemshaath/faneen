@@ -243,14 +243,23 @@ export const homeCategoryHref = (slug: string): string => {
 export const getHomeTaxonomyEntry = (slug: string): HomeTaxonomyEntry | undefined =>
   HOME_TAXONOMY_BY_SLUG[slug];
 
-/** The 6 sector tiles shown in HomeSectorGrid (image assets bound by consumer). */
+/**
+ * The 10 sector tiles shown in HomeSectorGrid (5 cols × 2 rows on desktop).
+ * The remaining 3 canonical primaries (security-control-systems,
+ * equipment-rental, contracting-finishing) stay reachable via the
+ * "Explore all sectors" link below the grid and via HomeCategoryRows.
+ */
 export const HOME_SECTOR_GRID_SLUGS = [
   'aluminum-works',
   'glass-securit-works',
   'steel-metal-works',
   'stainless-steel-works',
   'wood-carpentry',
-  'contracting-finishing',
+  'kitchens-works',
+  'facades-cladding',
+  'elevators-maintenance',
+  'energy-sustainability',
+  'technology-networks',
 ] as const;
 
 /** Row id -> primary + provider slugs. Consumed by categoryRows.ts. */
