@@ -756,6 +756,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     notes: '',
   });
   const [reqSubmitting, setReqSubmitting] = useState(false);
+  const [termErrors, setTermErrors] = useState<RentalTermErrors>({});
 
   // List toolbar state (search + status filter)
   const [listQuery, setListQuery] = useState('');
