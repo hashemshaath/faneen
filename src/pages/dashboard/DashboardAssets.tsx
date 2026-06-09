@@ -601,50 +601,108 @@ const AddUnitsForm: React.FC<{
     await onAdded();
   };
 
+  const filledSerials = serials.filter(s => s.trim()).length;
+
   return (
-    <div className="rounded-xl border bg-background p-3 space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Plus className="size-4 text-primary" />
-        <Bi ar="إضافة وحدات لهذا الصنف" en="Add units for this item" />
-      </div>
-      <p className="text-[11px] text-muted-foreground leading-relaxed">
-        <Bi
-          ar="الاسم والتصنيف مأخوذان من الصنف في مركز التأجير. أدخل عدد القطع ثم الأرقام التسلسلية (اختيارية)."
-          en="Name & category are inherited from the rental item. Set the quantity, then enter serial numbers (optional)."
-        />
-      </p>
-      <div className="flex items-end gap-2">
-        <div className="w-32">
-          <label className="text-[11px] text-muted-foreground"><Bi ar="عدد القطع" en="Quantity" /></label>
-          <Input
-            type="number" min={1} max={50} value={count}
-            onChange={e => setCountSafe(Number(e.target.value))}
-            className="tech-content h-10"
-          />
+    <div className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.04] via-background to-background shadow-elev-1">
+      {/* Header */}
+      <div className="flex items-start gap-3 p-4 pb-3 border-b border-border/50">
+        <div className="grid place-items-center size-9 rounded-xl bg-primary/10 text-primary shrink-0">
+          <Plus className="size-4" />
         </div>
-        <div className="text-[11px] text-muted-foreground pb-2.5">
-          <Bi ar={`الموجود حاليًا: ${existingCount}`} en={`Currently: ${existingCount}`} />
-        </div>
-      </div>
-      <div className="grid sm:grid-cols-2 gap-2">
-        {serials.map((s, i) => (
-          <div key={i} className="relative">
-            <Hash className="size-3.5 absolute top-1/2 -translate-y-1/2 start-2.5 text-muted-foreground" />
-            <Input
-              dir="ltr"
-              value={s}
-              onChange={e => setSerials(prev => prev.map((v, idx) => idx === i ? e.target.value : v))}
-              placeholder={`SN-${i + 1}`}
-              className="tech-content ps-8 h-10"
-            />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold leading-tight">
+            <Bi ar="إضافة وحدات لهذا الصنف" en="Add units for this item" />
           </div>
-        ))}
+          <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+            <Bi
+              ar="الاسم والتصنيف يُورَثان من مركز التأجير. حدّد العدد ثم أدخل الأرقام التسلسلية (اختيارية)."
+              en="Name & category are inherited from the rental center. Set quantity, then add serial numbers (optional)."
+            />
+          </p>
+        </div>
+        <div className="hidden sm:flex flex-col items-end text-[10px] text-muted-foreground shrink-0">
+          <span><Bi ar="موجود حاليًا" en="Currently" /></span>
+          <span className="tech-content text-sm font-semibold text-foreground">{existingCount}</span>
+        </div>
       </div>
-      <div className="flex justify-end">
-        <Button onClick={submit} disabled={saving} className="gap-2">
-          {saving && <Loader2 className="size-4 animate-spin" />}
-          <Bi ar={`حفظ ${count} وحدة`} en={`Save ${count} units`} />
-        </Button>
+
+      <div className="p-4 space-y-4">
+        {/* Quantity stepper */}
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/60 p-2.5">
+          <div className="min-w-0">
+            <div className="text-[11px] text-muted-foreground"><Bi ar="عدد القطع" en="Quantity" /></div>
+            <div className="text-[11px] text-muted-foreground/80 mt-0.5">
+              <Bi ar={`${filledSerials} من ${count} رقم تسلسلي`} en={`${filledSerials} of ${count} serials filled`} />
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button" size="icon" variant="outline"
+              className="h-9 w-9 rounded-lg"
+              onClick={() => setCountSafe(count - 1)} disabled={count <= 1}
+              aria-label="decrease"
+            >−</Button>
+            <Input
+              type="number" min={1} max={50} value={count}
+              onChange={e => setCountSafe(Number(e.target.value))}
+              className="tech-content h-9 w-16 text-center font-semibold"
+            />
+            <Button
+              type="button" size="icon" variant="outline"
+              className="h-9 w-9 rounded-lg"
+              onClick={() => setCountSafe(count + 1)} disabled={count >= 50}
+              aria-label="increase"
+            >+</Button>
+          </div>
+        </div>
+
+        {/* Serial inputs */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-medium text-muted-foreground">
+              <Bi ar="الأرقام التسلسلية (اختيارية)" en="Serial numbers (optional)" />
+            </label>
+            {filledSerials > 0 && (
+              <button
+                type="button"
+                onClick={() => setSerials(prev => prev.map(() => ''))}
+                className="text-[10px] text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Bi ar="مسح الكل" en="Clear all" />
+              </button>
+            )}
+          </div>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {serials.map((s, i) => (
+              <div key={i} className="relative group">
+                <span className="absolute top-1/2 -translate-y-1/2 start-2 grid place-items-center size-5 rounded-md bg-muted text-[10px] font-semibold text-muted-foreground tech-content">
+                  {i + 1}
+                </span>
+                <Hash className="size-3 absolute top-1/2 -translate-y-1/2 start-9 text-muted-foreground/60" />
+                <Input
+                  dir="ltr"
+                  value={s}
+                  onChange={e => setSerials(prev => prev.map((v, idx) => idx === i ? e.target.value : v))}
+                  placeholder={`SN-${String(i + 1).padStart(3, '0')}`}
+                  className="tech-content ps-14 h-10 group-focus-within:border-primary/40 transition-colors"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <p className="text-[10px] text-muted-foreground sm:hidden">
+            <Bi ar={`موجود: ${existingCount}`} en={`Currently: ${existingCount}`} />
+          </p>
+          <div className="flex-1" />
+          <Button onClick={submit} disabled={saving} className="gap-2 min-w-[140px]">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+            <Bi ar={`حفظ ${count} وحدة`} en={`Save ${count} units`} />
+          </Button>
+        </div>
       </div>
     </div>
   );
