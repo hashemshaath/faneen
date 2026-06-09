@@ -128,6 +128,7 @@ const providerGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'مركز التأجير', en: 'Rentals' }, url: '/dashboard/rentals', icon: Truck, end: true, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'تقويم التأجير', en: 'Rentals Calendar' }, url: '/dashboard/rentals/calendar', icon: CalendarClock, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: { ar: 'تحليلات التأجير', en: 'Rentals Analytics' }, url: '/dashboard/rentals/analytics', icon: BarChart3, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'الأصول والمعدات', en: 'Assets & Equipment' }, url: '/dashboard/assets', icon: Package },
     ],
   },
