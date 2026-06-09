@@ -188,7 +188,8 @@ const TermsField: React.FC<{
   presets: ReadonlyArray<{ ar: string; en: string }>;
   value: string;
   onChange: (v: string) => void;
-}> = ({ label, presets, value, onChange }) => {
+  hint?: string;
+}> = ({ label, presets, value, onChange, hint }) => {
   const { isRTL } = useLanguage();
   const lines = value.split('\n').map(s => s.trim()).filter(Boolean);
   const togglePreset = (text: string) => {
@@ -198,7 +199,14 @@ const TermsField: React.FC<{
   };
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs">{label}</Label>
+        {hint && (
+          <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+            <Sparkles className="size-3 text-primary/70" />{hint}
+          </span>
+        )}
+      </div>
       <div className="flex flex-wrap gap-1.5">
         {presets.map(p => {
           const text = isRTL ? p.ar : p.en;
@@ -217,6 +225,87 @@ const TermsField: React.FC<{
       </div>
       <Textarea dir="auto" rows={2} value={value} onChange={e => onChange(e.target.value)}
         placeholder={isRTL ? 'اختر من المقترحات أو اكتب نصًا خاصًا…' : 'Pick presets or type custom text…'} />
+    </div>
+  );
+};
+
+/** Terms block — category-aware presets + one-click apply-all. */
+const TermsBlock: React.FC<{
+  category: RentalCategory | undefined;
+  nameAr: string;
+  nameEn: string;
+  usage: string;
+  late: string;
+  penalty: string;
+  onChange: (next: { usage: string; late: string; penalty: string }) => void;
+}> = ({ category, nameAr, nameEn, usage, late, penalty, onChange }) => {
+  const { isRTL } = useLanguage();
+  const bi = useBi();
+  const match = getCategoryPreset(category, nameAr, nameEn);
+  const usagePresets = mergePresets(USAGE_PRESETS, match?.presets.usage);
+  const latePresets = mergePresets(LATE_PRESETS, match?.presets.late);
+  const penaltyPresets = mergePresets(PENALTY_PRESETS, match?.presets.penalty);
+  const allEmpty = !usage.trim() && !late.trim() && !penalty.trim();
+  const tagLabel = match ? (isRTL ? match.ar : match.en) : '';
+
+  const applySuggested = () => {
+    if (!match) return;
+    const join = (arr: Preset[]) => arr.map(p => (isRTL ? p.ar : p.en)).join('\n');
+    onChange({
+      usage: usage.trim() ? usage : join(match.presets.usage),
+      late: late.trim() ? late : join(match.presets.late),
+      penalty: penalty.trim() ? penalty : join(match.presets.penalty),
+    });
+    toast.success(bi('تم تطبيق المقترحات', 'Suggestions applied'));
+  };
+
+  return (
+    <div className="space-y-3 rounded-xl border border-border/60 bg-card/40 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide inline-flex items-center gap-2">
+          <ShieldCheck className="size-3.5 text-primary/80" />
+          <Bi ar="الشروط والأحكام" en="Terms & conditions" />
+          {match && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-[10px] normal-case tracking-normal">
+              <Sparkles className="size-3" />
+              <Bi ar={`مقترح لـ ${tagLabel}`} en={`Suggested for ${tagLabel}`} />
+            </span>
+          )}
+        </div>
+        {match && allEmpty && (
+          <Button type="button" size="sm" variant="outline" onClick={applySuggested} className="gap-1.5 h-8">
+            <Wand2 className="size-3.5" />
+            <Bi ar="تطبيق المقترحات" en="Apply suggestions" />
+          </Button>
+        )}
+      </div>
+      <p className="text-[11px] text-muted-foreground -mt-1">
+        <Bi
+          ar="اختر شروطًا متوافقة مع تصنيف المعدة لحماية أعمالك وتوضيح المسؤوليات للعميل."
+          en="Pick terms that match the equipment category to protect your business and clarify responsibilities."
+        />
+      </p>
+      <TermsField
+        label={bi('شروط الاستخدام', 'Usage terms')}
+        presets={usagePresets}
+        value={usage}
+        onChange={v => onChange({ usage: v, late, penalty })}
+        hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+      />
+      <TermsField
+        label={bi('شروط التأخير', 'Late terms')}
+        presets={latePresets}
+        value={late}
+        onChange={v => onChange({ usage, late: v, penalty })}
+        hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+      />
+      <TermsField
+        label={bi('الشروط الجزائية', 'Penalty terms')}
+        presets={penaltyPresets}
+        value={penalty}
+        onChange={v => onChange({ usage, late, penalty: v })}
+        hint={match ? bi('مقترح للفئة', 'Category-matched') : undefined}
+      />
     </div>
   );
 };
