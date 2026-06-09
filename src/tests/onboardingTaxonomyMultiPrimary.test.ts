@@ -75,10 +75,8 @@ describe('Safe Batch 2 — onboarding multi-primary shim', () => {
 
   it('strips non-string entries from arrays', () => {
     const normalized = normalizeOnboardingTaxonomyDraft({
-      // @ts-expect-error — intentionally exercising runtime guard
-      primaryActivityCategoryIds: ['pri-1', null, 42, '', 'pri-2'],
-      // @ts-expect-error — runtime guard
-      secondaryActivityCategoryIds: [null, 'sec-a', undefined, '', 'sec-b'],
+      primaryActivityCategoryIds: ['pri-1', null as unknown as string, 42 as unknown as string, '', 'pri-2'],
+      secondaryActivityCategoryIds: [null as unknown as string, 'sec-a', undefined as unknown as string, '', 'sec-b'],
     });
     expect(normalized.primaryActivityCategoryIds).toEqual(['pri-1', 'pri-2']);
     expect(normalized.secondaryActivityCategoryIds).toEqual(['sec-a', 'sec-b']);
