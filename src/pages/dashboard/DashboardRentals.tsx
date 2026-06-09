@@ -1679,30 +1679,47 @@ const RentalItemEditForm: React.FC<{
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs"><Bi ar="الماركة" en="Brand" /></Label>
-          <Input dir="auto" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
+      <details
+        className="group rounded-xl border border-border/60 bg-card/40 [&_summary::-webkit-details-marker]:hidden"
+        open={Boolean(form.brand || form.country_of_manufacture || form.condition)}
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide rounded-xl hover:bg-muted/40 transition-colors">
+          <span className="inline-flex items-center gap-2 normal-case tracking-normal">
+            <Info className="size-3.5 text-primary/70" />
+            <Bi ar="معلومات إضافية عن العلامة" en="Additional brand info" />
+            {(form.brand || form.country_of_manufacture || form.condition) && (
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2 py-0.5 text-[10px]">
+                <Bi ar="مكتمل" en="Filled" />
+              </span>
+            )}
+          </span>
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-1">
+          <div className="space-y-1">
+            <Label className="text-xs"><Bi ar="الماركة" en="Brand" /></Label>
+            <Input dir="auto" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs"><Bi ar="بلد الصنع" en="Country" /></Label>
+            <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
+              <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
+              <SelectContent>
+                {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs"><Bi ar="الحالة" en="Condition" /></Label>
+            <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
+              <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
+              <SelectContent>
+                {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs"><Bi ar="بلد الصنع" en="Country" /></Label>
-          <Select value={form.country_of_manufacture} onValueChange={v => setForm({ ...form, country_of_manufacture: v })}>
-            <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
-            <SelectContent>
-              {COUNTRY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs"><Bi ar="الحالة" en="Condition" /></Label>
-          <Select value={form.condition} onValueChange={v => setForm({ ...form, condition: v as typeof form.condition })}>
-            <SelectTrigger><SelectValue placeholder={bi('اختر','Choose')} /></SelectTrigger>
-            <SelectContent>
-              {CONDITION_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{isRTL ? c.ar : c.en}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      </details>
 
       {showElectrical && (
         <div className="space-y-2">
@@ -1781,18 +1798,18 @@ const RentalItemEditForm: React.FC<{
         </div>
       </div>
 
-      {/* Terms */}
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <Bi ar="الشروط والأحكام" en="Terms & conditions" />
-        </div>
-        <TermsField label={bi('شروط الاستخدام','Usage terms')} presets={USAGE_PRESETS}
-          value={form.usage_terms} onChange={v => setForm({ ...form, usage_terms: v })} />
-        <TermsField label={bi('شروط التأخير','Late terms')} presets={LATE_PRESETS}
-          value={form.late_terms} onChange={v => setForm({ ...form, late_terms: v })} />
-        <TermsField label={bi('الشروط الجزائية','Penalty terms')} presets={PENALTY_PRESETS}
-          value={form.penalty_terms} onChange={v => setForm({ ...form, penalty_terms: v })} />
-      </div>
+      {/* Terms — category-aware */}
+      <TermsBlock
+        category={cat}
+        nameAr={form.name_ar}
+        nameEn={form.name_en}
+        usage={form.usage_terms}
+        late={form.late_terms}
+        penalty={form.penalty_terms}
+        onChange={({ usage, late, penalty }) =>
+          setForm({ ...form, usage_terms: usage, late_terms: late, penalty_terms: penalty })
+        }
+      />
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} className="hover-lift">
