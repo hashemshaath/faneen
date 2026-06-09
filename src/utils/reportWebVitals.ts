@@ -67,29 +67,40 @@ function flush() {
   if (buffer.length === 0) return;
   const events = buffer.splice(0, buffer.length);
   const body = JSON.stringify({ events });
+  // Prefer fetch with keepalive + credentials:'omit' so the request is NOT
+  // credentialed. This avoids the "ACAO cannot be wildcard when credentials
+  // mode is include" CORS trap that sendBeacon hits (sendBeacon always sends
+  // credentialed cross-origin). The endpoint is public (verify_jwt=false)
+  // and accepts anonymous POSTs.
+  try {
+    void fetch(ENDPOINT, {
+      method: "POST",
+      mode: "cors",
+      credentials: "omit",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: ANON_KEY,
+      },
+      body,
+      keepalive: true,
+    }).catch(() => {
+      /* swallow — RUM must never break the app */
+    });
+    return;
+  } catch {
+    /* fall through to sendBeacon as a last resort */
+  }
+  // Last-resort fallback (e.g. fetch throws synchronously during unload):
+  // sendBeacon. The edge function echoes the origin for allow-listed hosts,
+  // so credentialed mode is safe there.
   try {
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: "application/json" });
-      // sendBeacon ignores custom headers, but the ingest function is public
-      // (verify_jwt = false) so the anon key is not strictly required.
       navigator.sendBeacon(ENDPOINT, blob);
-      return;
     }
   } catch {
-    /* fall through to fetch */
+    /* swallow */
   }
-  void fetch(ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
-    body,
-    keepalive: true,
-  }).catch(() => {
-    /* swallow — RUM must never break the app */
-  });
 }
 
 function scheduleFlush() {
