@@ -22401,6 +22401,15 @@ export type Database = {
         }
         Returns: Json
       }
+      set_business_taxonomy_categories_v2: {
+        Args: {
+          p_business_id: string
+          p_entity_type_category_id: string
+          p_primary_activity_category_ids: string[]
+          p_secondary_activity_category_ids: string[]
+        }
+        Returns: Json
+      }
       set_client_site_visibility: {
         Args: { _site_id: string; _visibility: string }
         Returns: Json
