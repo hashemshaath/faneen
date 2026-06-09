@@ -226,10 +226,6 @@ const SearchPage = () => {
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
 
-  const handleCategoryClick = useCallback((id: string) => {
-    handleFilterChange('categoryId', filters.categoryId === id ? 'all' : id);
-  }, [filters.categoryId, handleFilterChange]);
-
   const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0 || filters.serviceCategoryId !== 'all' || filters.regionId !== 'all';
 
   const clearFilters = useCallback(() => {
