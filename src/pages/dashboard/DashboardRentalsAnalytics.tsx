@@ -645,10 +645,25 @@ const DashboardRentalsAnalytics: React.FC = () => {
             <Button variant="outline" size="sm" onClick={() => window.print()} className="h-10 rounded-xl hidden sm:inline-flex" aria-label={bi('طباعة', 'Print')}>
               <Printer className="size-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={exportCsv} className="h-10 rounded-xl">
-              <Download className="size-4 me-2" />
-              {bi('تصدير CSV', 'Export CSV')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 rounded-xl">
+                  <Download className="size-4 me-2" />
+                  {bi('تصدير', 'Export')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-xl">
+                <DropdownMenuItem onClick={exportPdf}>
+                  <FileText className="size-4 me-2" /> {bi('PDF (مع الرسوم)', 'PDF (with charts)')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportExcel}>
+                  <FileSpreadsheet className="size-4 me-2" /> {bi('Excel متعدد الأوراق', 'Excel (multi-sheet)')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportCsv}>
+                  <Download className="size-4 me-2" /> {bi('CSV', 'CSV')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
