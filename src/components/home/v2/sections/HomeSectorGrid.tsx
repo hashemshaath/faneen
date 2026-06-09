@@ -111,7 +111,7 @@ const HomeSectorGrid = () => {
         title={bi('القطاعات الرئيسية', 'Main sectors')}
         sub={bi('اختر القطاع وابدأ تصفّح المزودين.', 'Pick a sector and browse providers.')}
       />
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-3 lg:gap-4">
         {tiles.map((s) => {
           const img = IMG[s.slug];
           return (
@@ -119,14 +119,14 @@ const HomeSectorGrid = () => {
               key={s.slug}
               to={homeCategoryHref(s.slug)}
               aria-label={bi(s.titleAr, s.titleEn)}
-              className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="group relative overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-muted">
+              <div className="relative aspect-square sm:aspect-[4/3] lg:aspect-[16/10] overflow-hidden bg-muted">
                 {img && (
                   <img
                     src={img.image}
                     srcSet={img.srcSet}
-                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                    sizes="(min-width: 1024px) 25vw, 25vw"
                     alt={bi(s.titleAr, s.titleEn)}
                     width={1024}
                     height={640}
@@ -137,11 +137,11 @@ const HomeSectorGrid = () => {
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent pointer-events-none" />
-                <h3 className="absolute bottom-2 start-3 end-3 sm:bottom-2.5 font-heading font-bold text-sm sm:text-base md:text-lg text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-tight">
+                <h3 className="absolute bottom-1.5 start-1.5 end-1.5 sm:bottom-2 sm:start-3 sm:end-3 font-heading font-bold text-[11px] xs:text-xs sm:text-sm md:text-base lg:text-lg text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-tight line-clamp-2">
                   {bi(s.titleAr, s.titleEn)}
                 </h3>
               </div>
-              <div className="p-2.5 sm:p-3 flex items-center justify-between gap-2">
+              <div className="hidden sm:flex p-2.5 sm:p-3 items-center justify-between gap-2">
                 <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">
                   {bi(s.bodyAr, s.bodyEn)}
                 </p>
