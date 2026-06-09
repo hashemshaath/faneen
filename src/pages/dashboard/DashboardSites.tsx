@@ -398,7 +398,7 @@ export default function DashboardSites() {
         .from('client_sites')
         .select(`
           id, business_id, client_user_id, site_ref, label, site_name, site_type, visibility,
-          contact_name, contact_phone, country_id, country_code, city_id, city_name,
+          contact_name, contact_phone, country_id, city_id, city_name,
           region, region_en, district, district_en, street_name, street_name_en,
           building_number, additional_number, post_code, short_address, address_en,
           address_line1, address_line2, map_url, latitude, longitude, access_notes,
