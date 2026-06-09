@@ -70,21 +70,24 @@ describe('Phase 7 — taxonomy/search integration', () => {
         taxonomy_categories: { id: 'c1', slug: 'aluminum-glass-facades', name_ar: 'ألمنيوم وزجاج وواجهات', name_en: 'Aluminum & Glass', type_id: null },
       },
     ];
-    it('groups by business and splits primary/secondary/service in Arabic', () => {
+    it('groups by business and normalizes legacy primary slugs to canonical', () => {
       const map = formatBusinessTaxonomyDisplayMap(rows as any, 'ar');
       const b1 = map.get('b1')!;
-      expect(b1.primaryLabel).toBe('ألمنيوم وزجاج وواجهات');
-      expect(b1.primarySlug).toBe('aluminum-glass-facades');
+      // Legacy `aluminum-glass-facades` is forbidden in the UI, so the
+      // primary display is rewritten to the canonical `aluminum-works`.
+      expect(b1.primaryLabel).toBe('أعمال الألمنيوم');
+      expect(b1.primarySlug).toBe('aluminum-works');
       expect(b1.secondaryLabels).toEqual(['حديد ومعادن']);
       expect(b1.serviceLabels).toEqual(['مطابخ وتجهيزات']);
       expect(b1.hasModernTaxonomy).toBe(true);
+      expect(b1.primaries).toHaveLength(1);
       const b2 = map.get('b2')!;
       expect(b2.primaryLabel).toBeNull();
       expect(b2.secondaryLabels).toEqual(['ألمنيوم وزجاج وواجهات']);
     });
-    it('falls back to English when language="en"', () => {
+    it('falls back to English with canonical labels when language="en"', () => {
       const map = formatBusinessTaxonomyDisplayMap(rows as any, 'en');
-      expect(map.get('b1')!.primaryLabel).toBe('Aluminum & Glass');
+      expect(map.get('b1')!.primaryLabel).toBe('Aluminum works');
     });
     it('returns empty map for empty input', () => {
       expect(formatBusinessTaxonomyDisplayMap([], 'ar').size).toBe(0);

@@ -21,6 +21,12 @@ import {
   resolveLegacySectorToTaxonomy,
 } from './legacy-mapping';
 import { getRuntimeLegacyMapCached } from './migration-services';
+import {
+  CANONICAL_PRIMARY_LABELS,
+  UI_FORBIDDEN_PRIMARY_SLUGS,
+  isCanonicalPrimarySlug,
+  type CanonicalPrimarySlug,
+} from './canonical-primaries';
 
 export interface SearchTaxonomyParams {
   q?: string | null;
@@ -425,15 +431,49 @@ export function useSearchableTaxonomyCategories() {
 // Phase 10 — Bulk taxonomy display for business cards (no N+1).
 // ────────────────────────────────────────────────────────────────
 
+/** A single taxonomy chip used by the public business UI. */
+export interface TaxonomyChip {
+  /** Stable id from `taxonomy_categories` (may be the legacy row id). */
+  id: string;
+  /** Canonical slug when known; falls back to the row's own slug otherwise. */
+  slug: string;
+  /** Localized display label (legacy → canonical normalization applied). */
+  label: string;
+}
+
+/**
+ * Safe Batch 4 — grouped display: one entry per primary the business
+ * selected, with its secondaries / services nested below. Businesses that
+ * only have a secondary linked surface that secondary's parent as an
+ * "inferred" primary so the public UI never shows orphan chips.
+ */
+export interface TaxonomyGroup {
+  primary: TaxonomyChip | null;
+  /** True when `primary` was inferred from a child's `parent_id`. */
+  inferred: boolean;
+  secondaries: TaxonomyChip[];
+  services: TaxonomyChip[];
+}
+
 export interface BusinessTaxonomyDisplay {
+  /** All primary activity chips (multi-primary aware). */
+  primaries: TaxonomyChip[];
+  /** Grouped view used by Profile + Card UIs. */
+  groups: TaxonomyGroup[];
+  /** Back-compat — first primary's label (or null). */
   primaryLabel: string | null;
+  /** Back-compat — first primary's slug (or null). */
   primarySlug: string | null;
+  /** Back-compat — flattened secondary labels across all primaries. */
   secondaryLabels: string[];
+  /** Back-compat — flattened service labels across all primaries. */
   serviceLabels: string[];
   hasModernTaxonomy: boolean;
 }
 
 export const EMPTY_TAXONOMY_DISPLAY: BusinessTaxonomyDisplay = {
+  primaries: [],
+  groups: [],
   primaryLabel: null,
   primarySlug: null,
   secondaryLabels: [],
@@ -452,7 +492,16 @@ interface RawLinkRow {
     name_ar: string;
     name_en: string | null;
     taxonomy_type_id: string | null;
+    parent_id?: string | null;
   } | null;
+}
+
+/** Lightweight parent-category lookup used to infer primary groups. */
+export interface ParentCategoryRow {
+  id: string;
+  slug: string;
+  name_ar: string | null;
+  name_en: string | null;
 }
 
 function pickLabel(
@@ -465,37 +514,175 @@ function pickLabel(
 }
 
 /**
+ * Safe Batch 4 — replace legacy / forbidden primary slugs with their
+ * canonical equivalent for display ONLY. The DB row id is preserved so
+ * downstream filters keep working; the slug + label switch to the
+ * canonical primary the user is supposed to see.
+ *
+ * Returns the original (or canonicalized) slug + a possibly overridden
+ * label. When no canonical mapping exists, the inputs pass through.
+ */
+function canonicalizePrimary(
+  slug: string | null | undefined,
+  fallbackLabel: string | null,
+  language: 'ar' | 'en',
+): { slug: string; label: string } | null {
+  const raw = (slug ?? '').trim().toLowerCase();
+  if (!raw) {
+    if (!fallbackLabel) return null;
+    return { slug: '', label: fallbackLabel };
+  }
+  const forbidden = (UI_FORBIDDEN_PRIMARY_SLUGS as readonly string[]).includes(raw);
+  const canonical = LEGACY_SECTOR_TO_TAXONOMY_SLUG[raw];
+  if (forbidden || canonical) {
+    const target = (canonical ?? raw) as string;
+    const labels = (CANONICAL_PRIMARY_LABELS as Record<string, { ar: string; en: string }>)[target];
+    if (labels) return { slug: target, label: labels[language] };
+    // Forbidden but no canonical mapping — fall back to original label but hide the slug.
+    if (fallbackLabel) return { slug: target, label: fallbackLabel };
+    return null;
+  }
+  if (!fallbackLabel) {
+    const labels = (CANONICAL_PRIMARY_LABELS as Record<string, { ar: string; en: string }>)[raw];
+    if (labels) return { slug: raw, label: labels[language] };
+    return null;
+  }
+  return { slug: raw, label: fallbackLabel };
+}
+
+/**
  * Build the display map from a list of joined rows. Pure — easy to test
  * and reuse from other batched callers (e.g. SSR or showcase later).
+ *
+ * Safe Batch 4 — produces a multi-primary, grouped view while keeping the
+ * legacy flat fields (primaryLabel / secondaryLabels / serviceLabels)
+ * populated for back-compat with older consumers.
  */
 export function formatBusinessTaxonomyDisplayMap(
   rows: RawLinkRow[],
   language: 'ar' | 'en',
+  parentLookup?: Map<string, ParentCategoryRow> | null,
 ): Map<string, BusinessTaxonomyDisplay> {
-  const out = new Map<string, BusinessTaxonomyDisplay>();
+  // Phase A — partition rows per business so each business is built in one pass.
+  const perBiz = new Map<string, RawLinkRow[]>();
   for (const row of rows) {
-    const label = pickLabel(row.taxonomy_categories, language);
-    if (!label) continue;
-    const existing = out.get(row.business_id) ?? {
-      primaryLabel: null,
-      primarySlug: null,
-      secondaryLabels: [] as string[],
-      serviceLabels: [] as string[],
-      hasModernTaxonomy: true,
-    };
-    const isPrimary =
-      row.is_primary === true || row.role === 'primary_activity' || row.role === 'entity_type';
-    if (isPrimary && !existing.primaryLabel) {
-      existing.primaryLabel = label;
-      existing.primarySlug = row.taxonomy_categories?.slug ?? null;
-    } else if (row.role === 'service') {
-      if (!existing.serviceLabels.includes(label)) existing.serviceLabels.push(label);
-    } else {
-      if (!existing.secondaryLabels.includes(label)) existing.secondaryLabels.push(label);
-    }
-    existing.hasModernTaxonomy = true;
-    out.set(row.business_id, existing);
+    const bucket = perBiz.get(row.business_id) ?? [];
+    bucket.push(row);
+    perBiz.set(row.business_id, bucket);
   }
+
+  const out = new Map<string, BusinessTaxonomyDisplay>();
+
+  for (const [businessId, bizRows] of perBiz) {
+    // primaryById indexes EXPLICIT primary groups by the original DB row id
+    // so secondaries with `parent_id` matching that id can attach in O(1).
+    const primaryById = new Map<string, TaxonomyGroup>();
+    // inferredByParentId hosts groups created from a secondary's parent_id
+    // when no explicit primary row was linked.
+    const inferredByParentId = new Map<string, TaxonomyGroup>();
+    const orphan: TaxonomyGroup = {
+      primary: null,
+      inferred: false,
+      secondaries: [],
+      services: [],
+    };
+    const primariesOrder: TaxonomyGroup[] = [];
+
+    // Pass 1 — explicit primary rows.
+    for (const row of bizRows) {
+      const cat = row.taxonomy_categories;
+      if (!cat) continue;
+      const isPrimary =
+        row.is_primary === true ||
+        row.role === 'primary_activity' ||
+        row.role === 'entity_type';
+      if (!isPrimary) continue;
+      const fallback = pickLabel(cat, language);
+      const canon = canonicalizePrimary(cat.slug, fallback, language);
+      if (!canon) continue;
+      if (primaryById.has(cat.id)) continue;
+      const group: TaxonomyGroup = {
+        primary: { id: cat.id, slug: canon.slug, label: canon.label },
+        inferred: false,
+        secondaries: [],
+        services: [],
+      };
+      primaryById.set(cat.id, group);
+      primariesOrder.push(group);
+    }
+
+    // Pass 2 — secondaries / services, with parent-aware grouping.
+    for (const row of bizRows) {
+      const cat = row.taxonomy_categories;
+      if (!cat) continue;
+      const isPrimary =
+        row.is_primary === true ||
+        row.role === 'primary_activity' ||
+        row.role === 'entity_type';
+      if (isPrimary) continue;
+      const label = pickLabel(cat, language);
+      if (!label) continue;
+      const chip: TaxonomyChip = { id: cat.id, slug: cat.slug, label };
+      const parentId = cat.parent_id ?? null;
+
+      // Pick the group to attach to.
+      let target: TaxonomyGroup | null = null;
+      if (parentId && primaryById.has(parentId)) {
+        target = primaryById.get(parentId)!;
+      } else if (parentId) {
+        // No explicit primary linked for this parent — infer a group.
+        let inferred = inferredByParentId.get(parentId);
+        if (!inferred) {
+          const parent = parentLookup?.get(parentId) ?? null;
+          const parentFallback = parent
+            ? pickLabel(
+                { name_ar: parent.name_ar ?? '', name_en: parent.name_en ?? null },
+                language,
+              )
+            : null;
+          const canon = canonicalizePrimary(parent?.slug ?? null, parentFallback, language);
+          inferred = {
+            primary: canon
+              ? { id: parent?.id ?? parentId, slug: canon.slug, label: canon.label }
+              : null,
+            inferred: true,
+            secondaries: [],
+            services: [],
+          };
+          inferredByParentId.set(parentId, inferred);
+          primariesOrder.push(inferred);
+        }
+        target = inferred;
+      } else {
+        target = orphan;
+      }
+
+      const list = row.role === 'service' ? target.services : target.secondaries;
+      if (!list.some((c) => c.id === chip.id)) list.push(chip);
+    }
+
+    // Assemble final groups: explicit + inferred (in insertion order), then orphan if any.
+    const groups = [...primariesOrder];
+    if (orphan.secondaries.length || orphan.services.length) groups.push(orphan);
+
+    const primaries: TaxonomyChip[] = groups
+      .map((g) => g.primary)
+      .filter((p): p is TaxonomyChip => p !== null);
+    const secondaryLabels = groups.flatMap((g) => g.secondaries.map((c) => c.label));
+    const serviceLabels = groups.flatMap((g) => g.services.map((c) => c.label));
+    const firstPrimary = primaries[0] ?? null;
+
+    out.set(businessId, {
+      primaries,
+      groups,
+      primaryLabel: firstPrimary?.label ?? null,
+      primarySlug: firstPrimary?.slug ?? null,
+      secondaryLabels,
+      serviceLabels,
+      hasModernTaxonomy: groups.length > 0,
+    });
+  }
+
   return out;
 }
 
@@ -520,11 +707,38 @@ export function useBusinessTaxonomyDisplayBatch(
       const { data, error } = await supabase
         .from('business_taxonomy_categories')
         .select(
-          'business_id, category_id, role, is_primary, taxonomy_categories!inner(id, slug, name_ar, name_en, taxonomy_type_id)',
+          'business_id, category_id, role, is_primary, taxonomy_categories!inner(id, slug, name_ar, name_en, taxonomy_type_id, parent_id)',
         )
         .in('business_id', ids);
       if (error) throw error;
-      return formatBusinessTaxonomyDisplayMap((data ?? []) as unknown as RawLinkRow[], language);
+      const rows = (data ?? []) as unknown as RawLinkRow[];
+
+      // Safe Batch 4 — second batched query to resolve "inferred" primaries:
+      // collect parent_ids whose parent category is NOT already loaded as a
+      // primary link for the same business. One query, no N+1.
+      const linkedIds = new Set<string>();
+      for (const r of rows) if (r.taxonomy_categories?.id) linkedIds.add(r.taxonomy_categories.id);
+      const missingParentIds = new Set<string>();
+      for (const r of rows) {
+        const parentId = r.taxonomy_categories?.parent_id ?? null;
+        if (!parentId) continue;
+        if (linkedIds.has(parentId)) continue;
+        missingParentIds.add(parentId);
+      }
+      let parentLookup: Map<string, ParentCategoryRow> | null = null;
+      if (missingParentIds.size > 0) {
+        const { data: parents } = await supabase
+          .from('taxonomy_categories')
+          .select('id, slug, name_ar, name_en')
+          .in('id', Array.from(missingParentIds));
+        if (parents) {
+          parentLookup = new Map(
+            (parents as ParentCategoryRow[]).map((p) => [p.id, p]),
+          );
+        }
+      }
+
+      return formatBusinessTaxonomyDisplayMap(rows, language, parentLookup);
     },
   });
 }

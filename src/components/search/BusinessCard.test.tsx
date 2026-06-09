@@ -3,6 +3,7 @@ import { Profiler, type ProfilerOnRenderCallback } from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { BusinessCard } from './BusinessCard';
+import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
 const langState = vi.hoisted(() => ({ language: 'ar' as 'ar' | 'en', isRTL: true }));
 vi.mock('@/i18n/LanguageContext', () => ({
@@ -47,13 +48,7 @@ const baseBiz = {
 const renderCard = (
   b: Record<string, unknown>,
   viewMode: 'grid' | 'list' = 'grid',
-  taxonomyDisplay?: {
-    primaryLabel: string | null;
-    primarySlug: string | null;
-    secondaryLabels: string[];
-    serviceLabels: string[];
-    hasModernTaxonomy: boolean;
-  },
+  taxonomyDisplay?: BusinessTaxonomyDisplay,
 ) =>
   render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -157,7 +152,16 @@ describe('BusinessCard service-category diversity pill', () => {
   // Phase 18c — diversity is now derived from
   // `taxonomyDisplay.serviceLabels` (taxonomy join), NOT from the legacy
   // `business_services.category_id` column.
-  const tx = (serviceLabels: string[]) => ({
+  const tx = (serviceLabels: string[]): BusinessTaxonomyDisplay => ({
+    primaries: [],
+    groups: [
+      {
+        primary: null,
+        inferred: false,
+        secondaries: [],
+        services: serviceLabels.map((label, i) => ({ id: `s${i}`, slug: `s${i}`, label })),
+      },
+    ],
     primaryLabel: null,
     primarySlug: null,
     secondaryLabels: [],

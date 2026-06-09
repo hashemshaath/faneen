@@ -77,12 +77,18 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
   // `business.categories.name_*` for display; when no modern taxonomy is
   // present we show a localized "Unclassified" label.
   const taxonomy = useBusinessTaxonomyDisplay(business.id, language);
+  // Safe Batch 4 — multi-primary aware label for the small stats grid.
+  const primaryChips = taxonomy.primaries;
   const categoryName =
-    (taxonomy.hasModernTaxonomy && taxonomy.primaryLabel) ||
-    bi("غير مصنّف", "Unclassified");
-  const taxonomyChips = taxonomy.hasModernTaxonomy
-    ? [...taxonomy.secondaryLabels, ...taxonomy.serviceLabels].slice(0, 4)
-    : [];
+    primaryChips.length > 0
+      ? primaryChips.map((p) => p.label).join(" · ")
+      : (taxonomy.hasModernTaxonomy && taxonomy.primaryLabel) ||
+        bi("غير مصنّف", "Unclassified");
+  // Grouped specialties: one block per primary activity → secondaries + services nested.
+  const taxonomyGroups = taxonomy.groups;
+  const hasAnySpecialties = taxonomyGroups.some(
+    (g) => g.secondaries.length > 0 || g.services.length > 0 || g.primary,
+  );
   const memberYear = new Date(business.created_at).getFullYear();
   const yearsActive = Math.max(1, new Date().getFullYear() - memberYear + 1);
 
@@ -159,20 +165,62 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
           </div>
         </dl>
 
-        {taxonomyChips.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] text-muted-foreground sm:text-[11px]">
-              {bi("التخصصات والخدمات", "Specialties & services")}:
-            </span>
-            {taxonomyChips.map((label) => (
-              <Badge
-                key={label}
-                variant="secondary"
-                className="px-2 py-0.5 text-[10px] sm:text-[11px] font-normal"
-              >
-                {label}
-              </Badge>
-            ))}
+        {hasAnySpecialties ? (
+          <div className="mt-3 space-y-2">
+            <div className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+              {bi("التخصصات والخدمات", "Specialties & services")}
+            </div>
+            <div className="space-y-2">
+              {taxonomyGroups.map((group, gi) => (
+                <div
+                  key={`${group.primary?.id ?? "ungrouped"}-${gi}`}
+                  className="rounded-xl border border-border/40 bg-muted/20 p-2.5 dark:border-border/20 dark:bg-muted/10"
+                >
+                  <div className="flex items-center gap-1.5">
+                    {group.primary ? (
+                      <span className="inline-flex items-center gap-1 rounded-md border border-accent/25 bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent">
+                        {group.primary.label}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] italic text-muted-foreground">
+                        {bi("تخصصات أخرى", "Other specialties")}
+                      </span>
+                    )}
+                    {group.inferred && (
+                      <span className="text-[10px] text-muted-foreground/70">
+                        {bi("(مستنتج)", "(inferred)")}
+                      </span>
+                    )}
+                  </div>
+                  {(group.secondaries.length > 0 || group.services.length > 0) && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {group.secondaries.map((c) => (
+                        <Badge
+                          key={`sec-${c.id}`}
+                          variant="secondary"
+                          className="px-2 py-0.5 text-[10px] sm:text-[11px] font-normal"
+                        >
+                          {c.label}
+                        </Badge>
+                      ))}
+                      {group.services.map((c) => (
+                        <Badge
+                          key={`svc-${c.id}`}
+                          variant="outline"
+                          className="px-2 py-0.5 text-[10px] sm:text-[11px] font-normal"
+                        >
+                          {c.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 text-[11px] italic text-muted-foreground/80">
+            {bi("لم يتم تحديد التخصصات بعد", "Specialties not specified yet")}
           </div>
         )}
 
