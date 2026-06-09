@@ -262,11 +262,77 @@ export async function setBusinessTaxonomyCategoriesV2(
   businessId: string,
   payload: SetBusinessTaxonomyPayloadV2,
 ): Promise<void> {
+  // Pre-validate primary IDs client-side: the DB function rejects any
+  // primary that is inactive / private / archived, or whose taxonomy type
+  // is not `primary_activity` / `sector`. If we send those ids the RPC
+  // raises `INVALID_PRIMARY_ACTIVITY` without telling us which one, so we
+  // sanitize here and only pass through the ones the DB will accept.
+  let primaryIds = payload.primaryActivityCategoryIds ?? [];
+  let secondaryIds = payload.secondaryActivityCategoryIds ?? [];
+  if (primaryIds.length) {
+    const { data: rows, error: vErr } = await supabase
+      .from('taxonomy_categories')
+      .select('id, is_active, is_public, is_archived, taxonomy_types!inner(code)')
+      .in('id', primaryIds);
+    if (vErr) fail(vErr, 'setBusinessTaxonomyCategoriesV2:validate-primaries');
+    type Row = {
+      id: string;
+      is_active: boolean | null;
+      is_public: boolean | null;
+      is_archived: boolean | null;
+      taxonomy_types: { code: string | null } | { code: string | null }[] | null;
+    };
+    const valid = new Set<string>();
+    for (const r of (rows ?? []) as Row[]) {
+      const tt = Array.isArray(r.taxonomy_types) ? r.taxonomy_types[0] : r.taxonomy_types;
+      const code = tt?.code ?? null;
+      if (
+        r.is_active &&
+        r.is_public &&
+        !r.is_archived &&
+        (code === 'primary_activity' || code === 'sector')
+      ) {
+        valid.add(r.id);
+      }
+    }
+    const dropped = primaryIds.filter((id) => !valid.has(id));
+    if (dropped.length) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[taxonomy] dropping invalid primary activity ids (inactive/private/archived/wrong-type):',
+        dropped,
+      );
+    }
+    primaryIds = primaryIds.filter((id) => valid.has(id));
+    // Drop any secondary whose parent primary was just removed — the DB
+    // would otherwise raise SECONDARY_NOT_CHILD_OF_PRIMARY.
+    if (dropped.length && secondaryIds.length) {
+      const { data: secRows } = await supabase
+        .from('taxonomy_categories')
+        .select('id, parent_id')
+        .in('id', secondaryIds);
+      const stillValidParents = new Set(primaryIds);
+      secondaryIds = secondaryIds.filter((sid) => {
+        const row = (secRows ?? []).find((r) => r.id === sid) as
+          | { id: string; parent_id: string | null }
+          | undefined;
+        // Keep if we don't know the parent (let DB decide) or parent is still valid.
+        return !row || !row.parent_id || stillValidParents.has(row.parent_id);
+      });
+    }
+    if (primaryIds.length === 0) {
+      throw new Error(
+        '[taxonomy:setBusinessTaxonomyCategoriesV2] لا يوجد نشاط رئيسي صالح للحفظ. ' +
+          'تم استبعاد الأنشطة غير النشطة أو المؤرشفة. اختر نشاطًا رئيسيًا واحدًا على الأقل.',
+      );
+    }
+  }
+
   const { error } = await supabase.rpc('set_business_taxonomy_categories_v2', {
     p_business_id: businessId,
     p_entity_type_category_id: payload.entityTypeCategoryId,
-    p_primary_activity_category_ids: payload.primaryActivityCategoryIds,
-    p_secondary_activity_category_ids: payload.secondaryActivityCategoryIds,
+    p_primary_activity_category_ids: primaryIds,
+    p_secondary_activity_category_ids: secondaryIds,
   });
   if (error) fail(error, 'setBusinessTaxonomyCategoriesV2');
 }
