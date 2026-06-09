@@ -209,7 +209,7 @@ describe('Home Taxonomy Link Guard', () => {
     });
 
     it('aluminum tile binds to `aluminum-works`', () => {
-      expect(files.sectorGrid).toMatch(/slug:\s*'aluminum-works'[\s\S]+titleAr:\s*'ألمنيوم'/);
+      expect(files.sectorGrid).toMatch(/slug:\s*'aluminum-works'[\s\S]+titleAr:\s*'الألمنيوم'/);
     });
   });
 
