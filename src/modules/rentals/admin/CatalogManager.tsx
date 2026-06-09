@@ -8,13 +8,13 @@ import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Pencil, Save, X, Power, Trash2, UserPlus, Loader2 } from 'lucide-react';
+import { Search, Pencil, Save, X, Power, Trash2, UserPlus, Loader2, ImageOff, AlertTriangle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { IconPicker, RenderIcon } from '@/components/admin/IconPicker';
 import { Textarea } from '@/components/ui/textarea';
 
-interface TaxCat { id: string; slug: string; name_ar: string; name_en: string | null; }
+interface TaxCat { id: string; slug: string; name_ar: string; name_en: string | null; parent_id: string | null; sort_order: number | null; }
 interface CatalogRow {
   id: string;
   slug: string;
@@ -40,6 +40,7 @@ interface Biz { id: string; name_ar: string; name_en: string | null; }
 type Draft = Partial<CatalogRow>;
 
 const EQUIPMENT_TYPE_ID = '069e30de-e312-479f-8efa-84fc8251bfaf';
+const CURRENCIES = ['SAR', 'AED', 'USD', 'EUR'] as const;
 
 export const CatalogManager: React.FC = () => {
   const { isRTL } = useLanguage();
@@ -49,10 +50,13 @@ export const CatalogManager: React.FC = () => {
   const [cats, setCats] = useState<TaxCat[]>([]);
   const [businesses, setBusinesses] = useState<Biz[]>([]);
   const [q, setQ] = useState('');
+  const [filterParent, setFilterParent] = useState<string>('all');
   const [filterCat, setFilterCat] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [onlyMissingImage, setOnlyMissingImage] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>({});
+  const [draftParent, setDraftParent] = useState<string>('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [assignFor, setAssignFor] = useState<string | null>(null);
   const [assignBiz, setAssignBiz] = useState<string>('');
@@ -61,7 +65,7 @@ export const CatalogManager: React.FC = () => {
     setLoading(true);
     const [c, t, b] = await Promise.all([
       supabase.from('rental_equipment_catalog').select('id,slug,name_ar,name_en,brand,model,category_id,taxonomy_category_id,estimated_daily_price,estimated_weekly_price,estimated_monthly_price,estimated_deposit,currency,is_active,image_url,icon,description_ar,description_en').order('name_ar'),
-      supabase.from('taxonomy_categories').select('id,slug,name_ar,name_en').eq('taxonomy_type_id', EQUIPMENT_TYPE_ID).order('sort_order'),
+      supabase.from('taxonomy_categories').select('id,slug,name_ar,name_en,parent_id,sort_order').eq('taxonomy_type_id', EQUIPMENT_TYPE_ID).eq('is_archived', false).order('sort_order'),
       supabase.from('businesses').select('id,name_ar,name_en').eq('is_active', true).order('name_ar').limit(500),
     ]);
     setRows((c.data as CatalogRow[] | null) ?? []);
@@ -72,19 +76,35 @@ export const CatalogManager: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
+  const parents = useMemo(() => cats.filter(c => !c.parent_id), [cats]);
+  const childrenOf = (parentId: string) => cats.filter(c => c.parent_id === parentId);
+  const parentIdOf = (catId: string | null) => {
+    if (!catId) return null;
+    return cats.find(c => c.id === catId)?.parent_id ?? null;
+  };
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return rows.filter(r => {
+      if (filterParent !== 'all') {
+        const pid = parentIdOf(r.taxonomy_category_id);
+        if (pid !== filterParent) return false;
+      }
       if (filterCat !== 'all' && r.taxonomy_category_id !== filterCat) return false;
       if (filterStatus === 'active' && !r.is_active) return false;
       if (filterStatus === 'inactive' && r.is_active) return false;
+      if (onlyMissingImage && r.image_url) return false;
       if (!needle) return true;
       return [r.name_ar, r.name_en, r.brand, r.model, r.slug].filter(Boolean).some(v => String(v).toLowerCase().includes(needle));
     });
-  }, [rows, q, filterCat, filterStatus]);
+  }, [rows, q, filterParent, filterCat, filterStatus, onlyMissingImage, cats]);
 
-  const startEdit = (r: CatalogRow) => { setEditingId(r.id); setDraft({ ...r }); };
-  const cancelEdit = () => { setEditingId(null); setDraft({}); };
+  const startEdit = (r: CatalogRow) => {
+    setEditingId(r.id);
+    setDraft({ ...r });
+    setDraftParent(parentIdOf(r.taxonomy_category_id) ?? '');
+  };
+  const cancelEdit = () => { setEditingId(null); setDraft({}); setDraftParent(''); };
 
   const saveEdit = async (id: string) => {
     setSavingId(id);
@@ -126,6 +146,8 @@ export const CatalogManager: React.FC = () => {
     toast.success(bi('تم الحذف', 'Deleted'));
     await load();
   };
+
+  const missingImageCount = useMemo(() => rows.filter(r => !r.image_url).length, [rows]);
 
   const assignToProvider = async (r: CatalogRow) => {
     if (!assignBiz) { toast.error(bi('اختر المزود', 'Select a provider')); return; }
