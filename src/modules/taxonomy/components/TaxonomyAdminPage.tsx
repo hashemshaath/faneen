@@ -24,6 +24,7 @@ import {
 } from '../usage-services';
 import { buildTaxonomyTree, evaluateTaxonomyQuality, normalizeTaxonomyLabel, toCsv } from '../utils';
 import type { TaxonomyCategory } from '../types';
+import { isLegacyPrimarySlug } from '../canonical-primaries';
 
 import { TaxonomySummaryCards } from './TaxonomySummaryCards';
 import { defaultTaxonomyFilters, type TaxonomyFilterState } from './TaxonomyFilters';
@@ -173,6 +174,9 @@ export const TaxonomyAdminPage: React.FC = () => {
     });
     return categories.filter((c) => {
       if (allowedTypeIds && !allowedTypeIds.has(c.taxonomy_type_id)) return false;
+      // Safe Batch 5 — hide legacy/merged primary slugs unless the admin
+      // explicitly toggles "Show legacy categories" in the filter panel.
+      if (!filters.showLegacy && isLegacyPrimarySlug(c.slug)) return false;
       if (filters.typeId !== 'all' && c.taxonomy_type_id !== filters.typeId) return false;
       if (filters.status === 'active' && (!c.is_active || c.is_archived)) return false;
       if (filters.status === 'hidden' && (c.is_active || c.is_archived)) return false;

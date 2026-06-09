@@ -75,3 +75,17 @@ export const UI_FORBIDDEN_PRIMARY_SLUGS = [
   'construction-building',
   'building-materials-supply',
 ] as const;
+
+const LEGACY_SET: Set<string> = new Set(UI_FORBIDDEN_PRIMARY_SLUGS);
+
+/**
+ * Safe Batch 5 — returns true when a slug is a legacy/merged primary that
+ * must never be rendered as a primary choice in user-facing UI
+ * (registration, business edit, search filter, RFQ picker, home, public
+ * SEO/JSON-LD). The slug still resolves via `LEGACY_SECTOR_TO_TAXONOMY_SLUG`
+ * for backward-compatible URLs.
+ */
+export function isLegacyPrimarySlug(slug: string | null | undefined): boolean {
+  if (!slug) return false;
+  return LEGACY_SET.has(slug.trim().toLowerCase());
+}
