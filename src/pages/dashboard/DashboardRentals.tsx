@@ -528,7 +528,7 @@ const BrandInfoDetails: React.FC<{
           <span className="hidden sm:inline text-muted-foreground/70 group-open:hidden">
             <Bi ar="توسيع" en="Expand" />
           </span>
-          <span className="hidden sm:inline text-muted-foreground/70 hidden group-open:inline">
+          <span className="hidden text-muted-foreground/70 group-open:sm:inline">
             <Bi ar="طي" en="Collapse" />
           </span>
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
