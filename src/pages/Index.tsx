@@ -7,6 +7,7 @@ import { useImagePerfTracking } from "@/hooks/useImagePerfTracking";
 import { LazyOnView } from "@/components/LazyOnView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { lazyRetry } from "@/lib/lazyRetry";
+import { HOME_JSONLD_SLUGS, getHomeTaxonomyEntry } from "@/components/home/v2/data/homeTaxonomy";
 // Eager: above-the-fold + LCP hero, plus the chips bar (small, no images).
 import { HeroV2 } from "@/components/home/v2/HomeV2";
 // FAQ data is needed eagerly for JSON-LD; keep it in a tiny module so the
