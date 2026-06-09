@@ -6,7 +6,7 @@
  * `/search?category=<slug>` or `/search?q=<term>`.
  */
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin, Star } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
@@ -121,7 +121,7 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                     <Link
                       key={`${row.id}-${business.id}`}
                       to={href}
-                      className="group shrink-0 snap-start w-[76%] sm:w-[280px] rounded-2xl border border-border/60 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-[var(--elev-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      className="group shrink-0 snap-start w-[76%] sm:w-[280px] rounded-2xl border border-border/60 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-[var(--elev-2)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       aria-label={name || bi('مزوّد', 'Provider')}
                     >
                       <div className="relative w-full overflow-hidden bg-gradient-to-br from-muted to-muted/40" style={{ aspectRatio: '16 / 10' }}>
@@ -150,19 +150,43 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                             </span>
                           </div>
                         )}
-                        {business.is_verified ? (
-                          <div className="absolute top-2 end-2 z-10">
-                            <VerifiedBadge size="xs" className="backdrop-blur-sm bg-success/15" />
+                        {/* Bottom gradient for legibility */}
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/55 via-black/15 to-transparent" aria-hidden="true" />
+                        {/* Rating chip (top-start) */}
+                        {business.rating_avg ? (
+                          <div className="absolute top-2 start-2 z-10 inline-flex items-center gap-1 rounded-full bg-background/85 backdrop-blur px-2 py-0.5 text-[11px] font-semibold text-foreground border border-border/60 shadow-sm">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            <span className="tech-content">{Number(business.rating_avg).toFixed(1)}</span>
+                            {business.rating_count ? (
+                              <span className="text-muted-foreground tech-content">({business.rating_count})</span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        {/* City pill (bottom-start, over gradient) */}
+                        {city ? (
+                          <div className="absolute bottom-2 start-2 z-10 inline-flex items-center gap-1 max-w-[70%] rounded-full bg-background/85 backdrop-blur px-2 py-0.5 text-[11px] font-medium text-foreground border border-border/60">
+                            <MapPin className="w-3 h-3 text-primary shrink-0" />
+                            <span className="truncate">{city}</span>
                           </div>
                         ) : null}
                       </div>
                       <div className="px-3.5 py-3 sm:px-4 sm:py-3.5 border-t border-border/40">
-                        <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors">
-                          {name || bi('مزوّد', 'Provider')}
-                        </h3>
-                        {city ? (
-                          <p className="text-xs text-muted-foreground truncate mt-1">{city}</p>
-                        ) : null}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors">
+                            {name || bi('مزوّد', 'Provider')}
+                          </h3>
+                          {business.is_verified ? (
+                            <VerifiedBadge size="xs" iconOnly className="text-success" />
+                          ) : null}
+                        </div>
+                        <div className="mt-1 flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-muted-foreground truncate">
+                            {business.is_verified
+                              ? bi('شركة موثّقة', 'Verified company')
+                              : bi('عرض الملف', 'View profile')}
+                          </span>
+                          <Arrow className="w-3.5 h-3.5 text-primary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shrink-0" />
+                        </div>
                       </div>
                     </Link>
                   );

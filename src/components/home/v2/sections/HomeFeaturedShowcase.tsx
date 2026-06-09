@@ -10,7 +10,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin, Star } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -88,10 +88,12 @@ const HomeFeaturedShowcase = () => {
                 <Link
                   key={b.id}
                   to={href}
-                  className="shrink-0 snap-start w-[78%] sm:w-auto group relative rounded-2xl border border-border/60 bg-card p-4 sm:p-5 hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 flex flex-col gap-3"
+                  className="shrink-0 snap-start w-[78%] sm:w-auto group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4 sm:p-5 hover-lift hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 flex flex-col gap-3"
                 >
+                  {/* Subtle brand accent stripe */}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary/60 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 border border-border/60">
+                    <div className="relative w-12 h-12 rounded-xl bg-muted overflow-hidden shrink-0 border border-border/60">
                       {b.logo_url ? (
                         <img
                           src={b.logo_url}
@@ -109,10 +111,15 @@ const HomeFeaturedShowcase = () => {
                         <h3 className="font-heading font-semibold text-sm sm:text-base text-foreground truncate">
                           {name || bi('مزوّد', 'Provider')}
                         </h3>
-                        {b.is_verified ? <VerifiedBadge size="xs" /> : null}
+                        {b.is_verified ? (
+                          <VerifiedBadge size="sm" iconOnly className="text-success" />
+                        ) : null}
                       </div>
                       {city ? (
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">{city}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5 inline-flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-primary shrink-0" />
+                          <span className="truncate">{city}</span>
+                        </p>
                       ) : null}
                     </div>
                   </div>
