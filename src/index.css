@@ -604,6 +604,9 @@ body.ltr { direction: ltr; }
 html { transition: none; }
 
 @keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
 
 /* Partner showcase marquee — uses translateX only (no width/left) */
 @keyframes partner-marquee-ltr {
@@ -637,9 +640,6 @@ html { transition: none; }
     animation: none !important;
     transform: none !important;
   }
-}
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
 }
 
 @keyframes fadeUp {
