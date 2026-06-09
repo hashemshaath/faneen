@@ -10,42 +10,78 @@
  * `LEGACY_SECTOR_TO_TAXONOMY_SLUG` constant).
  */
 
-/** Legacy slug → primary-activity slug in `taxonomy_categories`. */
+/**
+ * Legacy slug → canonical primary-activity slug in `taxonomy_categories`.
+ *
+ * Updated for Taxonomy Restructure P1 — targets are the 13 canonical
+ * primary activities (aluminum-works, glass-securit-works, …). Old
+ * targets like `aluminum-glass-facades`, `stainless-steel-fabrication`,
+ * `technology-systems` and `heavy-equipment-rental` are now legacy
+ * keys that resolve forward to the new primaries.
+ */
 export const LEGACY_SECTOR_TO_TAXONOMY_SLUG: Record<string, string> = {
-  // Aluminum / glass / facades family
-  aluminum: 'aluminum-glass-facades',
-  alumnium: 'aluminum-glass-facades',
-  glass: 'aluminum-glass-facades',
-  aluminum_glass: 'aluminum-glass-facades',
-  'aluminum-glass': 'aluminum-glass-facades',
-  storefronts: 'aluminum-glass-facades',
+  // Aluminum
+  aluminum: 'aluminum-works',
+  alumnium: 'aluminum-works',
+  aluminum_glass: 'aluminum-works',
+  'aluminum-glass': 'aluminum-works',
+  'aluminum-glass-facades': 'aluminum-works',
+  // Glass
+  glass: 'glass-securit-works',
+  'glass-securit': 'glass-securit-works',
+  securit: 'glass-securit-works',
+  // Facades / storefronts
+  storefronts: 'facades-cladding',
+  facades: 'facades-cladding',
+  cladding: 'facades-cladding',
   // Steel / iron
   steel: 'steel-metal-works',
   iron: 'steel-metal-works',
   'iron-steel': 'steel-metal-works',
-  // Wood
+  // Stainless
+  stainless: 'stainless-steel-works',
+  'stainless-steel': 'stainless-steel-works',
+  stainless_steel: 'stainless-steel-works',
+  'stainless-steel-fabrication': 'stainless-steel-works',
+  // Wood / kitchens
   wood: 'wood-carpentry',
   cabinets: 'wood-carpentry',
   'wood-cabinets': 'wood-carpentry',
-  // Stainless
-  stainless: 'stainless-steel-fabrication',
-  'stainless-steel': 'stainless-steel-fabrication',
-  stainless_steel: 'stainless-steel-fabrication',
-  // Finishing / fabrication / project fitout
+  kitchens: 'kitchens-works',
+  // Finishing / fabrication / project fitout / construction
   fabrication: 'contracting-finishing',
   'fabrication-installation': 'contracting-finishing',
   finishing: 'contracting-finishing',
   'project-fitout': 'contracting-finishing',
-  // Construction
-  construction: 'construction-building',
-  // Materials supply
+  construction: 'contracting-finishing',
+  'construction-building': 'contracting-finishing',
+  // Elevators
+  elevators: 'elevators-maintenance',
+  escalators: 'elevators-maintenance',
+  // Energy / sustainability
+  energy: 'energy-sustainability',
+  sustainability: 'energy-sustainability',
+  solar: 'energy-sustainability',
+  // Technology
+  technology: 'technology-networks',
+  'technology-systems': 'technology-networks',
+  networks: 'technology-networks',
+  // Security
+  security: 'security-control-systems',
+  surveillance: 'security-control-systems',
+  // Equipment / rental
+  equipment: 'equipment-rental',
+  'heavy-equipment-rental': 'equipment-rental',
+  rental: 'equipment-rental',
+  lifting: 'equipment-rental',
+  scaffolding: 'equipment-rental',
+  'equipment-rental-provider': 'equipment-rental',
+  // Operations / maintenance (kept for back-compat — legacy target retained)
+  maintenance: 'elevators-maintenance',
+  operations: 'elevators-maintenance',
+  // Materials supply (kept on legacy target — out of Home scope)
   materials: 'building-materials-supply',
   'building-materials': 'building-materials-supply',
-  // Equipment
-  equipment: 'heavy-equipment-rental',
-  // Operations / maintenance
-  maintenance: 'operations-maintenance',
-  operations: 'operations-maintenance',
 };
 
 /** Resolve a legacy sector string to a taxonomy slug, or null if unmapped. */
