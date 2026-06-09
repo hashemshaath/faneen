@@ -15,7 +15,6 @@ import {
   ArrowLeft, ArrowRight,
   Square, Layers, Hammer, Sparkles, TreePine, ChefHat,
   Building2, MoveVertical, SunMedium, Wifi,
-  type LucideIcon,
 } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -23,41 +22,39 @@ import { Section, SectionHead, SecondaryCTA, ROUTES } from './_shared';
 import {
   HOME_ALLOWED_SLUGS, HOME_SECTOR_GRID_SLUGS, homeCategoryHref,
 } from '@/components/home/v2/data/homeTaxonomy';
+import { useHomeSectorTiles, type DefaultTile } from '@/modules/home';
 
-type Sector = {
-  slug: string;
-  Icon: LucideIcon;
-  titleAr: string;
-  titleEn: string;
-  bodyAr: string;
-  bodyEn: string;
-};
-
-// Tile metadata. The `slug` of every tile MUST be one of the canonical
-// primary activities in HOME_ALLOWED_SLUGS — enforced at module load and
-// by the guard test. Order mirrors HOME_SECTOR_GRID_SLUGS.
-const SECTORS: Sector[] = [
-  { slug: 'aluminum-works',        Icon: Square,        titleAr: 'الألمنيوم',           titleEn: 'Aluminum',
+// DEFAULT tile metadata. These remain the hardcoded baseline rendered when
+// the DB has no `metadata.home_grid` overrides — which keeps the homepage
+// identical to its current production look until an admin opts in via
+// /admin/home-sectors. `iconName` MUST match a key in SECTOR_ICONS so the
+// admin UI can show the current selection.
+const SECTORS: DefaultTile[] = [
+  { slug: 'aluminum-works',        Icon: Square,        iconName: 'Square',         titleAr: 'الألمنيوم',           titleEn: 'Aluminum',
     bodyAr: 'نوافذ وأبواب ومطابخ ومظلات.',                bodyEn: 'Windows, doors, kitchens and canopies.' },
-  { slug: 'glass-securit-works',   Icon: Layers,        titleAr: 'الزجاج والسيكوريت',  titleEn: 'Glass & Tempered',
+  { slug: 'glass-securit-works',   Icon: Layers,        iconName: 'Layers',         titleAr: 'الزجاج والسيكوريت',  titleEn: 'Glass & Tempered',
     bodyAr: 'واجهات وقواطع وأبواب زجاجية.',               bodyEn: 'Facades, partitions and glass doors.' },
-  { slug: 'steel-metal-works',     Icon: Hammer,        titleAr: 'الحديد والمعادن',     titleEn: 'Steel & Metals',
+  { slug: 'steel-metal-works',     Icon: Hammer,        iconName: 'Hammer',         titleAr: 'الحديد والمعادن',     titleEn: 'Steel & Metals',
     bodyAr: 'أبواب وسلالم وهياكل ودرابزين.',              bodyEn: 'Doors, stairs, frames and railings.' },
-  { slug: 'stainless-steel-works', Icon: Sparkles,      titleAr: 'الستانلس ستيل',       titleEn: 'Stainless Steel',
+  { slug: 'stainless-steel-works', Icon: Sparkles,      iconName: 'Sparkles',       titleAr: 'الستانلس ستيل',       titleEn: 'Stainless Steel',
     bodyAr: 'مطابخ ومطاعم وتجهيزات صناعية.',              bodyEn: 'Kitchens, F&B and industrial fittings.' },
-  { slug: 'wood-carpentry',        Icon: TreePine,      titleAr: 'الخشب والنجارة',      titleEn: 'Wood & Carpentry',
+  { slug: 'wood-carpentry',        Icon: TreePine,      iconName: 'TreePine',       titleAr: 'الخشب والنجارة',      titleEn: 'Wood & Carpentry',
     bodyAr: 'أبواب وأثاث وتفصيل داخلي.',                  bodyEn: 'Doors, furniture and custom interiors.' },
-  { slug: 'kitchens-works',        Icon: ChefHat,       titleAr: 'المطابخ',              titleEn: 'Kitchens',
+  { slug: 'kitchens-works',        Icon: ChefHat,       iconName: 'ChefHat',        titleAr: 'المطابخ',              titleEn: 'Kitchens',
     bodyAr: 'تصميم وتنفيذ وتركيب المطابخ.',               bodyEn: 'Kitchen design, build and install.' },
-  { slug: 'facades-cladding',      Icon: Building2,     titleAr: 'الواجهات والكلادينج', titleEn: 'Facades & Cladding',
+  { slug: 'facades-cladding',      Icon: Building2,     iconName: 'Building2',      titleAr: 'الواجهات والكلادينج', titleEn: 'Facades & Cladding',
     bodyAr: 'واجهات تجارية وكلادينج ومداخل.',             bodyEn: 'Storefronts, cladding and entrances.' },
-  { slug: 'elevators-maintenance', Icon: MoveVertical,  titleAr: 'المصاعد والصيانة',    titleEn: 'Elevators & Maintenance',
+  { slug: 'elevators-maintenance', Icon: MoveVertical,  iconName: 'MoveVertical',   titleAr: 'المصاعد والصيانة',    titleEn: 'Elevators & Maintenance',
     bodyAr: 'مصاعد وسلالم كهربائية وصيانة دورية.',         bodyEn: 'Elevators, escalators and maintenance.' },
-  { slug: 'energy-sustainability', Icon: SunMedium,     titleAr: 'الطاقة والاستدامة',   titleEn: 'Energy & Sustainability',
+  { slug: 'energy-sustainability', Icon: SunMedium,     iconName: 'SunMedium',      titleAr: 'الطاقة والاستدامة',   titleEn: 'Energy & Sustainability',
     bodyAr: 'طاقة شمسية وعزل حراري واستدامة.',            bodyEn: 'Solar, insulation and sustainability.' },
-  { slug: 'technology-networks',   Icon: Wifi,          titleAr: 'التقنية والشبكات',    titleEn: 'Technology & Networks',
+  { slug: 'technology-networks',   Icon: Wifi,          iconName: 'Wifi',           titleAr: 'التقنية والشبكات',    titleEn: 'Technology & Networks',
     bodyAr: 'شبكات وأنظمة ذكية وبنية اتصالات.',            bodyEn: 'Networks, smart systems and comms.' },
 ];
+
+// Exposed so the admin page can show the same baseline copy + icons as
+// initial values when no override has been saved yet.
+export const HOME_SECTOR_GRID_DEFAULTS: ReadonlyArray<DefaultTile> = SECTORS;
 
 // Module-load assertion: order + membership match HOME_SECTOR_GRID_SLUGS.
 if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
@@ -79,6 +76,10 @@ const HomeSectorGrid = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  // CMS-aware tiles. Falls back to SECTORS verbatim if DB has no overrides
+  // — so the rendered output is byte-identical to the current homepage
+  // until an admin actively edits a tile.
+  const { tiles } = useHomeSectorTiles(SECTORS);
   return (
     <Section id="sectors" ariaLabelledBy="sectors-heading" className="bg-muted/20">
       <SectionHead
@@ -87,7 +88,7 @@ const HomeSectorGrid = () => {
         sub={bi('اختر القطاع وابدأ تصفّح المزودين.', 'Pick a sector and browse providers.')}
       />
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        {SECTORS.map((s) => {
+        {tiles.map((s) => {
           const Icon = s.Icon;
           return (
             <Link
