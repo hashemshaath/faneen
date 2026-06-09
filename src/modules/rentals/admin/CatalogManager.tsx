@@ -413,6 +413,15 @@ export const CatalogManager: React.FC = () => {
                       <Input type="number" dir="ltr" value={draft.estimated_deposit ?? ''} onChange={e => setDraft(d => ({ ...d, estimated_deposit: e.target.value === '' ? null : Number(e.target.value) }))} className="h-11 rounded-lg tech-content" />
                     </div>
                   </div>
+                  <div className="space-y-1.5 max-w-xs">
+                    <Label className="text-xs font-medium"><Bi ar="العملة" en="Currency" /></Label>
+                    <Select value={draft.currency ?? 'SAR'} onValueChange={v => setDraft(d => ({ ...d, currency: v }))}>
+                      <SelectTrigger className="h-11 rounded-lg tech-content"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map(cur => <SelectItem key={cur} value={cur} className="tech-content">{cur}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">
                     <Bi ar="الوصف" en="Description" />
@@ -424,7 +433,7 @@ export const CatalogManager: React.FC = () => {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium"><Bi ar="الوصف بالإنجليزية" en="English description" /></Label>
-                      <Textarea dir="ltr" rows={3} value={draft.description_en ?? ''} onChange={e => setDraft(d => ({ ...d, description_en: e.target.value }))} className="rounded-lg resize-none" />
+                      <Textarea dir="auto" rows={3} value={draft.description_en ?? ''} onChange={e => setDraft(d => ({ ...d, description_en: e.target.value }))} className="rounded-lg resize-none" />
                     </div>
                   </div>
 
