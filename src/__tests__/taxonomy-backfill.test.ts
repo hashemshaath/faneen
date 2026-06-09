@@ -57,7 +57,7 @@ describe('Phase 9 — taxonomy backfill & runtime mapping', () => {
     });
     const map = await getRuntimeLegacyMap();
     expect(map).toEqual({ ...LEGACY_SECTOR_TO_TAXONOMY_SLUG });
-    expect(map.aluminum).toBe('aluminum-glass-facades');
+    expect(map.aluminum).toBe('aluminum-works');
     expect(map.steel).toBe('steel-metal-works');
   });
 
