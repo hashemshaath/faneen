@@ -45,6 +45,9 @@ export interface PublicTaxonomyBusiness {
   name_ar: string | null;
   name_en: string | null;
   logo_url: string | null;
+  logo_image_variants: unknown | null;
+  cover_url: string | null;
+  cover_image_variants: unknown | null;
   rating_avg: number | null;
   rating_count: number | null;
   is_verified: boolean | null;
@@ -248,7 +251,7 @@ export async function listPublicBusinessesByTaxonomySlugs(
 
   const { data: businesses, error: businessesError } = await supabase
     .from('businesses_public')
-    .select('id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, cities(name_ar, name_en)')
+    .select('id, username, name_ar, name_en, logo_url, logo_image_variants, cover_url, cover_image_variants, rating_avg, rating_count, is_verified, cities(name_ar, name_en)')
     .eq('is_active', true)
     .in('id', selectedBusinessIds)
     .order('rating_avg', { ascending: false })
