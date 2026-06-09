@@ -216,7 +216,11 @@ export async function listPublicBusinessesByTaxonomySlugs(
     .eq('is_active', true)
     .eq('is_public', true)
     .eq('is_archived', false);
-  if (categoryError) return empty;
+  // Throw on errors so React Query can retry instead of caching an empty
+  // result for the full staleTime window. Returning `empty` here was the
+  // root cause of "companies only show after several attempts": a single
+  // transient failure would freeze the homepage rows for 10 minutes.
+  if (categoryError) throw categoryError;
 
   const taxonomyRows = (categories ?? []) as LightweightTaxonomyCategory[];
   const directBySlug = new Map(taxonomyRows.map((category) => [category.slug, category]));
@@ -241,7 +245,7 @@ export async function listPublicBusinessesByTaxonomySlugs(
     .from('business_taxonomy_categories')
     .select('business_id, category_id')
     .in('category_id', allCategoryIds);
-  if (linksError) return empty;
+  if (linksError) throw linksError;
 
   const linkRows = (links ?? []) as TaxonomyBusinessLink[];
   const candidateIdsBySlug = new Map<string, string[]>();
@@ -271,7 +275,7 @@ export async function listPublicBusinessesByTaxonomySlugs(
     .in('id', selectedBusinessIds)
     .order('rating_avg', { ascending: false })
     .order('rating_count', { ascending: false });
-  if (businessesError) return empty;
+  if (businessesError) throw businessesError;
 
   const businessRows = ((businesses ?? []) as unknown as PublicTaxonomyBusiness[])
     .filter((business) => Boolean(business.id));
