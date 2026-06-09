@@ -1824,7 +1824,7 @@ const RentalItemEditForm: React.FC<{
     if (!Number.isFinite(priceNum) || priceNum < 0) { toast.error(bi('السعر غير صحيح','Invalid price')); return; }
     // Category-aware terms validation.
     {
-      const match = getCategoryPreset(cat, form.name_ar, form.name_en);
+      const match = resolveCategoryPreset(cat, form.name_ar, form.name_en, termTemplates);
       const errs = validateRentalTerms(
         match,
         { usage: form.usage_terms, late: form.late_terms, penalty: form.penalty_terms },
