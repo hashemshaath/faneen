@@ -247,7 +247,7 @@ const DashboardRentalsAnalytics: React.FC = () => {
       <PageHeader
         icon={BarChart3}
         title={bi('تحليلات التأجير والإيرادات', 'Rentals Performance & Revenue')}
-        description={bi('متابعة الأداء، الإيرادات، ومعدّل الإشغال', 'Track performance, revenue, and occupancy')}
+        subtitle={bi('متابعة الأداء، الإيرادات، ومعدّل الإشغال', 'Track performance, revenue, and occupancy')}
       />
 
       {/* Filters */}
