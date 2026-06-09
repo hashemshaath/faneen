@@ -174,19 +174,21 @@ export async function getTaxonomyBusinessIdsForCategory(
   if (!categoryId) return [];
 
   // Discover children (active+public only) in one query.
-  const { data: children } = await supabase
+  const { data: children, error: childrenError } = await supabase
     .from('taxonomy_categories')
     .select('id')
     .eq('parent_id', categoryId)
     .eq('is_active', true)
     .eq('is_archived', false);
+  if (childrenError) throw childrenError;
 
   const ids = [categoryId, ...((children ?? []).map((c) => c.id))];
 
-  const { data: links } = await supabase
+  const { data: links, error: linksError } = await supabase
     .from('business_taxonomy_categories')
     .select('business_id')
     .in('category_id', ids);
+  if (linksError) throw linksError;
 
   const unique = new Set<string>();
   (links ?? []).forEach((l) => {
@@ -392,10 +394,13 @@ export function useSearchTaxonomyContext(params: SearchTaxonomyParams) {
       params.service ?? '',
     ],
     queryFn: () => buildSearchTaxonomyContext(params),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
     // Don't block the page on this — search must work even if taxonomy is slow.
-    retry: 1,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     enabled: Boolean(
       (params.q && params.q.trim().length >= 3) ||
       (params.sector && params.sector !== 'all') ||

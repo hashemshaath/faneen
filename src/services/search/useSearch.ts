@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { listActiveCities } from '@/modules/locations';
@@ -188,25 +188,31 @@ export const useCategories = () =>
         .eq('is_active', true)
         .eq('is_public', true)
         .eq('is_archived', false);
-      if (error) {
-        // Soft-fail: search must keep working even if taxonomy load fails.
-        return [];
-      }
+      if (error) throw error;
       return data ?? [];
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
 export const useCities = () =>
   useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const { data } = await listActiveCities<Database['public']['Tables']['cities']['Row']>({ select: '*' });
+      const { data, error } = await listActiveCities<Database['public']['Tables']['cities']['Row']>({ select: '*' });
+      if (error) throw error;
       return data ?? [];
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
 export const useBusinesses = () =>
@@ -229,7 +235,7 @@ export const useBusinesses = () =>
       // Phase 18a: `business_services.category_id` is also removed from the
       // embedded select. Service-level taxonomy is resolved via
       // `business_service_taxonomy_categories` (see `useServiceCategoryBusinessIds`).
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('businesses_public')
         .select(
           `${PARENT_SELECT}, cities(id, name_ar, name_en), business_services(id, name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status), promotions(id, end_date)`,
@@ -246,10 +252,15 @@ export const useBusinesses = () =>
         .or(`end_date.is.null,end_date.gte.${today}`, { foreignTable: 'promotions' })
         .order('rating_avg', { ascending: false })
         .limit(500);
+      if (error) throw error;
       return data ?? [];
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
 // Phase 19b — `useEntityTags` / `useTags` removed. The legacy `tags` and
