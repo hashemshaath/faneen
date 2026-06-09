@@ -44,16 +44,20 @@ const HomeCategoryRows = () => {
     queryFn: () => listPublicBusinessesByTaxonomySlugs(allSlugs, HOME_ROW_PROVIDER_LIMIT),
   });
 
-  // Realtime: invalidate when business↔taxonomy links or public business
-  // rows change so the homepage reflects edits without a hard reload.
+  // Realtime: invalidate every public-directory dependency that can change
+  // row visibility, grouping, logos, ratings, or city labels without reloads.
   useEffect(() => {
-    const channel = supabase
-      .channel('home-category-rows-sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_taxonomy_categories' },
-        () => queryClient.invalidateQueries({ queryKey }))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' },
-        () => queryClient.invalidateQueries({ queryKey }))
-      .subscribe();
+    const invalidateHomeRows = () => queryClient.invalidateQueries({ queryKey });
+    const tables = ['directory_sync_events'] as const;
+    let channel = supabase.channel('home-category-rows-sync');
+    for (const table of tables) {
+      channel = channel.on(
+        'postgres_changes' as unknown as 'system',
+        { event: '*', schema: 'public', table } as never,
+        invalidateHomeRows,
+      );
+    }
+    channel.subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [queryClient, queryKey]);
 
