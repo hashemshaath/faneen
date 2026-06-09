@@ -677,8 +677,20 @@ export default function DashboardSites() {
     setIssues([]); setActiveTab('general'); setShowForm(true);
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, []);
-  const openEdit = useCallback((s: ClientSite) => {
+  const openEdit = useCallback(async (s: ClientSite) => {
     setEditing(s);
+    // Pull owner_id_number / tax_number through the secure RPC. RLS column
+    // grants block reading them via `.select()`, so we never include them in
+    // the list query above. The RPC only returns values to the site's
+    // client owner or an admin.
+    let sensitive: { owner_id_number: string | null; tax_number: string | null } | null = null;
+    try {
+      const { data: rows } = await supabase.rpc('get_client_site_sensitive', { _site_id: s.id });
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row) sensitive = { owner_id_number: row.owner_id_number ?? null, tax_number: row.tax_number ?? null };
+    } catch {
+      sensitive = null;
+    }
     setForm({
       label: s.label, site_name: s.site_name || '', site_type: s.site_type, visibility: s.visibility,
       contact_name: s.contact_name || '', contact_phone: s.contact_phone || '',
@@ -691,8 +703,8 @@ export default function DashboardSites() {
       title_deed_no:                  s.title_deed_no || '',
       title_deed_date:                s.title_deed_date || '',
       owner_name:                     s.owner_name || '',
-      owner_id_number:                s.owner_id_number || '',
-      tax_number:                     (s as ClientSite & { tax_number?: string | null }).tax_number || '',
+      owner_id_number:                sensitive?.owner_id_number || '',
+      tax_number:                     sensitive?.tax_number || '',
       land_use_type:                  s.land_use_type || '',
       plot_number:                    s.plot_number || '',
       block_number:                   s.block_number || '',
