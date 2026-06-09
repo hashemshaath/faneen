@@ -223,7 +223,6 @@ const Index = () => {
       })),
     });
   }
-  if (featuredProviders.length > 0) {
   return blocks;
   }, [faqItems]));
 
