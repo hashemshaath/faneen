@@ -702,6 +702,53 @@ const DashboardRentalsAnalytics: React.FC = () => {
         </Card>
       ) : (
         <>
+          {/* Alerts banner */}
+          {alerts.length > 0 && !alertsMuted && (
+            <Card className="p-3 mb-4 rounded-xl border-l-4 border-l-amber-500 bg-amber-500/5 print:hidden">
+              <div className="flex items-start gap-3">
+                <div className="size-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="size-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h3 className="font-semibold text-sm">
+                      {bi('تنبيهات الأداء', 'Performance alerts')}
+                      <span className="ms-2 text-xs text-muted-foreground tech-content">({alerts.length})</span>
+                    </h3>
+                    <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs" onClick={toggleAlertsMute}>
+                      <BellOff className="size-3.5 me-1" /> {bi('إخفاء', 'Mute')}
+                    </Button>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {alerts.map(a => (
+                      <li key={a.id} className="flex items-start gap-2 text-sm">
+                        <span
+                          className={`mt-1 size-2 rounded-full shrink-0 ${
+                            a.severity === 'critical' ? 'bg-rose-500'
+                            : a.severity === 'warning' ? 'bg-amber-500'
+                            : 'bg-sky-500'
+                          }`}
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <div className="font-medium">{bi(a.title.ar, a.title.en)}</div>
+                          <div className="text-xs text-muted-foreground">{bi(a.detail.ar, a.detail.en)}</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          )}
+          {alerts.length > 0 && alertsMuted && (
+            <div className="mb-4 print:hidden">
+              <Button variant="outline" size="sm" className="h-9 rounded-xl text-xs" onClick={toggleAlertsMute}>
+                <Bell className="size-3.5 me-1" /> {bi('عرض التنبيهات', 'Show alerts')} ({alerts.length})
+              </Button>
+            </div>
+          )}
+
           {/* KPI tiles */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-4">
             <KpiTile icon={DollarSign} tone="emerald"
