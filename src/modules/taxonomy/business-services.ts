@@ -13,6 +13,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { TaxonomyCategory } from './types';
+import { isLegacyPrimarySlug } from './canonical-primaries';
 
 export type BusinessTaxonomyRole =
   | 'entity_type'
@@ -71,7 +72,9 @@ export async function getPublicTaxonomyCategoriesByType(
     .eq('show_in_registration', true)
     .order('sort_order', { ascending: true });
   if (error) fail(error, 'getPublicTaxonomyCategoriesByType:list');
-  return (data ?? []) as TaxonomyCategory[];
+  // Safe Batch 5 — defense-in-depth: even if a legacy slug somehow has
+  // `show_in_registration=true`, never expose it in user-facing pickers.
+  return ((data ?? []) as TaxonomyCategory[]).filter((c) => !isLegacyPrimarySlug(c.slug));
 }
 
 export function getRegistrationEntityTypes(): Promise<TaxonomyCategory[]> {
@@ -98,7 +101,7 @@ export async function getChildCategories(parentId: string): Promise<TaxonomyCate
     .eq('show_in_registration', true)
     .order('sort_order', { ascending: true });
   if (error) fail(error, 'getChildCategories');
-  return (data ?? []) as TaxonomyCategory[];
+  return ((data ?? []) as TaxonomyCategory[]).filter((c) => !isLegacyPrimarySlug(c.slug));
 }
 
 /**
@@ -121,6 +124,7 @@ export async function getChildCategoriesGrouped(
   const grouped: Record<string, TaxonomyCategory[]> = {};
   for (const id of parentIds) grouped[id] = [];
   for (const row of (data ?? []) as TaxonomyCategory[]) {
+    if (isLegacyPrimarySlug(row.slug)) continue;
     const pid = row.parent_id as string | null;
     if (pid && grouped[pid]) grouped[pid].push(row);
   }
