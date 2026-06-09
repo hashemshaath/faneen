@@ -8,54 +8,19 @@
  * When that lands, swap the query for a server-side ranking endpoint
  * and keep this presentational shell unchanged.
  */
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, MapPin, Star } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { Section, SectionHead, SecondaryCTA } from './_shared';
-
-interface FeaturedRow {
-  id: string;
-  username: string | null;
-  name_ar: string | null;
-  name_en: string | null;
-  logo_url: string | null;
-  rating_avg: number | null;
-  rating_count: number | null;
-  is_verified: boolean | null;
-  cities: { name_ar: string | null; name_en: string | null } | null;
-}
-
-const useFeatured = () =>
-  useQuery({
-    queryKey: ['home-featured-showcase'],
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    queryFn: async (): Promise<FeaturedRow[]> => {
-      const { data, error } = await supabase
-        .from('businesses_public')
-        .select(
-          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, cities(name_ar, name_en)',
-        )
-        .eq('is_active', true)
-        .eq('is_verified', true)
-        .not('rating_avg', 'is', null)
-        .order('rating_avg', { ascending: false })
-        .order('rating_count', { ascending: false })
-        .limit(8);
-      if (error) return [];
-      return (data ?? []) as unknown as FeaturedRow[];
-    },
-  });
+import { useFeaturedProviders } from '../data/useFeaturedProviders';
 
 const HomeFeaturedShowcase = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
-  const { data: items = [], isLoading } = useFeatured();
+  const { data: items = [], isLoading } = useFeaturedProviders();
 
   if (!isLoading && items.length === 0) return null;
 
