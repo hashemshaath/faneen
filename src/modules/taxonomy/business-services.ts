@@ -46,7 +46,22 @@ export interface SetBusinessTaxonomyPayloadV2 {
 }
 
 function fail(error: unknown, ctx: string): never {
-  const msg = error instanceof Error ? error.message : String(error);
+  // Supabase returns plain objects with { message, details, hint, code }.
+  // `String(obj)` produces "[object Object]", so format defensively.
+  let msg: string;
+  if (error instanceof Error) {
+    msg = error.message;
+  } else if (error && typeof error === 'object') {
+    const e = error as { message?: unknown; details?: unknown; hint?: unknown; code?: unknown };
+    const parts: string[] = [];
+    if (typeof e.message === 'string' && e.message) parts.push(e.message);
+    if (typeof e.details === 'string' && e.details) parts.push(e.details);
+    if (typeof e.hint === 'string' && e.hint) parts.push(`hint: ${e.hint}`);
+    if (typeof e.code === 'string' && e.code) parts.push(`code: ${e.code}`);
+    msg = parts.length ? parts.join(' — ') : JSON.stringify(error);
+  } else {
+    msg = String(error);
+  }
   throw new Error(`[taxonomy:${ctx}] ${msg}`);
 }
 
