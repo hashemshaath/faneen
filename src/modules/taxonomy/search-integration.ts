@@ -708,8 +708,12 @@ export function useBusinessTaxonomyDisplayBatch(
   return useQuery<Map<string, BusinessTaxonomyDisplay>>({
     queryKey: ['business-taxonomy-display-batch', language, sortedKey],
     enabled: sortedKey.length > 0,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const ids = sortedKey.split(',').filter(Boolean);
       if (ids.length === 0) return new Map();
@@ -736,10 +740,11 @@ export function useBusinessTaxonomyDisplayBatch(
       }
       let parentLookup: Map<string, ParentCategoryRow> | null = null;
       if (missingParentIds.size > 0) {
-        const { data: parents } = await supabase
+        const { data: parents, error: parentsError } = await supabase
           .from('taxonomy_categories')
           .select('id, slug, name_ar, name_en')
           .in('id', Array.from(missingParentIds));
+        if (parentsError) throw parentsError;
         if (parents) {
           parentLookup = new Map(
             (parents as ParentCategoryRow[]).map((p) => [p.id, p]),

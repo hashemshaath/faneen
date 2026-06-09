@@ -263,6 +263,52 @@ export const useBusinesses = () =>
     refetchOnWindowFocus: true,
   });
 
+const DIRECTORY_REALTIME_TABLES = [
+  'businesses',
+  'business_taxonomy_categories',
+  'business_service_taxonomy_categories',
+  'taxonomy_categories',
+  'cities',
+  'business_services',
+  'promotions',
+] as const;
+
+const DIRECTORY_QUERY_KEYS: ReadonlyArray<ReadonlyArray<unknown>> = [
+  ['businesses-all-with-services'],
+  ['search:taxonomy-categories'],
+  ['cities'],
+  ['search-taxonomy-context'],
+  ['business-taxonomy-display-batch'],
+  ['search:service-category-business-ids'],
+  ['home-category-row-businesses'],
+];
+
+export const useDirectoryRealtimeInvalidation = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const invalidateDirectory = () => {
+      for (const key of DIRECTORY_QUERY_KEYS) {
+        queryClient.invalidateQueries({ queryKey: key as unknown[] });
+      }
+    };
+
+    let channel = supabase.channel('qitaat-directory-live-sync');
+    for (const table of DIRECTORY_REALTIME_TABLES) {
+      channel = channel.on(
+        'postgres_changes' as unknown as 'system',
+        { event: '*', schema: 'public', table } as never,
+        invalidateDirectory,
+      );
+    }
+    channel.subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+};
+
 // Phase 19b — `useEntityTags` / `useTags` removed. The legacy `tags` and
 // `entity_tags` tables were dropped. Search no longer offers tag facets; the
 // taxonomy category and service-category filters are the only runtime path.
@@ -311,7 +357,7 @@ export const useServiceCategoryBusinessIds = (
           'service_id, category_id, business_services!inner(business_id, is_active, provider_status, admin_status)',
         )
         .in('category_id', allowedIds);
-      if (error) return new Set<string>();
+      if (error) throw error;
 
       const out = new Set<string>();
       for (const row of (data ?? []) as Array<{
@@ -331,6 +377,10 @@ export const useServiceCategoryBusinessIds = (
       }
       return out;
     },
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
 // ─── Filter + Sort Logic ──────────────────────────────

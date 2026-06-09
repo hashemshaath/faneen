@@ -8,6 +8,7 @@ export {
   useCategories,
   useCities,
   useBusinesses,
+  useDirectoryRealtimeInvalidation,
   useServiceCategoryBusinessIds,
   filterAndSort,
   defaultFilters,
