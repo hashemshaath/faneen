@@ -6,9 +6,9 @@ export const FooterBrand = () => {
   const { t, isRTL } = useLanguage();
 
   const contactItems = [
-    { icon: Mail, text: "care@qitaat.com", href: "mailto:care@qitaat.com" },
-    { icon: MessageCircle, text: "+966 56 922 0777", href: "https://wa.me/966569220777" },
-    { icon: MapPin, text: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia' },
+    { icon: Mail, text: "care@qitaat.com", href: "mailto:care@qitaat.com", technical: true },
+    { icon: MessageCircle, text: "+966 56 922 0777", href: "https://wa.me/966569220777", technical: true },
+    { icon: MapPin, text: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia', technical: false },
   ];
 
   const badges = [
@@ -51,9 +51,15 @@ export const FooterBrand = () => {
               <item.icon aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 group-hover:text-primary transition-colors" />
             </span>
             {item.href ? (
-              <a href={item.href} className="text-sm text-surface-nav-foreground/90 hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none rounded tech-content">{item.text}</a>
+              <a
+                href={item.href}
+                dir={item.technical ? "ltr" : "auto"}
+                className="text-sm text-surface-nav-foreground/90 hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none rounded tech-content"
+              >
+                {item.text}
+              </a>
             ) : (
-              <span className="text-sm text-surface-nav-foreground/85">{item.text}</span>
+              <span dir="auto" className="text-sm text-surface-nav-foreground/85">{item.text}</span>
             )}
           </div>
         ))}
