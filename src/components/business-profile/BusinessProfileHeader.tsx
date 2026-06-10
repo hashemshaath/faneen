@@ -128,7 +128,6 @@ export const BusinessProfileHeader = ({
     business.short_description_ar || business.description_ar,
     business.short_description_en || business.description_en,
   );
-  const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
   const branchLabel = selectedBranch
     ? getLocalizedValue(language, selectedBranch.name_ar, selectedBranch.name_en)
     : '';
