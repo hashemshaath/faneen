@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
@@ -73,9 +74,9 @@ const fmtNum = (n: number) => Number(n).toLocaleString();
 const PaymentDonut = React.memo(({ stats, isRTL }: { stats: any; isRTL: boolean }) => {
   useNoIndex();
   const data = [
-    { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#0E9E6F' },
-    { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#B45309' },
-    { name: isRTL ? 'متأخر' : 'Overdue', value: stats.overdueAmount, color: '#C42626' },
+    { name: pickBi(isRTL, 'مدفوع', 'Paid'), value: stats.paidAmount, color: '#0E9E6F' },
+    { name: pickBi(isRTL, 'معلق', 'Pending'), value: stats.pendingAmount, color: '#B45309' },
+    { name: pickBi(isRTL, 'متأخر', 'Overdue'), value: stats.overdueAmount, color: '#C42626' },
   ].filter(d => d.value > 0);
 
   if (data.length === 0) return null;
@@ -93,7 +94,7 @@ const PaymentDonut = React.memo(({ stats, isRTL }: { stats: any; isRTL: boolean 
       </ResponsiveContainer>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-bold tech-content text-foreground">{pct}%</span>
-        <span className="text-[8px] text-muted-foreground">{isRTL ? 'مسدد' : 'Paid'}</span>
+        <span className="text-[8px] text-muted-foreground">{pickBi(isRTL, 'مسدد', 'Paid')}</span>
       </div>
     </div>
   );
@@ -129,20 +130,20 @@ const InstallmentCalc = React.memo(({ isRTL }: { isRTL: boolean }) => {
           <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
             <Calculator className="w-4 h-4 text-accent" />
           </div>
-          {isRTL ? 'حاسبة الأقساط' : 'Installment Calculator'}
+          {pickBi(isRTL, 'حاسبة الأقساط', 'Installment Calculator')}
         </h3>
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <Label className="text-[10px]">{isRTL ? 'المبلغ الإجمالي' : 'Total Amount'}</Label>
+            <Label className="text-[10px]">{pickBi(isRTL, 'المبلغ الإجمالي', 'Total Amount')}</Label>
             <Input type="number" value={total} onChange={e => setTotal(Number(e.target.value))} className="h-8 text-xs mt-1 tech-content" />
           </div>
           <div>
-            <Label className="text-[10px]">{isRTL ? 'الدفعة الأولى' : 'Down Payment'}</Label>
+            <Label className="text-[10px]">{pickBi(isRTL, 'الدفعة الأولى', 'Down Payment')}</Label>
             <Input type="number" value={down} onChange={e => setDown(Number(e.target.value))} className="h-8 text-xs mt-1 tech-content" />
           </div>
           <div>
-            <Label className="text-[10px]">{isRTL ? 'عدد الأشهر' : 'Months'}</Label>
+            <Label className="text-[10px]">{pickBi(isRTL, 'عدد الأشهر', 'Months')}</Label>
             <Input type="number" value={months} onChange={e => setMonths(Number(e.target.value))} className="h-8 text-xs mt-1 tech-content" min={1} max={60} />
           </div>
         </div>
@@ -151,22 +152,22 @@ const InstallmentCalc = React.memo(({ isRTL }: { isRTL: boolean }) => {
         <div className="grid grid-cols-3 gap-2">
           <div className="p-3 rounded-xl bg-accent/10 text-center border border-accent/10">
             <p className="text-lg font-bold tech-content text-accent">{fmtNum(remaining)}</p>
-            <p className="text-[9px] text-muted-foreground">{isRTL ? 'المبلغ المتبقي' : 'Remaining'} SAR</p>
+            <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'المبلغ المتبقي', 'Remaining')} SAR</p>
           </div>
           <div className="p-3 rounded-xl bg-primary/10 text-center border border-primary/10">
             <p className="text-lg font-bold tech-content text-primary">{fmtNum(Math.ceil(perMonth))}</p>
-            <p className="text-[9px] text-muted-foreground">{isRTL ? 'القسط الشهري' : 'Monthly'} SAR</p>
+            <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'القسط الشهري', 'Monthly')} SAR</p>
           </div>
           <div className="p-3 rounded-xl bg-muted/50 text-center border border-border/20">
             <p className="text-lg font-bold tech-content">{down > 0 ? Math.round((down / total) * 100) : 0}%</p>
-            <p className="text-[9px] text-muted-foreground">{isRTL ? 'نسبة الدفعة الأولى' : 'Down %'}</p>
+            <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'نسبة الدفعة الأولى', 'Down %')}</p>
           </div>
         </div>
 
         {/* Schedule preview */}
         {months > 0 && months <= 24 && (
           <div className="space-y-1 max-h-40 overflow-y-auto">
-            <p className="text-[10px] font-semibold text-muted-foreground mb-1">{isRTL ? 'جدول الأقساط التقديري' : 'Estimated Schedule'}</p>
+            <p className="text-[10px] font-semibold text-muted-foreground mb-1">{pickBi(isRTL, 'جدول الأقساط التقديري', 'Estimated Schedule')}</p>
             {Array.from({ length: months }, (_, i) => {
               const dueDate = new Date();
               dueDate.setMonth(dueDate.getMonth() + i + 1);
@@ -214,7 +215,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<a
           <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
             <CalendarDays className="w-4 h-4 text-accent" />
           </div>
-          {isRTL ? 'المدفوعات القادمة' : 'Upcoming Payments'}
+          {pickBi(isRTL, 'المدفوعات القادمة', 'Upcoming Payments')}
           <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4">{upcoming.length}</Badge>
         </h3>
 
@@ -256,7 +257,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<a
                       {isOverdue ? (
                         <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5 animate-pulse">
                           <AlertTriangle className="w-2.5 h-2.5" />
-                          {isRTL ? 'متأخر' : 'Overdue'}
+                          {pickBi(isRTL, 'متأخر', 'Overdue')}
                         </Badge>
                       ) : daysLeft <= 7 ? (
                         <Badge className="bg-warning/10 text-warning text-[8px] px-1.5 py-0 h-[14px] gap-0.5">
@@ -307,23 +308,23 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
           </span>
         )}
         <Badge className={`text-[8px] px-1.5 py-0 h-[14px] ${statusColors[payment.status] || ''}`}>
-          {statusLabels[payment.status]?.[isRTL ? 'ar' : 'en'] || payment.status}
+          {statusLabels[payment.status]?.[pickBi(isRTL, 'ar', 'en')] || payment.status}
         </Badge>
         {/* C3A: read-only milestone link indicator */}
         {payment.milestone_id ? (
-          <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5 border-accent/40 text-accent" title={isRTL ? 'مرتبط بمرحلة' : 'Linked to milestone'}>
+          <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5 border-accent/40 text-accent" title={pickBi(isRTL, 'مرتبط بمرحلة', 'Linked to milestone')}>
             <Link2 className="w-2.5 h-2.5" />
-            {isRTL ? 'مرحلة' : 'Milestone'}
+            {pickBi(isRTL, 'مرحلة', 'Milestone')}
           </Badge>
         ) : (
-          <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5 text-muted-foreground" title={isRTL ? 'غير مرتبط بمرحلة' : 'Unlinked'}>
+          <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5 text-muted-foreground" title={pickBi(isRTL, 'غير مرتبط بمرحلة', 'Unlinked')}>
             <Unlink className="w-2.5 h-2.5" />
-            {isRTL ? 'غير مرتبط' : 'Unlinked'}
+            {pickBi(isRTL, 'غير مرتبط', 'Unlinked')}
           </Badge>
         )}
         {payment.status === 'pending' && isProvider && (
           <Button size="sm" variant="outline" className="h-5 text-[9px] px-1.5 gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => onMarkPaid(payment.id)} disabled={isPending}>
-            <CheckCircle className="w-2.5 h-2.5" />{isRTL ? 'تسجيل' : 'Paid'}
+            <CheckCircle className="w-2.5 h-2.5" />{pickBi(isRTL, 'تسجيل', 'Paid')}
           </Button>
         )}
       </div>
@@ -368,15 +369,15 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
                   {contract ? (isRTL ? contract.title_ar : (contract.title_en || contract.title_ar)) : ''}
                 </h3>
                 <Badge className={`${statusColors[plan.status] || ''} text-[8px] px-1.5 py-0 h-[14px]`}>
-                  {statusLabels[plan.status]?.[isRTL ? 'ar' : 'en'] || plan.status}
+                  {statusLabels[plan.status]?.[pickBi(isRTL, 'ar', 'en')] || plan.status}
                 </Badge>
                 <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5">
-                  {isUserProvider ? <><Zap className="w-2 h-2" />{isRTL ? 'مزود' : 'Provider'}</> : <><Users className="w-2 h-2" />{isRTL ? 'عميل' : 'Client'}</>}
+                  {isUserProvider ? <><Zap className="w-2 h-2" />{pickBi(isRTL, 'مزود', 'Provider')}</> : <><Users className="w-2 h-2" />{pickBi(isRTL, 'عميل', 'Client')}</>}
                 </Badge>
                 {overdueCount > 0 && (
                   <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5 animate-pulse">
                     <AlertTriangle className="w-2.5 h-2.5" />
-                    {overdueCount} {isRTL ? 'متأخر' : 'overdue'}
+                    {overdueCount} {pickBi(isRTL, 'متأخر', 'overdue')}
                   </Badge>
                 )}
               </div>
@@ -388,7 +389,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
               <MiniRing pct={progress} size={36} stroke={3} />
               <div className="text-end">
                 <p className="tech-content font-bold text-sm">{fmtNum(Number(plan.total_amount))} <span className="text-[10px] font-normal text-muted-foreground">{plan.currency_code}</span></p>
-                <p className="text-[9px] text-muted-foreground">{isRTL ? 'مدفوع:' : 'Paid:'} <span className="tech-content text-success dark:text-success">{fmtNum(paidAmount)}</span></p>
+                <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'مدفوع:', 'Paid:')} <span className="tech-content text-success dark:text-success">{fmtNum(paidAmount)}</span></p>
               </div>
             </div>
           </div>
@@ -401,7 +402,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
             )}>
               <span className="flex items-center gap-1.5 text-muted-foreground">
                 <Target className="w-3 h-3" />
-                {isRTL ? 'القسط التالي:' : 'Next:'} <span className="font-medium text-foreground">{isRTL ? `القسط ${nextPayment.installment_number}` : `#${nextPayment.installment_number}`}</span>
+                {pickBi(isRTL, 'القسط التالي:', 'Next:')} <span className="font-medium text-foreground">{isRTL ? `القسط ${nextPayment.installment_number}` : `#${nextPayment.installment_number}`}</span>
                 <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{fmtDate(nextPayment.due_date, language)}</span>
               </span>
               <span className="tech-content font-bold text-accent">{fmtNum(Number(nextPayment.amount))} {plan.currency_code}</span>
@@ -415,8 +416,8 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
               <span className="tech-content text-[10px] font-bold text-accent">{progress}%</span>
             </div>
             <div className="flex items-center justify-between text-[9px] text-muted-foreground">
-              <span>{isRTL ? 'الدفعة الأولى:' : 'Down:'} <span className="tech-content font-medium">{fmtNum(Number(plan.down_payment))}</span></span>
-              <span>{isRTL ? 'القسط:' : 'Per:'} <span className="tech-content font-medium">{fmtNum(Number(plan.installment_amount))}</span></span>
+              <span>{pickBi(isRTL, 'الدفعة الأولى:', 'Down:')} <span className="tech-content font-medium">{fmtNum(Number(plan.down_payment))}</span></span>
+              <span>{pickBi(isRTL, 'القسط:', 'Per:')} <span className="tech-content font-medium">{fmtNum(Number(plan.installment_amount))}</span></span>
               <span className="flex items-center gap-0.5">
                 <Receipt className="w-2.5 h-2.5" />
                 {paidCount}/{payments.length}
@@ -469,10 +470,10 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
             {provider.interest_rate === 0 ? (
               <Badge className="bg-success/90 text-white text-[10px] px-2.5 py-1 gap-1 shadow-sm">
                 <CheckCircle className="w-3 h-3" />
-                {isRTL ? 'بدون فوائد' : '0% Interest'}
+                {pickBi(isRTL, 'بدون فوائد', '0% Interest')}
               </Badge>
             ) : (
-              <Badge className="bg-background/90 backdrop-blur-sm text-foreground text-[10px] px-2.5 py-1 border shadow-sm">{provider.interest_rate}% {isRTL ? 'فائدة' : 'Interest'}</Badge>
+              <Badge className="bg-background/90 backdrop-blur-sm text-foreground text-[10px] px-2.5 py-1 border shadow-sm">{provider.interest_rate}% {pickBi(isRTL, 'فائدة', 'Interest')}</Badge>
             )}
           </div>
         </div>
@@ -483,7 +484,7 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
             <div className="flex items-center justify-center gap-2 mt-1">
               <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
                 <ShieldCheck className="w-3 h-3" />
-                {isRTL ? 'شريك معتمد' : 'Authorized Partner'}
+                {pickBi(isRTL, 'شريك معتمد', 'Authorized Partner')}
               </Badge>
             </div>
           </div>
@@ -491,15 +492,15 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
           <div className="grid grid-cols-3 gap-1.5 mb-4">
             <div className="p-3 rounded-xl text-center border border-border/20 hover:border-border/40 transition-colors" style={{ background: `${provider.color_hex}06` }}>
               <p className="text-base sm:text-lg font-bold text-foreground tech-content">{provider.installments_count}</p>
-              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'عدد الأقساط' : 'Installments'}</p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{pickBi(isRTL, 'عدد الأقساط', 'Installments')}</p>
             </div>
             <div className="p-3 rounded-xl text-center border border-border/20 hover:border-border/40 transition-colors" style={{ background: `${provider.color_hex}06` }}>
               <p className="text-base sm:text-lg font-bold text-foreground tech-content">{fmtNum(Number(provider.min_amount))}</p>
-              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'الحد الأدنى' : 'Min'} {provider.currency_code}</p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{pickBi(isRTL, 'الحد الأدنى', 'Min')} {provider.currency_code}</p>
             </div>
             <div className="p-3 rounded-xl text-center border border-border/20 hover:border-border/40 transition-colors" style={{ background: `${provider.color_hex}06` }}>
               <p className="text-base sm:text-lg font-bold text-foreground tech-content">{fmtNum(Number(provider.max_amount))}</p>
-              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'الحد الأقصى' : 'Max'} {provider.currency_code}</p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{pickBi(isRTL, 'الحد الأقصى', 'Max')} {provider.currency_code}</p>
             </div>
           </div>
 
@@ -507,14 +508,14 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
             <div className="flex items-center gap-1.5">
               <Info className="w-3.5 h-3.5 text-warning dark:text-warning shrink-0" />
               <p className="text-[10px] text-warning dark:text-warning">
-                {isRTL ? 'يخضع للموافقة الائتمانية والسجل الائتماني' : 'Subject to credit approval'}
+                {pickBi(isRTL, 'يخضع للموافقة الائتمانية والسجل الائتماني', 'Subject to credit approval')}
               </p>
             </div>
           </div>
 
           <Button variant="ghost" size="sm" className="w-full gap-1.5 text-xs text-muted-foreground" onClick={() => setShowDetails(!showDetails)}>
             {showDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            {isRTL ? 'تفاصيل إضافية' : 'More Details'}
+            {pickBi(isRTL, 'تفاصيل إضافية', 'More Details')}
           </Button>
 
           {showDetails && (
@@ -525,7 +526,7 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
                   className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium transition-all hover:opacity-80"
                   style={{ background: `${provider.color_hex}10`, color: provider.color_hex }}>
                   <Globe className="w-4 h-4" />
-                  {isRTL ? 'زيارة الموقع الرسمي' : 'Visit Official Website'}
+                  {pickBi(isRTL, 'زيارة الموقع الرسمي', 'Visit Official Website')}
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
@@ -566,23 +567,23 @@ const AdminBnplForm = React.memo(({ provider = null, isRTL, language, onSave, on
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-heading font-bold text-sm flex items-center gap-1.5">
             <Edit2 className="w-3.5 h-3.5 text-accent" />
-            {isNew ? (isRTL ? 'إضافة شركة تقسيط جديدة' : 'Add New BNPL Provider') : (isRTL ? 'تعديل' : 'Edit') + ' ' + (isRTL ? form.name_ar : form.name_en)}
+            {isNew ? (pickBi(isRTL, 'إضافة شركة تقسيط جديدة', 'Add New BNPL Provider')) : (pickBi(isRTL, 'تعديل', 'Edit')) + ' ' + (isRTL ? form.name_ar : form.name_en)}
           </h4>
           <div className="flex items-center gap-1.5">
-            <Label className="text-[10px]">{isRTL ? 'مفعّل' : 'Active'}</Label>
+            <Label className="text-[10px]">{pickBi(isRTL, 'مفعّل', 'Active')}</Label>
             <Switch checked={form.is_active} onCheckedChange={v => set('is_active', v)} />
           </div>
         </div>
 
         <div>
-          <Label className="text-xs mb-1.5 block">{isRTL ? 'شعار الشركة' : 'Provider Logo'}</Label>
+          <Label className="text-xs mb-1.5 block">{pickBi(isRTL, 'شعار الشركة', 'Provider Logo')}</Label>
           <div className="flex items-start gap-3">
             <div className="w-20">
-              <ImageUpload bucket="business-assets" value={form.logo_url} onChange={url => set('logo_url', url)} onRemove={() => set('logo_url', '')} folder="bnpl-logos" aspectRatio="square" placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} className="w-20 h-20" />
+              <ImageUpload bucket="business-assets" value={form.logo_url} onChange={url => set('logo_url', url)} onRemove={() => set('logo_url', '')} folder="bnpl-logos" aspectRatio="square" placeholder={pickBi(isRTL, 'رفع الشعار', 'Upload logo')} className="w-20 h-20" />
             </div>
             <div className="flex-1 space-y-2">
               <div>
-                <Label className="text-[10px]">{isRTL ? 'لون العلامة' : 'Brand Color'}</Label>
+                <Label className="text-[10px]">{pickBi(isRTL, 'لون العلامة', 'Brand Color')}</Label>
                 <div className="flex items-center gap-2 mt-0.5">
                   <input type="color" value={form.color_hex} onChange={e => set('color_hex', e.target.value)} className="w-8 h-8 rounded border-0 cursor-pointer" />
                   <Input value={form.color_hex} onChange={e => set('color_hex', e.target.value)} className="h-7 text-xs w-24 tech-content" />
@@ -593,36 +594,36 @@ const AdminBnplForm = React.memo(({ provider = null, isRTL, language, onSave, on
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><Label className="text-[10px]">{isRTL ? 'الاسم بالعربي *' : 'Name (Arabic) *'}</Label><Input value={form.name_ar} onChange={e => set('name_ar', e.target.value)} className="h-8 text-xs mt-0.5" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'الاسم بالإنجليزي *' : 'Name (English) *'}</Label><Input value={form.name_en} onChange={e => set('name_en', e.target.value)} className="h-8 text-xs mt-0.5" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'المعرف (slug) *' : 'Slug *'}</Label><Input value={form.slug} onChange={e => set('slug', e.target.value)} className="h-8 text-xs mt-0.5 tech-content" placeholder="tabby" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label><Input value={form.website_url} onChange={e => set('website_url', e.target.value)} className="h-8 text-xs mt-0.5 tech-content" placeholder="https://..." /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'الاسم بالعربي *', 'Name (Arabic) *')}</Label><Input value={form.name_ar} onChange={e => set('name_ar', e.target.value)} className="h-8 text-xs mt-0.5" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'الاسم بالإنجليزي *', 'Name (English) *')}</Label><Input value={form.name_en} onChange={e => set('name_en', e.target.value)} className="h-8 text-xs mt-0.5" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'المعرف (slug) *', 'Slug *')}</Label><Input value={form.slug} onChange={e => set('slug', e.target.value)} className="h-8 text-xs mt-0.5 tech-content" placeholder="tabby" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'الموقع الإلكتروني', 'Website')}</Label><Input value={form.website_url} onChange={e => set('website_url', e.target.value)} className="h-8 text-xs mt-0.5 tech-content" placeholder="https://..." /></div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><Label className="text-[10px]">{isRTL ? 'الوصف بالعربي' : 'Description (Arabic)'}</Label><Textarea value={form.description_ar} onChange={e => set('description_ar', e.target.value)} className="text-xs mt-0.5 min-h-[60px]" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'الوصف بالإنجليزي' : 'Description (English)'}</Label><Textarea value={form.description_en} onChange={e => set('description_en', e.target.value)} className="text-xs mt-0.5 min-h-[60px]" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'الوصف بالعربي', 'Description (Arabic)')}</Label><Textarea value={form.description_ar} onChange={e => set('description_ar', e.target.value)} className="text-xs mt-0.5 min-h-[60px]" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'الوصف بالإنجليزي', 'Description (English)')}</Label><Textarea value={form.description_en} onChange={e => set('description_en', e.target.value)} className="text-xs mt-0.5 min-h-[60px]" /></div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div><Label className="text-[10px]">{isRTL ? 'عدد الأقساط' : 'Installments'}</Label><Input type="number" value={form.installments_count} onChange={e => set('installments_count', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'نسبة الفائدة %' : 'Interest %'}</Label><Input type="number" step="0.01" value={form.interest_rate} onChange={e => set('interest_rate', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'الحد الأدنى' : 'Min Amount'}</Label><Input type="number" value={form.min_amount} onChange={e => set('min_amount', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'الحد الأقصى' : 'Max Amount'}</Label><Input type="number" value={form.max_amount} onChange={e => set('max_amount', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'عدد الأقساط', 'Installments')}</Label><Input type="number" value={form.installments_count} onChange={e => set('installments_count', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'نسبة الفائدة %', 'Interest %')}</Label><Input type="number" step="0.01" value={form.interest_rate} onChange={e => set('interest_rate', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'الحد الأدنى', 'Min Amount')}</Label><Input type="number" value={form.min_amount} onChange={e => set('min_amount', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'الحد الأقصى', 'Max Amount')}</Label><Input type="number" value={form.max_amount} onChange={e => set('max_amount', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-[10px]">{isRTL ? 'رمز العملة' : 'Currency'}</Label><Input value={form.currency_code} onChange={e => set('currency_code', e.target.value)} className="h-8 text-xs mt-0.5 tech-content" /></div>
-          <div><Label className="text-[10px]">{isRTL ? 'ترتيب العرض' : 'Sort Order'}</Label><Input type="number" value={form.sort_order} onChange={e => set('sort_order', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'رمز العملة', 'Currency')}</Label><Input value={form.currency_code} onChange={e => set('currency_code', e.target.value)} className="h-8 text-xs mt-0.5 tech-content" /></div>
+          <div><Label className="text-[10px]">{pickBi(isRTL, 'ترتيب العرض', 'Sort Order')}</Label><Input type="number" value={form.sort_order} onChange={e => set('sort_order', Number(e.target.value))} className="h-8 text-xs mt-0.5 tech-content" /></div>
         </div>
 
         <div className="flex items-center gap-2 pt-1">
           <Button size="sm" className="gap-1.5 text-xs" onClick={() => onSave(form, provider?.id)} disabled={saving || !form.name_ar || !form.name_en || !form.slug}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {isRTL ? 'حفظ' : 'Save'}
+            {pickBi(isRTL, 'حفظ', 'Save')}
           </Button>
           <Button size="sm" variant="ghost" className="gap-1.5 text-xs" onClick={onCancel}>
-            <X className="w-3.5 h-3.5" />{isRTL ? 'إلغاء' : 'Cancel'}
+            <X className="w-3.5 h-3.5" />{pickBi(isRTL, 'إلغاء', 'Cancel')}
           </Button>
         </div>
       </CardContent>
@@ -722,7 +723,7 @@ const DashboardInstallments = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['installment-plans'] });
-      toast.success(isRTL ? 'تم تسجيل الدفع' : 'Payment recorded');
+      toast.success(pickBi(isRTL, 'تم تسجيل الدفع', 'Payment recorded'));
     },
   });
 
@@ -740,7 +741,7 @@ const DashboardInstallments = () => {
       queryClient.invalidateQueries({ queryKey: ['bnpl-providers-all'] });
       setEditingProvider(null);
       setShowNewProvider(false);
-      toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
+      toast.success(pickBi(isRTL, 'تم الحفظ بنجاح', 'Saved successfully'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -752,7 +753,7 @@ const DashboardInstallments = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bnpl-providers-all'] });
-      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
+      toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted'));
     },
   });
 
@@ -786,7 +787,7 @@ const DashboardInstallments = () => {
     a.download = `installments_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم تصدير البيانات' : 'Data exported');
+    toast.success(pickBi(isRTL, 'تم تصدير البيانات', 'Data exported'));
   }, [plans, isRTL]);
 
   const hasFilters = statusFilter !== 'all' || searchQuery.trim();
@@ -806,22 +807,22 @@ const DashboardInstallments = () => {
               </div>
               <div>
                 <h1 className="font-heading font-bold text-xl sm:text-2xl text-foreground">
-                  {isRTL ? 'الأقساط والتقسيط' : 'Installments & BNPL'}
+                  {pickBi(isRTL, 'الأقساط والتقسيط', 'Installments & BNPL')}
                 </h1>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-                  {isRTL ? 'إدارة خطط التقسيط المباشر وشركات التقسيط المعتمدة' : 'Manage direct installment plans and authorized BNPL partners'}
+                  {pickBi(isRTL, 'إدارة خطط التقسيط المباشر وشركات التقسيط المعتمدة', 'Manage direct installment plans and authorized BNPL partners')}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline" size="sm" className="gap-1.5 text-xs backdrop-blur-sm bg-background/50" onClick={() => setShowCalc(!showCalc)}>
                 <Calculator className="w-3.5 h-3.5" />
-                {isRTL ? 'الحاسبة' : 'Calculator'}
+                {pickBi(isRTL, 'الحاسبة', 'Calculator')}
               </Button>
               {plans.length > 0 && (
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs backdrop-blur-sm bg-background/50" onClick={exportCSV}>
                   <Download className="w-3.5 h-3.5" />
-                  {isRTL ? 'تصدير' : 'Export'}
+                  {pickBi(isRTL, 'تصدير', 'Export')}
                 </Button>
               )}
             </div>
@@ -831,10 +832,10 @@ const DashboardInstallments = () => {
           {plans.length > 0 && (
             <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
               {[
-                { icon: Activity, label: isRTL ? 'خطط التقسيط' : 'Total Plans', value: plans.length, color: 'text-primary' },
-                { icon: CircleDollarSign, label: isRTL ? 'إجمالي المبالغ' : 'Total Amount', value: fmtNum(stats.totalAmount), sub: 'SAR', color: 'text-accent' },
-                { icon: TrendingUp, label: isRTL ? 'المدفوع' : 'Paid', value: fmtNum(stats.paidAmount), sub: 'SAR', color: 'text-success dark:text-success' },
-                { icon: TrendingDown, label: isRTL ? 'المتبقي' : 'Remaining', value: fmtNum(stats.totalAmount - stats.paidAmount), sub: 'SAR', color: 'text-warning dark:text-warning' },
+                { icon: Activity, label: pickBi(isRTL, 'خطط التقسيط', 'Total Plans'), value: plans.length, color: 'text-primary' },
+                { icon: CircleDollarSign, label: pickBi(isRTL, 'إجمالي المبالغ', 'Total Amount'), value: fmtNum(stats.totalAmount), sub: 'SAR', color: 'text-accent' },
+                { icon: TrendingUp, label: pickBi(isRTL, 'المدفوع', 'Paid'), value: fmtNum(stats.paidAmount), sub: 'SAR', color: 'text-success dark:text-success' },
+                { icon: TrendingDown, label: pickBi(isRTL, 'المتبقي', 'Remaining'), value: fmtNum(stats.totalAmount - stats.paidAmount), sub: 'SAR', color: 'text-warning dark:text-warning' },
               ].map((s, i) => (
                 <div key={i} className="p-3 rounded-xl bg-background/60 backdrop-blur-sm border border-border/30 hover:bg-background/80 transition-colors">
                   <div className="flex items-center gap-2 mb-1">
@@ -859,25 +860,25 @@ const DashboardInstallments = () => {
           <TabsList className="w-full sm:w-auto bg-muted/50 p-1">
             <TabsTrigger value="plans" className="gap-1.5 text-xs">
               <FileText className="w-3.5 h-3.5" />
-              {isRTL ? 'خطط التقسيط' : 'Plans'}
+              {pickBi(isRTL, 'خطط التقسيط', 'Plans')}
               {plans.length > 0 && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 ms-1">{plans.length}</Badge>}
             </TabsTrigger>
             <TabsTrigger value="timeline" className="gap-1.5 text-xs">
               <CalendarDays className="w-3.5 h-3.5" />
-              {isRTL ? 'الجدول الزمني' : 'Timeline'}
+              {pickBi(isRTL, 'الجدول الزمني', 'Timeline')}
               {stats.pendingPayments > 0 && (
                 <Badge className="bg-warning/10 text-warning text-[8px] px-1.5 py-0 h-4 ms-1">{stats.pendingPayments}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="bnpl" className="gap-1.5 text-xs">
               <Building2 className="w-3.5 h-3.5" />
-              {isRTL ? 'شركات التقسيط' : 'BNPL'}
+              {pickBi(isRTL, 'شركات التقسيط', 'BNPL')}
               {activeProviders.length > 0 && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 ms-1">{activeProviders.length}</Badge>}
             </TabsTrigger>
             {hasAdminRole && (
               <TabsTrigger value="admin" className="gap-1.5 text-xs">
                 <Shield className="w-3.5 h-3.5" />
-                {isRTL ? 'إدارة' : 'Admin'}
+                {pickBi(isRTL, 'إدارة', 'Admin')}
               </TabsTrigger>
             )}
           </TabsList>
@@ -892,13 +893,13 @@ const DashboardInstallments = () => {
                   <CardContent className="p-4 flex flex-col items-center justify-center">
                     <h4 className="text-[11px] font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
                       <PieChart className="w-3.5 h-3.5" />
-                      {isRTL ? 'توزيع المدفوعات' : 'Payment Distribution'}
+                      {pickBi(isRTL, 'توزيع المدفوعات', 'Payment Distribution')}
                     </h4>
                     <PaymentDonut stats={stats} isRTL={isRTL} />
                     <div className="flex items-center gap-3 mt-3 text-[9px] text-muted-foreground">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-success" />{isRTL ? 'مدفوع' : 'Paid'}</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning" />{isRTL ? 'معلق' : 'Pending'}</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" />{isRTL ? 'متأخر' : 'Overdue'}</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-success" />{pickBi(isRTL, 'مدفوع', 'Paid')}</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning" />{pickBi(isRTL, 'معلق', 'Pending')}</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" />{pickBi(isRTL, 'متأخر', 'Overdue')}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -909,7 +910,7 @@ const DashboardInstallments = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold flex items-center gap-1.5">
                         <BarChart3 className="w-3.5 h-3.5 text-primary" />
-                        {isRTL ? 'نسبة السداد الإجمالية' : 'Overall Payment Progress'}
+                        {pickBi(isRTL, 'نسبة السداد الإجمالية', 'Overall Payment Progress')}
                       </span>
                       <span className="tech-content text-sm font-bold text-accent">{Math.round((stats.paidAmount / stats.totalAmount) * 100)}%</span>
                     </div>
@@ -918,10 +919,10 @@ const DashboardInstallments = () => {
                     {/* Amount breakdown */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[
-                        { label: isRTL ? 'إجمالي' : 'Total', value: fmtNum(stats.totalAmount), color: 'text-foreground', bg: 'bg-muted/40' },
-                        { label: isRTL ? 'مسدد' : 'Paid', value: fmtNum(stats.paidAmount), color: 'text-success dark:text-success', bg: 'bg-success/50 dark:bg-success/10' },
-                        { label: isRTL ? 'معلق' : 'Pending', value: fmtNum(stats.pendingAmount), color: 'text-warning dark:text-warning', bg: 'bg-warning/50 dark:bg-warning/10' },
-                        { label: isRTL ? 'متأخر' : 'Overdue', value: fmtNum(stats.overdueAmount), color: 'text-destructive', bg: stats.overdueAmount > 0 ? 'bg-destructive/5' : 'bg-muted/30' },
+                        { label: pickBi(isRTL, 'إجمالي', 'Total'), value: fmtNum(stats.totalAmount), color: 'text-foreground', bg: 'bg-muted/40' },
+                        { label: pickBi(isRTL, 'مسدد', 'Paid'), value: fmtNum(stats.paidAmount), color: 'text-success dark:text-success', bg: 'bg-success/50 dark:bg-success/10' },
+                        { label: pickBi(isRTL, 'معلق', 'Pending'), value: fmtNum(stats.pendingAmount), color: 'text-warning dark:text-warning', bg: 'bg-warning/50 dark:bg-warning/10' },
+                        { label: pickBi(isRTL, 'متأخر', 'Overdue'), value: fmtNum(stats.overdueAmount), color: 'text-destructive', bg: stats.overdueAmount > 0 ? 'bg-destructive/5' : 'bg-muted/30' },
                       ].map((item, i) => (
                         <div key={i} className={cn("p-2 rounded-lg text-center", item.bg)}>
                           <p className={cn("text-sm font-bold tech-content", item.color)}>{item.value}</p>
@@ -933,12 +934,12 @@ const DashboardInstallments = () => {
                     <div className="flex items-center gap-4 text-[9px] text-muted-foreground flex-wrap pt-1 border-t border-border/20">
                       <span className="flex items-center gap-1">
                         <Receipt className="w-3 h-3" />
-                        {isRTL ? 'الدفعات:' : 'Payments:'} <span className="tech-content font-medium text-foreground">{stats.paidPayments}/{stats.totalPayments}</span>
+                        {pickBi(isRTL, 'الدفعات:', 'Payments:')} <span className="tech-content font-medium text-foreground">{stats.paidPayments}/{stats.totalPayments}</span>
                       </span>
                       {stats.overduePayments > 0 && (
                         <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5 animate-pulse">
                           <AlertTriangle className="w-2.5 h-2.5" />
-                          {stats.overduePayments} {isRTL ? 'متأخر' : 'overdue'}
+                          {stats.overduePayments} {pickBi(isRTL, 'متأخر', 'overdue')}
                         </Badge>
                       )}
                     </div>
@@ -951,12 +952,12 @@ const DashboardInstallments = () => {
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input placeholder={isRTL ? 'بحث بالعنوان أو الرقم...' : 'Search by title or number...'} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="ps-9 h-8 text-xs" />
+                <Input placeholder={pickBi(isRTL, 'بحث بالعنوان أو الرقم...', 'Search by title or number...')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="ps-9 h-8 text-xs" />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-36 h-8 text-xs"><Filter className="w-3 h-3 me-1.5" /><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع الحالات' : 'All Statuses'}</SelectItem>
+                  <SelectItem value="all">{pickBi(isRTL, 'جميع الحالات', 'All Statuses')}</SelectItem>
                   {Object.entries(statusLabels).filter(([k]) => ['active', 'completed', 'cancelled', 'defaulted'].includes(k)).map(([key, label]) => (
                     <SelectItem key={key} value={key}>{language === 'ar' ? label.ar : label.en}</SelectItem>
                   ))}
@@ -964,7 +965,7 @@ const DashboardInstallments = () => {
               </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => { setStatusFilter('all'); setSearchQuery(''); }}>
-                  <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear'}
+                  <X className="w-3 h-3" />{pickBi(isRTL, 'مسح الفلاتر', 'Clear')}
                 </Button>
               )}
             </div>
@@ -978,8 +979,8 @@ const DashboardInstallments = () => {
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
                     <CreditCard className="w-8 h-8 text-primary opacity-50" />
                   </div>
-                  <p className="font-heading font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد خطط تقسيط' : 'No installment plans'}</p>
-                  <p className="text-xs max-w-xs text-center">{hasFilters ? (isRTL ? 'جرّب تعديل الفلاتر' : 'Adjust filters') : (isRTL ? 'ستظهر هنا عند إنشائها من العقود' : 'Will appear when created from contracts')}</p>
+                  <p className="font-heading font-bold text-foreground mb-1 text-sm">{pickBi(isRTL, 'لا توجد خطط تقسيط', 'No installment plans')}</p>
+                  <p className="text-xs max-w-xs text-center">{hasFilters ? (pickBi(isRTL, 'جرّب تعديل الفلاتر', 'Adjust filters')) : (pickBi(isRTL, 'ستظهر هنا عند إنشائها من العقود', 'Will appear when created from contracts'))}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -1009,7 +1010,7 @@ const DashboardInstallments = () => {
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center mb-4">
                     <CalendarDays className="w-8 h-8 opacity-40" />
                   </div>
-                  <p className="font-heading font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد مدفوعات قادمة' : 'No upcoming payments'}</p>
+                  <p className="font-heading font-bold text-foreground mb-1 text-sm">{pickBi(isRTL, 'لا توجد مدفوعات قادمة', 'No upcoming payments')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -1023,8 +1024,8 @@ const DashboardInstallments = () => {
                         <AlertTriangle className="w-6 h-6 text-destructive" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-bold text-destructive">{stats.overduePayments} {isRTL ? 'أقساط متأخرة' : 'overdue payments'}</p>
-                        <p className="text-[10px] text-muted-foreground">{isRTL ? 'يرجى المبادرة بالسداد لتجنب أي رسوم إضافية' : 'Please settle to avoid additional charges'}</p>
+                        <p className="text-sm font-bold text-destructive">{stats.overduePayments} {pickBi(isRTL, 'أقساط متأخرة', 'overdue payments')}</p>
+                        <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'يرجى المبادرة بالسداد لتجنب أي رسوم إضافية', 'Please settle to avoid additional charges')}</p>
                       </div>
                       <div className="text-end shrink-0">
                         <p className="text-lg font-bold tech-content text-destructive">{fmtNum(stats.overdueAmount)}</p>
@@ -1058,7 +1059,7 @@ const DashboardInstallments = () => {
                           <div className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center">
                             <CheckCircle className="w-4 h-4 text-success dark:text-success" />
                           </div>
-                          {isRTL ? 'آخر المدفوعات' : 'Recent Payments'}
+                          {pickBi(isRTL, 'آخر المدفوعات', 'Recent Payments')}
                         </h3>
                         <div className="space-y-1.5">
                           {recent5.map((p) => (
@@ -1089,12 +1090,10 @@ const DashboardInstallments = () => {
                 <Building2 className="w-7 h-7 text-primary" />
               </div>
               <h2 className="font-heading font-bold text-lg sm:text-xl">
-                {isRTL ? 'شركات التقسيط المعتمدة' : 'Authorized BNPL Partners'}
+                {pickBi(isRTL, 'شركات التقسيط المعتمدة', 'Authorized BNPL Partners')}
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-                {isRTL
-                  ? 'يمكنك تقديم خدماتك للعملاء من خلال شركات التقسيط المعتمدة التالية.'
-                  : 'Offer your services through these authorized BNPL partners.'}
+                {pickBi(isRTL, 'يمكنك تقديم خدماتك للعملاء من خلال شركات التقسيط المعتمدة التالية.', 'Offer your services through these authorized BNPL partners.')}
               </p>
             </div>
 
@@ -1105,14 +1104,14 @@ const DashboardInstallments = () => {
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-foreground">
-                    {isRTL ? 'كيف يعمل التقسيط عبر الشركات المتخصصة؟' : 'How does BNPL work?'}
+                    {pickBi(isRTL, 'كيف يعمل التقسيط عبر الشركات المتخصصة؟', 'How does BNPL work?')}
                   </p>
                   <ul className="text-[11px] text-muted-foreground space-y-1 leading-relaxed">
                     {[
-                      isRTL ? 'يختار العميل شركة التقسيط المناسبة عند الدفع' : 'Customer selects a BNPL provider at checkout',
-                      isRTL ? 'تقوم الشركة بمراجعة السجل الائتماني للعميل والموافقة' : 'Provider reviews customer credit history and approves',
-                      isRTL ? 'يتم تقسيم المبلغ على أقساط شهرية ميسرة' : 'Amount is split into convenient monthly installments',
-                      isRTL ? 'يحصل المزود على المبلغ كاملاً من شركة التقسيط' : 'Provider receives the full amount from the BNPL company',
+                      pickBi(isRTL, 'يختار العميل شركة التقسيط المناسبة عند الدفع', 'Customer selects a BNPL provider at checkout'),
+                      pickBi(isRTL, 'تقوم الشركة بمراجعة السجل الائتماني للعميل والموافقة', 'Provider reviews customer credit history and approves'),
+                      pickBi(isRTL, 'يتم تقسيم المبلغ على أقساط شهرية ميسرة', 'Amount is split into convenient monthly installments'),
+                      pickBi(isRTL, 'يحصل المزود على المبلغ كاملاً من شركة التقسيط', 'Provider receives the full amount from the BNPL company'),
                     ].map((text, i) => (
                       <li key={i} className="flex items-start gap-1.5">
                         <span className="w-4 h-4 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[8px] shrink-0 mt-0.5">{isRTL ? ['1','2','3','4'][i] : i + 1}</span>
@@ -1134,7 +1133,7 @@ const DashboardInstallments = () => {
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
                     <Building2 className="w-8 h-8 opacity-40" />
                   </div>
-                  <p className="font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد شركات تقسيط متاحة حالياً' : 'No BNPL providers available'}</p>
+                  <p className="font-bold text-foreground mb-1 text-sm">{pickBi(isRTL, 'لا توجد شركات تقسيط متاحة حالياً', 'No BNPL providers available')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -1147,9 +1146,7 @@ const DashboardInstallments = () => {
 
             <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
               <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                {isRTL
-                  ? '⚠️ جميع عمليات التقسيط عبر الشركات المتخصصة تخضع لشروط وأحكام كل شركة على حدة. المنصة ليست طرفاً في عقد التقسيط.'
-                  : '⚠️ All BNPL transactions are subject to each provider\'s terms and conditions. The platform is not a party to the installment agreement.'}
+                {pickBi(isRTL, '⚠️ جميع عمليات التقسيط عبر الشركات المتخصصة تخضع لشروط وأحكام كل شركة على حدة. المنصة ليست طرفاً في عقد التقسيط.', '⚠️ All BNPL transactions are subject to each provider\'s terms and conditions. The platform is not a party to the installment agreement.')}
               </p>
             </div>
           </TabsContent>
@@ -1162,7 +1159,7 @@ const DashboardInstallments = () => {
                 <div>
                   <h2 className="font-heading font-bold text-base flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-accent" />
-                    {isRTL ? 'إدارة شركات التقسيط' : 'Manage BNPL Providers'}
+                    {pickBi(isRTL, 'إدارة شركات التقسيط', 'Manage BNPL Providers')}
                   </h2>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {isRTL 
@@ -1173,7 +1170,7 @@ const DashboardInstallments = () => {
                 <div className="flex items-center gap-2">
                   {!showNewProvider && !editingProvider && (
                     <Button size="sm" className="gap-1.5 text-xs" onClick={() => setShowNewProvider(true)}>
-                      <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة شركة' : 'Add Provider'}
+                      <Plus className="w-3.5 h-3.5" />{pickBi(isRTL, 'إضافة شركة', 'Add Provider')}
                     </Button>
                   )}
                 </div>
@@ -1183,15 +1180,15 @@ const DashboardInstallments = () => {
               <div className="grid grid-cols-3 gap-2">
                 <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 text-center">
                   <p className="text-lg font-bold tech-content text-primary">{allProviders.length}</p>
-                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'إجمالي الشركات' : 'Total Providers'}</p>
+                  <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'إجمالي الشركات', 'Total Providers')}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-success/5 border border-success/10 text-center">
                   <p className="text-lg font-bold tech-content text-success dark:text-success">{activeProviders.length}</p>
-                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'مفعّلة' : 'Active'}</p>
+                  <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'مفعّلة', 'Active')}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-muted/50 border border-border/20 text-center">
                   <p className="text-lg font-bold tech-content text-muted-foreground">{allProviders.length - activeProviders.length}</p>
-                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'معطّلة' : 'Inactive'}</p>
+                  <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'معطّلة', 'Inactive')}</p>
                 </div>
               </div>
 
@@ -1211,10 +1208,10 @@ const DashboardInstallments = () => {
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
                       <Building2 className="w-8 h-8 opacity-40" />
                     </div>
-                    <p className="font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد شركات تقسيط' : 'No BNPL providers'}</p>
-                    <p className="text-xs text-muted-foreground mb-3">{isRTL ? 'أضف أول شركة تقسيط لبدء العمل' : 'Add your first BNPL provider to get started'}</p>
+                    <p className="font-bold text-foreground mb-1 text-sm">{pickBi(isRTL, 'لا توجد شركات تقسيط', 'No BNPL providers')}</p>
+                    <p className="text-xs text-muted-foreground mb-3">{pickBi(isRTL, 'أضف أول شركة تقسيط لبدء العمل', 'Add your first BNPL provider to get started')}</p>
                     <Button size="sm" className="gap-1.5" onClick={() => setShowNewProvider(true)}>
-                      <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة أول شركة' : 'Add First Provider'}
+                      <Plus className="w-3.5 h-3.5" />{pickBi(isRTL, 'إضافة أول شركة', 'Add First Provider')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -1254,7 +1251,7 @@ const DashboardInstallments = () => {
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <h4 className="font-heading font-bold text-sm">{name}</h4>
                                   <Badge className={cn('text-[8px] px-1.5 py-0 h-[14px]', p.is_active ? 'bg-success/10 text-success dark:text-success' : 'bg-destructive/10 text-destructive')}>
-                                    {p.is_active ? (isRTL ? 'مفعّل' : 'Active') : (isRTL ? 'معطّل' : 'Disabled')}
+                                    {p.is_active ? (pickBi(isRTL, 'مفعّل', 'Active')) : (pickBi(isRTL, 'معطّل', 'Disabled'))}
                                   </Badge>
                                 </div>
                                 {nameSecondary && <p className="text-[10px] text-muted-foreground">{nameSecondary}</p>}
@@ -1262,7 +1259,7 @@ const DashboardInstallments = () => {
                                   <Badge variant="outline" className="text-[7px] px-1 py-0 h-3 tech-content">{p.slug}</Badge>
                                   {p.interest_rate === 0 && (
                                     <Badge className="bg-success/10 text-success dark:text-success text-[7px] px-1 py-0 h-3 gap-0.5">
-                                      <CheckCircle className="w-2 h-2" />{isRTL ? 'بدون فوائد' : '0%'}
+                                      <CheckCircle className="w-2 h-2" />{pickBi(isRTL, 'بدون فوائد', '0%')}
                                     </Badge>
                                   )}
                                 </div>
@@ -1281,7 +1278,7 @@ const DashboardInstallments = () => {
                                   <Edit2 className="w-3 h-3" />
                                 </Button>
                                 <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive opacity-60 hover:opacity-100" onClick={() => {
-                                  if (confirm(isRTL ? 'هل أنت متأكد من حذف هذا المزود؟ لا يمكن التراجع.' : 'Are you sure you want to delete this provider? This cannot be undone.')) deleteProviderMutation.mutate(p.id);
+                                  if (confirm(pickBi(isRTL, 'هل أنت متأكد من حذف هذا المزود؟ لا يمكن التراجع.', 'Are you sure you want to delete this provider? This cannot be undone.'))) deleteProviderMutation.mutate(p.id);
                                 }}>
                                   <Trash2 className="w-3 h-3" />
                                 </Button>
@@ -1292,19 +1289,19 @@ const DashboardInstallments = () => {
                             <div className="grid grid-cols-4 gap-1.5 mb-3">
                               <div className="p-2 rounded-lg bg-muted/30 text-center">
                                 <p className="text-xs font-bold tech-content">{p.installments_count}</p>
-                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'أقساط' : 'Payments'}</p>
+                                <p className="text-[7px] text-muted-foreground">{pickBi(isRTL, 'أقساط', 'Payments')}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted/30 text-center">
                                 <p className="text-xs font-bold tech-content">{p.interest_rate}%</p>
-                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'فائدة' : 'Interest'}</p>
+                                <p className="text-[7px] text-muted-foreground">{pickBi(isRTL, 'فائدة', 'Interest')}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted/30 text-center">
                                 <p className="text-xs font-bold tech-content">{fmtNum(Number(p.min_amount))}</p>
-                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'الحد الأدنى' : 'Min'}</p>
+                                <p className="text-[7px] text-muted-foreground">{pickBi(isRTL, 'الحد الأدنى', 'Min')}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted/30 text-center">
                                 <p className="text-xs font-bold tech-content">{fmtNum(Number(p.max_amount))}</p>
-                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'الحد الأقصى' : 'Max'}</p>
+                                <p className="text-[7px] text-muted-foreground">{pickBi(isRTL, 'الحد الأقصى', 'Max')}</p>
                               </div>
                             </div>
 
@@ -1322,7 +1319,7 @@ const DashboardInstallments = () => {
                               <div className="flex items-center gap-1.5">
                                 {p.website_url && (
                                   <a href={p.website_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-0.5">
-                                    <Globe className="w-2.5 h-2.5" />{isRTL ? 'الموقع' : 'Website'}
+                                    <Globe className="w-2.5 h-2.5" />{pickBi(isRTL, 'الموقع', 'Website')}
                                   </a>
                                 )}
                                 <span className="text-muted-foreground/50">{fmtDate(p.created_at, language)}</span>

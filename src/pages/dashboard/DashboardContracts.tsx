@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useTransition } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -590,7 +591,7 @@ const DashboardContracts = () => {
     if (!ok) {
       setSelectedVersionId(null);
       if (leadPrefill?.suggested_template_version_id === selectedVersionId) {
-        toast.message(isRTL ? 'القالب المقترح غير متاح، تم استخدام القالب الافتراضي.' : 'Suggested template unavailable; using default.');
+        toast.message(pickBi(isRTL, 'القالب المقترح غير متاح، تم استخدام القالب الافتراضي.', 'Suggested template unavailable; using default.'));
       }
     }
   }, [publishedVersions, selectedVersionId, leadPrefill, isRTL]);
@@ -601,7 +602,7 @@ const DashboardContracts = () => {
       const { error } = await createContractNote({ contract_id: contractId, user_id: user!.id, content, note_type: noteType || 'note' });
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contract-notes'] }); setNoteText(''); toast.success(isRTL ? 'تمت إضافة الملاحظة' : 'Note added'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contract-notes'] }); setNoteText(''); toast.success(pickBi(isRTL, 'تمت إضافة الملاحظة', 'Note added')); },
   });
 
   const addMeasurementMutation = useMutation({
@@ -625,7 +626,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setShowAddMeasurement(null);
       setMeasurementForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
-      toast.success(isRTL ? 'تمت إضافة المقاس وتحديث قيمة العقد' : 'Measurement added & contract updated');
+      toast.success(pickBi(isRTL, 'تمت إضافة المقاس وتحديث قيمة العقد', 'Measurement added & contract updated'));
     },
     onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
@@ -644,7 +645,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-milestones'] });
       setShowAddMilestone(null);
       setMilestoneForm({ title_ar: '', amount: '', due_date: '' });
-      toast.success(isRTL ? 'تمت إضافة المرحلة' : 'Milestone added');
+      toast.success(pickBi(isRTL, 'تمت إضافة المرحلة', 'Milestone added'));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -664,7 +665,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
       setShowAddAmendment(null);
       setAmendmentForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
-      toast.success(isRTL ? 'تم إرسال طلب التعديل' : 'Amendment request sent');
+      toast.success(pickBi(isRTL, 'تم إرسال طلب التعديل', 'Amendment request sent'));
       if (newAmendmentId) dispatchAmendmentEvent(newAmendmentId, 'created');
     },
     onError: (err: Error) => toast.error(err.message),
@@ -677,7 +678,7 @@ const DashboardContracts = () => {
     onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
-      toast.success(isRTL ? 'تمت الموافقة على التعديل' : 'Amendment approved');
+      toast.success(pickBi(isRTL, 'تمت الموافقة على التعديل', 'Amendment approved'));
       if (amId) dispatchAmendmentEvent(amId, 'approved');
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
@@ -715,7 +716,7 @@ const DashboardContracts = () => {
       setShowAddMaintenance(null);
       setMaintenanceForm({ title_ar: '', description_ar: '', priority: 'normal', scheduled_date: '' });
       setMaintenanceImages([]);
-      toast.success(isRTL ? 'تم إرسال طلب الصيانة' : 'Maintenance request submitted');
+      toast.success(pickBi(isRTL, 'تم إرسال طلب الصيانة', 'Maintenance request submitted'));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -747,7 +748,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-payments'] });
       setShowAddPayment(null);
       setPaymentForm({ amount: '', due_date: '', notes: '' });
-      toast.success(isRTL ? 'تمت إضافة الدفعة' : 'Payment added');
+      toast.success(pickBi(isRTL, 'تمت إضافة الدفعة', 'Payment added'));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -760,7 +761,7 @@ const DashboardContracts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-payments'] });
-      toast.success(isRTL ? 'تم تسجيل الدفع' : 'Payment recorded');
+      toast.success(pickBi(isRTL, 'تم تسجيل الدفع', 'Payment recorded'));
     },
   });
 
@@ -783,7 +784,7 @@ const DashboardContracts = () => {
         formula_inputs: fi,
       });
       if (!calc.ok) {
-        throw new Error(isRTL ? 'قيم البند غير صالحة' : 'Invalid line item values');
+        throw new Error(pickBi(isRTL, 'قيم البند غير صالحة', 'Invalid line item values'));
       }
       const { error } = await supabase.from('contract_line_items').insert({
         contract_id: contractId, name_ar: lineItemForm.name_ar,
@@ -809,7 +810,7 @@ const DashboardContracts = () => {
         pricing_method: 'unit', length_mm: '', width_mm: '', height_mm: '', weight_kg: '', weight_ton: '', amount: '',
         boq_group_key: 'other',
       });
-      toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
+      toast.success(pickBi(isRTL, 'تمت إضافة البند وتحديث قيمة العقد', 'Item added & total updated'));
     },
     onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
@@ -825,7 +826,7 @@ const DashboardContracts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
-      toast.success(isRTL ? 'تم حذف البند' : 'Item deleted');
+      toast.success(pickBi(isRTL, 'تم حذف البند', 'Item deleted'));
     },
     onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
@@ -868,7 +869,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       const n = res?.inserted ?? 0;
       if (n === 0) {
-        toast.info(isRTL ? 'تمت إضافة البنود المقترحة' : 'Suggested BOQ items already added');
+        toast.info(pickBi(isRTL, 'تمت إضافة البنود المقترحة', 'Suggested BOQ items already added'));
       } else {
         toast.success(isRTL ? `أُضيفت ${n} بنود مقترحة` : `Added ${n} suggested items`);
       }
@@ -930,7 +931,7 @@ const DashboardContracts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-milestones'] });
-      toast.success(isRTL ? 'تم تحديث المرحلة' : 'Milestone updated');
+      toast.success(pickBi(isRTL, 'تم تحديث المرحلة', 'Milestone updated'));
     },
   });
 
@@ -951,7 +952,7 @@ const DashboardContracts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-attachments'] });
       setUploadingContractId(null);
-      toast.success(isRTL ? 'تم رفع المرفق' : 'Attachment uploaded');
+      toast.success(pickBi(isRTL, 'تم رفع المرفق', 'Attachment uploaded'));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -979,7 +980,7 @@ const DashboardContracts = () => {
           if (vars?.allowMissingClient) {
             // Allow bare draft with no client — caller (import flow) accepts this.
           } else {
-            throw new Error(isRTL ? 'يرجى اختيار العميل أولاً' : 'Please select a client first');
+            throw new Error(pickBi(isRTL, 'يرجى اختيار العميل أولاً', 'Please select a client first'));
           }
         } else {
           const { data: cp, error: cpe } = await getProfileByEmail<{ user_id: string }>({
@@ -1017,7 +1018,7 @@ const DashboardContracts = () => {
         // template snapshot is frozen atomically. Falls back to General v1.
         const versionId = effectiveVersion?.version_id ?? null;
         if (!versionId) {
-          throw new Error(isRTL ? 'لا يوجد قالب عقد منشور' : 'No published contract template available');
+          throw new Error(pickBi(isRTL, 'لا يوجد قالب عقد منشور', 'No published contract template available'));
         }
         const { data, error } = await createContractFromTemplate({
           _payload: payload,
@@ -1050,14 +1051,10 @@ const DashboardContracts = () => {
           const msg = e instanceof Error ? e.message : String(e);
           const already = msg.match(/LEAD_LINK:ALREADY_CONVERTED:([0-9a-f-]+)/i);
           if (already?.[1]) {
-            toast.warning(isRTL
-              ? 'هذا الطلب مرتبط بعقد آخر بالفعل. سيتم فتح العقد الموجود.'
-              : 'This lead is already linked to another contract. Opening the existing contract.');
+            toast.warning(pickBi(isRTL, 'هذا الطلب مرتبط بعقد آخر بالفعل. سيتم فتح العقد الموجود.', 'This lead is already linked to another contract. Opening the existing contract.'));
             navigate(`/contracts/${already[1]}`);
           } else {
-            toast.warning(isRTL
-              ? 'تم حفظ المسودة، لكن تعذر ربطها بطلب الخدمة. يمكنك فتح الطلب لاحقًا.'
-              : 'Draft saved but could not be linked to the service request. You can open the request later.');
+            toast.warning(pickBi(isRTL, 'تم حفظ المسودة، لكن تعذر ربطها بطلب الخدمة. يمكنك فتح الطلب لاحقًا.', 'Draft saved but could not be linked to the service request. You can open the request later.'));
           }
         }
       }
@@ -1070,7 +1067,7 @@ const DashboardContracts = () => {
       setLeadPrefill(null);
       setLeadPrefillDismissed(false);
       setLeadClientConfirmed(false);
-      toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
+      toast.success(editingId ? (pickBi(isRTL, 'تم تحديث العقد', 'Contract updated')) : (pickBi(isRTL, 'تم إنشاء العقد', 'Contract created')));
     },
     onError: (err: Error) => {
       const mapped = mapContractCreateError(err, isRTL);
@@ -1082,7 +1079,7 @@ const DashboardContracts = () => {
   const sendInviteMutation = useMutation({
     mutationFn: async () => {
       const email = inviteForm.email.trim().toLowerCase();
-      if (!email) throw new Error(isRTL ? 'البريد الإلكتروني مطلوب' : 'Email is required');
+      if (!email) throw new Error(pickBi(isRTL, 'البريد الإلكتروني مطلوب', 'Email is required'));
       const draft = serializeDraftPayload({
         form,
         templateVersionId: effectiveVersion?.version_id ?? null,
@@ -1130,13 +1127,13 @@ const DashboardContracts = () => {
     },
     onSuccess: (res) => {
       if (res.alreadyRegistered) {
-        toast.info(isRTL ? 'هذا البريد مسجل بالفعل. يرجى البحث عنه واختياره.' : 'This email is already registered. Please search for the client and select them.');
+        toast.info(pickBi(isRTL, 'هذا البريد مسجل بالفعل. يرجى البحث عنه واختياره.', 'This email is already registered. Please search for the client and select them.'));
         setInviteMode('idle');
         return;
       }
       setPendingInvite(res.invite);
       setInviteMode('awaiting');
-      toast.success(isRTL ? 'تم إرسال الدعوة بنجاح' : 'Invitation sent successfully');
+      toast.success(pickBi(isRTL, 'تم إرسال الدعوة بنجاح', 'Invitation sent successfully'));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -1156,12 +1153,12 @@ const DashboardContracts = () => {
     },
     onSuccess: (res) => {
       setPendingInvite(p => p ? { ...p, reminder_count: res.reminder_count, expires_at: res.expires_at } : p);
-      toast.success(isRTL ? 'تم إرسال التذكير' : 'Reminder sent');
+      toast.success(pickBi(isRTL, 'تم إرسال التذكير', 'Reminder sent'));
     },
     onError: (err: Error) => {
       const msg = String(err.message || '');
-      if (msg.includes('cooldown')) toast.error(isRTL ? 'يرجى الانتظار قبل إعادة الإرسال (60 ثانية)' : 'Please wait before resending (60s cooldown)');
-      else if (msg.includes('reminder_limit')) toast.error(isRTL ? 'تم الوصول للحد الأقصى من التذكيرات' : 'Reminder limit reached');
+      if (msg.includes('cooldown')) toast.error(pickBi(isRTL, 'يرجى الانتظار قبل إعادة الإرسال (60 ثانية)', 'Please wait before resending (60s cooldown)'));
+      else if (msg.includes('reminder_limit')) toast.error(pickBi(isRTL, 'تم الوصول للحد الأقصى من التذكيرات', 'Reminder limit reached'));
       else toast.error(msg);
     },
   });
@@ -1172,7 +1169,7 @@ const DashboardContracts = () => {
       await cancelClientInvitation(pendingInvite.id);
     },
     onSuccess: () => {
-      toast.success(isRTL ? 'تم إلغاء الدعوة' : 'Invitation cancelled');
+      toast.success(pickBi(isRTL, 'تم إلغاء الدعوة', 'Invitation cancelled'));
       setPendingInvite(null);
       setInviteMode('idle');
       setInviteForm({ email: '', name: '', phone: '' });
@@ -1221,7 +1218,7 @@ const DashboardContracts = () => {
       return await completeContractFromInvitation(inviteId);
     },
     onSuccess: (contractId) => {
-      toast.success(isRTL ? 'تم إنشاء العقد من الدعوة' : 'Contract created from invitation');
+      toast.success(pickBi(isRTL, 'تم إنشاء العقد من الدعوة', 'Contract created from invitation'));
       queryClient.invalidateQueries({ queryKey: ['accepted-invitations', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['provider-contracts'] });
       // Reset invite state if this was the active awaiting invite
@@ -1232,10 +1229,10 @@ const DashboardContracts = () => {
     },
     onError: (err: Error) => {
       const msg = String(err.message || '');
-      if (msg.includes('forbidden')) toast.error(isRTL ? 'غير مصرح' : 'Not authorized');
-      else if (msg.includes('invitation_not_accepted')) toast.error(isRTL ? 'الدعوة غير مقبولة بعد' : 'Invitation not yet accepted');
-      else if (msg.includes('draft_payload_missing')) toast.error(isRTL ? 'لا توجد مسودة محفوظة لهذه الدعوة' : 'No saved draft for this invitation');
-      else if (msg.includes('business_ownership_invalid')) toast.error(isRTL ? 'الصلاحية على المنشأة غير صالحة' : 'Business ownership invalid');
+      if (msg.includes('forbidden')) toast.error(pickBi(isRTL, 'غير مصرح', 'Not authorized'));
+      else if (msg.includes('invitation_not_accepted')) toast.error(pickBi(isRTL, 'الدعوة غير مقبولة بعد', 'Invitation not yet accepted'));
+      else if (msg.includes('draft_payload_missing')) toast.error(pickBi(isRTL, 'لا توجد مسودة محفوظة لهذه الدعوة', 'No saved draft for this invitation'));
+      else if (msg.includes('business_ownership_invalid')) toast.error(pickBi(isRTL, 'الصلاحية على المنشأة غير صالحة', 'Business ownership invalid'));
       else toast.error(msg);
     },
   });
@@ -1248,7 +1245,7 @@ const DashboardContracts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setApproveConfirm(null);
-      toast.success(isRTL ? 'تمت الموافقة على العقد' : 'Contract approved');
+      toast.success(pickBi(isRTL, 'تمت الموافقة على العقد', 'Contract approved'));
     },
   });
 
@@ -1267,7 +1264,7 @@ const DashboardContracts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setSendConfirm(null);
-      toast.success(isRTL ? 'تم إرسال العقد للمراجعة' : 'Contract sent for review');
+      toast.success(pickBi(isRTL, 'تم إرسال العقد للمراجعة', 'Contract sent for review'));
     },
   });
 
@@ -1357,13 +1354,13 @@ const DashboardContracts = () => {
 
   const formatDate = useCallback((d: string | null) => {
     if (!d) return '-';
-    return new Date(d).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(d).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US'), { year: 'numeric', month: 'short', day: 'numeric' });
   }, [isRTL]);
 
   /* ── Phase 8 — Filtered CSV export (no PII; aggregate fields only). ── */
   const handleExportCsv = useCallback(() => {
     if (filtered.length === 0) {
-      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      toast.info(pickBi(isRTL, 'لا توجد عقود للتصدير', 'No contracts to export'));
       return;
     }
     const headers = isRTL
@@ -1401,7 +1398,7 @@ const DashboardContracts = () => {
   /* ── Excel (.xlsx) export of filtered contracts list. ── */
   const handleExportXlsx = useCallback(async () => {
     if (filtered.length === 0) {
-      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      toast.info(pickBi(isRTL, 'لا توجد عقود للتصدير', 'No contracts to export'));
       return;
     }
     try {
@@ -1422,18 +1419,18 @@ const DashboardContracts = () => {
       ]);
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, isRTL ? 'العقود' : 'Contracts');
+      XLSX.utils.book_append_sheet(wb, ws, pickBi(isRTL, 'العقود', 'Contracts'));
       XLSX.writeFile(wb, `contracts-${new Date().toISOString().slice(0, 10)}.xlsx`);
       toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
     } catch (err) {
-      toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
+      toast.error(pickBi(isRTL, 'فشل التصدير', 'Export failed'));
     }
   }, [filtered, isRTL]);
 
   /* ── PDF summary of filtered contracts list (uses jspdf-autotable). ── */
   const handleExportListPdf = useCallback(async () => {
     if (filtered.length === 0) {
-      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      toast.info(pickBi(isRTL, 'لا توجد عقود للتصدير', 'No contracts to export'));
       return;
     }
     try {
@@ -1467,7 +1464,7 @@ const DashboardContracts = () => {
       doc.save(`contracts-${new Date().toISOString().slice(0, 10)}.pdf`);
       toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
     } catch (err) {
-      toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
+      toast.error(pickBi(isRTL, 'فشل التصدير', 'Export failed'));
     }
   }, [filtered, isRTL]);
 
@@ -1625,18 +1622,16 @@ const DashboardContracts = () => {
       // PDF-QA2: log the export. Server validates auth & resolves metadata.
       try {
         const { recordContractPdfExport } = await import('@/lib/contract-pdf-history');
-        await recordContractPdfExport(c.id, 'dashboard_contracts', isRTL ? 'ar' : 'en');
+        await recordContractPdfExport(c.id, 'dashboard_contracts', pickBi(isRTL, 'ar', 'en'));
       } catch { /* non-blocking */ }
-      toast.success(isRTL ? 'تم تصدير العقد' : 'Contract exported');
+      toast.success(pickBi(isRTL, 'تم تصدير العقد', 'Contract exported'));
     } catch {
-      toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
+      toast.error(pickBi(isRTL, 'فشل التصدير', 'Export failed'));
     } finally { setIsExporting(false); }
   }, [profiles, allMilestones, isRTL, formatDate]);
 
   const handleDuplicate = useCallback(async (c: ContractWithRole) => {
-    const confirmMsg = isRTL
-      ? 'سيتم إنشاء مسودة جديدة من بيانات هذا العقد بدون نسخ الموافقات أو السجل الرسمي. هل تريد المتابعة؟'
-      : 'A new draft will be created from this contract\'s data, without copying approvals or the official record. Continue?';
+    const confirmMsg = pickBi(isRTL, 'سيتم إنشاء مسودة جديدة من بيانات هذا العقد بدون نسخ الموافقات أو السجل الرسمي. هل تريد المتابعة؟', 'A new draft will be created from this contract\'s data, without copying approvals or the official record. Continue?');
     if (!window.confirm(confirmMsg)) return;
     try {
       const data = await cloneContractAsDraft({
@@ -1647,7 +1642,7 @@ const DashboardContracts = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       queryClient.invalidateQueries({ queryKey: ['provider-contracts'] });
-      toast.success(isRTL ? 'تم إنشاء مسودة جديدة' : 'New draft created');
+      toast.success(pickBi(isRTL, 'تم إنشاء مسودة جديدة', 'New draft created'));
       const result = (data ?? {}) as { contract_id?: string };
       if (result.contract_id) {
         navigate(`/contracts/${result.contract_id}`);
@@ -1664,7 +1659,7 @@ const DashboardContracts = () => {
         'CLONE_CONTRACT:UNAUTHENTICATED': { ar: 'يجب تسجيل الدخول', en: 'You must be signed in' },
       };
       const key = Object.keys(map).find(k => raw.includes(k));
-      const msg = key ? (isRTL ? map[key].ar : map[key].en) : (isRTL ? 'فشل النسخ' : 'Duplication failed');
+      const msg = key ? (isRTL ? map[key].ar : map[key].en) : (pickBi(isRTL, 'فشل النسخ', 'Duplication failed'));
       toast.error(msg);
     }
   }, [queryClient, isRTL, navigate]);
@@ -1677,7 +1672,7 @@ const DashboardContracts = () => {
     }));
     setSelectedTemplate(tmpl);
     setViewSection('create');
-    toast.success(isRTL ? 'تم تطبيق القالب' : 'Template applied');
+    toast.success(pickBi(isRTL, 'تم تطبيق القالب', 'Template applied'));
   }, [isRTL]);
 
   const openEditContract = useCallback((c: ContractWithRole) => {
@@ -1712,7 +1707,7 @@ const DashboardContracts = () => {
       try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
     } else {
       navigator.clipboard.writeText(url);
-      toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+      toast.success(pickBi(isRTL, 'تم نسخ الرابط', 'Link copied'));
     }
   }, [isRTL]);
 
@@ -1743,7 +1738,7 @@ const DashboardContracts = () => {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-accent" />
-                  {isRTL ? 'قوالب العقود الاحترافية' : 'Professional Contract Templates'}
+                  {pickBi(isRTL, 'قوالب العقود الاحترافية', 'Professional Contract Templates')}
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{templates.length}</Badge>
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-2">
@@ -1754,7 +1749,7 @@ const DashboardContracts = () => {
                     onClick={() => { setViewSection('import'); }}
                   >
                     <Upload className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-                    {isRTL ? 'استيراد عقد' : 'Import contract'}
+                    {pickBi(isRTL, 'استيراد عقد', 'Import contract')}
                   </Button>
                   <Button
                     variant="hero"
@@ -1763,14 +1758,12 @@ const DashboardContracts = () => {
                     onClick={() => { closeForm(); setViewSection('create'); }}
                   >
                     <Plus className="w-4 h-4" aria-hidden="true" />
-                    {isRTL ? 'عقد جديد' : 'New Contract'}
+                    {pickBi(isRTL, 'عقد جديد', 'New Contract')}
                   </Button>
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {isRTL
-                  ? 'اختر قالباً جاهزاً، استورد عقداً موجوداً، أو ابدأ من الصفر.'
-                  : 'Pick a ready template, import an existing contract, or start from scratch.'}
+                {pickBi(isRTL, 'اختر قالباً جاهزاً، استورد عقداً موجوداً، أو ابدأ من الصفر.', 'Pick a ready template, import an existing contract, or start from scratch.')}
               </p>
             </CardHeader>
             <CardContent>
@@ -1790,7 +1783,7 @@ const DashboardContracts = () => {
               {templates.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm font-medium">{isRTL ? 'لا توجد قوالب متاحة' : 'No templates available'}</p>
+                  <p className="text-sm font-medium">{pickBi(isRTL, 'لا توجد قوالب متاحة', 'No templates available')}</p>
                 </div>
               )}
             </CardContent>
@@ -1806,22 +1799,22 @@ const DashboardContracts = () => {
                   {(() => { const cfg = templateCategoryConfig[templatePreview.category]; const Icon = cfg?.icon || FileText; return <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cfg?.color || 'bg-muted'}`}><Icon className="w-5 h-5" /></div>; })()}
                   <div>
                     <CardTitle className="text-sm">{isRTL ? templatePreview.name_ar : (templatePreview.name_en || templatePreview.name_ar)}</CardTitle>
-                    <p className="text-[10px] text-muted-foreground">{templateCategoryConfig[templatePreview.category]?.[isRTL ? 'ar' : 'en']}</p>
+                    <p className="text-[10px] text-muted-foreground">{templateCategoryConfig[templatePreview.category]?.[pickBi(isRTL, 'ar', 'en')]}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setViewSection('templates')} className="gap-1 text-xs">
-                  <ArrowRight className={`w-3 h-3 ${isRTL ? '' : 'rotate-180'}`} />{isRTL ? 'رجوع' : 'Back'}
+                  <ArrowRight className={`w-3 h-3 ${pickBi(isRTL, '', 'rotate-180')}`} />{pickBi(isRTL, 'رجوع', 'Back')}
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { key: 'terms', label: isRTL ? 'الشروط والالتزامات' : 'Terms', content: isRTL ? templatePreview.terms_ar : (templatePreview.terms_en || templatePreview.terms_ar) },
-                { key: 'scope', label: isRTL ? 'نطاق العمل' : 'Scope of Work', content: isRTL ? templatePreview.scope_of_work_ar : (templatePreview.scope_of_work_en || templatePreview.scope_of_work_ar) },
-                { key: 'warranty', label: isRTL ? 'شروط الضمان' : 'Warranty', content: isRTL ? templatePreview.warranty_terms_ar : (templatePreview.warranty_terms_en || templatePreview.warranty_terms_ar) },
-                { key: 'payment', label: isRTL ? 'شروط الدفع' : 'Payment', content: isRTL ? templatePreview.payment_terms_ar : (templatePreview.payment_terms_en || templatePreview.payment_terms_ar) },
-                { key: 'penalties', label: isRTL ? 'الغرامات' : 'Penalties', content: isRTL ? templatePreview.penalties_ar : (templatePreview.penalties_en || templatePreview.penalties_ar) },
-                { key: 'notes', label: isRTL ? 'ملاحظات' : 'Notes', content: isRTL ? templatePreview.notes_ar : (templatePreview.notes_en || templatePreview.notes_ar) },
+                { key: 'terms', label: pickBi(isRTL, 'الشروط والالتزامات', 'Terms'), content: isRTL ? templatePreview.terms_ar : (templatePreview.terms_en || templatePreview.terms_ar) },
+                { key: 'scope', label: pickBi(isRTL, 'نطاق العمل', 'Scope of Work'), content: isRTL ? templatePreview.scope_of_work_ar : (templatePreview.scope_of_work_en || templatePreview.scope_of_work_ar) },
+                { key: 'warranty', label: pickBi(isRTL, 'شروط الضمان', 'Warranty'), content: isRTL ? templatePreview.warranty_terms_ar : (templatePreview.warranty_terms_en || templatePreview.warranty_terms_ar) },
+                { key: 'payment', label: pickBi(isRTL, 'شروط الدفع', 'Payment'), content: isRTL ? templatePreview.payment_terms_ar : (templatePreview.payment_terms_en || templatePreview.payment_terms_ar) },
+                { key: 'penalties', label: pickBi(isRTL, 'الغرامات', 'Penalties'), content: isRTL ? templatePreview.penalties_ar : (templatePreview.penalties_en || templatePreview.penalties_ar) },
+                { key: 'notes', label: pickBi(isRTL, 'ملاحظات', 'Notes'), content: isRTL ? templatePreview.notes_ar : (templatePreview.notes_en || templatePreview.notes_ar) },
               ].filter(s => s.content).map(section => (
                 <div key={section.key} className="p-3.5 rounded-xl border border-border/40 bg-muted/20">
                   <h4 className="font-semibold text-xs mb-2 flex items-center gap-1.5"><FileCheck className="w-3.5 h-3.5 text-accent" />{section.label}</h4>
@@ -1829,7 +1822,7 @@ const DashboardContracts = () => {
                 </div>
               ))}
               <Button variant="hero" className="w-full gap-2 h-11 shadow-lg" onClick={() => applyTemplate(templatePreview)}>
-                <Zap className="w-4 h-4" />{isRTL ? 'استخدام القالب وإنشاء عقد' : 'Use Template & Create Contract'}
+                <Zap className="w-4 h-4" />{pickBi(isRTL, 'استخدام القالب وإنشاء عقد', 'Use Template & Create Contract')}
               </Button>
             </CardContent>
           </Card>
@@ -1847,18 +1840,18 @@ const DashboardContracts = () => {
             currentUserId={user?.id ?? null}
             onApplyToForm={({ form: partial, selectedClient: sc, guestClient: gc, selectedProvider: sp }) => {
               if (isAdmin && !sp) {
-                toast.error(isRTL ? 'اختر الطرف الأول (المزوّد) من القائمة' : 'Pick the first party (provider) from the list');
+                toast.error(pickBi(isRTL, 'اختر الطرف الأول (المزوّد) من القائمة', 'Pick the first party (provider) from the list'));
                 return;
               }
               setForm(f => ({ ...f, ...partial }) as ContractForm);
               if (sc) setSelectedClient(sc);
               else if (gc) setGuestClient(gc);
               setViewSection('create');
-              toast.success(isRTL ? 'تم تطبيق البيانات على نموذج العقد' : 'Data applied to contract form');
+              toast.success(pickBi(isRTL, 'تم تطبيق البيانات على نموذج العقد', 'Data applied to contract form'));
             }}
             onSaveDraft={({ form: partial, selectedClient: sc, guestClient: gc, selectedProvider: sp }) => {
               if (isAdmin && !sp) {
-                toast.error(isRTL ? 'اختر الطرف الأول (المزوّد) من القائمة' : 'Pick the first party (provider) from the list');
+                toast.error(pickBi(isRTL, 'اختر الطرف الأول (المزوّد) من القائمة', 'Pick the first party (provider) from the list'));
                 return;
               }
               // Apply to state for continuity if user comes back to the form,
@@ -1883,8 +1876,8 @@ const DashboardContracts = () => {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 {editingId ? <Edit3 className="w-4 h-4 text-accent" /> : <Plus className="w-4 h-4 text-accent" />}
-                {editingId ? (isRTL ? 'تعديل العقد' : 'Edit Contract') : (isRTL ? 'إنشاء عقد جديد' : 'Create New Contract')}
-                {selectedTemplate && <Badge variant="secondary" className="text-[9px] gap-0.5"><Sparkles className="w-2.5 h-2.5" />{isRTL ? 'من قالب' : 'From template'}</Badge>}
+                {editingId ? (pickBi(isRTL, 'تعديل العقد', 'Edit Contract')) : (pickBi(isRTL, 'إنشاء عقد جديد', 'Create New Contract'))}
+                {selectedTemplate && <Badge variant="secondary" className="text-[9px] gap-0.5"><Sparkles className="w-2.5 h-2.5" />{pickBi(isRTL, 'من قالب', 'From template')}</Badge>}
               </CardTitle>
               {!editingId && contracts.length === 0 && (
                 <div className="pt-2"><FirstContractGuidanceCard isRTL={isRTL} /></div>
@@ -1918,7 +1911,7 @@ const DashboardContracts = () => {
                     {leadPrefill.existing_contract_id ? (
                       <>
                         <p className="text-xs font-semibold">
-                          {isRTL ? 'تم إنشاء عقد سابق لهذا الطلب.' : 'A contract already exists for this lead.'}
+                          {pickBi(isRTL, 'تم إنشاء عقد سابق لهذا الطلب.', 'A contract already exists for this lead.')}
                         </p>
                         <Button
                           type="button"
@@ -1928,7 +1921,7 @@ const DashboardContracts = () => {
                           onClick={() => navigate(`/contracts/${leadPrefill.existing_contract_id}`)}
                         >
                           <ExternalLink className="w-3 h-3 me-1" />
-                          {isRTL ? 'فتح العقد الحالي' : 'Open existing contract'}
+                          {pickBi(isRTL, 'فتح العقد الحالي', 'Open existing contract')}
                         </Button>
                       </>
                     ) : (
@@ -1939,12 +1932,12 @@ const DashboardContracts = () => {
                             : `Some fields were suggested from lead #${leadPrefill.lead_ref_id ?? ''}. Review them before saving the draft.`}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {isRTL ? 'لم يتم إنشاء عقد بعد.' : 'No contract has been created yet.'}
+                          {pickBi(isRTL, 'لم يتم إنشاء عقد بعد.', 'No contract has been created yet.')}
                         </p>
                       </>
                     )}
                   </div>
-                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setLeadPrefillDismissed(true)} aria-label={isRTL ? 'إخفاء' : 'Dismiss'}>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setLeadPrefillDismissed(true)} aria-label={pickBi(isRTL, 'إخفاء', 'Dismiss')}>
                     <X className="w-3.5 h-3.5" />
                   </Button>
                 </div>
@@ -1956,7 +1949,7 @@ const DashboardContracts = () => {
                   <Users className="w-4 h-4 text-success shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0 space-y-1">
                     <p className="text-xs font-semibold">
-                      {isRTL ? 'تم العثور على عميل مسجل بهذا البريد.' : 'A registered client matches this email.'}
+                      {pickBi(isRTL, 'تم العثور على عميل مسجل بهذا البريد.', 'A registered client matches this email.')}
                     </p>
                     {leadPrefill.client_profile_match.display_name && (
                       <p className="text-[11px] text-muted-foreground truncate">{leadPrefill.client_profile_match.display_name}</p>
@@ -1980,7 +1973,7 @@ const DashboardContracts = () => {
                       }}
                     >
                       <CircleCheck className="w-3 h-3 me-1" />
-                      {isRTL ? 'استخدام هذا العميل' : 'Use this client'}
+                      {pickBi(isRTL, 'استخدام هذا العميل', 'Use this client')}
                     </Button>
                   </div>
                 </div>
@@ -1989,9 +1982,7 @@ const DashboardContracts = () => {
               {/* Phase 5B.4 — Helper for unknown email (no auto-invite). */}
               {!editingId && leadPrefill && !leadPrefill.existing_contract_id && !leadPrefill.client_profile_match && leadPrefill.customer_email && (
                 <div className="p-2.5 rounded-lg border border-border/40 bg-muted/20 text-[11px] text-muted-foreground">
-                  {isRTL
-                    ? 'يمكنك إرسال دعوة للعميل باستخدام البريد الموجود في الطلب.'
-                    : 'You can invite the client using the email from this lead.'}
+                  {pickBi(isRTL, 'يمكنك إرسال دعوة للعميل باستخدام البريد الموجود في الطلب.', 'You can invite the client using the email from this lead.')}
                 </div>
               )}
 
@@ -2033,35 +2024,33 @@ const DashboardContracts = () => {
                   <div className="flex items-center justify-between gap-2">
                     <Label className="text-xs font-semibold flex items-center gap-1.5">
                       <Send className="w-3.5 h-3.5 text-info" />
-                      {isRTL ? 'إرسال دعوة لعميل جديد' : 'Invite a new client'}
+                      {pickBi(isRTL, 'إرسال دعوة لعميل جديد', 'Invite a new client')}
                     </Label>
                     <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => { setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); }}>
                       <X className="w-3 h-3 me-1" />
-                      {isRTL ? 'إلغاء' : 'Cancel'}
+                      {pickBi(isRTL, 'إلغاء', 'Cancel')}
                     </Button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div className="space-y-1 sm:col-span-1">
-                      <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني' : 'Email'} <span className="text-destructive">*</span></Label>
+                      <Label className="text-[10px]">{pickBi(isRTL, 'البريد الإلكتروني', 'Email')} <span className="text-destructive">*</span></Label>
                       <Input dir="ltr" type="email" className="h-9 text-xs" value={inviteForm.email} onChange={(e) => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder="client@email.com" />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px]">{isRTL ? 'الاسم (اختياري)' : 'Name (optional)'}</Label>
+                      <Label className="text-[10px]">{pickBi(isRTL, 'الاسم (اختياري)', 'Name (optional)')}</Label>
                       <Input className="h-9 text-xs" value={inviteForm.name} onChange={(e) => setInviteForm(f => ({ ...f, name: e.target.value }))} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px]">{isRTL ? 'الجوال (اختياري)' : 'Phone (optional)'}</Label>
+                      <Label className="text-[10px]">{pickBi(isRTL, 'الجوال (اختياري)', 'Phone (optional)')}</Label>
                       <Input dir="ltr" className="h-9 text-xs" value={inviteForm.phone} onChange={(e) => setInviteForm(f => ({ ...f, phone: e.target.value }))} />
                     </div>
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    {isRTL
-                      ? 'سيتم إرسال رابط آمن للعميل لإنشاء حسابه أو تسجيل الدخول. لن يتم إنشاء العقد إلا بعد قبول الدعوة.'
-                      : 'A secure link will be emailed to the client to create their account or sign in. The contract is not created until the invitation is accepted.'}
+                    {pickBi(isRTL, 'سيتم إرسال رابط آمن للعميل لإنشاء حسابه أو تسجيل الدخول. لن يتم إنشاء العقد إلا بعد قبول الدعوة.', 'A secure link will be emailed to the client to create their account or sign in. The contract is not created until the invitation is accepted.')}
                   </p>
                   <Button type="button" variant="hero" size="sm" className="h-9 gap-1.5 text-xs" disabled={!inviteForm.email.trim() || sendInviteMutation.isPending} onClick={() => sendInviteMutation.mutate()}>
                     {sendInviteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    {isRTL ? 'إرسال الدعوة' : 'Send invitation'}
+                    {pickBi(isRTL, 'إرسال الدعوة', 'Send invitation')}
                   </Button>
                 </div>
               )}
@@ -2092,9 +2081,7 @@ const DashboardContracts = () => {
                   <div className="mb-2 p-2.5 rounded-lg border border-warning/40 bg-warning/5 text-[11px] text-foreground/80 flex items-start gap-2">
                     <MapPin className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
                     <span>
-                      {isRTL
-                        ? 'قد يحتوي وصف الطلب على معلومات موقع. يرجى مراجعتها وإضافة موقع التنفيذ يدويًا.'
-                        : 'The lead description may contain location info. Review it and add the execution site manually.'}
+                      {pickBi(isRTL, 'قد يحتوي وصف الطلب على معلومات موقع. يرجى مراجعتها وإضافة موقع التنفيذ يدويًا.', 'The lead description may contain location info. Review it and add the execution site manually.')}
                     </span>
                   </div>
                 )}
@@ -2218,10 +2205,10 @@ const DashboardContracts = () => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
                 const missing: string[] = [];
-                if (!selectedClient && !guestClient && !form.client_email) missing.push(isRTL ? 'العميل' : 'Client');
-                if (!form.title_ar) missing.push(isRTL ? 'عنوان العقد' : 'Title');
-                if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(isRTL ? 'المبلغ' : 'Amount');
-                if (!effectiveVersion) missing.push(isRTL ? 'قالب عقد منشور' : 'Published template');
+                if (!selectedClient && !guestClient && !form.client_email) missing.push(pickBi(isRTL, 'العميل', 'Client'));
+                if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title'));
+                if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
+                if (!effectiveVersion) missing.push(pickBi(isRTL, 'قالب عقد منشور', 'Published template'));
                 const templateLabel = effectiveVersion
                   ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}`
                   : '—';
@@ -2232,7 +2219,7 @@ const DashboardContracts = () => {
                     clientLabel={selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—'}
                     workTypeLabel={w ? (isRTL ? w.ar : w.en) : '—'}
                     templateLabel={templateLabel}
-                    pricingMethodLabel={selectedPricingMethod || (isRTL ? 'افتراضي' : 'Default')}
+                    pricingMethodLabel={selectedPricingMethod || (pickBi(isRTL, 'افتراضي', 'Default'))}
                     amountLabel={form.total_amount ? `${form.total_amount} ${form.currency_code}` : '—'}
                     vatLabel={form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `Inclusive ${form.vat_rate}%`) : (isRTL ? `تُضاف ${form.vat_rate}%` : `Added ${form.vat_rate}%`)}
                     datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')}
@@ -2242,12 +2229,8 @@ const DashboardContracts = () => {
               })()}
               {!editingId && (
                 <div className="text-[10px] text-muted-foreground space-y-1 px-1">
-                  <p>{isRTL
-                    ? 'بعد الإرسال للموافقة، لا يزال العقد غير مفعّل حتى يوافق الطرفان.'
-                    : 'After sending for approval, the contract remains inactive until both parties approve.'}</p>
-                  <p>{isRTL
-                    ? 'بعد تفعيل العقد، التعديلات الرسمية تتم عبر ملحق.'
-                    : 'Once active, formal changes must be made through an amendment.'}</p>
+                  <p>{pickBi(isRTL, 'بعد الإرسال للموافقة، لا يزال العقد غير مفعّل حتى يوافق الطرفان.', 'After sending for approval, the contract remains inactive until both parties approve.')}</p>
+                  <p>{pickBi(isRTL, 'بعد تفعيل العقد، التعديلات الرسمية تتم عبر ملحق.', 'Once active, formal changes must be made through an amendment.')}</p>
                 </div>
               )}
 
@@ -2454,7 +2437,7 @@ const DashboardContracts = () => {
                             {locked && (
                               <div className="flex items-center gap-2.5 p-3 mb-4 rounded-xl bg-warning/80 dark:bg-warning/20 border border-warning/60 dark:border-warning/30">
                                 <Shield className="w-4 h-4 text-warning shrink-0" />
-                                <p className="text-[11px] text-warning dark:text-warning">{isRTL ? 'العقد معتمد — التعديل يتطلب ملحق عقد رسمي وموافقة الطرفين' : 'Contract approved — changes require a formal amendment with both parties\' approval'}</p>
+                                <p className="text-[11px] text-warning dark:text-warning">{pickBi(isRTL, 'العقد معتمد — التعديل يتطلب ملحق عقد رسمي وموافقة الطرفين', 'Contract approved — changes require a formal amendment with both parties\' approval')}</p>
                               </div>
                             )}
 
@@ -2464,15 +2447,15 @@ const DashboardContracts = () => {
                             <Tabs defaultValue="milestones">
                               <TabsList className="w-full justify-start bg-muted/40 rounded-xl p-1 h-auto flex-wrap gap-0.5 mb-4">
                                 {[
-                                  { value: 'milestones', icon: ListChecks, label: isRTL ? 'المراحل' : 'Milestones', count: milestones.length },
-                                  { value: 'payments', icon: CreditCard, label: isRTL ? 'الدفعات' : 'Payments', count: payments.length },
-                                  { value: 'measurements', icon: Ruler, label: isRTL ? 'المقاسات' : 'Sizes', count: measurements.length },
-                                  { value: 'warranty', icon: ShieldCheck, label: isRTL ? 'الضمان' : 'Warranty', count: warranties.length },
-                                  { value: 'maintenance', icon: WrenchIcon, label: isRTL ? 'صيانة' : 'Maint.', count: maintenance.length },
-                                  { value: 'notes', icon: StickyNote, label: isRTL ? 'ملاحظات' : 'Notes', count: notes.length },
-                                  { value: 'attachments', icon: Paperclip, label: isRTL ? 'مرفقات' : 'Files', count: attachments.length },
-                                  { value: 'amendments', icon: FileText, label: isRTL ? 'ملاحق' : 'Amendments', count: amendments.length },
-                                  { value: 'actions', icon: Zap, label: isRTL ? 'إجراءات' : 'Actions' },
+                                  { value: 'milestones', icon: ListChecks, label: pickBi(isRTL, 'المراحل', 'Milestones'), count: milestones.length },
+                                  { value: 'payments', icon: CreditCard, label: pickBi(isRTL, 'الدفعات', 'Payments'), count: payments.length },
+                                  { value: 'measurements', icon: Ruler, label: pickBi(isRTL, 'المقاسات', 'Sizes'), count: measurements.length },
+                                  { value: 'warranty', icon: ShieldCheck, label: pickBi(isRTL, 'الضمان', 'Warranty'), count: warranties.length },
+                                  { value: 'maintenance', icon: WrenchIcon, label: pickBi(isRTL, 'صيانة', 'Maint.'), count: maintenance.length },
+                                  { value: 'notes', icon: StickyNote, label: pickBi(isRTL, 'ملاحظات', 'Notes'), count: notes.length },
+                                  { value: 'attachments', icon: Paperclip, label: pickBi(isRTL, 'مرفقات', 'Files'), count: attachments.length },
+                                  { value: 'amendments', icon: FileText, label: pickBi(isRTL, 'ملاحق', 'Amendments'), count: amendments.length },
+                                  { value: 'actions', icon: Zap, label: pickBi(isRTL, 'إجراءات', 'Actions') },
                                 ].map(tab => (
                                   <TabsTrigger key={tab.value} value={tab.value} className="text-[10px] px-3 py-1.5 gap-1 rounded-lg data-[state=active]:shadow-sm">
                                     <tab.icon className="w-3 h-3" />{tab.label}
@@ -2487,22 +2470,22 @@ const DashboardContracts = () => {
                                   <div className="mb-3">
                                     {showAddMilestone === c.id ? (
                                       <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-3">
-                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة مرحلة جديدة' : 'Add Milestone'}</h4>
+                                        <h4 className="text-xs font-semibold">{pickBi(isRTL, 'إضافة مرحلة جديدة', 'Add Milestone')}</h4>
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                          <Input placeholder={isRTL ? 'اسم المرحلة' : 'Title'} value={milestoneForm.title_ar} onChange={e => setMilestoneForm(f => ({ ...f, title_ar: e.target.value }))} className="h-9 text-xs" />
-                                          <Input type="number" placeholder={isRTL ? 'المبلغ' : 'Amount'} value={milestoneForm.amount} onChange={e => setMilestoneForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input placeholder={pickBi(isRTL, 'اسم المرحلة', 'Title')} value={milestoneForm.title_ar} onChange={e => setMilestoneForm(f => ({ ...f, title_ar: e.target.value }))} className="h-9 text-xs" />
+                                          <Input type="number" placeholder={pickBi(isRTL, 'المبلغ', 'Amount')} value={milestoneForm.amount} onChange={e => setMilestoneForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                           <Input type="date" value={milestoneForm.due_date} onChange={e => setMilestoneForm(f => ({ ...f, due_date: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                         </div>
                                         <div className="flex gap-2">
                                           <Button size="sm" className="h-8 text-xs gap-1" disabled={!milestoneForm.title_ar || !milestoneForm.amount || addMilestoneMutation.isPending} onClick={() => addMilestoneMutation.mutate({ contractId: c.id })}>
-                                            {addMilestoneMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                            {addMilestoneMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{pickBi(isRTL, 'إضافة', 'Add')}
                                           </Button>
-                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddMilestone(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddMilestone(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                                         </div>
                                       </div>
                                     ) : (
                                       <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMilestone(c.id)}>
-                                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة مرحلة' : 'Add Milestone'}
+                                        <Plus className="w-3.5 h-3.5" />{pickBi(isRTL, 'إضافة مرحلة', 'Add Milestone')}
                                       </Button>
                                     )}
                                   </div>
@@ -2528,13 +2511,13 @@ const DashboardContracts = () => {
                                                     <Select value={m.status} onValueChange={v => updateMilestoneMutation.mutate({ id: m.id, status: v })}>
                                                       <SelectTrigger className="h-6 text-[8px] w-20 px-1.5 border-0 bg-transparent"><SelectValue /></SelectTrigger>
                                                       <SelectContent>
-                                                        <SelectItem value="pending" className="text-[10px]">{isRTL ? 'قادم' : 'Pending'}</SelectItem>
-                                                        <SelectItem value="in_progress" className="text-[10px]">{isRTL ? 'جاري' : 'In Progress'}</SelectItem>
-                                                        <SelectItem value="completed" className="text-[10px]">{isRTL ? 'مكتمل' : 'Done'}</SelectItem>
+                                                        <SelectItem value="pending" className="text-[10px]">{pickBi(isRTL, 'قادم', 'Pending')}</SelectItem>
+                                                        <SelectItem value="in_progress" className="text-[10px]">{pickBi(isRTL, 'جاري', 'In Progress')}</SelectItem>
+                                                        <SelectItem value="completed" className="text-[10px]">{pickBi(isRTL, 'مكتمل', 'Done')}</SelectItem>
                                                       </SelectContent>
                                                     </Select>
                                                   )}
-                                                  <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-[8px] shrink-0">{isCompleted ? (isRTL ? 'مكتمل' : 'Done') : isInProgress ? (isRTL ? 'جاري' : 'Progress') : (isRTL ? 'قادم' : 'Pending')}</Badge>
+                                                  <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-[8px] shrink-0">{isCompleted ? (pickBi(isRTL, 'مكتمل', 'Done')) : isInProgress ? (pickBi(isRTL, 'جاري', 'Progress')) : (pickBi(isRTL, 'قادم', 'Pending'))}</Badge>
                                                 </div>
                                               </div>
                                               <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
@@ -2548,7 +2531,7 @@ const DashboardContracts = () => {
                                       })}
                                     </div>
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد مراحل بعد' : 'No milestones yet'}</p>}
+                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{pickBi(isRTL, 'لا توجد مراحل بعد', 'No milestones yet')}</p>}
                               </TabsContent>
 
                               {/* ═══ Payments Tab ═══ */}
@@ -2557,22 +2540,22 @@ const DashboardContracts = () => {
                                   <div className="mb-3">
                                     {showAddPayment === c.id ? (
                                       <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-3">
-                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة دفعة جديدة' : 'Add Payment'}</h4>
+                                        <h4 className="text-xs font-semibold">{pickBi(isRTL, 'إضافة دفعة جديدة', 'Add Payment')}</h4>
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                          <Input type="number" placeholder={isRTL ? 'المبلغ' : 'Amount'} value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                          <Input type="date" placeholder={isRTL ? 'تاريخ الاستحقاق' : 'Due Date'} value={paymentForm.due_date} onChange={e => setPaymentForm(f => ({ ...f, due_date: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                          <Input placeholder={isRTL ? 'ملاحظات' : 'Notes'} value={paymentForm.notes} onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))} className="h-9 text-xs" />
+                                          <Input type="number" placeholder={pickBi(isRTL, 'المبلغ', 'Amount')} value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="date" placeholder={pickBi(isRTL, 'تاريخ الاستحقاق', 'Due Date')} value={paymentForm.due_date} onChange={e => setPaymentForm(f => ({ ...f, due_date: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input placeholder={pickBi(isRTL, 'ملاحظات', 'Notes')} value={paymentForm.notes} onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))} className="h-9 text-xs" />
                                         </div>
                                         <div className="flex gap-2">
                                           <Button size="sm" className="h-8 text-xs gap-1" disabled={!paymentForm.amount || !paymentForm.due_date || addPaymentMutation.isPending} onClick={() => addPaymentMutation.mutate({ contractId: c.id })}>
-                                            {addPaymentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                            {addPaymentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{pickBi(isRTL, 'إضافة', 'Add')}
                                           </Button>
-                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddPayment(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddPayment(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                                         </div>
                                       </div>
                                     ) : (
                                       <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddPayment(c.id)}>
-                                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة دفعة' : 'Add Payment'}
+                                        <Plus className="w-3.5 h-3.5" />{pickBi(isRTL, 'إضافة دفعة', 'Add Payment')}
                                       </Button>
                                     )}
                                   </div>
@@ -2588,8 +2571,8 @@ const DashboardContracts = () => {
                                             </div>
                                             <div>
                                               <p className="text-xs font-semibold">{isRTL ? `الدفعة ${p.installment_number}` : `Payment #${p.installment_number}`}</p>
-                                              <p className="text-[10px] text-muted-foreground">{isRTL ? 'استحقاق:' : 'Due:'} {formatDate(p.due_date)}</p>
-                                              {p.paid_at && <p className="text-[9px] text-success">{isRTL ? 'دفع:' : 'Paid:'} {formatDate(p.paid_at)}</p>}
+                                              <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'استحقاق:', 'Due:')} {formatDate(p.due_date)}</p>
+                                              {p.paid_at && <p className="text-[9px] text-success">{pickBi(isRTL, 'دفع:', 'Paid:')} {formatDate(p.paid_at)}</p>}
                                               {p.notes && <p className="text-[9px] text-muted-foreground mt-0.5">{p.notes}</p>}
                                             </div>
                                           </div>
@@ -2597,11 +2580,11 @@ const DashboardContracts = () => {
                                             <div className="text-end">
                                               <p className="text-sm font-bold">{Number(p.amount).toLocaleString()} {c.currency_code}</p>
                                               <Badge variant={p.status === 'paid' ? 'default' : p.status === 'overdue' ? 'destructive' : 'secondary'} className="text-[8px] mt-0.5">
-                                                {p.status === 'paid' ? (isRTL ? 'مدفوع' : 'Paid') : p.status === 'overdue' ? (isRTL ? 'متأخر' : 'Overdue') : (isRTL ? 'معلق' : 'Pending')}
+                                                {p.status === 'paid' ? (pickBi(isRTL, 'مدفوع', 'Paid')) : p.status === 'overdue' ? (pickBi(isRTL, 'متأخر', 'Overdue')) : (pickBi(isRTL, 'معلق', 'Pending'))}
                                               </Badge>
                                             </div>
                                             {p.status !== 'paid' && isProvider && (
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success/10 dark:hover:bg-success/20 focus-visible:ring-2 focus-visible:ring-success/40" onClick={() => markPaidMutation.mutate({ paymentId: p.id })} aria-label={isRTL ? 'تأكيد السداد' : 'Mark as paid'} title={isRTL ? 'تأكيد السداد' : 'Mark as paid'}>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success/10 dark:hover:bg-success/20 focus-visible:ring-2 focus-visible:ring-success/40" onClick={() => markPaidMutation.mutate({ paymentId: p.id })} aria-label={pickBi(isRTL, 'تأكيد السداد', 'Mark as paid')} title={pickBi(isRTL, 'تأكيد السداد', 'Mark as paid')}>
                                                 <Banknote className="w-4 h-4" aria-hidden="true" />
                                               </Button>
                                             )}
@@ -2612,13 +2595,13 @@ const DashboardContracts = () => {
                                     {/* Payment Summary */}
                                     <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
                                       <div className="flex items-center justify-between mb-1">
-                                        <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
+                                        <span className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'الإجمالي المدفوع', 'Total Paid')}</span>
                                         <span className="text-xs font-bold text-success">{payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
                                       </div>
-                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-success" aria-label={isRTL ? 'نسبة المدفوع من إجمالي العقد' : 'Paid out of contract total'} />
+                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-success" aria-label={pickBi(isRTL, 'نسبة المدفوع من إجمالي العقد', 'Paid out of contract total')} />
                                     </div>
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments yet'}</p>}
+                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{pickBi(isRTL, 'لا توجد دفعات', 'No payments yet')}</p>}
                               </TabsContent>
 
                               {/* ═══ Measurements & Line Items Tab ═══ */}
@@ -2628,45 +2611,45 @@ const DashboardContracts = () => {
                                   <div className="mb-3">
                                     {showAddMeasurement === c.id ? (
                                       <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-3">
-                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة قطعة مقاس' : 'Add Measurement'}</h4>
+                                        <h4 className="text-xs font-semibold">{pickBi(isRTL, 'إضافة قطعة مقاس', 'Add Measurement')}</h4>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                          <Input placeholder={isRTL ? 'اسم القطعة' : 'Piece Name'} value={measurementForm.name_ar} onChange={e => setMeasurementForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
-                                          <Input placeholder={isRTL ? 'رقم القطعة' : 'Piece #'} value={measurementForm.piece_number} onChange={e => setMeasurementForm(f => ({ ...f, piece_number: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input placeholder={pickBi(isRTL, 'اسم القطعة', 'Piece Name')} value={measurementForm.name_ar} onChange={e => setMeasurementForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
+                                          <Input placeholder={pickBi(isRTL, 'رقم القطعة', 'Piece #')} value={measurementForm.piece_number} onChange={e => setMeasurementForm(f => ({ ...f, piece_number: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                           <Select value={measurementForm.floor_label} onValueChange={v => setMeasurementForm(f => ({ ...f, floor_label: v }))}>
                                             <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="ground_floor">{isRTL ? 'أرضي' : 'Ground'}</SelectItem>
-                                              <SelectItem value="first_floor">{isRTL ? 'أول' : '1st'}</SelectItem>
-                                              <SelectItem value="second_floor">{isRTL ? 'ثاني' : '2nd'}</SelectItem>
-                                              <SelectItem value="third_floor">{isRTL ? 'ثالث' : '3rd'}</SelectItem>
-                                              <SelectItem value="roof">{isRTL ? 'سطح' : 'Roof'}</SelectItem>
+                                              <SelectItem value="ground_floor">{pickBi(isRTL, 'أرضي', 'Ground')}</SelectItem>
+                                              <SelectItem value="first_floor">{pickBi(isRTL, 'أول', '1st')}</SelectItem>
+                                              <SelectItem value="second_floor">{pickBi(isRTL, 'ثاني', '2nd')}</SelectItem>
+                                              <SelectItem value="third_floor">{pickBi(isRTL, 'ثالث', '3rd')}</SelectItem>
+                                              <SelectItem value="roof">{pickBi(isRTL, 'سطح', 'Roof')}</SelectItem>
                                             </SelectContent>
                                           </Select>
-                                          <Input placeholder={isRTL ? 'الموقع' : 'Location'} value={measurementForm.location_ar} onChange={e => setMeasurementForm(f => ({ ...f, location_ar: e.target.value }))} className="h-9 text-xs" />
+                                          <Input placeholder={pickBi(isRTL, 'الموقع', 'Location')} value={measurementForm.location_ar} onChange={e => setMeasurementForm(f => ({ ...f, location_ar: e.target.value }))} className="h-9 text-xs" />
                                         </div>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                          <Input type="number" placeholder={isRTL ? 'الطول (مم)' : 'Length mm'} value={measurementForm.length_mm} onChange={e => setMeasurementForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                          <Input type="number" placeholder={isRTL ? 'العرض (مم)' : 'Width mm'} value={measurementForm.width_mm} onChange={e => setMeasurementForm(f => ({ ...f, width_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                          <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={measurementForm.quantity} onChange={e => setMeasurementForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                          <Input type="number" placeholder={isRTL ? 'سعر الوحدة' : 'Unit Price'} value={measurementForm.unit_price} onChange={e => setMeasurementForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="number" placeholder={pickBi(isRTL, 'الطول (مم)', 'Length mm')} value={measurementForm.length_mm} onChange={e => setMeasurementForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="number" placeholder={pickBi(isRTL, 'العرض (مم)', 'Width mm')} value={measurementForm.width_mm} onChange={e => setMeasurementForm(f => ({ ...f, width_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="number" placeholder={pickBi(isRTL, 'الكمية', 'Qty')} value={measurementForm.quantity} onChange={e => setMeasurementForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="number" placeholder={pickBi(isRTL, 'سعر الوحدة', 'Unit Price')} value={measurementForm.unit_price} onChange={e => setMeasurementForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                         </div>
                                         {measurementForm.length_mm && measurementForm.width_mm && measurementForm.unit_price && (
                                           <div className="flex items-center gap-4 text-[11px] p-2.5 bg-muted/40 rounded-lg border border-border/30">
-                                            <span>{isRTL ? 'المساحة:' : 'Area:'} <strong className="text-accent">{((Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000).toFixed(2)} م²</strong></span>
-                                            <span>{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(measurementForm.unit_price) * Number(measurementForm.quantity || 1)).toLocaleString()} {c.currency_code}</strong></span>
+                                            <span>{pickBi(isRTL, 'المساحة:', 'Area:')} <strong className="text-accent">{((Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000).toFixed(2)} م²</strong></span>
+                                            <span>{pickBi(isRTL, 'التكلفة:', 'Cost:')} <strong className="text-accent">{(Number(measurementForm.unit_price) * Number(measurementForm.quantity || 1)).toLocaleString()} {c.currency_code}</strong></span>
                                           </div>
                                         )}
                                         <div className="flex gap-2">
                                           <Button size="sm" className="h-8 text-xs gap-1" disabled={!measurementForm.name_ar || !measurementForm.piece_number || !measurementForm.length_mm || addMeasurementMutation.isPending} onClick={() => addMeasurementMutation.mutate({ contractId: c.id })}>
-                                            {addMeasurementMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                            {addMeasurementMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{pickBi(isRTL, 'إضافة', 'Add')}
                                           </Button>
-                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddMeasurement(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddMeasurement(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                                         </div>
                                       </div>
                                     ) : (
                                       <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'مقاس' : 'Measurement'}</Button>
-                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddLineItem(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'بند إضافي' : 'Line Item'}</Button>
+                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}><Plus className="w-3.5 h-3.5" />{pickBi(isRTL, 'مقاس', 'Measurement')}</Button>
+                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddLineItem(c.id)}><Plus className="w-3.5 h-3.5" />{pickBi(isRTL, 'بند إضافي', 'Line Item')}</Button>
                                         {(() => {
                                           const cv = (c as { template_version_id?: string | null }).template_version_id ?? null;
                                           const cat = cv ? (publishedVersions.find(v => v.version_id === cv)?.category ?? 'general') : 'general';
@@ -2716,14 +2699,14 @@ const DashboardContracts = () => {
                                 {/* Measurements List */}
                                 {measurements.length > 0 && (
                                   <div className="space-y-2">
-                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{isRTL ? 'المقاسات' : 'Measurements'}</h5>
+                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{pickBi(isRTL, 'المقاسات', 'Measurements')}</h5>
                                     {measurements.map((m) => (
                                       <div key={m.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-accent/20 transition-colors">
                                         <div className="flex items-center gap-3 min-w-0">
                                           <Badge variant="outline" className="text-[9px] shrink-0 font-mono px-2 py-0.5">{m.piece_number}</Badge>
                                           <div className="min-w-0">
                                             <p className="text-xs font-medium truncate">{isRTL ? m.name_ar : (m.name_en || m.name_ar)}</p>
-                                            <p className="text-[9px] text-muted-foreground">{m.floor_label} • {isRTL ? m.location_ar : (m.location_en || m.location_ar)} • {isRTL ? 'كمية:' : 'Qty:'} {m.quantity}</p>
+                                            <p className="text-[9px] text-muted-foreground">{m.floor_label} • {isRTL ? m.location_ar : (m.location_en || m.location_ar)} • {pickBi(isRTL, 'كمية:', 'Qty:')} {m.quantity}</p>
                                           </div>
                                         </div>
                                         <div className="text-end shrink-0">
@@ -2739,7 +2722,7 @@ const DashboardContracts = () => {
                                 {lineItems.length > 0 && (
                                   <div className="space-y-2">
                                     {(() => {
-                                      const typeLabels: Record<string, string> = { service: isRTL ? 'خدمة' : 'Service', material: isRTL ? 'مادة' : 'Material', installation: isRTL ? 'تركيب' : 'Install', other: isRTL ? 'أخرى' : 'Other' };
+                                      const typeLabels: Record<string, string> = { service: pickBi(isRTL, 'خدمة', 'Service'), material: pickBi(isRTL, 'مادة', 'Material'), installation: pickBi(isRTL, 'تركيب', 'Install'), other: pickBi(isRTL, 'أخرى', 'Other') };
                                       const groups = groupLineItemsByBoqGroup(lineItems);
                                       const mixed = hasMixedPricing(lineItems);
                                       const methodsUsed = listPricingMethodsUsed(lineItems);
@@ -2747,15 +2730,15 @@ const DashboardContracts = () => {
                                         <>
                                           <div className="flex items-center justify-between flex-wrap gap-2">
                                             <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
-                                              <ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}
+                                              <ClipboardList className="w-3 h-3" />{pickBi(isRTL, 'بنود إضافية', 'Additional Items')}
                                             </h5>
                                             {mixed && (
                                               <div className="flex items-center gap-1.5 flex-wrap">
                                                 <Badge variant="outline" className="text-[9px] border-accent/40 text-accent">
-                                                  {isRTL ? 'تسعير مختلط' : 'Mixed pricing'}
+                                                  {pickBi(isRTL, 'تسعير مختلط', 'Mixed pricing')}
                                                 </Badge>
                                                 <span className="text-[9px] text-muted-foreground">
-                                                  {methodsUsed.map(m => formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')).join(' • ')}
+                                                  {methodsUsed.map(m => formatPricingMethodLabel(m, pickBi(isRTL, 'ar', 'en'))).join(' • ')}
                                                 </span>
                                               </div>
                                             )}
@@ -2777,9 +2760,9 @@ const DashboardContracts = () => {
                                                 if (groupVat.vat <= 0 && groupVat.gross <= 0) return null;
                                                 return (
                                                   <div className="px-2 flex items-center justify-end gap-3 text-[9px] text-muted-foreground">
-                                                    <span>{isRTL ? 'الصافي' : 'Net'}: <span className="font-mono text-foreground/80">{groupVat.net.toLocaleString()}</span></span>
-                                                    <span>{isRTL ? 'الضريبة' : 'VAT'}: <span className="font-mono text-foreground/80">{groupVat.vat.toLocaleString()}</span></span>
-                                                    <span>{isRTL ? 'الإجمالي' : 'Gross'}: <span className="font-mono text-accent">{groupVat.gross.toLocaleString()}</span></span>
+                                                    <span>{pickBi(isRTL, 'الصافي', 'Net')}: <span className="font-mono text-foreground/80">{groupVat.net.toLocaleString()}</span></span>
+                                                    <span>{pickBi(isRTL, 'الضريبة', 'VAT')}: <span className="font-mono text-foreground/80">{groupVat.vat.toLocaleString()}</span></span>
+                                                    <span>{pickBi(isRTL, 'الإجمالي', 'Gross')}: <span className="font-mono text-accent">{groupVat.gross.toLocaleString()}</span></span>
                                                   </div>
                                                 );
                                               })()}
@@ -2795,26 +2778,26 @@ const DashboardContracts = () => {
                                                   <div className="flex items-center gap-2">
                                                     <div className="text-end shrink-0">
                                                       <p className="text-[10px] text-muted-foreground">
-                                                        {li.pricing_method && li.pricing_method !== 'unit' ? `${formatPricingMethodLabel(li.pricing_method, isRTL ? 'ar' : 'en')} • ` : ''}
+                                                        {li.pricing_method && li.pricing_method !== 'unit' ? `${formatPricingMethodLabel(li.pricing_method, pickBi(isRTL, 'ar', 'en'))} • ` : ''}
                                                         {li.quantity} × {Number(li.unit_price).toLocaleString()}
                                                       </p>
                                                       <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
                                                       {(() => {
                                                         const b = lineVatById.get(li.id);
                                                         if (!b) return null;
-                                                        const handlingLabel = formatVatHandlingLabel(b.vatHandling, isRTL ? 'ar' : 'en');
+                                                        const handlingLabel = formatVatHandlingLabel(b.vatHandling, pickBi(isRTL, 'ar', 'en'));
                                                         if (b.vatHandling === 'exempt' || b.vat <= 0) {
                                                           return <p className="text-[9px] text-muted-foreground mt-0.5">{handlingLabel}</p>;
                                                         }
                                                         return (
                                                           <p className="text-[9px] text-muted-foreground mt-0.5 font-mono">
-                                                            {handlingLabel} • {isRTL ? 'صافي' : 'Net'} {b.net.toLocaleString()} • {isRTL ? 'ض' : 'VAT'} {b.vat.toLocaleString()}
+                                                            {handlingLabel} • {pickBi(isRTL, 'صافي', 'Net')} {b.net.toLocaleString()} • {pickBi(isRTL, 'ض', 'VAT')} {b.vat.toLocaleString()}
                                                           </p>
                                                         );
                                                       })()}
                                                     </div>
                                                     {!locked && isProvider && (
-                                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-destructive/40" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })} aria-label={isRTL ? 'حذف البند' : 'Delete line item'} title={isRTL ? 'حذف البند' : 'Delete line item'}>
+                                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-destructive/40" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })} aria-label={pickBi(isRTL, 'حذف البند', 'Delete line item')} title={pickBi(isRTL, 'حذف البند', 'Delete line item')}>
                                                         <X className="w-3 h-3" aria-hidden="true" />
                                                       </Button>
                                                     )}
@@ -2829,7 +2812,7 @@ const DashboardContracts = () => {
                                   </div>
                                 )}
 
-                                {measurements.length === 0 && lineItems.length === 0 && <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد مقاسات أو بنود' : 'No measurements or items'}</p>}
+                                {measurements.length === 0 && lineItems.length === 0 && <p className="text-center py-8 text-muted-foreground text-xs">{pickBi(isRTL, 'لا توجد مقاسات أو بنود', 'No measurements or items')}</p>}
 
                                 {/* Financial Summary with VAT */}
                                 {(measurements.length > 0 || lineItems.length > 0) && (
@@ -2871,20 +2854,20 @@ const DashboardContracts = () => {
                                             <h4 className="text-xs font-semibold flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-success" />{isRTL ? (w.title_ar || 'شهادة الضمان') : (w.title_en || w.title_ar || 'Warranty')}</h4>
                                             {daysLeft !== null && (
                                               <Badge variant={daysLeft > 90 ? 'default' : daysLeft > 0 ? 'secondary' : 'destructive'} className="text-[9px]">
-                                                {daysLeft > 0 ? (isRTL ? `${daysLeft} يوم` : `${daysLeft}d`) : (isRTL ? 'منتهي' : 'Expired')}
+                                                {daysLeft > 0 ? (isRTL ? `${daysLeft} يوم` : `${daysLeft}d`) : (pickBi(isRTL, 'منتهي', 'Expired'))}
                                               </Badge>
                                             )}
                                           </div>
                                           <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                            <div><span className="text-muted-foreground">{isRTL ? 'البداية:' : 'Start:'}</span> {formatDate(w.start_date)}</div>
-                                            <div><span className="text-muted-foreground">{isRTL ? 'النهاية:' : 'End:'}</span> {formatDate(w.end_date)}</div>
+                                            <div><span className="text-muted-foreground">{pickBi(isRTL, 'البداية:', 'Start:')}</span> {formatDate(w.start_date)}</div>
+                                            <div><span className="text-muted-foreground">{pickBi(isRTL, 'النهاية:', 'End:')}</span> {formatDate(w.end_date)}</div>
                                           </div>
                                           {(w as any).coverage_description_ar && <p className="text-[10px] text-muted-foreground mt-2 line-clamp-2">{isRTL ? (w as any).coverage_description_ar : ((w as any).coverage_description_en || (w as any).coverage_description_ar)}</p>}
                                         </div>
                                       );
                                     })}
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا يوجد ضمان' : 'No warranty'}</p>}
+                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{pickBi(isRTL, 'لا يوجد ضمان', 'No warranty')}</p>}
                               </TabsContent>
 
                               {/* ═══ Maintenance Tab ═══ */}
@@ -2908,15 +2891,15 @@ const DashboardContracts = () => {
                                       </div>
                                     ))}
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد طلبات صيانة' : 'No maintenance requests'}</p>}
+                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{pickBi(isRTL, 'لا توجد طلبات صيانة', 'No maintenance requests')}</p>}
                               </TabsContent>
 
                               {/* ═══ Notes Tab ═══ */}
                               <TabsContent value="notes" className="mt-0">
                                 <div className="flex gap-2 mb-3">
-                                  <Input placeholder={isRTL ? 'اكتب ملاحظة...' : 'Write a note...'} value={expandedId === c.id ? noteText : ''} onChange={e => setNoteText(e.target.value)} className="text-xs h-9" />
+                                  <Input placeholder={pickBi(isRTL, 'اكتب ملاحظة...', 'Write a note...')} value={expandedId === c.id ? noteText : ''} onChange={e => setNoteText(e.target.value)} className="text-xs h-9" />
                                   <Button variant="default" size="sm" className="h-9 gap-1.5 text-xs shrink-0" disabled={!noteText.trim() || addNoteMutation.isPending} onClick={() => addNoteMutation.mutate({ contractId: c.id, content: noteText })}>
-                                    {addNoteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}{isRTL ? 'إرسال' : 'Send'}
+                                    {addNoteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}{pickBi(isRTL, 'إرسال', 'Send')}
                                   </Button>
                                 </div>
                                 {notes.length > 0 ? (
@@ -2928,7 +2911,7 @@ const DashboardContracts = () => {
                                             <Avatar className="w-5 h-5">
                                               <AvatarFallback className="text-[7px] bg-accent/10">{(profiles.find((p) => p.user_id === n.user_id)?.full_name || '?').charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                            <span className="text-[10px] font-medium">{n.user_id === user?.id ? (isRTL ? 'أنت' : 'You') : (profiles.find((p) => p.user_id === n.user_id)?.full_name || '-')}</span>
+                                            <span className="text-[10px] font-medium">{n.user_id === user?.id ? (pickBi(isRTL, 'أنت', 'You')) : (profiles.find((p) => p.user_id === n.user_id)?.full_name || '-')}</span>
                                             {n.note_type !== 'note' && <Badge variant="outline" className="text-[7px] px-1 h-3.5">{n.note_type}</Badge>}
                                           </div>
                                           <span className="text-[9px] text-muted-foreground">{formatDate(n.created_at)}</span>
@@ -2937,7 +2920,7 @@ const DashboardContracts = () => {
                                       </div>
                                     ))}
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد ملاحظات' : 'No notes yet'}</p>}
+                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{pickBi(isRTL, 'لا توجد ملاحظات', 'No notes yet')}</p>}
                               </TabsContent>
 
                               {/* ═══ Attachments Tab ═══ */}
@@ -2946,7 +2929,7 @@ const DashboardContracts = () => {
                                   <input type="file" ref={fileInputRef} className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file && uploadingContractId) uploadAttachmentMutation.mutate({ contractId: uploadingContractId, file }); e.target.value = ''; }} />
                                   <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" disabled={uploadAttachmentMutation.isPending} onClick={() => { setUploadingContractId(c.id); fileInputRef.current?.click(); }}>
                                     {uploadAttachmentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                                    {isRTL ? 'رفع مرفق' : 'Upload File'}
+                                    {pickBi(isRTL, 'رفع مرفق', 'Upload File')}
                                   </Button>
                                 </div>
                                 {attachments.length > 0 ? (
@@ -2964,7 +2947,7 @@ const DashboardContracts = () => {
                                       </a>
                                     ))}
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد مرفقات' : 'No attachments'}</p>}
+                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{pickBi(isRTL, 'لا توجد مرفقات', 'No attachments')}</p>}
                               </TabsContent>
 
                               {/* ═══ Amendments Tab ═══ */}
@@ -2973,38 +2956,38 @@ const DashboardContracts = () => {
                                   <div className="mb-3">
                                     {showAddAmendment === c.id ? (
                                       <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 space-y-3">
-                                        <h4 className="text-xs font-semibold">{isRTL ? 'طلب ملحق عقد' : 'Request Amendment'}</h4>
+                                        <h4 className="text-xs font-semibold">{pickBi(isRTL, 'طلب ملحق عقد', 'Request Amendment')}</h4>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                          <Input placeholder={isRTL ? 'عنوان التعديل' : 'Amendment title'} value={amendmentForm.title_ar} onChange={e => setAmendmentForm(f => ({ ...f, title_ar: e.target.value }))} className="h-9 text-xs" />
+                                          <Input placeholder={pickBi(isRTL, 'عنوان التعديل', 'Amendment title')} value={amendmentForm.title_ar} onChange={e => setAmendmentForm(f => ({ ...f, title_ar: e.target.value }))} className="h-9 text-xs" />
                                           <Select value={amendmentForm.amendment_type} onValueChange={v => setAmendmentForm(f => ({ ...f, amendment_type: v }))}>
                                             <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="scope_change">{isRTL ? 'تعديل نطاق العمل' : 'Scope Change'}</SelectItem>
-                                              <SelectItem value="financial">{isRTL ? 'تعديل مالي' : 'Financial'}</SelectItem>
-                                              <SelectItem value="extension">{isRTL ? 'تمديد المدة' : 'Extension'}</SelectItem>
-                                              <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
+                                              <SelectItem value="scope_change">{pickBi(isRTL, 'تعديل نطاق العمل', 'Scope Change')}</SelectItem>
+                                              <SelectItem value="financial">{pickBi(isRTL, 'تعديل مالي', 'Financial')}</SelectItem>
+                                              <SelectItem value="extension">{pickBi(isRTL, 'تمديد المدة', 'Extension')}</SelectItem>
+                                              <SelectItem value="other">{pickBi(isRTL, 'أخرى', 'Other')}</SelectItem>
                                             </SelectContent>
                                           </Select>
                                         </div>
-                                        <Textarea placeholder={isRTL ? 'وصف التعديل المطلوب...' : 'Describe the amendment...'} value={amendmentForm.description_ar} onChange={e => setAmendmentForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} className="text-xs" />
+                                        <Textarea placeholder={pickBi(isRTL, 'وصف التعديل المطلوب...', 'Describe the amendment...')} value={amendmentForm.description_ar} onChange={e => setAmendmentForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} className="text-xs" />
                                         {amendmentForm.amendment_type === 'financial' && (
-                                          <Input type="number" placeholder={isRTL ? 'المبلغ الجديد' : 'New Amount'} value={amendmentForm.new_amount} onChange={e => setAmendmentForm(f => ({ ...f, new_amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="number" placeholder={pickBi(isRTL, 'المبلغ الجديد', 'New Amount')} value={amendmentForm.new_amount} onChange={e => setAmendmentForm(f => ({ ...f, new_amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                         )}
                                         <div className="flex gap-2">
                                           <Button size="sm" className="h-8 text-xs gap-1" disabled={!amendmentForm.title_ar || addAmendmentMutation.isPending} onClick={() => addAmendmentMutation.mutate({ contractId: c.id })}>
-                                            {addAmendmentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}{isRTL ? 'إرسال الطلب' : 'Submit'}
+                                            {addAmendmentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}{pickBi(isRTL, 'إرسال الطلب', 'Submit')}
                                           </Button>
-                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddAmendment(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddAmendment(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                                         </div>
                                       </div>
                                     ) : (
                                       <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddAmendment(c.id)}>
-                                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'طلب ملحق عقد' : 'Request Amendment'}
+                                        <Plus className="w-3.5 h-3.5" />{pickBi(isRTL, 'طلب ملحق عقد', 'Request Amendment')}
                                       </Button>
                                     )}
                                   </div>
                                 )}
-                                {!locked && <p className="text-center py-4 text-muted-foreground text-[11px]">{isRTL ? 'العقد لم يُعتمد بعد — يمكنك تعديله مباشرة' : 'Contract not yet approved — you can edit it directly'}</p>}
+                                {!locked && <p className="text-center py-4 text-muted-foreground text-[11px]">{pickBi(isRTL, 'العقد لم يُعتمد بعد — يمكنك تعديله مباشرة', 'Contract not yet approved — you can edit it directly')}</p>}
                                 {amendments.length > 0 ? (
                                   <div className="space-y-2">
                                     {amendments.map((a) => {
@@ -3012,7 +2995,7 @@ const DashboardContracts = () => {
                                         (user?.id === c.client_id && !a.client_approved_at) ||
                                         (user?.id === c.provider_id && !a.provider_approved_at)
                                       );
-                                      const typeLabels: Record<string, string> = { scope_change: isRTL ? 'نطاق العمل' : 'Scope', financial: isRTL ? 'مالي' : 'Financial', extension: isRTL ? 'تمديد' : 'Extension', other: isRTL ? 'أخرى' : 'Other' };
+                                      const typeLabels: Record<string, string> = { scope_change: pickBi(isRTL, 'نطاق العمل', 'Scope'), financial: pickBi(isRTL, 'مالي', 'Financial'), extension: pickBi(isRTL, 'تمديد', 'Extension'), other: pickBi(isRTL, 'أخرى', 'Other') };
                                       return (
                                         <div key={a.id} className={`p-3.5 rounded-xl border ${a.status === 'approved' ? 'border-success/50 bg-success/20 dark:border-success/20 dark:bg-success/10' : a.status === 'rejected' ? 'border-destructive/50 bg-destructive/20' : 'border-warning/50 bg-warning/20 dark:border-warning/20'}`}>
                                           <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -3020,41 +3003,41 @@ const DashboardContracts = () => {
                                             <div className="flex items-center gap-1 shrink-0">
                                               <Badge variant="outline" className="text-[8px]">{typeLabels[a.amendment_type] || a.amendment_type}</Badge>
                                               <Badge variant={a.status === 'approved' ? 'default' : a.status === 'rejected' ? 'destructive' : 'secondary'} className="text-[8px]">
-                                                {a.status === 'approved' ? (isRTL ? 'معتمد' : 'Approved') : a.status === 'rejected' ? (isRTL ? 'مرفوض' : 'Rejected') : (isRTL ? 'بانتظار' : 'Pending')}
+                                                {a.status === 'approved' ? (pickBi(isRTL, 'معتمد', 'Approved')) : a.status === 'rejected' ? (pickBi(isRTL, 'مرفوض', 'Rejected')) : (pickBi(isRTL, 'بانتظار', 'Pending'))}
                                               </Badge>
                                             </div>
                                           </div>
                                           {a.description_ar && <p className="text-[10px] text-muted-foreground mb-2">{a.description_ar}</p>}
                                           <div className="flex items-center gap-3 text-[9px] text-muted-foreground">
-                                            {a.new_amount && <span className="font-medium">{isRTL ? 'المبلغ الجديد:' : 'New:'} {Number(a.new_amount).toLocaleString()} {c.currency_code}</span>}
-                                            <span>{isRTL ? 'العميل:' : 'Client:'} {a.client_approved_at ? '✅' : '⏳'}</span>
-                                            <span>{isRTL ? 'المزود:' : 'Provider:'} {a.provider_approved_at ? '✅' : '⏳'}</span>
+                                            {a.new_amount && <span className="font-medium">{pickBi(isRTL, 'المبلغ الجديد:', 'New:')} {Number(a.new_amount).toLocaleString()} {c.currency_code}</span>}
+                                            <span>{pickBi(isRTL, 'العميل:', 'Client:')} {a.client_approved_at ? '✅' : '⏳'}</span>
+                                            <span>{pickBi(isRTL, 'المزود:', 'Provider:')} {a.provider_approved_at ? '✅' : '⏳'}</span>
                                             <span>{formatDate(a.created_at)}</span>
                                           </div>
                                           {canApproveAmendment && (
                                             <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 mt-2.5 text-success border-success hover:bg-success" onClick={() => approveAmendmentMutation.mutate({ amendmentId: a.id, contract: c })}>
-                                              <CircleCheck className="w-3.5 h-3.5" />{isRTL ? 'موافقة على الملحق' : 'Approve Amendment'}
+                                              <CircleCheck className="w-3.5 h-3.5" />{pickBi(isRTL, 'موافقة على الملحق', 'Approve Amendment')}
                                             </Button>
                                           )}
                                         </div>
                                       );
                                     })}
                                   </div>
-                                ) : locked && <p className="text-center py-4 text-muted-foreground text-xs">{isRTL ? 'لا توجد ملاحق بعد' : 'No amendments yet'}</p>}
+                                ) : locked && <p className="text-center py-4 text-muted-foreground text-xs">{pickBi(isRTL, 'لا توجد ملاحق بعد', 'No amendments yet')}</p>}
                               </TabsContent>
 
                               {/* ═══ Actions Tab ═══ */}
                               <TabsContent value="actions" className="mt-0">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                                   {[
-                                    { icon: Download, label: isRTL ? 'تصدير PDF' : 'Export PDF', onClick: () => handleExportPDF(c), disabled: isExporting, show: true },
-                                    { icon: Copy, label: isRTL ? 'نسخ العقد' : 'Duplicate', onClick: () => handleDuplicate(c), show: true },
-                                    { icon: Share2, label: isRTL ? 'مشاركة' : 'Share', onClick: () => handleShareContract(c), show: true },
-                                    { icon: Send, label: isRTL ? 'إرسال للمراجعة' : 'Send for Review', onClick: () => setSendConfirm(c), show: c.status === 'draft' && user?.id === c.provider_id, className: 'text-primary border-primary/30' },
-                                    { icon: CircleCheck, label: isRTL ? 'موافقة' : 'Approve', onClick: () => setApproveConfirm(c), show: ((user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at)) && c.status !== 'completed' && c.status !== 'cancelled', className: 'text-success border-success' },
-                                    { icon: Edit3, label: isRTL ? 'تعديل' : 'Edit', onClick: () => openEditContract(c), show: !locked && user?.id === c.provider_id },
-                                    { icon: FileText, label: isRTL ? 'طلب ملحق' : 'Amendment', onClick: () => setShowAddAmendment(c.id), show: locked, className: 'text-warning border-warning' },
-                                    { icon: ExternalLink, label: isRTL ? 'عرض كامل' : 'Full View', onClick: () => navigate(`/contracts/${c.id}`), show: true },
+                                    { icon: Download, label: pickBi(isRTL, 'تصدير PDF', 'Export PDF'), onClick: () => handleExportPDF(c), disabled: isExporting, show: true },
+                                    { icon: Copy, label: pickBi(isRTL, 'نسخ العقد', 'Duplicate'), onClick: () => handleDuplicate(c), show: true },
+                                    { icon: Share2, label: pickBi(isRTL, 'مشاركة', 'Share'), onClick: () => handleShareContract(c), show: true },
+                                    { icon: Send, label: pickBi(isRTL, 'إرسال للمراجعة', 'Send for Review'), onClick: () => setSendConfirm(c), show: c.status === 'draft' && user?.id === c.provider_id, className: 'text-primary border-primary/30' },
+                                    { icon: CircleCheck, label: pickBi(isRTL, 'موافقة', 'Approve'), onClick: () => setApproveConfirm(c), show: ((user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at)) && c.status !== 'completed' && c.status !== 'cancelled', className: 'text-success border-success' },
+                                    { icon: Edit3, label: pickBi(isRTL, 'تعديل', 'Edit'), onClick: () => openEditContract(c), show: !locked && user?.id === c.provider_id },
+                                    { icon: FileText, label: pickBi(isRTL, 'طلب ملحق', 'Amendment'), onClick: () => setShowAddAmendment(c.id), show: locked, className: 'text-warning border-warning' },
+                                    { icon: ExternalLink, label: pickBi(isRTL, 'عرض كامل', 'Full View'), onClick: () => navigate(`/contracts/${c.id}`), show: true },
                                   ].filter(a => a.show).map((action, i) => (
                                     <Button key={i} variant="outline" size="sm" className={`gap-2 text-xs h-10 ${action.className || ''}`} onClick={action.onClick} disabled={action.disabled}>
                                       <action.icon className="w-4 h-4" />{action.label}
@@ -3091,13 +3074,13 @@ const DashboardContracts = () => {
       <AlertDialog open={!!approveConfirm} onOpenChange={() => setApproveConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{isRTL ? 'الموافقة على العقد' : 'Approve Contract'}</AlertDialogTitle>
-            <AlertDialogDescription>{isRTL ? 'هل تريد الموافقة على هذا العقد؟ هذا الإجراء لا يمكن التراجع عنه.' : 'Approve this contract? This action cannot be undone.'}</AlertDialogDescription>
+            <AlertDialogTitle>{pickBi(isRTL, 'الموافقة على العقد', 'Approve Contract')}</AlertDialogTitle>
+            <AlertDialogDescription>{pickBi(isRTL, 'هل تريد الموافقة على هذا العقد؟ هذا الإجراء لا يمكن التراجع عنه.', 'Approve this contract? This action cannot be undone.')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction className="bg-success text-success-foreground hover:bg-success/90" onClick={() => approveConfirm && approveMutation.mutate(approveConfirm)}>
-              <CircleCheck className="w-4 h-4 me-2" />{isRTL ? 'موافقة' : 'Approve'}
+              <CircleCheck className="w-4 h-4 me-2" />{pickBi(isRTL, 'موافقة', 'Approve')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -3107,13 +3090,13 @@ const DashboardContracts = () => {
       <AlertDialog open={!!sendConfirm} onOpenChange={() => setSendConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{isRTL ? 'إرسال العقد للمراجعة' : 'Send for Review'}</AlertDialogTitle>
-            <AlertDialogDescription>{isRTL ? 'سيتم إرسال إشعار للعميل لمراجعة العقد والموافقة عليه.' : 'A notification will be sent to the client to review and approve.'}</AlertDialogDescription>
+            <AlertDialogTitle>{pickBi(isRTL, 'إرسال العقد للمراجعة', 'Send for Review')}</AlertDialogTitle>
+            <AlertDialogDescription>{pickBi(isRTL, 'سيتم إرسال إشعار للعميل لمراجعة العقد والموافقة عليه.', 'A notification will be sent to the client to review and approve.')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}>
-              <Send className="w-4 h-4 me-2" />{isRTL ? 'إرسال' : 'Send'}
+              <Send className="w-4 h-4 me-2" />{pickBi(isRTL, 'إرسال', 'Send')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

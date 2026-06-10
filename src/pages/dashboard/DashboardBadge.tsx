@@ -8,6 +8,7 @@ import {
 } from '@/modules/businesses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,11 +86,11 @@ function relativeTime(iso: string, isRTL: boolean): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   const fmt = (n: number, ar: string, en: string) =>
     isRTL ? `قبل ${Math.floor(n)} ${ar}` : `${Math.floor(n)} ${en} ago`;
-  if (diff < 60) return isRTL ? 'الآن' : 'just now';
+  if (diff < 60) return pickBi(isRTL, 'الآن', 'just now');
   if (diff < 3600) return fmt(diff / 60, 'دقيقة', 'min');
   if (diff < 86400) return fmt(diff / 3600, 'ساعة', 'h');
   if (diff < 604800) return fmt(diff / 86400, 'يوم', 'd');
-  return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
+  return new Date(iso).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US'));
 }
 
 const DashboardBadge: React.FC = () => {
@@ -382,10 +383,10 @@ const DashboardBadge: React.FC = () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
-      toast.success(isRTL ? 'تم النسخ' : 'Copied');
+      toast.success(pickBi(isRTL, 'تم النسخ', 'Copied'));
       setTimeout(() => setCopied(null), 1800);
     } catch {
-      toast.error(isRTL ? 'تعذّر النسخ' : 'Copy failed');
+      toast.error(pickBi(isRTL, 'تعذّر النسخ', 'Copy failed'));
     }
   };
 
@@ -407,7 +408,7 @@ const DashboardBadge: React.FC = () => {
   const downloadPng = async () => {
     const blob = await svgToPngBlob(svgStandalone, 3);
     if (!blob) {
-      toast.error(isRTL ? 'تعذّر إنشاء PNG (قد يكون الشعار من نطاق خارجي)' : 'PNG export failed (logo may be cross-origin)');
+      toast.error(pickBi(isRTL, 'تعذّر إنشاء PNG (قد يكون الشعار من نطاق خارجي)', 'PNG export failed (logo may be cross-origin)'));
       return;
     }
     const url = URL.createObjectURL(blob);
@@ -416,18 +417,18 @@ const DashboardBadge: React.FC = () => {
     a.download = `qitaat-badge-${variant}-${size}.png`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم تنزيل PNG' : 'PNG downloaded');
+    toast.success(pickBi(isRTL, 'تم تنزيل PNG', 'PNG downloaded'));
   };
 
   const handleLogoFile = (file: File | null) => {
     if (!file) return;
     if (file.size > 200 * 1024) {
-      toast.error(isRTL ? 'الحد الأقصى 200KB' : 'Max 200KB');
+      toast.error(pickBi(isRTL, 'الحد الأقصى 200KB', 'Max 200KB'));
       return;
     }
     const reader = new FileReader();
     reader.onload = () => setLogoDataUrl(typeof reader.result === 'string' ? reader.result : '');
-    reader.onerror = () => toast.error(isRTL ? 'تعذّر قراءة الملف' : 'Could not read file');
+    reader.onerror = () => toast.error(pickBi(isRTL, 'تعذّر قراءة الملف', 'Could not read file'));
     reader.readAsDataURL(file);
   };
 
@@ -440,23 +441,21 @@ const DashboardBadge: React.FC = () => {
   // the HTML embed snippet, and the QR code — each instantly copyable.
   const openEmbedPreview = () => {
     if (!business || !html) {
-      toast.error(isRTL ? 'الشارة غير جاهزة بعد' : 'Badge is not ready yet');
+      toast.error(pickBi(isRTL, 'الشارة غير جاهزة بعد', 'Badge is not ready yet'));
       return;
     }
     const title = isRTL ? `معاينة شارة التوثيق · @${business.username}` : `Verification badge preview · @${business.username}`;
-    const tHeading = isRTL ? 'شارة التوثيق — معاينة التضمين' : 'Verification Badge — Embed preview';
-    const tBadge = isRTL ? 'الشارة المرسومة' : 'Rendered badge';
-    const tEmbed = isRTL ? 'كود HTML للتضمين' : 'HTML embed code';
-    const tQr = isRTL ? 'رمز QR (SVG)' : 'QR code (SVG)';
-    const tCopy = isRTL ? 'نسخ' : 'Copy';
-    const tCopied = isRTL ? 'تم النسخ ✓' : 'Copied ✓';
-    const tOpen = isRTL ? 'فتح صفحة المنشأة' : 'Open business page';
-    const tHint = isRTL
-      ? 'الصق الكود في موقعك أو وقّع به بريدك. بدون CSS أو JS خارجي.'
-      : 'Paste the code on your site or email signature. No external CSS/JS.';
+    const tHeading = pickBi(isRTL, 'شارة التوثيق — معاينة التضمين', 'Verification Badge — Embed preview');
+    const tBadge = pickBi(isRTL, 'الشارة المرسومة', 'Rendered badge');
+    const tEmbed = pickBi(isRTL, 'كود HTML للتضمين', 'HTML embed code');
+    const tQr = pickBi(isRTL, 'رمز QR (SVG)', 'QR code (SVG)');
+    const tCopy = pickBi(isRTL, 'نسخ', 'Copy');
+    const tCopied = pickBi(isRTL, 'تم النسخ ✓', 'Copied ✓');
+    const tOpen = pickBi(isRTL, 'فتح صفحة المنشأة', 'Open business page');
+    const tHint = pickBi(isRTL, 'الصق الكود في موقعك أو وقّع به بريدك. بدون CSS أو JS خارجي.', 'Paste the code on your site or email signature. No external CSS/JS.');
     const escAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const escText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const doc = `<!doctype html><html lang="${isRTL ? 'ar' : 'en'}" dir="${isRTL ? 'rtl' : 'ltr'}"><head>
+    const doc = `<!doctype html><html lang="${pickBi(isRTL, 'ar', 'en')}" dir="${pickBi(isRTL, 'rtl', 'ltr')}"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>${escText(title)}</title>
@@ -523,12 +522,12 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
     const url = URL.createObjectURL(blob);
     const win = window.open(url, '_blank', 'noopener');
     if (!win) {
-      toast.error(isRTL ? 'منع المتصفح فتح النافذة' : 'Browser blocked the preview window');
+      toast.error(pickBi(isRTL, 'منع المتصفح فتح النافذة', 'Browser blocked the preview window'));
       URL.revokeObjectURL(url);
       return;
     }
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    toast.success(isRTL ? 'تم فتح معاينة كود التضمين' : 'Embed preview opened');
+    toast.success(pickBi(isRTL, 'تم فتح معاينة كود التضمين', 'Embed preview opened'));
   };
 
   // Today's stats for hero
@@ -551,24 +550,22 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
               <AlertCircle className="w-10 h-10 text-warning mx-auto" />
               <div className="space-y-1">
                 <h2 className="text-base font-semibold">
-                  {isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد' : 'No establishment linked to your account yet'}
+                  {pickBi(isRTL, 'لا توجد منشأة مرتبطة بحسابك بعد', 'No establishment linked to your account yet')}
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  {isRTL
-                    ? 'أنشئ ملف منشأتك لتفعيل شارة التوثيق الرسمية، أو اطلب من مالك المنشأة إضافتك كموظف ثم اختر المنشأة من مُبدّل المنشآت أعلى الصفحة.'
-                    : 'Create your establishment profile to activate the official verification badge, or ask the owner to invite you as staff — then select the establishment from the workspace switcher above.'}
+                  {pickBi(isRTL, 'أنشئ ملف منشأتك لتفعيل شارة التوثيق الرسمية، أو اطلب من مالك المنشأة إضافتك كموظف ثم اختر المنشأة من مُبدّل المنشآت أعلى الصفحة.', 'Create your establishment profile to activate the official verification badge, or ask the owner to invite you as staff — then select the establishment from the workspace switcher above.')}
                 </p>
               </div>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <Button asChild size="sm" className="rounded-xl">
                   <a href="/dashboard/business-edit">
-                    {isRTL ? 'إنشاء ملف المنشأة' : 'Create establishment profile'}
+                    {pickBi(isRTL, 'إنشاء ملف المنشأة', 'Create establishment profile')}
                     <ArrowRight className="w-3.5 h-3.5 ms-1.5 rtl:rotate-180" />
                   </a>
                 </Button>
                 <Button asChild size="sm" variant="outline" className="rounded-xl">
                   <a href="/dashboard/diagnostics">
-                    {isRTL ? 'تشخيص الحساب' : 'Account diagnostics'}
+                    {pickBi(isRTL, 'تشخيص الحساب', 'Account diagnostics')}
                   </a>
                 </Button>
               </div>
@@ -587,11 +584,11 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h1 className="text-xl sm:text-2xl font-heading font-bold truncate">
-                        {isRTL ? 'شارة التوثيق الرسمية' : 'Official Verification Badge'}
+                        {pickBi(isRTL, 'شارة التوثيق الرسمية', 'Official Verification Badge')}
                       </h1>
                       {business.is_verified
                         ? <VerifiedBadge size="sm" />
-                        : <Badge variant="outline" className="text-warning border-warning/40 bg-warning/5">{isRTL ? 'قيد المراجعة' : 'Pending review'}</Badge>}
+                        : <Badge variant="outline" className="text-warning border-warning/40 bg-warning/5">{pickBi(isRTL, 'قيد المراجعة', 'Pending review')}</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground mt-1 truncate">
                       {displayName} · <span className="tech-content" dir="ltr">@{business.username}</span>
@@ -600,8 +597,8 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 </div>
                 <div className="grid grid-cols-3 gap-2 lg:gap-3 shrink-0">
                   {[
-                    { icon: Eye, label: isRTL ? 'انطباعات اليوم' : 'Impr. today', value: today.impressions, tone: 'text-foreground' },
-                    { icon: MousePointerClick, label: isRTL ? 'نقرات اليوم' : 'Clicks today', value: today.clicks, tone: 'text-primary' },
+                    { icon: Eye, label: pickBi(isRTL, 'انطباعات اليوم', 'Impr. today'), value: today.impressions, tone: 'text-foreground' },
+                    { icon: MousePointerClick, label: pickBi(isRTL, 'نقرات اليوم', 'Clicks today'), value: today.clicks, tone: 'text-primary' },
                     { icon: Percent, label: 'CTR', value: `${today.ctr.toFixed(1)}%`, tone: 'text-success' },
                   ].map((s) => (
                     <div key={s.label} className="rounded-xl bg-card/80 backdrop-blur border px-3 py-2 min-w-[88px]">
@@ -629,11 +626,11 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
             {/* Tabs */}
             <Tabs defaultValue="generator" className="w-full">
               <TabsList className="w-full justify-start overflow-x-auto no-scrollbar">
-                <TabsTrigger value="generator" className="gap-1.5"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'المولّد' : 'Generator'}</TabsTrigger>
-                <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'التحليلات' : 'Analytics'}</TabsTrigger>
-                <TabsTrigger value="share" className="gap-1.5"><Share2 className="w-3.5 h-3.5" />{isRTL ? 'المشاركة' : 'Share'}</TabsTrigger>
-                <TabsTrigger value="playbook" className="gap-1.5"><Target className="w-3.5 h-3.5" />{isRTL ? 'الدليل' : 'Playbook'}</TabsTrigger>
-                <TabsTrigger value="diag" className="gap-1.5"><Stethoscope className="w-3.5 h-3.5" />{isRTL ? 'التشخيص' : 'Diagnostics'}</TabsTrigger>
+                <TabsTrigger value="generator" className="gap-1.5"><Sparkles className="w-3.5 h-3.5" />{pickBi(isRTL, 'المولّد', 'Generator')}</TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{pickBi(isRTL, 'التحليلات', 'Analytics')}</TabsTrigger>
+                <TabsTrigger value="share" className="gap-1.5"><Share2 className="w-3.5 h-3.5" />{pickBi(isRTL, 'المشاركة', 'Share')}</TabsTrigger>
+                <TabsTrigger value="playbook" className="gap-1.5"><Target className="w-3.5 h-3.5" />{pickBi(isRTL, 'الدليل', 'Playbook')}</TabsTrigger>
+                <TabsTrigger value="diag" className="gap-1.5"><Stethoscope className="w-3.5 h-3.5" />{pickBi(isRTL, 'التشخيص', 'Diagnostics')}</TabsTrigger>
               </TabsList>
 
               {/* GENERATOR */}
@@ -642,11 +639,11 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                   {/* Customization */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4" />{isRTL ? 'تخصيص الشارة' : 'Customize'}</CardTitle>
+                      <CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4" />{pickBi(isRTL, 'تخصيص الشارة', 'Customize')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-5">
                       <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{isRTL ? 'الأسلوب' : 'Style'}</Label>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{pickBi(isRTL, 'الأسلوب', 'Style')}</Label>
                         <div className="flex flex-wrap gap-2">
                           {VARIANTS.map((v) => (
                             <button key={v.id} type="button" onClick={() => setVariant(v.id)} aria-pressed={variant === v.id} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
@@ -656,7 +653,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                         </div>
                       </div>
                       <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{isRTL ? 'الحجم' : 'Size'}</Label>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{pickBi(isRTL, 'الحجم', 'Size')}</Label>
                         <div className="flex flex-wrap gap-2">
                           {SIZES.map((s) => (
                             <button key={s.id} type="button" onClick={() => setSize(s.id)} aria-pressed={size === s.id} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
@@ -666,7 +663,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                         </div>
                       </div>
                       <div>
-                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{isRTL ? 'اللون' : 'Accent'}</Label>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{pickBi(isRTL, 'اللون', 'Accent')}</Label>
                         <div className="flex flex-wrap gap-2">
                           {ACCENT_SWATCHES.map((a) => (
                             <button key={a.id} type="button" onClick={() => { setAccent(a.id); setCustomAccent(''); }} aria-pressed={accent === a.id && !customAccent} title={isRTL ? a.ar : a.en}
@@ -681,7 +678,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                               value={customAccent || ACCENT_SWATCHES.find(a => a.id === accent)?.hex || '#10b981'}
                               onChange={(e) => setCustomAccent(e.target.value)}
                               className="h-9 w-9 rounded-full border-2 border-border cursor-pointer p-0 bg-transparent"
-                              aria-label={isRTL ? 'لون مخصص' : 'Custom color'}
+                              aria-label={pickBi(isRTL, 'لون مخصص', 'Custom color')}
                             />
                             <Input
                               value={customAccent}
@@ -691,23 +688,23 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                               dir="ltr"
                             />
                             {customAccent && (
-                              <Button type="button" size="sm" variant="ghost" className="h-9 w-9 p-0" onClick={() => setCustomAccent('')} aria-label={isRTL ? 'إزالة اللون المخصص' : 'Clear custom color'}>
+                              <Button type="button" size="sm" variant="ghost" className="h-9 w-9 p-0" onClick={() => setCustomAccent('')} aria-label={pickBi(isRTL, 'إزالة اللون المخصص', 'Clear custom color')}>
                                 <X className="w-3.5 h-3.5" />
                               </Button>
                             )}
                           </div>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-1.5">{isRTL ? 'اختر من اللوحة أو ألصق Hex مخصص (#RRGGBB).' : 'Pick a swatch or paste a custom hex (#RRGGBB).'}</p>
+                        <p className="text-[11px] text-muted-foreground mt-1.5">{pickBi(isRTL, 'اختر من اللوحة أو ألصق Hex مخصص (#RRGGBB).', 'Pick a swatch or paste a custom hex (#RRGGBB).')}</p>
                       </div>
 
                       <div>
                         <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block flex items-center gap-1.5">
-                          <Upload className="w-3 h-3" />{isRTL ? 'شعار المنشأة' : 'Establishment logo'}
+                          <Upload className="w-3 h-3" />{pickBi(isRTL, 'شعار المنشأة', 'Establishment logo')}
                         </Label>
                         <div className="flex items-center gap-3">
                           <label className="inline-flex items-center gap-2 px-3 h-9 rounded-md border border-dashed cursor-pointer hover:bg-muted text-xs">
                             <Upload className="w-3.5 h-3.5" />
-                            {isRTL ? 'رفع شعار (PNG/SVG)' : 'Upload logo (PNG/SVG)'}
+                            {pickBi(isRTL, 'رفع شعار (PNG/SVG)', 'Upload logo (PNG/SVG)')}
                             <input type="file" accept="image/png,image/svg+xml,image/jpeg" className="hidden" onChange={(e) => handleLogoFile(e.target.files?.[0] ?? null)} />
                           </label>
                           {logoDataUrl && (
@@ -715,18 +712,18 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                               <span className="inline-flex h-9 w-9 rounded-full overflow-hidden border bg-card">
                                 <img src={logoDataUrl} alt="logo preview" className="h-full w-full object-cover" loading="lazy" decoding="async"/>
                               </span>
-                              <Button type="button" size="sm" variant="ghost" className="h-9 w-9 p-0" onClick={() => setLogoDataUrl('')} aria-label={isRTL ? 'إزالة الشعار' : 'Remove logo'}>
+                              <Button type="button" size="sm" variant="ghost" className="h-9 w-9 p-0" onClick={() => setLogoDataUrl('')} aria-label={pickBi(isRTL, 'إزالة الشعار', 'Remove logo')}>
                                 <X className="w-3.5 h-3.5" />
                               </Button>
                             </>
                           )}
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-1.5">{isRTL ? 'يُستبدل أيقونة الدرع. الحد الأقصى 200KB، يُقصّ دائريًا.' : 'Replaces the shield icon. Max 200KB, cropped to a circle.'}</p>
+                        <p className="text-[11px] text-muted-foreground mt-1.5">{pickBi(isRTL, 'يُستبدل أيقونة الدرع. الحد الأقصى 200KB، يُقصّ دائريًا.', 'Replaces the shield icon. Max 200KB, cropped to a circle.')}</p>
                       </div>
 
                       <div>
                         <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block flex items-center gap-1.5">
-                          <TypeIcon className="w-3 h-3" />{isRTL ? 'خط الاسم' : 'Name font'}
+                          <TypeIcon className="w-3 h-3" />{pickBi(isRTL, 'خط الاسم', 'Name font')}
                         </Label>
                         <div className="flex flex-wrap gap-1.5">
                           {FONT_PRESETS.map((f) => (
@@ -741,18 +738,18 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                       <div className="grid sm:grid-cols-2 gap-3">
                         <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
                           <div className="text-sm">
-                            <div className="font-medium">{isRTL ? 'إظهار العنوان الفرعي' : 'Show sub-label'}</div>
-                            <div className="text-xs text-muted-foreground">{isRTL ? 'اسم المنشأة أسفل العنوان' : 'Establishment name below the title'}</div>
+                            <div className="font-medium">{pickBi(isRTL, 'إظهار العنوان الفرعي', 'Show sub-label')}</div>
+                            <div className="text-xs text-muted-foreground">{pickBi(isRTL, 'اسم المنشأة أسفل العنوان', 'Establishment name below the title')}</div>
                           </div>
                           <Switch checked={showSubLabel} onCheckedChange={setShowSubLabel} />
                         </div>
                         <div className="rounded-lg border p-3">
-                          <div className="text-sm font-medium mb-2">{isRTL ? 'لغة الشارة' : 'Badge language'}</div>
+                          <div className="text-sm font-medium mb-2">{pickBi(isRTL, 'لغة الشارة', 'Badge language')}</div>
                           <div className="flex gap-1">
                             {(['auto', 'ar', 'en'] as const).map((l) => (
                               <button key={l} type="button" onClick={() => setForceLang(l)} aria-pressed={forceLang === l}
                                 className={`flex-1 text-xs py-1.5 rounded-md border transition-colors ${forceLang === l ? 'bg-primary text-primary-foreground border-primary' : 'bg-card hover:bg-muted'}`}>
-                                {l === 'auto' ? (isRTL ? 'تلقائي' : 'Auto') : l.toUpperCase()}
+                                {l === 'auto' ? (pickBi(isRTL, 'تلقائي', 'Auto')) : l.toUpperCase()}
                               </button>
                             ))}
                           </div>
@@ -764,12 +761,12 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                   {/* Live preview on dual canvases */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2"><Eye className="w-4 h-4" />{isRTL ? 'معاينة مباشرة' : 'Live preview'}</CardTitle>
+                      <CardTitle className="text-base flex items-center gap-2"><Eye className="w-4 h-4" />{pickBi(isRTL, 'معاينة مباشرة', 'Live preview')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="rounded-xl border bg-white p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: html }} />
                       <div className="rounded-xl border bg-slate-900 p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: html }} />
-                      <p className="text-[11px] text-muted-foreground text-center">{isRTL ? 'معاينة على خلفية فاتحة وداكنة' : 'Preview on light + dark backgrounds'}</p>
+                      <p className="text-[11px] text-muted-foreground text-center">{pickBi(isRTL, 'معاينة على خلفية فاتحة وداكنة', 'Preview on light + dark backgrounds')}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -777,11 +774,11 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 {/* Snippets */}
                 <Card>
                   <CardHeader className="flex-row items-center justify-between gap-2">
-                    <CardTitle className="text-base flex items-center gap-2"><Code2 className="w-4 h-4" />{isRTL ? 'كود الإلصاق' : 'Embed code'}</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2"><Code2 className="w-4 h-4" />{pickBi(isRTL, 'كود الإلصاق', 'Embed code')}</CardTitle>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={openEmbedPreview} className="gap-2">
                         <ExternalLink className="w-4 h-4" />
-                        {isRTL ? 'معاينة الكود' : 'Preview embed'}
+                        {pickBi(isRTL, 'معاينة الكود', 'Preview embed')}
                       </Button>
                       <Button size="sm" onClick={() => copy(currentSnippet, snippetKind)} className="gap-2">
                         {copied === snippetKind ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -794,7 +791,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                       {(['html', 'md', 'jsx', 'iframe', 'email', 'link', 'svg'] as SnippetKind[]).map((k) => (
                         <button key={k} type="button" onClick={() => setSnippetKind(k)} aria-pressed={snippetKind === k}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors ${snippetKind === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card hover:bg-muted border-border'}`}>
-                          {k === 'md' ? 'Markdown' : k === 'jsx' ? 'React/JSX' : k === 'email' ? (isRTL ? 'توقيع بريد' : 'Email sig') : k === 'link' ? (isRTL ? 'رابط' : 'Link') : k.toUpperCase()}
+                          {k === 'md' ? 'Markdown' : k === 'jsx' ? 'React/JSX' : k === 'email' ? (pickBi(isRTL, 'توقيع بريد', 'Email sig')) : k === 'link' ? (pickBi(isRTL, 'رابط', 'Link')) : k.toUpperCase()}
                         </button>
                       ))}
                     </div>
@@ -803,13 +800,13 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                       onClick={(e) => (e.currentTarget as HTMLTextAreaElement).select()} />
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" className="gap-2" onClick={downloadSvg}>
-                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تنزيل SVG' : 'Download SVG'}
+                        <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'تنزيل SVG', 'Download SVG')}
                       </Button>
                       <Button size="sm" variant="outline" className="gap-2" onClick={downloadPng}>
-                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تنزيل PNG' : 'Download PNG'}
+                        <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'تنزيل PNG', 'Download PNG')}
                       </Button>
                       <p className="text-xs text-muted-foreground self-center">
-                        {isRTL ? 'بدون CSS أو JS خارجي. كل الأكواد تتضمن تتبع تلقائي.' : 'No external CSS/JS. All snippets include attribution tracking.'}
+                        {pickBi(isRTL, 'بدون CSS أو JS خارجي. كل الأكواد تتضمن تتبع تلقائي.', 'No external CSS/JS. All snippets include attribution tracking.')}
                       </p>
                     </div>
                   </CardContent>
@@ -821,10 +818,10 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 {/* KPI grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
-                    { icon: Eye, label: isRTL ? 'انطباعات (30 يوم)' : 'Impressions (30d)', value: periodStats.last30.impressions, delta: periodStats.delta30.impressions, tone: 'text-foreground' },
-                    { icon: MousePointerClick, label: isRTL ? 'نقرات (30 يوم)' : 'Clicks (30d)', value: periodStats.last30.clicks, delta: periodStats.delta30.clicks, tone: 'text-primary' },
+                    { icon: Eye, label: pickBi(isRTL, 'انطباعات (30 يوم)', 'Impressions (30d)'), value: periodStats.last30.impressions, delta: periodStats.delta30.impressions, tone: 'text-foreground' },
+                    { icon: MousePointerClick, label: pickBi(isRTL, 'نقرات (30 يوم)', 'Clicks (30d)'), value: periodStats.last30.clicks, delta: periodStats.delta30.clicks, tone: 'text-primary' },
                     { icon: Percent, label: 'CTR (30d)', value: `${periodStats.last30.ctr.toFixed(1)}%`, delta: periodStats.delta30.ctr, tone: 'text-success' },
-                    { icon: CalendarClock, label: isRTL ? 'حجوزات' : 'Bookings', value: funnel.bookings, delta: 0, tone: 'text-success' },
+                    { icon: CalendarClock, label: pickBi(isRTL, 'حجوزات', 'Bookings'), value: funnel.bookings, delta: 0, tone: 'text-success' },
                   ].map((k) => (
                     <Card key={k.label} className="hover-lift">
                       <CardContent className="p-4">
@@ -834,7 +831,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           <div className={`mt-1 inline-flex items-center gap-1 text-[11px] font-semibold ${k.delta >= 0 ? 'text-success' : 'text-destructive'}`}>
                             {k.delta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                             {k.delta >= 0 ? '+' : ''}{k.delta.toFixed(0)}%
-                            <span className="text-muted-foreground font-normal">{isRTL ? 'مقابل السابق' : 'vs prev'}</span>
+                            <span className="text-muted-foreground font-normal">{pickBi(isRTL, 'مقابل السابق', 'vs prev')}</span>
                           </div>
                         )}
                       </CardContent>
@@ -845,7 +842,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 {/* Chart */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2"><Activity className="w-4 h-4" />{isRTL ? 'آخر 30 يومًا' : 'Last 30 days'}</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2"><Activity className="w-4 h-4" />{pickBi(isRTL, 'آخر 30 يومًا', 'Last 30 days')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="h-64 w-full">
@@ -865,8 +862,8 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} interval={4} />
                           <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={28} allowDecimals={false} />
                           <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-                          <Area type="monotone" dataKey="impressions" stroke="hsl(var(--success))" fill="url(#impGrad)" strokeWidth={2} name={isRTL ? 'انطباعات' : 'Impressions'} />
-                          <Area type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" fill="url(#clkGrad)" strokeWidth={2} name={isRTL ? 'نقرات' : 'Clicks'} />
+                          <Area type="monotone" dataKey="impressions" stroke="hsl(var(--success))" fill="url(#impGrad)" strokeWidth={2} name={pickBi(isRTL, 'انطباعات', 'Impressions')} />
+                          <Area type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" fill="url(#clkGrad)" strokeWidth={2} name={pickBi(isRTL, 'نقرات', 'Clicks')} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -876,15 +873,15 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 {/* Funnel */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">{isRTL ? 'مسار التحويل من الشارة' : 'Conversion funnel'}</CardTitle>
+                    <CardTitle className="text-base">{pickBi(isRTL, 'مسار التحويل من الشارة', 'Conversion funnel')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[
-                        { icon: MousePointerClick, label: isRTL ? 'نقرات' : 'Clicks', value: clicks.length },
-                        { icon: Eye, label: isRTL ? 'زيارات الملف' : 'Profile views', value: funnel.profileViews },
-                        { icon: MessageSquare, label: isRTL ? 'تواصل' : 'Contacts', value: funnel.anyContact },
-                        { icon: CalendarClock, label: isRTL ? 'حجوزات' : 'Bookings', value: funnel.bookings },
+                        { icon: MousePointerClick, label: pickBi(isRTL, 'نقرات', 'Clicks'), value: clicks.length },
+                        { icon: Eye, label: pickBi(isRTL, 'زيارات الملف', 'Profile views'), value: funnel.profileViews },
+                        { icon: MessageSquare, label: pickBi(isRTL, 'تواصل', 'Contacts'), value: funnel.anyContact },
+                        { icon: CalendarClock, label: pickBi(isRTL, 'حجوزات', 'Bookings'), value: funnel.bookings },
                       ].map((s, i, arr) => (
                         <div key={s.label} className="relative rounded-xl border bg-card p-3">
                           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
@@ -892,18 +889,18 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           </div>
                           <div className="mt-1 text-2xl font-heading font-bold tech-content">{s.value}</div>
                           {i < arr.length - 1 && (
-                            <ArrowRight className={`hidden sm:block absolute top-1/2 -translate-y-1/2 ${isRTL ? '-start-3 rotate-180' : '-end-3'} w-4 h-4 text-muted-foreground/40`} />
+                            <ArrowRight className={`hidden sm:block absolute top-1/2 -translate-y-1/2 ${pickBi(isRTL, '-start-3 rotate-180', '-end-3')} w-4 h-4 text-muted-foreground/40`} />
                           )}
                         </div>
                       ))}
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                       <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
-                        <span className="text-muted-foreground">{isRTL ? 'تواصل ÷ نقرات' : 'Contact rate'}</span>
+                        <span className="text-muted-foreground">{pickBi(isRTL, 'تواصل ÷ نقرات', 'Contact rate')}</span>
                         <span className="font-heading font-bold text-primary tech-content">{funnel.contactRate.toFixed(1)}%</span>
                       </div>
                       <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
-                        <span className="text-muted-foreground">{isRTL ? 'حجز ÷ نقرات' : 'Booking rate'}</span>
+                        <span className="text-muted-foreground">{pickBi(isRTL, 'حجز ÷ نقرات', 'Booking rate')}</span>
                         <span className="font-heading font-bold text-success tech-content">{funnel.bookingRate.toFixed(1)}%</span>
                       </div>
                     </div>
@@ -919,10 +916,10 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 {/* Referrers + Source pages */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card>
-                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" />{isRTL ? 'أهم المواقع المُحيلة' : 'Top referrers'}</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" />{pickBi(isRTL, 'أهم المواقع المُحيلة', 'Top referrers')}</CardTitle></CardHeader>
                     <CardContent>
                       {referrerStats.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد نقرات بعد.' : 'No clicks yet.'}</p>
+                        <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'لا توجد نقرات بعد.', 'No clicks yet.')}</p>
                       ) : (
                         <ul className="divide-y rounded-xl border bg-card">
                           {referrerStats.map(([host, count]) => (
@@ -936,10 +933,10 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4" />{isRTL ? 'الصفحات المصدر' : 'Top source pages'}</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4" />{pickBi(isRTL, 'الصفحات المصدر', 'Top source pages')}</CardTitle></CardHeader>
                     <CardContent>
                       {sourcePageStats.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد بيانات بعد.' : 'No data yet.'}</p>
+                        <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'لا توجد بيانات بعد.', 'No data yet.')}</p>
                       ) : (
                         <ul className="divide-y rounded-xl border bg-card">
                           {sourcePageStats.map(([page, count]) => (
@@ -957,19 +954,19 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 {/* Recent activity + CSV */}
                 <Card>
                   <CardHeader className="flex-row items-center justify-between gap-2">
-                    <CardTitle className="text-base flex items-center gap-2"><Activity className="w-4 h-4" />{isRTL ? 'النشاط الأخير' : 'Recent activity'}</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2"><Activity className="w-4 h-4" />{pickBi(isRTL, 'النشاط الأخير', 'Recent activity')}</CardTitle>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" className="gap-1.5" onClick={() => exportRowsToCsv(clicks, `badge-clicks-${business.username}.csv`)} disabled={!clicks.length}>
-                        <Download className="w-3.5 h-3.5" />{isRTL ? 'نقرات CSV' : 'Clicks CSV'}
+                        <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'نقرات CSV', 'Clicks CSV')}
                       </Button>
                       <Button size="sm" variant="outline" className="gap-1.5" onClick={() => exportRowsToCsv(conversions, `badge-conversions-${business.username}.csv`)} disabled={!conversions.length}>
-                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تحويلات CSV' : 'Conv. CSV'}
+                        <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'تحويلات CSV', 'Conv. CSV')}
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
                     {recentActivity.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">{isRTL ? 'لا يوجد نشاط بعد.' : 'No activity yet.'}</p>
+                      <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'لا يوجد نشاط بعد.', 'No activity yet.')}</p>
                     ) : (
                       <ul className="divide-y rounded-xl border">
                         {recentActivity.map((e) => {
@@ -994,24 +991,24 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
               <TabsContent value="share" className="space-y-4 mt-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card>
-                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><QrCode className="w-4 h-4" />{isRTL ? 'رمز QR' : 'QR code'}</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><QrCode className="w-4 h-4" />{pickBi(isRTL, 'رمز QR', 'QR code')}</CardTitle></CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex justify-center rounded-xl border bg-white p-4 min-h-[220px] items-center" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-                      <p className="text-xs text-muted-foreground text-center">{isRTL ? 'اطبعه على البطاقات والمنشورات' : 'Print on cards and flyers'}</p>
+                      <p className="text-xs text-muted-foreground text-center">{pickBi(isRTL, 'اطبعه على البطاقات والمنشورات', 'Print on cards and flyers')}</p>
                       <Button size="sm" variant="outline" className="w-full gap-2" onClick={() => downloadQrPng(profileLink, `qitaat-qr-${business.username}.png`)}>
-                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تنزيل PNG' : 'Download PNG'}
+                        <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'تنزيل PNG', 'Download PNG')}
                       </Button>
                     </CardContent>
                   </Card>
 
                   <Card>
-                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Share2 className="w-4 h-4" />{isRTL ? 'مشاركة سريعة' : 'Quick share'}</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Share2 className="w-4 h-4" />{pickBi(isRTL, 'مشاركة سريعة', 'Quick share')}</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
                       {[
                         { label: 'WhatsApp', href: `https://wa.me/?text=${shareText}%20${shareUrl}`, color: 'bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20' },
                         { label: 'X / Twitter', href: `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, color: 'bg-foreground/5 hover:bg-foreground/10' },
                         { label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`, color: 'bg-[#0077B5]/10 text-[#0077B5] hover:bg-[#0077B5]/20' },
-                        { label: isRTL ? 'البريد الإلكتروني' : 'Email', href: `mailto:?subject=${shareText}&body=${shareUrl}`, color: 'bg-muted hover:bg-muted/70' },
+                        { label: pickBi(isRTL, 'البريد الإلكتروني', 'Email'), href: `mailto:?subject=${shareText}&body=${shareUrl}`, color: 'bg-muted hover:bg-muted/70' },
                       ].map((s) => (
                         <a key={s.label} href={s.href} target="_blank" rel="noopener" className={`flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors ${s.color}`}>
                           <span>{s.label}</span>
@@ -1024,10 +1021,10 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
 
                 <Card>
                   <CardHeader className="flex-row items-center justify-between gap-2">
-                    <CardTitle className="text-base flex items-center gap-2"><Mail className="w-4 h-4" />{isRTL ? 'توقيع البريد الإلكتروني' : 'Email signature'}</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2"><Mail className="w-4 h-4" />{pickBi(isRTL, 'توقيع البريد الإلكتروني', 'Email signature')}</CardTitle>
                     <Button size="sm" onClick={() => copy(emailSig, 'email-sig')} className="gap-2">
                       {copied === 'email-sig' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {isRTL ? 'نسخ' : 'Copy'}
+                      {pickBi(isRTL, 'نسخ', 'Copy')}
                     </Button>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -1044,12 +1041,12 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                     <CardContent className="p-4 flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                       <div className="text-sm flex-1">
-                        <p className="font-semibold">{isRTL ? 'وثّق منشأتك أولاً' : 'Verify your establishment first'}</p>
+                        <p className="font-semibold">{pickBi(isRTL, 'وثّق منشأتك أولاً', 'Verify your establishment first')}</p>
                         <p className="text-muted-foreground mt-1">
-                          {isRTL ? 'لا تنشر شارة التوثيق قبل اعتماد منشأتك من فريق قِطاعات؛ هذا يحمي مصداقيتك ويمنع تضليل العملاء.' : 'Do not publish the badge until your establishment is approved by the Qitaat team — this protects your credibility and prevents misleading customers.'}
+                          {pickBi(isRTL, 'لا تنشر شارة التوثيق قبل اعتماد منشأتك من فريق قِطاعات؛ هذا يحمي مصداقيتك ويمنع تضليل العملاء.', 'Do not publish the badge until your establishment is approved by the Qitaat team — this protects your credibility and prevents misleading customers.')}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" asChild><a href="/dashboard/business-edit">{isRTL ? 'ابدأ التوثيق' : 'Start verification'}</a></Button>
+                      <Button size="sm" variant="outline" asChild><a href="/dashboard/business-edit">{pickBi(isRTL, 'ابدأ التوثيق', 'Start verification')}</a></Button>
                     </CardContent>
                   </Card>
                 )}
@@ -1057,13 +1054,13 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 {/* Goals */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2"><Target className="w-4 h-4" />{isRTL ? 'أهداف الشهر' : 'Monthly goals'}</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2"><Target className="w-4 h-4" />{pickBi(isRTL, 'أهداف الشهر', 'Monthly goals')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <Label className="text-xs">{isRTL ? 'هدف الانطباعات (30 يوم)' : 'Impression goal (30d)'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'هدف الانطباعات (30 يوم)', 'Impression goal (30d)')}</Label>
                           <Input type="number" value={goalImpr} onChange={(e) => setGoalImpr(Math.max(0, Number(e.target.value) || 0))} className="h-8 w-24 text-end tech-content" />
                         </div>
                         <Progress value={Math.min(100, (periodStats.last30.impressions / Math.max(goalImpr, 1)) * 100)} className="h-2" />
@@ -1074,7 +1071,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <Label className="text-xs">{isRTL ? 'هدف النقرات (30 يوم)' : 'Click goal (30d)'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'هدف النقرات (30 يوم)', 'Click goal (30d)')}</Label>
                           <Input type="number" value={goalClicks} onChange={(e) => setGoalClicks(Math.max(0, Number(e.target.value) || 0))} className="h-8 w-24 text-end tech-content" />
                         </div>
                         <Progress value={Math.min(100, (periodStats.last30.clicks / Math.max(goalClicks, 1)) * 100)} className="h-2" />
@@ -1089,7 +1086,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
 
                 {/* Tips */}
                 <Card>
-                  <CardHeader><CardTitle className="text-base">{isRTL ? 'أين تعرض الشارة لأقصى أثر؟' : 'Where to display for maximum impact'}</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-base">{pickBi(isRTL, 'أين تعرض الشارة لأقصى أثر؟', 'Where to display for maximum impact')}</CardTitle></CardHeader>
                   <CardContent>
                     <ul className="grid sm:grid-cols-2 gap-2 text-sm">
                       {(isRTL ? [
@@ -1134,11 +1131,11 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                       <Card>
                         <CardHeader className="flex-row items-center justify-between gap-2">
                           <CardTitle className="text-base flex items-center gap-2">
-                            <Stethoscope className="w-4 h-4" />{isRTL ? 'تشخيص الشارة' : 'Badge diagnostics'}
+                            <Stethoscope className="w-4 h-4" />{pickBi(isRTL, 'تشخيص الشارة', 'Badge diagnostics')}
                           </CardTitle>
-                          <Button size="sm" variant="outline" className="gap-1.5" onClick={refreshAll} aria-label={isRTL ? 'تحديث' : 'Refresh'}>
+                          <Button size="sm" variant="outline" className="gap-1.5" onClick={refreshAll} aria-label={pickBi(isRTL, 'تحديث', 'Refresh')}>
                             <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-                            {isRTL ? 'تحديث' : 'Refresh'}
+                            {pickBi(isRTL, 'تحديث', 'Refresh')}
                           </Button>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -1146,22 +1143,22 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {[
                               {
-                                label: isRTL ? 'حالة التتبع' : 'Tracking status',
-                                value: anyError ? (isRTL ? 'خطأ' : 'Error') : anyLoading ? (isRTL ? 'يحمّل…' : 'Loading…') : anyData ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'بانتظار أحداث' : 'Awaiting events'),
+                                label: pickBi(isRTL, 'حالة التتبع', 'Tracking status'),
+                                value: anyError ? (pickBi(isRTL, 'خطأ', 'Error')) : anyLoading ? (pickBi(isRTL, 'يحمّل…', 'Loading…')) : anyData ? (pickBi(isRTL, 'نشط', 'Active')) : (pickBi(isRTL, 'بانتظار أحداث', 'Awaiting events')),
                                 tone: anyError ? 'text-destructive' : anyData ? 'text-success' : 'text-muted-foreground',
                               },
                               {
-                                label: isRTL ? 'مرات الظهور' : 'Impressions',
+                                label: pickBi(isRTL, 'مرات الظهور', 'Impressions'),
                                 value: impressions.length.toLocaleString(),
                                 tone: 'text-foreground',
                               },
                               {
-                                label: isRTL ? 'النقرات' : 'Clicks',
+                                label: pickBi(isRTL, 'النقرات', 'Clicks'),
                                 value: clicks.length.toLocaleString(),
                                 tone: 'text-primary',
                               },
                               {
-                                label: isRTL ? 'التحويلات' : 'Conversions',
+                                label: pickBi(isRTL, 'التحويلات', 'Conversions'),
                                 value: conversions.length.toLocaleString(),
                                 tone: 'text-success',
                               },
@@ -1177,7 +1174,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                             <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-start gap-2">
                               <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
                               <p className="text-xs text-destructive">
-                                {isRTL ? 'تعذر تحميل بيانات التتبع. حاول التحديث أو راجع الاتصال بالشبكة.' : 'Could not load tracking data. Try refreshing or check your network connection.'}
+                                {pickBi(isRTL, 'تعذر تحميل بيانات التتبع. حاول التحديث أو راجع الاتصال بالشبكة.', 'Could not load tracking data. Try refreshing or check your network connection.')}
                               </p>
                             </div>
                           )}
@@ -1185,20 +1182,20 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           {/* Last activity */}
                           <div className="rounded-xl border bg-card p-3">
                             <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground mb-2">
-                              <Activity className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر نشاط' : 'Last activity'}
+                              <Activity className="w-3 h-3" aria-hidden="true" />{pickBi(isRTL, 'آخر نشاط', 'Last activity')}
                             </div>
                             <ul className="space-y-1.5 text-xs">
                               <li className="flex items-center justify-between">
-                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><Eye className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر ظهور' : 'Last impression'}</span>
-                                <span className="tech-content font-medium">{lastImpression ? relativeTime(lastImpression, isRTL) : (isRTL ? 'لا يوجد' : '—')}</span>
+                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><Eye className="w-3 h-3" aria-hidden="true" />{pickBi(isRTL, 'آخر ظهور', 'Last impression')}</span>
+                                <span className="tech-content font-medium">{lastImpression ? relativeTime(lastImpression, isRTL) : (pickBi(isRTL, 'لا يوجد', '—'))}</span>
                               </li>
                               <li className="flex items-center justify-between">
-                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><MousePointerClick className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر نقرة' : 'Last click'}</span>
-                                <span className="tech-content font-medium">{lastClick ? relativeTime(lastClick, isRTL) : (isRTL ? 'لا يوجد' : '—')}</span>
+                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><MousePointerClick className="w-3 h-3" aria-hidden="true" />{pickBi(isRTL, 'آخر نقرة', 'Last click')}</span>
+                                <span className="tech-content font-medium">{lastClick ? relativeTime(lastClick, isRTL) : (pickBi(isRTL, 'لا يوجد', '—'))}</span>
                               </li>
                               <li className="flex items-center justify-between">
-                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><Sparkles className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر تحويل' : 'Last conversion'}</span>
-                                <span className="tech-content font-medium">{lastConversion ? relativeTime(lastConversion, isRTL) : (isRTL ? 'لا يوجد' : '—')}</span>
+                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><Sparkles className="w-3 h-3" aria-hidden="true" />{pickBi(isRTL, 'آخر تحويل', 'Last conversion')}</span>
+                                <span className="tech-content font-medium">{lastConversion ? relativeTime(lastConversion, isRTL) : (pickBi(isRTL, 'لا يوجد', '—'))}</span>
                               </li>
                             </ul>
                           </div>
@@ -1206,40 +1203,40 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           {/* Data source */}
                           <div className="rounded-xl border bg-card p-3">
                             <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground mb-2">
-                              <Database className="w-3 h-3" aria-hidden="true" />{isRTL ? 'مصدر البيانات' : 'Data source'}
+                              <Database className="w-3 h-3" aria-hidden="true" />{pickBi(isRTL, 'مصدر البيانات', 'Data source')}
                             </div>
                             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                               <div className="flex items-center justify-between">
-                                <dt className="text-muted-foreground">{isRTL ? 'المنشأة' : 'Establishment'}</dt>
+                                <dt className="text-muted-foreground">{pickBi(isRTL, 'المنشأة', 'Establishment')}</dt>
                                 <dd className="tech-content font-mono" dir="ltr">@{business.username}</dd>
                               </div>
                               <div className="flex items-center justify-between">
-                                <dt className="text-muted-foreground">{isRTL ? 'مُعرّف داخلي' : 'Internal ID'}</dt>
-                                <dd className="tech-content font-mono text-muted-foreground" dir="ltr" title={isRTL ? 'مُختصر لأغراض الخصوصية' : 'Truncated for privacy'}>{maskedId}</dd>
+                                <dt className="text-muted-foreground">{pickBi(isRTL, 'مُعرّف داخلي', 'Internal ID')}</dt>
+                                <dd className="tech-content font-mono text-muted-foreground" dir="ltr" title={pickBi(isRTL, 'مُختصر لأغراض الخصوصية', 'Truncated for privacy')}>{maskedId}</dd>
                               </div>
                               <div className="flex items-center justify-between">
-                                <dt className="text-muted-foreground">{isRTL ? 'موثّقة' : 'Verified'}</dt>
+                                <dt className="text-muted-foreground">{pickBi(isRTL, 'موثّقة', 'Verified')}</dt>
                                 <dd>
                                   {business.is_verified
-                                    ? <Badge className="bg-success text-success-foreground">{isRTL ? 'نعم' : 'Yes'}</Badge>
-                                    : <Badge variant="outline" className="text-warning border-warning/40">{isRTL ? 'لا' : 'No'}</Badge>}
+                                    ? <Badge className="bg-success text-success-foreground">{pickBi(isRTL, 'نعم', 'Yes')}</Badge>
+                                    : <Badge variant="outline" className="text-warning border-warning/40">{pickBi(isRTL, 'لا', 'No')}</Badge>}
                                 </dd>
                               </div>
                               <div className="flex items-center justify-between">
-                                <dt className="text-muted-foreground">{isRTL ? 'سكربت التتبع' : 'Tracking script'}</dt>
+                                <dt className="text-muted-foreground">{pickBi(isRTL, 'سكربت التتبع', 'Tracking script')}</dt>
                                 <dd className="inline-flex items-center gap-1">
                                   <CircleDot className="w-3 h-3 text-success" aria-hidden="true" />
-                                  <span className="text-success font-semibold">{isRTL ? 'مُضمّن في الكود' : 'Embedded'}</span>
+                                  <span className="text-success font-semibold">{pickBi(isRTL, 'مُضمّن في الكود', 'Embedded')}</span>
                                 </dd>
                               </div>
                               <div className="flex items-center justify-between">
-                                <dt className="text-muted-foreground">{isRTL ? 'استلام الأحداث' : 'Receiving events'}</dt>
+                                <dt className="text-muted-foreground">{pickBi(isRTL, 'استلام الأحداث', 'Receiving events')}</dt>
                                 <dd className={anyData ? 'text-success font-semibold' : 'text-muted-foreground'}>
-                                  {anyData ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا (انتظر بعد النشر)' : 'No (wait after embedding)')}
+                                  {anyData ? (pickBi(isRTL, 'نعم', 'Yes')) : (pickBi(isRTL, 'لا (انتظر بعد النشر)', 'No (wait after embedding)'))}
                                 </dd>
                               </div>
                               <div className="flex items-center justify-between">
-                                <dt className="text-muted-foreground">{isRTL ? 'آخر مزامنة' : 'Last sync'}</dt>
+                                <dt className="text-muted-foreground">{pickBi(isRTL, 'آخر مزامنة', 'Last sync')}</dt>
                                 <dd className="tech-content">{lastUpdated ? relativeTime(new Date(lastUpdated).toISOString(), isRTL) : '—'}</dd>
                               </div>
                             </dl>
@@ -1248,18 +1245,14 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           {!anyData && !anyLoading && !anyError && (
                             <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-center">
                               <p className="text-xs text-muted-foreground">
-                                {isRTL
-                                  ? 'لم تُسجَّل أحداث بعد. انسخ كود الشارة من تبويب «المولّد» وألصقه في موقعك؛ ستظهر الأحداث هنا خلال دقائق.'
-                                  : 'No events recorded yet. Copy the badge code from the Generator tab into your site; events will appear here within minutes.'}
+                                {pickBi(isRTL, 'لم تُسجَّل أحداث بعد. انسخ كود الشارة من تبويب «المولّد» وألصقه في موقعك؛ ستظهر الأحداث هنا خلال دقائق.', 'No events recorded yet. Copy the badge code from the Generator tab into your site; events will appear here within minutes.')}
                               </p>
                             </div>
                           )}
 
                           <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
                             <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" aria-hidden="true" />
-                            {isRTL
-                              ? 'تُستخدم هذه البيانات لأغراض التشخيص فقط. لا تُعرض أي مفاتيح أو رموز خاصة.'
-                              : 'This panel is for diagnostics only. No private tokens or secrets are exposed.'}
+                            {pickBi(isRTL, 'تُستخدم هذه البيانات لأغراض التشخيص فقط. لا تُعرض أي مفاتيح أو رموز خاصة.', 'This panel is for diagnostics only. No private tokens or secrets are exposed.')}
                           </p>
                         </CardContent>
                       </Card>
