@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/shared';
 import { Card, CardContent } from '@/components/ui/card';
@@ -162,17 +163,17 @@ const DashboardSettings = () => {
   const handleAccent = useCallback((key: string) => {
     setAccentState(key);
     applyAccent(key);
-    toast.success(isRTL ? 'تم تغيير اللون' : 'Accent updated');
+    toast.success(pickBi(isRTL, 'تم تغيير اللون', 'Accent updated'));
   }, [isRTL]);
 
   const handleUpdatePassword = async () => {
-    if (newPassword.length < 8) { toast.error(isRTL ? 'كلمة المرور قصيرة (8 أحرف على الأقل)' : 'Password too short (min 8 chars)'); return; }
-    if (newPassword !== confirmPassword) { toast.error(isRTL ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'); return; }
+    if (newPassword.length < 8) { toast.error(pickBi(isRTL, 'كلمة المرور قصيرة (8 أحرف على الأقل)', 'Password too short (min 8 chars)')); return; }
+    if (newPassword !== confirmPassword) { toast.error(pickBi(isRTL, 'كلمتا المرور غير متطابقتين', 'Passwords do not match')); return; }
     setLoading(true);
     try {
       const { error } = await updateUserPassword(newPassword);
       if (error) throw error;
-      toast.success(isRTL ? 'تم تحديث كلمة المرور بنجاح' : 'Password updated successfully');
+      toast.success(pickBi(isRTL, 'تم تحديث كلمة المرور بنجاح', 'Password updated successfully'));
       setNewPassword(''); setConfirmPassword('');
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Error'); }
     finally { setLoading(false); }
@@ -182,7 +183,7 @@ const DashboardSettings = () => {
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
       if (profileForm.username && !usernameOk) {
-        throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
+        throw new Error(pickBi(isRTL, 'اسم المستخدم غير صالح أو محجوز', 'Username is invalid or taken'));
       }
       const { error } = await updateProfile({
         userId: user.id,
@@ -203,7 +204,7 @@ const DashboardSettings = () => {
       await refreshProfile();
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       setEditingProfile(false);
-      toast.success(isRTL ? 'تم تحديث الملف الشخصي بنجاح' : 'Profile updated successfully');
+      toast.success(pickBi(isRTL, 'تم تحديث الملف الشخصي بنجاح', 'Profile updated successfully'));
     },
     onError: (e) => toast.error(e.message),
   });
@@ -241,7 +242,7 @@ const DashboardSettings = () => {
     if (!publicProfileUrl) return;
     await navigator.clipboard.writeText(publicProfileUrl);
     setCopiedUrl(true);
-    toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+    toast.success(pickBi(isRTL, 'تم نسخ الرابط', 'Link copied'));
     setTimeout(() => setCopiedUrl(false), 1500);
   }, [publicProfileUrl, isRTL]);
 
@@ -280,9 +281,9 @@ const DashboardSettings = () => {
         <PageHeader
           icon={Settings2}
           tone="accent"
-          eyebrow={isRTL ? 'الحساب' : 'Account'}
-          title={isRTL ? 'الإعدادات' : 'Settings'}
-          subtitle={isRTL ? 'إدارة حسابك ومظهرك وأمانك' : 'Manage your account, appearance, and security'}
+          eyebrow={pickBi(isRTL, 'الحساب', 'Account')}
+          title={pickBi(isRTL, 'الإعدادات', 'Settings')}
+          subtitle={pickBi(isRTL, 'إدارة حسابك ومظهرك وأمانك', 'Manage your account, appearance, and security')}
         />
 
         {/* Tab Navigation */}
@@ -314,7 +315,7 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Sun className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'وضع العرض' : 'Display Mode'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'وضع العرض', 'Display Mode')}</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {themeModes.map(m => (
@@ -340,7 +341,7 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Palette className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'اللون الرئيسي' : 'Accent Color'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'اللون الرئيسي', 'Accent Color')}</h3>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {accentPresets.map(p => (
@@ -366,19 +367,19 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Eye className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'معاينة' : 'Preview'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'معاينة', 'Preview')}</h3>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <Button variant="hero" size="sm" className="text-xs">{isRTL ? 'زر رئيسي' : 'Primary'}</Button>
-                  <Button variant="outline" size="sm" className="text-xs">{isRTL ? 'ثانوي' : 'Outline'}</Button>
-                  <Button variant="ghost" size="sm" className="text-xs">{isRTL ? 'شفاف' : 'Ghost'}</Button>
+                  <Button variant="hero" size="sm" className="text-xs">{pickBi(isRTL, 'زر رئيسي', 'Primary')}</Button>
+                  <Button variant="outline" size="sm" className="text-xs">{pickBi(isRTL, 'ثانوي', 'Outline')}</Button>
+                  <Button variant="ghost" size="sm" className="text-xs">{pickBi(isRTL, 'شفاف', 'Ghost')}</Button>
                 </div>
                 <div className="flex gap-2 mb-2">
                   {['bg-accent', 'bg-primary', 'bg-muted', 'bg-card border border-border'].map((c, i) => (
                     <div key={i} className={`w-8 h-8 rounded-lg ${c}`} />
                   ))}
                 </div>
-                <p className="text-[10px] text-muted-foreground">{isRTL ? 'نص تجريبي لمعاينة الخط والألوان.' : 'Preview text for fonts and colors.'}</p>
+                <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'نص تجريبي لمعاينة الخط والألوان.', 'Preview text for fonts and colors.')}</p>
               </CardContent>
             </Card>
           </div>
@@ -414,7 +415,7 @@ const DashboardSettings = () => {
                     ) : (
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-accent/10 flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg">
                         {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt={profile?.full_name || (isRTL ? 'صورة الملف الشخصي' : 'Profile photo')} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
+                          <img src={profile.avatar_url} alt={profile?.full_name || (pickBi(isRTL, 'صورة الملف الشخصي', 'Profile photo'))} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                         ) : (
                           <User className="w-8 h-8 text-accent" />
                         )}
@@ -426,7 +427,7 @@ const DashboardSettings = () => {
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div className="min-w-0">
                         <h2 className="font-heading font-bold text-base sm:text-lg truncate">
-                          {profile?.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+                          {profile?.full_name || (pickBi(isRTL, 'بدون اسم', 'No name'))}
                         </h2>
                         {profile?.username && (
                           <p className="text-[11px] text-muted-foreground tech-content flex items-center gap-1">
@@ -444,8 +445,8 @@ const DashboardSettings = () => {
                         {updateProfileMutation.isPending
                           ? <Loader2 className="w-3 h-3 animate-spin" />
                           : editingProfile
-                            ? <><Check className="w-3 h-3" />{isRTL ? 'حفظ التعديلات' : 'Save changes'}</>
-                            : <><Camera className="w-3 h-3" />{isRTL ? 'تعديل الملف' : 'Edit profile'}</>}
+                            ? <><Check className="w-3 h-3" />{pickBi(isRTL, 'حفظ التعديلات', 'Save changes')}</>
+                            : <><Camera className="w-3 h-3" />{pickBi(isRTL, 'تعديل الملف', 'Edit profile')}</>}
                       </Button>
                     </div>
 
@@ -455,14 +456,14 @@ const DashboardSettings = () => {
                         <Hash className="w-2.5 h-2.5 me-0.5" />{displayRefId || profile?.ref_id}
                       </Badge>
                       <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px]">
-                        {profile?.account_type === 'provider' ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
+                        {profile?.account_type === 'provider' ? (pickBi(isRTL, 'مزود خدمة', 'Provider')) : (pickBi(isRTL, 'عميل', 'Client'))}
                       </Badge>
                       <Badge className="bg-accent/10 text-accent text-[9px] px-1.5 py-0 h-[16px] gap-0.5">
                         <Crown className="w-2.5 h-2.5" />{profile?.membership_tier || 'free'}
                       </Badge>
                       {profile?.phone_verified && (
                         <Badge className="bg-success/10 text-success text-[9px] px-1.5 py-0 h-[16px] gap-0.5">
-                          <CheckCircle className="w-2.5 h-2.5" />{isRTL ? 'موثق' : 'Verified'}
+                          <CheckCircle className="w-2.5 h-2.5" />{pickBi(isRTL, 'موثق', 'Verified')}
                         </Badge>
                       )}
                     </div>
@@ -475,19 +476,19 @@ const DashboardSettings = () => {
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[10px] font-medium flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-accent" />
-                        {isRTL ? 'اكتمال الملف' : 'Profile completeness'}
+                        {pickBi(isRTL, 'اكتمال الملف', 'Profile completeness')}
                       </span>
                       <span className="text-[10px] font-bold tech-content">{completion.pct}%</span>
                     </div>
                     <Progress value={completion.pct} className="h-1.5" />
                     <p className="text-[9px] text-muted-foreground mt-1">
-                      {completion.done}/{completion.total} {isRTL ? 'حقول مكتملة' : 'fields complete'}
+                      {completion.done}/{completion.total} {pickBi(isRTL, 'حقول مكتملة', 'fields complete')}
                     </p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-muted/30 border border-border/40">
                     <span className="text-[10px] font-medium flex items-center gap-1 mb-1.5">
                       <Globe className="w-3 h-3 text-accent" />
-                      {isRTL ? 'رابط الملف العام' : 'Public profile link'}
+                      {pickBi(isRTL, 'رابط الملف العام', 'Public profile link')}
                     </span>
                     {publicProfileUrl ? (
                       <div className="flex items-center gap-1">
@@ -503,7 +504,7 @@ const DashboardSettings = () => {
                       </div>
                     ) : (
                       <p className="text-[10px] text-muted-foreground">
-                        {isRTL ? 'أضف اسم مستخدم لإنشاء رابط عام' : 'Add a username to get a public link'}
+                        {pickBi(isRTL, 'أضف اسم مستخدم لإنشاء رابط عام', 'Add a username to get a public link')}
                       </p>
                     )}
                   </div>
@@ -517,29 +518,29 @@ const DashboardSettings = () => {
                 <CardContent className="p-3 sm:p-4 space-y-4">
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-accent" />
-                    <h3 className="font-heading font-bold text-sm">{isRTL ? 'البيانات الشخصية' : 'Personal information'}</h3>
+                    <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'البيانات الشخصية', 'Personal information')}</h3>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-[10px]">{isRTL ? 'الاسم الكامل' : 'Full name'}</Label>
+                      <Label className="text-[10px]">{pickBi(isRTL, 'الاسم الكامل', 'Full name')}</Label>
                       <Input value={profileForm.full_name}
                         onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))}
                         className="h-9 text-sm mt-1" />
                     </div>
                     <div>
-                      <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني للملف' : 'Profile email'}</Label>
+                      <Label className="text-[10px]">{pickBi(isRTL, 'البريد الإلكتروني للملف', 'Profile email')}</Label>
                       <Input value={profileForm.email}
                         onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))}
                         className="h-9 text-sm mt-1 tech-content" dir="ltr" type="email" />
                       <p className="text-[9px] text-muted-foreground mt-0.5">
                         {isSyntheticPhoneEmail(user?.email)
-                          ? (isRTL ? 'تسجيل الدخول عبر الجوال.' : 'You sign in with your phone.')
-                          : (<>{isRTL ? 'دخول: ' : 'Login: '}<span className="tech-content font-medium">{user?.email}</span></>)}
+                          ? (pickBi(isRTL, 'تسجيل الدخول عبر الجوال.', 'You sign in with your phone.'))
+                          : (<>{pickBi(isRTL, 'دخول: ', 'Login: ')}<span className="tech-content font-medium">{user?.email}</span></>)}
                       </p>
                     </div>
                     <div>
-                      <Label className="text-[10px]">{isRTL ? 'رقم الجوال' : 'Phone'}</Label>
+                      <Label className="text-[10px]">{pickBi(isRTL, 'رقم الجوال', 'Phone')}</Label>
                       <Input value={profileForm.phone}
                         onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))}
                         className="h-9 text-sm mt-1 tech-content" dir="ltr" />
@@ -547,7 +548,7 @@ const DashboardSettings = () => {
                     <div>
                       <Label className="text-[10px] flex items-center gap-1">
                         <Languages className="w-3 h-3" />
-                        {isRTL ? 'لغة المراسلات' : 'Preferred language'}
+                        {pickBi(isRTL, 'لغة المراسلات', 'Preferred language')}
                       </Label>
                       <Select value={profileForm.preferred_language}
                         onValueChange={(v: 'ar' | 'en') => setProfileForm(p => ({ ...p, preferred_language: v }))}>
@@ -569,7 +570,7 @@ const DashboardSettings = () => {
                       excludeUserId={user?.id}
                       currentUsername={profile?.username ?? null}
                       isRTL={isRTL}
-                      label={isRTL ? 'اسم المستخدم (Handle)' : 'Username (handle)'}
+                      label={pickBi(isRTL, 'اسم المستخدم (Handle)', 'Username (handle)')}
                     />
                   </div>
 
@@ -577,15 +578,15 @@ const DashboardSettings = () => {
                   <div className="pt-2 border-t border-border/40">
                     <div className="flex items-center gap-2 mb-2">
                       <MapPin className="w-3.5 h-3.5 text-accent" />
-                      <p className="text-xs font-medium">{isRTL ? 'الموقع' : 'Location'}</p>
+                      <p className="text-xs font-medium">{pickBi(isRTL, 'الموقع', 'Location')}</p>
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-[10px]">{isRTL ? 'الدولة' : 'Country'}</Label>
+                        <Label className="text-[10px]">{pickBi(isRTL, 'الدولة', 'Country')}</Label>
                         <Select value={profileForm.country_id ?? ''}
                           onValueChange={(v) => setProfileForm(p => ({ ...p, country_id: v || null, city_id: null }))}>
                           <SelectTrigger className="h-9 text-sm mt-1">
-                            <SelectValue placeholder={isRTL ? 'اختر دولة' : 'Select country'} />
+                            <SelectValue placeholder={pickBi(isRTL, 'اختر دولة', 'Select country')} />
                           </SelectTrigger>
                           <SelectContent>
                             {countries.map(c => (
@@ -595,11 +596,11 @@ const DashboardSettings = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-[10px]">{isRTL ? 'المدينة' : 'City'}</Label>
+                        <Label className="text-[10px]">{pickBi(isRTL, 'المدينة', 'City')}</Label>
                         <Select value={profileForm.city_id ?? ''} disabled={!profileForm.country_id}
                           onValueChange={(v) => setProfileForm(p => ({ ...p, city_id: v || null }))}>
                           <SelectTrigger className="h-9 text-sm mt-1">
-                            <SelectValue placeholder={profileForm.country_id ? (isRTL ? 'اختر مدينة' : 'Select city') : (isRTL ? 'اختر الدولة أولاً' : 'Pick country first')} />
+                            <SelectValue placeholder={profileForm.country_id ? (pickBi(isRTL, 'اختر مدينة', 'Select city')) : (pickBi(isRTL, 'اختر الدولة أولاً', 'Pick country first'))} />
                           </SelectTrigger>
                           <SelectContent>
                             {cities.map(c => (
@@ -617,11 +618,11 @@ const DashboardSettings = () => {
                       {updateProfileMutation.isPending
                         ? <Loader2 className="w-3 h-3 animate-spin" />
                         : <Check className="w-3 h-3" />}
-                      {isRTL ? 'حفظ التعديلات' : 'Save changes'}
+                      {pickBi(isRTL, 'حفظ التعديلات', 'Save changes')}
                     </Button>
                     <Button variant="ghost" size="sm" className="text-xs"
                       onClick={() => setEditingProfile(false)} disabled={updateProfileMutation.isPending}>
-                      {isRTL ? 'إلغاء' : 'Cancel'}
+                      {pickBi(isRTL, 'إلغاء', 'Cancel')}
                     </Button>
                   </div>
                 </CardContent>
@@ -632,16 +633,16 @@ const DashboardSettings = () => {
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <User className="w-4 h-4 text-accent" />
-                    <h3 className="font-heading font-bold text-sm">{isRTL ? 'البيانات الشخصية' : 'Personal information'}</h3>
+                    <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'البيانات الشخصية', 'Personal information')}</h3>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-2">
                     {[
-                      { icon: User, label: isRTL ? 'الاسم' : 'Name', value: profile?.full_name },
-                      { icon: AtSign, label: isRTL ? 'اسم المستخدم' : 'Username', value: profile?.username ? `@${profile.username}` : null, tech: true },
-                      { icon: Mail, label: isRTL ? 'البريد' : 'Email', value: getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }), tech: true },
-                      { icon: Phone, label: isRTL ? 'الجوال' : 'Phone', value: profile?.phone, tech: true },
-                      { icon: Languages, label: isRTL ? 'لغة المراسلات' : 'Language', value: profile?.preferred_language === 'ar' ? 'العربية' : 'English' },
-                      { icon: MapPin, label: isRTL ? 'الموقع' : 'Location',
+                      { icon: User, label: pickBi(isRTL, 'الاسم', 'Name'), value: profile?.full_name },
+                      { icon: AtSign, label: pickBi(isRTL, 'اسم المستخدم', 'Username'), value: profile?.username ? `@${profile.username}` : null, tech: true },
+                      { icon: Mail, label: pickBi(isRTL, 'البريد', 'Email'), value: getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }), tech: true },
+                      { icon: Phone, label: pickBi(isRTL, 'الجوال', 'Phone'), value: profile?.phone, tech: true },
+                      { icon: Languages, label: pickBi(isRTL, 'لغة المراسلات', 'Language'), value: profile?.preferred_language === 'ar' ? 'العربية' : 'English' },
+                      { icon: MapPin, label: pickBi(isRTL, 'الموقع', 'Location'),
                         value: [
                           countries.find(c => c.id === profile?.country_id),
                           cities.find(c => c.id === profile?.city_id),
@@ -652,7 +653,7 @@ const DashboardSettings = () => {
                           <item.icon className="w-3 h-3" />{item.label}
                         </div>
                         <span className={cn('text-[11px] font-medium text-end truncate', item.tech && 'tech-content')}>
-                          {item.value || <span className="text-muted-foreground italic">{isRTL ? 'غير مضاف' : 'Not set'}</span>}
+                          {item.value || <span className="text-muted-foreground italic">{pickBi(isRTL, 'غير مضاف', 'Not set')}</span>}
                         </span>
                       </div>
                     ))}
@@ -666,16 +667,16 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4 space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <Info className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'البيانات النظامية' : 'System details'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'البيانات النظامية', 'System details')}</h3>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {[
-                    { icon: Fingerprint, label: isRTL ? 'المعرف' : 'Reference ID', value: displayRefId || profile?.ref_id, tech: true },
+                    { icon: Fingerprint, label: pickBi(isRTL, 'المعرف', 'Reference ID'), value: displayRefId || profile?.ref_id, tech: true },
                     isSyntheticPhoneEmail(user?.email)
-                      ? { icon: Phone, label: isRTL ? 'رقم الدخول' : 'Login phone', value: user?.phone ? `+${user.phone}` : (profile?.phone || '-'), tech: true }
-                      : { icon: Mail, label: isRTL ? 'بريد الدخول' : 'Login email', value: user?.email, tech: true },
-                    { icon: Globe, label: isRTL ? 'لغة الواجهة' : 'Interface', value: language === 'ar' ? 'العربية' : 'English' },
-                    { icon: Crown, label: isRTL ? 'الباقة' : 'Membership', value: profile?.membership_tier || 'free' },
+                      ? { icon: Phone, label: pickBi(isRTL, 'رقم الدخول', 'Login phone'), value: user?.phone ? `+${user.phone}` : (profile?.phone || '-'), tech: true }
+                      : { icon: Mail, label: pickBi(isRTL, 'بريد الدخول', 'Login email'), value: user?.email, tech: true },
+                    { icon: Globe, label: pickBi(isRTL, 'لغة الواجهة', 'Interface'), value: language === 'ar' ? 'العربية' : 'English' },
+                    { icon: Crown, label: pickBi(isRTL, 'الباقة', 'Membership'), value: profile?.membership_tier || 'free' },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors gap-2">
                       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground shrink-0">
@@ -693,11 +694,11 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-4 h-4 text-destructive" />
-                  <h3 className="font-heading font-bold text-sm text-destructive">{isRTL ? 'منطقة الخطر' : 'Danger zone'}</h3>
+                  <h3 className="font-heading font-bold text-sm text-destructive">{pickBi(isRTL, 'منطقة الخطر', 'Danger zone')}</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" className="text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10" onClick={handleSignOut}>
-                    <LogOut className="w-3 h-3" />{isRTL ? 'تسجيل الخروج' : 'Sign out'}
+                    <LogOut className="w-3 h-3" />{pickBi(isRTL, 'تسجيل الخروج', 'Sign out')}
                   </Button>
                 </div>
               </CardContent>
@@ -720,18 +721,18 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <KeyRound className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'تغيير كلمة المرور' : 'Change Password'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'تغيير كلمة المرور', 'Change Password')}</h3>
                 </div>
                 <div className="space-y-3 max-w-sm">
                   <div>
-                    <Label className="text-[10px]">{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                    <Label className="text-[10px]">{pickBi(isRTL, 'كلمة المرور الجديدة', 'New Password')}</Label>
                     <div className="relative mt-0.5">
                       <Input
                         type={showPassword ? 'text' : 'password'}
                         value={newPassword}
                         onChange={e => setNewPassword(e.target.value)}
                         className="h-8 text-xs pe-8"
-                        placeholder={isRTL ? '8 أحرف على الأقل' : 'At least 8 characters'}
+                        placeholder={pickBi(isRTL, '8 أحرف على الأقل', 'At least 8 characters')}
                       />
                       <button className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPassword(!showPassword)}>
                         {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -747,7 +748,7 @@ const DashboardSettings = () => {
                     )}
                   </div>
                   <div>
-                    <Label className="text-[10px]">{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
+                    <Label className="text-[10px]">{pickBi(isRTL, 'تأكيد كلمة المرور', 'Confirm Password')}</Label>
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       value={confirmPassword}
@@ -755,13 +756,13 @@ const DashboardSettings = () => {
                       className={cn('h-8 text-xs mt-0.5', confirmPassword && (passwordsMatch ? 'border-success/50' : 'border-destructive/50'))}
                     />
                     {confirmPassword && !passwordsMatch && (
-                      <p className="text-[9px] text-destructive mt-0.5">{isRTL ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
+                      <p className="text-[9px] text-destructive mt-0.5">{pickBi(isRTL, 'كلمتا المرور غير متطابقتين', 'Passwords do not match')}</p>
                     )}
                   </div>
                   <Button size="sm" className="gap-1.5 text-xs" onClick={handleUpdatePassword}
                     disabled={loading || !newPassword || !passwordsMatch}>
                     {loading ? <span className="animate-spin">⏳</span> : <Lock className="w-3 h-3" />}
-                    {isRTL ? 'تحديث كلمة المرور' : 'Update Password'}
+                    {pickBi(isRTL, 'تحديث كلمة المرور', 'Update Password')}
                   </Button>
                 </div>
               </CardContent>
@@ -772,7 +773,7 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Smartphone className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'الجلسات النشطة' : 'Active Sessions'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'الجلسات النشطة', 'Active Sessions')}</h3>
                 </div>
                 {sessions?.map((s, i: number) => (
                   <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20">
@@ -781,11 +782,11 @@ const DashboardSettings = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-medium">{isRTL ? 'الجلسة الحالية' : 'Current Session'}</p>
-                        <Badge className="bg-success/10 text-success text-[7px] px-1 py-0 h-3">{isRTL ? 'نشط' : 'Active'}</Badge>
+                        <p className="text-xs font-medium">{pickBi(isRTL, 'الجلسة الحالية', 'Current Session')}</p>
+                        <Badge className="bg-success/10 text-success text-[7px] px-1 py-0 h-3">{pickBi(isRTL, 'نشط', 'Active')}</Badge>
                       </div>
                       <p className="text-[9px] text-muted-foreground mt-0.5">
-                        {isRTL ? 'بدأت' : 'Started'}: {formatDistanceToNow(new Date(s.created_at), { addSuffix: true, locale: language === 'ar' ? arLocale : enUS })}
+                        {pickBi(isRTL, 'بدأت', 'Started')}: {formatDistanceToNow(new Date(s.created_at), { addSuffix: true, locale: language === 'ar' ? arLocale : enUS })}
                       </p>
                     </div>
                   </div>
@@ -798,7 +799,7 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Shield className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'نصائح أمنية' : 'Security Tips'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'نصائح أمنية', 'Security Tips')}</h3>
                 </div>
                 <div className="space-y-1.5">
                   {[
@@ -826,7 +827,7 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <BellRing className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'إشعارات المتصفح' : 'Browser Notifications'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'إشعارات المتصفح', 'Browser Notifications')}</h3>
                 </div>
                 {notifSupported ? (
                   <div className="space-y-3">
@@ -834,21 +835,21 @@ const DashboardSettings = () => {
                       <div className="flex items-center gap-2">
                         <Smartphone className="w-3.5 h-3.5 text-muted-foreground" />
                         <div>
-                          <p className="text-xs font-medium">{isRTL ? 'إشعارات سطح المكتب' : 'Desktop Notifications'}</p>
-                          <p className="text-[9px] text-muted-foreground">{isRTL ? 'تلقي إشعارات حتى عند عدم تصفح الموقع' : 'Get notified even when not browsing'}</p>
+                          <p className="text-xs font-medium">{pickBi(isRTL, 'إشعارات سطح المكتب', 'Desktop Notifications')}</p>
+                          <p className="text-[9px] text-muted-foreground">{pickBi(isRTL, 'تلقي إشعارات حتى عند عدم تصفح الموقع', 'Get notified even when not browsing')}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={cn('text-[8px] px-1.5 py-0 h-[14px]',
                           permission.current === 'granted' ? 'bg-success/10 text-success' :
                           permission.current === 'denied' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
-                          {permission.current === 'granted' ? (isRTL ? 'مفعّل' : 'Enabled') :
-                           permission.current === 'denied' ? (isRTL ? 'محظور' : 'Blocked') :
-                           (isRTL ? 'غير مفعّل' : 'Not set')}
+                          {permission.current === 'granted' ? (pickBi(isRTL, 'مفعّل', 'Enabled')) :
+                           permission.current === 'denied' ? (pickBi(isRTL, 'محظور', 'Blocked')) :
+                           (pickBi(isRTL, 'غير مفعّل', 'Not set'))}
                         </Badge>
                         {permission.current !== 'granted' && permission.current !== 'denied' && (
                           <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1" onClick={requestPermission}>
-                            <BellRing className="w-2.5 h-2.5" />{isRTL ? 'تفعيل' : 'Enable'}
+                            <BellRing className="w-2.5 h-2.5" />{pickBi(isRTL, 'تفعيل', 'Enable')}
                           </Button>
                         )}
                       </div>
@@ -857,7 +858,7 @@ const DashboardSettings = () => {
                 ) : (
                   <div className="text-center py-4">
                     <BellOff className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">{isRTL ? 'متصفحك لا يدعم الإشعارات' : 'Your browser does not support notifications'}</p>
+                    <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'متصفحك لا يدعم الإشعارات', 'Your browser does not support notifications')}</p>
                   </div>
                 )}
               </CardContent>
@@ -868,7 +869,7 @@ const DashboardSettings = () => {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Bell className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'تفضيلات الإشعارات' : 'Notification Preferences'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{pickBi(isRTL, 'تفضيلات الإشعارات', 'Notification Preferences')}</h3>
                 </div>
                 <div className="space-y-2">
                   {[
@@ -889,7 +890,7 @@ const DashboardSettings = () => {
                 </div>
                 <p className="text-[9px] text-muted-foreground mt-3 flex items-center gap-1">
                   <Info className="w-3 h-3" />
-                  {isRTL ? 'سيتم تطبيق هذه الإعدادات على جميع أجهزتك' : 'These settings apply across all your devices'}
+                  {pickBi(isRTL, 'سيتم تطبيق هذه الإعدادات على جميع أجهزتك', 'These settings apply across all your devices')}
                 </p>
               </CardContent>
             </Card>

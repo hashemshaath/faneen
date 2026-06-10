@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -150,10 +151,10 @@ const PostCard = React.memo(({ post, language, isRTL, onEdit, onDelete }: {
 
           {/* Meta row */}
           <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground flex-wrap">
-            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views_count || 0} {isRTL ? 'مشاهدة' : 'views'}</span>
+            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views_count || 0} {pickBi(isRTL, 'مشاهدة', 'views')}</span>
             <span className="flex items-center gap-1"><CalendarIcon className="w-3 h-3" />{format(new Date(post.created_at), 'yyyy/MM/dd')}</span>
             {post.reading_time_minutes > 0 && (
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{post.reading_time_minutes} {isRTL ? 'دقيقة' : 'min'}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{post.reading_time_minutes} {pickBi(isRTL, 'دقيقة', 'min')}</span>
             )}
             {post.focus_keyword && (
               <span className="flex items-center gap-1"><Hash className="w-3 h-3" />{post.focus_keyword}</span>
@@ -281,7 +282,7 @@ const DashboardBlog = () => {
       } as any);
       setLastAutoSave(new Date());
       queryClient.invalidateQueries({ queryKey: ['blog-drafts', editId] });
-      toast.success(isRTL ? 'تم حفظ النسخة' : 'Version saved');
+      toast.success(pickBi(isRTL, 'تم حفظ النسخة', 'Version saved'));
     } catch (_e) { /* auto-save failed silently */ } finally { setIsAutoSaving(false); }
   };
 
@@ -290,7 +291,7 @@ const DashboardBlog = () => {
     if (data?.form_snapshot) {
       const snapshot = data.form_snapshot as Record<string, unknown>;
       setForm({ ...defaultForm, ...snapshot });
-      toast.success(isRTL ? 'تم استعادة النسخة' : 'Version restored');
+      toast.success(pickBi(isRTL, 'تم استعادة النسخة', 'Version restored'));
     }
   };
 
@@ -345,7 +346,7 @@ const DashboardBlog = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-blog'] });
-      toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
+      toast.success(pickBi(isRTL, 'تم الحفظ بنجاح', 'Saved successfully'));
       closeForm();
     },
     onError: (err: Error) => toast.error(err.message),
@@ -358,7 +359,7 @@ const DashboardBlog = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-blog'] });
-      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
+      toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted'));
     },
   });
 
@@ -394,7 +395,7 @@ const DashboardBlog = () => {
       if (src.t) { const r = await callBlogAi({ action: 'translate', text: src.t, sourceLang: sLang, targetLang: tLang }); setField(tgt.t, stripMarkdown(r)); }
       if (src.c) { const r = await callBlogAi({ action: 'translate', text: src.c, sourceLang: sLang, targetLang: tLang }); setField(tgt.c, r.trim()); }
       if (src.e) { const r = await callBlogAi({ action: 'translate', text: src.e, sourceLang: sLang, targetLang: tLang }); setField(tgt.e, stripMarkdown(r)); }
-      toast.success(isRTL ? 'تمت الترجمة' : 'Translation done');
+      toast.success(pickBi(isRTL, 'تمت الترجمة', 'Translation done'));
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
@@ -406,7 +407,7 @@ const DashboardBlog = () => {
       if (Array.isArray(parsed)) {
         setField('keywords', parsed.join(', '));
         if (!form.focus_keyword && parsed[0]) setField('focus_keyword', parsed[0]);
-        toast.success(isRTL ? 'تم استخراج الكلمات المفتاحية' : 'Keywords extracted');
+        toast.success(pickBi(isRTL, 'تم استخراج الكلمات المفتاحية', 'Keywords extracted'));
       }
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
@@ -430,7 +431,7 @@ const DashboardBlog = () => {
           if (parsed.meta_description_en) setField('meta_description_en', parsed.meta_description_en);
           if (parsed.focus_keyword && !form.focus_keyword) setField('focus_keyword', parsed.focus_keyword);
           if (parsed.slug_suggestion && !form.slug) setField('slug', sanitizeSlug(parsed.slug_suggestion));
-          toast.success(isRTL ? 'تم توليد بيانات الميتا' : 'Meta generated');
+          toast.success(pickBi(isRTL, 'تم توليد بيانات الميتا', 'Meta generated'));
         }
       }
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
@@ -468,12 +469,12 @@ const DashboardBlog = () => {
       const raw = await callBlogAi({ action: 'seo_analysis', title: form.title_ar, content: form.content_ar || form.content_en, text: JSON.stringify(payload), keywords: [form.focus_keyword] });
       const parsed = parseJsonResponse(raw);
       if (parsed) setSeoAnalysis(parsed);
-      toast.success(isRTL ? 'تم التحليل' : 'Analysis done');
+      toast.success(pickBi(isRTL, 'تم التحليل', 'Analysis done'));
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   const handleCompetitorAnalysis = async () => {
-    if (!form.focus_keyword) { toast.error(isRTL ? 'أدخل الكلمة المفتاحية أولاً' : 'Enter focus keyword first'); return; }
+    if (!form.focus_keyword) { toast.error(pickBi(isRTL, 'أدخل الكلمة المفتاحية أولاً', 'Enter focus keyword first')); return; }
     setAiLoading('competitor');
     try {
       const raw = await callBlogAi({
@@ -482,7 +483,7 @@ const DashboardBlog = () => {
       });
       const parsed = parseJsonResponse(raw);
       if (parsed) setCompetitorAnalysis(parsed);
-      toast.success(isRTL ? 'تم تحليل المنافسين' : 'Competitor analysis done');
+      toast.success(pickBi(isRTL, 'تم تحليل المنافسين', 'Competitor analysis done'));
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
@@ -491,7 +492,7 @@ const DashboardBlog = () => {
     try {
       const raw = await callBlogAi({ action: 'generate_excerpt', title: lang === 'ar' ? form.title_ar : form.title_en, content: lang === 'ar' ? form.content_ar : form.content_en, keywords: [form.focus_keyword] });
       setField(lang === 'ar' ? 'excerpt_ar' : 'excerpt_en', stripMarkdown(raw));
-      toast.success(isRTL ? 'تم توليد المقتطف' : 'Excerpt generated');
+      toast.success(pickBi(isRTL, 'تم توليد المقتطف', 'Excerpt generated'));
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
@@ -500,7 +501,7 @@ const DashboardBlog = () => {
     try {
       const raw = await callBlogAi({ action: 'improve_content', text: lang === 'ar' ? form.content_ar : form.content_en, keywords: [form.focus_keyword] });
       setField(lang === 'ar' ? 'content_ar' : 'content_en', raw.trim());
-      toast.success(isRTL ? 'تم تحسين المحتوى' : 'Content improved');
+      toast.success(pickBi(isRTL, 'تم تحسين المحتوى', 'Content improved'));
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
@@ -549,13 +550,13 @@ const DashboardBlog = () => {
         <PageHeader
           icon={BookOpen}
           tone="primary"
-          eyebrow={isRTL ? 'المحتوى' : 'Content'}
-          title={isRTL ? 'إدارة المدونة' : 'Blog Management'}
-          subtitle={isRTL ? 'إنشاء وإدارة وتحسين المقالات لمحركات البحث' : 'Create, manage & optimize articles for SEO'}
+          eyebrow={pickBi(isRTL, 'المحتوى', 'Content')}
+          title={pickBi(isRTL, 'إدارة المدونة', 'Blog Management')}
+          subtitle={pickBi(isRTL, 'إنشاء وإدارة وتحسين المقالات لمحركات البحث', 'Create, manage & optimize articles for SEO')}
           actions={!showForm ? (
             <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2 rounded-xl h-10 px-5">
               <Plus className="w-4 h-4" />
-              {isRTL ? 'مقال جديد' : 'New Article'}
+              {pickBi(isRTL, 'مقال جديد', 'New Article')}
             </Button>
           ) : undefined}
         />
@@ -564,12 +565,12 @@ const DashboardBlog = () => {
         {!showForm && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: isRTL ? 'إجمالي المقالات' : 'Total', value: stats.total, icon: FileText, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
-              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Globe, gradient: 'from-success/10 to-success/5', iconBg: 'bg-success/15 text-success' },
-              { label: isRTL ? 'مسودة' : 'Drafts', value: stats.draft, icon: PenLine, gradient: 'from-warning/10 to-warning/5', iconBg: 'bg-warning/15 text-warning' },
-              { label: isRTL ? 'مجدول' : 'Scheduled', value: stats.scheduled, icon: CalendarClock, gradient: 'from-info/10 to-info/5', iconBg: 'bg-info/15 text-info' },
-              { label: isRTL ? 'المشاهدات' : 'Views', value: stats.totalViews, icon: Eye, gradient: 'from-secondary/10 to-secondary/5', iconBg: 'bg-secondary/15 text-secondary' },
-              { label: isRTL ? 'متوسط SEO' : 'Avg SEO', value: `${stats.avgSeo}%`, icon: TrendingUp, gradient: 'from-accent/10 to-accent/5', iconBg: 'bg-accent/15 text-accent-foreground' },
+              { label: pickBi(isRTL, 'إجمالي المقالات', 'Total'), value: stats.total, icon: FileText, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+              { label: pickBi(isRTL, 'منشور', 'Published'), value: stats.published, icon: Globe, gradient: 'from-success/10 to-success/5', iconBg: 'bg-success/15 text-success' },
+              { label: pickBi(isRTL, 'مسودة', 'Drafts'), value: stats.draft, icon: PenLine, gradient: 'from-warning/10 to-warning/5', iconBg: 'bg-warning/15 text-warning' },
+              { label: pickBi(isRTL, 'مجدول', 'Scheduled'), value: stats.scheduled, icon: CalendarClock, gradient: 'from-info/10 to-info/5', iconBg: 'bg-info/15 text-info' },
+              { label: pickBi(isRTL, 'المشاهدات', 'Views'), value: stats.totalViews, icon: Eye, gradient: 'from-secondary/10 to-secondary/5', iconBg: 'bg-secondary/15 text-secondary' },
+              { label: pickBi(isRTL, 'متوسط SEO', 'Avg SEO'), value: `${stats.avgSeo}%`, icon: TrendingUp, gradient: 'from-accent/10 to-accent/5', iconBg: 'bg-accent/15 text-accent-foreground' },
             ].map((s, i) => (
               <div key={i} className={`rounded-2xl border border-border/30 bg-gradient-to-br ${s.gradient} p-3.5 transition-all hover:shadow-md group`}>
                 <div className="flex items-center gap-2.5">
@@ -599,15 +600,15 @@ const DashboardBlog = () => {
                     </div>
                     <div>
                       <h2 className="font-heading font-bold text-sm">
-                        {editId ? (isRTL ? 'تعديل المقال' : 'Edit Article') : (isRTL ? 'مقال جديد' : 'New Article')}
+                        {editId ? (pickBi(isRTL, 'تعديل المقال', 'Edit Article')) : (pickBi(isRTL, 'مقال جديد', 'New Article'))}
                       </h2>
                       <div className="flex items-center gap-2 mt-0.5">
-                        {form.status === 'published' && <Badge variant="default" className="text-[9px] h-4">{isRTL ? 'منشور' : 'Published'}</Badge>}
+                        {form.status === 'published' && <Badge variant="default" className="text-[9px] h-4">{pickBi(isRTL, 'منشور', 'Published')}</Badge>}
                         {scheduledDate && <Badge variant="secondary" className="text-[9px] h-4 gap-1"><CalendarClock className="w-2.5 h-2.5" />{format(scheduledDate, 'MMM dd')}</Badge>}
                         {lastAutoSave && (
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                             <CheckCircle2 className="w-2.5 h-2.5 text-success" />
-                            {isRTL ? 'آخر حفظ' : 'Saved'} {format(lastAutoSave, 'HH:mm')}
+                            {pickBi(isRTL, 'آخر حفظ', 'Saved')} {format(lastAutoSave, 'HH:mm')}
                           </span>
                         )}
                       </div>
@@ -626,11 +627,11 @@ const DashboardBlog = () => {
 
                   <Tabs defaultValue="content" className="w-full">
                     <TabsList className="w-full grid grid-cols-5 h-10 rounded-xl">
-                      <TabsTrigger value="content" className="text-xs rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
+                      <TabsTrigger value="content" className="text-xs rounded-lg">{pickBi(isRTL, 'المحتوى', 'Content')}</TabsTrigger>
                       <TabsTrigger value="seo" className="text-xs rounded-lg gap-1"><Search className="w-3 h-3" /> SEO</TabsTrigger>
-                      <TabsTrigger value="media" className="text-xs rounded-lg">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
-                      <TabsTrigger value="preview" className="text-xs rounded-lg gap-1"><Eye className="w-3 h-3" /> {isRTL ? 'معاينة' : 'Preview'}</TabsTrigger>
-                      <TabsTrigger value="settings" className="text-xs rounded-lg">{isRTL ? 'الإعدادات' : 'Settings'}</TabsTrigger>
+                      <TabsTrigger value="media" className="text-xs rounded-lg">{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
+                      <TabsTrigger value="preview" className="text-xs rounded-lg gap-1"><Eye className="w-3 h-3" /> {pickBi(isRTL, 'معاينة', 'Preview')}</TabsTrigger>
+                      <TabsTrigger value="settings" className="text-xs rounded-lg">{pickBi(isRTL, 'الإعدادات', 'Settings')}</TabsTrigger>
                     </TabsList>
 
                     {/* Content Tab */}
@@ -638,17 +639,17 @@ const DashboardBlog = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <Label className="text-xs font-medium">{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label>
+                            <Label className="text-xs font-medium">{pickBi(isRTL, 'العنوان (عربي)', 'Title (AR)')} *</Label>
                             <FieldAiActions value={form.title_ar} lang="ar" isRTL={isRTL} fieldType="title"
                               onTranslated={(v) => setField('title_en', v)} onImproved={(v) => setField('title_ar', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Input value={form.title_ar} onChange={e => handleTitleChange('title_ar', e.target.value)}
-                            placeholder={isRTL ? 'عنوان جذاب يتضمن الكلمة المفتاحية' : 'Compelling title'} className="rounded-xl" />
+                            placeholder={pickBi(isRTL, 'عنوان جذاب يتضمن الكلمة المفتاحية', 'Compelling title')} className="rounded-xl" />
                           <span className={`text-[10px] ${charHint(form.title_ar.length, 70)}`}>{form.title_ar.length}/70</span>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <Label className="text-xs font-medium">{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
+                            <Label className="text-xs font-medium">{pickBi(isRTL, 'العنوان (إنجليزي)', 'Title (EN)')}</Label>
                             <FieldAiActions value={form.title_en} lang="en" isRTL={isRTL} fieldType="title"
                               onTranslated={(v) => setField('title_ar', v)} onImproved={(v) => setField('title_en', v)} focusKeyword={form.focus_keyword} />
                           </div>
@@ -661,7 +662,7 @@ const DashboardBlog = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <Label className="text-xs font-medium">{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label>
+                            <Label className="text-xs font-medium">{pickBi(isRTL, 'المقتطف (عربي)', 'Excerpt (AR)')}</Label>
                             <FieldAiActions value={form.excerpt_ar || form.content_ar} lang="ar" isRTL={isRTL} fieldType="excerpt"
                               onTranslated={(v) => setField('excerpt_en', v)} onImproved={(v) => setField('excerpt_ar', v)} focusKeyword={form.focus_keyword} />
                           </div>
@@ -670,7 +671,7 @@ const DashboardBlog = () => {
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <Label className="text-xs font-medium">{isRTL ? 'المقتطف (إنجليزي)' : 'Excerpt (EN)'}</Label>
+                            <Label className="text-xs font-medium">{pickBi(isRTL, 'المقتطف (إنجليزي)', 'Excerpt (EN)')}</Label>
                             <FieldAiActions value={form.excerpt_en || form.content_en} lang="en" isRTL={isRTL} fieldType="excerpt"
                               onTranslated={(v) => setField('excerpt_ar', v)} onImproved={(v) => setField('excerpt_en', v)} focusKeyword={form.focus_keyword} />
                           </div>
@@ -682,7 +683,7 @@ const DashboardBlog = () => {
 
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <Label className="text-xs font-semibold">{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label>
+                          <Label className="text-xs font-semibold">{pickBi(isRTL, 'المحتوى (عربي)', 'Content (AR)')}</Label>
                           <FieldAiActions value={form.content_ar} lang="ar" isRTL={isRTL} fieldType="content"
                             onTranslated={(v) => setField('content_en', v)} onImproved={(v) => setField('content_ar', v)} focusKeyword={form.focus_keyword} />
                         </div>
@@ -691,7 +692,7 @@ const DashboardBlog = () => {
 
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <Label className="text-xs font-semibold">{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label>
+                          <Label className="text-xs font-semibold">{pickBi(isRTL, 'المحتوى (إنجليزي)', 'Content (EN)')}</Label>
                           <FieldAiActions value={form.content_en} lang="en" isRTL={isRTL} fieldType="content"
                             onTranslated={(v) => setField('content_ar', v)} onImproved={(v) => setField('content_en', v)} focusKeyword={form.focus_keyword} />
                         </div>
@@ -703,14 +704,14 @@ const DashboardBlog = () => {
                     <TabsContent value="seo" className="space-y-4 mt-4">
                       <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
                         <Label className="text-xs font-semibold flex items-center gap-1.5 mb-2">
-                          <Hash className="w-3.5 h-3.5 text-primary" /> {isRTL ? 'الكلمة المفتاحية الرئيسية' : 'Focus Keyword'}
+                          <Hash className="w-3.5 h-3.5 text-primary" /> {pickBi(isRTL, 'الكلمة المفتاحية الرئيسية', 'Focus Keyword')}
                         </Label>
                         <Input value={form.focus_keyword} onChange={e => setField('focus_keyword', e.target.value)} className="bg-background rounded-xl"
-                          placeholder={isRTL ? 'الكلمة المفتاحية الأساسية للمقال' : 'Primary keyword'} />
+                          placeholder={pickBi(isRTL, 'الكلمة المفتاحية الأساسية للمقال', 'Primary keyword')} />
                         {form.focus_keyword && (
                           <div className="flex gap-3 mt-2 text-[11px] text-muted-foreground">
-                            <span>{isRTL ? 'الكثافة:' : 'Density:'} <strong>{contentStats.keywordDensity.toFixed(1)}%</strong></span>
-                            <span>{isRTL ? 'التكرار:' : 'Count:'} <strong>{countInText(form.content_ar + ' ' + form.content_en, form.focus_keyword)}</strong></span>
+                            <span>{pickBi(isRTL, 'الكثافة:', 'Density:')} <strong>{contentStats.keywordDensity.toFixed(1)}%</strong></span>
+                            <span>{pickBi(isRTL, 'التكرار:', 'Count:')} <strong>{countInText(form.content_ar + ' ' + form.content_en, form.focus_keyword)}</strong></span>
                           </div>
                         )}
                       </div>
@@ -775,7 +776,7 @@ const DashboardBlog = () => {
                           <div className="flex items-center justify-between">
                             <p className="text-[11px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                               <Sparkles className="w-3.5 h-3.5" />
-                              {isRTL ? 'خيارات الميتا المُولّدة' : 'Generated Meta Options'}
+                              {pickBi(isRTL, 'خيارات الميتا المُولّدة', 'Generated Meta Options')}
                             </p>
                             <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setMetaOptions(null)}>
                               <X className="w-3 h-3" />
@@ -815,7 +816,7 @@ const DashboardBlog = () => {
                                     </div>
                                   </div>
                                   <Button size="sm" variant={opt.recommended ? 'default' : 'outline'} className="w-full h-7 text-[10px] rounded-lg" onClick={() => applyMetaOption(opt)}>
-                                    {isRTL ? 'تطبيق' : 'Apply'}
+                                    {pickBi(isRTL, 'تطبيق', 'Apply')}
                                   </Button>
                                 </div>
                               );
@@ -862,7 +863,7 @@ const DashboardBlog = () => {
 
                       {/* Keywords & Canonical */}
                       <div>
-                        <Label className="text-xs flex items-center gap-1"><Tag className="w-3 h-3" /> {isRTL ? 'الكلمات المفتاحية' : 'SEO Keywords'}</Label>
+                        <Label className="text-xs flex items-center gap-1"><Tag className="w-3 h-3" /> {pickBi(isRTL, 'الكلمات المفتاحية', 'SEO Keywords')}</Label>
                         <Input value={form.keywords} onChange={e => setField('keywords', e.target.value)} dir="ltr" placeholder="keyword1, keyword2" className="mt-1.5 rounded-xl" />
                         {form.keywords && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -881,7 +882,7 @@ const DashboardBlog = () => {
                     {/* Media Tab */}
                     <TabsContent value="media" className="space-y-4 mt-4">
                       <div>
-                        <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                        <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'صورة الغلاف', 'Cover Image')}</Label>
                         <ImageUpload
                           value={form.cover_image_url}
                           onChange={(url) => setField('cover_image_url', url || '')}
@@ -890,7 +891,7 @@ const DashboardBlog = () => {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة المشاركة (OG Image)' : 'Social Share Image'}</Label>
+                        <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'صورة المشاركة (OG Image)', 'Social Share Image')}</Label>
                         <ImageUpload
                           value={form.og_image_url}
                           onChange={(url) => setField('og_image_url', url || '')}
@@ -900,7 +901,7 @@ const DashboardBlog = () => {
                       </div>
                       {form.og_image_url && (
                         <div className="rounded-xl border border-border/30 overflow-hidden">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground p-3 bg-muted/20">{isRTL ? 'معاينة البطاقة الاجتماعية' : 'Social Card Preview'}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground p-3 bg-muted/20">{pickBi(isRTL, 'معاينة البطاقة الاجتماعية', 'Social Card Preview')}</p>
                           <div className="aspect-video overflow-hidden">
                             <img src={form.og_image_url} alt="OG" className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                           </div>
@@ -951,7 +952,7 @@ const DashboardBlog = () => {
                           {metaErrors.slug && <span className="text-[10px] text-destructive mt-1 block">{metaErrors.slug}</span>}
                         </div>
                         <div>
-                          <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'التصنيف', 'Category')}</Label>
                           <Select value={form.category} onValueChange={v => setField('category', v)}>
                             <SelectTrigger className="mt-1.5 rounded-xl"><SelectValue /></SelectTrigger>
                             <SelectContent className="rounded-xl">{blogCategories.map(c => <SelectItem key={c.value} value={c.value}>{language === 'ar' ? c.ar : c.en}</SelectItem>)}</SelectContent>
@@ -965,19 +966,19 @@ const DashboardBlog = () => {
                           <div className="flex items-center justify-between gap-3 flex-wrap">
                             <Label className="text-xs font-semibold flex items-center gap-1.5">
                               <BookOpen className="w-3.5 h-3.5 text-primary" />
-                              {isRTL ? 'إعدادات الدليل الفني' : 'Technical Guide Settings'}
+                              {pickBi(isRTL, 'إعدادات الدليل الفني', 'Technical Guide Settings')}
                             </Label>
                             <a href="/guides" target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
                               <ExternalLink className="w-3 h-3" />
-                              {isRTL ? 'مكتبة الأدلة' : 'Guides Library'}
+                              {pickBi(isRTL, 'مكتبة الأدلة', 'Guides Library')}
                             </a>
                           </div>
 
                           <div>
-                            <Label className="text-[11px] text-muted-foreground">{isRTL ? 'موضوع الدليل' : 'Guide Topic'}</Label>
+                            <Label className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'موضوع الدليل', 'Guide Topic')}</Label>
                             <Select value={form.guide_topic || ''} onValueChange={v => setField('guide_topic', v)}>
                               <SelectTrigger className="mt-1 h-10 rounded-xl">
-                                <SelectValue placeholder={isRTL ? 'اختر الموضوع' : 'Select topic'} />
+                                <SelectValue placeholder={pickBi(isRTL, 'اختر الموضوع', 'Select topic')} />
                               </SelectTrigger>
                               <SelectContent className="rounded-xl">
                                 {guideTopics.map(t => (
@@ -990,7 +991,7 @@ const DashboardBlog = () => {
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <Label className="text-[11px] text-muted-foreground">
-                                {isRTL ? 'الأسئلة الشائعة (تنشأ FAQPage Schema تلقائياً)' : 'FAQs (auto-generates FAQPage Schema)'}
+                                {pickBi(isRTL, 'الأسئلة الشائعة (تنشأ FAQPage Schema تلقائياً)', 'FAQs (auto-generates FAQPage Schema)')}
                               </Label>
                               <Button
                                 type="button" size="sm" variant="outline"
@@ -998,7 +999,7 @@ const DashboardBlog = () => {
                                 className="h-7 px-2.5 text-[11px] rounded-lg gap-1"
                               >
                                 <Plus className="w-3 h-3" />
-                                {isRTL ? 'إضافة سؤال' : 'Add FAQ'}
+                                {pickBi(isRTL, 'إضافة سؤال', 'Add FAQ')}
                               </Button>
                             </div>
                             <div className="space-y-2">
@@ -1012,7 +1013,7 @@ const DashboardBlog = () => {
                                         const next = [...form.faq]; next[idx] = { ...next[idx], q: e.target.value };
                                         setField('faq', next);
                                       }}
-                                      placeholder={isRTL ? 'السؤال...' : 'Question...'}
+                                      placeholder={pickBi(isRTL, 'السؤال...', 'Question...')}
                                       dir="auto"
                                       className="h-9 rounded-lg text-xs"
                                     />
@@ -1030,7 +1031,7 @@ const DashboardBlog = () => {
                                       const next = [...form.faq]; next[idx] = { ...next[idx], a: e.target.value };
                                       setField('faq', next);
                                     }}
-                                    placeholder={isRTL ? 'الإجابة...' : 'Answer...'}
+                                    placeholder={pickBi(isRTL, 'الإجابة...', 'Answer...')}
                                     dir="auto"
                                     rows={3}
                                     className="rounded-lg text-xs resize-none"
@@ -1039,7 +1040,7 @@ const DashboardBlog = () => {
                               ))}
                               {(!form.faq || form.faq.length === 0) && (
                                 <p className="text-[11px] text-muted-foreground text-center py-3 border border-dashed border-border rounded-lg">
-                                  {isRTL ? 'لا توجد أسئلة بعد. أضف 3-5 أسئلة شائعة لتحسين الظهور في Google.' : 'No FAQs yet. Add 3-5 to boost Google rich results.'}
+                                  {pickBi(isRTL, 'لا توجد أسئلة بعد. أضف 3-5 أسئلة شائعة لتحسين الظهور في Google.', 'No FAQs yet. Add 3-5 to boost Google rich results.')}
                                 </p>
                               )}
                             </div>
@@ -1049,28 +1050,28 @@ const DashboardBlog = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                          <Label className="text-xs">{isRTL ? 'الحالة' : 'Status'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'الحالة', 'Status')}</Label>
                           <Select value={form.status} onValueChange={v => { setField('status', v); if (v !== 'scheduled') setScheduledDate(undefined); }}>
                             <SelectTrigger className="mt-1.5 rounded-xl"><SelectValue /></SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
-                              <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
-                              <SelectItem value="scheduled">{isRTL ? 'مجدول' : 'Scheduled'}</SelectItem>
+                              <SelectItem value="draft">{pickBi(isRTL, 'مسودة', 'Draft')}</SelectItem>
+                              <SelectItem value="published">{pickBi(isRTL, 'منشور', 'Published')}</SelectItem>
+                              <SelectItem value="scheduled">{pickBi(isRTL, 'مجدول', 'Scheduled')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label className="text-xs">{isRTL ? 'الوسوم' : 'Tags'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'الوسوم', 'Tags')}</Label>
                           <Input value={form.tags} onChange={e => setField('tags', e.target.value)} placeholder="tag1, tag2" dir="ltr" className="mt-1.5 rounded-xl" />
                         </div>
                         {form.status === 'scheduled' && (
                           <div>
-                            <Label className="text-xs flex items-center gap-1"><CalendarClock className="w-3 h-3" /> {isRTL ? 'تاريخ النشر' : 'Publish Date'}</Label>
+                            <Label className="text-xs flex items-center gap-1"><CalendarClock className="w-3 h-3" /> {pickBi(isRTL, 'تاريخ النشر', 'Publish Date')}</Label>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="outline" className={cn("w-full mt-1.5 justify-start text-start text-xs font-normal rounded-xl", !scheduledDate && "text-muted-foreground")}>
                                   <CalendarIcon className="w-3.5 h-3.5 me-1.5" />
-                                  {scheduledDate ? format(scheduledDate, 'PPP') : (isRTL ? 'اختر التاريخ' : 'Pick date')}
+                                  {scheduledDate ? format(scheduledDate, 'PPP') : (pickBi(isRTL, 'اختر التاريخ', 'Pick date'))}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 rounded-xl" align="start">
@@ -1105,7 +1106,7 @@ const DashboardBlog = () => {
                   <div className="flex gap-2 pt-4 border-t border-border/20">
                     <Button onClick={() => {
                         if (blockSave) {
-                          toast.error(isRTL ? 'صحّح أخطاء الميتا/Slug قبل النشر' : 'Fix meta/slug errors before publishing');
+                          toast.error(pickBi(isRTL, 'صحّح أخطاء الميتا/Slug قبل النشر', 'Fix meta/slug errors before publishing'));
                           return;
                         }
                         saveMutation.mutate();
@@ -1113,18 +1114,18 @@ const DashboardBlog = () => {
                       className="flex-1 gap-2 rounded-xl h-10">
                       {saveMutation.isPending ? '...' : (
                         <>
-                          {form.status === 'scheduled' ? (isRTL ? 'جدولة النشر' : 'Schedule') :
-                           editId ? (isRTL ? 'تحديث المقال' : 'Update') : (isRTL ? 'نشر المقال' : 'Publish')}
+                          {form.status === 'scheduled' ? (pickBi(isRTL, 'جدولة النشر', 'Schedule')) :
+                           editId ? (pickBi(isRTL, 'تحديث المقال', 'Update')) : (pickBi(isRTL, 'نشر المقال', 'Publish'))}
                           <ArrowRight className="w-3.5 h-3.5" />
                         </>
                       )}
                     </Button>
-                    <Button variant="outline" onClick={closeForm} className="rounded-xl h-10">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    <Button variant="outline" onClick={closeForm} className="rounded-xl h-10">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                   </div>
                   {blockSave && (
                     <p className="text-[11px] text-destructive flex items-center gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      {isRTL ? 'يوجد أخطاء في حقول SEO — صحّحها أو احفظ كمسودة' : 'SEO field errors — fix them or save as draft'}
+                      {pickBi(isRTL, 'يوجد أخطاء في حقول SEO — صحّحها أو احفظ كمسودة', 'SEO field errors — fix them or save as draft')}
                     </p>
                   )}
                 </div>
@@ -1137,7 +1138,7 @@ const DashboardBlog = () => {
               <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
                 <div className="px-4 py-3 border-b border-border/20">
                   <h3 className="text-xs font-heading font-bold flex items-center gap-1.5">
-                    <BarChart3 className="w-3.5 h-3.5 text-primary" /> {isRTL ? 'تقييم SEO' : 'SEO Score'}
+                    <BarChart3 className="w-3.5 h-3.5 text-primary" /> {pickBi(isRTL, 'تقييم SEO', 'SEO Score')}
                   </h3>
                 </div>
                 <div className="p-4">
@@ -1146,7 +1147,7 @@ const DashboardBlog = () => {
                     onApplyFix={(field, value) => {
                       const v = field === 'slug' ? sanitizeSlug(value) : value;
                       setField(field as keyof typeof form, v);
-                      toast.success(isRTL ? 'تم التطبيق' : 'Applied');
+                      toast.success(pickBi(isRTL, 'تم التطبيق', 'Applied'));
                     }}
                     onApplyAll={(fixes) => {
                       fixes.forEach(f => {
@@ -1162,17 +1163,17 @@ const DashboardBlog = () => {
               <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
                 <div className="px-4 py-3 border-b border-border/20">
                   <h3 className="text-xs font-heading font-bold flex items-center gap-1.5">
-                    <BarChart3 className="w-3.5 h-3.5 text-primary" /> {isRTL ? 'إحصائيات المحتوى' : 'Content Stats'}
+                    <BarChart3 className="w-3.5 h-3.5 text-primary" /> {pickBi(isRTL, 'إحصائيات المحتوى', 'Content Stats')}
                   </h3>
                 </div>
                 <div className="p-4 grid grid-cols-2 gap-2">
                   {[
-                    { label: isRTL ? 'كلمات عربي' : 'Words AR', value: contentStats.wordCountAr },
-                    { label: isRTL ? 'كلمات إنجليزي' : 'Words EN', value: contentStats.wordCountEn },
-                    { label: isRTL ? 'العناوين' : 'Headings', value: contentStats.headingsCount },
-                    { label: isRTL ? 'الصور' : 'Images', value: contentStats.imagesCount },
-                    { label: isRTL ? 'الروابط' : 'Links', value: contentStats.linksCount },
-                    { label: isRTL ? 'وقت القراءة' : 'Read time', value: `${contentStats.readingTime}${isRTL ? 'د' : 'm'}` },
+                    { label: pickBi(isRTL, 'كلمات عربي', 'Words AR'), value: contentStats.wordCountAr },
+                    { label: pickBi(isRTL, 'كلمات إنجليزي', 'Words EN'), value: contentStats.wordCountEn },
+                    { label: pickBi(isRTL, 'العناوين', 'Headings'), value: contentStats.headingsCount },
+                    { label: pickBi(isRTL, 'الصور', 'Images'), value: contentStats.imagesCount },
+                    { label: pickBi(isRTL, 'الروابط', 'Links'), value: contentStats.linksCount },
+                    { label: pickBi(isRTL, 'وقت القراءة', 'Read time'), value: `${contentStats.readingTime}${pickBi(isRTL, 'د', 'm')}` },
                   ].map((s, i) => (
                     <div key={i} className="p-2 rounded-lg bg-muted/20 text-center">
                       <p className="text-sm font-bold">{s.value}</p>
@@ -1187,7 +1188,7 @@ const DashboardBlog = () => {
                 <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
                   <div className="px-4 py-3 border-b border-border/20">
                     <h3 className="text-xs font-heading font-bold flex items-center gap-1.5">
-                      <History className="w-3.5 h-3.5 text-primary" /> {isRTL ? 'النسخ الاحتياطية' : 'Versions'}
+                      <History className="w-3.5 h-3.5 text-primary" /> {pickBi(isRTL, 'النسخ الاحتياطية', 'Versions')}
                     </h3>
                   </div>
                   <div className="p-4">
@@ -1202,7 +1203,7 @@ const DashboardBlog = () => {
                 <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
                   <div className="px-4 py-3 border-b border-border/20">
                     <h3 className="text-xs font-heading font-bold flex items-center gap-1.5">
-                      <Trophy className="w-3.5 h-3.5 text-primary" /> {isRTL ? 'تحليل المنافسين' : 'Competitor Analysis'}
+                      <Trophy className="w-3.5 h-3.5 text-primary" /> {pickBi(isRTL, 'تحليل المنافسين', 'Competitor Analysis')}
                     </h3>
                   </div>
                   <div className="p-4 space-y-3">
@@ -1210,36 +1211,36 @@ const DashboardBlog = () => {
                       <span className={`text-2xl font-bold ${competitorAnalysis.competitive_score >= 70 ? 'text-success' : competitorAnalysis.competitive_score >= 40 ? 'text-warning' : 'text-destructive'}`}>
                         {competitorAnalysis.competitive_score}
                       </span>
-                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'نقاط التنافسية' : 'Competitive Score'}</p>
+                      <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'نقاط التنافسية', 'Competitive Score')}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
                       <div className="p-2 rounded-lg bg-muted/20 text-center">
                         <p className="font-medium">{competitorAnalysis.keyword_difficulty}</p>
-                        <p className="text-muted-foreground text-[9px]">{isRTL ? 'صعوبة' : 'Difficulty'}</p>
+                        <p className="text-muted-foreground text-[9px]">{pickBi(isRTL, 'صعوبة', 'Difficulty')}</p>
                       </div>
                       <div className="p-2 rounded-lg bg-muted/20 text-center">
                         <p className="font-medium">{competitorAnalysis.estimated_position}</p>
-                        <p className="text-muted-foreground text-[9px]">{isRTL ? 'الترتيب المتوقع' : 'Est. Position'}</p>
+                        <p className="text-muted-foreground text-[9px]">{pickBi(isRTL, 'الترتيب المتوقع', 'Est. Position')}</p>
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-success">{isRTL ? 'نقاط القوة' : 'Strengths'}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-success">{pickBi(isRTL, 'نقاط القوة', 'Strengths')}</p>
                       {(isRTL ? competitorAnalysis.strengths_ar : competitorAnalysis.strengths_en)?.map((s: string, i: number) => (
                         <p key={i} className="text-[11px] flex items-start gap-1"><CheckCircle2 className="w-3 h-3 text-success shrink-0 mt-0.5" />{s}</p>
                       ))}
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-destructive">{isRTL ? 'نقاط الضعف' : 'Weaknesses'}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-destructive">{pickBi(isRTL, 'نقاط الضعف', 'Weaknesses')}</p>
                       {(isRTL ? competitorAnalysis.weaknesses_ar : competitorAnalysis.weaknesses_en)?.map((s: string, i: number) => (
                         <p key={i} className="text-[11px] flex items-start gap-1"><XCircle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />{s}</p>
                       ))}
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-primary">{isRTL ? 'التوصيات' : 'Tips'}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-primary">{pickBi(isRTL, 'التوصيات', 'Tips')}</p>
                       {(isRTL ? competitorAnalysis.recommendations_ar : competitorAnalysis.recommendations_en)?.map((s: string, i: number) => (
                         <p key={i} className="text-[11px] flex items-start gap-1"><AlertTriangle className="w-3 h-3 text-warning shrink-0 mt-0.5" />{s}</p>
                       ))}
@@ -1247,7 +1248,7 @@ const DashboardBlog = () => {
 
                     {(isRTL ? competitorAnalysis.content_gap_ar : competitorAnalysis.content_gap_en)?.length > 0 && (
                       <div className="space-y-1">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'فجوات المحتوى' : 'Content Gaps'}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{pickBi(isRTL, 'فجوات المحتوى', 'Content Gaps')}</p>
                         {(isRTL ? competitorAnalysis.content_gap_ar : competitorAnalysis.content_gap_en)?.map((s: string, i: number) => (
                           <p key={i} className="text-[11px] text-muted-foreground flex items-start gap-1"><span className="text-primary">•</span>{s}</p>
                         ))}
@@ -1269,7 +1270,7 @@ const DashboardBlog = () => {
                 <div className="relative flex-1">
                   <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input className="ps-9 rounded-xl bg-muted/30 border-border/20"
-                    placeholder={isRTL ? 'بحث بالعنوان أو الرابط...' : 'Search by title or slug...'}
+                    placeholder={pickBi(isRTL, 'بحث بالعنوان أو الرابط...', 'Search by title or slug...')}
                     value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                 </div>
                 <div className="flex gap-2">
@@ -1277,9 +1278,9 @@ const DashboardBlog = () => {
                     <Button key={status} variant={filterStatus === status ? 'default' : 'outline'}
                       size="sm" className="text-xs rounded-xl h-10 px-4"
                       onClick={() => setFilterStatus(status)}>
-                      {status === 'all' ? (isRTL ? 'الكل' : 'All') :
-                       status === 'published' ? (isRTL ? 'منشور' : 'Published') :
-                       (isRTL ? 'مسودة' : 'Draft')}
+                      {status === 'all' ? (pickBi(isRTL, 'الكل', 'All')) :
+                       status === 'published' ? (pickBi(isRTL, 'منشور', 'Published')) :
+                       (pickBi(isRTL, 'مسودة', 'Draft'))}
                       <Badge variant="secondary" className="text-[9px] ms-1.5 px-1.5 py-0 rounded-md">
                         {status === 'all' ? stats.total : status === 'published' ? stats.published : stats.draft}
                       </Badge>
@@ -1298,10 +1299,10 @@ const DashboardBlog = () => {
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center mx-auto mb-4">
                     <FileText className="w-8 h-8 opacity-30" />
                   </div>
-                  <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد مقالات' : 'No articles found'}</p>
-                  <p className="text-xs">{isRTL ? 'ابدأ بإنشاء أول مقال لمدونتك' : 'Start by creating your first article'}</p>
+                  <p className="font-heading font-bold text-sm mb-1">{pickBi(isRTL, 'لا توجد مقالات', 'No articles found')}</p>
+                  <p className="text-xs">{pickBi(isRTL, 'ابدأ بإنشاء أول مقال لمدونتك', 'Start by creating your first article')}</p>
                   <Button size="sm" className="mt-4 gap-1.5 rounded-xl" onClick={() => { resetForm(); setShowForm(true); }}>
-                    <Plus className="w-3.5 h-3.5" /> {isRTL ? 'مقال جديد' : 'New Article'}
+                    <Plus className="w-3.5 h-3.5" /> {pickBi(isRTL, 'مقال جديد', 'New Article')}
                   </Button>
                 </div>
               </div>
