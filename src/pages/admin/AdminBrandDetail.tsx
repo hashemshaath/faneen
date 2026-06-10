@@ -26,6 +26,7 @@ import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 
 import {
+import { pickBi } from '@/components/common/Bilingual';
   adminGetBrand, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
   adminMergeBrands, adminUpdateBrand,
   listBrandManufacturingCountries, listBrandSectors,
@@ -45,7 +46,7 @@ const AdminBrandDetail: React.FC = () => {
   useNoIndex();
   const { id = '' } = useParams<{ id: string }>();
   const { isRTL } = useLanguage();
-  const locale: 'ar' | 'en' = isRTL ? 'ar' : 'en';
+  const locale: 'ar' | 'en' = pickBi(isRTL, 'ar', 'en');
   const qc = useQueryClient();
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
@@ -115,7 +116,7 @@ const AdminBrandDetail: React.FC = () => {
   usePageMeta({
     title: brand
       ? (isRTL ? `${brand.name_ar} — إدارة العلامات` : `${brand.name_en ?? brand.name_ar} — Brand Admin`)
-      : (isRTL ? 'تفاصيل العلامة' : 'Brand detail'),
+      : (pickBi(isRTL, 'تفاصيل العلامة', 'Brand detail')),
     noindex: true,
   });
 
@@ -185,22 +186,22 @@ const AdminBrandDetail: React.FC = () => {
 
   const approve = useMutation({
     mutationFn: () => adminApproveBrand(id),
-    onSuccess: () => { toast.success(isRTL ? 'تم الاعتماد' : 'Approved'); invalidate(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم الاعتماد', 'Approved')); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const reject = useMutation({
     mutationFn: () => adminRejectBrand(id, reason),
-    onSuccess: () => { toast.success(isRTL ? 'تم الرفض' : 'Rejected'); setRejecting(false); setReason(''); invalidate(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم الرفض', 'Rejected')); setRejecting(false); setReason(''); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const archive = useMutation({
     mutationFn: () => adminArchiveBrand(id),
-    onSuccess: () => { toast.success(isRTL ? 'تمت الأرشفة' : 'Archived'); invalidate(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تمت الأرشفة', 'Archived')); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const merge = useMutation({
     mutationFn: (targetId: string) => adminMergeBrands(id, targetId),
-    onSuccess: () => { toast.success(isRTL ? 'تم الدمج' : 'Merged'); setMergeTarget(''); invalidate(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم الدمج', 'Merged')); setMergeTarget(''); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const toggleVerified = useMutation({
@@ -208,7 +209,7 @@ const AdminBrandDetail: React.FC = () => {
       is_verified: !brand?.is_verified,
       verification_status: brand?.is_verified ? 'unverified' : 'verified',
     }),
-    onSuccess: () => { toast.success(isRTL ? 'تم التحديث' : 'Updated'); invalidate(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم التحديث', 'Updated')); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const saveSeo = useMutation({
@@ -220,7 +221,7 @@ const AdminBrandDetail: React.FC = () => {
       brand_keywords: seoForm.brand_keywords.split(',').map(k => k.trim()).filter(Boolean),
       og_image_url: seoForm.og_image_url || null,
     }),
-    onSuccess: () => { toast.success(isRTL ? 'تم حفظ SEO' : 'SEO saved'); invalidate(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم حفظ SEO', 'SEO saved')); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
@@ -240,7 +241,7 @@ const AdminBrandDetail: React.FC = () => {
       is_local: identityForm.is_local,
     }),
     onSuccess: () => {
-      toast.success(isRTL ? 'تم حفظ التعديلات' : 'Changes saved');
+      toast.success(pickBi(isRTL, 'تم حفظ التعديلات', 'Changes saved'));
       setIdentityDirty(false); invalidate();
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -260,7 +261,7 @@ const AdminBrandDetail: React.FC = () => {
       status: 'approved',
     }),
     onSuccess: () => {
-      toast.success(isRTL ? 'تمت إضافة المنتج' : 'Product added');
+      toast.success(pickBi(isRTL, 'تمت إضافة المنتج', 'Product added'));
       setNewProduct({
         name_ar: '', name_en: '', model_number: '', sku: '',
         description_ar: '', image_url: '',
@@ -283,7 +284,7 @@ const AdminBrandDetail: React.FC = () => {
       image_variants: editProduct.image_variants ?? {},
     }),
     onSuccess: () => {
-      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+      toast.success(pickBi(isRTL, 'تم التحديث', 'Updated'));
       setEditingProductId(null); invalidateProducts();
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -291,20 +292,20 @@ const AdminBrandDetail: React.FC = () => {
 
   const deleteProduct = useMutation({
     mutationFn: (productId: string) => adminDeleteBrandProduct(productId),
-    onSuccess: () => { toast.success(isRTL ? 'تم الحذف' : 'Deleted'); invalidateProducts(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted')); invalidateProducts(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
   const approveProductReq = useMutation({
     mutationFn: (reqId: string) => adminApproveBrandProductRequest(reqId),
-    onSuccess: () => { toast.success(isRTL ? 'تم اعتماد المنتج' : 'Product approved'); invalidateProducts(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم اعتماد المنتج', 'Product approved')); invalidateProducts(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const rejectProductReq = useMutation({
     mutationFn: (vars: { reqId: string; reason: string }) =>
       adminRejectBrandProductRequest(vars.reqId, vars.reason),
     onSuccess: () => {
-      toast.success(isRTL ? 'تم الرفض' : 'Rejected');
+      toast.success(pickBi(isRTL, 'تم الرفض', 'Rejected'));
       setRejectingReqId(null); setReqRejectReason(''); invalidateProducts();
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -312,14 +313,14 @@ const AdminBrandDetail: React.FC = () => {
 
   const approveLink = useMutation({
     mutationFn: (linkId: string) => adminApproveProviderBrandLink(linkId),
-    onSuccess: () => { toast.success(isRTL ? 'تم اعتماد الربط' : 'Link approved'); invalidate(); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم اعتماد الربط', 'Link approved')); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const rejectLink = useMutation({
     mutationFn: (vars: { linkId: string; reason: string }) =>
       adminRejectProviderBrandLink(vars.linkId, vars.reason),
     onSuccess: () => {
-      toast.success(isRTL ? 'تم رفض الربط' : 'Link rejected');
+      toast.success(pickBi(isRTL, 'تم رفض الربط', 'Link rejected'));
       setRejectingLinkId(null); setLinkReason(''); invalidate();
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -332,8 +333,8 @@ const AdminBrandDetail: React.FC = () => {
     return (
       <DashboardLayout>
         <div className="p-6 text-center space-y-3">
-          <p className="text-muted-foreground">{isRTL ? 'العلامة غير موجودة' : 'Brand not found'}</p>
-          <Button asChild variant="outline"><Link to="/admin/brands"><BackArrow className="w-4 h-4 me-1" />{isRTL ? 'العودة' : 'Back'}</Link></Button>
+          <p className="text-muted-foreground">{pickBi(isRTL, 'العلامة غير موجودة', 'Brand not found')}</p>
+          <Button asChild variant="outline"><Link to="/admin/brands"><BackArrow className="w-4 h-4 me-1" />{pickBi(isRTL, 'العودة', 'Back')}</Link></Button>
         </div>
       </DashboardLayout>
     );
@@ -345,7 +346,7 @@ const AdminBrandDetail: React.FC = () => {
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6">
         <div>
-          <Button asChild variant="ghost" size="sm" className="mb-3"><Link to="/admin/brands"><BackArrow className="w-4 h-4 me-1" />{isRTL ? 'سجل العلامات' : 'Brands Registry'}</Link></Button>
+          <Button asChild variant="ghost" size="sm" className="mb-3"><Link to="/admin/brands"><BackArrow className="w-4 h-4 me-1" />{pickBi(isRTL, 'سجل العلامات', 'Brands Registry')}</Link></Button>
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="flex items-start gap-3 min-w-0 flex-1">
               {brand.logo_url ? (
@@ -360,7 +361,7 @@ const AdminBrandDetail: React.FC = () => {
                   {brand.slug && <span>/{brand.slug}</span>}
                   <Badge variant="outline" className="text-xs">{pick(brandStatusLabel[brand.status], locale)}</Badge>
                   <Badge variant="secondary" className="text-xs">{pick(verificationLabel[brand.verification_status], locale)}</Badge>
-                  {brand.is_local && <Badge variant="outline" className="text-xs">{isRTL ? 'محلي' : 'Local'}</Badge>}
+                  {brand.is_local && <Badge variant="outline" className="text-xs">{pickBi(isRTL, 'محلي', 'Local')}</Badge>}
                   {brand.website && (
                     <span className="inline-flex items-center gap-1 tech-content">
                       <Globe className="w-3 h-3" />
@@ -375,29 +376,29 @@ const AdminBrandDetail: React.FC = () => {
                 <>
                   <Button size="sm" onClick={() => approve.mutate()} disabled={approve.isPending}>
                     {approve.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Check className="w-4 h-4 me-1" />}
-                    {isRTL ? 'اعتماد' : 'Approve'}
+                    {pickBi(isRTL, 'اعتماد', 'Approve')}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setRejecting(true)}><X className="w-4 h-4 me-1" />{isRTL ? 'رفض' : 'Reject'}</Button>
+                  <Button size="sm" variant="outline" onClick={() => setRejecting(true)}><X className="w-4 h-4 me-1" />{pickBi(isRTL, 'رفض', 'Reject')}</Button>
                 </>
               )}
               {brand.status === 'approved' && (
                 <Button size="sm" variant="ghost" onClick={() => archive.mutate()} disabled={archive.isPending}>
-                  <Archive className="w-4 h-4 me-1" />{isRTL ? 'أرشفة' : 'Archive'}
+                  <Archive className="w-4 h-4 me-1" />{pickBi(isRTL, 'أرشفة', 'Archive')}
                 </Button>
               )}
               <Button size="sm" variant="outline" onClick={() => toggleVerified.mutate()} disabled={toggleVerified.isPending}>
-                <Shield className="w-4 h-4 me-1" />{brand.is_verified ? (isRTL ? 'إلغاء التوثيق' : 'Unverify') : (isRTL ? 'توثيق' : 'Verify')}
+                <Shield className="w-4 h-4 me-1" />{brand.is_verified ? (pickBi(isRTL, 'إلغاء التوثيق', 'Unverify')) : (pickBi(isRTL, 'توثيق', 'Verify'))}
               </Button>
             </div>
           </div>
           {rejecting && (
             <div className="mt-3 p-3 rounded-lg bg-muted/40 space-y-2">
-              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={isRTL ? 'سبب الرفض…' : 'Rejection reason…'} className="h-10" />
+              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={pickBi(isRTL, 'سبب الرفض…', 'Rejection reason…')} className="h-10" />
               <div className="flex gap-2">
                 <Button size="sm" variant="destructive" onClick={() => reject.mutate()} disabled={reject.isPending || !reason.trim()}>
-                  {isRTL ? 'تأكيد الرفض' : 'Confirm reject'}
+                  {pickBi(isRTL, 'تأكيد الرفض', 'Confirm reject')}
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => { setRejecting(false); setReason(''); }}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setRejecting(false); setReason(''); }}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
               </div>
             </div>
           )}
@@ -408,70 +409,70 @@ const AdminBrandDetail: React.FC = () => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2"><Edit3 className="w-4 h-4" />{isRTL ? 'البيانات الأساسية' : 'Identity & origin'}</span>
-                {identityDirty && <Badge variant="warning" className="text-[10px]">{isRTL ? 'تعديلات غير محفوظة' : 'Unsaved'}</Badge>}
+                <span className="flex items-center gap-2"><Edit3 className="w-4 h-4" />{pickBi(isRTL, 'البيانات الأساسية', 'Identity & origin')}</span>
+                {identityDirty && <Badge variant="warning" className="text-[10px]">{pickBi(isRTL, 'تعديلات غير محفوظة', 'Unsaved')}</Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid sm:grid-cols-2 gap-3">
-                <FieldLabeled label={isRTL ? 'الاسم (عربي) *' : 'Name (AR) *'}>
+                <FieldLabeled label={pickBi(isRTL, 'الاسم (عربي) *', 'Name (AR) *')}>
                   <Input dir="auto" value={identityForm.name_ar}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, name_ar: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
-                <FieldLabeled label={isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}>
+                <FieldLabeled label={pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (EN)')}>
                   <Input dir="ltr" value={identityForm.name_en}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, name_en: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
-                <FieldLabeled label={isRTL ? 'الموقع الرسمي' : 'Official website'}>
+                <FieldLabeled label={pickBi(isRTL, 'الموقع الرسمي', 'Official website')}>
                   <Input dir="ltr" placeholder="https://example.com" className="tech-content" value={identityForm.website}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, website: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
-                <FieldLabeled label={isRTL ? 'الشركة المالكة' : 'Brand owner'}>
+                <FieldLabeled label={pickBi(isRTL, 'الشركة المالكة', 'Brand owner')}>
                   <Input dir="auto" value={identityForm.brand_owner_company}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, brand_owner_company: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
-                <FieldLabeled label={isRTL ? 'سنة التأسيس' : 'Founded year'}>
+                <FieldLabeled label={pickBi(isRTL, 'سنة التأسيس', 'Founded year')}>
                   <Input type="number" inputMode="numeric" className="tech-content" value={identityForm.founded_year}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, founded_year: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
-                <FieldLabeled label={isRTL ? 'كود البلد (ISO)' : 'Country code (ISO)'}>
+                <FieldLabeled label={pickBi(isRTL, 'كود البلد (ISO)', 'Country code (ISO)')}>
                   <Input maxLength={3} dir="ltr" className="tech-content uppercase" value={identityForm.country_of_origin_code}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_code: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
-                <FieldLabeled label={isRTL ? 'اسم البلد (عربي)' : 'Country (AR)'}>
+                <FieldLabeled label={pickBi(isRTL, 'اسم البلد (عربي)', 'Country (AR)')}>
                   <Input dir="auto" value={identityForm.country_of_origin_name_ar}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_ar: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
-                <FieldLabeled label={isRTL ? 'اسم البلد (إنجليزي)' : 'Country (EN)'}>
+                <FieldLabeled label={pickBi(isRTL, 'اسم البلد (إنجليزي)', 'Country (EN)')}>
                   <Input dir="ltr" value={identityForm.country_of_origin_name_en}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_en: e.target.value })); setIdentityDirty(true); }} />
                 </FieldLabeled>
               </div>
-              <FieldLabeled label={isRTL ? 'وصف العلامة (عربي)' : 'Description (AR)'}>
+              <FieldLabeled label={pickBi(isRTL, 'وصف العلامة (عربي)', 'Description (AR)')}>
                 <Textarea dir="auto" rows={2} value={identityForm.description_ar}
                   onChange={(e) => { setIdentityForm(f => ({ ...f, description_ar: e.target.value })); setIdentityDirty(true); }} />
               </FieldLabeled>
-              <FieldLabeled label={isRTL ? 'وصف العلامة (إنجليزي)' : 'Description (EN)'}>
+              <FieldLabeled label={pickBi(isRTL, 'وصف العلامة (إنجليزي)', 'Description (EN)')}>
                 <Textarea dir="ltr" rows={2} value={identityForm.description_en}
                   onChange={(e) => { setIdentityForm(f => ({ ...f, description_en: e.target.value })); setIdentityDirty(true); }} />
               </FieldLabeled>
               <div>
-                <Label className="text-xs mb-2 block">{isRTL ? 'الشعار (يُضغط تلقائياً إلى WebP)' : 'Logo (auto-compressed to WebP)'}</Label>
+                <Label className="text-xs mb-2 block">{pickBi(isRTL, 'الشعار (يُضغط تلقائياً إلى WebP)', 'Logo (auto-compressed to WebP)')}</Label>
                 <ImageUpload bucket="business-assets" value={identityForm.logo_url}
                   onChange={(url) => { setIdentityForm(f => ({ ...f, logo_url: url || '' })); setIdentityDirty(true); }}
                   onRemove={() => { setIdentityForm(f => ({ ...f, logo_url: '' })); setIdentityDirty(true); }}
-                  placeholder={isRTL ? 'رفع شعار العلامة' : 'Upload brand logo'} />
+                  placeholder={pickBi(isRTL, 'رفع شعار العلامة', 'Upload brand logo')} />
               </div>
               <div className="flex items-center justify-between gap-2 pt-1">
                 <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
                   <input type="checkbox" className="h-4 w-4" checked={identityForm.is_local}
                     onChange={(e) => { setIdentityForm(f => ({ ...f, is_local: e.target.checked })); setIdentityDirty(true); }} />
-                  <span>{isRTL ? 'علامة محلية' : 'Local brand'}</span>
+                  <span>{pickBi(isRTL, 'علامة محلية', 'Local brand')}</span>
                 </label>
                 <Button size="sm" onClick={() => saveIdentity.mutate()}
                   disabled={!identityDirty || saveIdentity.isPending || !identityForm.name_ar.trim()}>
                   {saveIdentity.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
-                  {isRTL ? 'حفظ التعديلات' : 'Save changes'}
+                  {pickBi(isRTL, 'حفظ التعديلات', 'Save changes')}
                 </Button>
               </div>
             </CardContent>
@@ -498,7 +499,7 @@ const AdminBrandDetail: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'عنوان SEO (عربي)', 'SEO Title (AR)')}</Label>
                     <FieldAiActions value={seoForm.seo_title_ar || brand.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_title" compact
                       onTranslated={(t) => setSeoForm(f => ({ ...f, seo_title_ar: t }))}
                       onImproved={(t) => setSeoForm(f => ({ ...f, seo_title_ar: t }))} />
@@ -507,7 +508,7 @@ const AdminBrandDetail: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'عنوان SEO (إنجليزي)', 'SEO Title (EN)')}</Label>
                     <FieldAiActions value={seoForm.seo_title_en || brand.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_title" compact
                       onTranslated={(t) => setSeoForm(f => ({ ...f, seo_title_en: t }))}
                       onImproved={(t) => setSeoForm(f => ({ ...f, seo_title_en: t }))} />
@@ -516,7 +517,7 @@ const AdminBrandDetail: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'وصف SEO (عربي)', 'SEO Description (AR)')}</Label>
                     <FieldAiActions value={seoForm.seo_description_ar || brand.description_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_description" compact
                       onTranslated={(t) => setSeoForm(f => ({ ...f, seo_description_ar: t }))}
                       onImproved={(t) => setSeoForm(f => ({ ...f, seo_description_ar: t }))} />
@@ -525,7 +526,7 @@ const AdminBrandDetail: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'وصف SEO (إنجليزي)', 'SEO Description (EN)')}</Label>
                     <FieldAiActions value={seoForm.seo_description_en || brand.description_en || ''} lang="en" isRTL={isRTL} fieldType="meta_description" compact
                       onTranslated={(t) => setSeoForm(f => ({ ...f, seo_description_en: t }))}
                       onImproved={(t) => setSeoForm(f => ({ ...f, seo_description_en: t }))} />
@@ -534,29 +535,29 @@ const AdminBrandDetail: React.FC = () => {
                 </div>
               </div>
               <div>
-                <Label className="text-xs">{isRTL ? 'كلمات العلامة' : 'Brand keywords'}</Label>
+                <Label className="text-xs">{pickBi(isRTL, 'كلمات العلامة', 'Brand keywords')}</Label>
                 <Input value={seoForm.brand_keywords} onChange={(e) => setSeoForm(f => ({ ...f, brand_keywords: e.target.value }))} className="mt-1" dir="auto" />
               </div>
               <div>
-                <Label className="text-xs mb-2 block">{isRTL ? 'صورة OG' : 'OG image'}</Label>
+                <Label className="text-xs mb-2 block">{pickBi(isRTL, 'صورة OG', 'OG image')}</Label>
                 <ImageUpload bucket="business-assets" value={seoForm.og_image_url}
                   onChange={(url) => setSeoForm(f => ({ ...f, og_image_url: url || '' }))}
                   onRemove={() => setSeoForm(f => ({ ...f, og_image_url: '' }))}
-                  placeholder={isRTL ? 'رفع صورة المشاركة' : 'Upload share image'} />
+                  placeholder={pickBi(isRTL, 'رفع صورة المشاركة', 'Upload share image')} />
               </div>
               <Button onClick={() => saveSeo.mutate()} disabled={saveSeo.isPending} className="w-full gap-2">
                 {saveSeo.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {isRTL ? 'حفظ SEO' : 'Save SEO'}
+                {pickBi(isRTL, 'حفظ SEO', 'Save SEO')}
               </Button>
             </CardContent>
           </Card>
 
           {/* Manufacturing countries */}
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">{isRTL ? 'دول التصنيع' : 'Manufacturing countries'}</CardTitle></CardHeader>
+            <CardHeader className="pb-3"><CardTitle className="text-base">{pickBi(isRTL, 'دول التصنيع', 'Manufacturing countries')}</CardTitle></CardHeader>
             <CardContent>
               {mfgQ.isLoading ? <Skeleton className="h-20" /> : (mfgQ.data ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد بيانات' : 'None recorded'}</p>
+                <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد بيانات', 'None recorded')}</p>
               ) : (
                 <ul className="space-y-1 text-sm">
                   {(mfgQ.data ?? []).map((c) => (
@@ -573,10 +574,10 @@ const AdminBrandDetail: React.FC = () => {
 
           {/* Sectors */}
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">{isRTL ? 'القطاعات المرتبطة' : 'Linked sectors'}</CardTitle></CardHeader>
+            <CardHeader className="pb-3"><CardTitle className="text-base">{pickBi(isRTL, 'القطاعات المرتبطة', 'Linked sectors')}</CardTitle></CardHeader>
             <CardContent>
               {sectorsQ.isLoading ? <Skeleton className="h-16" /> : (sectorsQ.data ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد قطاعات مرتبطة' : 'No sectors linked'}</p>
+                <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد قطاعات مرتبطة', 'No sectors linked')}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {(sectorsQ.data ?? []).map((l) => {
@@ -595,18 +596,18 @@ const AdminBrandDetail: React.FC = () => {
 
           {/* Merge */}
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4" />{isRTL ? 'دمج العلامة' : 'Merge brand'}</CardTitle></CardHeader>
+            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4" />{pickBi(isRTL, 'دمج العلامة', 'Merge brand')}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               <p className="text-xs text-muted-foreground">
-                {isRTL ? 'دمج هذه العلامة في علامة أخرى (تظل المراجع كما هي).' : 'Merge this brand into another (refs are preserved).'}
+                {pickBi(isRTL, 'دمج هذه العلامة في علامة أخرى (تظل المراجع كما هي).', 'Merge this brand into another (refs are preserved).')}
               </p>
               <Input value={mergeTarget} onChange={(e) => setMergeTarget(e.target.value)}
-                placeholder={isRTL ? 'UUID العلامة الهدف' : 'Target brand UUID'} className="h-10 tech-content" />
+                placeholder={pickBi(isRTL, 'UUID العلامة الهدف', 'Target brand UUID')} className="h-10 tech-content" />
               <Button size="sm" variant="outline"
                 onClick={() => { if (mergeTarget.trim()) merge.mutate(mergeTarget.trim()); }}
                 disabled={!mergeTarget.trim() || merge.isPending}>
                 {merge.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
-                {isRTL ? 'دمج' : 'Merge'}
+                {pickBi(isRTL, 'دمج', 'Merge')}
               </Button>
             </CardContent>
           </Card>
@@ -614,15 +615,13 @@ const AdminBrandDetail: React.FC = () => {
 
         {/* Provider relationships */}
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4" />{isRTL ? 'علاقات المزودين' : 'Provider relationships'} <span className="text-xs text-muted-foreground">({linksQ.data?.length ?? 0})</span></CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4" />{pickBi(isRTL, 'علاقات المزودين', 'Provider relationships')} <span className="text-xs text-muted-foreground">({linksQ.data?.length ?? 0})</span></CardTitle></CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground mb-3">
-              {isRTL
-                ? 'نوع العلاقة (وكيل حصري، موزع معتمد، مُصنِّع، إلخ) يُحدَّد من قِبل المزود ويُعتمَد من هنا.'
-                : 'Relationship type (exclusive agent, authorized distributor, manufacturer, etc.) is declared by the provider and approved here.'}
+              {pickBi(isRTL, 'نوع العلاقة (وكيل حصري، موزع معتمد، مُصنِّع، إلخ) يُحدَّد من قِبل المزود ويُعتمَد من هنا.', 'Relationship type (exclusive agent, authorized distributor, manufacturer, etc.) is declared by the provider and approved here.')}
             </p>
             {linksQ.isLoading ? <Skeleton className="h-24" /> : (linksQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد علاقات بعد' : 'No provider links yet'}</p>
+              <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد علاقات بعد', 'No provider links yet')}</p>
             ) : (
               <div className="space-y-2">
                 {(linksQ.data ?? []).map((l) => {
@@ -641,31 +640,31 @@ const AdminBrandDetail: React.FC = () => {
                         {l.authorization_document_url && (
                           <a href={l.authorization_document_url} target="_blank" rel="noopener noreferrer"
                              className="text-xs text-primary underline ms-2 inline-flex items-center gap-1">
-                            <ExternalLink className="w-3 h-3" />{isRTL ? 'مستند التفويض' : 'Auth doc'}
+                            <ExternalLink className="w-3 h-3" />{pickBi(isRTL, 'مستند التفويض', 'Auth doc')}
                           </a>
                         )}
                       </div>
                       {l.authorization_status === 'pending' && (
                         <div className="flex gap-2">
                           <Button size="sm" onClick={() => approveLink.mutate(l.id)} disabled={approveLink.isPending}>
-                            <Check className="w-4 h-4 me-1" />{isRTL ? 'اعتماد' : 'Approve'}
+                            <Check className="w-4 h-4 me-1" />{pickBi(isRTL, 'اعتماد', 'Approve')}
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => { setRejectingLinkId(l.id); setLinkReason(''); }}>
-                            <X className="w-4 h-4 me-1" />{isRTL ? 'رفض' : 'Reject'}
+                            <X className="w-4 h-4 me-1" />{pickBi(isRTL, 'رفض', 'Reject')}
                           </Button>
                         </div>
                       )}
                       {rejectingLinkId === l.id && (
                         <div className="w-full mt-2 p-2 rounded bg-muted/40 space-y-2">
                           <Input value={linkReason} onChange={(e) => setLinkReason(e.target.value)}
-                            placeholder={isRTL ? 'سبب الرفض…' : 'Rejection reason…'} className="h-9" />
+                            placeholder={pickBi(isRTL, 'سبب الرفض…', 'Rejection reason…')} className="h-9" />
                           <div className="flex gap-2">
                             <Button size="sm" variant="destructive"
                               onClick={() => linkReason.trim() && rejectLink.mutate({ linkId: l.id, reason: linkReason })}
                               disabled={!linkReason.trim() || rejectLink.isPending}>
-                              {isRTL ? 'تأكيد' : 'Confirm'}
+                              {pickBi(isRTL, 'تأكيد', 'Confirm')}
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => { setRejectingLinkId(null); setLinkReason(''); }}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                            <Button size="sm" variant="ghost" onClick={() => { setRejectingLinkId(null); setLinkReason(''); }}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                           </div>
                         </div>
                       )}
@@ -682,27 +681,27 @@ const AdminBrandDetail: React.FC = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Package className="w-4 h-4" />{isRTL ? 'منتجات العلامة' : 'Brand products'}
+              <Package className="w-4 h-4" />{pickBi(isRTL, 'منتجات العلامة', 'Brand products')}
               <span className="text-xs text-muted-foreground">({productsQ.data?.length ?? 0})</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="border rounded-xl p-3 bg-muted/30 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-semibold"><Plus className="w-4 h-4" />{isRTL ? 'إضافة منتج مركزياً (معتمد فوراً)' : 'Add product centrally (instantly approved)'}</div>
+              <div className="flex items-center gap-2 text-sm font-semibold"><Plus className="w-4 h-4" />{pickBi(isRTL, 'إضافة منتج مركزياً (معتمد فوراً)', 'Add product centrally (instantly approved)')}</div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <Input dir="auto" placeholder={isRTL ? 'الاسم (عربي) *' : 'Name (AR) *'} value={newProduct.name_ar}
+                <Input dir="auto" placeholder={pickBi(isRTL, 'الاسم (عربي) *', 'Name (AR) *')} value={newProduct.name_ar}
                   onChange={(e) => setNewProduct(p => ({ ...p, name_ar: e.target.value }))} />
-                <Input dir="ltr" placeholder={isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'} value={newProduct.name_en}
+                <Input dir="ltr" placeholder={pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (EN)')} value={newProduct.name_en}
                   onChange={(e) => setNewProduct(p => ({ ...p, name_en: e.target.value }))} />
-                <Input dir="ltr" placeholder={isRTL ? 'رقم الموديل' : 'Model number'} className="tech-content" value={newProduct.model_number}
+                <Input dir="ltr" placeholder={pickBi(isRTL, 'رقم الموديل', 'Model number')} className="tech-content" value={newProduct.model_number}
                   onChange={(e) => setNewProduct(p => ({ ...p, model_number: e.target.value }))} />
                 <Input dir="ltr" placeholder="SKU" className="tech-content" value={newProduct.sku}
                   onChange={(e) => setNewProduct(p => ({ ...p, sku: e.target.value }))} />
               </div>
-              <Textarea dir="auto" rows={2} placeholder={isRTL ? 'وصف موجز' : 'Short description'} value={newProduct.description_ar}
+              <Textarea dir="auto" rows={2} placeholder={pickBi(isRTL, 'وصف موجز', 'Short description')} value={newProduct.description_ar}
                 onChange={(e) => setNewProduct(p => ({ ...p, description_ar: e.target.value }))} />
               <div>
-                <Label className="text-xs mb-2 block">{isRTL ? 'صورة المنتج (تُضغط تلقائياً)' : 'Product image (auto-compressed)'}</Label>
+                <Label className="text-xs mb-2 block">{pickBi(isRTL, 'صورة المنتج (تُضغط تلقائياً)', 'Product image (auto-compressed)')}</Label>
                 <ImageUpload bucket="business-assets" value={newProduct.image_url}
                   pipeline="product"
                   onChange={(url) => setNewProduct(p => ({ ...p, image_url: url || '' }))}
@@ -712,22 +711,22 @@ const AdminBrandDetail: React.FC = () => {
                     image_asset_id: meta.imageAssetId ?? '',
                     image_variants: (meta.variants ?? {}) as Record<string, string>,
                   }))}
-                  placeholder={isRTL ? 'رفع صورة' : 'Upload image'} />
+                  placeholder={pickBi(isRTL, 'رفع صورة', 'Upload image')} />
               </div>
               <Button size="sm" onClick={() => createProduct.mutate()}
                 disabled={!newProduct.name_ar.trim() || createProduct.isPending}>
                 {createProduct.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
-                {isRTL ? 'إضافة' : 'Add'}
+                {pickBi(isRTL, 'إضافة', 'Add')}
               </Button>
             </div>
 
             {productsQ.isLoading ? <Skeleton className="h-24" /> : (productsQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">{isRTL ? 'لا توجد منتجات بعد' : 'No products yet'}</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{pickBi(isRTL, 'لا توجد منتجات بعد', 'No products yet')}</p>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {(productsQ.data ?? []).map((p: BrandProduct) => editingProductId === p.id ? (
                   <div key={p.id} className="border rounded-xl p-3 space-y-2 bg-card">
-                    <Input dir="auto" value={editProduct.name_ar} onChange={(e) => setEditProduct(s => ({ ...s, name_ar: e.target.value }))} placeholder={isRTL ? 'العربية' : 'Arabic'} />
+                    <Input dir="auto" value={editProduct.name_ar} onChange={(e) => setEditProduct(s => ({ ...s, name_ar: e.target.value }))} placeholder={pickBi(isRTL, 'العربية', 'Arabic')} />
                     <Input dir="ltr" value={editProduct.name_en} onChange={(e) => setEditProduct(s => ({ ...s, name_en: e.target.value }))} placeholder="English" />
                     <Input dir="ltr" value={editProduct.model_number} onChange={(e) => setEditProduct(s => ({ ...s, model_number: e.target.value }))} placeholder="Model" className="tech-content" />
                     <Input dir="ltr" value={editProduct.sku} onChange={(e) => setEditProduct(s => ({ ...s, sku: e.target.value }))} placeholder="SKU" className="tech-content" />
@@ -743,9 +742,9 @@ const AdminBrandDetail: React.FC = () => {
                       }))} />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => updateProduct.mutate({ productId: p.id })} disabled={updateProduct.isPending}>
-                        <Save className="w-4 h-4 me-1" />{isRTL ? 'حفظ' : 'Save'}
+                        <Save className="w-4 h-4 me-1" />{pickBi(isRTL, 'حفظ', 'Save')}
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setEditingProductId(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingProductId(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                     </div>
                   </div>
                 ) : (
@@ -779,7 +778,7 @@ const AdminBrandDetail: React.FC = () => {
                           image_asset_id: p.image_asset_id ?? '',
                           image_variants: p.image_variants ?? {},
                         });
-                      }}><Edit3 className="w-3 h-3 me-1" />{isRTL ? 'تعديل' : 'Edit'}</Button>
+                      }}><Edit3 className="w-3 h-3 me-1" />{pickBi(isRTL, 'تعديل', 'Edit')}</Button>
                       <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
                         onClick={() => deleteProduct.mutate(p.id)} disabled={deleteProduct.isPending}>
                         <Trash2 className="w-3 h-3" />
@@ -796,13 +795,13 @@ const AdminBrandDetail: React.FC = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Inbox className="w-4 h-4" />{isRTL ? 'طلبات منتجات من المزودين' : 'Provider product requests'}
+              <Inbox className="w-4 h-4" />{pickBi(isRTL, 'طلبات منتجات من المزودين', 'Provider product requests')}
               <span className="text-xs text-muted-foreground">({productRequestsQ.data?.length ?? 0})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {productRequestsQ.isLoading ? <Skeleton className="h-20" /> : (productRequestsQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-3">{isRTL ? 'لا توجد طلبات' : 'No requests'}</p>
+              <p className="text-sm text-muted-foreground text-center py-3">{pickBi(isRTL, 'لا توجد طلبات', 'No requests')}</p>
             ) : (
               <ul className="space-y-2">
                 {(productRequestsQ.data ?? []).map((r: BrandProductRequest) => (
@@ -828,10 +827,10 @@ const AdminBrandDetail: React.FC = () => {
                       {(r.status === 'pending' || r.status === 'in_review' || r.status === 'needs_more_info') && (
                         <div className="flex gap-2">
                           <Button size="sm" onClick={() => approveProductReq.mutate(r.id)} disabled={approveProductReq.isPending}>
-                            <Check className="w-4 h-4 me-1" />{isRTL ? 'اعتماد' : 'Approve'}
+                            <Check className="w-4 h-4 me-1" />{pickBi(isRTL, 'اعتماد', 'Approve')}
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => { setRejectingReqId(r.id); setReqRejectReason(''); }}>
-                            <X className="w-4 h-4 me-1" />{isRTL ? 'رفض' : 'Reject'}
+                            <X className="w-4 h-4 me-1" />{pickBi(isRTL, 'رفض', 'Reject')}
                           </Button>
                         </div>
                       )}
@@ -839,14 +838,14 @@ const AdminBrandDetail: React.FC = () => {
                     {rejectingReqId === r.id && (
                       <div className="mt-2 p-2 rounded-lg bg-muted/40 space-y-2">
                         <Input value={reqRejectReason} onChange={(e) => setReqRejectReason(e.target.value)}
-                          placeholder={isRTL ? 'سبب الرفض…' : 'Rejection reason…'} className="h-9" />
+                          placeholder={pickBi(isRTL, 'سبب الرفض…', 'Rejection reason…')} className="h-9" />
                         <div className="flex gap-2">
                           <Button size="sm" variant="destructive"
                             onClick={() => rejectProductReq.mutate({ reqId: r.id, reason: reqRejectReason })}
                             disabled={!reqRejectReason.trim() || rejectProductReq.isPending}>
-                            {isRTL ? 'تأكيد' : 'Confirm'}
+                            {pickBi(isRTL, 'تأكيد', 'Confirm')}
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => { setRejectingReqId(null); setReqRejectReason(''); }}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setRejectingReqId(null); setReqRejectReason(''); }}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                         </div>
                       </div>
                     )}
@@ -859,10 +858,10 @@ const AdminBrandDetail: React.FC = () => {
 
         {/* Related requests (legacy brand requests) */}
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">{isRTL ? 'الطلبات المرتبطة' : 'Related requests'} <span className="text-xs text-muted-foreground">({reqsQ.data?.length ?? 0})</span></CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base">{pickBi(isRTL, 'الطلبات المرتبطة', 'Related requests')} <span className="text-xs text-muted-foreground">({reqsQ.data?.length ?? 0})</span></CardTitle></CardHeader>
           <CardContent>
             {reqsQ.isLoading ? <Skeleton className="h-20" /> : (reqsQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد طلبات مرتبطة' : 'No related requests'}</p>
+              <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد طلبات مرتبطة', 'No related requests')}</p>
             ) : (
               <ul className="space-y-2 text-sm">
                 {(reqsQ.data ?? []).map((r) => (
@@ -874,7 +873,7 @@ const AdminBrandDetail: React.FC = () => {
                       <span className="truncate" dir="auto">{locale === 'ar' ? r.name_ar : (r.name_en ?? r.name_ar)}</span>
                     </div>
                     <Button size="sm" variant="ghost" asChild>
-                      <Link to="/admin/brand-requests">{isRTL ? 'فتح القائمة' : 'Open queue'}</Link>
+                      <Link to="/admin/brand-requests">{pickBi(isRTL, 'فتح القائمة', 'Open queue')}</Link>
                     </Button>
                   </li>
                 ))}
@@ -885,16 +884,16 @@ const AdminBrandDetail: React.FC = () => {
 
         {/* Audit log */}
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4" />{isRTL ? 'سجل التدقيق' : 'Audit log'}</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4" />{pickBi(isRTL, 'سجل التدقيق', 'Audit log')}</CardTitle></CardHeader>
           <CardContent>
             {auditQ.isLoading ? <Skeleton className="h-24" /> : (auditQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد أحداث' : 'No events'}</p>
+              <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد أحداث', 'No events')}</p>
             ) : (
               <ul className="space-y-1 text-xs">
                 {(auditQ.data ?? []).map((e) => (
                   <li key={e.id} className="flex items-center justify-between gap-2 border-b border-border/40 py-1.5">
                     <code className="tech-content">{e.action}</code>
-                    <span className="text-muted-foreground">{new Date(e.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
+                    <span className="text-muted-foreground">{new Date(e.created_at).toLocaleString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US'))}</span>
                   </li>
                 ))}
               </ul>

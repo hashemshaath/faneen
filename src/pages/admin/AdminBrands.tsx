@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 
 import {
+import { pickBi } from '@/components/common/Bilingual';
   adminListBrands, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
   adminListBrandLinkSummaries, listSectorsLite,
   brandStatusLabel, verificationLabel, pick,
@@ -63,8 +64,8 @@ function errorMessage(error: unknown, fallback: string) {
 const AdminBrands: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const locale = isRTL ? 'ar' : 'en';
-  usePageMeta({ title: isRTL ? 'سجل العلامات التجارية — إدارة' : 'Brands Registry — Admin', noindex: true });
+  const locale = pickBi(isRTL, 'ar', 'en');
+  usePageMeta({ title: pickBi(isRTL, 'سجل العلامات التجارية — إدارة', 'Brands Registry — Admin'), noindex: true });
   const qc = useQueryClient();
 
   const [status, setStatus] = useState<BrandStatus | 'all'>('all');
@@ -198,17 +199,17 @@ const AdminBrands: React.FC = () => {
 
   const approve = useMutation({
     mutationFn: (id: string) => adminApproveBrand(id),
-    onSuccess: () => { toast.success(isRTL ? 'تم اعتماد العلامة' : 'Brand approved'); qc.invalidateQueries({ queryKey: ['admin-brands'] }); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم اعتماد العلامة', 'Brand approved')); qc.invalidateQueries({ queryKey: ['admin-brands'] }); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const reject = useMutation({
     mutationFn: (vars: { id: string; reason: string }) => adminRejectBrand(vars.id, vars.reason),
-    onSuccess: () => { toast.success(isRTL ? 'تم الرفض' : 'Rejected'); setRejecting(null); setReason(''); qc.invalidateQueries({ queryKey: ['admin-brands'] }); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تم الرفض', 'Rejected')); setRejecting(null); setReason(''); qc.invalidateQueries({ queryKey: ['admin-brands'] }); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
   const archive = useMutation({
     mutationFn: (id: string) => adminArchiveBrand(id),
-    onSuccess: () => { toast.success(isRTL ? 'تمت الأرشفة' : 'Archived'); qc.invalidateQueries({ queryKey: ['admin-brands'] }); },
+    onSuccess: () => { toast.success(pickBi(isRTL, 'تمت الأرشفة', 'Archived')); qc.invalidateQueries({ queryKey: ['admin-brands'] }); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
@@ -218,45 +219,43 @@ const AdminBrands: React.FC = () => {
         <AdminPageHeader
           icon={TagIcon}
           tone="primary"
-          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
-          title={isRTL ? 'سجل العلامات التجارية' : 'Brands Registry'}
-          subtitle={isRTL ? 'إدارة العلامات وربطها بالقطاعات والخدمات والمزودين من مكان واحد' : 'Manage brands, sector mapping, services, and provider assignments in one place'}
+          eyebrow={pickBi(isRTL, 'الإدارة', 'Admin')}
+          title={pickBi(isRTL, 'سجل العلامات التجارية', 'Brands Registry')}
+          subtitle={pickBi(isRTL, 'إدارة العلامات وربطها بالقطاعات والخدمات والمزودين من مكان واحد', 'Manage brands, sector mapping, services, and provider assignments in one place')}
           breadcrumbs={[
-            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
-            { label: isRTL ? 'العلامات التجارية' : 'Brands' },
+            { label: pickBi(isRTL, 'الإدارة', 'Admin'), href: '/admin' },
+            { label: pickBi(isRTL, 'العلامات التجارية', 'Brands') },
           ]}
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild variant="outline" size="sm">
-                <Link to="/admin/taxonomy"><Filter className="w-4 h-4 me-2" />{isRTL ? 'مركز التصنيفات' : 'Taxonomy Center'}</Link>
+                <Link to="/admin/taxonomy"><Filter className="w-4 h-4 me-2" />{pickBi(isRTL, 'مركز التصنيفات', 'Taxonomy Center')}</Link>
               </Button>
               <Button asChild variant="outline" size="sm">
-                <Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link>
+                <Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{pickBi(isRTL, 'طلبات العلامات', 'Brand requests')}</Link>
               </Button>
             </div>
           }
         />
 
-        <section className="grid gap-3 md:grid-cols-4" aria-label={isRTL ? 'ملخص العلامات' : 'Brands summary'}>
-          <StatCard icon={TagIcon} label={isRTL ? 'إجمالي العلامات' : 'Total brands'} value={stats.total} />
-          <StatCard icon={Check} label={isRTL ? 'معتمدة' : 'Approved'} value={stats.approved} />
-          <StatCard icon={ShieldCheck} label={isRTL ? 'موثقة' : 'Verified'} value={stats.verified} />
-          <StatCard icon={Link2} label={isRTL ? 'مرتبطة بمزودين' : 'Provider-linked'} value={stats.withProviders} muted={stats.withProviders === 0} />
+        <section className="grid gap-3 md:grid-cols-4" aria-label={pickBi(isRTL, 'ملخص العلامات', 'Brands summary')}>
+          <StatCard icon={TagIcon} label={pickBi(isRTL, 'إجمالي العلامات', 'Total brands')} value={stats.total} />
+          <StatCard icon={Check} label={pickBi(isRTL, 'معتمدة', 'Approved')} value={stats.approved} />
+          <StatCard icon={ShieldCheck} label={pickBi(isRTL, 'موثقة', 'Verified')} value={stats.verified} />
+          <StatCard icon={Link2} label={pickBi(isRTL, 'مرتبطة بمزودين', 'Provider-linked')} value={stats.withProviders} muted={stats.withProviders === 0} />
         </section>
 
         {stats.total > 0 && stats.withProviders === 0 && !brandsQuery.isLoading && (
           <Card className="border-dashed">
             <CardContent className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="space-y-1">
-                <p className="font-semibold">{isRTL ? 'العلامات موجودة لكن لم تُسند بعد إلى خدمات المزودين' : 'Brands exist but are not assigned to provider services yet'}</p>
+                <p className="font-semibold">{pickBi(isRTL, 'العلامات موجودة لكن لم تُسند بعد إلى خدمات المزودين', 'Brands exist but are not assigned to provider services yet')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {isRTL
-                    ? 'تم العثور على العلامات في السجل وربطها بالقطاعات، لكن جدول ربط العلامات بخدمات الشركات لا يحتوي على روابط حالياً.'
-                    : 'The registry and sector links are populated, but the provider-service brand assignment table has no links yet.'}
+                  {pickBi(isRTL, 'تم العثور على العلامات في السجل وربطها بالقطاعات، لكن جدول ربط العلامات بخدمات الشركات لا يحتوي على روابط حالياً.', 'The registry and sector links are populated, but the provider-service brand assignment table has no links yet.')}
                 </p>
               </div>
               <Button asChild variant="outline" size="sm" className="h-10 rounded-xl">
-                <Link to="/admin/businesses"><Building2 className="w-4 h-4 me-2" />{isRTL ? 'إسناد عبر الشركات' : 'Assign via businesses'}</Link>
+                <Link to="/admin/businesses"><Building2 className="w-4 h-4 me-2" />{pickBi(isRTL, 'إسناد عبر الشركات', 'Assign via businesses')}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -264,14 +263,14 @@ const AdminBrands: React.FC = () => {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" />{isRTL ? 'فلاتر العلامات والتصنيفات' : 'Brand and taxonomy filters'}</CardTitle>
-            <CardDescription>{isRTL ? 'اعرض العلامات حسب الحالة، القطاع، بلد المنشأ، التوثيق، وحالة الإسناد للمزودين.' : 'Filter by status, sector, origin, verification, and provider assignment state.'}</CardDescription>
+            <CardTitle className="text-base flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" />{pickBi(isRTL, 'فلاتر العلامات والتصنيفات', 'Brand and taxonomy filters')}</CardTitle>
+            <CardDescription>{pickBi(isRTL, 'اعرض العلامات حسب الحالة، القطاع، بلد المنشأ، التوثيق، وحالة الإسناد للمزودين.', 'Filter by status, sector, origin, verification, and provider assignment state.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
               {STATUS_FILTERS.map((s) => (
                 <Button key={s} size="sm" variant={status === s ? 'default' : 'outline'} onClick={() => setStatus(s)} className="h-9">
-                  {s === 'all' ? (isRTL ? 'الكل' : 'All') : pick(brandStatusLabel[s as BrandStatus], locale)}
+                  {s === 'all' ? (pickBi(isRTL, 'الكل', 'All')) : pick(brandStatusLabel[s as BrandStatus], locale)}
                   {counts[s as string] != null && <span className="ms-2 text-xs opacity-70">{counts[s as string]}</span>}
                 </Button>
               ))}
@@ -279,44 +278,44 @@ const AdminBrands: React.FC = () => {
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_auto]">
               <div className="relative">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input dir="auto" value={q} onChange={(e) => setQ(e.target.value)} placeholder={isRTL ? 'ابحث بالاسم أو الرابط أو الرقم المرجعي…' : 'Search by name, slug, website, or ref id…'} className="ps-9 h-11" />
+                <Input dir="auto" value={q} onChange={(e) => setQ(e.target.value)} placeholder={pickBi(isRTL, 'ابحث بالاسم أو الرابط أو الرقم المرجعي…', 'Search by name, slug, website, or ref id…')} className="ps-9 h-11" />
               </div>
               <Select value={sectorId} onValueChange={setSectorId}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={isRTL ? 'القطاع' : 'Sector'} /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'القطاع', 'Sector')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>{isRTL ? 'كل القطاعات' : 'All sectors'}</SelectItem>
+                  <SelectItem value={ALL}>{pickBi(isRTL, 'كل القطاعات', 'All sectors')}</SelectItem>
                   {sectors.map((sector) => (
                     <SelectItem key={sector.id} value={sector.id}>{locale === 'ar' ? sector.name_ar : (sector.name_en ?? sector.name_ar)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={isRTL ? 'بلد المنشأ' : 'Origin'} /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'بلد المنشأ', 'Origin')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>{isRTL ? 'كل البلدان' : 'All origins'}</SelectItem>
+                  <SelectItem value={ALL}>{pickBi(isRTL, 'كل البلدان', 'All origins')}</SelectItem>
                   {countries.map(([code, label]) => <SelectItem key={code} value={code}>{label}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={verification} onValueChange={(value) => setVerification(value as VerificationFilter)}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={isRTL ? 'التوثيق' : 'Verification'} /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'التوثيق', 'Verification')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل حالات التوثيق' : 'All verification'}</SelectItem>
-                  <SelectItem value="official">{isRTL ? 'رسمية' : 'Official'}</SelectItem>
-                  <SelectItem value="verified">{isRTL ? 'موثقة' : 'Verified'}</SelectItem>
-                  <SelectItem value="unverified">{isRTL ? 'غير موثقة' : 'Unverified'}</SelectItem>
+                  <SelectItem value="all">{pickBi(isRTL, 'كل حالات التوثيق', 'All verification')}</SelectItem>
+                  <SelectItem value="official">{pickBi(isRTL, 'رسمية', 'Official')}</SelectItem>
+                  <SelectItem value="verified">{pickBi(isRTL, 'موثقة', 'Verified')}</SelectItem>
+                  <SelectItem value="unverified">{pickBi(isRTL, 'غير موثقة', 'Unverified')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={providerFilter} onValueChange={(value) => setProviderFilter(value as ProviderFilter)}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={isRTL ? 'الربط' : 'Linking'} /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'الربط', 'Linking')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل حالات الربط' : 'All links'}</SelectItem>
-                  <SelectItem value="with_providers">{isRTL ? 'مرتبطة بمزودين' : 'With providers'}</SelectItem>
-                  <SelectItem value="without_providers">{isRTL ? 'بدون مزودين' : 'Without providers'}</SelectItem>
-                  <SelectItem value="with_sectors">{isRTL ? 'مرتبطة بقطاعات' : 'With sectors'}</SelectItem>
-                  <SelectItem value="without_sectors">{isRTL ? 'بدون قطاعات' : 'Without sectors'}</SelectItem>
+                  <SelectItem value="all">{pickBi(isRTL, 'كل حالات الربط', 'All links')}</SelectItem>
+                  <SelectItem value="with_providers">{pickBi(isRTL, 'مرتبطة بمزودين', 'With providers')}</SelectItem>
+                  <SelectItem value="without_providers">{pickBi(isRTL, 'بدون مزودين', 'Without providers')}</SelectItem>
+                  <SelectItem value="with_sectors">{pickBi(isRTL, 'مرتبطة بقطاعات', 'With sectors')}</SelectItem>
+                  <SelectItem value="without_sectors">{pickBi(isRTL, 'بدون قطاعات', 'Without sectors')}</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="h-11 rounded-xl" onClick={resetFilters}>{isRTL ? 'إعادة ضبط' : 'Reset'}</Button>
+              <Button variant="outline" className="h-11 rounded-xl" onClick={resetFilters}>{pickBi(isRTL, 'إعادة ضبط', 'Reset')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -324,9 +323,9 @@ const AdminBrands: React.FC = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center justify-between gap-3 flex-wrap">
-              <span>{isRTL ? 'العلامات' : 'Brands'} <span className="text-muted-foreground text-sm">({brands.length})</span></span>
+              <span>{pickBi(isRTL, 'العلامات', 'Brands')} <span className="text-muted-foreground text-sm">({brands.length})</span></span>
               <Button size="sm" variant="ghost" onClick={() => { qc.invalidateQueries({ queryKey: ['admin-brands'] }); qc.invalidateQueries({ queryKey: ['admin-brand-link-summaries'] }); }}>
-                <RefreshCw className="w-4 h-4 me-2" />{isRTL ? 'تحديث' : 'Refresh'}
+                <RefreshCw className="w-4 h-4 me-2" />{pickBi(isRTL, 'تحديث', 'Refresh')}
               </Button>
             </CardTitle>
           </CardHeader>
@@ -335,16 +334,16 @@ const AdminBrands: React.FC = () => {
               <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
             ) : brandsQuery.isError ? (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-3">
-                <p className="font-semibold text-destructive">{isRTL ? 'تعذر تحميل العلامات' : 'Could not load brands'}</p>
-                <p className="text-sm text-muted-foreground">{errorMessage(brandsQuery.error, isRTL ? 'تحقق من صلاحيات المدير وسياسات الوصول.' : 'Check admin permissions and access rules.')}</p>
-                <Button size="sm" variant="outline" onClick={() => brandsQuery.refetch()}>{isRTL ? 'إعادة المحاولة' : 'Try again'}</Button>
+                <p className="font-semibold text-destructive">{pickBi(isRTL, 'تعذر تحميل العلامات', 'Could not load brands')}</p>
+                <p className="text-sm text-muted-foreground">{errorMessage(brandsQuery.error, pickBi(isRTL, 'تحقق من صلاحيات المدير وسياسات الوصول.', 'Check admin permissions and access rules.'))}</p>
+                <Button size="sm" variant="outline" onClick={() => brandsQuery.refetch()}>{pickBi(isRTL, 'إعادة المحاولة', 'Try again')}</Button>
               </div>
             ) : brands.length === 0 ? (
               <div className="py-10 text-center space-y-3">
                 <TagIcon className="h-10 w-10 mx-auto text-muted-foreground/50" />
-                <p className="font-semibold">{isRTL ? 'لا توجد علامات بهذه التصفية' : 'No brands match these filters'}</p>
-                <p className="text-muted-foreground text-sm max-w-md mx-auto">{isRTL ? 'البيانات موجودة في السجل؛ وسّع الفلاتر أو أعد ضبطها لعرض العلامات المعتمدة.' : 'The registry has data; widen or reset filters to show approved brands.'}</p>
-                <Button size="sm" variant="outline" onClick={resetFilters}>{isRTL ? 'عرض كل العلامات' : 'Show all brands'}</Button>
+                <p className="font-semibold">{pickBi(isRTL, 'لا توجد علامات بهذه التصفية', 'No brands match these filters')}</p>
+                <p className="text-muted-foreground text-sm max-w-md mx-auto">{pickBi(isRTL, 'البيانات موجودة في السجل؛ وسّع الفلاتر أو أعد ضبطها لعرض العلامات المعتمدة.', 'The registry has data; widen or reset filters to show approved brands.')}</p>
+                <Button size="sm" variant="outline" onClick={resetFilters}>{pickBi(isRTL, 'عرض كل العلامات', 'Show all brands')}</Button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -416,12 +415,12 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
               {brand.verification_status !== 'unverified' && (
                 <Badge variant="secondary" className="text-xs">{pick(verificationLabel[brand.verification_status], locale)}</Badge>
               )}
-              {brand.is_local && <Badge variant="outline" className="text-xs">{isRTL ? 'محلي' : 'Local'}</Badge>}
+              {brand.is_local && <Badge variant="outline" className="text-xs">{pickBi(isRTL, 'محلي', 'Local')}</Badge>}
             </div>
             <div className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-3">
               {brand.slug && <span>/{brand.slug}</span>}
-              {brand.country_of_origin_code && <span>{isRTL ? 'بلد المنشأ:' : 'Origin:'} {brand.country_of_origin_code}</span>}
-              {sectorLabel && <span>{isRTL ? 'القطاع:' : 'Sector:'} {sectorLabel}</span>}
+              {brand.country_of_origin_code && <span>{pickBi(isRTL, 'بلد المنشأ:', 'Origin:')} {brand.country_of_origin_code}</span>}
+              {sectorLabel && <span>{pickBi(isRTL, 'القطاع:', 'Sector:')} {sectorLabel}</span>}
               {brand.website && (
                 <span className="inline-flex items-center gap-1 tech-content">
                   <Globe2 className="h-3 w-3" />
@@ -431,10 +430,10 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant={(summary?.sector_ids.length ?? 0) > 0 ? 'secondary' : 'outline'} className="text-xs gap-1">
-                <Filter className="h-3 w-3" />{isRTL ? 'قطاعات مرتبطة' : 'Linked sectors'}: {summary?.sector_ids.length ?? 0}
+                <Filter className="h-3 w-3" />{pickBi(isRTL, 'قطاعات مرتبطة', 'Linked sectors')}: {summary?.sector_ids.length ?? 0}
               </Badge>
               <Badge variant={providerCount > 0 ? 'secondary' : 'outline'} className="text-xs gap-1">
-                <Building2 className="h-3 w-3" />{isRTL ? 'إسناد مزودين/خدمات' : 'Provider/service links'}: {providerCount}
+                <Building2 className="h-3 w-3" />{pickBi(isRTL, 'إسناد مزودين/خدمات', 'Provider/service links')}: {providerCount}
               </Badge>
             </div>
             {categoryHints.length > 0 && (
@@ -449,24 +448,24 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.id}`}><Link2 className="w-4 h-4 me-1" />{isRTL ? 'تحسين وربط' : 'Improve & link'}</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.id}`}><Link2 className="w-4 h-4 me-1" />{pickBi(isRTL, 'تحسين وربط', 'Improve & link')}</Link></Button>
           {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
             <>
-              <Button size="sm" onClick={onApprove}><Check className="w-4 h-4 me-1" />{isRTL ? 'اعتماد' : 'Approve'}</Button>
-              <Button size="sm" variant="outline" onClick={onStartReject}><X className="w-4 h-4 me-1" />{isRTL ? 'رفض' : 'Reject'}</Button>
+              <Button size="sm" onClick={onApprove}><Check className="w-4 h-4 me-1" />{pickBi(isRTL, 'اعتماد', 'Approve')}</Button>
+              <Button size="sm" variant="outline" onClick={onStartReject}><X className="w-4 h-4 me-1" />{pickBi(isRTL, 'رفض', 'Reject')}</Button>
             </>
           )}
           {brand.status === 'approved' && (
-            <Button size="sm" variant="ghost" onClick={onArchive}><Archive className="w-4 h-4 me-1" />{isRTL ? 'أرشفة' : 'Archive'}</Button>
+            <Button size="sm" variant="ghost" onClick={onArchive}><Archive className="w-4 h-4 me-1" />{pickBi(isRTL, 'أرشفة', 'Archive')}</Button>
           )}
         </div>
       </div>
       {rejecting && (
         <div className="mt-3 p-3 rounded-lg bg-muted/40 space-y-2">
-          <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={isRTL ? 'سبب الرفض…' : 'Rejection reason…'} className="h-10" />
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={pickBi(isRTL, 'سبب الرفض…', 'Rejection reason…')} className="h-10" />
           <div className="flex gap-2">
-            <Button size="sm" variant="destructive" disabled={!reason.trim()} onClick={onConfirmReject}>{isRTL ? 'تأكيد الرفض' : 'Confirm reject'}</Button>
-            <Button size="sm" variant="ghost" onClick={onCancelReject}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button size="sm" variant="destructive" disabled={!reason.trim()} onClick={onConfirmReject}>{pickBi(isRTL, 'تأكيد الرفض', 'Confirm reject')}</Button>
+            <Button size="sm" variant="ghost" onClick={onCancelReject}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
           </div>
         </div>
       )}

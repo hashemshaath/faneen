@@ -45,6 +45,7 @@ import { AdminUpgradeRequestsPanel } from '@/components/membership/AdminUpgradeR
 import { AdminPromoCodesPanel } from '@/components/membership/AdminPromoCodesPanel';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { pickBi } from '@/components/common/Bilingual';
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
 
 /* ─── Admin Usage Report ─── */
@@ -106,13 +107,13 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
         <div className="absolute top-3 start-3 z-10">
           <div className="bg-accent text-accent-foreground text-[9px] font-bold px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
             <Sparkles className="w-2.5 h-2.5" />
-            {isRTL ? 'الأكثر شعبية' : 'Most Popular'}
+            {pickBi(isRTL, 'الأكثر شعبية', 'Most Popular')}
           </div>
         </div>
       )}
       {!plan.is_active && (
         <div className="absolute top-3 start-3 z-10 bg-destructive/10 text-destructive text-[9px] font-bold px-2 py-0.5 rounded-md border border-destructive/20">
-          {isRTL ? 'معطّلة' : 'Inactive'}
+          {pickBi(isRTL, 'معطّلة', 'Inactive')}
         </div>
       )}
 
@@ -138,7 +139,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
             size="icon"
             className="h-8 w-8 rounded-lg hover:bg-muted shrink-0"
             onClick={() => onEdit(plan)}
-            aria-label={isRTL ? 'تعديل الخطة' : 'Edit plan'}
+            aria-label={pickBi(isRTL, 'تعديل الخطة', 'Edit plan')}
           >
             <Pencil className="w-3.5 h-3.5" />
           </Button>
@@ -154,9 +155,9 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
           {isFree ? (
             <div className="flex items-baseline justify-between">
               <span className={cn('text-3xl font-bold leading-none tech-content', colors.text)}>
-                {isRTL ? 'مجاناً' : 'Free'}
+                {pickBi(isRTL, 'مجاناً', 'Free')}
               </span>
-              <span className="text-[10px] text-muted-foreground">{isRTL ? 'بدون التزام' : 'No commitment'}</span>
+              <span className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'بدون التزام', 'No commitment')}</span>
             </div>
           ) : (
             <div className="space-y-1.5">
@@ -165,13 +166,13 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
                   {plan.price_monthly}
                 </span>
                 <span className="text-[10px] font-medium text-muted-foreground">{plan.currency_code}</span>
-                <span className="text-[10px] text-muted-foreground">/ {isRTL ? 'شهر' : 'mo'}</span>
+                <span className="text-[10px] text-muted-foreground">/ {pickBi(isRTL, 'شهر', 'mo')}</span>
               </div>
               <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
                 <span className="tech-content tabular-nums">
                   {plan.price_yearly > 0
-                    ? `${plan.price_yearly} ${plan.currency_code} / ${isRTL ? 'سنة' : 'yr'}`
-                    : (isRTL ? 'بدون خطة سنوية' : 'No yearly')}
+                    ? `${plan.price_yearly} ${plan.currency_code} / ${pickBi(isRTL, 'سنة', 'yr')}`
+                    : (pickBi(isRTL, 'بدون خطة سنوية', 'No yearly'))}
                 </span>
                 {savingPct > 0 && (
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20">
@@ -191,7 +192,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
               <div className={cn('text-sm font-bold leading-none tabular-nums', subsCount > 0 ? colors.text : 'text-muted-foreground')}>
                 {subsCount}
               </div>
-              <div className="text-[9px] text-muted-foreground mt-0.5 truncate">{isRTL ? 'مشترك' : 'Subscribers'}</div>
+              <div className="text-[9px] text-muted-foreground mt-0.5 truncate">{pickBi(isRTL, 'مشترك', 'Subscribers')}</div>
             </div>
           </div>
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-background">
@@ -200,7 +201,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
               <div className={cn('text-sm font-bold leading-none tabular-nums', enabledBoolLimits > 0 ? colors.text : 'text-muted-foreground')}>
                 {enabledBoolLimits}<span className="text-muted-foreground font-normal">/{totalBoolLimits}</span>
               </div>
-              <div className="text-[9px] text-muted-foreground mt-0.5 truncate">{isRTL ? 'مزايا مفعّلة' : 'Benefits on'}</div>
+              <div className="text-[9px] text-muted-foreground mt-0.5 truncate">{pickBi(isRTL, 'مزايا مفعّلة', 'Benefits on')}</div>
             </div>
           </div>
         </div>
@@ -208,7 +209,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
         {/* ── Benefits bar ── */}
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-muted-foreground font-medium">{isRTL ? 'تغطية المزايا' : 'Benefit coverage'}</span>
+            <span className="text-muted-foreground font-medium">{pickBi(isRTL, 'تغطية المزايا', 'Benefit coverage')}</span>
             <span className={cn('font-bold tabular-nums', benefitPct > 0 ? colors.text : 'text-muted-foreground')}>{benefitPct}%</span>
           </div>
           <div className={cn('h-1.5 rounded-full overflow-hidden', benefitPct === 0 ? 'bg-muted/30 border border-dashed border-border/60' : 'bg-muted/40')}>
@@ -223,7 +224,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
         {features.length > 0 && (
           <div className="space-y-1.5 pt-1">
             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-              {isRTL ? 'المميزات' : 'Features'}
+              {pickBi(isRTL, 'المميزات', 'Features')}
             </p>
             <ul className="space-y-1">
               {features.slice(0, 5).map((f: string, i: number) => (
@@ -234,7 +235,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
               ))}
               {features.length > 5 && (
                 <li className="text-[10px] text-muted-foreground ps-5 font-medium">
-                  +{features.length - 5} {isRTL ? 'ميزة أخرى' : 'more'}
+                  +{features.length - 5} {pickBi(isRTL, 'ميزة أخرى', 'more')}
                 </li>
               )}
             </ul>
@@ -245,14 +246,14 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
         <div className="pt-3 border-t border-border/40">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-              {isRTL ? 'الحدود الرئيسية' : 'Key Limits'}
+              {pickBi(isRTL, 'الحدود الرئيسية', 'Key Limits')}
             </p>
             {extraKeys.length > 0 && (
               <span
                 className="text-[9px] text-muted-foreground/80 italic"
                 title={extraKeys.join(', ')}
               >
-                +{extraKeys.length} {isRTL ? 'إضافي' : 'extra'}
+                +{extraKeys.length} {pickBi(isRTL, 'إضافي', 'extra')}
               </span>
             )}
           </div>
@@ -367,7 +368,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
               <Badge className={cn('text-[7px] px-1.5 py-0 h-3.5', status.badge)}>{isRTL ? status.label_ar : status.label_en}</Badge>
               <Badge variant="outline" className="text-[7px] px-1.5 py-0 h-3.5 gap-0.5">
                 <CalendarDays className="w-2 h-2" />
-                {sub.billing_cycle === 'yearly' ? (isRTL ? 'سنوي' : 'Yearly') : (isRTL ? 'شهري' : 'Monthly')}
+                {sub.billing_cycle === 'yearly' ? (pickBi(isRTL, 'سنوي', 'Yearly')) : (pickBi(isRTL, 'شهري', 'Monthly'))}
               </Badge>
               {isExpiringSoon && (
                 <Badge className="bg-warning/10 text-warning text-[7px] px-1.5 py-0 h-3.5 gap-0.5 animate-pulse">
@@ -402,7 +403,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
               </span>
               {daysLeft !== null && sub.status === 'active' && (
                 <span className={cn('font-medium', daysLeft <= 7 ? 'text-warning' : daysLeft <= 30 ? 'text-foreground' : 'text-success')}>
-                  {daysLeft} {isRTL ? 'يوم متبقي' : 'days left'}
+                  {daysLeft} {pickBi(isRTL, 'يوم متبقي', 'days left')}
                 </span>
               )}
             </div>
@@ -424,7 +425,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
                       <ArrowUpCircle className="w-3.5 h-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-[10px]">{isRTL ? 'ترقية' : 'Upgrade'}</TooltipContent>
+                  <TooltipContent className="text-[10px]">{pickBi(isRTL, 'ترقية', 'Upgrade')}</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -432,7 +433,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
                       <Ban className="w-3.5 h-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-[10px]">{isRTL ? 'إلغاء' : 'Cancel'}</TooltipContent>
+                  <TooltipContent className="text-[10px]">{pickBi(isRTL, 'إلغاء', 'Cancel')}</TooltipContent>
                 </Tooltip>
               </>
             )}
@@ -443,7 +444,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
                     <RefreshCw className="w-3.5 h-3.5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="text-[10px]">{isRTL ? 'تجديد' : 'Renew'}</TooltipContent>
+                <TooltipContent className="text-[10px]">{pickBi(isRTL, 'تجديد', 'Renew')}</TooltipContent>
               </Tooltip>
             )}
           </div>
@@ -685,7 +686,7 @@ const AdminMemberships = () => {
       queryClient.invalidateQueries({ queryKey: ['membership-plans-comparison'] });
       queryClient.invalidateQueries({ queryKey: ['home-membership-plans'] });
       setEditingPlan(null);
-      toast.success(isRTL ? 'تم حفظ الخطة بنجاح' : 'Plan saved successfully');
+      toast.success(pickBi(isRTL, 'تم حفظ الخطة بنجاح', 'Plan saved successfully'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -716,7 +717,7 @@ const AdminMemberships = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['admin-all-businesses-tiers'] });
-      toast.success(isRTL ? 'تم إلغاء الاشتراك' : 'Subscription cancelled');
+      toast.success(pickBi(isRTL, 'تم إلغاء الاشتراك', 'Subscription cancelled'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -736,7 +737,7 @@ const AdminMemberships = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-all-businesses-tiers'] });
       setUpgradeSub(null);
       setUpgradeTargetPlan('');
-      toast.success(isRTL ? 'تمت الترقية بنجاح' : 'Upgrade completed');
+      toast.success(pickBi(isRTL, 'تمت الترقية بنجاح', 'Upgrade completed'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -753,7 +754,7 @@ const AdminMemberships = () => {
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['admin-all-businesses-tiers'] });
-      toast.success(isRTL ? 'تم تجديد الاشتراك' : 'Subscription renewed');
+      toast.success(pickBi(isRTL, 'تم تجديد الاشتراك', 'Subscription renewed'));
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   }, [isRTL, queryClient]);
 
@@ -798,16 +799,16 @@ const AdminMemberships = () => {
     const a = document.createElement('a');
     a.href = url; a.download = `subscriptions-${format(new Date(), 'yyyy-MM-dd')}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم التصدير' : 'Exported');
+    toast.success(pickBi(isRTL, 'تم التصدير', 'Exported'));
   }, [enrichedSubs, isRTL]);
 
   const tabs: { key: Tab; icon: React.ElementType; label: string; count?: number }[] = [
-    { key: 'overview', icon: BarChart3, label: isRTL ? 'نظرة عامة' : 'Overview' },
-    { key: 'plans', icon: CreditCard, label: isRTL ? 'الخطط' : 'Plans', count: plans.length },
-    { key: 'subscriptions', icon: Users, label: isRTL ? 'الاشتراكات' : 'Subscriptions', count: stats.active },
-    { key: 'requests', icon: ArrowUpCircle, label: isRTL ? 'طلبات الترقية' : 'Upgrade Requests' },
-    { key: 'businesses', icon: Building2, label: isRTL ? 'الجهات' : 'Businesses' },
-    { key: 'usage', icon: Activity, label: isRTL ? 'الاستخدام' : 'Usage' },
+    { key: 'overview', icon: BarChart3, label: pickBi(isRTL, 'نظرة عامة', 'Overview') },
+    { key: 'plans', icon: CreditCard, label: pickBi(isRTL, 'الخطط', 'Plans'), count: plans.length },
+    { key: 'subscriptions', icon: Users, label: pickBi(isRTL, 'الاشتراكات', 'Subscriptions'), count: stats.active },
+    { key: 'requests', icon: ArrowUpCircle, label: pickBi(isRTL, 'طلبات الترقية', 'Upgrade Requests') },
+    { key: 'businesses', icon: Building2, label: pickBi(isRTL, 'الجهات', 'Businesses') },
+    { key: 'usage', icon: Activity, label: pickBi(isRTL, 'الاستخدام', 'Usage') },
   ];
 
   // Defense-in-depth: ProtectedRoute requireAdmin already gates this route,
@@ -820,10 +821,10 @@ const AdminMemberships = () => {
             <Lock className="w-6 h-6 text-destructive" />
           </div>
           <h2 className="font-heading font-bold text-base">
-            {isRTL ? 'وصول غير مصرّح به' : 'Unauthorized'}
+            {pickBi(isRTL, 'وصول غير مصرّح به', 'Unauthorized')}
           </h2>
           <p className="text-xs text-muted-foreground">
-            {isRTL ? 'هذه الصفحة متاحة لمسؤولي النظام فقط.' : 'This page is restricted to administrators.'}
+            {pickBi(isRTL, 'هذه الصفحة متاحة لمسؤولي النظام فقط.', 'This page is restricted to administrators.')}
           </p>
         </div>
       </DashboardLayout>
@@ -861,7 +862,7 @@ const AdminMemberships = () => {
             </div>
             {activeTab === 'subscriptions' && (
               <Button variant="outline" size="sm" className="text-xs h-9 gap-1.5 shrink-0" onClick={exportCSV}>
-                <Download className="w-3 h-3" />{isRTL ? 'تصدير CSV' : 'Export CSV'}
+                <Download className="w-3 h-3" />{pickBi(isRTL, 'تصدير CSV', 'Export CSV')}
               </Button>
             )}
           </div>
@@ -871,10 +872,10 @@ const AdminMemberships = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { icon: Users, label: isRTL ? 'إجمالي الاشتراكات' : 'Total Subscriptions', value: stats.total, accent: 'border-e-primary', delta: null, empty: stats.total === 0 },
-                  { icon: UserCheck, label: isRTL ? 'نشط حالياً' : 'Currently Active', value: stats.active, accent: 'border-e-success', delta: stats.active > 0 ? 'live' : null, empty: stats.active === 0 },
-                  { icon: DollarSign, label: isRTL ? 'الإيراد الشهري' : 'Monthly Revenue', value: Math.round(stats.revenue).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US'), suffix: 'SAR', accent: 'border-e-info', delta: null, empty: stats.revenue === 0 },
-                  { icon: AlertTriangle, label: isRTL ? 'ينتهي قريباً' : 'Expiring Soon', value: stats.expiringSoon, accent: stats.expiringSoon > 0 ? 'border-e-warning' : 'border-e-border', delta: null, empty: stats.expiringSoon === 0 },
+                  { icon: Users, label: pickBi(isRTL, 'إجمالي الاشتراكات', 'Total Subscriptions'), value: stats.total, accent: 'border-e-primary', delta: null, empty: stats.total === 0 },
+                  { icon: UserCheck, label: pickBi(isRTL, 'نشط حالياً', 'Currently Active'), value: stats.active, accent: 'border-e-success', delta: stats.active > 0 ? 'live' : null, empty: stats.active === 0 },
+                  { icon: DollarSign, label: pickBi(isRTL, 'الإيراد الشهري', 'Monthly Revenue'), value: Math.round(stats.revenue).toLocaleString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US')), suffix: 'SAR', accent: 'border-e-info', delta: null, empty: stats.revenue === 0 },
+                  { icon: AlertTriangle, label: pickBi(isRTL, 'ينتهي قريباً', 'Expiring Soon'), value: stats.expiringSoon, accent: stats.expiringSoon > 0 ? 'border-e-warning' : 'border-e-border', delta: null, empty: stats.expiringSoon === 0 },
                 ].map((s, i) => (
                   <Card
                     key={i}
@@ -902,12 +903,12 @@ const AdminMemberships = () => {
                         {s.delta === 'live' && (
                           <span className="inline-flex items-center gap-1 text-[9px] font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-md">
                             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                            {isRTL ? 'مباشر' : 'LIVE'}
+                            {pickBi(isRTL, 'مباشر', 'LIVE')}
                           </span>
                         )}
                         {s.empty && !s.delta && (
                           <span className="text-[9px] text-muted-foreground/60">
-                            {isRTL ? 'لا بيانات' : 'No data'}
+                            {pickBi(isRTL, 'لا بيانات', 'No data')}
                           </span>
                         )}
                       </div>
@@ -921,10 +922,10 @@ const AdminMemberships = () => {
                   <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
                     <h3 className="font-heading font-bold text-sm flex items-center gap-2">
                       <Layers className="w-4 h-4 text-primary" />
-                      {isRTL ? 'توزيع العضويات' : 'Tier Distribution'}
+                      {pickBi(isRTL, 'توزيع العضويات', 'Tier Distribution')}
                     </h3>
                     <span className="px-2 py-0.5 bg-muted/40 text-muted-foreground rounded-md text-[9px] font-bold uppercase tracking-wide">
-                      {isRTL ? 'تحديث تلقائي' : 'Auto'}
+                      {pickBi(isRTL, 'تحديث تلقائي', 'Auto')}
                     </span>
                   </div>
                   <CardContent className="p-5">
@@ -972,23 +973,23 @@ const AdminMemberships = () => {
                   <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
                     <h3 className="font-heading font-bold text-sm flex items-center gap-2">
                       <Activity className="w-4 h-4 text-primary" />
-                      {isRTL ? 'ملخص الحالة' : 'Status Summary'}
+                      {pickBi(isRTL, 'ملخص الحالة', 'Status Summary')}
                     </h3>
                     <button
                       type="button"
                       onClick={exportCSV}
                       className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide"
                     >
-                      {isRTL ? 'تصدير التقرير' : 'Export'}
+                      {pickBi(isRTL, 'تصدير التقرير', 'Export')}
                     </button>
                   </div>
                   <CardContent className="p-5 space-y-4">
                     {[
-                      { label: isRTL ? 'شهري نشط' : 'Monthly Active', value: stats.monthly, denom: stats.active, color: 'bg-info' },
-                      { label: isRTL ? 'سنوي نشط' : 'Yearly Active', value: stats.yearly, denom: stats.active, color: 'bg-accent' },
-                      { label: isRTL ? 'ينتهي خلال أسبوع' : 'Expiring (7d)', value: stats.expiringSoon, denom: stats.active, color: 'bg-warning' },
-                      { label: isRTL ? 'ملغي' : 'Cancelled', value: stats.cancelled, denom: stats.total, color: 'bg-destructive' },
-                      { label: isRTL ? 'منتهي' : 'Expired', value: stats.expired, denom: stats.total, color: 'bg-muted-foreground/50' },
+                      { label: pickBi(isRTL, 'شهري نشط', 'Monthly Active'), value: stats.monthly, denom: stats.active, color: 'bg-info' },
+                      { label: pickBi(isRTL, 'سنوي نشط', 'Yearly Active'), value: stats.yearly, denom: stats.active, color: 'bg-accent' },
+                      { label: pickBi(isRTL, 'ينتهي خلال أسبوع', 'Expiring (7d)'), value: stats.expiringSoon, denom: stats.active, color: 'bg-warning' },
+                      { label: pickBi(isRTL, 'ملغي', 'Cancelled'), value: stats.cancelled, denom: stats.total, color: 'bg-destructive' },
+                      { label: pickBi(isRTL, 'منتهي', 'Expired'), value: stats.expired, denom: stats.total, color: 'bg-muted-foreground/50' },
                     ].map((row, i) => {
                       const pct = row.denom > 0 ? Math.round((row.value / row.denom) * 100) : 0;
                       const isEmpty = row.value === 0;
@@ -1020,16 +1021,14 @@ const AdminMemberships = () => {
               {!editingPlan && (
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <p className="text-[11px] text-muted-foreground">
-                    {isRTL
-                      ? 'الخطط تُعرض على /membership تلقائياً عند تفعيلها.'
-                      : 'Active plans are auto-listed on /membership.'}
+                    {pickBi(isRTL, 'الخطط تُعرض على /membership تلقائياً عند تفعيلها.', 'Active plans are auto-listed on /membership.')}
                   </p>
                   <div className="flex items-center gap-1.5">
-                    <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إنشاء بمستوى:' : 'Create as:'}</Label>
+                    <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'إنشاء بمستوى:', 'Create as:')}</Label>
                     <Select onValueChange={(v) => openCreate(v as typeof TIERS[number])}>
                       <SelectTrigger className="h-8 w-[140px] text-xs gap-1.5">
                         <Plus className="w-3 h-3" />
-                        <SelectValue placeholder={isRTL ? 'اختر المستوى' : 'Pick tier'} />
+                        <SelectValue placeholder={pickBi(isRTL, 'اختر المستوى', 'Pick tier')} />
                       </SelectTrigger>
                       <SelectContent>
                         {TIERS.map(t => (
@@ -1049,8 +1048,8 @@ const AdminMemberships = () => {
                       <h3 className="font-heading font-bold text-sm flex items-center gap-2">
                         {(editingPlan as any)._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
                         {(editingPlan as any)._new
-                          ? (isRTL ? 'إنشاء خطة جديدة' : 'Create Plan')
-                          : (isRTL ? 'تعديل الخطة' : 'Edit Plan')}
+                          ? (pickBi(isRTL, 'إنشاء خطة جديدة', 'Create Plan'))
+                          : (pickBi(isRTL, 'تعديل الخطة', 'Edit Plan'))}
                         <Badge className={cn('text-[9px]', tierColors[editingPlan.tier]?.badge)}>{editingPlan.tier}</Badge>
                       </h3>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingPlan(null)}><X className="w-4 h-4" /></Button>
@@ -1058,22 +1057,22 @@ const AdminMemberships = () => {
 
                     {/* Basic Info */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div><Label className="text-[10px]">{isRTL ? 'الاسم (عربي)' : 'Name (AR)'}</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} className="h-9 text-xs mt-1" /></div>
+                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الاسم (عربي)', 'Name (AR)')}</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs mt-1" /></div>
+                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (EN)')}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} className="h-9 text-xs mt-1" /></div>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
-                      <div><Label className="text-[10px]">{isRTL ? 'السعر الشهري' : 'Monthly Price'}</Label><Input type="number" value={form.price_monthly} onChange={e => setForm(f => ({ ...f, price_monthly: parseFloat(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{isRTL ? 'السعر السنوي' : 'Yearly Price'}</Label><Input type="number" value={form.price_yearly} onChange={e => setForm(f => ({ ...f, price_yearly: parseFloat(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{isRTL ? 'الترتيب' : 'Sort Order'}</Label><Input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
+                      <div><Label className="text-[10px]">{pickBi(isRTL, 'السعر الشهري', 'Monthly Price')}</Label><Input type="number" value={form.price_monthly} onChange={e => setForm(f => ({ ...f, price_monthly: parseFloat(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
+                      <div><Label className="text-[10px]">{pickBi(isRTL, 'السعر السنوي', 'Yearly Price')}</Label><Input type="number" value={form.price_yearly} onChange={e => setForm(f => ({ ...f, price_yearly: parseFloat(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
+                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الترتيب', 'Sort Order')}</Label><Input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div><Label className="text-[10px]">{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} className="text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} className="text-xs mt-1" /></div>
+                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الوصف (عربي)', 'Description (AR)')}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} className="text-xs mt-1" /></div>
+                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (EN)')}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} className="text-xs mt-1" /></div>
                     </div>
 
                     {/* Features text */}
                     <div>
-                      <Label className="text-[10px]">{isRTL ? 'المميزات النصية (سطر لكل ميزة)' : 'Text Features (one per line)'}</Label>
+                      <Label className="text-[10px]">{pickBi(isRTL, 'المميزات النصية (سطر لكل ميزة)', 'Text Features (one per line)')}</Label>
                       <Textarea value={featuresText} onChange={e => setFeaturesText(e.target.value)} rows={4} className="text-xs mt-1" />
                     </div>
 
@@ -1081,9 +1080,9 @@ const AdminMemberships = () => {
                     <div className="border border-border/30 rounded-xl p-4 bg-background/50">
                       <div className="flex items-center gap-2 mb-4">
                         <Settings2 className="w-4 h-4 text-accent" />
-                        <h4 className="font-heading font-bold text-sm">{isRTL ? 'حدود ومزايا الباقة' : 'Plan Limits & Benefits'}</h4>
+                        <h4 className="font-heading font-bold text-sm">{pickBi(isRTL, 'حدود ومزايا الباقة', 'Plan Limits & Benefits')}</h4>
                         <Badge variant="outline" className="text-[8px] ms-auto">
-                          {LIMIT_FIELDS.filter(f => f.type === 'boolean' && editLimits[f.key] === true).length}/{LIMIT_FIELDS.filter(f => f.type === 'boolean').length} {isRTL ? 'مفعّل' : 'enabled'}
+                          {LIMIT_FIELDS.filter(f => f.type === 'boolean' && editLimits[f.key] === true).length}/{LIMIT_FIELDS.filter(f => f.type === 'boolean').length} {pickBi(isRTL, 'مفعّل', 'enabled')}
                         </Badge>
                       </div>
                       <LimitsEditor limits={editLimits} onChange={setEditLimits} isRTL={isRTL} language={language} />
@@ -1092,13 +1091,13 @@ const AdminMemberships = () => {
                     <div className="flex items-center justify-between pt-2">
                       <div className="flex items-center gap-2">
                         <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
-                        <Label className="text-xs">{isRTL ? 'مفعّل' : 'Active'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</Label>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setEditingPlan(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                        <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setEditingPlan(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                         <Button size="sm" className="text-xs h-8 gap-1.5" onClick={() => updatePlanMutation.mutate()} disabled={updatePlanMutation.isPending}>
                           {updatePlanMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                          {isRTL ? 'حفظ التعديلات' : 'Save Changes'}
+                          {pickBi(isRTL, 'حفظ التعديلات', 'Save Changes')}
                         </Button>
                       </div>
                     </div>
@@ -1127,7 +1126,7 @@ const AdminMemberships = () => {
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-heading font-bold text-sm flex items-center gap-2">
                         <ArrowUpCircle className="w-4 h-4 text-accent" />
-                        {isRTL ? 'ترقية الاشتراك' : 'Upgrade Subscription'}
+                        {pickBi(isRTL, 'ترقية الاشتراك', 'Upgrade Subscription')}
                       </h3>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setUpgradeSub(null)}><X className="w-4 h-4" /></Button>
                     </div>
@@ -1139,16 +1138,16 @@ const AdminMemberships = () => {
                       <div>
                         <p className="text-xs font-medium">{upgradeSub.profile?.full_name || '—'}</p>
                         <p className="text-[9px] text-muted-foreground">
-                          {isRTL ? 'الخطة الحالية:' : 'Current:'} {upgradeSub.plan?.name_ar || upgradeSub.plan?.name_en}
+                          {pickBi(isRTL, 'الخطة الحالية:', 'Current:')} {upgradeSub.plan?.name_ar || upgradeSub.plan?.name_en}
                           {upgradeSub.business && ` • ${isRTL ? upgradeSub.business.name_ar : (upgradeSub.business.name_en || upgradeSub.business.name_ar)}`}
                         </p>
                       </div>
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3 mb-4">
                       <div>
-                        <Label className="text-[10px]">{isRTL ? 'الخطة الجديدة' : 'New Plan'}</Label>
+                        <Label className="text-[10px]">{pickBi(isRTL, 'الخطة الجديدة', 'New Plan')}</Label>
                         <Select value={upgradeTargetPlan} onValueChange={setUpgradeTargetPlan}>
-                          <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder={isRTL ? 'اختر الخطة...' : 'Select plan...'} /></SelectTrigger>
+                          <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder={pickBi(isRTL, 'اختر الخطة...', 'Select plan...')} /></SelectTrigger>
                           <SelectContent>
                             {plans.filter((p) => p.is_active && p.id !== upgradeSub.plan_id).map((p) => (
                               <SelectItem key={p.id} value={p.id}>
@@ -1162,21 +1161,21 @@ const AdminMemberships = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-[10px]">{isRTL ? 'دورة الفوترة' : 'Billing Cycle'}</Label>
+                        <Label className="text-[10px]">{pickBi(isRTL, 'دورة الفوترة', 'Billing Cycle')}</Label>
                         <Select value={upgradeCycle} onValueChange={setUpgradeCycle}>
                           <SelectTrigger className="h-9 text-xs mt-1"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="monthly">{isRTL ? 'شهري' : 'Monthly'}</SelectItem>
-                            <SelectItem value="yearly">{isRTL ? 'سنوي' : 'Yearly'}</SelectItem>
+                            <SelectItem value="monthly">{pickBi(isRTL, 'شهري', 'Monthly')}</SelectItem>
+                            <SelectItem value="yearly">{pickBi(isRTL, 'سنوي', 'Yearly')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setUpgradeSub(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                      <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setUpgradeSub(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                       <Button size="sm" className="text-xs h-8 gap-1.5" onClick={() => upgradeMutation.mutate()} disabled={!upgradeTargetPlan || upgradeMutation.isPending}>
                         {upgradeMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowUpCircle className="w-3 h-3" />}
-                        {isRTL ? 'تأكيد الترقية' : 'Confirm Upgrade'}
+                        {pickBi(isRTL, 'تأكيد الترقية', 'Confirm Upgrade')}
                       </Button>
                     </div>
                   </CardContent>
@@ -1187,13 +1186,13 @@ const AdminMemberships = () => {
               <div className="flex gap-2 flex-wrap">
                 <div className="relative flex-1 min-w-[180px]">
                   <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input placeholder={isRTL ? 'بحث بالمعرف، الاسم، البريد...' : 'Search by ref, name, email...'}
+                  <Input placeholder={pickBi(isRTL, 'بحث بالمعرف، الاسم، البريد...', 'Search by ref, name, email...')}
                     value={searchQuery} onChange={e => handleSearchChange(e.target.value)} className="h-9 text-xs ps-8" />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="h-9 w-[120px] text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{isRTL ? 'جميع الحالات' : 'All Status'}</SelectItem>
+                    <SelectItem value="all">{pickBi(isRTL, 'جميع الحالات', 'All Status')}</SelectItem>
                     {Object.entries(statusConfig).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{isRTL ? v.label_ar : v.label_en}</SelectItem>
                     ))}
@@ -1202,7 +1201,7 @@ const AdminMemberships = () => {
                 <Select value={tierFilter} onValueChange={setTierFilter}>
                   <SelectTrigger className="h-9 w-[120px] text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{isRTL ? 'جميع الباقات' : 'All Tiers'}</SelectItem>
+                    <SelectItem value="all">{pickBi(isRTL, 'جميع الباقات', 'All Tiers')}</SelectItem>
                     {TIERS.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -1216,7 +1215,7 @@ const AdminMemberships = () => {
               ) : filteredSubs.length === 0 ? (
                 <Card className="border-border/30"><CardContent className="p-10 text-center text-muted-foreground text-sm">
                   <Users className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  {isRTL ? 'لا توجد اشتراكات مطابقة' : 'No matching subscriptions'}
+                  {pickBi(isRTL, 'لا توجد اشتراكات مطابقة', 'No matching subscriptions')}
                 </CardContent></Card>
               ) : (
                 <div className="space-y-2">
@@ -1245,7 +1244,7 @@ const AdminMemberships = () => {
               <div className="flex gap-2 flex-wrap">
                 <div className="relative flex-1 min-w-[180px]">
                   <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input placeholder={isRTL ? 'بحث عن جهة...' : 'Search businesses...'} value={searchQuery}
+                  <Input placeholder={pickBi(isRTL, 'بحث عن جهة...', 'Search businesses...')} value={searchQuery}
                     onChange={e => handleSearchChange(e.target.value)} className="h-9 text-xs ps-8" />
                 </div>
                 <Badge variant="outline" className="h-9 px-3 text-xs flex items-center gap-1.5 shrink-0">
@@ -1290,7 +1289,7 @@ const AdminMemberships = () => {
                             <div className="flex items-center gap-1.5">
                               <span className="text-xs font-bold truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
                               {biz.is_verified && <Shield className="w-3 h-3 text-success shrink-0" />}
-                              {!biz.is_active && <Badge variant="outline" className="text-[7px] h-3 px-1 text-destructive">{isRTL ? 'معطل' : 'Inactive'}</Badge>}
+                              {!biz.is_active && <Badge variant="outline" className="text-[7px] h-3 px-1 text-destructive">{pickBi(isRTL, 'معطل', 'Inactive')}</Badge>}
                             </div>
                             <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
                               <span className="tech-content">@{biz.username}</span>
@@ -1317,9 +1316,7 @@ const AdminMemberships = () => {
                 <CardContent className="p-3 text-[11px] text-foreground/80 flex items-start gap-2">
                   <AlertTriangle className="w-3.5 h-3.5 text-info shrink-0 mt-0.5" />
                   <span>
-                    {isRTL
-                      ? 'هذه مؤشرات استخدام فقط. لا يتم فرض الحدود تلقائيًا بعد.'
-                      : 'Usage indicators only. Limits are not enforced automatically yet.'}
+                    {pickBi(isRTL, 'هذه مؤشرات استخدام فقط. لا يتم فرض الحدود تلقائيًا بعد.', 'Usage indicators only. Limits are not enforced automatically yet.')}
                   </span>
                 </CardContent>
               </Card>
@@ -1331,7 +1328,7 @@ const AdminMemberships = () => {
                     onCheckedChange={setUsageOnlyFlagged}
                   />
                   <Label className="text-xs">
-                    {isRTL ? 'إظهار المتجاوزين/القريبين من الحد فقط' : 'Show only over-limit / near-cap'}
+                    {pickBi(isRTL, 'إظهار المتجاوزين/القريبين من الحد فقط', 'Show only over-limit / near-cap')}
                   </Label>
                 </div>
                 <Badge variant="outline" className="h-7 px-2 text-[10px] gap-1">
@@ -1347,7 +1344,7 @@ const AdminMemberships = () => {
               ) : usageReport.length === 0 ? (
                 <Card className="border-dashed">
                   <CardContent className="p-8 text-center text-xs text-muted-foreground">
-                    {isRTL ? 'لا توجد جهات قريبة من الحد أو متجاوزة.' : 'No businesses near or over their limits.'}
+                    {pickBi(isRTL, 'لا توجد جهات قريبة من الحد أو متجاوزة.', 'No businesses near or over their limits.')}
                   </CardContent>
                 </Card>
               ) : (
@@ -1355,18 +1352,18 @@ const AdminMemberships = () => {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-muted/30 text-muted-foreground">
-                        <th className="text-start p-2 font-semibold">{isRTL ? 'الجهة' : 'Business'}</th>
-                        <th className="text-start p-2 font-semibold">{isRTL ? 'الباقة' : 'Tier'}</th>
-                        <th className="text-start p-2 font-semibold">{isRTL ? 'المؤشر' : 'Metric'}</th>
-                        <th className="text-center p-2 font-semibold">{isRTL ? 'الاستخدام' : 'Used / Limit'}</th>
-                        <th className="text-start p-2 font-semibold">{isRTL ? 'الفترة' : 'Period'}</th>
-                        <th className="text-center p-2 font-semibold">{isRTL ? 'الحالة' : 'Status'}</th>
+                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'الجهة', 'Business')}</th>
+                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'الباقة', 'Tier')}</th>
+                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'المؤشر', 'Metric')}</th>
+                        <th className="text-center p-2 font-semibold">{pickBi(isRTL, 'الاستخدام', 'Used / Limit')}</th>
+                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'الفترة', 'Period')}</th>
+                        <th className="text-center p-2 font-semibold">{pickBi(isRTL, 'الحالة', 'Status')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {usageReport.map((r, i) => {
                         const limText = r.limit_value === 0
-                          ? (isRTL ? 'غير محدود' : '∞')
+                          ? (pickBi(isRTL, 'غير محدود', '∞'))
                           : String(r.limit_value);
                         return (
                           <tr key={`${r.business_id}-${r.metric}-${i}`} className="border-t border-border/30 hover:bg-muted/10">
@@ -1382,11 +1379,11 @@ const AdminMemberships = () => {
                             <td className="p-2 text-center">
                               {r.over_limit ? (
                                 <Badge className="text-[9px] bg-destructive/15 text-destructive">
-                                  {isRTL ? 'تجاوز الحد' : 'Over limit'}
+                                  {pickBi(isRTL, 'تجاوز الحد', 'Over limit')}
                                 </Badge>
                               ) : r.near_cap ? (
                                 <Badge className="text-[9px] bg-warning/15 text-warning">
-                                  {isRTL ? 'اقترب من الحد' : 'Near cap'}
+                                  {pickBi(isRTL, 'اقترب من الحد', 'Near cap')}
                                 </Badge>
                               ) : (
                                 <Badge variant="outline" className="text-[9px]">OK</Badge>
