@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/shared';
 import { supabase } from '@/integrations/supabase/client';
@@ -274,9 +275,7 @@ const PersonalModeBanner = memo(function PersonalModeBanner({
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <Info className="w-4 h-4 text-primary shrink-0" />
         <p className="text-xs leading-relaxed">
-          {isRTL
-            ? 'وضع شخصي: تُربط مواقعك تلقائياً بحسابك ورقم هويتك. الرقم الضريبي اختياري ويُستخدم على الفواتير والعقود.'
-            : 'Personal mode: your sites are auto-linked to your account and national ID. Tax number is optional and used on invoices/contracts.'}
+          {pickBi(isRTL, 'وضع شخصي: تُربط مواقعك تلقائياً بحسابك ورقم هويتك. الرقم الضريبي اختياري ويُستخدم على الفواتير والعقود.', 'Personal mode: your sites are auto-linked to your account and national ID. Tax number is optional and used on invoices/contracts.')}
         </p>
       </div>
       {refId && (
@@ -296,16 +295,14 @@ const SitesEmptyState = memo(function SitesEmptyState({
       <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
         <MapPin className="w-7 h-7 text-primary" />
       </div>
-      <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد مواقع بعد' : 'No sites yet'}</h3>
+      <h3 className="text-base font-semibold mb-1">{pickBi(isRTL, 'لا توجد مواقع بعد', 'No sites yet')}</h3>
       <p className="text-sm text-muted-foreground max-w-xs mb-5">
-        {isRTL
-          ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفِرَق.'
-          : 'Add execution sites to link them with contracts, work orders, and teams.'}
+        {pickBi(isRTL, 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفِرَق.', 'Add execution sites to link them with contracts, work orders, and teams.')}
       </p>
       {canCreate && (
         <Button variant="hero" size="sm" onClick={onCreate}>
           <Plus className="w-4 h-4 me-1" />
-          {isRTL ? 'إضافة أول موقع' : 'Add First Site'}
+          {pickBi(isRTL, 'إضافة أول موقع', 'Add First Site')}
         </Button>
       )}
     </div>
@@ -485,14 +482,14 @@ export default function DashboardSites() {
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error(isRTL ? 'يجب تسجيل الدخول' : 'Sign-in required');
+      if (!user) throw new Error(pickBi(isRTL, 'يجب تسجيل الدخول', 'Sign-in required'));
       // Compose the canonical address line from the National Address fields,
       // unless the user explicitly typed a custom Arabic line (address_manual).
       const composedAr = (naf.address && naf.address.trim()) || buildAddressLine(naf, 'ar');
       const composedEn = (naf.address_en && naf.address_en.trim()) || buildAddressLine(naf, 'en');
       const city = naf.city_id ? citiesRef.find((c) => c.id === naf.city_id) : null;
       if (!composedAr) {
-        throw new Error(isRTL ? 'أكمل بيانات العنوان الوطني (المنطقة / المدينة / الحي على الأقل)' : 'Complete the National Address (region / city / district at minimum)');
+        throw new Error(pickBi(isRTL, 'أكمل بيانات العنوان الوطني (المنطقة / المدينة / الحي على الأقل)', 'Complete the National Address (region / city / district at minimum)'));
       }
       // Saudi National short address must be exactly 4 letters + 4 digits.
       // If the user typed a partial value, drop it instead of failing the whole save.
@@ -561,7 +558,7 @@ export default function DashboardSites() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-sites'] });
-      toast.success(editing ? (isRTL ? 'تم تحديث الموقع' : 'Site updated') : (isRTL ? 'تم إضافة الموقع' : 'Site added'));
+      toast.success(editing ? (pickBi(isRTL, 'تم تحديث الموقع', 'Site updated')) : (pickBi(isRTL, 'تم إضافة الموقع', 'Site added')));
       setIssues([]);
       closeForm();
     },
@@ -610,7 +607,7 @@ export default function DashboardSites() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-sites'] });
       setDeleteConfirm(null);
-      toast.success(isRTL ? 'تم الأرشفة' : 'Archived');
+      toast.success(pickBi(isRTL, 'تم الأرشفة', 'Archived'));
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Failed'),
   });
@@ -741,12 +738,12 @@ export default function DashboardSites() {
         <PageHeader
           icon={MapPin}
           tone="primary"
-          eyebrow={isRTL ? 'المواقع' : 'Sites'}
-          title={isRTL ? 'عناوين المواقع' : 'Site Addresses'}
+          eyebrow={pickBi(isRTL, 'المواقع', 'Sites')}
+          title={pickBi(isRTL, 'عناوين المواقع', 'Site Addresses')}
           subtitle={isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
           actions={user ? (
             <Button variant="hero" size="sm" className="h-8 text-xs" onClick={openCreate}>
-              <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة موقع' : 'Add Site'}
+              <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة موقع', 'Add Site')}
             </Button>
           ) : undefined}
         />
@@ -755,10 +752,10 @@ export default function DashboardSites() {
         {sites.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {[
-              { l: isRTL ? 'النشطة' : 'Active', v: stats.total, icon: MapPin, cls: 'text-primary bg-primary/10' },
-              { l: isRTL ? 'العقود المرتبطة' : 'Linked Contracts', v: stats.linked, icon: FileText, cls: 'text-accent bg-accent/10' },
-              { l: isRTL ? 'أنواع المواقع' : 'Site Types', v: stats.types, icon: Layers, cls: 'text-primary bg-primary/10' },
-              { l: isRTL ? 'المؤرشفة' : 'Archived', v: stats.archived, icon: AlertCircle, cls: 'text-muted-foreground bg-muted' },
+              { l: pickBi(isRTL, 'النشطة', 'Active'), v: stats.total, icon: MapPin, cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'العقود المرتبطة', 'Linked Contracts'), v: stats.linked, icon: FileText, cls: 'text-accent bg-accent/10' },
+              { l: pickBi(isRTL, 'أنواع المواقع', 'Site Types'), v: stats.types, icon: Layers, cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'المؤرشفة', 'Archived'), v: stats.archived, icon: AlertCircle, cls: 'text-muted-foreground bg-muted' },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border/40 bg-card/50">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.cls}`}>
@@ -786,7 +783,7 @@ export default function DashboardSites() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     {editing ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
-                    {editing ? (isRTL ? 'تعديل الموقع' : 'Edit Site') : (isRTL ? 'إضافة موقع جديد' : 'New Site')}
+                    {editing ? (pickBi(isRTL, 'تعديل الموقع', 'Edit Site')) : (pickBi(isRTL, 'إضافة موقع جديد', 'New Site'))}
                   </CardTitle>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm}><X className="w-4 h-4" /></Button>
                 </div>
@@ -837,7 +834,7 @@ export default function DashboardSites() {
                                 <span>{isRTL ? iss.fix_ar : iss.fix_en}</span>
                               </p>
                             </div>
-                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5 ${isRTL ? 'rotate-180' : ''}`} />
+                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5 ${pickBi(isRTL, 'rotate-180', '')}`} />
                           </button>
                         </li>
                       ))}
@@ -846,30 +843,30 @@ export default function DashboardSites() {
                 )}
                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FormTab)} className="w-full">
                   <TabsList className="w-full grid grid-cols-4 h-auto p-1">
-                    <TabsTrigger value="general" className="text-[11px] gap-1.5"><Layers className="w-3.5 h-3.5" />{isRTL ? 'الأساسيات' : 'General'}</TabsTrigger>
-                    <TabsTrigger value="address" className="text-[11px] gap-1.5"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'العنوان والخريطة' : 'Address & Map'}</TabsTrigger>
-                    <TabsTrigger value="government" className="text-[11px] gap-1.5"><Landmark className="w-3.5 h-3.5" />{isRTL ? 'البيانات الحكومية' : 'Government'}</TabsTrigger>
-                    <TabsTrigger value="contact" className="text-[11px] gap-1.5"><User className="w-3.5 h-3.5" />{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
+                    <TabsTrigger value="general" className="text-[11px] gap-1.5"><Layers className="w-3.5 h-3.5" />{pickBi(isRTL, 'الأساسيات', 'General')}</TabsTrigger>
+                    <TabsTrigger value="address" className="text-[11px] gap-1.5"><MapPin className="w-3.5 h-3.5" />{pickBi(isRTL, 'العنوان والخريطة', 'Address & Map')}</TabsTrigger>
+                    <TabsTrigger value="government" className="text-[11px] gap-1.5"><Landmark className="w-3.5 h-3.5" />{pickBi(isRTL, 'البيانات الحكومية', 'Government')}</TabsTrigger>
+                    <TabsTrigger value="contact" className="text-[11px] gap-1.5"><User className="w-3.5 h-3.5" />{pickBi(isRTL, 'التواصل', 'Contact')}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="general" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="space-y-1.5" id="site-field-label">
-                    <Label className="text-xs font-medium">{isRTL ? 'الاسم المختصر' : 'Label'} <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs font-medium">{pickBi(isRTL, 'الاسم المختصر', 'Label')} <span className="text-destructive">*</span></Label>
                     <Input
                       value={form.label}
                       onChange={e => setForm(p => ({ ...p, label: e.target.value }))}
-                      placeholder={isRTL ? 'مثال: فيلا العميل' : 'e.g. Client villa'}
+                      placeholder={pickBi(isRTL, 'مثال: فيلا العميل', 'e.g. Client villa')}
                       className={`h-9 ${errorFields.label ? 'ring-2 ring-destructive/60 border-destructive' : ''}`}
                       aria-invalid={!!errorFields.label}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'اسم الموقع' : 'Site Name'}</Label>
-                    <Input value={form.site_name} onChange={e => setForm(p => ({ ...p, site_name: e.target.value }))} placeholder={isRTL ? 'اختياري' : 'Optional'} className="h-9" />
+                    <Label className="text-xs font-medium">{pickBi(isRTL, 'اسم الموقع', 'Site Name')}</Label>
+                    <Input value={form.site_name} onChange={e => setForm(p => ({ ...p, site_name: e.target.value }))} placeholder={pickBi(isRTL, 'اختياري', 'Optional')} className="h-9" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'نوع الموقع' : 'Site Type'}</Label>
+                    <Label className="text-xs font-medium">{pickBi(isRTL, 'نوع الموقع', 'Site Type')}</Label>
                     <Select value={form.site_type} onValueChange={(v) => setForm(p => ({ ...p, site_type: v as SiteType }))}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -878,7 +875,7 @@ export default function DashboardSites() {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'الخصوصية' : 'Visibility'}</Label>
+                    <Label className="text-xs font-medium">{pickBi(isRTL, 'الخصوصية', 'Visibility')}</Label>
                     <Select value={form.visibility} onValueChange={(v) => setForm(p => ({ ...p, visibility: v as Visibility }))}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -889,7 +886,7 @@ export default function DashboardSites() {
                 </div>
                 <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
                   <input type="checkbox" id="is_default" checked={form.is_default} onChange={e => setForm(p => ({ ...p, is_default: e.target.checked }))} className="w-4 h-4 rounded border-border" />
-                  <label htmlFor="is_default" className="text-xs font-medium cursor-pointer">{isRTL ? 'تعيين كموقع افتراضي' : 'Set as default site'}</label>
+                  <label htmlFor="is_default" className="text-xs font-medium cursor-pointer">{pickBi(isRTL, 'تعيين كموقع افتراضي', 'Set as default site')}</label>
                 </div>
                   </TabsContent>
 
@@ -907,7 +904,7 @@ export default function DashboardSites() {
                 <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <MapIcon className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-bold">{isRTL ? 'تحديد الموقع على الخريطة' : 'Pin location on map'}</h3>
+                    <h3 className="text-sm font-bold">{pickBi(isRTL, 'تحديد الموقع على الخريطة', 'Pin location on map')}</h3>
                   </div>
                   <LocationPicker
                     isRTL={isRTL}
@@ -932,7 +929,7 @@ export default function DashboardSites() {
                     }}
                   />
                   <div className="space-y-1.5" id="site-field-map_url">
-                    <Label className="text-xs font-medium">{isRTL ? 'رابط خريطة مخصص (اختياري)' : 'Custom map URL (optional)'}</Label>
+                    <Label className="text-xs font-medium">{pickBi(isRTL, 'رابط خريطة مخصص (اختياري)', 'Custom map URL (optional)')}</Label>
                     <Input
                       type="url" dir="ltr" value={form.map_url}
                       onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))}
@@ -949,25 +946,25 @@ export default function DashboardSites() {
                   <TabsContent value="government" className="space-y-3 mt-4">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-lg p-2.5">
                       <Landmark className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>{isRTL ? 'بيانات الرخص الحكومية وصك الملكية والمالك — تستخدم تلقائياً في العقود المرتبطة بهذا الموقع.' : 'Government licenses, title deed, and ownership data — auto-attached to contracts linked to this site.'}</span>
+                      <span>{pickBi(isRTL, 'بيانات الرخص الحكومية وصك الملكية والمالك — تستخدم تلقائياً في العقود المرتبطة بهذا الموقع.', 'Government licenses, title deed, and ownership data — auto-attached to contracts linked to this site.')}</span>
                     </div>
 
                     <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
                       <div className="flex items-center gap-2 pb-1 border-b border-border/30">
                         <ScrollText className="w-3.5 h-3.5 text-primary" />
-                        <h3 className="text-xs font-bold">{isRTL ? 'رخصة البلدية' : 'Municipal License'}</h3>
+                        <h3 className="text-xs font-bold">{pickBi(isRTL, 'رخصة البلدية', 'Municipal License')}</h3>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'رقم الرخصة' : 'License No.'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'رقم الرخصة', 'License No.')}</Label>
                           <Input dir="ltr" value={form.municipal_license_no} onChange={e => setForm(p => ({ ...p, municipal_license_no: e.target.value }))} className="h-9 tech-content" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'تاريخ الإصدار' : 'Issue Date'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'تاريخ الإصدار', 'Issue Date')}</Label>
                           <Input type="date" dir="ltr" value={form.municipal_license_issue_date} onChange={e => setForm(p => ({ ...p, municipal_license_issue_date: e.target.value }))} className="h-9 tech-content" />
                         </div>
                         <div className="space-y-1.5" id="site-field-municipal_license_expiry_date">
-                          <Label className="text-xs font-medium">{isRTL ? 'تاريخ الانتهاء' : 'Expiry Date'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'تاريخ الانتهاء', 'Expiry Date')}</Label>
                           <Input
                             type="date" dir="ltr" value={form.municipal_license_expiry_date}
                             onChange={e => setForm(p => ({ ...p, municipal_license_expiry_date: e.target.value }))}
@@ -981,34 +978,34 @@ export default function DashboardSites() {
                     <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
                       <div className="flex items-center gap-2 pb-1 border-b border-border/30">
                         <FileText className="w-3.5 h-3.5 text-primary" />
-                        <h3 className="text-xs font-bold">{isRTL ? 'صك الملكية والمالك' : 'Title Deed & Owner'}</h3>
+                        <h3 className="text-xs font-bold">{pickBi(isRTL, 'صك الملكية والمالك', 'Title Deed & Owner')}</h3>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'رقم الصك' : 'Deed Number'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'رقم الصك', 'Deed Number')}</Label>
                           <Input dir="ltr" value={form.title_deed_no} onChange={e => setForm(p => ({ ...p, title_deed_no: e.target.value }))} className="h-9 tech-content" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'تاريخ الصك' : 'Deed Date'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'تاريخ الصك', 'Deed Date')}</Label>
                           <Input type="date" dir="ltr" value={form.title_deed_date} onChange={e => setForm(p => ({ ...p, title_deed_date: e.target.value }))} className="h-9 tech-content" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'اسم المالك' : 'Owner Name'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'اسم المالك', 'Owner Name')}</Label>
                           <Input value={form.owner_name} onChange={e => setForm(p => ({ ...p, owner_name: e.target.value }))} className="h-9" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'رقم هوية المالك' : 'Owner ID Number'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'رقم هوية المالك', 'Owner ID Number')}</Label>
                           <Input dir="ltr" value={form.owner_id_number} onChange={e => setForm(p => ({ ...p, owner_id_number: e.target.value }))} className="h-9 tech-content" />
                         </div>
                         <div className="space-y-1.5">
                           <Label className="text-xs font-medium">
-                            {isRTL ? 'الرقم الضريبي (اختياري)' : 'Tax Number (optional)'}
+                            {pickBi(isRTL, 'الرقم الضريبي (اختياري)', 'Tax Number (optional)')}
                           </Label>
                           <Input
                             dir="ltr"
                             value={form.tax_number}
                             onChange={e => setForm(p => ({ ...p, tax_number: e.target.value }))}
-                            placeholder={isRTL ? 'يستخدم في الفواتير عند توفره' : 'Used on invoices when available'}
+                            placeholder={pickBi(isRTL, 'يستخدم في الفواتير عند توفره', 'Used on invoices when available')}
                             className="h-9 tech-content"
                           />
                         </div>
@@ -1018,29 +1015,29 @@ export default function DashboardSites() {
                     <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
                       <div className="flex items-center gap-2 pb-1 border-b border-border/30">
                         <Layers className="w-3.5 h-3.5 text-primary" />
-                        <h3 className="text-xs font-bold">{isRTL ? 'بيانات المخطط والاستخدام' : 'Plan & Land Use'}</h3>
+                        <h3 className="text-xs font-bold">{pickBi(isRTL, 'بيانات المخطط والاستخدام', 'Plan & Land Use')}</h3>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'نوع الاستخدام' : 'Land Use'}</Label>
-                          <Input value={form.land_use_type} onChange={e => setForm(p => ({ ...p, land_use_type: e.target.value }))} placeholder={isRTL ? 'سكني / تجاري...' : 'Residential...'} className="h-9" />
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'نوع الاستخدام', 'Land Use')}</Label>
+                          <Input value={form.land_use_type} onChange={e => setForm(p => ({ ...p, land_use_type: e.target.value }))} placeholder={pickBi(isRTL, 'سكني / تجاري...', 'Residential...')} className="h-9" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'رقم القطعة' : 'Plot No.'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'رقم القطعة', 'Plot No.')}</Label>
                           <Input dir="ltr" value={form.plot_number} onChange={e => setForm(p => ({ ...p, plot_number: e.target.value }))} className="h-9 tech-content" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'رقم البلوك' : 'Block No.'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'رقم البلوك', 'Block No.')}</Label>
                           <Input dir="ltr" value={form.block_number} onChange={e => setForm(p => ({ ...p, block_number: e.target.value }))} className="h-9 tech-content" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">{isRTL ? 'رقم المخطط' : 'Plan No.'}</Label>
+                          <Label className="text-xs font-medium">{pickBi(isRTL, 'رقم المخطط', 'Plan No.')}</Label>
                           <Input dir="ltr" value={form.plan_number} onChange={e => setForm(p => ({ ...p, plan_number: e.target.value }))} className="h-9 tech-content" />
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-medium">{isRTL ? 'ملاحظات حكومية' : 'Government Notes'}</Label>
-                        <Textarea value={form.government_notes} onChange={e => setForm(p => ({ ...p, government_notes: e.target.value }))} rows={2} placeholder={isRTL ? 'رخص إضافية، اشتراطات، تصاريح...' : 'Additional permits, conditions...'} className="text-sm resize-none" />
+                        <Label className="text-xs font-medium">{pickBi(isRTL, 'ملاحظات حكومية', 'Government Notes')}</Label>
+                        <Textarea value={form.government_notes} onChange={e => setForm(p => ({ ...p, government_notes: e.target.value }))} rows={2} placeholder={pickBi(isRTL, 'رخص إضافية، اشتراطات، تصاريح...', 'Additional permits, conditions...')} className="text-sm resize-none" />
                       </div>
                     </div>
                   </TabsContent>
@@ -1048,18 +1045,18 @@ export default function DashboardSites() {
                   <TabsContent value="contact" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{isRTL ? 'اسم الجهة المسؤولة' : 'Contact Name'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{pickBi(isRTL, 'اسم الجهة المسؤولة', 'Contact Name')}</Label>
                     <Input value={form.contact_name} onChange={e => setForm(p => ({ ...p, contact_name: e.target.value }))} className="h-9" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{isRTL ? 'رقم التواصل' : 'Contact Phone'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{pickBi(isRTL, 'رقم التواصل', 'Contact Phone')}</Label>
                     <Input dir="ltr" value={form.contact_phone} onChange={e => setForm(p => ({ ...p, contact_phone: e.target.value }))} className="h-9 tech-content" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">{isRTL ? 'ملاحظات الوصول' : 'Access notes'}</Label>
-                  <Textarea value={form.access_notes} onChange={e => setForm(p => ({ ...p, access_notes: e.target.value }))} rows={2} placeholder={isRTL ? 'أرقام البوابات، أوقات الوصول...' : 'Gate numbers, access hours...'} className="text-sm resize-none" />
+                  <Label className="text-xs font-medium">{pickBi(isRTL, 'ملاحظات الوصول', 'Access notes')}</Label>
+                  <Textarea value={form.access_notes} onChange={e => setForm(p => ({ ...p, access_notes: e.target.value }))} rows={2} placeholder={pickBi(isRTL, 'أرقام البوابات، أوقات الوصول...', 'Gate numbers, access hours...')} className="text-sm resize-none" />
                 </div>
                   </TabsContent>
                 </Tabs>
@@ -1086,9 +1083,9 @@ export default function DashboardSites() {
                     className="flex-1 h-9"
                   >
                     {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
-                    {saveMut.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
+                    {saveMut.isPending ? (pickBi(isRTL, 'جاري الحفظ...', 'Saving...')) : editing ? (pickBi(isRTL, 'تحديث', 'Update')) : (pickBi(isRTL, 'إضافة', 'Add'))}
                   </Button>
-                  <Button variant="outline" className="h-9" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button variant="outline" className="h-9" onClick={closeForm}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -1100,7 +1097,7 @@ export default function DashboardSites() {
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative flex-1 min-w-[180px] max-w-sm">
               <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-              <Input placeholder={isRTL ? 'ابحث...' : 'Search...'} value={search}
+              <Input placeholder={pickBi(isRTL, 'ابحث...', 'Search...')} value={search}
                 onChange={e => startTransition(() => setSearch(e.target.value))}
                 className="ps-8 h-8 text-xs" />
             </div>
@@ -1109,18 +1106,18 @@ export default function DashboardSites() {
                 <Layers className="w-3 h-3" /><SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{isRTL ? 'كل الأنواع' : 'All types'}</SelectItem>
+                <SelectItem value="all">{pickBi(isRTL, 'كل الأنواع', 'All types')}</SelectItem>
                 {SITE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{isRTL ? t.ar : t.en}</SelectItem>)}
               </SelectContent>
             </Select>
             <button onClick={() => setShowArchived(v => !v)}
               className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors ${showArchived ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
-              {isRTL ? 'إظهار المؤرشفة' : 'Show archived'}
+              {pickBi(isRTL, 'إظهار المؤرشفة', 'Show archived')}
             </button>
             <button onClick={() => setShowAdvanced(v => !v)}
               className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors flex items-center gap-1.5 ${showAdvanced || advancedActive ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
               <SlidersHorizontal className="w-3 h-3" />
-              {isRTL ? 'فلترة متقدمة' : 'Advanced filters'}
+              {pickBi(isRTL, 'فلترة متقدمة', 'Advanced filters')}
               {advancedActive && <span className="ms-0.5 w-1.5 h-1.5 rounded-full bg-primary" />}
             </button>
           </div>
@@ -1129,40 +1126,40 @@ export default function DashboardSites() {
         {showAdvanced && (
           <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-bold flex items-center gap-1.5"><Landmark className="w-3.5 h-3.5 text-primary" />{isRTL ? 'فلترة بالبيانات الحكومية' : 'Filter by government data'}</p>
+              <p className="text-xs font-bold flex items-center gap-1.5"><Landmark className="w-3.5 h-3.5 text-primary" />{pickBi(isRTL, 'فلترة بالبيانات الحكومية', 'Filter by government data')}</p>
               {advancedActive && (
-                <button onClick={resetAdvanced} className="text-[10px] text-primary hover:underline">{isRTL ? 'مسح الكل' : 'Clear all'}</button>
+                <button onClick={resetAdvanced} className="text-[10px] text-primary hover:underline">{pickBi(isRTL, 'مسح الكل', 'Clear all')}</button>
               )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم رخصة البلدية' : 'License No.'}</Label>
+                <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'رقم رخصة البلدية', 'License No.')}</Label>
                 <Input dir="ltr" value={advLicenseNo} onChange={e => setAdvLicenseNo(e.target.value)} className="h-8 text-xs tech-content" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم الصك' : 'Deed No.'}</Label>
+                <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'رقم الصك', 'Deed No.')}</Label>
                 <Input dir="ltr" value={advDeedNo} onChange={e => setAdvDeedNo(e.target.value)} className="h-8 text-xs tech-content" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم هوية المالك' : 'Owner ID'}</Label>
+                <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'رقم هوية المالك', 'Owner ID')}</Label>
                 <Input dir="ltr" value={advOwnerId} onChange={e => setAdvOwnerId(e.target.value)} className="h-8 text-xs tech-content" />
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إصدار من' : 'Issued from'}</Label>
+                <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'إصدار من', 'Issued from')}</Label>
                 <Input type="date" dir="ltr" value={advIssueFrom} onChange={e => setAdvIssueFrom(e.target.value)} className="h-8 text-xs tech-content" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إصدار إلى' : 'Issued to'}</Label>
+                <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'إصدار إلى', 'Issued to')}</Label>
                 <Input type="date" dir="ltr" value={advIssueTo} onChange={e => setAdvIssueTo(e.target.value)} className="h-8 text-xs tech-content" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'انتهاء من' : 'Expiry from'}</Label>
+                <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'انتهاء من', 'Expiry from')}</Label>
                 <Input type="date" dir="ltr" value={advExpiryFrom} onChange={e => setAdvExpiryFrom(e.target.value)} className="h-8 text-xs tech-content" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'انتهاء إلى' : 'Expiry to'}</Label>
+                <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'انتهاء إلى', 'Expiry to')}</Label>
                 <Input type="date" dir="ltr" value={advExpiryTo} onChange={e => setAdvExpiryTo(e.target.value)} className="h-8 text-xs tech-content" />
               </div>
             </div>
@@ -1174,12 +1171,12 @@ export default function DashboardSites() {
           <div className="flex items-center gap-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-medium">{isRTL ? 'تأكيد الأرشفة' : 'Confirm archive'}</p>
-              <p className="text-[11px] text-muted-foreground">{isRTL ? 'يمكنك استعادته لاحقًا بإظهار المؤرشفة' : 'You can restore it later from Archived'}</p>
+              <p className="text-sm font-medium">{pickBi(isRTL, 'تأكيد الأرشفة', 'Confirm archive')}</p>
+              <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'يمكنك استعادته لاحقًا بإظهار المؤرشفة', 'You can restore it later from Archived')}</p>
             </div>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteConfirm(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteConfirm(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
             <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => archiveMut.mutate(deleteConfirm)} disabled={archiveMut.isPending}>
-              {archiveMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{isRTL ? 'أرشفة' : 'Archive'}
+              {archiveMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{pickBi(isRTL, 'أرشفة', 'Archive')}
             </Button>
           </div>
         )}
@@ -1194,8 +1191,8 @@ export default function DashboardSites() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <Search className="w-7 h-7 mb-2" />
-            <p className="text-sm font-medium">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
-            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearch(''); setTypeFilter('all'); }}>{isRTL ? 'إعادة تعيين' : 'Reset filters'}</button>
+            <p className="text-sm font-medium">{pickBi(isRTL, 'لا توجد نتائج', 'No results')}</p>
+            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearch(''); setTypeFilter('all'); }}>{pickBi(isRTL, 'إعادة تعيين', 'Reset filters')}</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1217,7 +1214,7 @@ export default function DashboardSites() {
                       type="button"
                       onClick={() => navigate(`/dashboard/sites/${s.id}`)}
                       className="group relative block w-full aspect-[16/6] sm:aspect-[16/5.5] overflow-hidden bg-gradient-to-br from-muted to-muted/50"
-                      title={isRTL ? 'فتح صفحة الموقع' : 'Open site page'}
+                      title={pickBi(isRTL, 'فتح صفحة الموقع', 'Open site page')}
                     >
                       {s.cover_image_url ? (
                         <img src={s.cover_image_url} alt={s.label} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
@@ -1260,10 +1257,10 @@ export default function DashboardSites() {
                             </button>
                             {s.is_default && (
                               <Badge variant="outline" className="h-4 text-[9px] px-1 border-accent text-accent gap-0.5">
-                                <Star className="w-2.5 h-2.5 fill-current" />{isRTL ? 'افتراضي' : 'Default'}
+                                <Star className="w-2.5 h-2.5 fill-current" />{pickBi(isRTL, 'افتراضي', 'Default')}
                               </Badge>
                             )}
-                            {isArchived && <Badge variant="outline" className="h-4 text-[9px] px-1">{isRTL ? 'مؤرشف' : 'Archived'}</Badge>}
+                            {isArchived && <Badge variant="outline" className="h-4 text-[9px] px-1">{pickBi(isRTL, 'مؤرشف', 'Archived')}</Badge>}
                           </div>
                           {s.site_ref && <p className="text-[10px] text-muted-foreground tech-content mt-0.5">{s.site_ref}</p>}
                         </div>
@@ -1291,36 +1288,36 @@ export default function DashboardSites() {
                         className={`text-[10px] flex items-center gap-1 ${linkedCount > 0 ? 'text-primary hover:underline' : 'text-muted-foreground'}`}>
                         <FileText className="w-3 h-3" />
                         <span className="tech-content">{linkedCount}</span>
-                        <span>{isRTL ? 'عقد' : 'contracts'}</span>
+                        <span>{pickBi(isRTL, 'عقد', 'contracts')}</span>
                         {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
                       </button>
                       <div className="flex items-center gap-0.5">
                           <Button variant="ghost" size="icon"
                             className={`h-7 w-7 ${expandedBarcode === s.id ? 'text-primary bg-primary/10' : ''}`}
                             onClick={() => setExpandedBarcode(v => v === s.id ? null : s.id)}
-                            title={isRTL ? 'الباركود والطباعة' : 'Barcode & print'}>
+                            title={pickBi(isRTL, 'الباركود والطباعة', 'Barcode & print')}>
                             <QrCode className="w-3.5 h-3.5" />
                           </Button>
                           {!isArchived && (
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10"
-                              onClick={() => goToNewContract(s.id)} title={isRTL ? 'إنشاء عقد لهذا الموقع' : 'New contract for this site'}>
+                              onClick={() => goToNewContract(s.id)} title={pickBi(isRTL, 'إنشاء عقد لهذا الموقع', 'New contract for this site')}>
                               <FilePlus2 className="w-3.5 h-3.5" />
                             </Button>
                           )}
                         {s.map_url && (
                           <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                            <a href={s.map_url} target="_blank" rel="noopener noreferrer" title={isRTL ? 'فتح الخريطة' : 'Open map'}>
+                            <a href={s.map_url} target="_blank" rel="noopener noreferrer" title={pickBi(isRTL, 'فتح الخريطة', 'Open map')}>
                               <ExternalLink className="w-3.5 h-3.5" />
                             </a>
                           </Button>
                         )}
                         {!isArchived && (
                           <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)} title={isRTL ? 'تعديل' : 'Edit'}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)} title={pickBi(isRTL, 'تعديل', 'Edit')}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => setDeleteConfirm(s.id)} title={isRTL ? 'أرشفة' : 'Archive'}>
+                              onClick={() => setDeleteConfirm(s.id)} title={pickBi(isRTL, 'أرشفة', 'Archive')}>
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </>
@@ -1355,14 +1352,14 @@ function SiteBarcodePanel({ siteId, siteRef, label, isRTL }: { siteId: string; s
     return (
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground py-3">
         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        {isRTL ? 'جاري تحميل الباركود...' : 'Loading barcode...'}
+        {pickBi(isRTL, 'جاري تحميل الباركود...', 'Loading barcode...')}
       </div>
     );
   }
   if (!code) {
     return (
       <div className="text-[11px] text-muted-foreground p-3 rounded-lg bg-muted/30 border border-dashed border-border/50">
-        {isRTL ? 'لم يتم إصدار باركود لهذا الموقع بعد. سيتم توليده تلقائياً قريباً.' : 'No barcode issued for this site yet.'}
+        {pickBi(isRTL, 'لم يتم إصدار باركود لهذا الموقع بعد. سيتم توليده تلقائياً قريباً.', 'No barcode issued for this site yet.')}
       </div>
     );
   }
@@ -1381,7 +1378,7 @@ function SiteBarcodePanel({ siteId, siteRef, label, isRTL }: { siteId: string; s
         className="flex items-center justify-center gap-1.5 text-[11px] text-primary hover:underline py-1.5 rounded-lg border border-primary/20 bg-primary/5"
       >
         <Printer className="w-3 h-3" />
-        {isRTL ? 'فتح صفحة الطباعة المخصصة (PDF / ملصق)' : 'Open dedicated print page (PDF / sticker)'}
+        {pickBi(isRTL, 'فتح صفحة الطباعة المخصصة (PDF / ملصق)', 'Open dedicated print page (PDF / sticker)')}
       </Link>
     </div>
   );

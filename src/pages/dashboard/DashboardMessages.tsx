@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, useTransition
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listProfilesByUserIds } from '@/modules/users';
@@ -102,7 +103,7 @@ const TypingIndicator = React.memo(({ isRTL }: { isRTL: boolean }) => (
           <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />
           <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
-        <span className="text-[10px] text-muted-foreground ms-1">{isRTL ? 'يكتب...' : 'typing...'}</span>
+        <span className="text-[10px] text-muted-foreground ms-1">{pickBi(isRTL, 'يكتب...', 'typing...')}</span>
       </div>
     </div>
   </div>
@@ -213,7 +214,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <h4 className={`text-sm truncate transition-colors ${unread > 0 ? 'font-bold text-foreground' : 'font-medium text-foreground/80'}`}>
-              {conv.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
+              {conv.other_profile?.full_name || (pickBi(isRTL, 'مستخدم', 'User'))}
             </h4>
             {isStarred && <Star className="w-3 h-3 text-warning fill-warning shrink-0" />}
             {isMuted && <VolumeX className="w-3 h-3 text-muted-foreground/50 shrink-0" />}
@@ -227,7 +228,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
         )}
         <div className="flex items-center justify-between mt-0.5">
           <p className={`text-xs truncate ${unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-            {conv.last_message_text || (isRTL ? 'ابدأ المحادثة...' : 'Start chatting...')}
+            {conv.last_message_text || (pickBi(isRTL, 'ابدأ المحادثة...', 'Start chatting...'))}
           </p>
           {unread > 0 && (
             <Badge className="text-[9px] px-1.5 py-0 h-4 min-w-[18px] justify-center shrink-0 ms-1.5 bg-accent text-accent-foreground border-0 shadow-sm">
@@ -239,13 +240,13 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
 
       {/* Hover actions */}
       <div className="absolute end-2 bottom-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={(e) => { e.stopPropagation(); onPin?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'تثبيت' : 'Pin'}>
+        <button onClick={(e) => { e.stopPropagation(); onPin?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={pickBi(isRTL, 'تثبيت', 'Pin')}>
           <Pin className={`w-2.5 h-2.5 ${isPinned ? 'fill-current text-accent' : ''}`} />
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onStar?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'مفضلة' : 'Star'}>
+        <button onClick={(e) => { e.stopPropagation(); onStar?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={pickBi(isRTL, 'مفضلة', 'Star')}>
           <Star className={`w-2.5 h-2.5 ${isStarred ? 'fill-warning text-warning' : ''}`} />
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onMute?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'كتم' : 'Mute'}>
+        <button onClick={(e) => { e.stopPropagation(); onMute?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={pickBi(isRTL, 'كتم', 'Mute')}>
           {isMuted ? <Volume2 className="w-2.5 h-2.5" /> : <VolumeX className="w-2.5 h-2.5" />}
         </button>
       </div>
@@ -274,19 +275,19 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
       {/* Actions - mine */}
       {isMine && (
         <div className="flex items-center gap-0.5 opacity-0 group-hover/msg:opacity-100 transition-all me-1 self-center">
-          <button onClick={() => setShowReactions(!showReactions)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'تفاعل' : 'React'}>
+          <button onClick={() => setShowReactions(!showReactions)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={pickBi(isRTL, 'تفاعل', 'React')}>
             <Smile className="w-3 h-3" />
           </button>
-          <button onClick={() => onCopy?.(msg.content)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'نسخ' : 'Copy'}>
+          <button onClick={() => onCopy?.(msg.content)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={pickBi(isRTL, 'نسخ', 'Copy')}>
             <Copy className="w-3 h-3" />
           </button>
-          <button onClick={() => onReply(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'رد' : 'Reply'}>
+          <button onClick={() => onReply(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={pickBi(isRTL, 'رد', 'Reply')}>
             <Reply className="w-3 h-3" />
           </button>
-          <button onClick={() => onForward?.(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'تحويل' : 'Forward'}>
+          <button onClick={() => onForward?.(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={pickBi(isRTL, 'تحويل', 'Forward')}>
             <Forward className="w-3 h-3" />
           </button>
-          <button onClick={() => onStar?.(msg.id)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'حفظ' : 'Bookmark'}>
+          <button onClick={() => onStar?.(msg.id)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={pickBi(isRTL, 'حفظ', 'Bookmark')}>
             {isBookmarked ? <BookmarkCheck className="w-3 h-3 text-accent" /> : <Bookmark className="w-3 h-3" />}
           </button>
         </div>
@@ -382,7 +383,7 @@ MessageBubble.displayName = 'MessageBubble';
 /* ─── Emoji Quick Picker ─── */
 const EmojiQuickPicker = React.memo(({ onSelect, isRTL }: { onSelect: (e: string) => void; isRTL: boolean }) => (
   <div className="absolute bottom-full mb-2 start-0 bg-card border border-border/40 rounded-2xl shadow-xl p-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-200 z-20">
-    <p className="text-[9px] text-muted-foreground font-medium mb-2 px-1">{isRTL ? 'رموز سريعة' : 'Quick Emoji'}</p>
+    <p className="text-[9px] text-muted-foreground font-medium mb-2 px-1">{pickBi(isRTL, 'رموز سريعة', 'Quick Emoji')}</p>
     <div className="grid grid-cols-6 gap-0.5">
       {EMOJI_QUICK.map(e => (
         <button key={e} onClick={() => onSelect(e)} className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center text-base transition-all hover:scale-110">
@@ -423,7 +424,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
       <div className="p-4 border-b border-border/20 flex items-center justify-between">
         <h3 className="font-heading font-bold text-sm flex items-center gap-1.5">
           <Info className="w-4 h-4 text-primary" />
-          {isRTL ? 'تفاصيل المحادثة' : 'Chat Details'}
+          {pickBi(isRTL, 'تفاصيل المحادثة', 'Chat Details')}
         </h3>
         <Button variant="ghost" size="icon" className="w-7 h-7 rounded-lg" onClick={onClose}><X className="w-3.5 h-3.5" /></Button>
       </div>
@@ -448,7 +449,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
                 return (
                   <Badge variant="outline" className="text-[9px] mt-1.5 gap-1">
                     <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-success' : away ? 'bg-warning' : 'bg-muted-foreground/30'}`} />
-                    {online ? (isRTL ? 'متصل' : 'Online') : away ? (isRTL ? 'بعيد' : 'Away') : (isRTL ? 'غير متصل' : 'Offline')}
+                    {online ? (pickBi(isRTL, 'متصل', 'Online')) : away ? (pickBi(isRTL, 'بعيد', 'Away')) : (pickBi(isRTL, 'غير متصل', 'Offline'))}
                   </Badge>
                 );
               })()}
@@ -458,10 +459,10 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: isRTL ? 'الرسائل' : 'Messages', value: totalMsgs, icon: MessageCircle, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'المرفقات' : 'Attachments', value: attachments.length, icon: Paperclip, color: 'text-warning bg-warning/10' },
-              { label: isRTL ? 'الصور' : 'Images', value: images.length, icon: ImageIcon, color: 'text-info bg-info/10' },
-              { label: isRTL ? 'الملفات' : 'Files', value: files.length, icon: FileText, color: 'text-success bg-success/10' },
+              { label: pickBi(isRTL, 'الرسائل', 'Messages'), value: totalMsgs, icon: MessageCircle, color: 'text-primary bg-primary/10' },
+              { label: pickBi(isRTL, 'المرفقات', 'Attachments'), value: attachments.length, icon: Paperclip, color: 'text-warning bg-warning/10' },
+              { label: pickBi(isRTL, 'الصور', 'Images'), value: images.length, icon: ImageIcon, color: 'text-info bg-info/10' },
+              { label: pickBi(isRTL, 'الملفات', 'Files'), value: files.length, icon: FileText, color: 'text-success bg-success/10' },
             ].map((s, i) => (
               <div key={i} className="p-2.5 rounded-xl bg-muted/20 border border-border/20 text-center">
                 <div className={`w-7 h-7 rounded-lg mx-auto mb-1 flex items-center justify-center ${s.color}`}>
@@ -477,7 +478,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
           <div className="p-3 rounded-xl bg-muted/10 border border-border/20">
             <p className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
               <TrendingUp className="w-3 h-3" />
-              {isRTL ? 'نشاط المحادثة' : 'Chat Activity'}
+              {pickBi(isRTL, 'نشاط المحادثة', 'Chat Activity')}
             </p>
             <div className="flex items-end gap-1 h-12">
               {activityByDay.map((pct, i) => (
@@ -499,14 +500,14 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
           {/* Timeline */}
           {firstMsg && (
             <div className="space-y-2">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{isRTL ? 'التسلسل الزمني' : 'Timeline'}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{pickBi(isRTL, 'التسلسل الزمني', 'Timeline')}</p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs">
                   <div className="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center shrink-0">
                     <Calendar className="w-3 h-3 text-success" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground">{isRTL ? 'بداية المحادثة' : 'Started'}</p>
+                    <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'بداية المحادثة', 'Started')}</p>
                     <p className="text-[11px] font-medium">{format(new Date(firstMsg.created_at), 'PP', { locale: isRTL ? ar : enUS })}</p>
                   </div>
                 </div>
@@ -516,7 +517,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
                       <Clock className="w-3 h-3 text-info" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'آخر رسالة' : 'Last message'}</p>
+                      <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'آخر رسالة', 'Last message')}</p>
                       <p className="text-[11px] font-medium">{format(new Date(lastMsg.created_at), 'PP p', { locale: isRTL ? ar : enUS })}</p>
                     </div>
                   </div>
@@ -530,18 +531,18 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
                 <ImageIcon className="w-3 h-3" />
-                {isRTL ? 'الصور المشتركة' : 'Shared Images'}
+                {pickBi(isRTL, 'الصور المشتركة', 'Shared Images')}
               </p>
               <div className="grid grid-cols-3 gap-1.5">
                 {images.slice(0, 9).map((m) => (
                   <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer"
                     className="aspect-square rounded-lg overflow-hidden border border-border/20 hover:opacity-80 transition-opacity">
-                    <img src={m.attachment_url} alt={isRTL ? 'مرفق صورة' : 'Image attachment'} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={m.attachment_url} alt={pickBi(isRTL, 'مرفق صورة', 'Image attachment')} className="w-full h-full object-cover" loading="lazy" />
                   </a>
                 ))}
               </div>
               {images.length > 9 && (
-                <p className="text-[10px] text-center text-muted-foreground mt-1.5">+{images.length - 9} {isRTL ? 'صور أخرى' : 'more'}</p>
+                <p className="text-[10px] text-center text-muted-foreground mt-1.5">+{images.length - 9} {pickBi(isRTL, 'صور أخرى', 'more')}</p>
               )}
             </div>
           )}
@@ -551,7 +552,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
                 <FileText className="w-3 h-3" />
-                {isRTL ? 'الملفات المشتركة' : 'Shared Files'}
+                {pickBi(isRTL, 'الملفات المشتركة', 'Shared Files')}
               </p>
               <div className="space-y-1">
                 {files.slice(0, 5).map((m) => (
@@ -644,7 +645,7 @@ const DashboardMessages = () => {
   }, []);
   const toggleMuteConv = useCallback((id: string) => {
     setMutedConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-    toast.success(isRTL ? 'تم تحديث الإشعارات' : 'Notifications updated');
+    toast.success(pickBi(isRTL, 'تم تحديث الإشعارات', 'Notifications updated'));
   }, [isRTL]);
   const setConvLabel = useCallback((id: string, label: string) => {
     setConvLabels(prev => {
@@ -669,12 +670,12 @@ const DashboardMessages = () => {
   }, []);
   const handleForwardMessage = useCallback((msg: any) => {
     setForwardMsg(msg);
-    toast.info(isRTL ? 'اختر محادثة لتحويل الرسالة إليها' : 'Select a conversation to forward to');
+    toast.info(pickBi(isRTL, 'اختر محادثة لتحويل الرسالة إليها', 'Select a conversation to forward to'));
   }, [isRTL]);
 
   /* ─── Drag & Drop ─── */
   const handleDragFile = useCallback((file: File) => {
-    if (file.size > MAX_FILE_SIZE) { toast.error(isRTL ? 'حجم الملف يتجاوز 10 ميجابايت' : 'File size exceeds 10MB'); return; }
+    if (file.size > MAX_FILE_SIZE) { toast.error(pickBi(isRTL, 'حجم الملف يتجاوز 10 ميجابايت', 'File size exceeds 10MB')); return; }
     setAttachedFile(file);
     if (IMAGE_TYPES.includes(file.type)) {
       const reader = new FileReader();
@@ -722,16 +723,16 @@ const DashboardMessages = () => {
 
         return data.map((c) => {
           const otherId = c.participant_1 === user!.id ? c.participant_2 : c.participant_1;
-          const otherProfile = profileMap.get(otherId) || { full_name: isRTL ? 'مستخدم' : 'User' };
+          const otherProfile = profileMap.get(otherId) || { full_name: pickBi(isRTL, 'مستخدم', 'User') };
           if (isSuperAdmin) {
             const p1 = profileMap.get(c.participant_1);
             const p2 = profileMap.get(c.participant_2);
-            return { ...c, other_profile: otherProfile, participant_1_name: p1?.full_name || (isRTL ? 'مستخدم' : 'User'), participant_2_name: p2?.full_name || (isRTL ? 'مستخدم' : 'User') };
+            return { ...c, other_profile: otherProfile, participant_1_name: p1?.full_name || (pickBi(isRTL, 'مستخدم', 'User')), participant_2_name: p2?.full_name || (pickBi(isRTL, 'مستخدم', 'User')) };
           }
           return { ...c, other_profile: otherProfile };
         });
       }
-      return data.map((c: any) => ({ ...c, other_profile: { full_name: isRTL ? 'مستخدم' : 'User' } as any }));
+      return data.map((c: any) => ({ ...c, other_profile: { full_name: pickBi(isRTL, 'مستخدم', 'User') } as any }));
     },
     enabled: !!user,
   });
@@ -808,7 +809,7 @@ const DashboardMessages = () => {
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) { toast.error(isRTL ? 'حجم الملف يتجاوز 10 ميجابايت' : 'File size exceeds 10MB'); return; }
+    if (file.size > MAX_FILE_SIZE) { toast.error(pickBi(isRTL, 'حجم الملف يتجاوز 10 ميجابايت', 'File size exceeds 10MB')); return; }
     setAttachedFile(file);
     if (IMAGE_TYPES.includes(file.type)) {
       const reader = new FileReader();
@@ -877,13 +878,13 @@ const DashboardMessages = () => {
         trackMessageSent({ source_page: 'dashboard_messages' });
       } catch { /* analytics must never break send */ }
     },
-    onError: () => { setIsUploading(false); toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send'); },
+    onError: () => { setIsUploading(false); toast.error(pickBi(isRTL, 'فشل إرسال الرسالة', 'Failed to send')); },
   });
 
   const handleSend = useCallback(() => { if ((!messageText.trim() && !attachedFile) || !selectedConversation) return; sendMutation.mutate(); }, [messageText, attachedFile, selectedConversation, sendMutation]);
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }, [handleSend]);
   const handleReply = useCallback((msg: any) => { setReplyTo(msg); inputRef.current?.focus(); }, []);
-  const handleCopy = useCallback((text: string) => { if (!text) return; navigator.clipboard.writeText(text); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }, [isRTL]);
+  const handleCopy = useCallback((text: string) => { if (!text) return; navigator.clipboard.writeText(text); toast.success(pickBi(isRTL, 'تم النسخ', 'Copied')); }, [isRTL]);
   const handleEmojiSelect = useCallback((emoji: string) => { setMessageText(prev => prev + emoji); setShowEmoji(false); inputRef.current?.focus(); }, []);
 
   /* ─── Schedule Message ─── */
@@ -899,7 +900,7 @@ const DashboardMessages = () => {
 
   const cancelScheduledMessage = useCallback((id: string) => {
     setScheduledMessages(prev => prev.filter(m => m.id !== id));
-    toast.success(isRTL ? 'تم إلغاء الرسالة المجدولة' : 'Scheduled message cancelled');
+    toast.success(pickBi(isRTL, 'تم إلغاء الرسالة المجدولة', 'Scheduled message cancelled'));
   }, [isRTL]);
 
   /* ─── Filter & Select ─── */
@@ -927,10 +928,10 @@ const DashboardMessages = () => {
     const name = selectedConv.other_profile?.full_name || 'User';
     const lines = messages.map((m) => {
       const time = new Date(m.created_at).toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en');
-      const sender = m.sender_id === user?.id ? (isRTL ? 'أنا' : 'Me') : name;
+      const sender = m.sender_id === user?.id ? (pickBi(isRTL, 'أنا', 'Me')) : name;
       return `[${time}] ${sender}: ${m.content || (m.attachment_url ? '📎 مرفق' : '')}`;
     });
-    const header = `${isRTL ? 'سجل المحادثة مع' : 'Chat history with'} ${name}\n${isRTL ? 'تاريخ التصدير' : 'Exported on'}: ${new Date().toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en')}\n${'─'.repeat(50)}\n\n`;
+    const header = `${pickBi(isRTL, 'سجل المحادثة مع', 'Chat history with')} ${name}\n${pickBi(isRTL, 'تاريخ التصدير', 'Exported on')}: ${new Date().toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en')}\n${'─'.repeat(50)}\n\n`;
     const content = header + lines.join('\n');
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -939,7 +940,7 @@ const DashboardMessages = () => {
     a.download = `chat-${name}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم تصدير المحادثة بنجاح' : 'Chat exported successfully');
+    toast.success(pickBi(isRTL, 'تم تصدير المحادثة بنجاح', 'Chat exported successfully'));
   }, [messages, selectedConv, user?.id, isRTL, language]);
 
 
@@ -980,10 +981,10 @@ const DashboardMessages = () => {
           {/* ─── Stats Bar ─── */}
           <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
             {[
-              { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Chats', value: stats.total, color: 'text-primary bg-primary/10', filter: 'all' as const },
-              { icon: Clock, label: isRTL ? 'غير مقروءة' : 'Unread', value: stats.unread, color: 'text-warning bg-warning/10', filter: 'unread' as const },
-              { icon: Star, label: isRTL ? 'مميزة' : 'Starred', value: stats.starred, color: 'text-warning bg-warning/10', filter: 'starred' as const },
-              { icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned', value: stats.pinned, color: 'text-info bg-info/10', filter: 'pinned' as const },
+              { icon: MessageSquare, label: pickBi(isRTL, 'المحادثات', 'Chats'), value: stats.total, color: 'text-primary bg-primary/10', filter: 'all' as const },
+              { icon: Clock, label: pickBi(isRTL, 'غير مقروءة', 'Unread'), value: stats.unread, color: 'text-warning bg-warning/10', filter: 'unread' as const },
+              { icon: Star, label: pickBi(isRTL, 'مميزة', 'Starred'), value: stats.starred, color: 'text-warning bg-warning/10', filter: 'starred' as const },
+              { icon: Pin, label: pickBi(isRTL, 'مثبتة', 'Pinned'), value: stats.pinned, color: 'text-info bg-info/10', filter: 'pinned' as const },
             ].map((s, i) => (
               <button
                 key={i}
@@ -1013,7 +1014,7 @@ const DashboardMessages = () => {
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center">
                       <MessageSquare className="w-4 h-4 text-accent" />
                     </div>
-                    {isRTL ? 'المحادثات' : 'Messages'}
+                    {pickBi(isRTL, 'المحادثات', 'Messages')}
                     {totalUnread > 0 && (
                       <Badge className="text-[9px] px-1.5 py-0 h-4 min-w-[18px] justify-center bg-accent text-accent-foreground border-0 animate-pulse">{totalUnread}</Badge>
                     )}
@@ -1023,10 +1024,10 @@ const DashboardMessages = () => {
                 {/* Filter tabs */}
                 <div className="flex bg-muted/50 border border-border/30 rounded-xl overflow-hidden p-0.5">
                   {[
-                    { key: 'all' as const, icon: Users, label: isRTL ? 'الكل' : 'All' },
-                    { key: 'unread' as const, icon: Archive, label: isRTL ? 'غير مقروء' : 'Unread' },
-                    { key: 'starred' as const, icon: Star, label: isRTL ? 'مميزة' : 'Starred' },
-                    { key: 'pinned' as const, icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned' },
+                    { key: 'all' as const, icon: Users, label: pickBi(isRTL, 'الكل', 'All') },
+                    { key: 'unread' as const, icon: Archive, label: pickBi(isRTL, 'غير مقروء', 'Unread') },
+                    { key: 'starred' as const, icon: Star, label: pickBi(isRTL, 'مميزة', 'Starred') },
+                    { key: 'pinned' as const, icon: Pin, label: pickBi(isRTL, 'مثبتة', 'Pinned') },
                   ].map(f => (
                     <button
                       key={f.key}
@@ -1045,7 +1046,7 @@ const DashboardMessages = () => {
                   <Input
                     value={searchTerm}
                     onChange={e => handleSearchChange(e.target.value)}
-                    placeholder={isRTL ? 'بحث في المحادثات...' : 'Search conversations...'}
+                    placeholder={pickBi(isRTL, 'بحث في المحادثات...', 'Search conversations...')}
                     className="ps-9 h-9 text-xs bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
                   />
                   {searchTerm && (
@@ -1061,7 +1062,7 @@ const DashboardMessages = () => {
                 <div className="px-3 py-2 bg-accent/10 border-b border-accent/20 flex items-center gap-2">
                   <Forward className="w-4 h-4 text-accent shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold text-accent">{isRTL ? 'اختر محادثة للتحويل' : 'Select conversation to forward'}</p>
+                    <p className="text-[10px] font-semibold text-accent">{pickBi(isRTL, 'اختر محادثة للتحويل', 'Select conversation to forward')}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{forwardMsg.content?.substring(0, 40)}</p>
                   </div>
                   <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0" onClick={() => setForwardMsg(null)}>
@@ -1079,15 +1080,15 @@ const DashboardMessages = () => {
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
                       <MessageSquare className="w-8 h-8 text-accent/40" />
                     </div>
-                    <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد محادثات' : 'No conversations'}</p>
-                    <p className="text-xs text-muted-foreground mb-5">{isRTL ? 'ابدأ التواصل مع مزودي الخدمة' : 'Start connecting with providers'}</p>
+                    <p className="font-heading font-bold text-sm mb-1">{pickBi(isRTL, 'لا توجد محادثات', 'No conversations')}</p>
+                    <p className="text-xs text-muted-foreground mb-5">{pickBi(isRTL, 'ابدأ التواصل مع مزودي الخدمة', 'Start connecting with providers')}</p>
                     <div className="space-y-2 text-start bg-muted/30 rounded-xl p-3.5 border border-border/20">
-                      <p className="text-xs font-semibold text-foreground mb-2">{isRTL ? '💡 نصائح:' : '💡 Tips:'}</p>
+                      <p className="text-xs font-semibold text-foreground mb-2">{pickBi(isRTL, '💡 نصائح:', '💡 Tips:')}</p>
                       {[
-                        { emoji: '🔍', text: isRTL ? 'ابحث عن مزودي الخدمة' : 'Find providers' },
-                        { emoji: '💬', text: isRTL ? 'اضغط "تواصل" في صفحة المزود' : 'Click "Contact" on provider page' },
-                        { emoji: '📎', text: isRTL ? 'أرسل صور وملفات بسهولة' : 'Send files & photos easily' },
-                        { emoji: '⭐', text: isRTL ? 'ميّز المحادثات المهمة بنجمة' : 'Star important conversations' },
+                        { emoji: '🔍', text: pickBi(isRTL, 'ابحث عن مزودي الخدمة', 'Find providers') },
+                        { emoji: '💬', text: pickBi(isRTL, 'اضغط "تواصل" في صفحة المزود', 'Click "Contact" on provider page') },
+                        { emoji: '📎', text: pickBi(isRTL, 'أرسل صور وملفات بسهولة', 'Send files & photos easily') },
+                        { emoji: '⭐', text: pickBi(isRTL, 'ميّز المحادثات المهمة بنجمة', 'Star important conversations') },
                       ].map((tip, i) => (
                         <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground">
                           <span>{tip.emoji}</span><span>{tip.text}</span>
@@ -1095,7 +1096,7 @@ const DashboardMessages = () => {
                       ))}
                     </div>
                     <Button variant="outline" size="sm" className="mt-4 gap-1.5 text-xs h-9 rounded-xl" onClick={() => navigate('/search')}>
-                      <Search className="w-3.5 h-3.5" />{isRTL ? 'بحث عن مزودين' : 'Find Providers'}
+                      <Search className="w-3.5 h-3.5" />{pickBi(isRTL, 'بحث عن مزودين', 'Find Providers')}
                     </Button>
                   </div>
                 ) : (
@@ -1147,8 +1148,8 @@ const DashboardMessages = () => {
                     <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-accent/20 flex items-center justify-center">
                       <Upload className="w-8 h-8 text-accent" />
                     </div>
-                    <p className="font-heading font-bold text-sm text-accent">{isRTL ? 'أفلت الملف هنا' : 'Drop file here'}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{isRTL ? 'الحد الأقصى 10 ميجابايت' : 'Max 10MB'}</p>
+                    <p className="font-heading font-bold text-sm text-accent">{pickBi(isRTL, 'أفلت الملف هنا', 'Drop file here')}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{pickBi(isRTL, 'الحد الأقصى 10 ميجابايت', 'Max 10MB')}</p>
                   </div>
                 </div>
               )}
@@ -1159,14 +1160,14 @@ const DashboardMessages = () => {
                     <div className="w-24 h-24 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-accent/15 to-primary/10 flex items-center justify-center shadow-inner">
                       <MessageSquare className="w-12 h-12 text-accent/30" />
                     </div>
-                    <p className="font-heading font-bold text-xl mb-2">{isRTL ? 'مرحباً بك في المحادثات' : 'Welcome to Messages'}</p>
-                    <p className="text-sm text-muted-foreground mb-6">{isRTL ? 'اختر محادثة من القائمة أو ابدأ محادثة جديدة' : 'Select a conversation or start a new one'}</p>
+                    <p className="font-heading font-bold text-xl mb-2">{pickBi(isRTL, 'مرحباً بك في المحادثات', 'Welcome to Messages')}</p>
+                    <p className="text-sm text-muted-foreground mb-6">{pickBi(isRTL, 'اختر محادثة من القائمة أو ابدأ محادثة جديدة', 'Select a conversation or start a new one')}</p>
                     <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
                       {[
-                        { icon: Shield, label: isRTL ? 'مشفّرة' : 'Encrypted', desc: isRTL ? 'محادثات آمنة' : 'Secure chats' },
-                        { icon: Paperclip, label: isRTL ? 'مرفقات' : 'Attachments', desc: isRTL ? 'صور وملفات' : 'Images & files' },
-                        { icon: Sparkles, label: isRTL ? 'قوالب' : 'Templates', desc: isRTL ? 'ردود جاهزة' : 'Quick replies' },
-                        { icon: Forward, label: isRTL ? 'تحويل' : 'Forward', desc: isRTL ? 'إعادة توجيه' : 'Forward msgs' },
+                        { icon: Shield, label: pickBi(isRTL, 'مشفّرة', 'Encrypted'), desc: pickBi(isRTL, 'محادثات آمنة', 'Secure chats') },
+                        { icon: Paperclip, label: pickBi(isRTL, 'مرفقات', 'Attachments'), desc: pickBi(isRTL, 'صور وملفات', 'Images & files') },
+                        { icon: Sparkles, label: pickBi(isRTL, 'قوالب', 'Templates'), desc: pickBi(isRTL, 'ردود جاهزة', 'Quick replies') },
+                        { icon: Forward, label: pickBi(isRTL, 'تحويل', 'Forward'), desc: pickBi(isRTL, 'إعادة توجيه', 'Forward msgs') },
                       ].map((feat, i) => (
                         <div key={i} className="p-3 rounded-xl bg-card border border-border/30 text-center hover:border-accent/30 transition-colors">
                           <feat.icon className="w-5 h-5 text-accent mx-auto mb-1.5" />
@@ -1203,27 +1204,27 @@ const DashboardMessages = () => {
                       })()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-heading font-bold text-sm truncate">{selectedConv?.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h3>
+                      <h3 className="font-heading font-bold text-sm truncate">{selectedConv?.other_profile?.full_name || (pickBi(isRTL, 'مستخدم', 'User'))}</h3>
                       {(() => {
                         const mins = selectedConv?.last_message_at ? differenceInMinutes(new Date(), new Date(selectedConv.last_message_at)) : 999;
                         if (mins < 5) return (
                           <p className="text-[10px] text-success font-medium flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                            {isRTL ? 'متصل الآن' : 'Online'}
+                            {pickBi(isRTL, 'متصل الآن', 'Online')}
                           </p>
                         );
                         if (mins < 30) return (
                           <p className="text-[10px] text-warning font-medium flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-                            {isRTL ? 'بعيد' : 'Away'}
+                            {pickBi(isRTL, 'بعيد', 'Away')}
                           </p>
                         );
                         return (
                           <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                             {selectedConv?.last_message_at
-                              ? `${isRTL ? 'آخر ظهور' : 'Last seen'} ${formatDistanceToNow(new Date(selectedConv.last_message_at), { addSuffix: true, locale: language === 'ar' ? ar : enUS })}`
-                              : (isRTL ? 'غير متصل' : 'Offline')}
+                              ? `${pickBi(isRTL, 'آخر ظهور', 'Last seen')} ${formatDistanceToNow(new Date(selectedConv.last_message_at), { addSuffix: true, locale: language === 'ar' ? ar : enUS })}`
+                              : (pickBi(isRTL, 'غير متصل', 'Offline'))}
                           </p>
                         );
                       })()}
@@ -1235,7 +1236,7 @@ const DashboardMessages = () => {
                             <Search className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'بحث في الرسائل' : 'Search messages'}</TooltipContent>
+                        <TooltipContent side="bottom" className="text-xs">{pickBi(isRTL, 'بحث في الرسائل', 'Search messages')}</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -1243,38 +1244,38 @@ const DashboardMessages = () => {
                             <Info className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'تفاصيل المحادثة' : 'Chat details'}</TooltipContent>
+                        <TooltipContent side="bottom" className="text-xs">{pickBi(isRTL, 'تفاصيل المحادثة', 'Chat details')}</TooltipContent>
                       </Tooltip>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="rounded-xl min-w-[180px]">
+                        <DropdownMenuContent align={pickBi(isRTL, 'start', 'end')} className="rounded-xl min-w-[180px]">
                           <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg text-xs gap-2">
-                            <Eye className="w-3.5 h-3.5" />{isRTL ? 'عرض الملف الشخصي' : 'View profile'}
+                            <Eye className="w-3.5 h-3.5" />{pickBi(isRTL, 'عرض الملف الشخصي', 'View profile')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => togglePinConv(selectedConversation!)}>
                             <Pin className={`w-3.5 h-3.5 ${pinnedConvs.has(selectedConversation!) ? 'fill-current text-accent' : ''}`} />
-                            {pinnedConvs.has(selectedConversation!) ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
+                            {pinnedConvs.has(selectedConversation!) ? (pickBi(isRTL, 'إلغاء التثبيت', 'Unpin')) : (pickBi(isRTL, 'تثبيت', 'Pin'))}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => toggleStarConv(selectedConversation!)}>
                             <Star className={`w-3.5 h-3.5 ${starredConvs.has(selectedConversation!) ? 'fill-warning text-warning' : ''}`} />
-                            {starredConvs.has(selectedConversation!) ? (isRTL ? 'إزالة النجمة' : 'Unstar') : (isRTL ? 'تمييز بنجمة' : 'Star')}
+                            {starredConvs.has(selectedConversation!) ? (pickBi(isRTL, 'إزالة النجمة', 'Unstar')) : (pickBi(isRTL, 'تمييز بنجمة', 'Star'))}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => toggleMuteConv(selectedConversation!)}>
                             {mutedConvs.has(selectedConversation!)
-                              ? <><Bell className="w-3.5 h-3.5" />{isRTL ? 'تفعيل الإشعارات' : 'Unmute'}</>
-                              : <><BellOff className="w-3.5 h-3.5" />{isRTL ? 'كتم الإشعارات' : 'Mute'}</>}
+                              ? <><Bell className="w-3.5 h-3.5" />{pickBi(isRTL, 'تفعيل الإشعارات', 'Unmute')}</>
+                              : <><BellOff className="w-3.5 h-3.5" />{pickBi(isRTL, 'كتم الإشعارات', 'Mute')}</>}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => setShowInfoPanel(true)}>
-                            <BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'إحصائيات المحادثة' : 'Chat statistics'}
+                            <BarChart3 className="w-3.5 h-3.5" />{pickBi(isRTL, 'إحصائيات المحادثة', 'Chat statistics')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={handleExportChat}>
-                            <FileDown className="w-3.5 h-3.5" />{isRTL ? 'تصدير المحادثة' : 'Export chat'}
+                            <FileDown className="w-3.5 h-3.5" />{pickBi(isRTL, 'تصدير المحادثة', 'Export chat')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <p className="px-2 py-1 text-[9px] font-semibold text-muted-foreground uppercase">{isRTL ? 'تصنيف' : 'Label'}</p>
+                          <p className="px-2 py-1 text-[9px] font-semibold text-muted-foreground uppercase">{pickBi(isRTL, 'تصنيف', 'Label')}</p>
                           {CONV_LABELS.map(l => (
                             <DropdownMenuItem key={l.key} className="rounded-lg text-xs gap-2" onClick={() => setConvLabel(selectedConversation!, l.key)}>
                               {l.color ? <span className={`w-2.5 h-2.5 rounded-full ${l.color}`} /> : <X className="w-2.5 h-2.5 text-muted-foreground" />}
@@ -1299,7 +1300,7 @@ const DashboardMessages = () => {
                             target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                           }
                         }}
-                        placeholder={isRTL ? 'بحث في الرسائل...' : 'Search messages...'}
+                        placeholder={pickBi(isRTL, 'بحث في الرسائل...', 'Search messages...')}
                         className="h-8 text-xs border-0 bg-transparent shadow-none focus-visible:ring-0 rounded-xl" autoFocus />
                       {chatSearchTerm && filteredMessages.length > 0 && (
                         <div className="flex items-center gap-0.5 shrink-0">
@@ -1323,7 +1324,7 @@ const DashboardMessages = () => {
                         </div>
                       )}
                       {chatSearchTerm && filteredMessages.length === 0 && (
-                        <span className="text-[10px] text-muted-foreground shrink-0">{isRTL ? 'لا نتائج' : 'No results'}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{pickBi(isRTL, 'لا نتائج', 'No results')}</span>
                       )}
                       <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); setChatSearchIndex(0); }}>
                         <X className="w-3.5 h-3.5" />
@@ -1384,7 +1385,7 @@ const DashboardMessages = () => {
                       <div className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-xl border border-border/20">
                         <div className="w-1 h-8 rounded-full bg-accent shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-accent font-semibold">{isRTL ? 'رد على رسالة' : 'Replying to'}</p>
+                          <p className="text-[10px] text-accent font-semibold">{pickBi(isRTL, 'رد على رسالة', 'Replying to')}</p>
                           <p className="text-xs text-muted-foreground truncate">{replyTo.content?.substring(0, 60)}</p>
                         </div>
                         <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0 rounded-lg" onClick={() => setReplyTo(null)}>
@@ -1399,7 +1400,7 @@ const DashboardMessages = () => {
                     <div className="px-4 pt-2 border-t border-border/20 animate-in slide-in-from-bottom-1 duration-200">
                       <div className="flex items-center gap-2.5 p-2.5 bg-muted/40 rounded-xl border border-border/20">
                         {attachedPreview ? (
-                          <img src={attachedPreview} alt={attachedFile?.name || (isRTL ? 'معاينة المرفق' : 'Attachment preview')} className="w-12 h-12 rounded-xl object-cover border border-border/20" loading="lazy" decoding="async"/>
+                          <img src={attachedPreview} alt={attachedFile?.name || (pickBi(isRTL, 'معاينة المرفق', 'Attachment preview'))} className="w-12 h-12 rounded-xl object-cover border border-border/20" loading="lazy" decoding="async"/>
                         ) : (
                           <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center border border-border/20">
                             <FileText className="w-5 h-5 text-muted-foreground" />
@@ -1433,7 +1434,7 @@ const DashboardMessages = () => {
                               <Paperclip className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">{isRTL ? 'إرفاق ملف' : 'Attach'}</TooltipContent>
+                          <TooltipContent side="top" className="text-xs">{pickBi(isRTL, 'إرفاق ملف', 'Attach')}</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1441,7 +1442,7 @@ const DashboardMessages = () => {
                               <Smile className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">{isRTL ? 'رموز' : 'Emoji'}</TooltipContent>
+                          <TooltipContent side="top" className="text-xs">{pickBi(isRTL, 'رموز', 'Emoji')}</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1449,7 +1450,7 @@ const DashboardMessages = () => {
                               <Sparkles className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">{isRTL ? 'قوالب' : 'Templates'}</TooltipContent>
+                          <TooltipContent side="top" className="text-xs">{pickBi(isRTL, 'قوالب', 'Templates')}</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1457,7 +1458,7 @@ const DashboardMessages = () => {
                               <Timer className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">{isRTL ? 'جدولة' : 'Schedule'}</TooltipContent>
+                          <TooltipContent side="top" className="text-xs">{pickBi(isRTL, 'جدولة', 'Schedule')}</TooltipContent>
                         </Tooltip>
                       </div>
 
@@ -1467,7 +1468,7 @@ const DashboardMessages = () => {
                         onChange={e => setMessageText(e.target.value)}
                         onKeyDown={handleKeyDown}
                         onFocus={() => { setShowEmoji(false); }}
-                        placeholder={isRTL ? 'اكتب رسالتك...' : 'Type a message...'}
+                        placeholder={pickBi(isRTL, 'اكتب رسالتك...', 'Type a message...')}
                         className="flex-1 h-10 text-sm bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
                         disabled={isUploading}
                       />
@@ -1486,7 +1487,7 @@ const DashboardMessages = () => {
                       <div className="mt-2 p-3 bg-muted/30 rounded-xl border border-border/20 animate-in slide-in-from-bottom-1 duration-200">
                         <div className="flex items-center gap-2 mb-2">
                           <Timer className="w-4 h-4 text-accent shrink-0" />
-                          <p className="text-xs font-bold text-foreground">{isRTL ? 'جدولة الرسالة' : 'Schedule Message'}</p>
+                          <p className="text-xs font-bold text-foreground">{pickBi(isRTL, 'جدولة الرسالة', 'Schedule Message')}</p>
                         </div>
                         <div className="flex gap-2 items-end">
                           <div className="flex-1">
@@ -1500,16 +1501,16 @@ const DashboardMessages = () => {
                           </div>
                           <Button size="sm" className="h-9 gap-1.5 rounded-lg text-xs" disabled={!messageText.trim() || !scheduleTime} onClick={handleScheduleMessage}>
                             <Timer className="w-3.5 h-3.5" />
-                            {isRTL ? 'جدولة' : 'Schedule'}
+                            {pickBi(isRTL, 'جدولة', 'Schedule')}
                           </Button>
                           <Button variant="ghost" size="sm" className="h-9 rounded-lg text-xs" onClick={() => { setShowScheduler(false); setScheduleTime(''); }}>
-                            {isRTL ? 'إلغاء' : 'Cancel'}
+                            {pickBi(isRTL, 'إلغاء', 'Cancel')}
                           </Button>
                         </div>
                         {!messageText.trim() && (
                           <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
                             <AlertCircle className="w-3 h-3" />
-                            {isRTL ? 'اكتب رسالة أولاً قبل الجدولة' : 'Write a message first to schedule'}
+                            {pickBi(isRTL, 'اكتب رسالة أولاً قبل الجدولة', 'Write a message first to schedule')}
                           </p>
                         )}
                       </div>
