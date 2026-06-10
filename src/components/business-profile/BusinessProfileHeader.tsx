@@ -258,6 +258,7 @@ export const BusinessProfileHeader = ({
                       isVerified={business.is_verified}
                       size="sm"
                       ownerView={isOwner}
+                      businessId={business.id}
                     />
                     {activeOffersCount > 0 && (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive dark:text-destructive text-[10px] sm:text-[11px] font-body font-semibold border border-destructive/20">
@@ -292,17 +293,18 @@ export const BusinessProfileHeader = ({
                     </span>
                   )}
 
-                  <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground sm:mt-3 sm:gap-x-3 sm:gap-y-1.5 sm:text-sm">
-                    {cityName && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 text-accent" />
-                        <span dir="auto">
-                          {branchLabel
-                            ? `${cityName} — ${language === 'ar' ? (selectedBranch?.is_main ? 'المركز الرئيسي' : `فرع ${branchLabel}`) : (selectedBranch?.is_main ? 'Head office' : `${branchLabel} branch`)}`
-                            : cityName}
-                        </span>
-                      </div>
-                    )}
+                  {fullAddress && (
+                    <div className="mt-2 flex items-start gap-1 text-[11px] leading-relaxed text-foreground/80 sm:text-xs">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                      <span dir="auto" className="line-clamp-2">
+                        {branchLabel
+                          ? `${language === 'ar' ? (selectedBranch?.is_main ? 'المركز الرئيسي' : `فرع ${branchLabel}`) : (selectedBranch?.is_main ? 'Head office' : `${branchLabel} branch`)} — ${fullAddress}`
+                          : fullAddress}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground sm:mt-2.5 sm:gap-x-3 sm:gap-y-1.5 sm:text-sm">
                     {business.contact_person && (
                       <div className="flex items-center gap-1">
                         <User className="h-3.5 w-3.5 text-accent" />
@@ -319,15 +321,6 @@ export const BusinessProfileHeader = ({
                       <span>{memberDate}</span>
                     </div>
                   </div>
-
-                  {fullAddress && (
-                    <div className="mt-1.5 flex items-start gap-1 text-[11px] leading-relaxed text-muted-foreground/90 sm:text-xs">
-                      <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-accent/60" />
-                      <span dir="auto" className="line-clamp-2">
-                        {fullAddress}
-                      </span>
-                    </div>
-                  )}
 
                   <BusinessIdentityStrip
                     business={business}
