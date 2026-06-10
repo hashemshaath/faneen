@@ -52,10 +52,10 @@ interface AdminAnalytics {
 }
 
 const PERIODS: { key: Period; ar: string; en: string }[] = [
-  { key: '7d', ar: '٧ أيام', en: '7d' },
-  { key: '30d', ar: '٣٠ يوم', en: '30d' },
-  { key: '90d', ar: '٩٠ يوم', en: '90d' },
-  { key: '12m', ar: '١٢ شهر', en: '12m' },
+  { key: '7d', ar: '7 أيام', en: '7d' },
+  { key: '30d', ar: '30 يوم', en: '30d' },
+  { key: '90d', ar: '90 يوم', en: '90d' },
+  { key: '12m', ar: '12 شهر', en: '12m' },
   { key: 'all', ar: 'الكل', en: 'All' },
 ];
 
@@ -288,7 +288,7 @@ const AdminContractAnalytics: React.FC = () => {
               <Card className="rounded-xl">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-primary" aria-hidden />{t('الأعلى عدداً (٢٠)', 'Top by count (20)')}
+                    <Trophy className="h-4 w-4 text-primary" aria-hidden />{t('الأعلى عدداً (20)', 'Top by count (20)')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -313,7 +313,7 @@ const AdminContractAnalytics: React.FC = () => {
               <Card className="rounded-xl">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Wallet className="h-4 w-4 text-primary" aria-hidden />{t('الأعلى قيمةً (٢٠)', 'Top by value (20)')}
+                    <Wallet className="h-4 w-4 text-primary" aria-hidden />{t('الأعلى قيمةً (20)', 'Top by value (20)')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -531,7 +531,7 @@ const AdminContractAnalytics: React.FC = () => {
 
             <p className="text-[11px] text-muted-foreground">
               {t(
-                'تحدّث البيانات كل ٦٠ ثانية. القيم النقدية تُعرض حسب العملة ولا تُجمع عبر العملات.',
+                'تحدّث البيانات كل 60 ثانية. القيم النقدية تُعرض حسب العملة ولا تُجمع عبر العملات.',
                 'Data refreshes every 60 seconds. Monetary values are grouped by currency and never summed across currencies.',
               )}
             </p>

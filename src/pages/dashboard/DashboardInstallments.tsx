@@ -1115,7 +1115,7 @@ const DashboardInstallments = () => {
                       isRTL ? 'يحصل المزود على المبلغ كاملاً من شركة التقسيط' : 'Provider receives the full amount from the BNPL company',
                     ].map((text, i) => (
                       <li key={i} className="flex items-start gap-1.5">
-                        <span className="w-4 h-4 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[8px] shrink-0 mt-0.5">{isRTL ? ['١','٢','٣','٤'][i] : i + 1}</span>
+                        <span className="w-4 h-4 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[8px] shrink-0 mt-0.5">{isRTL ? ['1','2','3','4'][i] : i + 1}</span>
                         {text}
                       </li>
                     ))}

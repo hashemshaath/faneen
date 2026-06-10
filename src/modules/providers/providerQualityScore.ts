@@ -147,7 +147,7 @@ export function computeProviderQualityScore(
     add({
       category: 'outdated',
       key: 'updated_at_aging',
-      ar: 'لم يتم تحديث الملف منذ ٦ أشهر',
+      ar: 'لم يتم تحديث الملف منذ 6 أشهر',
       en: 'Profile stale for 6+ months',
       penalty: 5,
     });

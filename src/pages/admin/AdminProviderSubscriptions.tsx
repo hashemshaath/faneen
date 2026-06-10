@@ -384,7 +384,7 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
                     <span className="px-1.5 py-0.5 rounded-full border border-border bg-muted/40">{TYPE_LABEL_ADMIN[t.type] ?? t.type}</span>
                     <span className="text-muted-foreground truncate">{REASON_LABEL[t.reason] ?? t.reason}</span>
                   </div>
-                  <div className="text-muted-foreground tech-content mt-0.5">{new Date(t.created_at).toLocaleString('ar-SA-u-nu-latn')}</div>
+                  <div className="text-muted-foreground tech-content mt-0.5">{new Date(t.created_at).toLocaleString('en-US')}</div>
                 </div>
                 <div className="text-end shrink-0">
                   <div className={`tech-content font-medium ${t.amount > 0 ? 'text-success' : t.amount < 0 ? 'text-destructive' : ''}`}>{t.amount > 0 ? `+${t.amount}` : t.amount}</div>

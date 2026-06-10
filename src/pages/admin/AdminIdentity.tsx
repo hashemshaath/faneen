@@ -421,11 +421,11 @@ const AdminIdentity: React.FC = () => {
                   <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                       <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                      {isRTL ? `${kpis.totalUsers.toLocaleString('ar-SA-u-nu-latn')} حساب` : `${kpis.totalUsers.toLocaleString()} accounts`}
+                      {isRTL ? `${kpis.totalUsers.toLocaleString('en-US')} حساب` : `${kpis.totalUsers.toLocaleString()} accounts`}
                     </span>
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                       <Building2 className="w-3 h-3 text-success" />
-                      {isRTL ? `${kpis.totalBusinesses.toLocaleString('ar-SA-u-nu-latn')} منشأة` : `${kpis.totalBusinesses.toLocaleString()} businesses`}
+                      {isRTL ? `${kpis.totalBusinesses.toLocaleString('en-US')} منشأة` : `${kpis.totalBusinesses.toLocaleString()} businesses`}
                     </span>
                     {pendingTotal > 0 && (
                       <Link to="/admin/identity?tab=workspace" onClick={() => setTabSafe('workspace')}

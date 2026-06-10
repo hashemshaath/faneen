@@ -436,7 +436,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 </span>
                 <span className="text-xs text-muted-foreground">المصدر: {quote.source}</span>
                 <span className="text-xs text-muted-foreground tech-content ms-auto">
-                  {new Date(quote.created_at).toLocaleString('ar-SA-u-nu-latn')}
+                  {new Date(quote.created_at).toLocaleString('en-US')}
                 </span>
               </div>
 
@@ -515,7 +515,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
                         {QUOTE_STATUS_LABEL_AR[e.status as QuoteStatus] ?? e.status}
                       </span>
                       <span className="text-xs text-muted-foreground tech-content">
-                        {new Date(e.changed_at).toLocaleString('ar-SA-u-nu-latn')}
+                        {new Date(e.changed_at).toLocaleString('en-US')}
                       </span>
                     </li>
                   ))}
@@ -1066,7 +1066,7 @@ const EventsTimelineCard: React.FC<{
                         {e.source === 'lead' ? 'حدث مزود' : 'حدث طلب'}
                       </span>
                       <span className="text-[11px] text-muted-foreground tech-content ms-auto">
-                        {new Date(e.created_at).toLocaleString('ar-SA-u-nu-latn')}
+                        {new Date(e.created_at).toLocaleString('en-US')}
                       </span>
                     </div>
                     <p className="text-sm text-foreground/90">{describeEvent(e)}</p>

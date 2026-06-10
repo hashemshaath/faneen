@@ -504,7 +504,7 @@ export const BusinessOwnerPanel: React.FC<Props> = ({
               type="text"
               dir="ltr"
               className="h-9 text-xs tech-content"
-              placeholder={t(isRTL, '٨ أحرف على الأقل', 'min 8 chars')}
+              placeholder={t(isRTL, '8 أحرف على الأقل', 'min 8 chars')}
               value={newPwd}
               onChange={(e) => setNewPwd(e.target.value)}
             />

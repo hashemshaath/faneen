@@ -160,12 +160,12 @@ const AdminPdfExportAudit: React.FC = () => {
             icon={<CalendarDays className="h-4 w-4 text-primary" />}
           />
           <SummaryCard
-            label={isRTL ? 'آخر ٧ أيام' : 'Last 7 days'}
+            label={isRTL ? 'آخر 7 أيام' : 'Last 7 days'}
             value={summary.data?.exports_7d ?? '—'}
             icon={<Activity className="h-4 w-4 text-primary" />}
           />
           <SummaryCard
-            label={isRTL ? 'عقود فريدة (٣٠ يوم)' : 'Unique contracts (30d)'}
+            label={isRTL ? 'عقود فريدة (30 يوم)' : 'Unique contracts (30d)'}
             value={summary.data?.unique_contracts_30d ?? '—'}
             icon={<FileText className="h-4 w-4 text-primary" />}
           />

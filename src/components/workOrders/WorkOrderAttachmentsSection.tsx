@@ -54,7 +54,7 @@ function validationMessage(
   switch (code) {
     case "too_large":
       return isRTL
-        ? "الملف يتجاوز الحد الأقصى ٥٠ ميجابايت."
+        ? "الملف يتجاوز الحد الأقصى 50 ميجابايت."
         : "File exceeds the 50 MB limit.";
     case "forbidden_extension":
       return isRTL ? "نوع الملف غير مسموح به." : "This file type is not allowed.";
@@ -102,7 +102,7 @@ export function WorkOrderAttachmentsSection({ workOrderId, businessId, canManage
     errDelete: isRTL ? "تعذّر حذف المرفق." : "Failed to delete attachment.",
     confirm: isRTL ? "حذف هذا المرفق؟" : "Delete this attachment?",
     limit: isRTL
-      ? "حتى ٥٠م.ب — صور، PDF، Word، Excel."
+      ? "حتى 50م.ب — صور، PDF، Word، Excel."
       : "Up to 50 MB — images, PDF, Word, Excel.",
   };
 

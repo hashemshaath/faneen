@@ -79,7 +79,7 @@ const AdminClientSitesKpiGrid: React.FC<Props> = ({ summary: s, isLoading, bi })
           <TabsContent value="engagement" className="mt-3">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard label={bi('إجمالي المسحات', 'Total scans')} value={s.total_scans} icon={<Activity className="h-5 w-5" />} />
-              <StatCard label={bi('مسحات ٧ أيام', 'Visits 7d')} value={s.visits_last_7d} icon={<TrendingUp className="h-5 w-5" />} tone="text-info" />
+              <StatCard label={bi('مسحات 7 أيام', 'Visits 7d')} value={s.visits_last_7d} icon={<TrendingUp className="h-5 w-5" />} tone="text-info" />
               <StatCard label={bi('اهتمامات مزودين', 'Provider interests')} value={s.provider_interests} icon={<Users className="h-5 w-5" />} />
               <StatCard label={bi('إجمالي العقود', 'Contracts total')} value={s.total_contracts_with_site} icon={<FileText className="h-5 w-5" />} />
             </div>

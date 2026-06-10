@@ -210,7 +210,7 @@ export const CatalogManager: React.FC = () => {
         {/* Step 1: parent group → Step 2: subcategory (scoped to parent) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label className="text-[11px] text-muted-foreground"><Bi ar="١) التصنيف الرئيسي" en="1) Main category" /></Label>
+            <Label className="text-[11px] text-muted-foreground"><Bi ar="1) التصنيف الرئيسي" en="1) Main category" /></Label>
             <Select value={filterParent} onValueChange={(v) => { setFilterParent(v); setFilterCat('all'); }}>
               <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -220,7 +220,7 @@ export const CatalogManager: React.FC = () => {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px] text-muted-foreground"><Bi ar="٢) التصنيف الفرعي" en="2) Subcategory" /></Label>
+            <Label className="text-[11px] text-muted-foreground"><Bi ar="2) التصنيف الفرعي" en="2) Subcategory" /></Label>
             <Select
               value={filterCat}
               onValueChange={setFilterCat}
@@ -330,7 +330,7 @@ export const CatalogManager: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium">
-                        <Bi ar="١) التصنيف الرئيسي" en="1) Main category" /> <span className="text-red-500">*</span>
+                        <Bi ar="1) التصنيف الرئيسي" en="1) Main category" /> <span className="text-red-500">*</span>
                       </Label>
                       <Select
                         value={draftParent}
@@ -344,7 +344,7 @@ export const CatalogManager: React.FC = () => {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium">
-                        <Bi ar="٢) التصنيف الفرعي" en="2) Subcategory" /> <span className="text-red-500">*</span>
+                        <Bi ar="2) التصنيف الفرعي" en="2) Subcategory" /> <span className="text-red-500">*</span>
                       </Label>
                       <Select
                         value={draft.taxonomy_category_id ?? ''}

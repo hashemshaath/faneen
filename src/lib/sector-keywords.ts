@@ -179,7 +179,7 @@ export const normalizeArabic = (input: string): string => {
   s = s.replace(/ى/g, 'ي');
   s = s.replace(/ة/g, 'ه');
   // Convert Arabic-Indic digits to ASCII
-  s = s.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+  s = s.replace(/[0-9]/g, (d) => String('0123456789'.indexOf(d)));
   // Strip leading "ال" definite article on whole words
   s = s.replace(/(^|\s)ال(?=\S)/g, '$1');
   // Collapse runs of repeated alef (e.g. "إأ" → "اا" → "ا")

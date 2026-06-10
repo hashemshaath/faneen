@@ -44,7 +44,7 @@ const MAP_AR: Record<AdminCreateBizErrorCode, string> = {
   missing_auth: 'الجلسة منتهية. يرجى تسجيل الدخول مجدداً.',
   unauthorized: 'الجلسة غير صالحة. يرجى تسجيل الدخول مجدداً.',
   invalid_body: 'البيانات المرسلة غير مكتملة.',
-  invalid_username: 'اسم المستخدم غير صالح (يجب ٣ أحرف على الأقل، إنجليزية وأرقام).',
+  invalid_username: 'اسم المستخدم غير صالح (يجب 3 أحرف على الأقل، إنجليزية وأرقام).',
   name_ar_required: 'الاسم بالعربية حقل إلزامي.',
   owner_not_found: 'تعذّر العثور على المستخدم المرجعي.',
   owner_id_or_ref_required: 'يجب تحديد معرّف المالك أو رقمه المرجعي.',

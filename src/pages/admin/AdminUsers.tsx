@@ -1580,7 +1580,7 @@ const AdminUsers = () => {
               { icon: UserCheck, label: isRTL ? 'مكتمل' : 'Onboarded', val: stats.onboarded, color: 'text-info bg-info/10' },
               { icon: Crown, label: isRTL ? 'فريق' : 'Staff', val: stats.superAdmins + stats.admins + stats.moderators, color: 'text-accent bg-accent/10' },
               { icon: Ban, label: isRTL ? 'معطّل' : 'Disabled', val: stats.bannedCount, color: 'text-destructive bg-destructive/10' },
-              { icon: TrendingUp, label: isRTL ? '٧ أيام' : '7d', val: stats.recentUsers, color: 'text-warning bg-warning/10' },
+              { icon: TrendingUp, label: isRTL ? '7 أيام' : '7d', val: stats.recentUsers, color: 'text-warning bg-warning/10' },
             ]).map((s, i) => {
               const Icon = s.icon;
               return (

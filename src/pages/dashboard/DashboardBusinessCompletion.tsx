@@ -93,7 +93,7 @@ function buildGroups(
       key: 'about',
       title_ar: 'الوصف والتعريف',
       title_en: 'About & description',
-      hint_ar: 'صفحات بوصف غني تتفوّق بفارق ٤٠٪ في الظهور.',
+      hint_ar: 'صفحات بوصف غني تتفوّق بفارق 40٪ في الظهور.',
       hint_en: 'Pages with rich descriptions rank up to 40% higher.',
       weight: 18,
       Icon: FileText,
@@ -607,7 +607,7 @@ const DashboardBusinessCompletion: React.FC = () => {
                 <div className="flex items-center gap-2 mb-3">
                   <Zap className="w-4 h-4 text-accent" />
                   <p className="text-sm font-semibold text-foreground">
-                    {isRTL ? 'أعلى ٣ خطوات تأثيراً الآن' : 'Top 3 high‑impact next steps'}
+                    {isRTL ? 'أعلى 3 خطوات تأثيراً الآن' : 'Top 3 high‑impact next steps'}
                   </p>
                 </div>
                 {prioritized.length === 0 ? (

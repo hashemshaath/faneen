@@ -751,8 +751,8 @@ const AdminContactMessages = () => {
                 <SelectContent>
                   <SelectItem value="all">{isRTL ? 'كل الفترات' : 'All time'}</SelectItem>
                   <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
-                  <SelectItem value="7d">{isRTL ? '٧ أيام' : 'Last 7 days'}</SelectItem>
-                  <SelectItem value="30d">{isRTL ? '٣٠ يوم' : 'Last 30 days'}</SelectItem>
+                  <SelectItem value="7d">{isRTL ? '7 أيام' : 'Last 7 days'}</SelectItem>
+                  <SelectItem value="30d">{isRTL ? '30 يوم' : 'Last 30 days'}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sortKey} onValueChange={v => updateParam({ sort: v === 'newest' ? null : v, page: null })}>

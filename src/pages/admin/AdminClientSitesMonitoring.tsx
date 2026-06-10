@@ -304,7 +304,7 @@ const AdminClientSitesMonitoring: React.FC = () => {
                     <QrCode className="h-3 w-3 me-1" aria-hidden /> {s.qr_enabled_sites} {bi('QR مفعّل', 'QR on')}
                   </Badge>
                   <Badge variant="secondary" className="tech-content">
-                    <Activity className="h-3 w-3 me-1" aria-hidden /> {s.visits_last_7d} {bi('مسحة/٧ أيام', 'scans/7d')}
+                    <Activity className="h-3 w-3 me-1" aria-hidden /> {s.visits_last_7d} {bi('مسحة/7 أيام', 'scans/7d')}
                   </Badge>
                   {s.pending_access_requests > 0 && (
                     <Badge variant="default" className="bg-warning text-warning-foreground tech-content">
