@@ -132,9 +132,24 @@ export const BusinessProfileHeader = ({
   const branchLabel = selectedBranch
     ? getLocalizedValue(language, selectedBranch.name_ar, selectedBranch.name_en)
     : '';
-  const branchAddressParts = selectedBranch
-    ? [selectedBranch.district, selectedBranch.region, selectedBranch.address].filter(Boolean)
-    : [];
+  // Build a full address line. When a branch is selected we use its address
+  // parts; otherwise we fall back to the business's own location fields.
+  // The result is shown right after the city in the header meta row so
+  // visitors immediately know where the open page points to.
+  const addressParts = (selectedBranch
+    ? [selectedBranch.district, selectedBranch.address]
+    : [
+        business.district,
+        business.street_name,
+        business.building_number
+          ? (language === 'ar' ? `مبنى ${business.building_number}` : `Bldg ${business.building_number}`)
+          : null,
+        business.address,
+      ]
+  ).filter((part): part is string => Boolean(part));
+  // Dedupe while preserving order — common when `address` already contains
+  // district/street.
+  const fullAddress = Array.from(new Set(addressParts)).join('، ');
   // Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
   // name is intentionally not used for display. When no modern taxonomy is
   // available we show a localized "Unclassified" label.
@@ -305,10 +320,12 @@ export const BusinessProfileHeader = ({
                     </div>
                   </div>
 
-                  {selectedBranch && branchAddressParts.length > 0 && (
-                    <div className="mt-1.5 flex items-start gap-1 text-[11px] text-muted-foreground/90 sm:text-xs">
+                  {fullAddress && (
+                    <div className="mt-1.5 flex items-start gap-1 text-[11px] leading-relaxed text-muted-foreground/90 sm:text-xs">
                       <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-accent/60" />
-                      <span dir="auto">{branchAddressParts.join('، ')}</span>
+                      <span dir="auto" className="line-clamp-2">
+                        {fullAddress}
+                      </span>
                     </div>
                   )}
 
