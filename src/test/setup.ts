@@ -39,11 +39,9 @@ if (!Element.prototype.scrollIntoView) {
 // `URL.createObjectURL is not a function`. We install no-op stand-ins ONLY
 // when missing so real environments are untouched.
 if (typeof URL.createObjectURL !== 'function') {
-  // @ts-expect-error test polyfill
   URL.createObjectURL = () => 'blob:mock';
 }
 if (typeof URL.revokeObjectURL !== 'function') {
-  // @ts-expect-error test polyfill
   URL.revokeObjectURL = () => {};
 }
 
