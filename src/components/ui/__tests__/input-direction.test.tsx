@@ -18,9 +18,12 @@ describe('<Input> direction defaults', () => {
     });
   }
 
-  it('does not force dir for type="text"', () => {
+  it('defaults type="text" to dir="auto" for safe mixed-content rendering', () => {
+    // Global Forms RTL/LTR Hotfix — free-form text inputs use `auto` so
+    // mixed Arabic/Latin content never renders mirrored inside an RTL
+    // paragraph context. Explicit `dir` overrides still win.
     const { container } = render(<Input type="text" />);
-    expect(container.querySelector('input')?.getAttribute('dir')).toBeNull();
+    expect(container.querySelector('input')?.getAttribute('dir')).toBe('auto');
   });
 
   it('respects an explicit dir override (e.g. RTL Arabic name field)', () => {
