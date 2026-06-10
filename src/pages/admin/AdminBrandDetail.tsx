@@ -115,7 +115,7 @@ const AdminBrandDetail: React.FC = () => {
 
   usePageMeta({
     title: brand
-      ? (isRTL ? `${brand.name_ar} — إدارة العلامات` : `${brand.name_en ?? brand.name_ar} — Brand Admin`)
+      ? (pickBi(isRTL, `${brand.name_ar} — إدارة العلامات`, `${brand.name_en ?? brand.name_ar} — Brand Admin`))
       : (pickBi(isRTL, 'تفاصيل العلامة', 'Brand detail')),
     noindex: true,
   });

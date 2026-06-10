@@ -287,7 +287,7 @@ const AdminContactMessages = () => {
     },
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-contact-messages'] });
-      toast.success(isRTL ? `تم التحديث (${vars.ids.length})` : `Updated (${vars.ids.length})`);
+      toast.success(pickBi(isRTL, `تم التحديث (${vars.ids.length})`, `Updated (${vars.ids.length})`));
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل التحديث', 'Update failed'))),
   });
@@ -301,7 +301,7 @@ const AdminContactMessages = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-contact-messages'] });
       setSelectedIds(new Set());
       if (focusedId && ids.includes(focusedId)) updateParam({ id: null });
-      toast.success(isRTL ? `تم الحذف (${ids.length})` : `Deleted (${ids.length})`);
+      toast.success(pickBi(isRTL, `تم الحذف (${ids.length})`, `Deleted (${ids.length})`));
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل الحذف', 'Delete failed'))),
   });
@@ -511,7 +511,7 @@ const AdminContactMessages = () => {
           filterSummary: buildFilterSummary(),
         });
       }
-      toast.success(isRTL ? `تم تصدير ${rows.length} رسالة` : `Exported ${rows.length} messages`);
+      toast.success(pickBi(isRTL, `تم تصدير ${rows.length} رسالة`, `Exported ${rows.length} messages`));
       setShowExportPanel(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل التصدير', 'Export failed')));
@@ -639,9 +639,7 @@ const AdminContactMessages = () => {
                     return;
                   }
                   queryClient.invalidateQueries({ queryKey: ['admin-contact-messages'] });
-                  toast.success(isRTL
-                    ? `الفرز: ${data.priority || ''} · ${data.category || ''}`
-                    : `Triage: ${data.priority || ''} · ${data.category || ''}`);
+                  toast.success(pickBi(isRTL, `الفرز: ${data.priority || ''} · ${data.category || ''}`, `Triage: ${data.priority || ''} · ${data.category || ''}`));
                 }}
               >
                 <Brain className="w-4 h-4" />{pickBi(isRTL, 'فرز ذكي', 'AI Triage')}
@@ -826,9 +824,9 @@ const AdminContactMessages = () => {
                     <Select value={exportScope} onValueChange={(v: 'filtered' | 'selected') => setExportScope(v)}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="filtered">{isRTL ? `كل المُفلترة (${filtered.length})` : `All filtered (${filtered.length})`}</SelectItem>
+                        <SelectItem value="filtered">{pickBi(isRTL, `كل المُفلترة (${filtered.length})`, `All filtered (${filtered.length})`)}</SelectItem>
                         <SelectItem value="selected" disabled={selectedIds.size === 0}>
-                          {isRTL ? `المحدد فقط (${selectedIds.size})` : `Selected only (${selectedIds.size})`}
+                          {pickBi(isRTL, `المحدد فقط (${selectedIds.size})`, `Selected only (${selectedIds.size})`)}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -837,7 +835,7 @@ const AdminContactMessages = () => {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-medium text-muted-foreground">
-                      {isRTL ? `الحقول (${exportFields.length}/${ALL_EXPORT_FIELDS.length})` : `Fields (${exportFields.length}/${ALL_EXPORT_FIELDS.length})`}
+                      {pickBi(isRTL, `الحقول (${exportFields.length}/${ALL_EXPORT_FIELDS.length})`, `Fields (${exportFields.length}/${ALL_EXPORT_FIELDS.length})`)}
                     </label>
                     <div className="flex gap-1">
                       <button
@@ -888,7 +886,7 @@ const AdminContactMessages = () => {
                   </Button>
                   <Button size="sm" onClick={runExport} disabled={isExporting || exportFields.length === 0} className="gap-2">
                     {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                    {isRTL ? `تصدير ${exportFormat.toUpperCase()}` : `Export ${exportFormat.toUpperCase()}`}
+                    {pickBi(isRTL, `تصدير ${exportFormat.toUpperCase()}`, `Export ${exportFormat.toUpperCase()}`)}
                   </Button>
                 </div>
               </div>
@@ -925,7 +923,7 @@ const AdminContactMessages = () => {
             {selectedIds.size > 0 && (
               <div className="flex items-center gap-2 p-2 rounded-lg bg-accent/5 border border-accent/20 flex-wrap">
                 <span className="text-xs font-medium text-accent ms-1">
-                  {isRTL ? `محدد: ${selectedIds.size}` : `${selectedIds.size} selected`}
+                  {pickBi(isRTL, `محدد: ${selectedIds.size}`, `${selectedIds.size} selected`)}
                 </span>
                 <Separator orientation="vertical" className="h-5" />
                 <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [...selectedIds], patch: { status: 'read' } })}>
@@ -958,7 +956,7 @@ const AdminContactMessages = () => {
                   size="sm" variant="ghost"
                   className="h-7 gap-1.5 text-xs text-destructive hover:text-destructive"
                   onClick={() => {
-                    if (confirm(isRTL ? `حذف ${selectedIds.size} رسالة نهائياً؟` : `Delete ${selectedIds.size} messages permanently?`)) {
+                    if (confirm(pickBi(isRTL, `حذف ${selectedIds.size} رسالة نهائياً؟`, `Delete ${selectedIds.size} messages permanently?`))) {
                       deleteMutation.mutate([...selectedIds]);
                     }
                   }}
@@ -1024,9 +1022,7 @@ const AdminContactMessages = () => {
                       onCheckedChange={toggleSelectAll}
                     />
                     <span className="text-xs text-muted-foreground">
-                      {isRTL
-                        ? `عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length}`
-                        : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length}`}
+                      {pickBi(isRTL, `عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length}`, `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length}`)}
                     </span>
                     <span className="text-[10px] text-muted-foreground ms-auto hidden md:block">
                       {pickBi(isRTL, 'اختصارات: / بحث · J/K تنقل · R رد · E أرشفة · U غير مقروء · S تمييز · Esc إغلاق', '/ search · J/K nav · R reply · E archive · U unread · S star · Esc close')}
@@ -1241,7 +1237,7 @@ const FocusedMessage: React.FC<FocusedProps> = ({
               {focused.starred && <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30"><Star className="w-3 h-3 fill-current" /></Badge>}
               {responseHrs !== null && (
                 <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                  <Timer className="w-3 h-3 me-1" />{isRTL ? `رُدّ خلال ${responseHrs}س` : `Replied in ${responseHrs}h`}
+                  <Timer className="w-3 h-3 me-1" />{pickBi(isRTL, `رُدّ خلال ${responseHrs}س`, `Replied in ${responseHrs}h`)}
                 </Badge>
               )}
             </div>
@@ -1466,7 +1462,7 @@ const FocusedMessage: React.FC<FocusedProps> = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <Clock className="w-3.5 h-3.5" />
-              {isRTL ? `سجل الأحداث (${events.length})` : `Activity feed (${events.length})`}
+              {pickBi(isRTL, `سجل الأحداث (${events.length})`, `Activity feed (${events.length})`)}
             </div>
             <div className="space-y-1.5 max-h-56 overflow-y-auto pe-1">
               {events.map(ev => {
@@ -1582,21 +1578,21 @@ const EventLabel: React.FC<{ ev: ContactEvent; isRTL: boolean; assigneeMap: Map<
     case 'created':
       return <>{pickBi(isRTL, 'تم إنشاء التذكرة', 'Ticket created')}</>;
     case 'status_changed':
-      return <>{isRTL ? `تغيير الحالة: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Status: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+      return <>{pickBi(isRTL, `تغيير الحالة: ${ev.from_value || '—'} → ${ev.to_value || '—'}`, `Status: ${ev.from_value || '—'} → ${ev.to_value || '—'}`)}</>;
     case 'priority_changed':
-      return <>{isRTL ? `تغيير الأولوية: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Priority: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+      return <>{pickBi(isRTL, `تغيير الأولوية: ${ev.from_value || '—'} → ${ev.to_value || '—'}`, `Priority: ${ev.from_value || '—'} → ${ev.to_value || '—'}`)}</>;
     case 'work_state_changed':
-      return <>{isRTL ? `حالة العمل: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Work state: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+      return <>{pickBi(isRTL, `حالة العمل: ${ev.from_value || '—'} → ${ev.to_value || '—'}`, `Work state: ${ev.from_value || '—'} → ${ev.to_value || '—'}`)}</>;
     case 'assigned':
-      return <>{isRTL ? `تعيين إلى ${userLabel(ev.to_value)}` : `Assigned to ${userLabel(ev.to_value)}`}</>;
+      return <>{pickBi(isRTL, `تعيين إلى ${userLabel(ev.to_value)}`, `Assigned to ${userLabel(ev.to_value)}`)}</>;
     case 'unassigned':
-      return <>{isRTL ? `إلغاء تعيين ${userLabel(ev.from_value)}` : `Unassigned from ${userLabel(ev.from_value)}`}</>;
+      return <>{pickBi(isRTL, `إلغاء تعيين ${userLabel(ev.from_value)}`, `Unassigned from ${userLabel(ev.from_value)}`)}</>;
     case 'replied':
       return <>{pickBi(isRTL, 'تم الرد على الرسالة', 'Message replied')}</>;
     case 'note_added':
       return <>{pickBi(isRTL, 'تمت إضافة/تحديث ملاحظة داخلية', 'Internal note updated')}</>;
     case 'ai_triaged':
-      return <>{isRTL ? `فرز ذكي: ${ev.to_value || ''}` : `AI triage: ${ev.to_value || ''}`}</>;
+      return <>{pickBi(isRTL, `فرز ذكي: ${ev.to_value || ''}`, `AI triage: ${ev.to_value || ''}`)}</>;
     default:
       return <>{ev.event_type}{ev.note ? ` — ${ev.note}` : ''}</>;
   }

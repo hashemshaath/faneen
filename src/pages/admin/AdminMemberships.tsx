@@ -373,7 +373,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
               {isExpiringSoon && (
                 <Badge className="bg-warning/10 text-warning text-[7px] px-1.5 py-0 h-3.5 gap-0.5 animate-pulse">
                   <AlertTriangle className="w-2 h-2" />
-                  {isRTL ? `ينتهي خلال ${daysLeft} يوم` : `Expires in ${daysLeft}d`}
+                  {pickBi(isRTL, `ينتهي خلال ${daysLeft} يوم`, `Expires in ${daysLeft}d`)}
                 </Badge>
               )}
             </div>
