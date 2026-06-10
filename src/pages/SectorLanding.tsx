@@ -47,6 +47,7 @@ type BizRow = {
 const SectorLanding: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isRTL, language } = useLanguage();
+  const bi = useBi();
 
   const sectorSlug = slug as SectorSlug;
   const sector = sectorSlug && SECTOR_KEYWORDS[sectorSlug] ? SECTOR_KEYWORDS[sectorSlug] : null;

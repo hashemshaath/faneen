@@ -473,6 +473,7 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
 
 const About = () => {
   const { isRTL, language } = useLanguage();
+  const bi = useBi();
   usePageMeta({
     title: bi('من نحن — قصة قِطاعات ورؤيتنا للصناعات', 'About Qitaat — Our Story & Industrial Vision'),
     description: bi('قِطاعات: منصة تربط أصحاب المشاريع بأفضل مزودي الألمنيوم والزجاج والحديد والخشب — عقود محمية، تقسيط مرن، وضمانات موثوقة في السعودية والخليج.', 'Qitaat connects project owners with top aluminum, glass, steel and wood providers — protected contracts, flexible installments and trusted reviews across Saudi & Gulf.'),
