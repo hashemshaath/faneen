@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { pickBi } from "@/components/common/Bilingual";
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listContractsForProviderOrBusiness } from '@/modules/contracts';
@@ -61,7 +62,7 @@ const DashboardAnalytics = () => {
   const [period, setPeriod] = useState<Period>('30d');
 
   usePageMeta({
-    title: isRTL ? 'التحليلات | قِطاعات' : 'Analytics | Qitaat',
+    title: pickBi(isRTL, 'التحليلات | قِطاعات', 'Analytics | Qitaat'),
     noindex: true,
   });
 
@@ -237,7 +238,7 @@ const DashboardAnalytics = () => {
           ['completed', 'active'].includes(c.status) && c.created_at.startsWith(monthStr)
         );
         return {
-          date: format(m, isRTL ? 'MMM' : 'MMM yy'),
+          date: format(m, pickBi(isRTL, 'MMM', 'MMM yy')),
           revenue: monthContracts.reduce((s, c) => s + Number(c.total_amount || 0), 0),
           count: monthContracts.length,
         };
@@ -266,10 +267,10 @@ const DashboardAnalytics = () => {
   const bookingPieData = useMemo(() => {
     if (!stats) return [];
     const items = [
-      { name: isRTL ? 'مؤكد' : 'Confirmed',  key: 'confirmed', value: stats.confirmedBookings },
-      { name: isRTL ? 'مكتمل' : 'Completed', key: 'completed', value: stats.completedBookings },
-      { name: isRTL ? 'بانتظار' : 'Pending', key: 'pending',   value: stats.pendingBookings },
-      { name: isRTL ? 'ملغي' : 'Cancelled',  key: 'cancelled', value: stats.cancelledBookings },
+      { name: pickBi(isRTL, 'مؤكد', 'Confirmed'),  key: 'confirmed', value: stats.confirmedBookings },
+      { name: pickBi(isRTL, 'مكتمل', 'Completed'), key: 'completed', value: stats.completedBookings },
+      { name: pickBi(isRTL, 'بانتظار', 'Pending'), key: 'pending',   value: stats.pendingBookings },
+      { name: pickBi(isRTL, 'ملغي', 'Cancelled'),  key: 'cancelled', value: stats.cancelledBookings },
     ];
     return items.filter(i => i.value > 0);
   }, [stats, isRTL]);
@@ -285,7 +286,7 @@ const DashboardAnalytics = () => {
       cancelled: { ar: 'ملغي', en: 'Cancelled' },
     };
     return Object.entries(statusMap).map(([status, value]) => ({
-      name: labels[status]?.[isRTL ? 'ar' : 'en'] || status,
+      name: labels[status]?.[pickBi(isRTL, 'ar', 'en')] || status,
       key: status,
       value,
     }));
@@ -302,7 +303,7 @@ const DashboardAnalytics = () => {
       return months.map(m => {
         const monthStr = format(m, 'yyyy-MM');
         return {
-          date: format(m, isRTL ? 'MMM' : 'MMM yy'),
+          date: format(m, pickBi(isRTL, 'MMM', 'MMM yy')),
           count: bookings.filter(b => b.created_at.startsWith(monthStr)).length,
         };
       });
@@ -334,10 +335,10 @@ const DashboardAnalytics = () => {
   }, [analytics]);
 
   const periodOptions: { value: Period; label: string }[] = [
-    { value: '7d', label: isRTL ? '7 أيام' : '7d' },
-    { value: '30d', label: isRTL ? '30 يوم' : '30d' },
-    { value: '90d', label: isRTL ? '90 يوم' : '90d' },
-    { value: '12m', label: isRTL ? '12 شهر' : '12m' },
+    { value: '7d', label: pickBi(isRTL, '7 أيام', '7d') },
+    { value: '30d', label: pickBi(isRTL, '30 يوم', '30d') },
+    { value: '90d', label: pickBi(isRTL, '90 يوم', '90d') },
+    { value: '12m', label: pickBi(isRTL, '12 شهر', '12m') },
   ];
 
   const trend = (curr: number, prev: number | undefined): { up?: boolean; label: string } | undefined => {
@@ -469,7 +470,7 @@ const DashboardAnalytics = () => {
       <div className="dash-emerald space-y-5">
         {/* Brand-aligned hero (Qitaat: primary green + info blue, no off-brand gold) */}
         <section
-          aria-label={isRTL ? 'مركز التحليلات' : 'Analytics center'}
+          aria-label={pickBi(isRTL, 'مركز التحليلات', 'Analytics center')}
           className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/8 via-card to-info/5 p-5 sm:p-7 shadow-[var(--elev-1)]"
         >
           <div className="pointer-events-none absolute -top-24 -end-24 h-56 w-56 rounded-full bg-primary/15 blur-3xl" aria-hidden />
@@ -477,24 +478,22 @@ const DashboardAnalytics = () => {
             <div className="min-w-0 space-y-2">
               <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-1 bg-primary/10 text-primary border border-primary/15">
                 <Sparkles className="w-3 h-3" aria-hidden="true" />
-                {isRTL ? 'مركز التحليلات' : 'Analytics center'}
+                {pickBi(isRTL, 'مركز التحليلات', 'Analytics center')}
               </span>
               <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight flex items-center gap-2">
                 <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
-                {isRTL ? 'التحليلات والإحصائيات' : 'Analytics & Insights'}
+                {pickBi(isRTL, 'التحليلات والإحصائيات', 'Analytics & Insights')}
               </h1>
               <p className="text-xs sm:text-sm text-foreground/80 max-w-xl">
-                {isRTL
-                  ? 'مؤشرات أداء حية، مقارنات بين الفترات، تسليم العقود، المتأخرات، وتصدير فوري للبيانات.'
-                  : 'Live KPIs, period comparisons, contract delivery, overdue payments, and instant CSV export.'}
+                {pickBi(isRTL, 'مؤشرات أداء حية، مقارنات بين الفترات، تسليم العقود، المتأخرات، وتصدير فوري للبيانات.', 'Live KPIs, period comparisons, contract delivery, overdue payments, and instant CSV export.')}
               </p>
               <p className="text-[10px] tech-content text-muted-foreground">
-                {isRTL ? 'آخر تحديث' : 'Updated'} · {format(lastRefreshed, 'HH:mm:ss')}
+                {pickBi(isRTL, 'آخر تحديث', 'Updated')} · {format(lastRefreshed, 'HH:mm:ss')}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <div className="inline-flex rounded-full bg-muted/40 border border-border/60 p-1" role="tablist" aria-label={isRTL ? 'اختيار الفترة' : 'Select period'}>
+              <div className="inline-flex rounded-full bg-muted/40 border border-border/60 p-1" role="tablist" aria-label={pickBi(isRTL, 'اختيار الفترة', 'Select period')}>
                 {periodOptions.map((o) => (
                   <button
                     key={o.value}
@@ -515,11 +514,11 @@ const DashboardAnalytics = () => {
               </div>
               <Button size="sm" variant="outline" className="h-9 gap-1.5" onClick={refetchAll}>
                 <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} aria-hidden="true" />
-                {isRTL ? 'تحديث' : 'Refresh'}
+                {pickBi(isRTL, 'تحديث', 'Refresh')}
               </Button>
               <Button size="sm" variant="outline" className="h-9 gap-1.5" onClick={downloadCsv} disabled={!stats}>
                 <Download className="w-3.5 h-3.5" aria-hidden="true" />
-                {isRTL ? 'CSV' : 'CSV'}
+                {pickBi(isRTL, 'CSV', 'CSV')}
               </Button>
               <Button size="sm" className="h-9 gap-1.5" onClick={downloadPdf} disabled={!stats || isExportingPdf}>
                 <FileDown className={cn('w-3.5 h-3.5', isExportingPdf && 'animate-pulse')} aria-hidden="true" />
@@ -546,19 +545,17 @@ const DashboardAnalytics = () => {
                   </span>
                   <div className="flex-1 min-w-[200px]">
                     <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                      {isRTL ? 'رؤية ذكية' : 'Smart Insight'}
+                      {pickBi(isRTL, 'رؤية ذكية', 'Smart Insight')}
                     </p>
                     <p className="text-sm font-semibold">
                       {insight.bestDate ? (
-                        isRTL
-                          ? `أعلى يوم إيراد كان ${insight.bestDate} بمبلغ ${insight.bestRevenue.toLocaleString()} ر.س`
-                          : `Top revenue day was ${insight.bestDate} with ${insight.bestRevenue.toLocaleString()} SAR`
-                      ) : isRTL ? 'لا توجد إيرادات في هذه الفترة بعد' : 'No revenue in this period yet'}
+                        pickBi(isRTL, `أعلى يوم إيراد كان ${insight.bestDate} بمبلغ ${insight.bestRevenue.toLocaleString()} ر.س`, `Top revenue day was ${insight.bestDate} with ${insight.bestRevenue.toLocaleString()} SAR`)
+                      ) : pickBi(isRTL, 'لا توجد إيرادات في هذه الفترة بعد', 'No revenue in this period yet')}
                     </p>
                   </div>
                   <div className="text-center">
                     <p className="text-[11px] text-muted-foreground">
-                      {isRTL ? 'معدل الإنجاز' : 'Completion Rate'}
+                      {pickBi(isRTL, 'معدل الإنجاز', 'Completion Rate')}
                     </p>
                     <p className="text-2xl font-bold tech-content text-success">
                       {insight.convRate}%
@@ -579,20 +576,18 @@ const DashboardAnalytics = () => {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="font-heading text-sm sm:text-base font-semibold">
-                      {isRTL ? 'لا توجد نشاطات في هذه الفترة بعد' : 'No activity in this period yet'}
+                      {pickBi(isRTL, 'لا توجد نشاطات في هذه الفترة بعد', 'No activity in this period yet')}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                      {isRTL
-                        ? 'ستظهر مؤشرات الأداء والرسوم البيانية تلقائيًا فور توفر بيانات حقيقية من العقود والحجوزات والتقييمات.'
-                        : 'KPIs and charts will appear automatically once real contract, booking, and review data is available.'}
+                      {pickBi(isRTL, 'ستظهر مؤشرات الأداء والرسوم البيانية تلقائيًا فور توفر بيانات حقيقية من العقود والحجوزات والتقييمات.', 'KPIs and charts will appear automatically once real contract, booking, and review data is available.')}
                     </p>
                   </div>
                   <div className="flex gap-2 flex-wrap shrink-0">
                     <Button asChild size="sm" variant="outline" className="h-8 text-xs">
-                      <a href="/dashboard/services">{isRTL ? 'إدارة الخدمات' : 'Manage services'}</a>
+                      <a href="/dashboard/services">{pickBi(isRTL, 'إدارة الخدمات', 'Manage services')}</a>
                     </Button>
                     <Button asChild size="sm" className="h-8 text-xs">
-                      <a href="/dashboard/business-completion">{isRTL ? 'أكمل ملفك' : 'Complete profile'}</a>
+                      <a href="/dashboard/business-completion">{pickBi(isRTL, 'أكمل ملفك', 'Complete profile')}</a>
                     </Button>
                   </div>
                 </CardContent>
@@ -604,57 +599,57 @@ const DashboardAnalytics = () => {
               <BentoTile
                 variant="feature"
                 icon={DollarSign}
-                label={isRTL ? 'إجمالي الإيرادات' : 'Total Revenue'}
+                label={pickBi(isRTL, 'إجمالي الإيرادات', 'Total Revenue')}
                 value={
                   <>
                     {stats.totalRevenue.toLocaleString()}{' '}
-                    <span className="text-base font-normal text-muted-foreground">{isRTL ? 'ر.س' : 'SAR'}</span>
+                    <span className="text-base font-normal text-muted-foreground">{pickBi(isRTL, 'ر.س', 'SAR')}</span>
                   </>
                 }
-                sub={`${stats.activeContracts + stats.completedContracts} ${isRTL ? 'عقد مُولِّد' : 'earning contracts'}`}
+                sub={`${stats.activeContracts + stats.completedContracts} ${pickBi(isRTL, 'عقد مُولِّد', 'earning contracts')}`}
                 trend={trend(stats.totalRevenue, prevAnalytics?.revenue)}
                 accent="emerald"
               />
               <BentoTile
                 icon={FileText}
-                label={isRTL ? 'العقود' : 'Contracts'}
+                label={pickBi(isRTL, 'العقود', 'Contracts')}
                 value={stats.totalContracts}
-                sub={`${stats.activeContracts} ${isRTL ? 'نشط' : 'active'} · ${stats.completedContracts} ${isRTL ? 'مكتمل' : 'done'}`}
+                sub={`${stats.activeContracts} ${pickBi(isRTL, 'نشط', 'active')} · ${stats.completedContracts} ${pickBi(isRTL, 'مكتمل', 'done')}`}
                 trend={trend(stats.totalContracts, prevAnalytics?.contracts)}
               />
               <BentoTile
                 icon={CalendarClock}
-                label={isRTL ? 'الحجوزات' : 'Bookings'}
+                label={pickBi(isRTL, 'الحجوزات', 'Bookings')}
                 value={stats.totalBookings}
-                sub={`${stats.confirmedBookings} ${isRTL ? 'مؤكد' : 'confirmed'}`}
+                sub={`${stats.confirmedBookings} ${pickBi(isRTL, 'مؤكد', 'confirmed')}`}
                 trend={trend(stats.totalBookings, prevAnalytics?.bookings)}
               />
               <BentoTile
                 icon={Star}
-                label={isRTL ? 'متوسط التقييم' : 'Avg. Rating'}
+                label={pickBi(isRTL, 'متوسط التقييم', 'Avg. Rating')}
                 value={stats.avgRating}
-                sub={`${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`}
+                sub={`${stats.totalReviews} ${pickBi(isRTL, 'تقييم', 'reviews')}`}
                 trend={prevAnalytics ? trend(Number(stats.avgRating), prevAnalytics.avgRating) : undefined}
                 accent="neutral"
               />
               <BentoTile
                 icon={Briefcase}
-                label={isRTL ? 'المشاريع' : 'Projects'}
+                label={pickBi(isRTL, 'المشاريع', 'Projects')}
                 value={stats.projectsCount}
               />
               <BentoTile
                 icon={Activity}
-                label={isRTL ? 'الخدمات النشطة' : 'Active Services'}
+                label={pickBi(isRTL, 'الخدمات النشطة', 'Active Services')}
                 value={stats.servicesCount}
               />
               <BentoTile
                 icon={Users}
-                label={isRTL ? 'حجوزات مكتملة' : 'Completed Bookings'}
+                label={pickBi(isRTL, 'حجوزات مكتملة', 'Completed Bookings')}
                 value={stats.completedBookings}
               />
               <BentoTile
                 icon={TrendingUp}
-                label={isRTL ? 'عقود مكتملة' : 'Done Contracts'}
+                label={pickBi(isRTL, 'عقود مكتملة', 'Done Contracts')}
                 value={stats.completedContracts}
               />
             </div>
@@ -673,7 +668,7 @@ const DashboardAnalytics = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-primary" />
-                    {isRTL ? 'تطور الإيرادات' : 'Revenue Trend'}
+                    {pickBi(isRTL, 'تطور الإيرادات', 'Revenue Trend')}
                   </CardTitle>
                   {prevAnalytics && (
                     <Badge variant="outline" className="text-[10px] font-semibold gap-1">
@@ -686,7 +681,7 @@ const DashboardAnalytics = () => {
                             <Icon className="w-3 h-3" />
                             <span className="tech-content">{t.label}</span>
                             <span className="text-muted-foreground">
-                              {isRTL ? 'مقابل السابق' : 'vs prev'}
+                              {pickBi(isRTL, 'مقابل السابق', 'vs prev')}
                             </span>
                           </>
                         );
@@ -723,7 +718,7 @@ const DashboardAnalytics = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
                     <CalendarClock className="w-4 h-4 text-info" />
-                    {isRTL ? 'الحجوزات' : 'Bookings'}
+                    {pickBi(isRTL, 'الحجوزات', 'Bookings')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -746,13 +741,13 @@ const DashboardAnalytics = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
                     <PieChartIcon className="w-4 h-4 text-accent" />
-                    {isRTL ? 'حالة الحجوزات' : 'Booking Status'}
+                    {pickBi(isRTL, 'حالة الحجوزات', 'Booking Status')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   {bookingPieData.length === 0 ? (
                     <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">
-                      {isRTL ? 'لا توجد بيانات' : 'No data'}
+                      {pickBi(isRTL, 'لا توجد بيانات', 'No data')}
                     </div>
                   ) : (
                     <div className="h-[200px]">
@@ -779,13 +774,13 @@ const DashboardAnalytics = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
                     <FileText className="w-4 h-4 text-accent" />
-                    {isRTL ? 'حالة العقود' : 'Contract Status'}
+                    {pickBi(isRTL, 'حالة العقود', 'Contract Status')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   {contractPieData.length === 0 ? (
                     <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">
-                      {isRTL ? 'لا توجد بيانات' : 'No data'}
+                      {pickBi(isRTL, 'لا توجد بيانات', 'No data')}
                     </div>
                   ) : (
                     <div className="h-[200px]">
@@ -812,7 +807,7 @@ const DashboardAnalytics = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
                     <Star className="w-4 h-4 text-warning" />
-                    {isRTL ? 'توزيع التقييمات' : 'Rating Distribution'}
+                    {pickBi(isRTL, 'توزيع التقييمات', 'Rating Distribution')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -842,42 +837,42 @@ const DashboardAnalytics = () => {
                   <div className="min-w-0">
                     <CardTitle className="text-sm font-heading flex items-center gap-2">
                       <Filter className="w-4 h-4 text-primary" aria-hidden="true" />
-                      {isRTL ? 'تفاصيل الفلتر' : 'Filtered details'}
+                      {pickBi(isRTL, 'تفاصيل الفلتر', 'Filtered details')}
                     </CardTitle>
                     <p className="text-[11px] text-muted-foreground mt-1">
-                      {isRTL ? 'البند:' : 'Segment:'}{' '}
+                      {pickBi(isRTL, 'البند:', 'Segment:')}{' '}
                       <span className="font-semibold text-foreground">{drill.label}</span>
                       {' · '}
                       <span className="tech-content">{drillRows.length}</span>{' '}
-                      {isRTL ? 'سجل' : 'rows'}
+                      {pickBi(isRTL, 'سجل', 'rows')}
                       {' · '}
                       <span>{periodOptions.find((o) => o.value === period)?.label}</span>
                     </p>
                   </div>
                   <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => setDrill(null)}>
                     <XIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                    {isRTL ? 'إغلاق' : 'Close'}
+                    {pickBi(isRTL, 'إغلاق', 'Close')}
                   </Button>
                 </CardHeader>
                 <CardContent className="pt-0">
                   {drillRows.length === 0 ? (
                     <p className="text-xs text-muted-foreground py-6 text-center">
-                      {isRTL ? 'لا توجد سجلات في هذا الفلتر للفترة المحددة.' : 'No records for this filter in the selected period.'}
+                      {pickBi(isRTL, 'لا توجد سجلات في هذا الفلتر للفترة المحددة.', 'No records for this filter in the selected period.')}
                     </p>
                   ) : (
                     <div className="overflow-x-auto -mx-2">
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="text-start text-[10px] uppercase tracking-wide text-muted-foreground border-b border-border/40">
-                            <th className="px-2 py-2 text-start">{isRTL ? 'المعرّف' : 'ID'}</th>
+                            <th className="px-2 py-2 text-start">{pickBi(isRTL, 'المعرّف', 'ID')}</th>
                             {drill.kind === 'contract' && (
-                              <th className="px-2 py-2 text-start">{isRTL ? 'المبلغ' : 'Amount'}</th>
+                              <th className="px-2 py-2 text-start">{pickBi(isRTL, 'المبلغ', 'Amount')}</th>
                             )}
                             <th className="px-2 py-2 text-start">
-                              {drill.kind === 'rating' ? (isRTL ? 'التقييم' : 'Rating') : (isRTL ? 'الحالة' : 'Status')}
+                              {drill.kind === 'rating' ? (pickBi(isRTL, 'التقييم', 'Rating')) : (pickBi(isRTL, 'الحالة', 'Status'))}
                             </th>
-                            <th className="px-2 py-2 text-start">{isRTL ? 'التاريخ' : 'Date'}</th>
-                            <th className="px-2 py-2 text-end">{isRTL ? 'إجراء' : 'Action'}</th>
+                            <th className="px-2 py-2 text-start">{pickBi(isRTL, 'التاريخ', 'Date')}</th>
+                            <th className="px-2 py-2 text-end">{pickBi(isRTL, 'إجراء', 'Action')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -902,17 +897,17 @@ const DashboardAnalytics = () => {
                               <td className="px-2 py-2 text-end">
                                 {drill.kind === 'contract' && (
                                   <a href={`/contracts/${row.id}`} className="text-primary text-[11px] underline-offset-2 hover:underline">
-                                    {isRTL ? 'فتح' : 'Open'}
+                                    {pickBi(isRTL, 'فتح', 'Open')}
                                   </a>
                                 )}
                                 {drill.kind === 'booking' && (
                                   <a href={`/dashboard/bookings`} className="text-primary text-[11px] underline-offset-2 hover:underline">
-                                    {isRTL ? 'فتح' : 'Open'}
+                                    {pickBi(isRTL, 'فتح', 'Open')}
                                   </a>
                                 )}
                                 {drill.kind === 'rating' && (
                                   <a href={`/dashboard/reviews`} className="text-primary text-[11px] underline-offset-2 hover:underline">
-                                    {isRTL ? 'فتح' : 'Open'}
+                                    {pickBi(isRTL, 'فتح', 'Open')}
                                   </a>
                                 )}
                               </td>
@@ -922,7 +917,7 @@ const DashboardAnalytics = () => {
                       </table>
                       {drillRows.length > 100 && (
                         <p className="text-[10px] text-muted-foreground text-center mt-2">
-                          {isRTL ? `عرض أول 100 من ${drillRows.length}` : `Showing first 100 of ${drillRows.length}`}
+                          {pickBi(isRTL, `عرض أول 100 من ${drillRows.length}`, `Showing first 100 of ${drillRows.length}`)}
                         </p>
                       )}
                     </div>

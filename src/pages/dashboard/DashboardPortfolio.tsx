@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useTransition } from 'react';
+import { pickBi } from "@/components/common/Bilingual";
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -357,18 +358,18 @@ const DashboardPortfolio = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); closeForm(); toast.success(editingItem ? (isRTL ? 'تم التحديث' : 'Updated') : (isRTL ? 'تم الإضافة' : 'Added')); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); closeForm(); toast.success(editingItem ? (pickBi(isRTL, 'تم التحديث', 'Updated')) : (pickBi(isRTL, 'تم الإضافة', 'Added'))); },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('portfolio_items').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); setDeleteConfirm(null); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); setDeleteConfirm(null); toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted')); },
   });
 
   const toggleFeaturedMut = useMutation({
     mutationFn: async (item: PortfolioItem) => { const { error } = await supabase.from('portfolio_items').update({ is_featured: !item.is_featured }).eq('id', item.id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); toast.success(pickBi(isRTL, 'تم التحديث', 'Updated')); },
   });
 
   const reorderMut = useMutation({
@@ -380,12 +381,12 @@ const DashboardPortfolio = () => {
 
   const bulkDeleteMut = useMutation({
     mutationFn: async () => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('portfolio_items').delete().eq('id', id))); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); setSelectedIds(new Set()); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); setSelectedIds(new Set()); toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted')); },
   });
 
   const bulkFeatureMut = useMutation({
     mutationFn: async (featured: boolean) => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('portfolio_items').update({ is_featured: featured }).eq('id', id))); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); setSelectedIds(new Set()); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); setSelectedIds(new Set()); toast.success(pickBi(isRTL, 'تم التحديث', 'Updated')); },
   });
 
   /* ─── Callbacks ─── */
@@ -413,7 +414,7 @@ const DashboardPortfolio = () => {
   const duplicateItem = useCallback((item: PortfolioItem) => {
     setEditingItem(null);
     setForm({
-      title_ar: item.title_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
+      title_ar: item.title_ar + (pickBi(isRTL, ' (نسخة)', ' (copy)')),
       title_en: item.title_en ? item.title_en + ' (copy)' : '',
       description_ar: item.description_ar || '', description_en: item.description_en || '',
       media_url: item.media_url, media_type: item.media_type as 'image', is_featured: false,
@@ -453,7 +454,7 @@ const DashboardPortfolio = () => {
     const url = URL.createObjectURL(blob);
     Object.assign(document.createElement('a'), { href: url, download: `portfolio_${new Date().toISOString().slice(0, 10)}.csv` }).click();
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم التصدير' : 'Exported');
+    toast.success(pickBi(isRTL, 'تم التصدير', 'Exported'));
   }, [items, isRTL]);
 
   const publicLinkFor = useCallback((_item: PortfolioItem) => {
@@ -463,14 +464,14 @@ const DashboardPortfolio = () => {
 
   const handleShare = useCallback(async (item: PortfolioItem) => {
     const url = publicLinkFor(item);
-    if (!url) { toast.error(isRTL ? 'لا يوجد رابط عام بعد' : 'No public link yet'); return; }
+    if (!url) { toast.error(pickBi(isRTL, 'لا يوجد رابط عام بعد', 'No public link yet')); return; }
     const title = isRTL ? item.title_ar : (item.title_en || item.title_ar);
     try {
       if (navigator.share) {
         await navigator.share({ title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+        toast.success(pickBi(isRTL, 'تم نسخ الرابط', 'Link copied'));
       }
       // Optimistic share counter
       queryClient.setQueryData(['dashboard-portfolio', businessId], (prev: PortfolioItem[] | undefined) =>
@@ -482,14 +483,14 @@ const DashboardPortfolio = () => {
 
   const handleOpenPublic = useCallback((item: PortfolioItem) => {
     const url = publicLinkFor(item);
-    if (!url) { toast.error(isRTL ? 'لا يوجد رابط عام بعد' : 'No public link yet'); return; }
+    if (!url) { toast.error(pickBi(isRTL, 'لا يوجد رابط عام بعد', 'No public link yet')); return; }
     window.open(url, '_blank', 'noopener');
   }, [publicLinkFor, isRTL]);
 
   const filterOptions = useMemo(() => [
-    { key: 'all' as const, label: isRTL ? 'الكل' : 'All', count: stats.total, icon: Layers },
-    { key: 'featured' as const, label: isRTL ? 'مميزة' : 'Featured', count: stats.featured, icon: Star },
-    { key: 'regular' as const, label: isRTL ? 'عادية' : 'Regular', count: stats.regular, icon: ImageIcon },
+    { key: 'all' as const, label: pickBi(isRTL, 'الكل', 'All'), count: stats.total, icon: Layers },
+    { key: 'featured' as const, label: pickBi(isRTL, 'مميزة', 'Featured'), count: stats.featured, icon: Star },
+    { key: 'regular' as const, label: pickBi(isRTL, 'عادية', 'Regular'), count: stats.regular, icon: ImageIcon },
   ], [isRTL, stats]);
 
   return (
@@ -498,19 +499,19 @@ const DashboardPortfolio = () => {
         <PageHeader
           icon={Layers}
           tone="primary"
-          eyebrow={isRTL ? 'المعرض' : 'Gallery'}
-          title={isRTL ? 'معرض الأعمال' : 'Portfolio Gallery'}
-          subtitle={isRTL ? `${stats.total} عمل · ${stats.featured} مميز` : `${stats.total} works · ${stats.featured} featured`}
+          eyebrow={pickBi(isRTL, 'المعرض', 'Gallery')}
+          title={pickBi(isRTL, 'معرض الأعمال', 'Portfolio Gallery')}
+          subtitle={pickBi(isRTL, `${stats.total} عمل · ${stats.featured} مميز`, `${stats.total} works · ${stats.featured} featured`)}
           actions={
             <>
               {items.length > 0 && (
                 <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
-                  <Download className="w-3.5 h-3.5 me-1" />{isRTL ? 'تصدير' : 'Export'}
+                  <Download className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'تصدير', 'Export')}
                 </Button>
               )}
               <PermissionHint permission="documents.upload">
                 <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-                  <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة عمل' : 'Add Work'}
+                  <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة عمل', 'Add Work')}
                 </Button>
               </PermissionHint>
             </>
@@ -523,12 +524,12 @@ const DashboardPortfolio = () => {
         {items.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
             {[
-              { l: isRTL ? 'إجمالي' : 'Total', v: stats.total, icon: ImageIcon, cls: 'text-primary bg-primary/10' },
-              { l: isRTL ? 'مميزة' : 'Featured', v: stats.featured, icon: Star, cls: 'text-accent bg-accent/10' },
-              { l: isRTL ? 'المشاهدات' : 'Views', v: stats.totalViews, icon: Eye, cls: 'text-primary bg-primary/10' },
-              { l: isRTL ? 'المشاركات' : 'Shares', v: stats.totalShares, icon: Share2, cls: 'text-accent bg-accent/10' },
-              { l: isRTL ? 'تصنيفات' : 'Categories', v: stats.usedCats, icon: FolderOpen, cls: 'text-primary bg-primary/10' },
-              { l: isRTL ? 'الاكتمال' : 'Complete', v: stats.completeness, icon: BarChart3, cls: 'text-primary bg-primary/10', suffix: '%' },
+              { l: pickBi(isRTL, 'إجمالي', 'Total'), v: stats.total, icon: ImageIcon, cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'مميزة', 'Featured'), v: stats.featured, icon: Star, cls: 'text-accent bg-accent/10' },
+              { l: pickBi(isRTL, 'المشاهدات', 'Views'), v: stats.totalViews, icon: Eye, cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'المشاركات', 'Shares'), v: stats.totalShares, icon: Share2, cls: 'text-accent bg-accent/10' },
+              { l: pickBi(isRTL, 'تصنيفات', 'Categories'), v: stats.usedCats, icon: FolderOpen, cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'الاكتمال', 'Complete'), v: stats.completeness, icon: BarChart3, cls: 'text-primary bg-primary/10', suffix: '%' },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border/40 bg-card/50">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.cls}`}>
@@ -549,7 +550,7 @@ const DashboardPortfolio = () => {
             <Zap className="w-4 h-4 text-primary shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-medium">{isRTL ? 'اكتمال بيانات المعرض' : 'Portfolio completeness'}</span>
+                <span className="text-[11px] font-medium">{pickBi(isRTL, 'اكتمال بيانات المعرض', 'Portfolio completeness')}</span>
                 <span className="text-[11px] font-bold text-primary">{stats.completeness}%</span>
               </div>
               <Progress value={stats.completeness} className="h-1" />
@@ -566,7 +567,7 @@ const DashboardPortfolio = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     {editingItem ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
-                    {editingItem ? (isRTL ? 'تعديل العمل' : 'Edit Work') : (isRTL ? 'إضافة عمل جديد' : 'New Work')}
+                    {editingItem ? (pickBi(isRTL, 'تعديل العمل', 'Edit Work')) : (pickBi(isRTL, 'إضافة عمل جديد', 'New Work'))}
                   </CardTitle>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm}><X className="w-4 h-4" /></Button>
                 </div>
@@ -576,16 +577,16 @@ const DashboardPortfolio = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'العنوان (عربي)', 'Title (Arabic)')} <span className="text-destructive">*</span></Label>
                       <FieldAiActions value={form.title_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
                         onTranslated={v => setForm(p => ({ ...p, title_en: v }))}
                         onImproved={v => setForm(p => ({ ...p, title_ar: v }))} />
                     </div>
-                    <Input value={form.title_ar} onChange={e => setForm(p => ({ ...p, title_ar: e.target.value }))} placeholder={isRTL ? 'مثال: تركيب واجهات زجاجية' : 'e.g. Glass facade installation'} className="h-9" />
+                    <Input value={form.title_ar} onChange={e => setForm(p => ({ ...p, title_ar: e.target.value }))} placeholder={pickBi(isRTL, 'مثال: تركيب واجهات زجاجية', 'e.g. Glass facade installation')} className="h-9" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'العنوان (إنجليزي)', 'Title (English)')}</Label>
                       <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
                         onTranslated={v => setForm(p => ({ ...p, title_ar: v }))}
                         onImproved={v => setForm(p => ({ ...p, title_en: v }))} />
@@ -597,7 +598,7 @@ const DashboardPortfolio = () => {
                 {/* Category + Location + Date */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><FolderOpen className="w-3.5 h-3.5" />{isRTL ? 'التصنيف' : 'Category'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><FolderOpen className="w-3.5 h-3.5" />{pickBi(isRTL, 'التصنيف', 'Category')}</Label>
                     <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -606,59 +607,59 @@ const DashboardPortfolio = () => {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'الموقع' : 'Location'}</Label>
-                    <Input value={form.project_location} onChange={e => setForm(p => ({ ...p, project_location: e.target.value }))} placeholder={isRTL ? 'الرياض' : 'Riyadh'} className="h-9" />
+                    <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{pickBi(isRTL, 'الموقع', 'Location')}</Label>
+                    <Input value={form.project_location} onChange={e => setForm(p => ({ ...p, project_location: e.target.value }))} placeholder={pickBi(isRTL, 'الرياض', 'Riyadh')} className="h-9" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{isRTL ? 'تاريخ الإنجاز' : 'Date'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{pickBi(isRTL, 'تاريخ الإنجاز', 'Date')}</Label>
                     <Input type="date" value={form.completion_date} onChange={e => setForm(p => ({ ...p, completion_date: e.target.value }))} dir="ltr" className="h-9" />
                   </div>
                 </div>
 
                 {/* Image Upload */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">{isRTL ? 'صورة العمل' : 'Work Image'} <span className="text-destructive">*</span></Label>
-                  <ImageUpload bucket="portfolio-images" value={form.media_url} onChange={url => setForm(p => ({ ...p, media_url: url }))} onRemove={() => setForm(p => ({ ...p, media_url: '' }))} compact placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
+                  <Label className="text-xs font-medium">{pickBi(isRTL, 'صورة العمل', 'Work Image')} <span className="text-destructive">*</span></Label>
+                  <ImageUpload bucket="portfolio-images" value={form.media_url} onChange={url => setForm(p => ({ ...p, media_url: url }))} onRemove={() => setForm(p => ({ ...p, media_url: '' }))} compact placeholder={pickBi(isRTL, 'اضغط لرفع صورة (يُفضل 16:9)', 'Click to upload (16:9 recommended)')} />
                 </div>
 
                 {/* ── Pro fields: client, value, duration, external url, tags ── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{isRTL ? 'اسم العميل' : 'Client'}</Label>
-                    <Input value={form.client_name} onChange={e => setForm(p => ({ ...p, client_name: e.target.value }))} placeholder={isRTL ? 'اختياري' : 'Optional'} className="h-9" />
+                    <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{pickBi(isRTL, 'اسم العميل', 'Client')}</Label>
+                    <Input value={form.client_name} onChange={e => setForm(p => ({ ...p, client_name: e.target.value }))} placeholder={pickBi(isRTL, 'اختياري', 'Optional')} className="h-9" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Banknote className="w-3.5 h-3.5" />{isRTL ? 'قيمة المشروع' : 'Project Value'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Banknote className="w-3.5 h-3.5" />{pickBi(isRTL, 'قيمة المشروع', 'Project Value')}</Label>
                     <Input type="number" min="0" step="0.01" value={form.project_value} onChange={e => setForm(p => ({ ...p, project_value: e.target.value }))} placeholder="SAR" dir="ltr" className="h-9 tech-content" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{isRTL ? 'المدة (أيام)' : 'Duration (days)'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{pickBi(isRTL, 'المدة (أيام)', 'Duration (days)')}</Label>
                     <Input type="number" min="0" step="1" value={form.project_duration_days} onChange={e => setForm(p => ({ ...p, project_duration_days: e.target.value }))} dir="ltr" className="h-9 tech-content" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Link2 className="w-3.5 h-3.5" />{isRTL ? 'رابط خارجي' : 'External Link'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Link2 className="w-3.5 h-3.5" />{pickBi(isRTL, 'رابط خارجي', 'External Link')}</Label>
                     <Input type="url" value={form.external_url} onChange={e => setForm(p => ({ ...p, external_url: e.target.value }))} placeholder="https://…" dir="ltr" className="h-9 tech-content" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'وسوم (مفصولة بفاصلة)' : 'Tags (comma-separated)'}</Label>
-                  <Input value={form.tags} onChange={e => setForm(p => ({ ...p, tags: e.target.value }))} placeholder={isRTL ? 'فلل، تجاري، الرياض' : 'villa, commercial, riyadh'} className="h-9" />
+                  <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{pickBi(isRTL, 'وسوم (مفصولة بفاصلة)', 'Tags (comma-separated)')}</Label>
+                  <Input value={form.tags} onChange={e => setForm(p => ({ ...p, tags: e.target.value }))} placeholder={pickBi(isRTL, 'فلل، تجاري، الرياض', 'villa, commercial, riyadh')} className="h-9" />
                 </div>
 
                 {/* Descriptions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'الوصف (عربي)', 'Description (Arabic)')}</Label>
                       <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
                         onTranslated={v => setForm(p => ({ ...p, description_en: v }))}
                         onImproved={v => setForm(p => ({ ...p, description_ar: v }))} />
                     </div>
-                    <Textarea value={form.description_ar} onChange={e => setForm(p => ({ ...p, description_ar: e.target.value }))} rows={2} placeholder={isRTL ? 'وصف العمل...' : 'Work description...'} className="resize-none text-sm" />
+                    <Textarea value={form.description_ar} onChange={e => setForm(p => ({ ...p, description_ar: e.target.value }))} rows={2} placeholder={pickBi(isRTL, 'وصف العمل...', 'Work description...')} className="resize-none text-sm" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (English)')}</Label>
                       <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
                         onTranslated={v => setForm(p => ({ ...p, description_ar: v }))}
                         onImproved={v => setForm(p => ({ ...p, description_en: v }))} />
@@ -671,17 +672,17 @@ const DashboardPortfolio = () => {
                 <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
                   <Switch checked={form.is_featured} onCheckedChange={v => setForm(p => ({ ...p, is_featured: v }))} />
                   <div>
-                    <span className="text-xs font-medium">{isRTL ? 'عمل مميز' : 'Featured Work'}</span>
-                    <p className="text-[10px] text-muted-foreground">{isRTL ? 'يظهر بشكل بارز في المعرض' : 'Displayed prominently'}</p>
+                    <span className="text-xs font-medium">{pickBi(isRTL, 'عمل مميز', 'Featured Work')}</span>
+                    <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'يظهر بشكل بارز في المعرض', 'Displayed prominently')}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-2 pt-1">
                   <Button onClick={() => saveMut.mutate()} disabled={!form.title_ar.trim() || !form.media_url || saveMut.isPending} variant="hero" className="flex-1 h-9">
                     {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
-                    {saveMut.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editingItem ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
+                    {saveMut.isPending ? (pickBi(isRTL, 'جاري الحفظ...', 'Saving...')) : editingItem ? (pickBi(isRTL, 'تحديث', 'Update')) : (pickBi(isRTL, 'إضافة', 'Add'))}
                   </Button>
-                  <Button variant="outline" className="h-9" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button variant="outline" className="h-9" onClick={closeForm}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -694,7 +695,7 @@ const DashboardPortfolio = () => {
             <div className="flex items-center gap-2">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input placeholder={isRTL ? 'ابحث...' : 'Search...'} value={searchQuery}
+                <Input placeholder={pickBi(isRTL, 'ابحث...', 'Search...')} value={searchQuery}
                   onChange={e => startTransition(() => setSearchQuery(e.target.value))}
                   className="ps-8 h-8 text-xs" />
               </div>
@@ -704,7 +705,7 @@ const DashboardPortfolio = () => {
                     <FolderOpen className="w-3 h-3" /><SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                    <SelectItem value="all">{pickBi(isRTL, 'الكل', 'All')}</SelectItem>
                     {usedCategories.map(c => <SelectItem key={c.value} value={c.value}>{c.icon} {isRTL ? c.ar : c.en}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -714,17 +715,17 @@ const DashboardPortfolio = () => {
                   <TrendingUp className="w-3 h-3" /><SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="order">{isRTL ? 'الترتيب اليدوي' : 'Manual order'}</SelectItem>
-                  <SelectItem value="views">{isRTL ? 'الأكثر مشاهدة' : 'Most viewed'}</SelectItem>
-                  <SelectItem value="shares">{isRTL ? 'الأكثر مشاركة' : 'Most shared'}</SelectItem>
-                  <SelectItem value="recent">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
+                  <SelectItem value="order">{pickBi(isRTL, 'الترتيب اليدوي', 'Manual order')}</SelectItem>
+                  <SelectItem value="views">{pickBi(isRTL, 'الأكثر مشاهدة', 'Most viewed')}</SelectItem>
+                  <SelectItem value="shares">{pickBi(isRTL, 'الأكثر مشاركة', 'Most shared')}</SelectItem>
+                  <SelectItem value="recent">{pickBi(isRTL, 'الأحدث', 'Newest')}</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex border border-border/40 rounded-lg overflow-hidden ms-auto">
                 <button className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}><LayoutGrid className="w-3.5 h-3.5" /></button>
                 <button className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}><List className="w-3.5 h-3.5" /></button>
               </div>
-              <button onClick={toggleSelectAll} className="p-1.5 rounded-lg border border-border/40 hover:bg-muted/50 transition-colors" title={isRTL ? 'تحديد الكل' : 'Select All'}>
+              <button onClick={toggleSelectAll} className="p-1.5 rounded-lg border border-border/40 hover:bg-muted/50 transition-colors" title={pickBi(isRTL, 'تحديد الكل', 'Select All')}>
                 <CheckCircle2 className={`w-3.5 h-3.5 ${selectedIds.size === filteredItems.length && filteredItems.length > 0 ? 'text-primary' : 'text-muted-foreground/40'}`} />
               </button>
             </div>
@@ -746,10 +747,10 @@ const DashboardPortfolio = () => {
         {/* Bulk Actions */}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-2 p-2 rounded-xl bg-primary/5 border border-primary/15 animate-in fade-in-0 duration-150">
-            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{selectedIds.size} {isRTL ? 'محددة' : 'selected'}</Badge>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkFeatureMut.mutate(true)} disabled={bulkFeatureMut.isPending}><Star className="w-3 h-3 me-0.5" />{isRTL ? 'تمييز' : 'Feature'}</Button>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkFeatureMut.mutate(false)} disabled={bulkFeatureMut.isPending}><StarOff className="w-3 h-3 me-0.5" />{isRTL ? 'إلغاء' : 'Unfeature'}</Button>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive" onClick={() => bulkDeleteMut.mutate()} disabled={bulkDeleteMut.isPending}><Trash2 className="w-3 h-3 me-0.5" />{isRTL ? 'حذف' : 'Del'}</Button>
+            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{selectedIds.size} {pickBi(isRTL, 'محددة', 'selected')}</Badge>
+            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkFeatureMut.mutate(true)} disabled={bulkFeatureMut.isPending}><Star className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'تمييز', 'Feature')}</Button>
+            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkFeatureMut.mutate(false)} disabled={bulkFeatureMut.isPending}><StarOff className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'إلغاء', 'Unfeature')}</Button>
+            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive" onClick={() => bulkDeleteMut.mutate()} disabled={bulkDeleteMut.isPending}><Trash2 className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'حذف', 'Del')}</Button>
             <button className="ms-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSelectedIds(new Set())}><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
@@ -759,12 +760,12 @@ const DashboardPortfolio = () => {
           <div className="flex items-center gap-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5 animate-in fade-in-0 slide-in-from-top-1 duration-150">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-medium">{isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}</p>
-              <p className="text-[11px] text-muted-foreground">{isRTL ? 'لا يمكن التراجع عن هذا الإجراء' : 'This action cannot be undone'}</p>
+              <p className="text-sm font-medium">{pickBi(isRTL, 'تأكيد الحذف', 'Confirm Delete')}</p>
+              <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'لا يمكن التراجع عن هذا الإجراء', 'This action cannot be undone')}</p>
             </div>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteConfirm(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteConfirm(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
             <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => deleteConfirm && deleteMut.mutate(deleteConfirm)} disabled={deleteMut.isPending}>
-              {deleteMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{isRTL ? 'حذف' : 'Delete'}
+              {deleteMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{pickBi(isRTL, 'حذف', 'Delete')}
             </Button>
           </div>
         )}
@@ -779,15 +780,15 @@ const DashboardPortfolio = () => {
             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <ImageIcon className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد أعمال بعد' : 'No portfolio items yet'}</h3>
-            <p className="text-sm text-muted-foreground max-w-xs mb-5">{isRTL ? 'أضف صور أعمالك المنجزة لعرضها للعملاء' : 'Add photos of your work to showcase to clients'}</p>
-            <Button variant="hero" size="sm" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{isRTL ? 'أضف أول عمل' : 'Add First Work'}</Button>
+            <h3 className="text-base font-semibold mb-1">{pickBi(isRTL, 'لا توجد أعمال بعد', 'No portfolio items yet')}</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mb-5">{pickBi(isRTL, 'أضف صور أعمالك المنجزة لعرضها للعملاء', 'Add photos of your work to showcase to clients')}</p>
+            <Button variant="hero" size="sm" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{pickBi(isRTL, 'أضف أول عمل', 'Add First Work')}</Button>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <Search className="w-7 h-7 mb-2" />
-            <p className="text-sm font-medium">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
-            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearchQuery(''); setFilterMode('all'); setCategoryFilter('all'); }}>{isRTL ? 'إعادة تعيين' : 'Reset filters'}</button>
+            <p className="text-sm font-medium">{pickBi(isRTL, 'لا توجد نتائج', 'No results')}</p>
+            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearchQuery(''); setFilterMode('all'); setCategoryFilter('all'); }}>{pickBi(isRTL, 'إعادة تعيين', 'Reset filters')}</button>
           </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

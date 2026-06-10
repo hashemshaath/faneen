@@ -86,12 +86,10 @@ const statusBadgeClass = (status: string | null | undefined): string => {
 const DashboardBrands: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const locale: Loc = isRTL ? 'ar' : 'en';
+  const locale: Loc = pickBi(isRTL, 'ar', 'en');
   usePageMeta({
-    title: isRTL ? 'العلامات التجارية — قِطاعات' : 'My Brands — Qitaat',
-    description: isRTL
-      ? 'إدارة علاقات منشأتك مع العلامات التجارية المعتمدة.'
-      : 'Manage your business relationships with approved brands.',
+    title: pickBi(isRTL, 'العلامات التجارية — قِطاعات', 'My Brands — Qitaat'),
+    description: pickBi(isRTL, 'إدارة علاقات منشأتك مع العلامات التجارية المعتمدة.', 'Manage your business relationships with approved brands.'),
     noindex: true,
   });
   const { user } = useAuth();
@@ -192,9 +190,9 @@ const DashboardBrands: React.FC = () => {
 
   const linkMut = useMutation({
     mutationFn: async (args: { brandId: string; serviceIds: string[] }) => {
-      if (!businessId) throw new Error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
+      if (!businessId) throw new Error(pickBi(isRTL, 'لا توجد منشأة نشطة', 'No active business'));
       if (args.serviceIds.length === 0) {
-        throw new Error(isRTL ? 'اختر تخصصاً واحداً على الأقل' : 'Pick at least one specialization');
+        throw new Error(pickBi(isRTL, 'اختر تخصصاً واحداً على الأقل', 'Pick at least one specialization'));
       }
       const results = await Promise.allSettled(
         args.serviceIds.map((sid) =>
@@ -217,7 +215,7 @@ const DashboardBrands: React.FC = () => {
             : `Linked to ${ok} specialization${ok > 1 ? 's' : ''}${fail ? ` (${fail} failed)` : ''}`,
         );
       } else {
-        toast.error(isRTL ? 'تعذّر ربط أي تخصص' : 'No specialization linked');
+        toast.error(pickBi(isRTL, 'تعذّر ربط أي تخصص', 'No specialization linked'));
       }
       setLinkPanel(null);
       qc.invalidateQueries({ queryKey: ['provider-brand-links', businessId] });
@@ -228,7 +226,7 @@ const DashboardBrands: React.FC = () => {
   const unlinkMut = useMutation({
     mutationFn: (linkId: string) => unlinkMyProviderBrand(linkId),
     onSuccess: () => {
-      toast.success(isRTL ? 'تم إلغاء الربط' : 'Brand unlinked');
+      toast.success(pickBi(isRTL, 'تم إلغاء الربط', 'Brand unlinked'));
       qc.invalidateQueries({ queryKey: ['provider-brand-links', businessId] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -238,7 +236,7 @@ const DashboardBrands: React.FC = () => {
   const [requestOpen, setRequestOpen] = useState(false);
   const submit = useMutation({
     mutationFn: async (payload: BrandRequestFormPayload) => {
-      if (!user) throw new Error(isRTL ? 'يجب تسجيل الدخول' : 'Not signed in');
+      if (!user) throw new Error(pickBi(isRTL, 'يجب تسجيل الدخول', 'Not signed in'));
       return createMyBrandRequest({
         request_type: 'create_brand',
         business_id: businessId,
@@ -247,7 +245,7 @@ const DashboardBrands: React.FC = () => {
       });
     },
     onSuccess: () => {
-      toast.success(isRTL ? 'تم إرسال الطلب للمراجعة' : 'Request submitted for review');
+      toast.success(pickBi(isRTL, 'تم إرسال الطلب للمراجعة', 'Request submitted for review'));
       setRequestOpen(false);
       qc.invalidateQueries({ queryKey: ['provider-brand-requests', user?.id] });
     },
@@ -271,11 +269,11 @@ const DashboardBrands: React.FC = () => {
 
   const submitProduct = useMutation({
     mutationFn: async () => {
-      if (!prodBrandId) throw new Error(isRTL ? 'اختر العلامة' : 'Pick a brand');
+      if (!prodBrandId) throw new Error(pickBi(isRTL, 'اختر العلامة', 'Pick a brand'));
       // Multi-product mode: each newline in the Arabic name field becomes a
       // separate product request, so providers can propose a batch in one shot.
       const lines = prodNameAr.split('\n').map((s) => s.trim()).filter(Boolean);
-      if (lines.length === 0) throw new Error(isRTL ? 'اسم المنتج مطلوب' : 'Product name required');
+      if (lines.length === 0) throw new Error(pickBi(isRTL, 'اسم المنتج مطلوب', 'Product name required'));
       const enLines = prodNameEn.split('\n').map((s) => s.trim());
       const modelLines = prodModel.split('\n').map((s) => s.trim());
       const results = await Promise.allSettled(
@@ -295,9 +293,7 @@ const DashboardBrands: React.FC = () => {
     },
     onSuccess: ({ ok, total }) => {
       toast.success(
-        isRTL
-          ? `تم إرسال ${ok} من ${total} منتج للمراجعة`
-          : `${ok} of ${total} product${total > 1 ? 's' : ''} submitted`,
+        pickBi(isRTL, `تم إرسال ${ok} من ${total} منتج للمراجعة`, `${ok} of ${total} product${total > 1 ? 's' : ''} submitted`),
       );
       setProdNameAr(''); setProdNameEn(''); setProdModel(''); setProdDesc('');
       setProdOpen(false);
@@ -336,12 +332,10 @@ const DashboardBrands: React.FC = () => {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">
-              {isRTL ? 'العلامات التجارية' : 'Brands'}
+              {pickBi(isRTL, 'العلامات التجارية', 'Brands')}
             </h1>
             <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-              {isRTL
-                ? 'سجل العلامات المعتمدة في قِطاعات. اربط منشأتك بالعلامات التي تتعامل معها أو اطلب إضافة علامة جديدة لمراجعتها.'
-                : 'Approved brand registry on Qitaat. Link your business to the brands you work with, or request a new brand for review.'}
+              {pickBi(isRTL, 'سجل العلامات المعتمدة في قِطاعات. اربط منشأتك بالعلامات التي تتعامل معها أو اطلب إضافة علامة جديدة لمراجعتها.', 'Approved brand registry on Qitaat. Link your business to the brands you work with, or request a new brand for review.')}
             </p>
           </div>
           <Button
@@ -350,17 +344,17 @@ const DashboardBrands: React.FC = () => {
             data-testid="request-new-brand-cta"
           >
             <PackagePlus className="w-4 h-4 me-2" />
-            {isRTL ? 'طلب علامة جديدة' : 'Request new brand'}
+            {pickBi(isRTL, 'طلب علامة جديدة', 'Request new brand')}
           </Button>
         </div>
 
         {/* Stats strip — quick at-a-glance counts */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="brands-stats-strip">
           {[
-            { icon: Tag, label: isRTL ? 'علامات مرتبطة' : 'Linked brands', value: myLinks.length, tone: 'text-primary' },
-            { icon: Layers, label: isRTL ? 'تخصصاتي' : 'My specializations', value: services.length, tone: 'text-info' },
-            { icon: Clock, label: isRTL ? 'طلبات قيد المراجعة' : 'Pending requests', value: myRequests.filter((r) => r.status === 'pending').length + myProductRequests.filter((r) => r.status === 'pending').length, tone: 'text-warning' },
-            { icon: Sparkles, label: isRTL ? 'منتجات معتمدة' : 'Approved products', value: myProductRequests.filter((r) => r.status === 'approved').length, tone: 'text-success' },
+            { icon: Tag, label: pickBi(isRTL, 'علامات مرتبطة', 'Linked brands'), value: myLinks.length, tone: 'text-primary' },
+            { icon: Layers, label: pickBi(isRTL, 'تخصصاتي', 'My specializations'), value: services.length, tone: 'text-info' },
+            { icon: Clock, label: pickBi(isRTL, 'طلبات قيد المراجعة', 'Pending requests'), value: myRequests.filter((r) => r.status === 'pending').length + myProductRequests.filter((r) => r.status === 'pending').length, tone: 'text-warning' },
+            { icon: Sparkles, label: pickBi(isRTL, 'منتجات معتمدة', 'Approved products'), value: myProductRequests.filter((r) => r.status === 'approved').length, tone: 'text-success' },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border bg-card p-3 flex items-center gap-3 hover-lift">
               <div className={`w-9 h-9 rounded-lg bg-muted flex items-center justify-center ${s.tone}`}>
@@ -391,12 +385,10 @@ const DashboardBrands: React.FC = () => {
         <Card data-testid="my-linked-brands-panel">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              {isRTL ? 'العلامات المرتبطة بمنشأتي' : 'My linked brands'}
+              {pickBi(isRTL, 'العلامات المرتبطة بمنشأتي', 'My linked brands')}
             </CardTitle>
             <CardDescription>
-              {isRTL
-                ? 'حالات الربط: قيد المراجعة، موثّق، مرفوض. الإدارة وحدها تستطيع الموافقة على الربط.'
-                : 'Link statuses: pending, verified, or rejected. Only admins can approve a link.'}
+              {pickBi(isRTL, 'حالات الربط: قيد المراجعة، موثّق، مرفوض. الإدارة وحدها تستطيع الموافقة على الربط.', 'Link statuses: pending, verified, or rejected. Only admins can approve a link.')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -407,14 +399,12 @@ const DashboardBrands: React.FC = () => {
             ) : !businessId ? (
               <DashboardEmptyState
                 icon={<AlertCircle className="w-8 h-8" />}
-                title={isRTL ? 'لا توجد منشأة نشطة' : 'No active business'}
-                description={isRTL
-                  ? 'أنشئ ملف منشأتك أولاً لتتمكن من ربط العلامات التجارية.'
-                  : 'Create your business profile first to link brands.'}
+                title={pickBi(isRTL, 'لا توجد منشأة نشطة', 'No active business')}
+                description={pickBi(isRTL, 'أنشئ ملف منشأتك أولاً لتتمكن من ربط العلامات التجارية.', 'Create your business profile first to link brands.')}
                 primaryAction={
                   <Button asChild>
                     <Link to="/dashboard/business-edit">
-                      {isRTL ? 'تعديل الملف التجاري' : 'Edit business profile'}
+                      {pickBi(isRTL, 'تعديل الملف التجاري', 'Edit business profile')}
                     </Link>
                   </Button>
                 }
@@ -422,10 +412,8 @@ const DashboardBrands: React.FC = () => {
             ) : myLinks.length === 0 ? (
               <DashboardEmptyState
                 icon={<Tag className="w-8 h-8" />}
-                title={isRTL ? 'لم تربط أي علامة بعد' : 'No linked brands yet'}
-                description={isRTL
-                  ? 'اختر علامة من السجل أدناه واضغط "ربط" لإضافتها لإحدى خدماتك.'
-                  : 'Pick a brand from the catalog below and click "Link" to add it to one of your services.'}
+                title={pickBi(isRTL, 'لم تربط أي علامة بعد', 'No linked brands yet')}
+                description={pickBi(isRTL, 'اختر علامة من السجل أدناه واضغط "ربط" لإضافتها لإحدى خدماتك.', 'Pick a brand from the catalog below and click "Link" to add it to one of your services.')}
               />
             ) : (
               <div className="space-y-2">
@@ -438,7 +426,7 @@ const DashboardBrands: React.FC = () => {
                   );
                   const display = b
                     ? (locale === 'ar' ? b.name_ar : (b.name_en ?? b.name_ar))
-                    : (isRTL ? 'علامة محذوفة' : 'Removed brand');
+                    : (pickBi(isRTL, 'علامة محذوفة', 'Removed brand'));
                   const linkedService = services.find((s) => s.id === link.business_service_id);
                   const linkedServiceLbl = linkedService
                     ? (locale === 'ar'
@@ -487,14 +475,14 @@ const DashboardBrands: React.FC = () => {
                             {expanded
                               ? <ChevronUp className="w-4 h-4 me-1" />
                               : <ChevronDown className="w-4 h-4 me-1" />}
-                            {isRTL ? 'المنتجات' : 'Products'}
+                            {pickBi(isRTL, 'المنتجات', 'Products')}
                           </Button>
                         )}
                         {b?.slug && (
                           <Button asChild variant="ghost" size="sm">
                             <Link to={`/brands/${b.slug}`} target="_blank" rel="noopener">
                               <ExternalLink className="w-4 h-4 me-1" />
-                              {isRTL ? 'الصفحة العامة' : 'Public page'}
+                              {pickBi(isRTL, 'الصفحة العامة', 'Public page')}
                             </Link>
                           </Button>
                         )}
@@ -506,7 +494,7 @@ const DashboardBrands: React.FC = () => {
                           data-testid="unlink-brand-btn"
                         >
                           <Unlink className="w-4 h-4 me-1" />
-                          {isRTL ? 'إلغاء الربط' : 'Unlink'}
+                          {pickBi(isRTL, 'إلغاء الربط', 'Unlink')}
                         </Button>
                       </div>
                     </div>
@@ -525,7 +513,7 @@ const DashboardBrands: React.FC = () => {
         <Card data-testid="approved-brands-browser">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              {isRTL ? 'سجل العلامات المعتمدة' : 'Approved brand catalog'}
+              {pickBi(isRTL, 'سجل العلامات المعتمدة', 'Approved brand catalog')}
             </CardTitle>
             <div className="grid md:grid-cols-3 gap-2 mt-3">
               <div className="relative md:col-span-1">
@@ -533,14 +521,14 @@ const DashboardBrands: React.FC = () => {
                 <Input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder={isRTL ? 'بحث بالاسم…' : 'Search by name…'}
+                  placeholder={pickBi(isRTL, 'بحث بالاسم…', 'Search by name…')}
                   className="ps-9 h-10"
                 />
               </div>
               <Select value={sectorId} onValueChange={setSectorId}>
-                <SelectTrigger className="h-10"><SelectValue placeholder={isRTL ? 'القطاع' : 'Sector'} /></SelectTrigger>
+                <SelectTrigger className="h-10"><SelectValue placeholder={pickBi(isRTL, 'القطاع', 'Sector')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع القطاعات' : 'All sectors'}</SelectItem>
+                  <SelectItem value="all">{pickBi(isRTL, 'جميع القطاعات', 'All sectors')}</SelectItem>
                   {(filterOpts?.sectors ?? []).map((sid) => {
                     const lbl = sectorLabelMap.get(sid);
                     return (
@@ -552,9 +540,9 @@ const DashboardBrands: React.FC = () => {
                 </SelectContent>
               </Select>
               <Select value={countryCode} onValueChange={setCountryCode}>
-                <SelectTrigger className="h-10"><SelectValue placeholder={isRTL ? 'بلد المنشأ' : 'Country'} /></SelectTrigger>
+                <SelectTrigger className="h-10"><SelectValue placeholder={pickBi(isRTL, 'بلد المنشأ', 'Country')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع البلدان' : 'All countries'}</SelectItem>
+                  <SelectItem value="all">{pickBi(isRTL, 'جميع البلدان', 'All countries')}</SelectItem>
                   {(filterOpts?.countries ?? []).map((c) => (
                     <SelectItem key={c.code} value={c.code}>
                       {locale === 'ar' ? (c.name_ar ?? c.code) : (c.name_en ?? c.code)}
@@ -571,19 +559,17 @@ const DashboardBrands: React.FC = () => {
               </div>
             ) : catalogError ? (
               <p className="text-sm text-destructive text-center py-6">
-                {isRTL ? 'تعذّر تحميل العلامات. حاول مرة أخرى.' : 'Failed to load brands. Please try again.'}
+                {pickBi(isRTL, 'تعذّر تحميل العلامات. حاول مرة أخرى.', 'Failed to load brands. Please try again.')}
               </p>
             ) : catalog.length === 0 ? (
               <DashboardEmptyState
                 icon={<Search className="w-8 h-8" />}
-                title={isRTL ? 'لا توجد علامات مطابقة' : 'No matching brands'}
-                description={isRTL
-                  ? 'جرّب تعديل البحث أو اطلب إضافة علامة جديدة.'
-                  : 'Try adjusting your search, or request a new brand.'}
+                title={pickBi(isRTL, 'لا توجد علامات مطابقة', 'No matching brands')}
+                description={pickBi(isRTL, 'جرّب تعديل البحث أو اطلب إضافة علامة جديدة.', 'Try adjusting your search, or request a new brand.')}
                 primaryAction={
                   <Button variant="outline" onClick={() => setRequestOpen(true)}>
                     <PackagePlus className="w-4 h-4 me-2" />
-                    {isRTL ? 'طلب علامة جديدة' : 'Request new brand'}
+                    {pickBi(isRTL, 'طلب علامة جديدة', 'Request new brand')}
                   </Button>
                 }
               />
@@ -623,7 +609,7 @@ const DashboardBrands: React.FC = () => {
                           <Button asChild variant="ghost" size="sm">
                             <Link to={`/brands/${b.slug}`} target="_blank" rel="noopener">
                               <ExternalLink className="w-3.5 h-3.5 me-1" />
-                              {isRTL ? 'العرض العام' : 'View'}
+                              {pickBi(isRTL, 'العرض العام', 'View')}
                             </Link>
                           </Button>
                         ) : <span />}
@@ -632,7 +618,7 @@ const DashboardBrands: React.FC = () => {
                           size="sm"
                           onClick={() => {
                             if (!businessId) {
-                              toast.error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
+                              toast.error(pickBi(isRTL, 'لا توجد منشأة نشطة', 'No active business'));
                               return;
                             }
                             // Pre-select the services already linked to this
@@ -647,8 +633,8 @@ const DashboardBrands: React.FC = () => {
                         >
                           <Link2 className="w-3.5 h-3.5 me-1" />
                           {alreadyLinked
-                            ? (isRTL ? 'ربط إضافي' : 'Link again')
-                            : (isRTL ? 'ربط' : 'Link')}
+                            ? (pickBi(isRTL, 'ربط إضافي', 'Link again'))
+                            : (pickBi(isRTL, 'ربط', 'Link'))}
                         </Button>
                       </div>
                       {panelOpen && (
@@ -656,7 +642,7 @@ const DashboardBrands: React.FC = () => {
                           <div className="flex items-center justify-between">
                             <Label className="text-xs flex items-center gap-1">
                               <Layers className="w-3 h-3" />
-                              {isRTL ? 'اختر تخصصاتك المرتبطة بهذه العلامة' : 'Pick specializations for this brand'}
+                              {pickBi(isRTL, 'اختر تخصصاتك المرتبطة بهذه العلامة', 'Pick specializations for this brand')}
                             </Label>
                             {services.length > 0 && (
                               <button
@@ -670,16 +656,14 @@ const DashboardBrands: React.FC = () => {
                               >
                                 <CheckSquare className="inline w-3 h-3 me-1" />
                                 {linkPanel?.serviceIds.length === services.length
-                                  ? (isRTL ? 'إلغاء تحديد الكل' : 'Clear all')
-                                  : (isRTL ? 'تحديد الكل' : 'Select all')}
+                                  ? (pickBi(isRTL, 'إلغاء تحديد الكل', 'Clear all'))
+                                  : (pickBi(isRTL, 'تحديد الكل', 'Select all'))}
                               </button>
                             )}
                           </div>
                           {services.length === 0 ? (
                             <p className="text-xs text-muted-foreground">
-                              {isRTL
-                                ? 'لا توجد تخصصات نشطة. أضف خدمة من '
-                                : 'No active specializations. Add one from '}
+                              {pickBi(isRTL, 'لا توجد تخصصات نشطة. أضف خدمة من ', 'No active specializations. Add one from ')}
                               <Link to="/dashboard/services" className="text-primary underline">
                                 /dashboard/services
                               </Link>
@@ -712,13 +696,11 @@ const DashboardBrands: React.FC = () => {
                               </div>
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-[11px] text-muted-foreground">
-                                  {isRTL
-                                    ? `محدّد: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`
-                                    : `Selected: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`}
+                                  {pickBi(isRTL, `محدّد: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`, `Selected: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`)}
                                 </span>
                                 <div className="flex gap-2">
                                   <Button variant="ghost" size="sm" onClick={() => setLinkPanel(null)}>
-                                    {isRTL ? 'إلغاء' : 'Cancel'}
+                                    {pickBi(isRTL, 'إلغاء', 'Cancel')}
                                   </Button>
                                   <Button
                                     size="sm"
@@ -726,7 +708,7 @@ const DashboardBrands: React.FC = () => {
                                     onClick={() => linkPanel && linkMut.mutate(linkPanel)}
                                     data-testid="confirm-link-btn"
                                   >
-                                    {isRTL ? 'تأكيد الربط' : 'Confirm links'}
+                                    {pickBi(isRTL, 'تأكيد الربط', 'Confirm links')}
                                   </Button>
                                 </div>
                               </div>
@@ -746,7 +728,7 @@ const DashboardBrands: React.FC = () => {
         <Card data-testid="my-brand-requests-panel">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              {isRTL ? 'طلباتي للعلامات' : 'My brand requests'}
+              {pickBi(isRTL, 'طلباتي للعلامات', 'My brand requests')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -755,10 +737,8 @@ const DashboardBrands: React.FC = () => {
             ) : myRequests.length === 0 ? (
               <DashboardEmptyState
                 icon={<Clock className="w-8 h-8" />}
-                title={isRTL ? 'لا توجد طلبات بعد' : 'No requests yet'}
-                description={isRTL
-                  ? 'يمكنك طلب إضافة علامة جديدة في أي وقت لتُراجعها الإدارة.'
-                  : 'You can request a new brand at any time for admin review.'}
+                title={pickBi(isRTL, 'لا توجد طلبات بعد', 'No requests yet')}
+                description={pickBi(isRTL, 'يمكنك طلب إضافة علامة جديدة في أي وقت لتُراجعها الإدارة.', 'You can request a new brand at any time for admin review.')}
               />
             ) : (
               <div className="space-y-2">
@@ -809,12 +789,10 @@ const DashboardBrands: React.FC = () => {
           <CardHeader className="pb-3 flex flex-row items-start justify-between gap-3">
             <div>
               <CardTitle className="text-base">
-                {isRTL ? 'طلبات منتجات العلامات' : 'Brand product requests'}
+                {pickBi(isRTL, 'طلبات منتجات العلامات', 'Brand product requests')}
               </CardTitle>
               <CardDescription>
-                {isRTL
-                  ? 'اقترح منتجاً جديداً لإحدى علاماتك المرتبطة. تخضع جميع الاقتراحات لموافقة الإدارة قبل ظهورها في الكتالوج المركزي.'
-                  : 'Suggest a new product for one of your linked brands. All proposals are reviewed by admins before they appear in the central catalog.'}
+                {pickBi(isRTL, 'اقترح منتجاً جديداً لإحدى علاماتك المرتبطة. تخضع جميع الاقتراحات لموافقة الإدارة قبل ظهورها في الكتالوج المركزي.', 'Suggest a new product for one of your linked brands. All proposals are reviewed by admins before they appear in the central catalog.')}
               </CardDescription>
             </div>
             <Button
@@ -822,11 +800,11 @@ const DashboardBrands: React.FC = () => {
               size="sm"
               onClick={() => {
                 if (!businessId) {
-                  toast.error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
+                  toast.error(pickBi(isRTL, 'لا توجد منشأة نشطة', 'No active business'));
                   return;
                 }
                 if (linkedBrandOptions.length === 0) {
-                  toast.error(isRTL ? 'اربط علامة أولاً' : 'Link a brand first');
+                  toast.error(pickBi(isRTL, 'اربط علامة أولاً', 'Link a brand first'));
                   return;
                 }
                 setProdBrandId(linkedBrandOptions[0]?.id ?? '');
@@ -835,7 +813,7 @@ const DashboardBrands: React.FC = () => {
               data-testid="propose-product-cta"
             >
               <Package className="w-4 h-4 me-2" />
-              {isRTL ? 'اقتراح منتج' : 'Propose product'}
+              {pickBi(isRTL, 'اقتراح منتج', 'Propose product')}
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -843,7 +821,7 @@ const DashboardBrands: React.FC = () => {
               <div className="border rounded-xl p-3 space-y-3" data-testid="product-request-form">
                 <div className="grid md:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'العلامة *' : 'Brand *'}</Label>
+                    <Label>{pickBi(isRTL, 'العلامة *', 'Brand *')}</Label>
                     <Select value={prodBrandId} onValueChange={setProdBrandId}>
                       <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -854,43 +832,43 @@ const DashboardBrands: React.FC = () => {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'رقم/كود الموديل' : 'Model number'}</Label>
+                    <Label>{pickBi(isRTL, 'رقم/كود الموديل', 'Model number')}</Label>
                     <Textarea
                       value={prodModel}
                       onChange={(e) => setProdModel(e.target.value)}
                       rows={2}
                       className="tech-content"
-                      placeholder={isRTL ? 'سطر لكل موديل (اختياري)' : 'One model per line (optional)'}
+                      placeholder={pickBi(isRTL, 'سطر لكل موديل (اختياري)', 'One model per line (optional)')}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'أسماء المنتجات بالعربية *' : 'Arabic product names *'}</Label>
+                    <Label>{pickBi(isRTL, 'أسماء المنتجات بالعربية *', 'Arabic product names *')}</Label>
                     <Textarea
                       value={prodNameAr}
                       onChange={(e) => setProdNameAr(e.target.value)}
                       rows={3}
                       dir="auto"
-                      placeholder={isRTL ? 'منتج لكل سطر — يمكنك اقتراح عدة منتجات دفعة واحدة' : 'One product per line — propose several at once'}
+                      placeholder={pickBi(isRTL, 'منتج لكل سطر — يمكنك اقتراح عدة منتجات دفعة واحدة', 'One product per line — propose several at once')}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'الأسماء بالإنجليزية' : 'English names'}</Label>
+                    <Label>{pickBi(isRTL, 'الأسماء بالإنجليزية', 'English names')}</Label>
                     <Textarea
                       value={prodNameEn}
                       onChange={(e) => setProdNameEn(e.target.value)}
                       rows={3}
                       dir="auto"
-                      placeholder={isRTL ? 'سطر لكل منتج (اختياري)' : 'One per line (optional)'}
+                      placeholder={pickBi(isRTL, 'سطر لكل منتج (اختياري)', 'One per line (optional)')}
                     />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>{isRTL ? 'وصف مختصر' : 'Short description'}</Label>
+                  <Label>{pickBi(isRTL, 'وصف مختصر', 'Short description')}</Label>
                   <Textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} rows={2} dir="auto" />
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" onClick={() => setProdOpen(false)}>
-                    {isRTL ? 'إلغاء' : 'Cancel'}
+                    {pickBi(isRTL, 'إلغاء', 'Cancel')}
                   </Button>
                   <Button
                     onClick={() => submitProduct.mutate()}
@@ -898,7 +876,7 @@ const DashboardBrands: React.FC = () => {
                     data-testid="submit-product-request-btn"
                   >
                     <Send className="w-4 h-4 me-2" />
-                    {isRTL ? 'إرسال للمراجعة' : 'Submit for review'}
+                    {pickBi(isRTL, 'إرسال للمراجعة', 'Submit for review')}
                   </Button>
                 </div>
               </div>
@@ -909,10 +887,8 @@ const DashboardBrands: React.FC = () => {
             ) : myProductRequests.length === 0 ? (
               <DashboardEmptyState
                 icon={<Package className="w-8 h-8" />}
-                title={isRTL ? 'لا توجد طلبات منتجات' : 'No product requests yet'}
-                description={isRTL
-                  ? 'اقترح منتجاً جديداً لإثراء الكتالوج المركزي للعلامات.'
-                  : 'Propose a new product to enrich the central brand catalog.'}
+                title={pickBi(isRTL, 'لا توجد طلبات منتجات', 'No product requests yet')}
+                description={pickBi(isRTL, 'اقترح منتجاً جديداً لإثراء الكتالوج المركزي للعلامات.', 'Propose a new product to enrich the central brand catalog.')}
               />
             ) : (
               <div className="space-y-2">

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { pickBi } from "@/components/common/Bilingual";
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -164,7 +165,7 @@ const SortableProfileRow = React.memo(({
             <div className={`w-2 h-2 rounded-full shrink-0 ${profile.status === 'published' ? 'bg-success' : 'bg-warning'}`} />
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">
-            {profile.status === 'published' ? (isRTL ? 'منشور' : 'Published') : (isRTL ? 'مسودة' : 'Draft')}
+            {profile.status === 'published' ? (pickBi(isRTL, 'منشور', 'Published')) : (pickBi(isRTL, 'مسودة', 'Draft'))}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -178,15 +179,15 @@ const SortableProfileRow = React.memo(({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-44">
-            <DropdownMenuItem onClick={() => onEdit(profile)} className="gap-2 text-xs"><Pencil className="w-3.5 h-3.5" />{isRTL ? 'تعديل' : 'Edit'}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDuplicate(profile)} className="gap-2 text-xs"><Copy className="w-3.5 h-3.5" />{isRTL ? 'تكرار' : 'Duplicate'}</DropdownMenuItem>
+          <DropdownMenuContent align={pickBi(isRTL, 'start', 'end')} className="w-44">
+            <DropdownMenuItem onClick={() => onEdit(profile)} className="gap-2 text-xs"><Pencil className="w-3.5 h-3.5" />{pickBi(isRTL, 'تعديل', 'Edit')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDuplicate(profile)} className="gap-2 text-xs"><Copy className="w-3.5 h-3.5" />{pickBi(isRTL, 'تكرار', 'Duplicate')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onToggleStatus(profile.id, profile.status === 'published' ? 'draft' : 'published')} className="gap-2 text-xs">
               {profile.status === 'published' ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              {profile.status === 'published' ? (isRTL ? 'إلغاء النشر' : 'Unpublish') : (isRTL ? 'نشر' : 'Publish')}
+              {profile.status === 'published' ? (pickBi(isRTL, 'إلغاء النشر', 'Unpublish')) : (pickBi(isRTL, 'نشر', 'Publish'))}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onDelete(profile.id)} className="gap-2 text-xs text-destructive"><Trash2 className="w-3.5 h-3.5" />{isRTL ? 'حذف' : 'Delete'}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDelete(profile.id)} className="gap-2 text-xs text-destructive"><Trash2 className="w-3.5 h-3.5" />{pickBi(isRTL, 'حذف', 'Delete')}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -284,7 +285,7 @@ const DashboardProfileSystems = () => {
 
   const handleDuplicate = useCallback((p) => {
     setForm({
-      name_ar: p.name_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
+      name_ar: p.name_ar + (pickBi(isRTL, ' (نسخة)', ' (copy)')),
       name_en: (p.name_en || '') + ' (copy)', slug: p.slug + '-copy',
       description_ar: p.description_ar || '', description_en: p.description_en || '',
       category: p.category, profile_type: p.profile_type,
@@ -332,7 +333,7 @@ const DashboardProfileSystems = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] }); toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved'); closeForm(); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] }); toast.success(pickBi(isRTL, 'تم الحفظ بنجاح', 'Saved')); closeForm(); },
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -341,8 +342,8 @@ const DashboardProfileSystems = () => {
       const { error } = await supabase.from('profile_systems').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] }); setDeletingId(null); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
-    onError: () => toast.error(isRTL ? 'فشل الحذف' : 'Delete failed'),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] }); setDeletingId(null); toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted')); },
+    onError: () => toast.error(pickBi(isRTL, 'فشل الحذف', 'Delete failed')),
   });
 
   const toggleStatusMutation = useMutation({
@@ -350,7 +351,7 @@ const DashboardProfileSystems = () => {
       const { error } = await supabase.from('profile_systems').update({ status }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] }); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] }); toast.success(pickBi(isRTL, 'تم التحديث', 'Updated')); },
   });
 
   const reorderMutation = useMutation({
@@ -411,24 +412,24 @@ const DashboardProfileSystems = () => {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <Layers className="w-5 h-5 text-primary" />
                 </div>
-                {isRTL ? 'إدارة القطاعات' : 'Profile Systems'}
+                {pickBi(isRTL, 'إدارة القطاعات', 'Profile Systems')}
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                {isRTL ? 'إضافة وإدارة قطاعات الألمنيوم والمواد مع التقييمات الفنية' : 'Manage aluminum & material profiles with technical ratings'}
+                {pickBi(isRTL, 'إضافة وإدارة قطاعات الألمنيوم والمواد مع التقييمات الفنية', 'Manage aluminum & material profiles with technical ratings')}
               </p>
             </div>
             <Button onClick={() => { closeForm(); setShowForm(true); }} className="gap-2 rounded-xl shadow-sm">
-              <Plus className="w-4 h-4" />{isRTL ? 'إضافة قطاع' : 'Add Profile'}
+              <Plus className="w-4 h-4" />{pickBi(isRTL, 'إضافة قطاع', 'Add Profile')}
             </Button>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: isRTL ? 'إجمالي القطاعات' : 'Total Profiles', value: stats.total, icon: Layers, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Eye, color: 'text-success bg-success/10' },
-              { label: isRTL ? 'مسودة' : 'Draft', value: stats.draft, icon: FileText, color: 'text-warning bg-warning/10' },
-              { label: isRTL ? 'متوسط التقييم' : 'Avg Rating', value: `${stats.avgRating}/10`, icon: TrendingUp, color: 'text-info bg-info/10' },
+              { label: pickBi(isRTL, 'إجمالي القطاعات', 'Total Profiles'), value: stats.total, icon: Layers, color: 'text-primary bg-primary/10' },
+              { label: pickBi(isRTL, 'منشور', 'Published'), value: stats.published, icon: Eye, color: 'text-success bg-success/10' },
+              { label: pickBi(isRTL, 'مسودة', 'Draft'), value: stats.draft, icon: FileText, color: 'text-warning bg-warning/10' },
+              { label: pickBi(isRTL, 'متوسط التقييم', 'Avg Rating'), value: `${stats.avgRating}/10`, icon: TrendingUp, color: 'text-info bg-info/10' },
             ].map((s, i) => (
               <Card key={i} className="border-border/50">
                 <CardContent className="p-3 flex items-center gap-3">
@@ -447,7 +448,7 @@ const DashboardProfileSystems = () => {
           {/* Category quick filters */}
           <div className="flex flex-wrap gap-2">
             <Button variant={filterCategory === 'all' ? 'default' : 'outline'} size="sm" className="h-8 rounded-lg text-xs gap-1.5" onClick={() => setFilterCategory('all')}>
-              <Filter className="w-3 h-3" />{isRTL ? 'الكل' : 'All'} ({stats.total})
+              <Filter className="w-3 h-3" />{pickBi(isRTL, 'الكل', 'All')} ({stats.total})
             </Button>
             {categoryOptions.map(c => (
               <Button key={c.value} variant={filterCategory === c.value ? 'default' : 'outline'} size="sm" className="h-8 rounded-lg text-xs gap-1.5" onClick={() => setFilterCategory(c.value)}>
@@ -464,7 +465,7 @@ const DashboardProfileSystems = () => {
                   <div className="flex items-center gap-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       {editId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                      {editId ? (isRTL ? 'تعديل القطاع' : 'Edit Profile') : (isRTL ? 'قطاع جديد' : 'New Profile')}
+                      {editId ? (pickBi(isRTL, 'تعديل القطاع', 'Edit Profile')) : (pickBi(isRTL, 'قطاع جديد', 'New Profile'))}
                     </CardTitle>
                     <Badge variant="outline" className="text-[10px] gap-1">
                       <TrendingUp className="w-3 h-3" /> {formCompletion}%
@@ -477,59 +478,59 @@ const DashboardProfileSystems = () => {
               <CardContent>
                 <Tabs value={formTab} onValueChange={setFormTab}>
                   <TabsList className="mb-4 w-full justify-start">
-                    <TabsTrigger value="basic" className="text-xs gap-1.5"><FileText className="w-3.5 h-3.5" />{isRTL ? 'أساسي' : 'Basic'}</TabsTrigger>
-                    <TabsTrigger value="ratings" className="text-xs gap-1.5"><TrendingUp className="w-3.5 h-3.5" />{isRTL ? 'التقييمات' : 'Ratings'}</TabsTrigger>
-                    <TabsTrigger value="specs" className="text-xs gap-1.5"><Ruler className="w-3.5 h-3.5" />{isRTL ? 'المواصفات' : 'Specs'}</TabsTrigger>
-                    <TabsTrigger value="media" className="text-xs gap-1.5"><Image className="w-3.5 h-3.5" />{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                    <TabsTrigger value="basic" className="text-xs gap-1.5"><FileText className="w-3.5 h-3.5" />{pickBi(isRTL, 'أساسي', 'Basic')}</TabsTrigger>
+                    <TabsTrigger value="ratings" className="text-xs gap-1.5"><TrendingUp className="w-3.5 h-3.5" />{pickBi(isRTL, 'التقييمات', 'Ratings')}</TabsTrigger>
+                    <TabsTrigger value="specs" className="text-xs gap-1.5"><Ruler className="w-3.5 h-3.5" />{pickBi(isRTL, 'المواصفات', 'Specs')}</TabsTrigger>
+                    <TabsTrigger value="media" className="text-xs gap-1.5"><Image className="w-3.5 h-3.5" />{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="basic" className="space-y-4 mt-0">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم (عربي) *' : 'Name (Arabic) *'}</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9" /></div>
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} className="h-9" dir="ltr" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'الاسم (عربي) *', 'Name (Arabic) *')}</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (English)')}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} className="h-9" dir="ltr" /></div>
                     </div>
                     <div className="space-y-1.5"><Label className="text-xs">Slug</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} className="h-9" dir="ltr" placeholder="auto" /></div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1.5">
-                        <Label className="text-xs">{isRTL ? 'الفئة' : 'Category'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'الفئة', 'Category')}</Label>
                         <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
                           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                           <SelectContent>{categoryOptions.map(c => <SelectItem key={c.value} value={c.value}>{c.icon} {isRTL ? c.ar : c.en}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs">{isRTL ? 'النوع' : 'Type'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'النوع', 'Type')}</Label>
                         <Select value={form.profile_type} onValueChange={v => setForm(f => ({ ...f, profile_type: v }))}>
                           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="market">{isRTL ? 'قطاع سوق' : 'Market'}</SelectItem>
-                            <SelectItem value="custom">{isRTL ? 'تصميم خاص' : 'Custom'}</SelectItem>
+                            <SelectItem value="market">{pickBi(isRTL, 'قطاع سوق', 'Market')}</SelectItem>
+                            <SelectItem value="custom">{pickBi(isRTL, 'تصميم خاص', 'Custom')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs">{isRTL ? 'مستوى التوصية' : 'Recommendation'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'مستوى التوصية', 'Recommendation')}</Label>
                         <Select value={form.recommendation_level} onValueChange={v => setForm(f => ({ ...f, recommendation_level: v }))}>
                           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="standard">{isRTL ? 'قياسي' : 'Standard'}</SelectItem>
-                            <SelectItem value="recommended">⭐ {isRTL ? 'موصى به' : 'Recommended'}</SelectItem>
-                            <SelectItem value="premium">🏆 {isRTL ? 'احترافي' : 'Premium'}</SelectItem>
+                            <SelectItem value="standard">{pickBi(isRTL, 'قياسي', 'Standard')}</SelectItem>
+                            <SelectItem value="recommended">⭐ {pickBi(isRTL, 'موصى به', 'Recommended')}</SelectItem>
+                            <SelectItem value="premium">🏆 {pickBi(isRTL, 'احترافي', 'Premium')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} className="text-sm" /></div>
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} className="text-sm" dir="ltr" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'الوصف (عربي)', 'Description (AR)')}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} className="text-sm" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (EN)')}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} className="text-sm" dir="ltr" /></div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Label className="text-xs">{isRTL ? 'الحالة' : 'Status'}</Label>
+                      <Label className="text-xs">{pickBi(isRTL, 'الحالة', 'Status')}</Label>
                       <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
                         <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
-                          <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
+                          <SelectItem value="published">{pickBi(isRTL, 'منشور', 'Published')}</SelectItem>
+                          <SelectItem value="draft">{pickBi(isRTL, 'مسودة', 'Draft')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -537,43 +538,43 @@ const DashboardProfileSystems = () => {
 
                   <TabsContent value="ratings" className="space-y-5 mt-0">
                     <div className="p-4 rounded-xl bg-muted/30 space-y-4">
-                      <h4 className="font-heading font-bold text-sm flex items-center gap-2"><TrendingUp className="w-4 h-4" />{isRTL ? 'التقييمات الفنية' : 'Technical Ratings'}</h4>
-                      <RatingSlider label={isRTL ? 'العزل الحراري' : 'Thermal Insulation'} icon={Thermometer} color="text-destructive" value={form.thermal_insulation_rating} onChange={v => setForm(f => ({ ...f, thermal_insulation_rating: v }))} />
-                      <RatingSlider label={isRTL ? 'العزل الصوتي' : 'Sound Insulation'} icon={Volume2} color="text-info" value={form.sound_insulation_rating} onChange={v => setForm(f => ({ ...f, sound_insulation_rating: v }))} />
-                      <RatingSlider label={isRTL ? 'قوة التحمل' : 'Strength'} icon={Shield} color="text-success" value={form.strength_rating} onChange={v => setForm(f => ({ ...f, strength_rating: v }))} />
+                      <h4 className="font-heading font-bold text-sm flex items-center gap-2"><TrendingUp className="w-4 h-4" />{pickBi(isRTL, 'التقييمات الفنية', 'Technical Ratings')}</h4>
+                      <RatingSlider label={pickBi(isRTL, 'العزل الحراري', 'Thermal Insulation')} icon={Thermometer} color="text-destructive" value={form.thermal_insulation_rating} onChange={v => setForm(f => ({ ...f, thermal_insulation_rating: v }))} />
+                      <RatingSlider label={pickBi(isRTL, 'العزل الصوتي', 'Sound Insulation')} icon={Volume2} color="text-info" value={form.sound_insulation_rating} onChange={v => setForm(f => ({ ...f, sound_insulation_rating: v }))} />
+                      <RatingSlider label={pickBi(isRTL, 'قوة التحمل', 'Strength')} icon={Shield} color="text-success" value={form.strength_rating} onChange={v => setForm(f => ({ ...f, strength_rating: v }))} />
                     </div>
                     <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 text-xs text-muted-foreground">
-                      💡 {isRTL ? 'تحرك المؤشر من 0 إلى 10 لتقييم الخاصية الفنية. القيمة الافتراضية 5.' : 'Slide from 0 to 10 to rate. Default is 5.'}
+                      💡 {pickBi(isRTL, 'تحرك المؤشر من 0 إلى 10 لتقييم الخاصية الفنية. القيمة الافتراضية 5.', 'Slide from 0 to 10 to rate. Default is 5.')}
                     </div>
                   </TabsContent>
 
                   <TabsContent value="specs" className="space-y-4 mt-0">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Ruler className="w-3 h-3" />{isRTL ? 'أقصى ارتفاع (mm)' : 'Max Height (mm)'}</Label><Input type="number" value={form.max_height_mm} onChange={e => setForm(f => ({ ...f, max_height_mm: e.target.value }))} className="h-9" dir="ltr" /></div>
-                      <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Ruler className="w-3 h-3" />{isRTL ? 'أقصى عرض (mm)' : 'Max Width (mm)'}</Label><Input type="number" value={form.max_width_mm} onChange={e => setForm(f => ({ ...f, max_width_mm: e.target.value }))} className="h-9" dir="ltr" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Ruler className="w-3 h-3" />{pickBi(isRTL, 'أقصى ارتفاع (mm)', 'Max Height (mm)')}</Label><Input type="number" value={form.max_height_mm} onChange={e => setForm(f => ({ ...f, max_height_mm: e.target.value }))} className="h-9" dir="ltr" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Ruler className="w-3 h-3" />{pickBi(isRTL, 'أقصى عرض (mm)', 'Max Width (mm)')}</Label><Input type="number" value={form.max_width_mm} onChange={e => setForm(f => ({ ...f, max_width_mm: e.target.value }))} className="h-9" dir="ltr" /></div>
                     </div>
-                    <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Palette className="w-3 h-3" />{isRTL ? 'الألوان المتاحة (مفصولة بفاصلة)' : 'Available Colors (comma-separated)'}</Label><Input value={form.available_colors} onChange={e => setForm(f => ({ ...f, available_colors: e.target.value }))} className="h-9" placeholder={isRTL ? 'أبيض, رمادي, أسود, بني' : 'White, Gray, Black, Brown'} /></div>
+                    <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Palette className="w-3 h-3" />{pickBi(isRTL, 'الألوان المتاحة (مفصولة بفاصلة)', 'Available Colors (comma-separated)')}</Label><Input value={form.available_colors} onChange={e => setForm(f => ({ ...f, available_colors: e.target.value }))} className="h-9" placeholder={pickBi(isRTL, 'أبيض, رمادي, أسود, بني', 'White, Gray, Black, Brown')} /></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'المميزات (سطر لكل ميزة)' : 'Features AR (one per line)'}</Label><Textarea value={form.features_ar} onChange={e => setForm(f => ({ ...f, features_ar: e.target.value }))} rows={4} className="text-sm" placeholder={isRTL ? 'عزل حراري ممتاز\nمقاوم للتآكل' : ''} /></div>
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'المميزات (إنجليزي)' : 'Features EN (one per line)'}</Label><Textarea value={form.features_en} onChange={e => setForm(f => ({ ...f, features_en: e.target.value }))} rows={4} className="text-sm" dir="ltr" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'المميزات (سطر لكل ميزة)', 'Features AR (one per line)')}</Label><Textarea value={form.features_ar} onChange={e => setForm(f => ({ ...f, features_ar: e.target.value }))} rows={4} className="text-sm" placeholder={pickBi(isRTL, 'عزل حراري ممتاز\nمقاوم للتآكل', '')} /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'المميزات (إنجليزي)', 'Features EN (one per line)')}</Label><Textarea value={form.features_en} onChange={e => setForm(f => ({ ...f, features_en: e.target.value }))} rows={4} className="text-sm" dir="ltr" /></div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاستخدامات (عربي)' : 'Applications (AR)'}</Label><Textarea value={form.applications_ar} onChange={e => setForm(f => ({ ...f, applications_ar: e.target.value }))} rows={2} className="text-sm" /></div>
-                      <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاستخدامات (إنجليزي)' : 'Applications (EN)'}</Label><Textarea value={form.applications_en} onChange={e => setForm(f => ({ ...f, applications_en: e.target.value }))} rows={2} className="text-sm" dir="ltr" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'الاستخدامات (عربي)', 'Applications (AR)')}</Label><Textarea value={form.applications_ar} onChange={e => setForm(f => ({ ...f, applications_ar: e.target.value }))} rows={2} className="text-sm" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'الاستخدامات (إنجليزي)', 'Applications (EN)')}</Label><Textarea value={form.applications_en} onChange={e => setForm(f => ({ ...f, applications_en: e.target.value }))} rows={2} className="text-sm" dir="ltr" /></div>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="media" className="space-y-4 mt-0">
-                    <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Image className="w-3 h-3" />{isRTL ? 'رابط صورة الغلاف' : 'Cover Image URL'}</Label><Input value={form.cover_image_url} onChange={e => setForm(f => ({ ...f, cover_image_url: e.target.value }))} className="h-9" dir="ltr" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Image className="w-3 h-3" />{pickBi(isRTL, 'رابط صورة الغلاف', 'Cover Image URL')}</Label><Input value={form.cover_image_url} onChange={e => setForm(f => ({ ...f, cover_image_url: e.target.value }))} className="h-9" dir="ltr" /></div>
                     {form.cover_image_url && (
                       <div className="w-full h-40 rounded-xl overflow-hidden bg-muted">
-                        <img src={form.cover_image_url} alt={isRTL ? 'معاينة صورة الغلاف' : 'Cover image preview'} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
+                        <img src={form.cover_image_url} alt={pickBi(isRTL, 'معاينة صورة الغلاف', 'Cover image preview')} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                       </div>
                     )}
-                    <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Package className="w-3 h-3" />{isRTL ? 'رابط الشعار' : 'Logo URL'}</Label><Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} className="h-9" dir="ltr" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Package className="w-3 h-3" />{pickBi(isRTL, 'رابط الشعار', 'Logo URL')}</Label><Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} className="h-9" dir="ltr" /></div>
                     {form.logo_url && (
                       <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted border">
-                        <img src={form.logo_url} alt={isRTL ? 'معاينة الشعار' : 'Logo preview'} className="w-full h-full object-contain p-2" loading="lazy" decoding="async"/>
+                        <img src={form.logo_url} alt={pickBi(isRTL, 'معاينة الشعار', 'Logo preview')} className="w-full h-full object-contain p-2" loading="lazy" decoding="async"/>
                       </div>
                     )}
                   </TabsContent>
@@ -582,9 +583,9 @@ const DashboardProfileSystems = () => {
                 <div className="flex gap-2 mt-4">
                   <Button onClick={() => saveMutation.mutate()} disabled={!form.name_ar.trim() || saveMutation.isPending} className="gap-2 flex-1 rounded-lg">
                     {saveMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {editId ? (isRTL ? 'تحديث القطاع' : 'Update Profile') : (isRTL ? 'إضافة القطاع' : 'Add Profile')}
+                    {editId ? (pickBi(isRTL, 'تحديث القطاع', 'Update Profile')) : (pickBi(isRTL, 'إضافة القطاع', 'Add Profile'))}
                   </Button>
-                  <Button variant="outline" onClick={closeForm} className="rounded-lg">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button variant="outline" onClick={closeForm} className="rounded-lg">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -595,20 +596,20 @@ const DashboardProfileSystems = () => {
             <CardContent className="p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="relative flex-1">
                 <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '10px' }} />
-                <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={isRTL ? 'بحث في القطاعات...' : 'Search profiles...'} className="ps-9 h-9" />
+                <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={pickBi(isRTL, 'بحث في القطاعات...', 'Search profiles...')} className="ps-9 h-9" />
                 {search && <button onClick={() => setSearch('')} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}><X className="w-4 h-4" /></button>}
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="h-9 w-full sm:w-36"><SelectValue placeholder={isRTL ? 'الحالة' : 'Status'} /></SelectTrigger>
+                <SelectTrigger className="h-9 w-full sm:w-36"><SelectValue placeholder={pickBi(isRTL, 'الحالة', 'Status')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع الحالات' : 'All Status'}</SelectItem>
-                  <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
-                  <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
+                  <SelectItem value="all">{pickBi(isRTL, 'جميع الحالات', 'All Status')}</SelectItem>
+                  <SelectItem value="published">{pickBi(isRTL, 'منشور', 'Published')}</SelectItem>
+                  <SelectItem value="draft">{pickBi(isRTL, 'مسودة', 'Draft')}</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-1.5">
-                <Tooltip><TooltipTrigger asChild><Button variant={viewMode === 'list' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{isRTL ? 'قائمة' : 'List'}</TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{isRTL ? 'شبكي' : 'Grid'}</TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button variant={viewMode === 'list' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{pickBi(isRTL, 'قائمة', 'List')}</TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger asChild><Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{pickBi(isRTL, 'شبكي', 'Grid')}</TooltipContent></Tooltip>
               </div>
             </CardContent>
           </Card>
@@ -619,8 +620,8 @@ const DashboardProfileSystems = () => {
           ) : filtered.length === 0 ? (
             <Card><CardContent className="p-12 text-center">
               <Layers className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-muted-foreground">{isRTL ? 'لا توجد قطاعات' : 'No profiles found'}</p>
-              <Button variant="outline" className="mt-4 gap-2" onClick={() => { closeForm(); setShowForm(true); }}><Plus className="w-4 h-4" />{isRTL ? 'إضافة قطاع' : 'Add Profile'}</Button>
+              <p className="text-muted-foreground">{pickBi(isRTL, 'لا توجد قطاعات', 'No profiles found')}</p>
+              <Button variant="outline" className="mt-4 gap-2" onClick={() => { closeForm(); setShowForm(true); }}><Plus className="w-4 h-4" />{pickBi(isRTL, 'إضافة قطاع', 'Add Profile')}</Button>
             </CardContent></Card>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -639,7 +640,7 @@ const DashboardProfileSystems = () => {
                       )}
                       <div className="absolute top-2 end-2 flex gap-1.5">
                         <Badge className={`text-[10px] ${p.status === 'published' ? 'bg-success text-white' : 'bg-warning text-white'}`}>
-                          {p.status === 'published' ? (isRTL ? 'منشور' : 'Published') : (isRTL ? 'مسودة' : 'Draft')}
+                          {p.status === 'published' ? (pickBi(isRTL, 'منشور', 'Published')) : (pickBi(isRTL, 'مسودة', 'Draft'))}
                         </Badge>
                         {p.recommendation_level === 'premium' && <Badge className="bg-warning text-white text-[10px]">🏆</Badge>}
                       </div>
@@ -648,7 +649,7 @@ const DashboardProfileSystems = () => {
                       </div>
                       {/* Hover actions */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button size="sm" variant="secondary" className="h-8 text-xs gap-1" onClick={() => openEdit(p)}><Pencil className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}</Button>
+                        <Button size="sm" variant="secondary" className="h-8 text-xs gap-1" onClick={() => openEdit(p)}><Pencil className="w-3 h-3" />{pickBi(isRTL, 'تعديل', 'Edit')}</Button>
                         <Button size="sm" variant="destructive" className="h-8 text-xs gap-1" onClick={() => setDeletingId(p.id)}><Trash2 className="w-3 h-3" /></Button>
                       </div>
                     </div>
@@ -671,10 +672,10 @@ const DashboardProfileSystems = () => {
               <div className="flex items-center gap-3 py-2 px-3 bg-muted/30 border-b border-border/50 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                 <span className="w-[28px]" />
                 <span className="w-16" />
-                <span className="flex-1">{isRTL ? 'القطاع' : 'Profile'}</span>
-                <span className="w-24 text-center">{isRTL ? 'الفئة' : 'Category'}</span>
-                <span className="w-20 text-center hidden sm:block">{isRTL ? 'التوصية' : 'Level'}</span>
-                <span className="w-[180px] text-center hidden lg:block">{isRTL ? 'التقييمات' : 'Ratings'}</span>
+                <span className="flex-1">{pickBi(isRTL, 'القطاع', 'Profile')}</span>
+                <span className="w-24 text-center">{pickBi(isRTL, 'الفئة', 'Category')}</span>
+                <span className="w-20 text-center hidden sm:block">{pickBi(isRTL, 'التوصية', 'Level')}</span>
+                <span className="w-[180px] text-center hidden lg:block">{pickBi(isRTL, 'التقييمات', 'Ratings')}</span>
                 <span className="w-2" />
                 <span className="w-[64px]" />
               </div>
@@ -695,8 +696,8 @@ const DashboardProfileSystems = () => {
                 </DragOverlay>
               </DndContext>
               <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/40 text-[11px] text-muted-foreground">
-                <span>{isRTL ? `${filtered.length} قطاع من أصل ${stats.total}` : `${filtered.length} of ${stats.total} profiles`}</span>
-                <span className="flex items-center gap-1.5"><GripVertical className="w-3 h-3" />{isRTL ? 'اسحب للترتيب' : 'Drag to reorder'}</span>
+                <span>{pickBi(isRTL, `${filtered.length} قطاع من أصل ${stats.total}`, `${filtered.length} of ${stats.total} profiles`)}</span>
+                <span className="flex items-center gap-1.5"><GripVertical className="w-3 h-3" />{pickBi(isRTL, 'اسحب للترتيب', 'Drag to reorder')}</span>
               </div>
             </Card>
           )}
@@ -705,13 +706,13 @@ const DashboardProfileSystems = () => {
           <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>{isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}</AlertDialogTitle>
-                <AlertDialogDescription>{isRTL ? 'هل أنت متأكد من حذف هذا القطاع؟ لا يمكن التراجع.' : 'Are you sure? This cannot be undone.'}</AlertDialogDescription>
+                <AlertDialogTitle>{pickBi(isRTL, 'تأكيد الحذف', 'Confirm Delete')}</AlertDialogTitle>
+                <AlertDialogDescription>{pickBi(isRTL, 'هل أنت متأكد من حذف هذا القطاع؟ لا يمكن التراجع.', 'Are you sure? This cannot be undone.')}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={() => deletingId && deleteMutation.mutate(deletingId)} className="bg-destructive text-destructive-foreground">
-                  {deleteMutation.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}{isRTL ? 'حذف' : 'Delete'}
+                  {deleteMutation.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}{pickBi(isRTL, 'حذف', 'Delete')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
