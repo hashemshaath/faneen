@@ -20,7 +20,9 @@ import {
 } from 'lucide-react';
 
 /* ───────── Hero ───────── */
-const AboutHero = ({ isRTL }: { isRTL: boolean }) => (
+const AboutHero = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
+  return (
   <section className="relative overflow-hidden bg-primary text-primary-foreground pt-28 sm:pt-36 pb-20 sm:pb-28">
     <div className="absolute inset-0 pointer-events-none">
       <div className="absolute -top-24 -start-24 w-[28rem] h-[28rem] rounded-full bg-accent/10 blur-3xl" />
