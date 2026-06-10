@@ -15,7 +15,7 @@ import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearc
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
 import { HOME_TRENDING, type HomeTrendingItem } from '@/components/home/v2/data/homeTaxonomy';
 import heroSlide2 from '@/assets/home/hero-slide-2.webp';
-import heroSlide3 from '@/assets/home/hero-slide-3.webp';
+import heroSlide3 from '@/assets/home/hero-slide-3-rental-1920.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 // Responsive hero variants (768/1280/1920). Without an explicit srcset the
 // browser always pulled the full 1920×1080 source even on a 412px mobile
@@ -24,9 +24,9 @@ import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 import heroSlide2_768 from '@/assets/home/hero-slide-2-768.webp';
 import heroSlide2_1280 from '@/assets/home/hero-slide-2-1280.webp';
 import heroSlide2_1920 from '@/assets/home/hero-slide-2-1920.webp';
-import heroSlide3_768 from '@/assets/home/hero-slide-3-768.webp';
-import heroSlide3_1280 from '@/assets/home/hero-slide-3-1280.webp';
-import heroSlide3_1920 from '@/assets/home/hero-slide-3-1920.webp';
+import heroSlide3_768 from '@/assets/home/hero-slide-3-rental-768.webp';
+import heroSlide3_1280 from '@/assets/home/hero-slide-3-rental-1280.webp';
+import heroSlide3_1920 from '@/assets/home/hero-slide-3-rental-1920.webp';
 import heroSlide4_768 from '@/assets/home/hero-slide-4-768.webp';
 import heroSlide4_1280 from '@/assets/home/hero-slide-4-1280.webp';
 
@@ -113,19 +113,19 @@ export const HeroV2 = () => {
     },
     {
       img: heroSlide2,
-      tagAr: 'حديد وستانلس', tagEn: 'Iron & stainless',
-      titleAr: 'تصنيع معدني بدقّة وموثوقية',
-      titleEn: 'Metal fabrication, done with precision',
-      subAr: 'ورش ومصانع تنفّذ أعمال الحديد والستانلس وفق مواصفات واضحة.',
-      subEn: 'Workshops and factories delivering steel work to clear specifications.',
+      tagAr: 'مصانع وورش متخصّصة', tagEn: 'Specialized factories & workshops',
+      titleAr: 'أفضل المصانع في كل القطاعات الصناعية',
+      titleEn: 'The best factories across every industrial sector',
+      subAr: 'تصفّح مصانع وورش موثّقة في الألمنيوم والحديد والستانلس والزجاج والخشب — وقارن العروض في مكان واحد.',
+      subEn: 'Browse verified factories and workshops across aluminum, steel, stainless, glass and wood — and compare offers in one place.',
     },
     {
       img: heroSlide3,
-      tagAr: 'نجارة وخشب', tagEn: 'Carpentry & wood',
-      titleAr: 'نجارة احترافية بتفاصيل تصنع الفرق',
-      titleEn: 'Professional carpentry with details that make the difference',
-      subAr: 'احصل على عرض سعر من نجّارين موثوقين بقربك.',
-      subEn: 'Get a quote from trusted carpenters near you.',
+      tagAr: 'تأجير المعدات', tagEn: 'Equipment rental',
+      titleAr: 'تأجير معدات المقاولات بسهولة وثقة',
+      titleEn: 'Rent construction equipment with ease and confidence',
+      subAr: 'حفّارات، شيولات، رافعات تلسكوبية، رافعات سلة، صهاريج — بأسعار شفافة وتسليم منضبط.',
+      subEn: 'Excavators, loaders, telehandlers, boom lifts and tankers — transparent pricing and on-time delivery.',
     },
     {
       img: heroSlide4,
@@ -842,7 +842,7 @@ export const HeroV2 = () => {
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
               <PrimaryCTA
                 to={ROUTES.quote}
-                label={bi('اطلب عرض سعر', 'Request a quote')}
+                label={bi('استكشف كل القطاعات الصناعية', 'Explore every industrial sector')}
                 onClick={() => trackAbClick('hero_headline')}
               />
               <Link to={ROUTES.signupProvider}>
