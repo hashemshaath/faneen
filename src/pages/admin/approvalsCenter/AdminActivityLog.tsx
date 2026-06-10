@@ -205,12 +205,12 @@ export const AdminActivityLog: React.FC<AdminActivityLogProps> = ({ externalSear
         <div className="flex flex-wrap items-center gap-2">
           {externalSearch === undefined && (
             <div className="relative flex-1 min-w-[220px]">
-              <Search className={`h-4 w-4 absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+              <Search className="h-4 w-4 absolute top-1/2 -translate-y-1/2 text-muted-foreground start-3" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={isRTL ? 'بحث: مسؤول، إجراء، كيان…' : 'Search: actor, action, entity…'}
-                className={`h-11 ${isRTL ? 'pr-9' : 'pl-9'}`}
+                className="h-11 ps-9"
                 dir="auto"
               />
             </div>
