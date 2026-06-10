@@ -1,3 +1,4 @@
+import { pickBi } from '@/components/common/Bilingual';
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,7 +23,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 
 import {
-import { pickBi } from '@/components/common/Bilingual';
   adminListBrands, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
   adminListBrandLinkSummaries, listSectorsLite,
   brandStatusLabel, verificationLabel, pick,

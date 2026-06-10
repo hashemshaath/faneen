@@ -1,3 +1,4 @@
+import { pickBi } from '@/components/common/Bilingual';
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -26,7 +27,6 @@ import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 
 import {
-import { pickBi } from '@/components/common/Bilingual';
   adminGetBrand, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
   adminMergeBrands, adminUpdateBrand,
   listBrandManufacturingCountries, listBrandSectors,

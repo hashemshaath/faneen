@@ -1,3 +1,4 @@
+import { pickBi } from '@/components/common/Bilingual';
 import React, { useMemo, useState } from 'react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -35,7 +36,6 @@ import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import SuperAdminBusinessOverridePanel from '@/components/admin/system-access/SuperAdminBusinessOverridePanel';
-import { pickBi } from '@/components/common/Bilingual';
 
 type ScopeTab = 'global' | 'account_type' | 'entity' | 'user';
 type ViewTab = 'manage' | 'audit' | 'super_override';
