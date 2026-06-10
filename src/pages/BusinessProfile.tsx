@@ -14,6 +14,7 @@ import {
   Phone,
   Shield,
   Star,
+  Tag,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -91,6 +92,9 @@ const BusinessBarcodeCard = lazy(() =>
   import("@/components/business-profile/BusinessBarcodeCard").then((m) => ({
     default: m.BusinessBarcodeCard,
   })),
+);
+const BrandsTab = lazy(() =>
+  import("@/components/business-profile/BrandsTab").then((m) => ({ default: m.BrandsTab })),
 );
 
 const TabFallback = () => <Skeleton className="h-48 w-full rounded-2xl" />;
@@ -401,6 +405,7 @@ const BusinessProfile = () => {
     canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
     canSee("requests_as_beneficiary") && { value: "requests", label: language === "ar" ? "طلبات مطروحة" : "Public requests", icon: Inbox },
     canSee("branches") && branches.length > 0 && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
+    { value: "brands", label: language === "ar" ? "العلامات التجارية" : "Brands", icon: Tag },
     canSee("reviews") && { value: "reviews", label: language === "ar" ? "التقييمات" : "Reviews", icon: Star, count: business.rating_count ?? 0 },
     canSee("contact") && { value: "contact", label: language === "ar" ? "التواصل" : "Contact", icon: Phone },
   ].filter(Boolean) as Array<{ value: string; label: string; icon: React.ElementType; count?: number }>;
@@ -610,6 +615,16 @@ const BusinessProfile = () => {
                   />
                   </TabsContent>
                 )}
+                <TabsContent value="brands" className="mt-0">
+                  <Suspense fallback={<TabFallback />}>
+                    <BrandsTab
+                      businessId={business.id}
+                      isOwner={isOwner}
+                      ownerUserId={user?.id ?? null}
+                      sectorId={(business as { sector_id?: string | null }).sector_id ?? null}
+                    />
+                  </Suspense>
+                </TabsContent>
                 {canSee("reviews") && (
                   <TabsContent value="reviews" className="mt-0">
                     <ReviewsTab business={business} />
