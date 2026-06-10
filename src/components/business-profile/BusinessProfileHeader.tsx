@@ -212,7 +212,11 @@ export const BusinessProfileHeader = ({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-3">
-                    <h1 dir="auto" className="font-heading text-base font-bold text-foreground leading-tight sm:text-3xl line-clamp-2">
+                    <h1
+                      dir="auto"
+                      data-testid="business-profile-name"
+                      className="font-heading text-base font-bold text-foreground leading-tight sm:text-3xl line-clamp-2"
+                    >
                       {name}
                     </h1>
                     <VerificationStatusBadge
@@ -235,7 +239,22 @@ export const BusinessProfileHeader = ({
                   </div>
 
                   {categoryName && (
-                    <span dir="auto" className="text-xs font-medium text-accent sm:text-sm">{categoryName}</span>
+                    <span
+                      dir="auto"
+                      data-testid="business-profile-taxonomy"
+                      className="text-xs font-medium text-accent sm:text-sm"
+                    >
+                      {primaryChips.length > 0 ? (
+                        primaryChips.map((p, i) => (
+                          <span key={p.label + i}>
+                            {i > 0 && <span aria-hidden="true"> · </span>}
+                            <span data-testid="business-profile-taxonomy-chip">{p.label}</span>
+                          </span>
+                        ))
+                      ) : (
+                        categoryName
+                      )}
+                    </span>
                   )}
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground sm:mt-3 sm:gap-x-3 sm:gap-y-1.5 sm:text-sm">

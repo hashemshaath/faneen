@@ -1,0 +1,54 @@
+name: provider-profile-taxonomy-e2e
+
+# REQUIRED CI gate: /ajanetworking must always render a real taxonomy label
+# (never "غير مصنّف") across Chromium, Firefox, and WebKit. Failure blocks merge.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: provider-profile-taxonomy-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  taxonomy-gate:
+    name: /ajanetworking taxonomy (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browser (${{ matrix.browser }})
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Run /ajanetworking taxonomy gate
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: https://qitaat.com
+        run: npx playwright test --config=playwright.cross-browser.config.ts --project=${{ matrix.browser }}
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: |
+            playwright-report-cross-browser
+            test-results-cross-browser
+          retention-days: 14
