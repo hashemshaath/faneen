@@ -327,7 +327,18 @@ const DashboardBusinessEdit: React.FC = () => {
       setDirty(false);
       qc.invalidateQueries({ queryKey: ['business-edit', user.id] });
       qc.invalidateQueries({ queryKey: ['business-completion', user.id] });
-      qc.invalidateQueries({ queryKey: ['business', form.username] });
+      // Public profile freshness — invalidate both the new and (if changed)
+      // the previous username so /{username} reflects the edit immediately.
+      const newUsername = (form.username ?? '').trim().toLowerCase();
+      const oldUsername = (business?.username ?? '').trim().toLowerCase();
+      if (newUsername) {
+        qc.invalidateQueries({ queryKey: ['business', newUsername] });
+        qc.invalidateQueries({ queryKey: ['username-kind', newUsername] });
+      }
+      if (oldUsername && oldUsername !== newUsername) {
+        qc.invalidateQueries({ queryKey: ['business', oldUsername] });
+        qc.invalidateQueries({ queryKey: ['username-kind', oldUsername] });
+      }
       // Keep /dashboard/services in sync with the changes above.
       qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
       qc.invalidateQueries({ queryKey: ['business-services-sync', form.id] });
