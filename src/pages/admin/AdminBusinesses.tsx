@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition
 import { useSearchParams } from 'react-router-dom';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { invokeBlogAiTools } from '@/modules/ai';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -495,9 +496,9 @@ const AdminBusinesses = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+      toast.success(pickBi(isRTL, 'تم التحديث', 'Updated'));
     },
-    onError: () => toast.error(isRTL ? 'فشل التحديث' : 'Update failed'),
+    onError: () => toast.error(pickBi(isRTL, 'فشل التحديث', 'Update failed')),
   });
 
   const approvalStatusMutation = useMutation({
@@ -510,9 +511,9 @@ const AdminBusinesses = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      toast.success(isRTL ? 'تم تحديث الحالة' : 'Status updated');
+      toast.success(pickBi(isRTL, 'تم تحديث الحالة', 'Status updated'));
     },
-    onError: () => toast.error(isRTL ? 'فشل تحديث الحالة' : 'Status update failed'),
+    onError: () => toast.error(pickBi(isRTL, 'فشل تحديث الحالة', 'Status update failed')),
   });
 
   const tierMutation = useMutation({
@@ -559,10 +560,10 @@ const AdminBusinesses = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      toast.success(isRTL ? 'تم تغيير العضوية' : 'Tier updated');
+      toast.success(pickBi(isRTL, 'تم تغيير العضوية', 'Tier updated'));
     },
     onError: (e: unknown) =>
-      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل تغيير العضوية' : 'Tier change failed')),
+      toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل تغيير العضوية', 'Tier change failed'))),
   });
 
   const updateBizMutation = useMutation({
@@ -617,7 +618,7 @@ const AdminBusinesses = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      toast.success(isRTL ? 'تم حفظ التعديلات' : 'Changes saved');
+      toast.success(pickBi(isRTL, 'تم حفظ التعديلات', 'Changes saved'));
       setEditingBiz(null);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -647,7 +648,7 @@ const AdminBusinesses = () => {
         if (data) { userId = data.user_id as string; label = `${data.full_name ?? ''} (${data.email ?? ''})`.trim(); }
       }
       if (!userId) {
-        setCreateForm((f: any) => ({ ...f, resolving_owner: false, owner_error: isRTL ? 'لم يتم العثور على المستخدم' : 'User not found' }));
+        setCreateForm((f: any) => ({ ...f, resolving_owner: false, owner_error: pickBi(isRTL, 'لم يتم العثور على المستخدم', 'User not found') }));
         return;
       }
       setCreateForm((f: any) => ({ ...f, resolving_owner: false, resolved_user_id: userId!, resolved_owner_label: label }));
@@ -655,7 +656,7 @@ const AdminBusinesses = () => {
       setCreateForm((f: any) => ({
         ...f,
         resolving_owner: false,
-        owner_error: e instanceof Error ? e.message : (isRTL ? 'فشل البحث' : 'Lookup failed'),
+        owner_error: e instanceof Error ? e.message : (pickBi(isRTL, 'فشل البحث', 'Lookup failed')),
       }));
     }
   }, [createForm.owner_query, isRTL]);
@@ -708,10 +709,10 @@ const AdminBusinesses = () => {
   const createBizMutation = useMutation({
     mutationFn: async () => {
       if (!createForm.username || !createForm.username_ok) {
-        throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
+        throw new Error(pickBi(isRTL, 'اسم المستخدم غير صالح أو محجوز', 'Username is invalid or taken'));
       }
       if (!createForm.name_ar?.trim()) {
-        throw new Error(isRTL ? 'الاسم بالعربية مطلوب' : 'Arabic name is required');
+        throw new Error(pickBi(isRTL, 'الاسم بالعربية مطلوب', 'Arabic name is required'));
       }
       const phoneE164 = createForm.phone_national
         ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
@@ -752,10 +753,10 @@ const AdminBusinesses = () => {
         if (ownerMode !== 'placeholder') {
         const email = (createForm.owner_email || '').trim().toLowerCase();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          throw new Error(isRTL ? 'بريد المسؤول غير صالح' : 'Invalid manager email');
+          throw new Error(pickBi(isRTL, 'بريد المسؤول غير صالح', 'Invalid manager email'));
         }
         if (ownerMode === 'new' && (createForm.owner_password || '').length < 8) {
-          throw new Error(isRTL ? 'كلمة المرور يجب ألا تقل عن 8 أحرف' : 'Password must be at least 8 characters');
+          throw new Error(pickBi(isRTL, 'كلمة المرور يجب ألا تقل عن 8 أحرف', 'Password must be at least 8 characters'));
         }
         }
         const ownerEmail = ownerMode === 'placeholder'
@@ -775,7 +776,7 @@ const AdminBusinesses = () => {
           redirect_to: `${window.location.origin}/auth/reset-password`,
         });
         if (!res.success || !res.business) {
-          throw new Error(res.error || (isRTL ? 'فشل الإنشاء' : 'Create failed'));
+          throw new Error(res.error || (pickBi(isRTL, 'فشل الإنشاء', 'Create failed')));
         }
         return res.business as unknown as Record<string, unknown>;
       }
@@ -839,16 +840,16 @@ const AdminBusinesses = () => {
       // surface raw server strings to admins; unknown codes fall back to the
       // generic bucket inside `mapAdminCreateBizError`.
       const raw = err instanceof Error ? err.message : '';
-      const msg = mapAdminCreateBizError(raw, isRTL ? 'ar' : 'en');
+      const msg = mapAdminCreateBizError(raw, pickBi(isRTL, 'ar', 'en'));
       const isInvalidMode = raw.includes('invalid_owner_mode');
       toast.error(
-        isRTL ? 'فشل إنشاء المنشأة' : 'Failed to create business',
+        pickBi(isRTL, 'فشل إنشاء المنشأة', 'Failed to create business'),
         {
           description: msg,
           ...(isInvalidMode
             ? {
                 action: {
-                  label: isRTL ? 'تحويل إلى "بدون مدير"' : 'Switch to "No manager"',
+                  label: pickBi(isRTL, 'تحويل إلى "بدون مدير"', 'Switch to "No manager"'),
                   onClick: () => {
                     setCreateForm((f) => ({ ...f, owner_mode: 'placeholder' }));
                   },
@@ -888,7 +889,7 @@ const AdminBusinesses = () => {
     onSuccess: () => {
       refetchServices();
       setNewService({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
-      toast.success(isRTL ? 'تمت إضافة الخدمة' : 'Service added');
+      toast.success(pickBi(isRTL, 'تمت إضافة الخدمة', 'Service added'));
     },
   });
 
@@ -913,7 +914,7 @@ const AdminBusinesses = () => {
     },
     onSuccess: () => {
       refetchServices();
-      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
+      toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted'));
     },
   });
 
@@ -983,7 +984,7 @@ const AdminBusinesses = () => {
       refetchBranches();
       setBranchForm(null);
       setEditingBranchId(null);
-      toast.success(isRTL ? 'تم حفظ الفرع' : 'Branch saved');
+      toast.success(pickBi(isRTL, 'تم حفظ الفرع', 'Branch saved'));
     },
     onError: (err: Error) => {
       const mapped = parseMembershipLimitError(err, isRTL);
@@ -998,7 +999,7 @@ const AdminBusinesses = () => {
     },
     onSuccess: () => {
       refetchBranches();
-      toast.success(isRTL ? 'تم حذف الفرع' : 'Branch deleted');
+      toast.success(pickBi(isRTL, 'تم حذف الفرع', 'Branch deleted'));
     },
   });
 
@@ -1042,7 +1043,7 @@ const AdminBusinesses = () => {
       toast.success(isRTL ? `تم تحديث ${vars.ids.length} عنصر` : `Updated ${vars.ids.length} item(s)`);
       clearSelected();
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التحديث' : 'Update failed')),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل التحديث', 'Update failed'))),
   });
 
   /* ─── AI auto-translate missing field (single business) ─── */
@@ -1065,7 +1066,7 @@ const AdminBusinesses = () => {
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         refetchBusinesses();
-        toast.success(isRTL ? 'تم التحديث' : 'Refreshed');
+        toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed'));
       }
       if (e.key === 'e' || e.key === 'E') {
         e.preventDefault();
@@ -1094,7 +1095,7 @@ const AdminBusinesses = () => {
         if ((editForm[ar] || '').trim() && !(editForm[en] || '').trim()) fields.push({ key: en, from: 'ar', to: 'en' });
         else if ((editForm[en] || '').trim() && !(editForm[ar] || '').trim()) fields.push({ key: ar, from: 'en', to: 'ar' });
       }
-      if (fields.length === 0) { toast.info(isRTL ? 'كل الحقول مكتملة' : 'All fields complete'); return; }
+      if (fields.length === 0) { toast.info(pickBi(isRTL, 'كل الحقول مكتملة', 'All fields complete')); return; }
       let done = 0;
       for (const f of fields) {
         const sourceKey = f.to === 'en' ? f.key.replace('_en', '_ar') : f.key.replace('_ar', '_en');
@@ -1111,7 +1112,7 @@ const AdminBusinesses = () => {
       }
       toast.success(isRTL ? `تمت ترجمة ${done} حقل` : `Translated ${done} field(s)`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشلت الترجمة التلقائية' : 'Auto-translate failed'));
+      toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشلت الترجمة التلقائية', 'Auto-translate failed')));
     } finally { setAutoTranslating(false); }
   }, [editingBiz, editForm, isRTL, setField]);
 
@@ -1171,9 +1172,9 @@ const AdminBusinesses = () => {
         building_number: a.building_number ?? prev.building_number,
         additional_number: a.additional_number ?? prev.additional_number,
       }));
-      toast.success(isRTL ? 'تم جلب العنوان وتعبئة الحقول' : 'Address fetched');
+      toast.success(pickBi(isRTL, 'تم جلب العنوان وتعبئة الحقول', 'Address fetched'));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل البحث' : 'Lookup failed'));
+      toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل البحث', 'Lookup failed')));
     } finally {
       setSplBusy(false);
     }
@@ -1338,12 +1339,12 @@ const AdminBusinesses = () => {
         <AdminPageHeader
           tone="accent"
           icon={Building2}
-          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          eyebrow={pickBi(isRTL, 'لوحة الإدارة', 'Admin Console')}
           breadcrumbs={[
-            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
-            { label: isRTL ? 'إدارة الأعمال' : 'Business Management' },
+            { label: pickBi(isRTL, 'الإدارة', 'Admin'), href: '/admin' },
+            { label: pickBi(isRTL, 'إدارة الأعمال', 'Business Management') },
           ]}
-          title={isRTL ? 'إدارة الأعمال والمنشآت' : 'Business Management'}
+          title={pickBi(isRTL, 'إدارة الأعمال والمنشآت', 'Business Management')}
           subtitle={panelOpen ? undefined : (
             isRTL
               ? `${stats.total} منشأة مسجلة • تحكم كامل في الملفات والخدمات والفروع والعضويات`
@@ -1354,7 +1355,7 @@ const AdminBusinesses = () => {
               <div className="flex bg-muted/40 border border-border/40 rounded-xl overflow-hidden p-0.5">
                 <button
                   type="button"
-                  aria-label={isRTL ? 'عرض بطاقات' : 'Card view'}
+                  aria-label={pickBi(isRTL, 'عرض بطاقات', 'Card view')}
                   className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                   onClick={() => setViewMode('cards')}
                 >
@@ -1362,7 +1363,7 @@ const AdminBusinesses = () => {
                 </button>
                 <button
                   type="button"
-                  aria-label={isRTL ? 'عرض جدول' : 'Table view'}
+                  aria-label={pickBi(isRTL, 'عرض جدول', 'Table view')}
                   className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                   onClick={() => setViewMode('table')}
                 >
@@ -1373,10 +1374,10 @@ const AdminBusinesses = () => {
                 variant="outline"
                 size="sm"
                 className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => { refetchBusinesses(); toast.success(isRTL ? 'تم التحديث' : 'Refreshed'); }}
+                onClick={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
+                <span className="hidden sm:inline">{pickBi(isRTL, 'تحديث', 'Refresh')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -1385,7 +1386,7 @@ const AdminBusinesses = () => {
                 onClick={() => exportCSV(filtered, language)}
               >
                 <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
+                <span className="hidden sm:inline">{pickBi(isRTL, 'تصدير CSV', 'Export CSV')}</span>
               </Button>
               <SavedViewsMenu
                 views={savedViews.views}
@@ -1402,7 +1403,7 @@ const AdminBusinesses = () => {
               >
                 <Link to="/admin/provider-review">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{isRTL ? 'مراجعة المزودين' : 'Provider Review'}</span>
+                  <span className="hidden sm:inline">{pickBi(isRTL, 'مراجعة المزودين', 'Provider Review')}</span>
                 </Link>
               </Button>
               <Button
@@ -1411,39 +1412,39 @@ const AdminBusinesses = () => {
                 onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
               >
                 <Plus className="w-3.5 h-3.5" />
-                {isRTL ? 'منشأة جديدة' : 'New Business'}
+                {pickBi(isRTL, 'منشأة جديدة', 'New Business')}
               </Button>
             </>
           }
           kpiSlot={panelOpen ? undefined : (
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               <AdminKpiCard
-                label={isRTL ? 'إجمالي المنشآت' : 'Total Businesses'}
+                label={pickBi(isRTL, 'إجمالي المنشآت', 'Total Businesses')}
                 value={stats.total}
                 icon={Building2}
                 tone="primary"
               />
               <AdminKpiCard
-                label={isRTL ? 'نشطة' : 'Active'}
+                label={pickBi(isRTL, 'نشطة', 'Active')}
                 value={stats.active}
                 icon={Activity}
                 tone="success"
                 trend={stats.total ? `${Math.round((stats.active / stats.total) * 100)}%` : undefined}
               />
               <AdminKpiCard
-                label={isRTL ? 'موثّقة' : 'Verified'}
+                label={pickBi(isRTL, 'موثّقة', 'Verified')}
                 value={stats.verified}
                 icon={Shield}
                 tone="info"
               />
               <AdminKpiCard
-                label={isRTL ? 'بعقود فعّالة' : 'With Contracts'}
+                label={pickBi(isRTL, 'بعقود فعّالة', 'With Contracts')}
                 value={stats.contracts}
                 icon={FileText}
                 tone="accent"
               />
               <AdminKpiCard
-                label={isRTL ? 'مميّز / مؤسسات' : 'Premium / Enterprise'}
+                label={pickBi(isRTL, 'مميّز / مؤسسات', 'Premium / Enterprise')}
                 value={stats.premium}
                 icon={Crown}
                 tone="secondary"
@@ -1519,11 +1520,9 @@ const AdminBusinesses = () => {
                   <Plus className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-base">{isRTL ? 'إضافة منشأة / جهة جديدة' : 'Add new entity (company / organization)'}</h3>
+                  <h3 className="font-heading font-bold text-base">{pickBi(isRTL, 'إضافة منشأة / جهة جديدة', 'Add new entity (company / organization)')}</h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {isRTL
-                      ? 'مخصّص للشركات والمؤسسات والجهات الحكومية والخاصة. اختر المسؤول/المالك من المستخدمين ثم أدخل البيانات الرسمية للمنشأة (السجل التجاري، الرقم الموحّد، الضريبة… تُكمل لاحقاً).'
-                      : 'For companies, foundations, and public/private entities. Pick a responsible owner, then enter the entity\'s official data (CR, unified number, VAT… can be completed later).'}
+                    {pickBi(isRTL, 'مخصّص للشركات والمؤسسات والجهات الحكومية والخاصة. اختر المسؤول/المالك من المستخدمين ثم أدخل البيانات الرسمية للمنشأة (السجل التجاري، الرقم الموحّد، الضريبة… تُكمل لاحقاً).', 'For companies, foundations, and public/private entities. Pick a responsible owner, then enter the entity\'s official data (CR, unified number, VAT… can be completed later).')}
                   </p>
                 </div>
               </div>
@@ -1538,16 +1537,14 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5 text-info" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '1) المدير / المسؤول للمنشأة' : '1) Entity manager / responsible person'}
+                    {pickBi(isRTL, '1) المدير / المسؤول للمنشأة', '1) Entity manager / responsible person')}
                   </Label>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
-                    {isRTL ? 'اختياري' : 'Optional'}
+                    {pickBi(isRTL, 'اختياري', 'Optional')}
                   </span>
                 </div>
                 <p className="text-[10.5px] text-muted-foreground leading-relaxed">
-                  {isRTL
-                    ? 'الافتراضي "بدون مدير" — تُربط المنشأة بالحساب المؤقت (com@qitaat.com) ويمكن لمالكها الحقيقي لاحقاً طلب نقل الملكية بموافقة الادمن. أو اختر مستخدماً موجوداً، أنشئ حساباً، أو أرسل دعوة بالبريد.'
-                    : 'Default is "No manager" — the entity is linked to the placeholder account (com@qitaat.com); its real owner can later request a transfer that an admin approves. You can also pick an existing user, create an account, or send an email invite.'}
+                  {pickBi(isRTL, 'الافتراضي "بدون مدير" — تُربط المنشأة بالحساب المؤقت (com@qitaat.com) ويمكن لمالكها الحقيقي لاحقاً طلب نقل الملكية بموافقة الادمن. أو اختر مستخدماً موجوداً، أنشئ حساباً، أو أرسل دعوة بالبريد.', 'Default is "No manager" — the entity is linked to the placeholder account (com@qitaat.com); its real owner can later request a transfer that an admin approves. You can also pick an existing user, create an account, or send an email invite.')}
                 </p>
 
                 {/* Owner mode tabs (placeholder / existing / new / invite) */}
@@ -1577,9 +1574,7 @@ const AdminBusinesses = () => {
                 {/* Mode: Placeholder (no manager — default) */}
                 {(createForm.owner_mode || 'placeholder') === 'placeholder' && (
                   <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-[11px] leading-relaxed text-foreground/80">
-                    {isRTL
-                      ? 'ستُربط المنشأة بالحساب المؤقت المشترك. عندما يطلب المالك الحقيقي تسلّم منشأته يوافق الادمن لنقل الملكية إليه.'
-                      : 'The entity will be linked to the shared placeholder account. When the real owner requests it, an admin can approve to transfer ownership.'}
+                    {pickBi(isRTL, 'ستُربط المنشأة بالحساب المؤقت المشترك. عندما يطلب المالك الحقيقي تسلّم منشأته يوافق الادمن لنقل الملكية إليه.', 'The entity will be linked to the shared placeholder account. When the real owner requests it, an admin can approve to transfer ownership.')}
                   </div>
                 )}
 
@@ -1593,7 +1588,7 @@ const AdminBusinesses = () => {
                     </div>
                     <Button type="button" variant="ghost" size="sm" className="h-7 text-[11px] rounded-lg"
                       onClick={() => setCreateForm((f: any) => ({ ...f, resolved_user_id: '', resolved_owner_label: '', owner_query: '' }))}>
-                      <X className="w-3 h-3 me-1" /> {isRTL ? 'تغيير' : 'Change'}
+                      <X className="w-3 h-3 me-1" /> {pickBi(isRTL, 'تغيير', 'Change')}
                     </Button>
                   </div>
                 ) : (
@@ -1604,7 +1599,7 @@ const AdminBusinesses = () => {
                         value={createForm.owner_query}
                         onChange={(e) => { setCField('owner_query', e.target.value); setOwnerOpen(true); }}
                         onFocus={() => setOwnerOpen(true)}
-                        placeholder={isRTL ? 'ابحث بالاسم / البريد / اسم المستخدم / USR-1000001' : 'Search by name / email / username / USR-1000001'}
+                        placeholder={pickBi(isRTL, 'ابحث بالاسم / البريد / اسم المستخدم / USR-1000001', 'Search by name / email / username / USR-1000001')}
                         className="h-10 rounded-xl ps-9"
                       />
                       {ownerSearching && (
@@ -1615,7 +1610,7 @@ const AdminBusinesses = () => {
                       <div className="absolute z-30 mt-1 w-full rounded-xl border border-border bg-popover shadow-lg max-h-72 overflow-y-auto">
                         {ownerResults.length === 0 && !ownerSearching ? (
                           <div className="p-3 text-xs text-muted-foreground text-center">
-                            {isRTL ? 'لا توجد نتائج مطابقة' : 'No matching users'}
+                            {pickBi(isRTL, 'لا توجد نتائج مطابقة', 'No matching users')}
                           </div>
                         ) : (
                           ownerResults.map((u) => {
@@ -1623,8 +1618,8 @@ const AdminBusinesses = () => {
                             // ref_id/email remain hidden from the primary display
                             // line; they are already rendered separately below.
                             const displayName = getProfileDisplayName(u, {
-                              locale: isRTL ? 'ar' : 'en',
-                              emptyFallback: isRTL ? 'بدون اسم' : 'No name',
+                              locale: pickBi(isRTL, 'ar', 'en'),
+                              emptyFallback: pickBi(isRTL, 'بدون اسم', 'No name'),
                             });
                             return (
                               <button
@@ -1670,29 +1665,27 @@ const AdminBusinesses = () => {
                 {createForm.owner_mode === 'new' && (
                   <div className="grid sm:grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الاسم الكامل للمسؤول' : 'Manager full name'}</Label>
-                      <Input value={createForm.owner_full_name} onChange={(e) => setCField('owner_full_name', e.target.value)} dir="auto" className="h-10 rounded-xl" placeholder={isRTL ? 'مثال: محمد العتيبي' : 'e.g. Mohammed Al-Otaibi'} />
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'الاسم الكامل للمسؤول', 'Manager full name')}</Label>
+                      <Input value={createForm.owner_full_name} onChange={(e) => setCField('owner_full_name', e.target.value)} dir="auto" className="h-10 rounded-xl" placeholder={pickBi(isRTL, 'مثال: محمد العتيبي', 'e.g. Mohammed Al-Otaibi')} />
                     </div>
                     <div>
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'المنصب' : 'Position'}</Label>
-                      <Input value={createForm.owner_position} onChange={(e) => setCField('owner_position', e.target.value)} dir="auto" className="h-10 rounded-xl" placeholder={isRTL ? 'مدير عام' : 'General Manager'} />
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'المنصب', 'Position')}</Label>
+                      <Input value={createForm.owner_position} onChange={(e) => setCField('owner_position', e.target.value)} dir="auto" className="h-10 rounded-xl" placeholder={pickBi(isRTL, 'مدير عام', 'General Manager')} />
                     </div>
                     <div>
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'البريد (تسجيل الدخول)' : 'Email (login)'}</Label>
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'البريد (تسجيل الدخول)', 'Email (login)')}</Label>
                       <Input value={createForm.owner_email} onChange={(e) => setCField('owner_email', e.target.value.toLowerCase().trim())} dir="ltr" type="email" className="h-10 rounded-xl tech-content" placeholder="manager@company.com" />
                     </div>
                     <div>
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'كلمة المرور (8+ أحرف)' : 'Password (8+ chars)'}</Label>
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'كلمة المرور (8+ أحرف)', 'Password (8+ chars)')}</Label>
                       <Input value={createForm.owner_password} onChange={(e) => setCField('owner_password', e.target.value)} dir="ltr" type="text" className="h-10 rounded-xl tech-content" placeholder="Tmp@2026!" />
                     </div>
                     <div className="sm:col-span-2">
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الجوال (اختياري)' : 'Mobile (optional)'}</Label>
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'الجوال (اختياري)', 'Mobile (optional)')}</Label>
                       <Input value={createForm.owner_phone} onChange={(e) => setCField('owner_phone', e.target.value)} dir="ltr" className="h-10 rounded-xl tech-content" placeholder="+9665XXXXXXXX" />
                     </div>
                     <p className="sm:col-span-2 text-[10.5px] text-info bg-info/5 border border-info/20 rounded-lg px-3 py-2">
-                      {isRTL
-                        ? 'سيتم إنشاء حساب جديد فوراً ببريد وكلمة المرور المُدخلَين، وسيكون هو مالك المنشأة. شارك بيانات الدخول مع المسؤول عبر قناة آمنة.'
-                        : 'A new account will be created instantly with the email and password provided, and will own this entity. Share login credentials with the manager via a secure channel.'}
+                      {pickBi(isRTL, 'سيتم إنشاء حساب جديد فوراً ببريد وكلمة المرور المُدخلَين، وسيكون هو مالك المنشأة. شارك بيانات الدخول مع المسؤول عبر قناة آمنة.', 'A new account will be created instantly with the email and password provided, and will own this entity. Share login credentials with the manager via a secure channel.')}
                     </p>
                   </div>
                 )}
@@ -1701,25 +1694,23 @@ const AdminBusinesses = () => {
                 {createForm.owner_mode === 'invite' && (
                   <div className="grid sm:grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الاسم الكامل للمسؤول' : 'Manager full name'}</Label>
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'الاسم الكامل للمسؤول', 'Manager full name')}</Label>
                       <Input value={createForm.owner_full_name} onChange={(e) => setCField('owner_full_name', e.target.value)} dir="auto" className="h-10 rounded-xl" />
                     </div>
                     <div>
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'المنصب' : 'Position'}</Label>
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'المنصب', 'Position')}</Label>
                       <Input value={createForm.owner_position} onChange={(e) => setCField('owner_position', e.target.value)} dir="auto" className="h-10 rounded-xl" />
                     </div>
                     <div className="sm:col-span-2">
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'البريد (سيُرسل عليه رابط التفعيل)' : 'Email (activation link will be sent here)'}</Label>
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'البريد (سيُرسل عليه رابط التفعيل)', 'Email (activation link will be sent here)')}</Label>
                       <Input value={createForm.owner_email} onChange={(e) => setCField('owner_email', e.target.value.toLowerCase().trim())} dir="ltr" type="email" className="h-10 rounded-xl tech-content" placeholder="manager@company.com" />
                     </div>
                     <div className="sm:col-span-2">
-                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الجوال (اختياري)' : 'Mobile (optional)'}</Label>
+                      <Label className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, 'الجوال (اختياري)', 'Mobile (optional)')}</Label>
                       <Input value={createForm.owner_phone} onChange={(e) => setCField('owner_phone', e.target.value)} dir="ltr" className="h-10 rounded-xl tech-content" placeholder="+9665XXXXXXXX" />
                     </div>
                     <p className="sm:col-span-2 text-[10.5px] text-accent bg-accent/5 border border-accent/20 rounded-lg px-3 py-2">
-                      {isRTL
-                        ? 'سيتم إنشاء الحساب وإرسال رابط تعيين كلمة المرور للمسؤول على بريده ليُكمل التفعيل بنفسه.'
-                        : 'The account will be created and a set-password link will be emailed to the manager so they can complete activation themselves.'}
+                      {pickBi(isRTL, 'سيتم إنشاء الحساب وإرسال رابط تعيين كلمة المرور للمسؤول على بريده ليُكمل التفعيل بنفسه.', 'The account will be created and a set-password link will be emailed to the manager so they can complete activation themselves.')}
                     </p>
                   </div>
                 )}
@@ -1729,10 +1720,10 @@ const AdminBusinesses = () => {
               <div className="flex items-center gap-2 pt-1">
                 <Building2 className="w-3.5 h-3.5 text-primary" />
                 <Label className="text-xs font-semibold">
-                  {isRTL ? '2) البيانات الرسمية للمنشأة' : '2) Entity official data'}
+                  {pickBi(isRTL, '2) البيانات الرسمية للمنشأة', '2) Entity official data')}
                 </Label>
                 <span className="text-[10.5px] text-muted-foreground">
-                  {isRTL ? '(الاسم التجاري، رقم التواصل الرسمي، وبريد المنشأة — وليست بيانات المالك الشخصية)' : '(commercial name, official contact number, and entity email — not the owner\'s personal data)'}
+                  {pickBi(isRTL, '(الاسم التجاري، رقم التواصل الرسمي، وبريد المنشأة — وليست بيانات المالك الشخصية)', '(commercial name, official contact number, and entity email — not the owner\'s personal data)')}
                 </span>
               </div>
 
@@ -1764,11 +1755,11 @@ const AdminBusinesses = () => {
                 <PhoneField
                   value={{ countryCode: createForm.phone_cc, national: createForm.phone_national }}
                   onChange={(next) => setCreateForm((f: any) => ({ ...f, phone_cc: next.countryCode, phone_national: next.national }))}
-                  label={isRTL ? 'رقم التواصل الرسمي للمنشأة' : 'Official entity contact number'}
+                  label={pickBi(isRTL, 'رقم التواصل الرسمي للمنشأة', 'Official entity contact number')}
                   optional
                 />
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'البريد الرسمي للمنشأة' : 'Official entity email'}</Label>
+                  <Label className="text-xs">{pickBi(isRTL, 'البريد الرسمي للمنشأة', 'Official entity email')}</Label>
                   <Input
                     value={createForm.email}
                     onChange={(e) => setCField('email', e.target.value)}
@@ -1779,11 +1770,9 @@ const AdminBusinesses = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'نشاط/قطاع المنشأة' : 'Entity sector / activity'}</Label>
+                  <Label className="text-xs">{pickBi(isRTL, 'نشاط/قطاع المنشأة', 'Entity sector / activity')}</Label>
                   <div className="h-10 rounded-xl border border-dashed border-border bg-muted/30 px-3 flex items-center text-[11px] text-muted-foreground">
-                    {isRTL
-                      ? 'غير مصنّف — يمكن إضافة التصنيف بعد الإنشاء من تبويب التحرير (التصنيفات المركزية).'
-                      : 'Unclassified — taxonomy can be added after creation from the edit tab (Central Taxonomy).'}
+                    {pickBi(isRTL, 'غير مصنّف — يمكن إضافة التصنيف بعد الإنشاء من تبويب التحرير (التصنيفات المركزية).', 'Unclassified — taxonomy can be added after creation from the edit tab (Central Taxonomy).')}
                   </div>
                 </div>
               </div>
@@ -1793,21 +1782,21 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5 text-primary" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '3) بيانات السجل والأرقام الرسمية' : '3) Registry & official numbers'}
+                    {pickBi(isRTL, '3) بيانات السجل والأرقام الرسمية', '3) Registry & official numbers')}
                   </Label>
-                  <span className="text-[10.5px] text-muted-foreground">{isRTL ? '(اختياري — يمكن استكمالها لاحقاً)' : '(optional — can be completed later)'}</span>
+                  <span className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, '(اختياري — يمكن استكمالها لاحقاً)', '(optional — can be completed later)')}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'رقم السجل التجاري (CR)' : 'Commercial Registration (CR)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'رقم السجل التجاري (CR)', 'Commercial Registration (CR)')}</Label>
                     <Input value={createForm.national_id} onChange={(e) => setCField('national_id', e.target.value)} dir="ltr" placeholder="1010xxxxxx" className="h-10 rounded-xl tech-content" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'الرقم الموحّد (700)' : 'Unified number (700)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الموحّد (700)', 'Unified number (700)')}</Label>
                     <Input value={createForm.unified_number} onChange={(e) => setCField('unified_number', e.target.value)} dir="ltr" placeholder="7001234567" className="h-10 rounded-xl tech-content" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'الرقم الضريبي (VAT)' : 'VAT / Tax number'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الضريبي (VAT)', 'VAT / Tax number')}</Label>
                     <Input value={createForm.vat_number} onChange={(e) => setCField('vat_number', e.target.value)} dir="ltr" placeholder="3xxxxxxxxxxxxx3" className="h-10 rounded-xl tech-content" />
                   </div>
                 </div>
@@ -1818,64 +1807,64 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-primary" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '4) العنوان الوطني التفصيلي للمنشأة' : '4) National detailed address'}
+                    {pickBi(isRTL, '4) العنوان الوطني التفصيلي للمنشأة', '4) National detailed address')}
                   </Label>
-                  <span className="text-[10.5px] text-muted-foreground">{isRTL ? '(اختر المنطقة لتظهر المدن التابعة لها)' : '(pick region to see its cities)'}</span>
+                  <span className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, '(اختر المنطقة لتظهر المدن التابعة لها)', '(pick region to see its cities)')}</span>
                 </div>
 
                 <RegionCitySelector
                   value={{ region_id: createForm.region_id, city_id: createForm.city_id }}
                   onChange={(next) => setCreateForm((f: any) => ({ ...f, region_id: next.region_id || '', city_id: next.city_id || '' }))}
-                  regionLabel={isRTL ? 'المنطقة' : 'Region'}
-                  cityLabel={isRTL ? 'المدينة' : 'City'}
+                  regionLabel={pickBi(isRTL, 'المنطقة', 'Region')}
+                  cityLabel={pickBi(isRTL, 'المدينة', 'City')}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'الحي (عربي)' : 'District (AR)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الحي (عربي)', 'District (AR)')}</Label>
                     <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.district} onChange={(e) => setCField('district', e.target.value)} dir="auto" placeholder={isRTL ? 'مثال: العليا' : 'e.g. Al Olaya'} className="h-10 rounded-xl flex-1" />
+                      <Input value={createForm.district} onChange={(e) => setCField('district', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'مثال: العليا', 'e.g. Al Olaya')} className="h-10 rounded-xl flex-1" />
                       <FieldAiActions value={createForm.district} lang="ar" fieldType="short_text" compact isRTL={isRTL}
                         onTranslated={(t) => setCField('district_en', t)} />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'الحي (English)' : 'District (EN)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الحي (English)', 'District (EN)')}</Label>
                     <Input value={createForm.district_en} onChange={(e) => setCField('district_en', e.target.value)} dir="ltr" placeholder="e.g. Al Olaya" className="h-10 rounded-xl" />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'اسم الشارع (عربي)' : 'Street name (AR)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'اسم الشارع (عربي)', 'Street name (AR)')}</Label>
                     <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.street_name} onChange={(e) => setCField('street_name', e.target.value)} dir="auto" placeholder={isRTL ? 'مثال: شارع الأمير محمد' : 'e.g. Prince Mohammed St'} className="h-10 rounded-xl flex-1" />
+                      <Input value={createForm.street_name} onChange={(e) => setCField('street_name', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'مثال: شارع الأمير محمد', 'e.g. Prince Mohammed St')} className="h-10 rounded-xl flex-1" />
                       <FieldAiActions value={createForm.street_name} lang="ar" fieldType="short_text" compact isRTL={isRTL}
                         onTranslated={(t) => setCField('street_name_en', t)} />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'اسم الشارع (English)' : 'Street name (EN)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'اسم الشارع (English)', 'Street name (EN)')}</Label>
                     <Input value={createForm.street_name_en} onChange={(e) => setCField('street_name_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building number'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'رقم المبنى', 'Building number')}</Label>
                     <Input value={createForm.building_number} onChange={(e) => setCField('building_number', e.target.value)} dir="ltr" placeholder="1234" className="h-10 rounded-xl tech-content" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{isRTL ? 'الرقم الإضافي (العنوان الوطني)' : 'Additional number (national address)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الإضافي (العنوان الوطني)', 'Additional number (national address)')}</Label>
                     <Input value={createForm.additional_number} onChange={(e) => setCField('additional_number', e.target.value)} dir="ltr" placeholder="5678" className="h-10 rounded-xl tech-content" />
                   </div>
 
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs">{isRTL ? 'العنوان التفصيلي (عربي)' : 'Detailed address (AR)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'العنوان التفصيلي (عربي)', 'Detailed address (AR)')}</Label>
                     <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.address} onChange={(e) => setCField('address', e.target.value)} dir="auto" placeholder={isRTL ? 'الحي - الشارع - معالم قريبة' : 'District - street - landmarks'} className="h-10 rounded-xl flex-1" />
+                      <Input value={createForm.address} onChange={(e) => setCField('address', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'الحي - الشارع - معالم قريبة', 'District - street - landmarks')} className="h-10 rounded-xl flex-1" />
                       <FieldAiActions value={createForm.address} lang="ar" fieldType="short_text" compact isRTL={isRTL}
                         onTranslated={(t) => setCField('address_en', t)} />
                     </div>
                   </div>
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs">{isRTL ? 'العنوان التفصيلي (English)' : 'Detailed address (EN)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'العنوان التفصيلي (English)', 'Detailed address (EN)')}</Label>
                     <Input value={createForm.address_en} onChange={(e) => setCField('address_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
                   </div>
                 </div>
@@ -1894,10 +1883,10 @@ const AdminBusinesses = () => {
                   className="flex-1 gap-1.5 rounded-xl"
                 >
                   {createBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                  {isRTL ? 'إنشاء المنشأة وفتح بيانات السجل للتعديل' : 'Create entity & open registry data'}
+                  {pickBi(isRTL, 'إنشاء المنشأة وفتح بيانات السجل للتعديل', 'Create entity & open registry data')}
                 </Button>
                 <Button variant="outline" onClick={() => { setCreatingBiz(false); setCreateForm(emptyCreateForm()); }} className="rounded-xl">
-                  {isRTL ? 'إلغاء' : 'Cancel'}
+                  {pickBi(isRTL, 'إلغاء', 'Cancel')}
                 </Button>
               </div>
             </div>
@@ -1913,18 +1902,18 @@ const AdminBusinesses = () => {
                   <Edit className="w-4 h-4 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-base">{isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}</h3>
+                  <h3 className="font-heading font-bold text-base">{pickBi(isRTL, 'تعديل العمل', 'Edit Business')}: {editingBiz.name_ar}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[10px] font-mono text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
                     {contractBusinessIds.includes(editingBiz.id) && (
-                      <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
+                      <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{pickBi(isRTL, 'مرتبط بعقود', 'Has Contracts')}</Badge>
                     )}
                     {(() => {
                       const tc = translationCompleteness(editForm);
                       return (
                         <Badge variant="outline" className={`text-[9px] gap-1 ${tc.full ? 'border-success/40 text-success' : 'border-warning/40 text-warning'}`}>
                           <Languages className="w-2.5 h-2.5" />
-                          {tc.full ? (isRTL ? 'الترجمة مكتملة' : 'Bilingual ready')
+                          {tc.full ? (pickBi(isRTL, 'الترجمة مكتملة', 'Bilingual ready'))
                             : (isRTL ? `ينقص: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}` : `Missing: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}`)}
                         </Badge>
                       );
@@ -1936,23 +1925,23 @@ const AdminBusinesses = () => {
                 <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
                   onClick={autoFillTranslations} disabled={autoTranslating}>
                   {autoTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
-                  {isRTL ? 'ترجمة تلقائية للناقص' : 'Auto-translate missing'}
+                  {pickBi(isRTL, 'ترجمة تلقائية للناقص', 'Auto-translate missing')}
                 </Button>
                 <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
                 <TabsList className="w-full grid grid-cols-10 h-9 rounded-xl">
-                  <TabsTrigger value="info" className="text-[10px] rounded-lg">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
-                  <TabsTrigger value="owner" className="text-[10px] rounded-lg">{isRTL ? 'المسؤول' : 'Owner'}</TabsTrigger>
-                  <TabsTrigger value="address" className="text-[10px] rounded-lg">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
-                  <TabsTrigger value="content" className="text-[10px] rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
-                  <TabsTrigger value="media" className="text-[10px] rounded-lg">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                  <TabsTrigger value="info" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المعلومات', 'Info')}</TabsTrigger>
+                  <TabsTrigger value="owner" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المسؤول', 'Owner')}</TabsTrigger>
+                  <TabsTrigger value="address" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العنوان', 'Address')}</TabsTrigger>
+                  <TabsTrigger value="content" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المحتوى', 'Content')}</TabsTrigger>
+                  <TabsTrigger value="media" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
                   <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
-                  <TabsTrigger value="contact" className="text-[10px] rounded-lg">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
-                  <TabsTrigger value="branches" className="text-[10px] rounded-lg">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
-                  <TabsTrigger value="controls" className="text-[10px] rounded-lg">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
-                  <TabsTrigger value="ops" className="text-[10px] rounded-lg">{isRTL ? 'العمليات' : 'Ops'}</TabsTrigger>
+                  <TabsTrigger value="contact" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التواصل', 'Contact')}</TabsTrigger>
+                  <TabsTrigger value="branches" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الفروع', 'Branches')} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
+                  <TabsTrigger value="controls" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التحكم', 'Controls')}</TabsTrigger>
+                  <TabsTrigger value="ops" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العمليات', 'Ops')}</TabsTrigger>
                 </TabsList>
 
                 {/* ── Info Tab ── */}
@@ -1966,21 +1955,21 @@ const AdminBusinesses = () => {
                     return (
                       <div className="flex items-start justify-between gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-300/50">
                         <p className="text-[11px] text-amber-800 dark:text-amber-200">
-                          {isRTL ? 'يبدو أن الاسم العربي والإنجليزي معكوسان.' : 'Arabic and English names appear swapped.'}
+                          {pickBi(isRTL, 'يبدو أن الاسم العربي والإنجليزي معكوسان.', 'Arabic and English names appear swapped.')}
                         </p>
                         <Button type="button" size="sm" variant="outline" className="h-6 text-[10px] px-2"
                           onClick={() => {
                             const ar = editForm.name_ar; const en = editForm.name_en;
                             setField('name_ar', en); setField('name_en', ar);
                           }}>
-                          {isRTL ? '↔ تبديل' : '↔ Swap'}
+                          {pickBi(isRTL, '↔ تبديل', '↔ Swap')}
                         </Button>
                       </div>
                     );
                   })()}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs">{isRTL ? 'الاسم (عربي)' : 'Name (AR)'} *</Label>
+                      <Label className="text-xs">{pickBi(isRTL, 'الاسم (عربي)', 'Name (AR)')} *</Label>
                       <FieldAiActions compact value={editForm.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
                         onTranslated={(v) => setField('name_en', v)} onImproved={(v) => setField('name_ar', v)} />
                     </div>
@@ -1988,7 +1977,7 @@ const AdminBusinesses = () => {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs">{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label>
+                      <Label className="text-xs">{pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (EN)')}</Label>
                       <FieldAiActions compact value={editForm.name_en} lang="en" isRTL={isRTL} fieldType="title"
                         onTranslated={(v) => setField('name_ar', v)} onImproved={(v) => setField('name_en', v)} />
                     </div>
@@ -2008,18 +1997,18 @@ const AdminBusinesses = () => {
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
                     {/* Primary reference — official platform identifier */}
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-foreground font-semibold">{isRTL ? 'المعرف' : 'Ref'}</span>
+                      <span className="text-foreground font-semibold">{pickBi(isRTL, 'المعرف', 'Ref')}</span>
                       <ReferenceTag refId={editingBiz.ref_id} isRTL={isRTL} />
                     </div>
                     {editingBiz.legacy_ref_id && editingBiz.legacy_ref_id !== editingBiz.ref_id && (
-                      <p>{isRTL ? 'المعرف السابق' : 'Previously'}: {editingBiz.legacy_ref_id}</p>
+                      <p>{pickBi(isRTL, 'المعرف السابق', 'Previously')}: {editingBiz.legacy_ref_id}</p>
                     )}
                     <p>Username: @{editingBiz.username}</p>
                     <div className="flex items-center justify-between gap-2">
-                      <span>{isRTL ? 'المالك' : 'Owner'}</span>
+                      <span>{pickBi(isRTL, 'المالك', 'Owner')}</span>
                       {ownerRef?.ref_id
                         ? <ReferenceTag refId={ownerRef.ref_id} isRTL={isRTL} />
-                        : <span className="text-muted-foreground">{isRTL ? '…تحميل' : 'loading…'}</span>}
+                        : <span className="text-muted-foreground">{pickBi(isRTL, '…تحميل', 'loading…')}</span>}
                     </div>
                     <p>Created: {new Date(editingBiz.created_at).toLocaleDateString()}</p>
                     <p className="flex items-center gap-1">
@@ -2027,7 +2016,7 @@ const AdminBusinesses = () => {
                     </p>
                     {/* Internal-only technical UUIDs — kept collapsed; never the primary identifier */}
                     <details className="mt-1 pt-1 border-t border-border/30">
-                      <summary className="cursor-pointer text-[9px] opacity-60 hover:opacity-100">{isRTL ? 'معرفات تقنية (UUID)' : 'Technical (UUID)'}</summary>
+                      <summary className="cursor-pointer text-[9px] opacity-60 hover:opacity-100">{pickBi(isRTL, 'معرفات تقنية (UUID)', 'Technical (UUID)')}</summary>
                       <div className="mt-1 space-y-0.5 opacity-70">
                         <p className="break-all">business.id: {editingBiz.id}</p>
                         <p className="break-all">owner.user_id: {editingBiz.user_id}</p>
@@ -2052,35 +2041,35 @@ const AdminBusinesses = () => {
                   <div>
                     <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
                       <MapPinned className="w-3 h-3" />
-                      {isRTL ? 'تحديد الموقع على الخريطة' : 'Pick Location on Map'}
+                      {pickBi(isRTL, 'تحديد الموقع على الخريطة', 'Pick Location on Map')}
                     </Label>
                     <p className="text-[10px] text-muted-foreground mb-2">
-                      {isRTL ? 'انقر على الخريطة لتحديد الموقع وتعبئة حقول العنوان تلقائياً' : 'Click on map to pick location and auto-fill address fields'}
+                      {pickBi(isRTL, 'انقر على الخريطة لتحديد الموقع وتعبئة حقول العنوان تلقائياً', 'Click on map to pick location and auto-fill address fields')}
                     </p>
                     <LocationPicker lat={parseFloat(editForm.latitude) || 0} lng={parseFloat(editForm.longitude) || 0}
                       onPick={handleMapPick} isRTL={isRTL} />
                     {geocoding && (
                       <div className="flex items-center gap-2 mt-2 text-xs text-primary">
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        {isRTL ? 'جاري استخراج بيانات العنوان...' : 'Extracting address data...'}
+                        {pickBi(isRTL, 'جاري استخراج بيانات العنوان...', 'Extracting address data...')}
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-2 mt-2">
                       <div>
-                        <Label className="text-[10px]">{isRTL ? 'خط العرض' : 'Latitude'}</Label>
+                        <Label className="text-[10px]">{pickBi(isRTL, 'خط العرض', 'Latitude')}</Label>
                         <Input value={editForm.latitude} onChange={e => setField('latitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
                       </div>
                       <div>
-                        <Label className="text-[10px]">{isRTL ? 'خط الطول' : 'Longitude'}</Label>
+                        <Label className="text-[10px]">{pickBi(isRTL, 'خط الطول', 'Longitude')}</Label>
                         <Input value={editForm.longitude} onChange={e => setField('longitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
                       </div>
                     </div>
                   </div>
                   <Separator />
                   <div>
-                    <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الدولة', 'Country')}</Label>
                     <Select value={editForm.country_id} onValueChange={v => { setField('country_id', v); setField('city_id', ''); }}>
-                      <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                      <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={pickBi(isRTL, 'اختر', 'Select')} /></SelectTrigger>
                       <SelectContent>
                         {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                       </SelectContent>
@@ -2124,7 +2113,7 @@ const AdminBusinesses = () => {
                     }))}
                   />
                   <div>
-                    <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الوطني', 'National ID')}</Label>
                     <Input value={editForm.national_id} onChange={e => setField('national_id', e.target.value)} dir="ltr" className="mt-1 max-w-xs" />
                   </div>
                 </TabsContent>
@@ -2133,17 +2122,17 @@ const AdminBusinesses = () => {
                 <TabsContent value="content" className="space-y-4 mt-3">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{isRTL ? 'نبذة قصيرة (عربي)' : 'Short Description (AR)'}</Label>
+                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'نبذة قصيرة (عربي)', 'Short Description (AR)')}</Label>
                       <FieldAiActions compact value={editForm.short_description_ar} lang="ar" isRTL={isRTL} fieldType="excerpt"
                         onTranslated={(v) => setField('short_description_en', v)} onImproved={(v) => setField('short_description_ar', v)} />
                     </div>
                     <Textarea value={editForm.short_description_ar} onChange={e => setField('short_description_ar', e.target.value)} rows={2}
-                      placeholder={isRTL ? 'وصف مختصر للنشاط (150 حرف)' : 'Short business description (150 chars)'} />
+                      placeholder={pickBi(isRTL, 'وصف مختصر للنشاط (150 حرف)', 'Short business description (150 chars)')} />
                     <span className="text-[10px] text-muted-foreground">{editForm.short_description_ar?.length || 0}/150</span>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{isRTL ? 'نبذة قصيرة (إنجليزي)' : 'Short Description (EN)'}</Label>
+                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'نبذة قصيرة (إنجليزي)', 'Short Description (EN)')}</Label>
                       <FieldAiActions compact value={editForm.short_description_en} lang="en" isRTL={isRTL} fieldType="excerpt"
                         onTranslated={(v) => setField('short_description_ar', v)} onImproved={(v) => setField('short_description_en', v)} />
                     </div>
@@ -2153,21 +2142,21 @@ const AdminBusinesses = () => {
                   <Separator />
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{isRTL ? 'الوصف التفصيلي (عربي)' : 'Full Description (AR)'}</Label>
+                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'الوصف التفصيلي (عربي)', 'Full Description (AR)')}</Label>
                       <FieldAiActions compact value={editForm.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
                         onTranslated={(v) => setField('description_en', v)} onImproved={(v) => setField('description_ar', v)} />
                     </div>
                     <Textarea value={editForm.description_ar} onChange={e => setField('description_ar', e.target.value)} rows={5} />
-                    <span className="text-[10px] text-muted-foreground">{editForm.description_ar?.length || 0} {isRTL ? 'حرف' : 'chars'}</span>
+                    <span className="text-[10px] text-muted-foreground">{editForm.description_ar?.length || 0} {pickBi(isRTL, 'حرف', 'chars')}</span>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{isRTL ? 'الوصف التفصيلي (إنجليزي)' : 'Full Description (EN)'}</Label>
+                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'الوصف التفصيلي (إنجليزي)', 'Full Description (EN)')}</Label>
                       <FieldAiActions compact value={editForm.description_en} lang="en" isRTL={isRTL} fieldType="description"
                         onTranslated={(v) => setField('description_ar', v)} onImproved={(v) => setField('description_en', v)} />
                     </div>
                     <Textarea value={editForm.description_en} onChange={e => setField('description_en', e.target.value)} rows={5} dir="ltr" />
-                    <span className="text-[10px] text-muted-foreground">{editForm.description_en?.length || 0} {isRTL ? 'حرف' : 'chars'}</span>
+                    <span className="text-[10px] text-muted-foreground">{editForm.description_en?.length || 0} {pickBi(isRTL, 'حرف', 'chars')}</span>
                   </div>
                 </TabsContent>
 
@@ -2175,7 +2164,7 @@ const AdminBusinesses = () => {
                 <TabsContent value="media" className="space-y-4 mt-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'الشعار' : 'Logo'}</Label>
+                      <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'الشعار', 'Logo')}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.logo_url}
                         onChange={(url) => setField('logo_url', url)}
                         onRemove={() => {
@@ -2189,10 +2178,10 @@ const AdminBusinesses = () => {
                           setField('logo_image_asset_id', meta.imageAssetId ?? null);
                           setField('logo_image_variants', meta.variants ?? null);
                         }}
-                        aspectRatio="square" placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} />
+                        aspectRatio="square" placeholder={pickBi(isRTL, 'رفع الشعار', 'Upload logo')} />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                      <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'صورة الغلاف', 'Cover Image')}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.cover_url}
                         onChange={(url) => setField('cover_url', url)}
                         onRemove={() => {
@@ -2206,21 +2195,21 @@ const AdminBusinesses = () => {
                           setField('cover_image_asset_id', meta.imageAssetId ?? null);
                           setField('cover_image_variants', meta.variants ?? null);
                         }}
-                        placeholder={isRTL ? 'رفع صورة الغلاف' : 'Upload cover'} />
+                        placeholder={pickBi(isRTL, 'رفع صورة الغلاف', 'Upload cover')} />
                     </div>
                   </div>
                   <Separator />
                   <div>
                     <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
-                      <Image className="w-3 h-3" /> {isRTL ? 'معرض صور الأعمال' : 'Work Gallery'}
+                      <Image className="w-3 h-3" /> {pickBi(isRTL, 'معرض صور الأعمال', 'Work Gallery')}
                       <Badge variant="secondary" className="text-[9px] ms-1">{portfolioData.length}</Badge>
                     </Label>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {portfolioData.map((item) => (
                         <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
-                          <img src={item.media_url} alt={isRTL ? 'صورة من معرض الأعمال' : 'Portfolio image'} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
+                          <img src={item.media_url} alt={pickBi(isRTL, 'صورة من معرض الأعمال', 'Portfolio image')} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                           <button type="button"
-                            onClick={() => { if (confirm(isRTL ? 'حذف هذه الصورة؟' : 'Delete this image?')) deletePortfolioMutation.mutate(item.id); }}
+                            onClick={() => { if (confirm(pickBi(isRTL, 'حذف هذه الصورة؟', 'Delete this image?'))) deletePortfolioMutation.mutate(item.id); }}
                             className="absolute top-1 end-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <X className="w-3 h-3" />
                           </button>
@@ -2228,7 +2217,7 @@ const AdminBusinesses = () => {
                       ))}
                       <div className="aspect-square">
                         <ImageUpload bucket="portfolio-images" folder="admin" aspectRatio="square"
-                          onChange={(url) => addPortfolioMutation.mutate(url)} placeholder={isRTL ? 'إضافة صورة' : 'Add image'} />
+                          onChange={(url) => addPortfolioMutation.mutate(url)} placeholder={pickBi(isRTL, 'إضافة صورة', 'Add image')} />
                       </div>
                     </div>
                   </div>
@@ -2257,7 +2246,7 @@ const AdminBusinesses = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'عنوان SEO (عربي)', 'SEO Title (AR)')}</Label>
                         <FieldAiActions value={editForm.seo_title_ar || editForm.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_title" compact
                           onTranslated={(t) => setField('seo_title_ar', t)} onImproved={(t) => setField('seo_title_ar', t)} />
                       </div>
@@ -2265,7 +2254,7 @@ const AdminBusinesses = () => {
                     </div>
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'عنوان SEO (إنجليزي)', 'SEO Title (EN)')}</Label>
                         <FieldAiActions value={editForm.seo_title_en || editForm.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_title" compact
                           onTranslated={(t) => setField('seo_title_en', t)} onImproved={(t) => setField('seo_title_en', t)} />
                       </div>
@@ -2273,7 +2262,7 @@ const AdminBusinesses = () => {
                     </div>
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'وصف SEO (عربي)', 'SEO Description (AR)')}</Label>
                         <FieldAiActions value={editForm.seo_description_ar || editForm.description_ar || editForm.short_description_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_description" compact
                           onTranslated={(t) => setField('seo_description_ar', t)} onImproved={(t) => setField('seo_description_ar', t)} />
                       </div>
@@ -2281,7 +2270,7 @@ const AdminBusinesses = () => {
                     </div>
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'وصف SEO (إنجليزي)', 'SEO Description (EN)')}</Label>
                         <FieldAiActions value={editForm.seo_description_en || editForm.description_en || editForm.short_description_en || ''} lang="en" isRTL={isRTL} fieldType="meta_description" compact
                           onTranslated={(t) => setField('seo_description_en', t)} onImproved={(t) => setField('seo_description_en', t)} />
                       </div>
@@ -2289,40 +2278,40 @@ const AdminBusinesses = () => {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold">{isRTL ? 'كلمات SEO' : 'SEO keywords'}</Label>
-                    <Input value={editForm.seo_keywords} onChange={e => setField('seo_keywords', e.target.value)} dir="auto" className="mt-1" placeholder={isRTL ? 'ألمنيوم, زجاج, تركيب' : 'aluminum, glass, installation'} />
+                    <Label className="text-xs font-semibold">{pickBi(isRTL, 'كلمات SEO', 'SEO keywords')}</Label>
+                    <Input value={editForm.seo_keywords} onChange={e => setField('seo_keywords', e.target.value)} dir="auto" className="mt-1" placeholder={pickBi(isRTL, 'ألمنيوم, زجاج, تركيب', 'aluminum, glass, installation')} />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة OG' : 'OG image'}</Label>
+                    <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'صورة OG', 'OG image')}</Label>
                     <ImageUpload bucket="business-assets" value={editForm.og_image}
                       onChange={(url) => setField('og_image', url)} onRemove={() => setField('og_image', '')}
-                      placeholder={isRTL ? 'رفع صورة المشاركة' : 'Upload share image'} />
+                      placeholder={pickBi(isRTL, 'رفع صورة المشاركة', 'Upload share image')} />
                   </div>
                 </TabsContent>
 
                 {/* ── Contact Tab ── */}
                 <TabsContent value="contact" className="space-y-4 mt-3">
                   <div>
-                    <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" /> {isRTL ? 'اسم مسؤول التواصل' : 'Contact Person'}</Label>
+                    <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" /> {pickBi(isRTL, 'اسم مسؤول التواصل', 'Contact Person')}</Label>
                     <Input value={editForm.contact_person} onChange={e => setField('contact_person', e.target.value)} className="mt-1" />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <PhoneField value={parsePhoneValue(editForm.phone)} onChange={(v) => setField('phone', toE164(v))} label={isRTL ? 'رقم الهاتف' : 'Phone'} optional />
-                    <PhoneField value={parsePhoneValue(editForm.mobile)} onChange={(v) => setField('mobile', toE164(v))} label={isRTL ? 'رقم الجوال' : 'Mobile'} optional />
+                    <PhoneField value={parsePhoneValue(editForm.phone)} onChange={(v) => setField('phone', toE164(v))} label={pickBi(isRTL, 'رقم الهاتف', 'Phone')} optional />
+                    <PhoneField value={parsePhoneValue(editForm.mobile)} onChange={(v) => setField('mobile', toE164(v))} label={pickBi(isRTL, 'رقم الجوال', 'Mobile')} optional />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
+                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {pickBi(isRTL, 'الرقم الموحد', 'Unified Number')}</Label>
                       <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="920xxxxxxx" />
                     </div>
-                    <PhoneField value={parsePhoneValue(editForm.customer_service_phone)} onChange={(v) => setField('customer_service_phone', toE164(v))} label={isRTL ? 'خدمة العملاء' : 'Customer Service'} optional />
+                    <PhoneField value={parsePhoneValue(editForm.customer_service_phone)} onChange={(v) => setField('customer_service_phone', toE164(v))} label={pickBi(isRTL, 'خدمة العملاء', 'Customer Service')} optional />
                   </div>
                   <div>
-                    <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                    <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {pickBi(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
                     <Input type="email" value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                   </div>
                   <div>
-                    <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
+                    <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {pickBi(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
                     <Input type="url" value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="https://" />
                   </div>
                   {editingBiz && (
@@ -2330,14 +2319,14 @@ const AdminBusinesses = () => {
                       <Separator className="mb-3" />
                       <div className="flex items-center justify-between mb-2">
                         <Label className="text-xs font-semibold flex items-center gap-1">
-                          <Package className="w-3 h-3" /> {isRTL ? 'الخدمات المسجلة' : 'Registered Services'}
+                          <Package className="w-3 h-3" /> {pickBi(isRTL, 'الخدمات المسجلة', 'Registered Services')}
                         </Label>
                         <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1" onClick={() => { setEditingBiz(null); openServices(editingBiz.id); }}>
-                          <Settings className="w-3 h-3" /> {isRTL ? 'إدارة' : 'Manage'}
+                          <Settings className="w-3 h-3" /> {pickBi(isRTL, 'إدارة', 'Manage')}
                         </Button>
                       </div>
                       {allServices.filter((s) => s.business_id === editingBiz.id).length === 0 ? (
-                        <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد خدمات مسجلة' : 'No registered services'}</p>
+                        <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'لا توجد خدمات مسجلة', 'No registered services')}</p>
                       ) : (
                         <div className="flex flex-wrap gap-1.5">
                           {allServices.filter((s) => s.business_id === editingBiz.id).map((s) => (
@@ -2359,7 +2348,7 @@ const AdminBusinesses = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-sm font-medium truncate">{language === 'ar' ? br.name_ar : (br.name_en || br.name_ar)}</p>
-                            {br.is_main && <Badge className="text-[8px] h-4 bg-primary/10 text-primary border-0">{isRTL ? 'رئيسي' : 'Main'}</Badge>}
+                            {br.is_main && <Badge className="text-[8px] h-4 bg-primary/10 text-primary border-0">{pickBi(isRTL, 'رئيسي', 'Main')}</Badge>}
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
                             {br.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.phone}</span>}
@@ -2387,14 +2376,14 @@ const AdminBusinesses = () => {
                             <Edit className="w-3 h-3" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
-                            onClick={() => { if (confirm(isRTL ? 'حذف هذا الفرع؟' : 'Delete this branch?')) deleteBranchMutation.mutate(br.id); }}>
+                            onClick={() => { if (confirm(pickBi(isRTL, 'حذف هذا الفرع؟', 'Delete this branch?'))) deleteBranchMutation.mutate(br.id); }}>
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>
                     ))}
                     {branches.length === 0 && !branchForm && (
-                      <p className="text-center text-sm text-muted-foreground py-6">{isRTL ? 'لا توجد فروع مسجلة' : 'No branches registered'}</p>
+                      <p className="text-center text-sm text-muted-foreground py-6">{pickBi(isRTL, 'لا توجد فروع مسجلة', 'No branches registered')}</p>
                     )}
                   </div>
 
@@ -2403,53 +2392,53 @@ const AdminBusinesses = () => {
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-primary flex items-center gap-1.5">
                           {editingBranchId ? <Edit className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-                          {editingBranchId ? (isRTL ? 'تعديل الفرع' : 'Edit Branch') : (isRTL ? 'إضافة فرع جديد' : 'Add New Branch')}
+                          {editingBranchId ? (pickBi(isRTL, 'تعديل الفرع', 'Edit Branch')) : (pickBi(isRTL, 'إضافة فرع جديد', 'Add New Branch'))}
                         </p>
                         <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setBranchForm(null); setEditingBranchId(null); }}>
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
                       <div>
-                        <Label className="text-xs">{isRTL ? 'اسم الفرع (عربي)' : 'Branch Name (AR)'} *</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)')} *</Label>
                         <Input value={branchForm.name_ar} onChange={e => setBranchForm((f) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
                       </div>
                       <div>
-                        <Label className="text-xs">{isRTL ? 'اسم الفرع (إنجليزي)' : 'Branch Name (EN)'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
                         <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
                       </div>
                       <Separator />
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'بيانات التواصل' : 'Contact Info'}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{pickBi(isRTL, 'بيانات التواصل', 'Contact Info')}</p>
                       <div>
-                        <Label className="text-xs">{isRTL ? 'اسم مسؤول التواصل' : 'Contact Person'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'اسم مسؤول التواصل', 'Contact Person')}</Label>
                         <Input value={branchForm.contact_person} onChange={e => setBranchForm((f) => ({ ...f, contact_person: e.target.value }))} className="mt-1" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <PhoneField value={parsePhoneValue(branchForm.phone)} onChange={(v) => setBranchForm((f) => ({ ...f, phone: toE164(v) }))} label={isRTL ? 'الهاتف' : 'Phone'} optional />
-                        <PhoneField value={parsePhoneValue(branchForm.mobile)} onChange={(v) => setBranchForm((f) => ({ ...f, mobile: toE164(v) }))} label={isRTL ? 'الجوال' : 'Mobile'} optional />
+                        <PhoneField value={parsePhoneValue(branchForm.phone)} onChange={(v) => setBranchForm((f) => ({ ...f, phone: toE164(v) }))} label={pickBi(isRTL, 'الهاتف', 'Phone')} optional />
+                        <PhoneField value={parsePhoneValue(branchForm.mobile)} onChange={(v) => setBranchForm((f) => ({ ...f, mobile: toE164(v) }))} label={pickBi(isRTL, 'الجوال', 'Mobile')} optional />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs">{isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'الرقم الموحد', 'Unified Number')}</Label>
                           <Input value={branchForm.unified_number} onChange={e => setBranchForm((f) => ({ ...f, unified_number: e.target.value }))} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
                         </div>
-                        <PhoneField value={parsePhoneValue(branchForm.customer_service_phone)} onChange={(v) => setBranchForm((f) => ({ ...f, customer_service_phone: toE164(v) }))} label={isRTL ? 'خدمة العملاء' : 'Customer Service'} optional />
+                        <PhoneField value={parsePhoneValue(branchForm.customer_service_phone)} onChange={(v) => setBranchForm((f) => ({ ...f, customer_service_phone: toE164(v) }))} label={pickBi(isRTL, 'خدمة العملاء', 'Customer Service')} optional />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
                           <Input value={branchForm.email} onChange={e => setBranchForm((f) => ({ ...f, email: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                         <div>
-                          <Label className="text-xs">{isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
+                          <Label className="text-xs">{pickBi(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
                           <Input value={branchForm.website} onChange={e => setBranchForm((f) => ({ ...f, website: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                       </div>
                       <Separator />
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'العنوان' : 'Address'}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{pickBi(isRTL, 'العنوان', 'Address')}</p>
                       <div>
-                        <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'الدولة', 'Country')}</Label>
                         <Select value={branchForm.country_id} onValueChange={v => setBranchForm((f) => ({ ...f, country_id: v, city_id: '' }))}>
-                          <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                          <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={pickBi(isRTL, 'اختر', 'Select')} /></SelectTrigger>
                           <SelectContent>
                             {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                           </SelectContent>
@@ -2494,7 +2483,7 @@ const AdminBusinesses = () => {
                         }))}
                       />
                       <div>
-                        <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
+                        <Label className="text-xs">{pickBi(isRTL, 'الرقم الوطني', 'National ID')}</Label>
                         <Input value={branchForm.national_id} onChange={e => setBranchForm((f) => ({ ...f, national_id: e.target.value }))} dir="ltr" className="mt-1 max-w-xs" />
                       </div>
                       <div className="flex items-center gap-4">
@@ -2507,24 +2496,22 @@ const AdminBusinesses = () => {
                                 : `"${currentMain.name_ar}" will be unset as main and this branch will replace it. Continue?`)) {
                                 return;
                               }
-                            } else if (branchForm.is_main && !confirm(isRTL
-                              ? 'هل تريد إلغاء كون هذا الفرع رئيسياً؟ يجب تعيين فرع آخر كرئيسي.'
-                              : 'Unset this branch as main? You must set another branch as main.')) {
+                            } else if (branchForm.is_main && !confirm(pickBi(isRTL, 'هل تريد إلغاء كون هذا الفرع رئيسياً؟ يجب تعيين فرع آخر كرئيسي.', 'Unset this branch as main? You must set another branch as main.'))) {
                               return;
                             }
                             setBranchForm((f) => ({ ...f, is_main: v }));
                           }} />
-                          <span className="text-xs">{isRTL ? 'فرع رئيسي' : 'Main Branch'}</span>
+                          <span className="text-xs">{pickBi(isRTL, 'فرع رئيسي', 'Main Branch')}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch checked={branchForm.is_active} onCheckedChange={v => setBranchForm((f) => ({ ...f, is_active: v }))} />
-                          <span className="text-xs">{isRTL ? 'مفعّل' : 'Active'}</span>
+                          <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
                         </div>
                       </div>
                       <Button onClick={() => saveBranchMutation.mutate()} disabled={!branchForm.name_ar || saveBranchMutation.isPending}
                         className="w-full gap-1.5">
                         <Save className="w-3.5 h-3.5" />
-                        {saveBranchMutation.isPending ? '...' : (isRTL ? 'حفظ الفرع' : 'Save Branch')}
+                        {saveBranchMutation.isPending ? '...' : (pickBi(isRTL, 'حفظ الفرع', 'Save Branch'))}
                       </Button>
                     </div>
                   ) : (
@@ -2535,7 +2522,7 @@ const AdminBusinesses = () => {
                       setBranchForm({ ...emptyBranch(), is_main: isFirst });
                       setEditingBranchId(null);
                     }}>
-                      <Plus className="w-3.5 h-3.5" /> {isRTL ? 'إضافة فرع جديد' : 'Add New Branch'}
+                      <Plus className="w-3.5 h-3.5" /> {pickBi(isRTL, 'إضافة فرع جديد', 'Add New Branch')}
                     </Button>
                   )}
                 </TabsContent>
@@ -2545,20 +2532,20 @@ const AdminBusinesses = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 border border-border/30">
                       <div>
-                        <p className="text-sm font-medium">{isRTL ? 'حالة التفعيل' : 'Active Status'}</p>
-                        <p className="text-[10px] text-muted-foreground">{isRTL ? 'تفعيل أو تعطيل ظهور العمل' : 'Enable or disable business visibility'}</p>
+                        <p className="text-sm font-medium">{pickBi(isRTL, 'حالة التفعيل', 'Active Status')}</p>
+                        <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'تفعيل أو تعطيل ظهور العمل', 'Enable or disable business visibility')}</p>
                       </div>
                       <Switch checked={editForm.is_active} onCheckedChange={v => setField('is_active', v)} />
                     </div>
                     <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 border border-border/30">
                       <div>
-                        <p className="text-sm font-medium">{isRTL ? 'التوثيق' : 'Verification'}</p>
-                        <p className="text-[10px] text-muted-foreground">{isRTL ? 'علامة التوثيق الرسمية' : 'Official verification badge'}</p>
+                        <p className="text-sm font-medium">{pickBi(isRTL, 'التوثيق', 'Verification')}</p>
+                        <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'علامة التوثيق الرسمية', 'Official verification badge')}</p>
                       </div>
                       <Switch checked={editForm.is_verified} onCheckedChange={v => setField('is_verified', v)} />
                     </div>
                     <div className="p-3.5 rounded-xl bg-muted/30 border border-border/30">
-                      <p className="text-sm font-medium mb-2">{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</p>
+                      <p className="text-sm font-medium mb-2">{pickBi(isRTL, 'مستوى العضوية', 'Membership Tier')}</p>
                       {(() => {
                         const cur = tiers.find(t => t.value === editForm.membership_tier) || tiers[0];
                         return (
@@ -2571,9 +2558,7 @@ const AdminBusinesses = () => {
                         );
                       })()}
                       <p className="text-[10px] text-muted-foreground mt-2">
-                        {isRTL
-                          ? 'تغيير العضوية يتم من خيار العضوية في صف المنشأة.'
-                          : 'Use the row tier picker to change membership.'}
+                        {pickBi(isRTL, 'تغيير العضوية يتم من خيار العضوية في صف المنشأة.', 'Use the row tier picker to change membership.')}
                       </p>
                     </div>
                   </div>
@@ -2589,9 +2574,9 @@ const AdminBusinesses = () => {
               <div className="flex gap-2">
                 <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5 rounded-xl">
                   <Save className="w-3.5 h-3.5" />
-                  {updateBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'حفظ التعديلات' : 'Save Changes')}
+                  {updateBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (pickBi(isRTL, 'حفظ التعديلات', 'Save Changes'))}
                 </Button>
-                <Button variant="outline" onClick={() => setEditingBiz(null)} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                <Button variant="outline" onClick={() => setEditingBiz(null)} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
               </div>
           </div>
         )}
@@ -2604,7 +2589,7 @@ const AdminBusinesses = () => {
                 <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
                   <Package className="w-4 h-4 text-accent" />
                 </div>
-                {isRTL ? 'إدارة الخدمات' : 'Manage Services'}
+                {pickBi(isRTL, 'إدارة الخدمات', 'Manage Services')}
                 <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
               </h3>
               <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
@@ -2617,30 +2602,30 @@ const AdminBusinesses = () => {
                       <p className="text-sm font-medium truncate">{language === 'ar' ? svc.name_ar : (svc.name_en || svc.name_ar)}</p>
                       <p className="text-[10px] text-muted-foreground">
                         {svc.price_from && svc.price_to ? `${svc.price_from} - ${svc.price_to} ${svc.currency_code}` :
-                         svc.price_from ? `${isRTL ? 'من' : 'From'} ${svc.price_from} ${svc.currency_code}` : ''}
+                         svc.price_from ? `${pickBi(isRTL, 'من', 'From')} ${svc.price_from} ${svc.currency_code}` : ''}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Switch checked={svc.is_active} onCheckedChange={v => toggleServiceMutation.mutate({ id: svc.id, is_active: v })} />
                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
-                        onClick={() => { if (confirm(isRTL ? 'حذف هذه الخدمة؟' : 'Delete this service?')) deleteServiceMutation.mutate(svc.id); }}>
+                        onClick={() => { if (confirm(pickBi(isRTL, 'حذف هذه الخدمة؟', 'Delete this service?'))) deleteServiceMutation.mutate(svc.id); }}>
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
                 ))}
                 {services.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-6">{isRTL ? 'لا توجد خدمات' : 'No services'}</p>
+                  <p className="text-center text-sm text-muted-foreground py-6">{pickBi(isRTL, 'لا توجد خدمات', 'No services')}</p>
                 )}
               </div>
               <Separator />
               <div className="space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <Plus className="w-3 h-3" /> {isRTL ? 'إضافة خدمة جديدة' : 'Add New Service'}
+                  <Plus className="w-3 h-3" /> {pickBi(isRTL, 'إضافة خدمة جديدة', 'Add New Service')}
                 </p>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{isRTL ? 'اسم الخدمة (عربي)' : 'Service Name (AR)'} *</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'اسم الخدمة (عربي)', 'Service Name (AR)')} *</Label>
                     <FieldAiActions compact value={newService.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
                       onTranslated={(v) => setServiceField('name_en', v)} onImproved={(v) => setServiceField('name_ar', v)} />
                   </div>
@@ -2648,7 +2633,7 @@ const AdminBusinesses = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{isRTL ? 'اسم الخدمة (إنجليزي)' : 'Service Name (EN)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'اسم الخدمة (إنجليزي)', 'Service Name (EN)')}</Label>
                     <FieldAiActions compact value={newService.name_en} lang="en" isRTL={isRTL} fieldType="title"
                       onTranslated={(v) => setServiceField('name_ar', v)} onImproved={(v) => setServiceField('name_en', v)} />
                   </div>
@@ -2656,7 +2641,7 @@ const AdminBusinesses = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الوصف (عربي)', 'Description (AR)')}</Label>
                     <FieldAiActions compact value={newService.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
                       onTranslated={(v) => setServiceField('description_en', v)} onImproved={(v) => setServiceField('description_ar', v)} />
                   </div>
@@ -2664,7 +2649,7 @@ const AdminBusinesses = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label>
+                    <Label className="text-xs">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (EN)')}</Label>
                     <FieldAiActions compact value={newService.description_en} lang="en" isRTL={isRTL} fieldType="description"
                       onTranslated={(v) => setServiceField('description_ar', v)} onImproved={(v) => setServiceField('description_en', v)} />
                   </div>
@@ -2672,24 +2657,24 @@ const AdminBusinesses = () => {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {isRTL ? 'السعر من' : 'Price From'}</Label>
+                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {pickBi(isRTL, 'السعر من', 'Price From')}</Label>
                     <Input type="number" value={newService.price_from} onChange={e => setServiceField('price_from', e.target.value)} dir="ltr" className="mt-1" />
                   </div>
                   <div>
-                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {isRTL ? 'السعر إلى' : 'Price To'}</Label>
+                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {pickBi(isRTL, 'السعر إلى', 'Price To')}</Label>
                     <Input type="number" value={newService.price_to} onChange={e => setServiceField('price_to', e.target.value)} dir="ltr" className="mt-1" />
                   </div>
                   <div className="flex items-end pb-1">
                     <div className="flex items-center gap-2">
                       <Switch checked={newService.is_active} onCheckedChange={v => setServiceField('is_active', v)} />
-                      <span className="text-xs">{isRTL ? 'مفعّل' : 'Active'}</span>
+                      <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
                     </div>
                   </div>
                 </div>
                 <Button onClick={() => addServiceMutation.mutate()} disabled={!newService.name_ar || addServiceMutation.isPending}
                   className="w-full gap-1.5">
                   <Plus className="w-3.5 h-3.5" />
-                  {addServiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
+                  {addServiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (pickBi(isRTL, 'إضافة الخدمة', 'Add Service'))}
                 </Button>
               </div>
             </div>
@@ -2704,12 +2689,12 @@ const AdminBusinesses = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
               <Building2 className="w-8 h-8 text-accent/30" />
             </div>
-            <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
-            <p className="text-xs text-muted-foreground">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
+            <p className="font-heading font-bold text-sm mb-1">{pickBi(isRTL, 'لا توجد نتائج', 'No results found')}</p>
+            <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'جرّب تعديل معايير البحث', 'Try adjusting your search criteria')}</p>
             {(search || filterStatus !== 'all' || selectedTiers.length > 0) && (
               <Button variant="outline" size="sm" className="mt-4 gap-1.5 rounded-xl"
                 onClick={() => { setSearch(''); setFilterStatus('all'); clearTiers(); }}>
-                <X className="w-3.5 h-3.5" /> {isRTL ? 'مسح الفلاتر' : 'Clear Filters'}
+                <X className="w-3.5 h-3.5" /> {pickBi(isRTL, 'مسح الفلاتر', 'Clear Filters')}
               </Button>
             )}
           </div>
@@ -2725,13 +2710,13 @@ const AdminBusinesses = () => {
                         {allPagedSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                       </button>
                     </TableHead>
-                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'النشاط' : 'Business'}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'المعرف' : 'Username'}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'العضوية' : 'Tier'}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'التقييم' : 'Rating'}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'الترجمة' : 'Trans.'}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'الحالة' : 'Status'}</TableHead>
-                    <TableHead className="text-[11px] font-semibold text-center">{isRTL ? 'إجراءات' : 'Actions'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'النشاط', 'Business')}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'المعرف', 'Username')}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'العضوية', 'Tier')}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'التقييم', 'Rating')}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'الترجمة', 'Trans.')}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'الحالة', 'Status')}</TableHead>
+                    <TableHead className="text-[11px] font-semibold text-center">{pickBi(isRTL, 'إجراءات', 'Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -2757,8 +2742,8 @@ const AdminBusinesses = () => {
                               <div className="flex items-center gap-1">
                                 <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
                                 {biz.is_demo && (
-                                  <Badge variant="outline" className="text-[9px] h-4 px-1 gap-0.5 border-amber-500/40 text-amber-600 dark:text-amber-400" title={isRTL ? 'بيانات تجريبية' : 'Demo data'}>
-                                    <FlaskConical className="w-2.5 h-2.5" />{isRTL ? 'تجريبي' : 'Demo'}
+                                  <Badge variant="outline" className="text-[9px] h-4 px-1 gap-0.5 border-amber-500/40 text-amber-600 dark:text-amber-400" title={pickBi(isRTL, 'بيانات تجريبية', 'Demo data')}>
+                                    <FlaskConical className="w-2.5 h-2.5" />{pickBi(isRTL, 'تجريبي', 'Demo')}
                                   </Badge>
                                 )}
                               </div>
@@ -2779,16 +2764,16 @@ const AdminBusinesses = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-[9px] h-5 gap-1 ${tc.full ? 'border-success/30 text-success' : 'border-warning/30 text-warning'}`}
-                            title={tc.full ? (isRTL ? 'مكتملة' : 'Complete') : (isRTL ? 'ناقصة' : 'Incomplete')}>
+                            title={tc.full ? (pickBi(isRTL, 'مكتملة', 'Complete')) : (pickBi(isRTL, 'ناقصة', 'Incomplete'))}>
                             <Languages className="w-2.5 h-2.5" />
                             {tc.ar ? 'AR' : '·'} / {tc.en ? 'EN' : '·'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            {biz.is_verified && <Badge className="text-[8px] h-4 bg-info/10 text-info border-0">{isRTL ? 'موثق' : 'Verified'}</Badge>}
-                            {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{isRTL ? 'معطل' : 'Disabled'}</Badge>}
-                            {biz.is_active && !biz.is_verified && <Badge className="text-[8px] h-4 bg-success/10 text-success border-0">{isRTL ? 'نشط' : 'Active'}</Badge>}
+                            {biz.is_verified && <Badge className="text-[8px] h-4 bg-info/10 text-info border-0">{pickBi(isRTL, 'موثق', 'Verified')}</Badge>}
+                            {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{pickBi(isRTL, 'معطل', 'Disabled')}</Badge>}
+                            {biz.is_active && !biz.is_verified && <Badge className="text-[8px] h-4 bg-success/10 text-success border-0">{pickBi(isRTL, 'نشط', 'Active')}</Badge>}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -2817,7 +2802,7 @@ const AdminBusinesses = () => {
             <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
               <button onClick={togglePageAll} className="inline-flex items-center gap-1 hover:text-foreground">
                 {allPagedSelected ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
-                {isRTL ? 'تحديد الصفحة' : 'Select page'}
+                {pickBi(isRTL, 'تحديد الصفحة', 'Select page')}
               </button>
               <span className="ms-auto tech-content">
                 {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}
@@ -2859,15 +2844,15 @@ const AdminBusinesses = () => {
                             <h3 className="font-heading font-bold text-sm sm:text-base leading-tight break-words min-w-0" dir="auto">
                               {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             </h3>
-                            {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
-                            {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
+                            {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{pickBi(isRTL, 'معطل', 'Disabled')}</Badge>}
+                            {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{pickBi(isRTL, 'عقود', 'Contracts')}</Badge>}
                             {biz.is_demo && (
-                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-amber-500/40 text-amber-600 dark:text-amber-400" title={isRTL ? 'بيانات تجريبية' : 'Demo data'}>
-                                <FlaskConical className="w-2.5 h-2.5" />{isRTL ? 'تجريبي' : 'Demo'}
+                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-amber-500/40 text-amber-600 dark:text-amber-400" title={pickBi(isRTL, 'بيانات تجريبية', 'Demo data')}>
+                                <FlaskConical className="w-2.5 h-2.5" />{pickBi(isRTL, 'تجريبي', 'Demo')}
                               </Badge>
                             )}
                             {!tc.full && (
-                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-warning/40 text-warning" title={isRTL ? 'الترجمة غير مكتملة' : 'Translation incomplete'}>
+                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-warning/40 text-warning" title={pickBi(isRTL, 'الترجمة غير مكتملة', 'Translation incomplete')}>
                                 <AlertTriangle className="w-2.5 h-2.5" />{tc.ar ? 'EN' : 'AR'}
                               </Badge>
                             )}
@@ -2888,13 +2873,13 @@ const AdminBusinesses = () => {
                             </span>
                             {svcCount > 0 && (
                               <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
-                                <Package className="w-2.5 h-2.5" /> {svcCount} {isRTL ? 'خدمة' : 'services'}
+                                <Package className="w-2.5 h-2.5" /> {svcCount} {pickBi(isRTL, 'خدمة', 'services')}
                               </Badge>
                             )}
                           </div>
                         </div>
                         {/* Quick view button — always visible top-corner */}
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl shrink-0" asChild title={isRTL ? 'عرض الملف' : 'View profile'}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl shrink-0" asChild title={pickBi(isRTL, 'عرض الملف', 'View profile')}>
                           <Link to={`/${biz.username}`}><Eye className="w-4 h-4" /></Link>
                         </Button>
                       </div>
@@ -2915,17 +2900,17 @@ const AdminBusinesses = () => {
                           >
                             <SelectTrigger
                               className="h-8 text-xs w-32 rounded-xl shrink-0"
-                              title={isRTL ? 'حالة النشر' : 'Publication status'}
+                              title={pickBi(isRTL, 'حالة النشر', 'Publication status')}
                             >
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="draft">📝 {isRTL ? 'مسودة' : 'Draft'}</SelectItem>
-                              <SelectItem value="submitted">📨 {isRTL ? 'مُرسلة' : 'Submitted'}</SelectItem>
-                              <SelectItem value="under_review">🔍 {isRTL ? 'قيد المراجعة' : 'Under review'}</SelectItem>
-                              <SelectItem value="approved">✅ {isRTL ? 'معتمدة' : 'Approved'}</SelectItem>
-                              <SelectItem value="published">🌐 {isRTL ? 'منشورة' : 'Published'}</SelectItem>
-                              <SelectItem value="rejected">⛔ {isRTL ? 'مرفوضة' : 'Rejected'}</SelectItem>
+                              <SelectItem value="draft">📝 {pickBi(isRTL, 'مسودة', 'Draft')}</SelectItem>
+                              <SelectItem value="submitted">📨 {pickBi(isRTL, 'مُرسلة', 'Submitted')}</SelectItem>
+                              <SelectItem value="under_review">🔍 {pickBi(isRTL, 'قيد المراجعة', 'Under review')}</SelectItem>
+                              <SelectItem value="approved">✅ {pickBi(isRTL, 'معتمدة', 'Approved')}</SelectItem>
+                              <SelectItem value="published">🌐 {pickBi(isRTL, 'منشورة', 'Published')}</SelectItem>
+                              <SelectItem value="rejected">⛔ {pickBi(isRTL, 'مرفوضة', 'Rejected')}</SelectItem>
                             </SelectContent>
                           </Select>
 
@@ -2938,32 +2923,32 @@ const AdminBusinesses = () => {
                               name: biz.name_ar || biz.name_en || '',
                               value: !biz.is_verified,
                             })}
-                            title={isRTL ? 'تبديل حالة التوثيق الرسمي' : 'Toggle official verification'}
+                            title={pickBi(isRTL, 'تبديل حالة التوثيق الرسمي', 'Toggle official verification')}
                           >
                             {biz.is_verified ? <CheckCircle className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
-                            <span>{biz.is_verified ? (isRTL ? 'موثّق — إلغاء' : 'Verified — Unverify') : (isRTL ? 'توثيق الحساب' : 'Verify')}</span>
+                            <span>{biz.is_verified ? (pickBi(isRTL, 'موثّق — إلغاء', 'Verified — Unverify')) : (pickBi(isRTL, 'توثيق الحساب', 'Verify'))}</span>
                           </Button>
 
                           <Button variant="outline" size="sm"
                             className={`h-8 text-xs gap-1.5 rounded-xl shrink-0 ${!biz.is_active ? 'text-success border-success' : 'text-warning border-warning'}`}
                             onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_active', value: !biz.is_active })}>
                             {biz.is_active ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                            <span>{biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}</span>
+                            <span>{biz.is_active ? (pickBi(isRTL, 'تعطيل', 'Disable')) : (pickBi(isRTL, 'تفعيل', 'Enable'))}</span>
                           </Button>
 
                           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0"
-                            onClick={() => openServices(biz.id)} title={isRTL ? 'خدمات' : 'Services'}>
-                            <Package className="w-3 h-3" /> <span className="hidden md:inline">{isRTL ? 'خدمات' : 'Services'}</span>
+                            onClick={() => openServices(biz.id)} title={pickBi(isRTL, 'خدمات', 'Services')}>
+                            <Package className="w-3 h-3" /> <span className="hidden md:inline">{pickBi(isRTL, 'خدمات', 'Services')}</span>
                           </Button>
 
-                          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0" asChild title={isRTL ? 'خدمات الجهة' : 'Activations'}>
+                          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0" asChild title={pickBi(isRTL, 'خدمات الجهة', 'Activations')}>
                             <Link to={`/admin/service-activations?businessId=${biz.id}`}>
-                              <ShieldCheck className="w-3 h-3" /><span className="hidden lg:inline">{isRTL ? 'خدمات الجهة' : 'Activations'}</span>
+                              <ShieldCheck className="w-3 h-3" /><span className="hidden lg:inline">{pickBi(isRTL, 'خدمات الجهة', 'Activations')}</span>
                             </Link>
                           </Button>
 
                           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl shrink-0 ms-auto" onClick={() => openEdit(biz)}>
-                            <Edit className="w-3 h-3" /><span className="hidden md:inline">{isRTL ? 'تعديل' : 'Edit'}</span>
+                            <Edit className="w-3 h-3" /><span className="hidden md:inline">{pickBi(isRTL, 'تعديل', 'Edit')}</span>
                           </Button>
                         </div>
                       </div>
@@ -3013,7 +2998,7 @@ const AdminBusinesses = () => {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-info" />
-                {isRTL ? 'تأكيد التوثيق' : 'Confirm Verification'}
+                {pickBi(isRTL, 'تأكيد التوثيق', 'Confirm Verification')}
               </AlertDialogTitle>
               <AlertDialogDescription>
                 {verifyConfirm?.value
@@ -3029,7 +3014,7 @@ const AdminBusinesses = () => {
             <AlertDialogFooter className="gap-2">
               <AlertDialogCancel asChild>
                 <Button variant="outline" className="rounded-xl">
-                  {isRTL ? 'إلغاء' : 'Cancel'}
+                  {pickBi(isRTL, 'إلغاء', 'Cancel')}
                 </Button>
               </AlertDialogCancel>
               <AlertDialogAction asChild>
@@ -3044,8 +3029,8 @@ const AdminBusinesses = () => {
                   }}
                 >
                   {verifyConfirm?.value
-                    ? (isRTL ? 'نعم، توثيق' : 'Yes, Verify')
-                    : (isRTL ? 'نعم، إلغاء التوثيق' : 'Yes, Unverify')
+                    ? (pickBi(isRTL, 'نعم، توثيق', 'Yes, Verify'))
+                    : (pickBi(isRTL, 'نعم، إلغاء التوثيق', 'Yes, Unverify'))
                   }
                 </Button>
               </AlertDialogAction>
