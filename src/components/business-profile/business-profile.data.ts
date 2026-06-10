@@ -307,8 +307,8 @@ export const useBranches = (businessId: string | undefined) =>
         source: 'public',
         select:
           "id, name_ar, name_en, slug, is_main, " +
-          "address, district, region, street_name, building_number, additional_number, " +
-          "phone, mobile, whatsapp, unified_number, customer_service_phone, email, " +
+          "address, district, region, street_name, building_number, " +
+          "phone, mobile, unified_number, customer_service_phone, " +
           "website, latitude, longitude",
         order: [
           { column: "is_main", ascending: false },
@@ -419,9 +419,9 @@ export const useBranchBySlug = (
         .select(
           "id, business_id, slug, is_main, name_ar, name_en, " +
           "description_ar, description_en, " +
-          "phone, mobile, whatsapp, customer_service_phone, unified_number, " +
-          "email, website, " +
-          "address, region, district, street_name, building_number, additional_number, " +
+          "phone, mobile, customer_service_phone, unified_number, " +
+          "website, " +
+          "address, region, district, street_name, building_number, " +
           "latitude, longitude"
         )
         .eq("business_id", businessId!)
