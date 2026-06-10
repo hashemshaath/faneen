@@ -109,10 +109,13 @@ const PUBLIC_BUSINESS_SELECT =
   'countries(name_ar, name_en, code)';
 
 // Provider edits must surface on the public profile without a hard reload.
-// We use a short stale window for the headline profile row and force a
-// refetch on mount, while keeping derived collections (services, branches,
-// reviews, ...) on a longer window since they change less often.
-const PROFILE_HEADLINE_STALE_MS = 30 * 1000;
+// LIVE-DATA-FIX — headline row is now `staleTime: 0` so revisiting
+// `/{username}` immediately after saving from /dashboard/business-edit
+// triggers a background refetch instead of briefly showing the previously
+// cached headline. `refetchOnMount: 'always'` is preserved so cache hits
+// still revalidate. Derived collections (services, branches, reviews, ...)
+// keep the longer window since they change less often.
+const PROFILE_HEADLINE_STALE_MS = 0;
 const PROFILE_STALE_MS = 5 * 60 * 1000;
 
 /**

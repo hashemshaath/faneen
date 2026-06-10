@@ -19,7 +19,9 @@ describe('business profile freshness contract', () => {
   );
 
   it('uses the short headline stale window for useBusinessByUsername', () => {
-    expect(src).toMatch(/PROFILE_HEADLINE_STALE_MS\s*=\s*30\s*\*\s*1000/);
+    // LIVE-DATA-FIX — staleTime lowered to 0 so revisits after a save
+    // refetch immediately instead of briefly flashing the cached headline.
+    expect(src).toMatch(/PROFILE_HEADLINE_STALE_MS\s*=\s*0\b/);
     expect(src).toMatch(/staleTime:\s*PROFILE_HEADLINE_STALE_MS/);
   });
 
@@ -62,6 +64,26 @@ describe('dashboard business edit invalidation', () => {
   it('also invalidates the previous username when it changes', () => {
     expect(editSrc).toMatch(/oldUsername\s*!==\s*newUsername/);
     expect(editSrc).toMatch(/queryKey:\s*\['business',\s*oldUsername\]/);
+  });
+
+  // LIVE-DATA-FIX — guardrail: edits must invalidate the broader public
+  // lists too, otherwise /search and homepage category rows keep showing
+  // pre-save values until their own staleTime expires.
+  it('invalidates the /search results query', () => {
+    expect(editSrc).toMatch(/queryKey:\s*\['businesses-all-with-services'\]/);
+  });
+
+  it('invalidates the homepage category rows', () => {
+    expect(editSrc).toMatch(/queryKey:\s*\['home-category-row-businesses'\]/);
+  });
+
+  it('invalidates the taxonomy display batch', () => {
+    expect(editSrc).toMatch(/queryKey:\s*\['business-taxonomy-display-batch'\]/);
+  });
+
+  it('invalidates every service-category-business-ids variant by prefix', () => {
+    expect(editSrc).toMatch(/search:service-category-business-ids/);
+    expect(editSrc).toMatch(/predicate:/);
   });
 });
 

@@ -342,6 +342,21 @@ const DashboardBusinessEdit: React.FC = () => {
       // Keep /dashboard/services in sync with the changes above.
       qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
       qc.invalidateQueries({ queryKey: ['business-services-sync', form.id] });
+      // LIVE-DATA-FIX — broader public/list invalidations so /search, the
+      // homepage category rows, and the taxonomy display batch reflect the
+      // edit without a hard refresh. These were previously missing, causing
+      // already-mounted /search tabs (and the bg-cached business cards) to
+      // keep showing pre-save values until the 30s staleTime expired.
+      qc.invalidateQueries({ queryKey: ['businesses-all-with-services'] });
+      qc.invalidateQueries({ queryKey: ['home-category-row-businesses'] });
+      qc.invalidateQueries({ queryKey: ['business-taxonomy-display-batch'] });
+      // Service-category facet cache key is `['search:service-category-business-ids', id, topology]`
+      // — match by prefix so every variant is invalidated.
+      qc.invalidateQueries({
+        predicate: (q) =>
+          Array.isArray(q.queryKey) &&
+          q.queryKey[0] === 'search:service-category-business-ids',
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       toast.error(t(isRTL, `تعذّر الحفظ: ${message}`, `Save failed: ${message}`));
