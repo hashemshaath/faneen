@@ -85,7 +85,7 @@ const ROUTES = {
 };
 
 const PrimaryCTA: React.FC<{ to: string; label: string; onClick?: () => void }> = ({ to, label, onClick }) => {
-  const { isRTL } = useLanguage();
+  const bi = useBi();
   const Arrow = bi(ArrowLeft, ArrowRight);
   return (
     <Link to={to} onClick={onClick}>
