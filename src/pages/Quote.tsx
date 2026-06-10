@@ -219,7 +219,7 @@ const QuoteSpecialtyPicker: React.FC<{
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
         <Bi
-          ar={bi('سيساعد المزودين على فهم احتياجك بدقة أكبر.', '')}
+          ar="سيساعد المزودين على فهم احتياجك بدقة أكبر."
           en="Helps providers understand your need more precisely."
         />
       </p>
