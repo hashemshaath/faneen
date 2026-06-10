@@ -31,6 +31,8 @@ type ContactMethod = "whatsapp" | "call" | "email";
 type Timeline = "urgent" | "1_month" | "1_3_months" | "3_6_months" | "flexible";
 type ServiceLocation = "project_site" | "provider_location" | "not_sure";
 
+const MIXED_TIMELINE_VALUES = new Set<Timeline>(["1_3_months", "3_6_months"]);
+
 interface RfqFormState {
   name: string;
   email: string;
@@ -72,6 +74,18 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
 
   const update = (k: keyof RfqFormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }));
+
+  const timelineLabel = (value: Timeline) => {
+    const labels: Record<Timeline, string> = {
+      urgent: bi("عاجل", "Urgent"),
+      "1_month": bi("خلال شهر", "Within a month"),
+      "1_3_months": bi("1–3 أشهر", "1–3 months"),
+      "3_6_months": bi("3–6 أشهر", "3–6 months"),
+      flexible: bi("مرن", "Flexible"),
+    };
+    const label = labels[value];
+    return MIXED_TIMELINE_VALUES.has(value) ? <TechnicalText mono={false}>{label}</TechnicalText> : label;
+  };
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -194,7 +208,9 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             value={form.contact_method}
             onValueChange={(v) => setForm((p) => ({ ...p, contact_method: v as typeof p.contact_method }))}
           >
-            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-11 rounded-xl">
+              <span className="min-w-0 flex-1 text-start">{timelineLabel(form.timeline)}</span>
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="whatsapp">{bi("واتساب", "WhatsApp")}</SelectItem>
               <SelectItem value="call">{bi("اتصال", "Call")}</SelectItem>
