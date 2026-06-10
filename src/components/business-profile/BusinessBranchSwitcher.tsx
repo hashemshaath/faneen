@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { GitBranch, MapPin } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue } from "@/lib/direction";
@@ -24,16 +23,14 @@ export interface BusinessBranchSwitcherBranch {
 interface Props {
   username: string;
   branches: BusinessBranchSwitcherBranch[];
-  currentBranchSlug?: string;
+  currentBranchId?: string | null;
+  onSelect: (branch: BusinessBranchSwitcherBranch | null) => void;
 }
 
-export const BusinessBranchSwitcher = ({ username, branches, currentBranchSlug }: Props) => {
+export const BusinessBranchSwitcher = ({ username, branches, currentBranchId, onSelect }: Props) => {
   const { language, isRTL } = useLanguage();
-  const navigate = useNavigate();
 
-  // Only render when there's at least one navigable branch.
-  const navigable = branches.filter((b) => !!b.slug);
-  if (navigable.length === 0) return null;
+  if (branches.length === 0) return null;
 
   const labelMain = isRTL ? "المركز الرئيسي" : "Head office";
   const labelFor = (b: BusinessBranchSwitcherBranch) => {
@@ -42,8 +39,12 @@ export const BusinessBranchSwitcher = ({ username, branches, currentBranchSlug }
     return isRTL ? `${b.region ? `${b.region} — ` : ""}فرع ${name}` : `${b.region ? `${b.region} — ` : ""}${name} branch`;
   };
 
-  const go = (slug?: string) => {
-    navigate(slug ? `/${username}/${slug}` : `/${username}`);
+  const go = (b: BusinessBranchSwitcherBranch | null) => {
+    onSelect(b);
+    if (typeof window !== "undefined") {
+      const next = b?.slug ? `/${username}/${b.slug}` : `/${username}`;
+      window.history.replaceState(window.history.state, "", next);
+    }
   };
 
   return (
@@ -58,10 +59,10 @@ export const BusinessBranchSwitcher = ({ username, branches, currentBranchSlug }
         </span>
         <button
           type="button"
-          onClick={() => go(undefined)}
+          onClick={() => go(null)}
           className={cn(
             "inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-[11px] transition-colors sm:text-xs",
-            !currentBranchSlug
+            !currentBranchId
               ? "border-accent bg-accent/10 text-accent"
               : "border-border/40 text-muted-foreground hover:border-accent/30",
           )}
@@ -69,13 +70,13 @@ export const BusinessBranchSwitcher = ({ username, branches, currentBranchSlug }
           <MapPin className="h-3 w-3" />
           {labelMain}
         </button>
-        {navigable.map((b) => {
-          const active = currentBranchSlug === b.slug;
+        {branches.map((b) => {
+          const active = currentBranchId === b.id;
           return (
             <button
               key={b.id}
               type="button"
-              onClick={() => go(b.slug || undefined)}
+              onClick={() => go(b)}
               className={cn(
                 "inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-[11px] transition-colors sm:text-xs",
                 active
