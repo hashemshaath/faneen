@@ -82,6 +82,9 @@ export const BusinessTaxonomySection: React.FC<Props> = ({
     onSuccess: () => {
       toast.success(t(isRTL, 'تم حفظ التصنيف', 'Taxonomy saved'));
       qc.invalidateQueries({ queryKey: ['tx:business-links', businessId] });
+      qc.invalidateQueries({ queryKey: ['business-taxonomy-display-batch'] });
+      qc.invalidateQueries({ queryKey: ['business-taxonomy-presence-batch'] });
+      qc.invalidateQueries({ queryKey: ['search-taxonomy-context'] });
       onSaved?.();
     },
     onError: (err: unknown) => {
