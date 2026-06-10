@@ -213,8 +213,41 @@ export default function AdminProviderReview() {
       }
     },
     onSuccess: () => {
-      toast.success(language === 'ar' ? 'تم تحديث الحالة' : 'Status updated');
+      // Determine the just-applied status from the mutation variables, so
+      // we can broadcast the right cache invalidations and toast copy.
+      const lastStatus = approvalMutation.variables?.status;
+      const lastId = approvalMutation.variables?.id;
+      const target = (rows ?? []).find((r) => r.id === lastId) ?? null;
+      const uname = target?.username ?? null;
+
+      if (lastStatus === 'published') {
+        toast.success(
+          language === 'ar'
+            ? 'تم نشر الشركة للعامة وستظهر في البحث'
+            : 'The provider is now public and visible in search',
+        );
+      } else {
+        toast.success(language === 'ar' ? 'تم تحديث الحالة' : 'Status updated');
+      }
+
+      // Admin review screens.
       qc.invalidateQueries({ queryKey: ['admin-provider-review'] });
+
+      // Public/search caches — any approval transition (publish OR
+      // unpublish) can change what `businesses_public` exposes, so we
+      // invalidate them on every successful approval change.
+      qc.invalidateQueries({ queryKey: ['businesses-all-with-services'] });
+      qc.invalidateQueries({ queryKey: ['home-category-row-businesses'] });
+      qc.invalidateQueries({ queryKey: ['business-taxonomy-display-batch'] });
+      qc.invalidateQueries({ queryKey: ['search:service-category-business-ids'] });
+      if (uname) {
+        qc.invalidateQueries({ queryKey: ['business', uname] });
+        qc.invalidateQueries({ queryKey: ['username-kind', uname] });
+      }
+      // Generic admin business list/details surfaces.
+      qc.invalidateQueries({ queryKey: ['admin-businesses'] });
+      qc.invalidateQueries({ queryKey: ['admin-business'] });
+
       setNotes('');
     },
     onError: (e: unknown) => {

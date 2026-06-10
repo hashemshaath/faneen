@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CheckCircle2, XCircle, Eye, AlertCircle, Loader2, Send, Globe, Tag, Lock,
-  Users as UsersIcon, ExternalLink, Building2, ShieldAlert,
+  Users as UsersIcon, ExternalLink, Building2, ShieldAlert, Rocket,
 } from 'lucide-react';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,11 @@ export const ProviderReviewDetailPanel: React.FC<Props> = ({
   // exist we surface a "needs taxonomy link" hint instead of legacy data.
   const taxonomyDisplay = useBusinessTaxonomyDisplay(selected?.id ?? null, language);
   const taxonomyPresence = useBusinessTaxonomyPresence(selected?.id ?? null);
+  // Inline confirm state for the "Publish Publicly" action. The UX rule
+  // forbids dialogs — we toggle a confirm strip inline instead.
+  const [confirmPublish, setConfirmPublish] = useState(false);
+  // Reset the confirm strip whenever the selected business changes.
+  React.useEffect(() => { setConfirmPublish(false); }, [selected?.id]);
   if (!selected) {
     return (
       <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center text-sm text-muted-foreground">
@@ -267,10 +272,6 @@ export const ProviderReviewDetailPanel: React.FC<Props> = ({
             <CheckCircle2 className="h-3.5 w-3.5 text-success" />
             {isRTL ? 'موافقة' : 'Approve'}
           </Button>
-          <Button size="sm" variant="hero" onClick={() => onApprovalChange('published')} disabled={approvalPending} className="gap-1">
-            <Send className="h-3.5 w-3.5" />
-            {isRTL ? 'نشر' : 'Publish'}
-          </Button>
           <Button size="sm" variant="outline" onClick={() => onApprovalChange('submitted')} disabled={approvalPending} className="gap-1">
             <ShieldAlert className="h-3.5 w-3.5 text-warning" />
             {isRTL ? 'إلغاء النشر' : 'Unpublish'}
@@ -302,6 +303,101 @@ export const ProviderReviewDetailPanel: React.FC<Props> = ({
             </Link>
           </Button>
         </div>
+
+        {/* ─────── Publish Publicly — gated action ───────
+            Visible only when:
+              • approval_status === 'approved'
+              • is_active === true
+              • is_demo === false
+            For other statuses we surface a small locked hint so admins
+            know publishing requires approval first.
+         */}
+        {(() => {
+          const status = selected.approval_status ?? 'draft';
+          const isActive = selected.is_active !== false;
+          const isDemo = selected.is_demo === true;
+          if (status === 'published') {
+            return (
+              <div
+                data-testid="publish-publicly-locked"
+                className="rounded-xl border border-success/30 bg-success/5 p-3 text-xs text-success"
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="h-3.5 w-3.5" />
+                  {isRTL
+                    ? 'هذه الشركة منشورة للعامة وتظهر في البحث.'
+                    : 'This provider is public and visible in search.'}
+                </div>
+              </div>
+            );
+          }
+          if (status !== 'approved' || !isActive || isDemo) {
+            return null;
+          }
+          return (
+            <div
+              data-testid="publish-publicly-action"
+              className="rounded-xl border border-success/40 bg-success/5 p-3"
+            >
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-success">
+                <Rocket className="h-3.5 w-3.5" />
+                {isRTL ? 'جاهز للنشر للعامة' : 'Ready to publish publicly'}
+              </div>
+              <p className="mb-3 text-[12px] leading-relaxed text-muted-foreground">
+                {isRTL
+                  ? 'تم اعتماد هذه الشركة. اضغط "نشر للعامة" لجعلها تظهر في البحث والصفحات العامة.'
+                  : 'This provider is approved. Click "Publish Publicly" to make it appear in search and on public pages.'}
+              </p>
+              {!confirmPublish ? (
+                <Button
+                  size="sm"
+                  variant="hero"
+                  data-testid="publish-publicly-btn"
+                  onClick={() => setConfirmPublish(true)}
+                  disabled={approvalPending}
+                  className="gap-1"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {isRTL ? 'نشر للعامة' : 'Publish Publicly'}
+                </Button>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[12px] font-medium">
+                    {isRTL
+                      ? 'هل تريد نشر هذه الشركة للعامة؟ ستظهر في البحث والصفحات العامة.'
+                      : 'Publish this provider publicly? It will appear in search and on public pages.'}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="hero"
+                    data-testid="publish-publicly-confirm"
+                    onClick={() => {
+                      onApprovalChange('published');
+                      setConfirmPublish(false);
+                    }}
+                    disabled={approvalPending}
+                    className="gap-1"
+                  >
+                    {approvalPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    )}
+                    {isRTL ? 'تأكيد النشر' : 'Confirm publish'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setConfirmPublish(false)}
+                    disabled={approvalPending}
+                  >
+                    {isRTL ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </CardContent>
     </>
   );
