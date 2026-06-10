@@ -208,7 +208,9 @@ const BusinessProfile = () => {
     ? buildSeoTitle({
         kind: 'company',
         lang: language === 'ar' ? 'ar' : 'en',
-        name: businessName,
+        name: branch
+          ? `${businessName} — ${getLocalizedValue(language, branch.name_ar, branch.name_en)}`
+          : businessName,
         activity: categoryName,
         city: cityName,
       })
@@ -218,10 +220,14 @@ const BusinessProfile = () => {
     ? buildSeoDescription({
         kind: 'company',
         lang: language === 'ar' ? 'ar' : 'en',
-        name: businessName,
+        name: branch
+          ? `${businessName} — ${getLocalizedValue(language, branch.name_ar, branch.name_en)}`
+          : businessName,
         activity: categoryName,
         city: cityName,
-        rawDescription: businessDesc,
+        rawDescription: branch
+          ? `${getLocalizedValue(language, branch.name_ar, branch.name_en)} — ${[branch.district, branch.region, branch.street_name].filter(Boolean).join("، ") || businessDesc}`
+          : businessDesc,
       })
     : undefined;
 
@@ -247,6 +253,7 @@ const BusinessProfile = () => {
     reviews,
     certifications,
     awards,
+    branches,
     categoryName,
     cityName,
     language,

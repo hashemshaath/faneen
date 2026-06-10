@@ -14,6 +14,8 @@ import {
   MapPin,
   MapPinned,
   MessageSquare,
+  MessageCircle,
+  Navigation,
   Phone,
   PhoneCall,
   Star,
@@ -783,6 +785,84 @@ export const BranchesTab = ({
                 })}
               </div>
             )}
+
+            {(() => {
+              const callNumber = isAuthenticated ? (branch.phone || branch.mobile) : null;
+              const waNumber = isAuthenticated
+                ? ((branch as { whatsapp?: string | null }).whatsapp || branch.phone || branch.mobile)
+                : null;
+              const mapHref =
+                branch.latitude && branch.longitude
+                  ? `https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`
+                  : addressParts.length > 0
+                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, ...addressParts].join(", "))}`
+                    : null;
+              if (!callNumber && !waNumber && !mapHref) return null;
+              const sanitizeWa = (n: string) => n.replace(/[^\d+]/g, "").replace(/^\+/, "");
+              return (
+                <div className="grid grid-cols-3 gap-2 border-t border-border/20 p-3 dark:border-border/10 sm:p-4">
+                  {callNumber ? (
+                    <a
+                      href={`tel:${callNumber}`}
+                      onClick={() => onRevealContact?.("phone")}
+                      className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-accent/10 text-[11px] font-medium text-accent transition hover:bg-accent/15 sm:text-xs"
+                      aria-label={language === "ar" ? "اتصال" : "Call"}
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                      {language === "ar" ? "اتصال" : "Call"}
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onRequestContact}
+                      className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-muted/40 text-[11px] font-medium text-muted-foreground transition hover:bg-muted/60 sm:text-xs"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                      {language === "ar" ? "اتصال" : "Call"}
+                    </button>
+                  )}
+                  {waNumber ? (
+                    <a
+                      href={`https://wa.me/${sanitizeWa(waNumber)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onRevealContact?.("phone")}
+                      className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 text-[11px] font-medium text-emerald-600 transition hover:bg-emerald-500/15 dark:text-emerald-400 sm:text-xs"
+                      aria-label="WhatsApp"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      {language === "ar" ? "واتساب" : "WhatsApp"}
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onRequestContact}
+                      className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-muted/40 text-[11px] font-medium text-muted-foreground transition hover:bg-muted/60 sm:text-xs"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      {language === "ar" ? "واتساب" : "WhatsApp"}
+                    </button>
+                  )}
+                  {mapHref ? (
+                    <a
+                      href={mapHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-sky-500/10 text-[11px] font-medium text-sky-600 transition hover:bg-sky-500/15 dark:text-sky-400 sm:text-xs"
+                      aria-label={language === "ar" ? "الموقع" : "Map"}
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                      {language === "ar" ? "الموقع" : "Map"}
+                    </a>
+                  ) : (
+                    <span className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-muted/30 text-[11px] font-medium text-muted-foreground/60 sm:text-xs">
+                      <Navigation className="h-3.5 w-3.5" />
+                      {language === "ar" ? "الموقع" : "Map"}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
 
             {branch.latitude && branch.longitude && (
               <div className="px-4 pb-4 sm:px-5 sm:pb-5">

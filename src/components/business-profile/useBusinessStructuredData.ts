@@ -81,12 +81,29 @@ interface AwardLite {
   awarded_year?: number | null;
 }
 
+interface BranchLite {
+  id?: string;
+  slug?: string | null;
+  name_ar?: string | null;
+  name_en?: string | null;
+  is_main?: boolean | null;
+  phone?: string | null;
+  mobile?: string | null;
+  address?: string | null;
+  region?: string | null;
+  district?: string | null;
+  street_name?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
 interface Args {
   business: BusinessWithJoins | null | undefined;
   services: ServiceLite[];
   reviews: ReviewLite[];
   certifications?: CertificationLite[];
   awards?: AwardLite[];
+  branches?: BranchLite[];
   categoryName: string;
   cityName: string;
   language: string;
@@ -109,6 +126,7 @@ export const useBusinessStructuredData = ({
   reviews,
   certifications = [],
   awards = [],
+  branches = [],
   categoryName,
   cityName,
   language,
@@ -196,6 +214,53 @@ export const useBusinessStructuredData = ({
           ? services.map((s) => (language === "ar" ? s.name_ar : s.name_en || s.name_ar))
           : undefined,
     };
+
+    // schema.org `department` — one LocalBusiness sub-entity per branch with
+    // its own PostalAddress + GeoCoordinates. Helps Google show per-branch
+    // rich results and "near me" pack listings.
+    if (branches.length > 0) {
+      const countryCode = business.countries?.code || "SA";
+      localBusiness.department = branches.slice(0, 25).map((br) => {
+        const bName =
+          (language === "ar" ? br.name_ar : br.name_en || br.name_ar) ||
+          br.name_ar ||
+          businessName;
+        const street =
+          [br.street_name, br.district].filter(Boolean).join("، ") ||
+          br.address ||
+          undefined;
+        const branchUrl = br.slug
+          ? `https://qitaat.com/${business.username}/${br.slug}`
+          : `https://qitaat.com/${business.username}`;
+        const dept: Record<string, unknown> = {
+          "@type": "LocalBusiness",
+          "@id": `${branchUrl}#branch-${br.id ?? br.slug ?? ""}`,
+          name: `${businessName} — ${bName}`,
+          url: branchUrl,
+          ...(br.is_main ? { branchCode: "main" } : {}),
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: street,
+            addressLocality: cityName || br.region || undefined,
+            addressRegion: br.region || undefined,
+            addressCountry: countryCode,
+          },
+          ...(br.latitude && br.longitude
+            ? {
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: br.latitude,
+                  longitude: br.longitude,
+                },
+              }
+            : {}),
+          // Branch phone is intentionally surfaced (already public via UI);
+          // mobile is omitted to reduce scraper value.
+          ...(br.phone ? { telephone: br.phone } : {}),
+        };
+        return dept;
+      });
+    }
 
     // schema.org `hasCredential` — EducationalOccupationalCredential[]
     if (certifications.length > 0) {
@@ -295,5 +360,5 @@ export const useBusinessStructuredData = ({
       ...serviceEntities,
       ...reviewEntities,
     ];
-  }, [business, services, reviews, certifications, awards, categoryName, cityName, language, businessName]);
+  }, [business, services, reviews, certifications, awards, branches, categoryName, cityName, language, businessName]);
 };
