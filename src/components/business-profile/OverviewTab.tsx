@@ -9,7 +9,10 @@ import {
   GitBranch,
   Globe,
   MapPin,
+  Phone,
+  Sparkles,
   Star,
+  TrendingUp,
   Wrench,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
