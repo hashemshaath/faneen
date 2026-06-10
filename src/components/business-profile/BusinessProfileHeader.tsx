@@ -131,23 +131,27 @@ export const BusinessProfileHeader = ({
   const branchLabel = selectedBranch
     ? getLocalizedValue(language, selectedBranch.name_ar, selectedBranch.name_en)
     : '';
-  // Build a full address line. When a branch is selected we use its address
-  // parts; otherwise we fall back to the business's own location fields.
-  // The result is shown right after the city in the header meta row so
-  // visitors immediately know where the open page points to.
-  const addressParts = (selectedBranch
-    ? [selectedBranch.district, selectedBranch.address]
-    : [
-        business.district,
-        business.street_name,
-        business.building_number
-          ? (language === 'ar' ? `مبنى ${business.building_number}` : `Bldg ${business.building_number}`)
-          : null,
-        business.address,
-      ]
-  ).filter((part): part is string => Boolean(part));
-  // Dedupe while preserving order — common when `address` already contains
-  // district/street.
+  // Build a full address line in the canonical order:
+  //   City، District، Street، Postal Code
+  // City is sourced from the embedded `cities` relation (falls back to the
+  // free-text `region` field). Postal code is shown only when present on
+  // the underlying record (no dedicated column yet on the public view, so
+  // this is a forward-compatible read).
+  const cityName = selectedBranch
+    ? (selectedBranch as { city?: string | null }).city || selectedBranch.region || null
+    : getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en) || business.region || null;
+  const streetPart = selectedBranch
+    ? (selectedBranch as { street_name?: string | null }).street_name || selectedBranch.address || null
+    : business.street_name || business.address || null;
+  const postalCode = selectedBranch
+    ? (selectedBranch as { postal_code?: string | null }).postal_code || null
+    : (business as { postal_code?: string | null }).postal_code || null;
+  const addressParts = [
+    cityName,
+    selectedBranch ? selectedBranch.district : business.district,
+    streetPart,
+    postalCode,
+  ].filter((part): part is string => Boolean(part));
   const fullAddress = Array.from(new Set(addressParts)).join('، ');
   // Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
   // name is intentionally not used for display. When no modern taxonomy is
