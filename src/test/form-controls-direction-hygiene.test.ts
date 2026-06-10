@@ -40,3 +40,23 @@ describe('Select primitive — logical spacing', () => {
     expect(src).not.toMatch(/\btext-left\b/);
   });
 });
+
+describe('/quote — Arabic placeholders follow UI direction', () => {
+  const f = 'src/pages/Quote.tsx';
+  const src = readFileSync(join(process.cwd(), f), 'utf8');
+
+  it('does not leave Arabic placeholder fields on dir="auto" when empty', () => {
+    for (const id of ['q-city', 'q-district', 'q-desc', 'q-meas', 'q-qty']) {
+      const block = src.match(new RegExp(`id="${id}"[\\s\\S]{0,260}`))?.[0] ?? '';
+      expect(block, `${id} should use UI direction for empty placeholder alignment`).toMatch(/dir=\{isRTL \? 'rtl' : 'ltr'\}/);
+      expect(block, `${id} should not use dir auto`).not.toMatch(/dir="auto"/);
+    }
+  });
+
+  it('keeps technical contact and budget fields LTR', () => {
+    expect(src).toMatch(/id="q-phone"[\s\S]{0,180}dir="ltr"/);
+    expect(src).toMatch(/id="q-email"[\s\S]{0,180}dir="ltr"/);
+    expect(src).toMatch(/id="q-budget"[\s\S]{0,180}inputMode="numeric"/);
+    expect(src).not.toMatch(/[٠-٩]/);
+  });
+});
