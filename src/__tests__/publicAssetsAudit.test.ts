@@ -24,8 +24,16 @@ const REQUIRED_PUBLIC_FILES = [
   'llms.txt',
   '_headers',
   'favicon.ico',
-  'pwa-192.png',
-  'pwa-512.png',
+  // Brand icon family (single source of truth). The legacy
+  // `pwa-192.png` / `pwa-512.png` duplicates were removed in the
+  // Qitaat Icon/SEO hotfix because vite-plugin-pwa was emitting a
+  // competing manifest pointing at them — Google was picking up the
+  // stale identity. All callers now use /icons-*.png.
+  'icons-48.png',
+  'icons-96.png',
+  'icons-144.png',
+  'icons-192.png',
+  'icons-512.png',
   'og-image.jpg',
   'logo.png',
   'placeholder.svg',
@@ -48,7 +56,8 @@ describe('PUBLIC-ASSETS-AUDIT-1: public/ asset integrity', () => {
   it('index.html still references the favicon and PWA icons that live in public/', () => {
     const html = readFileSync(resolve(root, 'index.html'), 'utf8');
     expect(html).toMatch(/href="\/favicon\.ico"/);
-    expect(html).toMatch(/href="\/pwa-192\.png"/);
+    expect(html).toMatch(/href="\/icons-192\.png"/);
+    expect(html).toMatch(/href="\/icons-512\.png"/);
     expect(html).toMatch(/apple-touch-icon/);
     expect(html).toMatch(/og-image\.jpg/);
   });
@@ -58,5 +67,8 @@ describe('PUBLIC-ASSETS-AUDIT-1: public/ asset integrity', () => {
     // names, we want to know — they were considered and rejected.
     const html = readFileSync(resolve(root, 'index.html'), 'utf8');
     expect(html).not.toMatch(/\/hero-bg\.(webp|jpg)/);
+    // Legacy duplicate PWA icons (replaced by /icons-*.png family).
+    expect(html).not.toMatch(/\/pwa-192\.png/);
+    expect(html).not.toMatch(/\/pwa-512\.png/);
   });
 });

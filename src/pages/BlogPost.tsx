@@ -353,7 +353,7 @@ const BlogPost = () => {
       keywords: post.tags?.join(', '),
       articleSection: post.category,
       ...authorBlock,
-      publisher: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com', logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' } },
+      publisher: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com', logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' } },
       mainEntityOfPage: { '@type': 'WebPage', '@id': `https://qitaat.com/blog/${post.slug}` },
       // Speakable: limited to the visible headline + excerpt summary so voice
       // surfaces (Google Assistant) read a clean abstract rather than the full

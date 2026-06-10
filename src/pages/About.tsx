@@ -508,7 +508,7 @@ const About = () => {
         '@type': 'Organization',
         name: 'قِطاعات Qitaat',
         url: 'https://qitaat.com',
-        logo: 'https://qitaat.com/og-image.jpg',
+        logo: 'https://qitaat.com/logo.png',
         sameAs: [
           'https://qitaat.lovable.app',
         ],
@@ -522,7 +522,7 @@ const About = () => {
       name: 'قِطاعات Qitaat',
       alternateName: 'Qitaat',
       url: 'https://qitaat.com',
-      logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' },
+      logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
       description: language === 'ar'
         ? 'منصة قطاعات الصناعة العربية: ألمنيوم، زجاج، حديد، خشب وخزائن.'
         : 'Arabic industrial sectors platform: aluminum, glass, steel, wood and cabinets.',
