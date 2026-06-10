@@ -174,7 +174,7 @@ const VerifyBusiness = () => {
     const safeName = displayName || data.username || 'Qitaat';
     const ogTitle = `${safeName} — ${verified ? t.verified : t.unverified} · ${t.title}`;
     const ogDesc = desc || (verified ? t.reasonVerified : t.reasonUnverified);
-    const ogImage = data.logo_url || `${window.location.origin}/pwa-192.png`;
+    const ogImage = data.logo_url || `${window.location.origin}/icons-192.png`;
     const restorers = [
       setMeta('meta[property="og:type"]', { content: 'website' }),
       setMeta('meta[property="og:title"]', { content: ogTitle }),

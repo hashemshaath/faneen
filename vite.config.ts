@@ -110,22 +110,15 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      manifest: {
-        name: "قِطاعات - دليل أعمال الألمنيوم والحديد",
-        short_name: "قِطاعات",
-        description: "المنصة الأولى للبحث عن مصانع ومحلات الألمنيوم والحديد والزجاج والخشب",
-        theme_color: "#C8A767",
-        background_color: "#0F1419",
-        display: "standalone",
-        dir: "rtl",
-        lang: "ar",
-        start_url: "/",
-        icons: [
-          { src: "/pwa-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/pwa-512.png", sizes: "512x512", type: "image/png" },
-          { src: "/pwa-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
-      },
+      // IMPORTANT: Do NOT let vite-plugin-pwa generate a manifest here.
+      // The authoritative Qitaat manifest is hand-written at
+      // `public/manifest.webmanifest` (Qitaat green #0E9E6F, /icons-*.png).
+      // Previously the plugin emitted a competing manifest with the legacy
+      // gold theme (#C8A767), legacy name, and /pwa-*.png icons, which
+      // overwrote the hand-written file at build time and surfaced the
+      // wrong favicon/identity to Google + Android. Keep the service
+      // worker, drop the manifest generation. Single source of truth.
+      manifest: false,
     }),
   ].filter(Boolean),
   resolve: {

@@ -8,10 +8,19 @@
 /logo.png
   Cache-Control: public, max-age=2592000
 
-/pwa-192.png
+/icons-48.png
   Cache-Control: public, max-age=2592000
 
-/pwa-512.png
+/icons-96.png
+  Cache-Control: public, max-age=2592000
+
+/icons-144.png
+  Cache-Control: public, max-age=2592000
+
+/icons-192.png
+  Cache-Control: public, max-age=2592000
+
+/icons-512.png
   Cache-Control: public, max-age=2592000
 
 # Service worker must always revalidate. Note: /registerSW.js and
