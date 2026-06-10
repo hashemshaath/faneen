@@ -12,6 +12,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
 import { isVariantUrls } from '@/modules/files/services/image-pipeline';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { PublicTaxonomyBusiness } from '@/modules/taxonomy/search-integration';
 import type { CategoryRow } from '../data/categoryRows';
 
@@ -177,7 +178,7 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                         <div className="flex items-center gap-2.5 min-w-0">
                           {showLogoBadge ? (
                             <div
-                              className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-background ring-1 ring-border/60 shadow-sm overflow-hidden flex items-center justify-center p-1"
+                              className="shrink-0 aspect-square w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-background ring-1 ring-border/60 shadow-sm overflow-hidden flex items-center justify-center p-1"
                               aria-hidden="true"
                             >
                               <ResponsiveImage
@@ -191,9 +192,19 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                           ) : null}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <h3 className="font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors">
-                                {name || bi('مزوّد', 'Provider')}
-                              </h3>
+                              <Tooltip delayDuration={250}>
+                                <TooltipTrigger asChild>
+                                  <h3
+                                    className="min-w-0 flex-1 font-heading font-semibold text-sm sm:text-[15px] text-foreground truncate leading-snug group-hover:text-primary transition-colors"
+                                    dir="auto"
+                                  >
+                                    {name || bi('مزوّد', 'Provider')}
+                                  </h3>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" align="start" className="max-w-[260px] break-words text-xs">
+                                  {name || bi('مزوّد', 'Provider')}
+                                </TooltipContent>
+                              </Tooltip>
                               {business.is_verified ? (
                                 <VerifiedBadge size="xs" iconOnly className="text-success shrink-0" />
                               ) : null}
