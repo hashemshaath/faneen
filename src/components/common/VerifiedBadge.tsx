@@ -33,15 +33,16 @@ export const VerifiedBadge = memo(({ size = 'sm', className }: VerifiedBadgeProp
   const { isRTL } = useLanguage();
   const label = isRTL ? 'موثقة' : 'Verified';
   return (
-    <BadgeCheck
-      aria-label={label}
-      title={label}
-      className={cn(
-        'shrink-0 text-[#1D9BF0] dark:text-[#1D9BF0] fill-[#1D9BF0]/15',
-        iconSize[size],
-        className,
-      )}
-    />
+    <span title={label} aria-label={label} className="inline-flex shrink-0 items-center">
+      <BadgeCheck
+        aria-hidden="true"
+        className={cn(
+          'text-[#1D9BF0] dark:text-[#1D9BF0] fill-[#1D9BF0]/15',
+          iconSize[size],
+          className,
+        )}
+      />
+    </span>
   );
 });
 
