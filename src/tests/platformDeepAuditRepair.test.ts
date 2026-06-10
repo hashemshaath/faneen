@@ -94,9 +94,13 @@ describe('PDAR-1 — public token pages are safe', () => {
 /* ───────────────── Public directory privacy invariants ───────────── */
 
 describe('PDAR-1 — public directory privacy', () => {
-  it('SearchResults reads businesses_public, not raw businesses', () => {
-    const src = read(path.join(SRC, 'components/search/SearchResults.tsx'));
-    expect(src).not.toMatch(/supabase\.from\(\s*['"]businesses['"]\s*\)/);
+  it('Search V3 data layer reads businesses_public, not raw businesses', () => {
+    // Search V3 (`/search`) goes through the shared services/search hook —
+    // the page component does no direct supabase reads of `businesses`.
+    const page = read(path.join(SRC, 'pages/SearchV3.tsx'));
+    expect(page).not.toMatch(/supabase\.from\(\s*['"]businesses['"]\s*\)/);
+    const hook = read(path.join(SRC, 'services/search/useSearch.ts'));
+    expect(hook).not.toMatch(/supabase\.from\(\s*['"]businesses['"]\s*\)/);
   });
 
   it('PublishReadinessPanel mirrors the businesses_public filter', () => {

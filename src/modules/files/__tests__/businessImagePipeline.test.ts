@@ -46,14 +46,17 @@ describe('Phase 2.2 — Business image pipeline integration', () => {
     expect(src).toContain('cover_image_variants');
   });
 
-  it('BusinessCard + BusinessProfileHeader use ResponsiveImage with legacy fallback', () => {
-    const card = read('src/components/search/BusinessCard.tsx');
-    expect(card).toContain('ResponsiveImage');
-    expect(card).toContain('logo_image_variants');
-    expect(card).toContain('cover_image_variants');
-    expect(card).toContain('originalUrl={b.logo_url}');
-    expect(card).toContain('originalUrl={b.cover_url}');
+  it('Search V3 card lazy-loads the logo image (no eager network cost)', () => {
+    // The legacy `BusinessCard` (ResponsiveImage + image_variants) was removed
+    // with the Search V3 rebuild. V3 ships a leaner card that lazy-loads the
+    // logo via the native browser `loading="lazy"` attribute — enough to keep
+    // /search cheap without re-introducing the heavier pipeline component.
+    const cardV3 = read('src/components/search/v3/SearchResultCardV3.tsx');
+    expect(cardV3).toContain('loading="lazy"');
+    expect(cardV3).toContain('logo_url');
+  });
 
+  it('BusinessProfileHeader still uses ResponsiveImage with legacy fallback', () => {
     const header = read('src/components/business-profile/BusinessProfileHeader.tsx');
     expect(header).toContain('ResponsiveImage');
     expect(header).toContain('originalUrl={business.cover_url}');

@@ -28,16 +28,21 @@ describe('Core Web Vitals optimizations for public routes', () => {
     expect(() => readFileSync(join(root, 'src/assets/home/hero-slide-1.webp'))).not.toThrow();
   });
 
-  it('lazy-loads SearchMap (leaflet) in the search results component', () => {
-    const src = readFileSync(
-      join(root, 'src/components/search/SearchResults.tsx'),
+  it('Search V3 ships no heavy map/chart libs in the initial bundle', () => {
+    // The legacy SearchMap (leaflet ~150KB gz) was removed with Search V3.
+    // We now guard the inverse: V3's page + results component must NOT
+    // import leaflet/react-leaflet/recharts statically, so they never end
+    // up in the initial /search chunk.
+    const page = readFileSync(join(root, 'src/pages/SearchV3.tsx'), 'utf8');
+    const results = readFileSync(
+      join(root, 'src/components/search/v3/SearchResultsV3.tsx'),
       'utf8',
     );
-    expect(src).not.toMatch(/^import\s+\{\s*SearchMap\s*\}/m);
-    // Accept both React.lazy and the project-wide lazyRetry wrapper
-    // (asset-stability pattern that retries on stale chunk loads).
-    expect(src).toMatch(/(?:lazy|lazyRetry)\(\(\)\s*=>\s*import\(['"]\.\/SearchMap['"]\)/);
-    expect(src).toMatch(/<Suspense[\s\S]*?<SearchMap/);
+    for (const src of [page, results]) {
+      expect(src).not.toMatch(/from\s+['"]leaflet['"]/);
+      expect(src).not.toMatch(/from\s+['"]react-leaflet['"]/);
+      expect(src).not.toMatch(/from\s+['"]recharts['"]/);
+    }
   });
 
   it('respects prefers-reduced-motion in the hero parallax + typing', () => {
