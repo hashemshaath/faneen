@@ -4,12 +4,9 @@ import { getLocalizedValue } from "@/lib/direction";
 import { cn } from "@/lib/utils";
 
 /**
- * Compact branch switcher rendered above the profile tabs. Lets the visitor
- * jump between the main business view (`/{username}`) and any specific
- * branch (`/{username}/{slug}`) without leaving the profile context.
- *
- * Pure presentation — receives the already-fetched branches list from the
- * parent so we don't trigger an extra query.
+ * Compact branch switcher rendered above the profile tabs. It only changes
+ * the selected branch in local page state — no navigation, route mutation or
+ * hard reload — so `/{username}` remains the stable profile URL.
  */
 export interface BusinessBranchSwitcherBranch {
   id: string;
@@ -21,13 +18,12 @@ export interface BusinessBranchSwitcherBranch {
 }
 
 interface Props {
-  username: string;
   branches: BusinessBranchSwitcherBranch[];
   currentBranchId?: string | null;
   onSelect: (branch: BusinessBranchSwitcherBranch | null) => void;
 }
 
-export const BusinessBranchSwitcher = ({ username, branches, currentBranchId, onSelect }: Props) => {
+export const BusinessBranchSwitcher = ({ branches, currentBranchId, onSelect }: Props) => {
   const { language, isRTL } = useLanguage();
 
   if (branches.length === 0) return null;
@@ -39,13 +35,7 @@ export const BusinessBranchSwitcher = ({ username, branches, currentBranchId, on
     return isRTL ? `${b.region ? `${b.region} — ` : ""}فرع ${name}` : `${b.region ? `${b.region} — ` : ""}${name} branch`;
   };
 
-  const go = (b: BusinessBranchSwitcherBranch | null) => {
-    onSelect(b);
-    if (typeof window !== "undefined") {
-      const next = b?.slug ? `/${username}/${b.slug}` : `/${username}`;
-      window.history.replaceState(window.history.state, "", next);
-    }
-  };
+  const go = (b: BusinessBranchSwitcherBranch | null) => onSelect(b);
 
   return (
     <nav
