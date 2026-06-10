@@ -723,8 +723,32 @@ export function useBusinessTaxonomyDisplayBatch(
           'business_id, category_id, role, is_primary, taxonomy_categories!inner(id, slug, name_ar, name_en, taxonomy_type_id, parent_id)',
         )
         .in('business_id', ids);
-      if (error) throw error;
+      if (error) {
+        // Surface PostgREST / RLS errors so Sentry-style listeners and the
+        // browser console can capture why some users see "غير مصنّف" on the
+        // public profile even though links exist in the database.
+        // eslint-disable-next-line no-console
+        console.error('[taxonomy] business_taxonomy_categories batch failed', {
+          ids,
+          language,
+          reason: error.message,
+          code: (error as { code?: string }).code ?? null,
+          details: (error as { details?: string }).details ?? null,
+          hint: (error as { hint?: string }).hint ?? null,
+        });
+        throw error;
+      }
       const rows = (data ?? []) as unknown as RawLinkRow[];
+      if (rows.length === 0 && ids.length > 0) {
+        // No links returned for an explicit set of ids — log a structured
+        // diagnostic so we can correlate production reports of "غير مصنّف"
+        // appearing on /:username with a known anon/RLS edge case.
+        // eslint-disable-next-line no-console
+        console.warn('[taxonomy] business_taxonomy_categories returned 0 rows', {
+          requestedIds: ids,
+          language,
+        });
+      }
 
       // Safe Batch 4 — second batched query to resolve "inferred" primaries:
       // collect parent_ids whose parent category is NOT already loaded as a

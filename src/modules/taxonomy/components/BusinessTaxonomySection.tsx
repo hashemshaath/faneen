@@ -79,9 +79,22 @@ export const BusinessTaxonomySection: React.FC<Props> = ({
       primaryActivityCategoryIds: value.primaryActivityCategoryIds,
       secondaryActivityCategoryIds: value.secondaryActivityCategoryIds,
     }),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success(t(isRTL, 'تم حفظ التصنيف', 'Taxonomy saved'));
-      qc.invalidateQueries({ queryKey: ['tx:business-links', businessId] });
+      // Drop any stale cached taxonomy data first so the public profile
+      // page does not flash "غير مصنّف" while the refetch is in flight.
+      qc.removeQueries({ queryKey: ['business-taxonomy-display-batch'], exact: false });
+      qc.removeQueries({ queryKey: ['business-taxonomy-presence-batch'], exact: false });
+      qc.removeQueries({ queryKey: ['tx:business-links', businessId] });
+      // Then force an immediate refetch of every active query that depends
+      // on taxonomy so the UI is fresh as soon as the user navigates back.
+      await Promise.all([
+        qc.refetchQueries({ queryKey: ['tx:business-links', businessId] }),
+        qc.refetchQueries({ queryKey: ['business-taxonomy-display-batch'], type: 'active' }),
+        qc.refetchQueries({ queryKey: ['business-taxonomy-presence-batch'], type: 'active' }),
+        qc.refetchQueries({ queryKey: ['search-taxonomy-context'], type: 'active' }),
+      ]);
+      // Also invalidate inactive queries so any later mount refetches.
       qc.invalidateQueries({ queryKey: ['business-taxonomy-display-batch'] });
       qc.invalidateQueries({ queryKey: ['business-taxonomy-presence-batch'] });
       qc.invalidateQueries({ queryKey: ['search-taxonomy-context'] });
