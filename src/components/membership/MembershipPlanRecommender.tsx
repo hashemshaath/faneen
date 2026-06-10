@@ -60,15 +60,15 @@ export const MembershipPlanRecommender: React.FC<Props> = ({ isRTL, onApply }) =
 
   const SizeOpts: { v: SizeAnswer; ar: string; en: string }[] = [
     { v: 'solo', ar: 'فردي', en: 'Solo' },
-    { v: 'small', ar: '٢-٥ موظفين', en: '2-5 staff' },
-    { v: 'mid', ar: '٦-٢٠ موظفًا', en: '6-20 staff' },
-    { v: 'large', ar: '+٢٠ موظفًا', en: '20+ staff' },
+    { v: 'small', ar: '2-5 موظفين', en: '2-5 staff' },
+    { v: 'mid', ar: '6-20 موظفًا', en: '6-20 staff' },
+    { v: 'large', ar: '+20 موظفًا', en: '20+ staff' },
   ];
   const VolumeOpts: { v: VolumeAnswer; ar: string; en: string }[] = [
-    { v: 'low', ar: '<٥ عقود/شهر', en: '<5 contracts/mo' },
-    { v: 'med', ar: '٥-٢٠', en: '5-20' },
-    { v: 'high', ar: '٢١-٥٠', en: '21-50' },
-    { v: 'pro', ar: '+٥٠', en: '50+' },
+    { v: 'low', ar: '<5 عقود/شهر', en: '<5 contracts/mo' },
+    { v: 'med', ar: '5-20', en: '5-20' },
+    { v: 'high', ar: '21-50', en: '21-50' },
+    { v: 'pro', ar: '+50', en: '50+' },
   ];
   const PriorityOpts: { v: PriorityAnswer; ar: string; en: string }[] = [
     { v: 'visibility', ar: 'الظهور والتسويق', en: 'Visibility & marketing' },
@@ -122,7 +122,7 @@ export const MembershipPlanRecommender: React.FC<Props> = ({ isRTL, onApply }) =
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {isRTL
-                ? '٣ أسئلة سريعة وسنرشّح لك الباقة الأنسب لحجم نشاطك.'
+                ? '3 أسئلة سريعة وسنرشّح لك الباقة الأنسب لحجم نشاطك.'
                 : '3 quick questions and we will recommend the right plan for your size.'}
             </p>
           </div>
@@ -158,9 +158,9 @@ export const MembershipPlanRecommender: React.FC<Props> = ({ isRTL, onApply }) =
           </Button>
         </div>
 
-        {renderGroup(SizeOpts, size, (v) => setSize(v as SizeAnswer), isRTL ? '١. حجم منشأتك؟' : '1. Business size?')}
-        {renderGroup(VolumeOpts, volume, (v) => setVolume(v as VolumeAnswer), isRTL ? '٢. كم عقدًا تتوقّع شهريًا؟' : '2. Expected monthly contracts?')}
-        {renderGroup(PriorityOpts, priority, (v) => setPriority(v as PriorityAnswer), isRTL ? '٣. أهم أولوية لك؟' : '3. Top priority?')}
+        {renderGroup(SizeOpts, size, (v) => setSize(v as SizeAnswer), isRTL ? '1. حجم منشأتك؟' : '1. Business size?')}
+        {renderGroup(VolumeOpts, volume, (v) => setVolume(v as VolumeAnswer), isRTL ? '2. كم عقدًا تتوقّع شهريًا؟' : '2. Expected monthly contracts?')}
+        {renderGroup(PriorityOpts, priority, (v) => setPriority(v as PriorityAnswer), isRTL ? '3. أهم أولوية لك؟' : '3. Top priority?')}
 
         {complete && (
           <div className="rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 flex flex-wrap items-center gap-3 animate-fade-in">

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, Suspense } from 'react';
+import { useBi } from '@/components/common/Bilingual';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +59,7 @@ const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
 const Membership = () => {
   const { language, isRTL } = useLanguage();
+  const bi = useBi();
   const membershipVisibility = useMembershipVisibility();
   usePageMeta({
     title: language === 'ar'
@@ -262,7 +264,7 @@ const Membership = () => {
         approved: 'Approved',
       };
       const label = (isRTL ? labelsAr : labelsEn)[current] ?? current;
-      const title = isRTL ? 'تحديث حالة اعتماد المنشأة' : 'Business approval status updated';
+      const title = bi('تحديث حالة اعتماد المنشأة', 'Business approval status updated');
       if (current === 'approved') toast.success(`${title}: ${label}`);
       else if (current === 'rejected' || current === 'needs_changes') toast.warning(`${title}: ${label}`);
       else toast.info(`${title}: ${label}`);
@@ -306,7 +308,7 @@ const Membership = () => {
 
   const subscribeMutation = useMutation({
     mutationFn: async (planId: string) => {
-      if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
+      if (!user || !myBusiness) throw new Error(bi('يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً', 'Login and create a business first'));
       const { data, error } = await subscribeToPlan({
         _user_id: user.id,
         _plan_id: planId,
@@ -322,7 +324,7 @@ const Membership = () => {
       queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       setSubscribingPlanId(null);
-      toast.success(isRTL ? 'تم تفعيل الاشتراك بنجاح! 🎉' : 'Subscription activated! 🎉');
+      toast.success(bi('تم تفعيل الاشتراك بنجاح! 🎉', 'Subscription activated! 🎉'));
       const subId = res?.subscriptionId;
       if (!subId) return;
       const deliveryEmail = getEmailDeliveryAddress({ authEmail: user?.email, profileEmail: profile?.email });
@@ -352,12 +354,10 @@ const Membership = () => {
   // Manual upgrade request flow for paid plans (admin-mediated activation alongside the Moyasar checkout).
   const requestUpgradeMutation = useMutation({
     mutationFn: async (plan: { id: string; tier: string }) => {
-      if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
+      if (!user || !myBusiness) throw new Error(bi('يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً', 'Login and create a business first'));
       const bizRefId = (myBusiness as { ref_id?: string | null }).ref_id ?? null;
       if (!bizRefId) {
-        throw new Error(isRTL
-          ? 'تعذّر التحقق من رقم المنشأة. يرجى تحديث الصفحة وإعادة المحاولة.'
-          : 'Could not verify business reference. Please refresh and try again.');
+        throw new Error(bi('تعذّر التحقق من رقم المنشأة. يرجى تحديث الصفحة وإعادة المحاولة.', 'Could not verify business reference. Please refresh and try again.'));
       }
       // Prevent duplicate pending requests for same business+tier
       const { data: existing } = await findPendingMembershipUpgradeRequest<{ id: string }>({
@@ -383,10 +383,10 @@ const Membership = () => {
       setSubscribingPlanId(null);
       queryClient.invalidateQueries({ queryKey: ['my-upgrade-requests'] });
       if (res?.duplicate) {
-        toast.info(isRTL ? 'لديك طلب ترقية معلّق لهذه الباقة بالفعل.' : 'You already have a pending request for this plan.');
+        toast.info(bi('لديك طلب ترقية معلّق لهذه الباقة بالفعل.', 'You already have a pending request for this plan.'));
         return;
       } else {
-        toast.success(isRTL ? 'تم إرسال طلب الترقية، وسيتواصل معك فريق قطاعات قريباً.' : 'Upgrade request sent. Our team will contact you shortly.');
+        toast.success(bi('تم إرسال طلب الترقية، وسيتواصل معك فريق قطاعات قريباً.', 'Upgrade request sent. Our team will contact you shortly.'));
       }
       // Best-effort: in-app notification + confirmation email. Never blocks success.
       const requestId = res?.requestId;
@@ -445,7 +445,7 @@ const Membership = () => {
           : `${e.message}${bizRefId ? `\nBusiness: ${bizRefId}` : ''}`,
         duration: 12_000,
         action: {
-          label: isRTL ? 'تفاصيل الطلب' : 'Request details',
+          label: bi('تفاصيل الطلب', 'Request details'),
           onClick: () => navigate('/membership#upgrade-requests'),
         },
       });
@@ -472,7 +472,7 @@ const Membership = () => {
               : `${e.message}\nLog ID: ${shortId}…${bizRefId ? `  ·  Business: ${bizRefId}` : ''}`,
             duration: 14_000,
             action: {
-              label: isRTL ? 'تفاصيل الطلب' : 'Request details',
+              label: bi('تفاصيل الطلب', 'Request details'),
               onClick: () => navigate(`/membership?rejection=${res.auditId}#upgrade-requests`),
             },
           });
@@ -506,9 +506,7 @@ const Membership = () => {
     onSuccess: async (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
-      toast.success(isRTL
-        ? 'تم إيقاف التجديد التلقائي. تحتفظ بمميزات باقتك حتى انتهاء الفترة الحالية.'
-        : 'Auto-renewal cancelled. You keep your plan benefits until the current period ends.');
+      toast.success(bi('تم إيقاف التجديد التلقائي. تحتفظ بمميزات باقتك حتى انتهاء الفترة الحالية.', 'Auto-renewal cancelled. You keep your plan benefits until the current period ends.'));
       const subId = res?.subId;
       if (!user || !subId) return;
       const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
@@ -558,7 +556,7 @@ const Membership = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
-      toast.success(isRTL ? 'تم استئناف التجديد التلقائي' : 'Auto-renewal resumed');
+      toast.success(bi('تم استئناف التجديد التلقائي', 'Auto-renewal resumed'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -570,20 +568,16 @@ const Membership = () => {
   const friendlyCheckoutError = React.useCallback((code: string): string => {
     switch (code) {
       case 'missing_payment_config':
-        return isRTL
-          ? 'الدفع الإلكتروني غير مفعّل حاليًا. يرجى المحاولة لاحقًا.'
-          : 'Online payment is not available yet. Please try again later.';
+        return bi('الدفع الإلكتروني غير مفعّل حاليًا. يرجى المحاولة لاحقًا.', 'Online payment is not available yet. Please try again later.');
       case 'not_eligible':
-        return isRTL ? 'لا يمكن إنشاء عملية دفع لهذه الباقة حاليًا.' : 'This plan is not eligible for payment right now.';
+        return bi('لا يمكن إنشاء عملية دفع لهذه الباقة حاليًا.', 'This plan is not eligible for payment right now.');
       case 'not_found':
-        return isRTL ? 'تعذّر العثور على بيانات الباقة.' : 'Plan not found.';
+        return bi('تعذّر العثور على بيانات الباقة.', 'Plan not found.');
       case 'unauthorized':
-        return isRTL ? 'يرجى تسجيل الدخول للمتابعة.' : 'Please sign in to continue.';
+        return bi('يرجى تسجيل الدخول للمتابعة.', 'Please sign in to continue.');
       case 'provider_error':
       default:
-        return isRTL
-          ? 'تعذّر بدء عملية الدفع. يرجى المحاولة مرة أخرى.'
-          : 'Could not start the payment. Please try again.';
+        return bi('تعذّر بدء عملية الدفع. يرجى المحاولة مرة أخرى.', 'Could not start the payment. Please try again.');
     }
   }, [isRTL]);
 
@@ -624,15 +618,13 @@ const Membership = () => {
     // Account-type guard: regular users cannot subscribe to provider plans.
     if (!isProvider && profile?.account_type === 'user') {
       toast.info(
-        isRTL
-          ? 'باقات العضوية مخصّصة لمزوّدي الخدمات. حوّل حسابك إلى حساب مزوّد للاشتراك.'
-          : 'Membership plans are for service providers. Switch your account to a provider to subscribe.',
+        bi('باقات العضوية مخصّصة لمزوّدي الخدمات. حوّل حسابك إلى حساب مزوّد للاشتراك.', 'Membership plans are for service providers. Switch your account to a provider to subscribe.'),
       );
       navigate('/onboarding');
       return;
     }
     if (!myBusiness) {
-      toast.info(isRTL ? 'جاري تحضير منشأتك...' : 'Preparing your business...');
+      toast.info(bi('جاري تحضير منشأتك...', 'Preparing your business...'));
       return;
     }
     const planTierIndex = tierOrder.indexOf(plan.tier);
@@ -701,9 +693,7 @@ const Membership = () => {
         <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-border/60 bg-card px-4 py-3 flex items-start gap-2 text-xs text-muted-foreground">
           <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="leading-relaxed">
-            {isRTL
-              ? 'قد تختلف بعض المزايا حسب إعدادات الحساب ونوع الخدمة، وقد تخضع لمراجعة من الإدارة. العضوية تساعد على تنظيم الظهور والمزايا، ولا تعني ضمان الطلبات أو المبيعات.'
-              : 'Some benefits may vary based on account settings and service type and may be subject to admin review. Membership organizes visibility and benefits — it does not guarantee leads or sales.'}
+            {bi('قد تختلف بعض المزايا حسب إعدادات الحساب ونوع الخدمة، وقد تخضع لمراجعة من الإدارة. العضوية تساعد على تنظيم الظهور والمزايا، ولا تعني ضمان الطلبات أو المبيعات.', 'Some benefits may vary based on account settings and service type and may be subject to admin review. Membership organizes visibility and benefits — it does not guarantee leads or sales.')}
           </p>
         </div>
 
@@ -713,28 +703,26 @@ const Membership = () => {
               <Building2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground mb-1">
-                  {isRTL ? 'باقات العضوية مخصّصة لمزوّدي الخدمات' : 'Membership plans are for service providers'}
+                  {bi('باقات العضوية مخصّصة لمزوّدي الخدمات', 'Membership plans are for service providers')}
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                  {isRTL
-                    ? 'حسابك الحالي هو حساب مستخدم — مصمّم للتصفّح وطلب عروض الأسعار وحفظ المنشآت المفضّلة، وكل ذلك مجاناً وبدون اشتراك. باقات العضوية تظهر هنا للمنشآت الصناعية ومقدّمي الخدمات (ألمنيوم، زجاج، أخشاب، حديد) لتعزيز ظهورها واستلام طلبات العملاء.'
-                    : 'You are signed in as a regular user — designed for browsing, requesting quotes, and saving favorite businesses, all free with no subscription. Membership plans shown here are for industrial businesses and service providers (Aluminum, Glass, Wood, Steel) to boost visibility and receive customer requests.'}
+                  {bi('حسابك الحالي هو حساب مستخدم — مصمّم للتصفّح وطلب عروض الأسعار وحفظ المنشآت المفضّلة، وكل ذلك مجاناً وبدون اشتراك. باقات العضوية تظهر هنا للمنشآت الصناعية ومقدّمي الخدمات (ألمنيوم، زجاج، أخشاب، حديد) لتعزيز ظهورها واستلام طلبات العملاء.', 'You are signed in as a regular user — designed for browsing, requesting quotes, and saving favorite businesses, all free with no subscription. Membership plans shown here are for industrial businesses and service providers (Aluminum, Glass, Wood, Steel) to boost visibility and receive customer requests.')}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Link to="/">
                     <Button size="sm" variant="primary" className="h-8 text-xs gap-1.5">
-                      {isRTL ? 'تصفّح الدليل الصناعي' : 'Browse the directory'}
+                      {bi('تصفّح الدليل الصناعي', 'Browse the directory')}
                     </Button>
                   </Link>
                   <Link to="/onboarding">
                     <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
                       <Building2 className="w-3.5 h-3.5" />
-                      {isRTL ? 'تحويل حسابي إلى مزوّد خدمة' : 'Become a service provider'}
+                      {bi('تحويل حسابي إلى مزوّد خدمة', 'Become a service provider')}
                     </Button>
                   </Link>
                   <Link to="/dashboard">
                     <Button size="sm" variant="ghost" className="h-8 text-xs">
-                      {isRTL ? 'لوحة التحكم' : 'Go to dashboard'}
+                      {bi('لوحة التحكم', 'Go to dashboard')}
                     </Button>
                   </Link>
                 </div>
@@ -746,9 +734,7 @@ const Membership = () => {
         <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
           <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
           <p className="leading-relaxed">
-            {isRTL
-              ? 'الدفع الإلكتروني عبر مُيسّر — اختر الباقة المناسبة وسيتم تحويلك مباشرة إلى صفحة الدفع الآمنة.'
-              : 'Online payment via Moyasar — pick a plan and you will be taken straight to the secure checkout.'}
+            {bi('الدفع الإلكتروني عبر مُيسّر — اختر الباقة المناسبة وسيتم تحويلك مباشرة إلى صفحة الدفع الآمنة.', 'Online payment via Moyasar — pick a plan and you will be taken straight to the secure checkout.')}
           </p>
         </div>
 
@@ -779,12 +765,12 @@ const Membership = () => {
                 : 'border-warning/30 bg-warning/5 text-warning';
 
           const label = isComplete
-            ? (isRTL ? 'مكتملة ومعتمدة' : 'Complete & approved')
+            ? (bi('مكتملة ومعتمدة', 'Complete & approved'))
             : isReview
-              ? (isRTL ? 'تحت المراجعة' : 'Under review')
+              ? (bi('تحت المراجعة', 'Under review'))
               : needsChanges
-                ? (isRTL ? 'تحتاج تعديلات' : 'Needs changes')
-                : (isRTL ? 'مسودة — أكمل بياناتك' : 'Draft — complete your profile');
+                ? (bi('تحتاج تعديلات', 'Needs changes'))
+                : (bi('مسودة — أكمل بياناتك', 'Draft — complete your profile'));
 
           return (
             <>
@@ -793,13 +779,11 @@ const Membership = () => {
                   <Info className="w-5 h-5 text-info shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground leading-relaxed">
-                      {isRTL
-                        ? 'تم إنشاء منشأتك تلقائياً كمسودة برقم تسلسلي خاص. أكمل بياناتها لتفعيل اعتمادها وعرضها في الدليل.'
-                        : 'Your business was auto-created as a draft with its own reference ID. Complete its details to activate approval and listing.'}
+                      {bi('تم إنشاء منشأتك تلقائياً كمسودة برقم تسلسلي خاص. أكمل بياناتها لتفعيل اعتمادها وعرضها في الدليل.', 'Your business was auto-created as a draft with its own reference ID. Complete its details to activate approval and listing.')}
                     </p>
                     {biz.ref_id && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        <span className="me-1">{isRTL ? 'الرقم التسلسلي:' : 'Reference ID:'}</span>
+                        <span className="me-1">{bi('الرقم التسلسلي:', 'Reference ID:')}</span>
                         <span className="tech-content font-mono font-semibold text-foreground">{biz.ref_id}</span>
                       </p>
                     )}
@@ -807,12 +791,12 @@ const Membership = () => {
                       <Link to="/dashboard/business-draft">
                         <Button size="sm" className="h-8 text-xs gap-1.5">
                           <Building2 className="w-3.5 h-3.5" />
-                          {isRTL ? 'إدارة المنشأة' : 'Manage business'}
+                          {bi('إدارة المنشأة', 'Manage business')}
                         </Button>
                       </Link>
                       <Link to="/onboarding">
                         <Button size="sm" variant="outline" className="h-8 text-xs">
-                          {isRTL ? 'استئناف الإعداد' : 'Resume setup'}
+                          {bi('استئناف الإعداد', 'Resume setup')}
                         </Button>
                       </Link>
                     </div>
@@ -822,7 +806,7 @@ const Membership = () => {
                       type="button"
                       onClick={() => dismissDraftBanner(biz.ref_id!)}
                       className="shrink-0 -m-1 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-                      aria-label={isRTL ? 'إخفاء التنبيه' : 'Dismiss notice'}
+                      aria-label={bi('إخفاء التنبيه', 'Dismiss notice')}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -834,7 +818,7 @@ const Membership = () => {
               <div className="flex-1 min-w-0 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-foreground">
-                    {biz.name_ar || biz.name_en || (isRTL ? 'منشأتك' : 'Your business')}
+                    {biz.name_ar || biz.name_en || (bi('منشأتك', 'Your business'))}
                   </span>
                   {biz.ref_id && (
                     <span className="tech-content text-xs font-mono px-2 py-0.5 rounded bg-accent/10 text-accent">
@@ -847,12 +831,12 @@ const Membership = () => {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {isComplete
-                    ? (isRTL ? 'سيتم تطبيق الترقية على هذه المنشأة مباشرة.' : 'Upgrade will apply to this business directly.')
+                    ? (bi('سيتم تطبيق الترقية على هذه المنشأة مباشرة.', 'Upgrade will apply to this business directly.'))
                     : isReview
-                      ? (isRTL ? 'يمكنك الاشتراك الآن، وسيكتمل الاعتماد خلال المراجعة.' : 'You can subscribe now; approval will finalize during review.')
+                      ? (bi('يمكنك الاشتراك الآن، وسيكتمل الاعتماد خلال المراجعة.', 'You can subscribe now; approval will finalize during review.'))
                       : needsChanges
-                        ? (isRTL ? 'الرجاء معالجة الملاحظات لاكتمال اعتماد المنشأة.' : 'Please address the notes to finalize your business.')
-                        : (isRTL ? 'الترقية مرتبطة بهذه المنشأة. أكمل بياناتها لرفع جاهزيتها.' : 'Upgrade is bound to this business. Complete its profile to boost readiness.')}
+                        ? (bi('الرجاء معالجة الملاحظات لاكتمال اعتماد المنشأة.', 'Please address the notes to finalize your business.'))
+                        : (bi('الترقية مرتبطة بهذه المنشأة. أكمل بياناتها لرفع جاهزيتها.', 'Upgrade is bound to this business. Complete its profile to boost readiness.'))}
                 </p>
               </div>
               <div className="shrink-0 flex flex-wrap items-center gap-2">
@@ -867,8 +851,8 @@ const Membership = () => {
                   >
                     <MessageSquareWarning className="w-3.5 h-3.5" />
                     {showReviewNotes
-                      ? (isRTL ? 'إخفاء الملاحظات' : 'Hide notes')
-                      : (isRTL ? 'عرض ملاحظات المراجعة' : 'Show review notes')}
+                      ? (bi('إخفاء الملاحظات', 'Hide notes'))
+                      : (bi('عرض ملاحظات المراجعة', 'Show review notes'))}
                     {showReviewNotes
                       ? <ChevronUp className="w-3.5 h-3.5" />
                       : <ChevronDown className="w-3.5 h-3.5" />}
@@ -877,7 +861,7 @@ const Membership = () => {
                 {!isComplete && (
                   <Link to="/onboarding">
                     <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
-                      {isRTL ? 'إكمال البيانات' : 'Complete profile'}
+                      {bi('إكمال البيانات', 'Complete profile')}
                     </Button>
                   </Link>
                 )}
@@ -888,13 +872,13 @@ const Membership = () => {
                   id="review-notes-panel"
                   className="max-w-3xl mx-auto -mt-4 mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3"
                   role="region"
-                  aria-label={isRTL ? 'ملاحظات المراجعة' : 'Review notes'}
+                  aria-label={bi('ملاحظات المراجعة', 'Review notes')}
                 >
                   <div className="flex items-start gap-2">
                     <MessageSquareWarning className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-foreground mb-1">
-                        {isRTL ? 'ملاحظات فريق المراجعة' : 'Reviewer notes'}
+                        {bi('ملاحظات فريق المراجعة', 'Reviewer notes')}
                       </p>
                       <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-wrap" dir="auto">
                         {biz.approval_notes}
@@ -1069,12 +1053,10 @@ const Membership = () => {
           </div>
           <div className="relative z-10 space-y-7">
             <h2 className="font-heading font-bold text-3xl sm:text-4xl text-white">
-              {isRTL ? 'اختر العضوية المناسبة' : 'Pick the right membership'}
+              {bi('اختر العضوية المناسبة', 'Pick the right membership')}
             </h2>
             <p className="text-slate-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
-              {isRTL
-                ? 'اختر مستوى الظهور والمزايا المناسب لجهتك حسب الخدمات، الطلبات، والعروض المتاحة.'
-                : 'Pick the visibility and benefits level that fits your business based on services, requests, and offers available.'}
+              {bi('اختر مستوى الظهور والمزايا المناسب لجهتك حسب الخدمات، الطلبات، والعروض المتاحة.', 'Pick the visibility and benefits level that fits your business based on services, requests, and offers available.')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <Button
@@ -1084,7 +1066,7 @@ const Membership = () => {
                   document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
               >
-                {isRTL ? 'اختر العضوية المناسبة' : 'Pick the right plan'}
+                {bi('اختر العضوية المناسبة', 'Pick the right plan')}
               </Button>
               <Button
                 asChild
@@ -1092,14 +1074,12 @@ const Membership = () => {
                 variant="outline"
                 className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white rounded-xl h-12 px-8 font-bold w-full sm:w-auto"
               >
-                <Link to="/contact">{isRTL ? 'تواصل معنا' : 'Contact us'}</Link>
+                <Link to="/contact">{bi('تواصل معنا', 'Contact us')}</Link>
               </Button>
             </div>
             <p className="text-slate-400 text-xs flex items-center justify-center gap-1.5 pt-2">
               <Shield className="w-3.5 h-3.5" />
-              {isRTL
-                ? 'العضوية تساعد على تنظيم الظهور والمزايا، ولا تعني ضمان الطلبات أو المبيعات.'
-                : 'Memberships organize visibility and benefits — they do not guarantee leads or sales.'}
+              {bi('العضوية تساعد على تنظيم الظهور والمزايا، ولا تعني ضمان الطلبات أو المبيعات.', 'Memberships organize visibility and benefits — they do not guarantee leads or sales.')}
             </p>
           </div>
         </div>

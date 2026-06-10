@@ -71,9 +71,9 @@ interface AnalyticsPayload {
 }
 
 const PERIODS: { key: Period; ar: string; en: string }[] = [
-  { key: '7d', ar: '٧ أيام', en: '7 days' },
-  { key: '30d', ar: '٣٠ يوم', en: '30 days' },
-  { key: '90d', ar: '٩٠ يوم', en: '90 days' },
+  { key: '7d', ar: '7 أيام', en: '7 days' },
+  { key: '30d', ar: '30 يوم', en: '30 days' },
+  { key: '90d', ar: '90 يوم', en: '90 days' },
   { key: 'all', ar: 'الكل', en: 'All time' },
 ];
 

@@ -1538,7 +1538,7 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5 text-info" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '١) المدير / المسؤول للمنشأة' : '1) Entity manager / responsible person'}
+                    {isRTL ? '1) المدير / المسؤول للمنشأة' : '1) Entity manager / responsible person'}
                   </Label>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
                     {isRTL ? 'اختياري' : 'Optional'}
@@ -1729,7 +1729,7 @@ const AdminBusinesses = () => {
               <div className="flex items-center gap-2 pt-1">
                 <Building2 className="w-3.5 h-3.5 text-primary" />
                 <Label className="text-xs font-semibold">
-                  {isRTL ? '٢) البيانات الرسمية للمنشأة' : '2) Entity official data'}
+                  {isRTL ? '2) البيانات الرسمية للمنشأة' : '2) Entity official data'}
                 </Label>
                 <span className="text-[10.5px] text-muted-foreground">
                   {isRTL ? '(الاسم التجاري، رقم التواصل الرسمي، وبريد المنشأة — وليست بيانات المالك الشخصية)' : '(commercial name, official contact number, and entity email — not the owner\'s personal data)'}
@@ -1793,7 +1793,7 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5 text-primary" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '٣) بيانات السجل والأرقام الرسمية' : '3) Registry & official numbers'}
+                    {isRTL ? '3) بيانات السجل والأرقام الرسمية' : '3) Registry & official numbers'}
                   </Label>
                   <span className="text-[10.5px] text-muted-foreground">{isRTL ? '(اختياري — يمكن استكمالها لاحقاً)' : '(optional — can be completed later)'}</span>
                 </div>
@@ -1818,7 +1818,7 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-primary" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '٤) العنوان الوطني التفصيلي للمنشأة' : '4) National detailed address'}
+                    {isRTL ? '4) العنوان الوطني التفصيلي للمنشأة' : '4) National detailed address'}
                   </Label>
                   <span className="text-[10.5px] text-muted-foreground">{isRTL ? '(اختر المنطقة لتظهر المدن التابعة لها)' : '(pick region to see its cities)'}</span>
                 </div>

@@ -43,13 +43,13 @@ const USAGE_PRESETS = [
 ];
 const LATE_PRESETS = [
   { ar: 'رسوم تأخير يومية بنفس سعر الإيجار', en: 'Daily late fee equals rental rate' },
-  { ar: 'فترة سماح ٢٤ ساعة', en: '24-hour grace period' },
+  { ar: 'فترة سماح 24 ساعة', en: '24-hour grace period' },
   { ar: 'إشعار خطي قبل التمديد', en: 'Written notice required before extension' },
 ];
 const PENALTY_PRESETS = [
   { ar: 'خصم من مبلغ التأمين عند التلف', en: 'Damages deducted from deposit' },
   { ar: 'استبدال القطع المفقودة بسعر السوق', en: 'Lost parts replaced at market price' },
-  { ar: 'غرامة سوء الاستخدام ٢٠٪ من قيمة العقد', en: 'Misuse penalty 20% of contract value' },
+  { ar: 'غرامة سوء الاستخدام 20٪ من قيمة العقد', en: 'Misuse penalty 20% of contract value' },
 ];
 
 /** Category-aware preset suggestions for terms (matched by Arabic/English keywords). */
@@ -69,7 +69,7 @@ const CATEGORY_PRESETS: ReadonlyArray<{
         { ar: 'فحص يومي قبل الاستخدام', en: 'Daily pre-use inspection required' },
         { ar: 'ارتداء معدات الوقاية الشخصية إلزامي', en: 'PPE mandatory at all times' },
       ],
-      late: [{ ar: 'رسوم تأخير ١٠٪ من السعر اليومي عن كل ساعة', en: 'Late fee 10% of daily rate per hour' }],
+      late: [{ ar: 'رسوم تأخير 10٪ من السعر اليومي عن كل ساعة', en: 'Late fee 10% of daily rate per hour' }],
       penalty: [
         { ar: 'استبدال أي عنصر مفقود بقيمته الجديدة', en: 'Missing parts replaced at new value' },
         { ar: 'غرامة عدم إعادة التركيب الأصلي', en: 'Penalty for not restoring original assembly' },
@@ -98,10 +98,10 @@ const CATEGORY_PRESETS: ReadonlyArray<{
     presets: {
       usage: [
         { ar: 'يلزم مشغل معتمد ذو رخصة سارية', en: 'Certified, licensed operator required' },
-        { ar: 'يُمنع التشغيل عند سرعة رياح > ٣٢ كم/س', en: 'No operation when wind speed > 32 km/h' },
+        { ar: 'يُمنع التشغيل عند سرعة رياح > 32 كم/س', en: 'No operation when wind speed > 32 km/h' },
         { ar: 'الالتزام بحدود الحمولة القصوى', en: 'Respect maximum load capacity' },
       ],
-      late: [{ ar: 'رسوم تأخير ١٢٥٪ من السعر اليومي', en: 'Late fee 125% of daily rate' }],
+      late: [{ ar: 'رسوم تأخير 125٪ من السعر اليومي', en: 'Late fee 125% of daily rate' }],
       penalty: [
         { ar: 'غرامة التشغيل بدون مشغل معتمد', en: 'Penalty for operating without certified operator' },
         { ar: 'تكلفة فحص الهيكل بعد أي حادث', en: 'Post-incident structural inspection cost' },
@@ -116,7 +116,7 @@ const CATEGORY_PRESETS: ReadonlyArray<{
         { ar: 'فحص الضغط يوميًا قبل البدء', en: 'Daily pressure check before use' },
         { ar: 'تفريغ الخزان بعد كل يوم عمل', en: 'Drain tank after each work day' },
       ],
-      late: [{ ar: 'فترة سماح ٣ ساعات ثم رسوم يومية كاملة', en: '3-hour grace then full daily fee' }],
+      late: [{ ar: 'فترة سماح 3 ساعات ثم رسوم يومية كاملة', en: '3-hour grace then full daily fee' }],
       penalty: [{ ar: 'استبدال الفلاتر التالفة بسعر السوق', en: 'Damaged filters replaced at market price' }],
     },
   },
@@ -794,7 +794,7 @@ const RentalsIntroBanner: React.FC<{ itemsCount: number }> = ({ itemsCount }) =>
 const RENTAL_TIPS: ReadonlyArray<{ icon: React.ComponentType<{ className?: string }>; ar: string; en: string; tone: string }> = [
   { icon: ImagePlus,      ar: 'صور حقيقية وواضحة ترفع فرص التأجير 3 أضعاف',         en: 'Real, sharp photos triple your rental chances',        tone: 'text-sky-600 bg-sky-500/10' },
   { icon: ClipboardCheck, ar: 'حدد شروط الاستخدام والتأخير بدقة لحماية معداتك',     en: 'Define usage & late terms clearly to protect your gear', tone: 'text-emerald-600 bg-emerald-500/10' },
-  { icon: CalendarClock,  ar: 'تابع التنبيهات قبل ٣ أيام من انتهاء العقد للتمديد',  en: 'Watch alerts 3 days before expiry to renew on time',   tone: 'text-amber-600 bg-amber-500/10' },
+  { icon: CalendarClock,  ar: 'تابع التنبيهات قبل 3 أيام من انتهاء العقد للتمديد',  en: 'Watch alerts 3 days before expiry to renew on time',   tone: 'text-amber-600 bg-amber-500/10' },
   { icon: Lightbulb,      ar: 'سعر تنافسي + حد أدنى مرن = طلبات أكثر',              en: 'Competitive price + flexible minimum = more orders',    tone: 'text-fuchsia-600 bg-fuchsia-500/10' },
 ];
 
@@ -998,7 +998,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
     if (allImages.length > 6) {
       setSubmitting(false);
-      toast.error(bi('الحد الأقصى صورة غلاف + ٥ صور إضافية','Limit: 1 cover + 5 additional images'));
+      toast.error(bi('الحد الأقصى صورة غلاف + 5 صور إضافية','Limit: 1 cover + 5 additional images'));
       return;
     }
     const { error } = await RentalItems.createItem({
@@ -1097,7 +1097,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
               {/* Step 1: choose category first */}
               {!catalogFilterCat ? (
                 <div className="space-y-3">
-                  <div className="text-sm font-semibold"><Bi ar="١. اختر التصنيف أولًا" en="1. Choose a category first" /></div>
+                  <div className="text-sm font-semibold"><Bi ar="1. اختر التصنيف أولًا" en="1. Choose a category first" /></div>
                   {catalogLoading ? (
                     <div className="flex items-center justify-center py-10"><Loader2 className="size-5 animate-spin" /></div>
                   ) : (
@@ -1146,7 +1146,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                       <Bi ar="تغيير التصنيف" en="Change category" />
                     </Button>
                   </div>
-                  <div className="text-sm font-semibold"><Bi ar="٢. اختر المعدة من القائمة" en="2. Pick equipment" /></div>
+                  <div className="text-sm font-semibold"><Bi ar="2. اختر المعدة من القائمة" en="2. Pick equipment" /></div>
                   <Input
                     dir="auto"
                     placeholder={bi('ابحث داخل هذا التصنيف…','Search within this category…')}
@@ -1263,7 +1263,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
               <Textarea
                 dir="auto"
                 rows={2}
-                placeholder={bi('مثال: نفس الجهاز ولكن باللون الأصفر / موديل ٢٠٢٤','e.g. Same equipment but yellow / 2024 model')}
+                placeholder={bi('مثال: نفس الجهاز ولكن باللون الأصفر / موديل 2024','e.g. Same equipment but yellow / 2024 model')}
                 value={form.provider_note}
                 onChange={e => setForm({ ...form, provider_note: e.target.value })}
               />
@@ -1282,7 +1282,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
             </div>
             <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
               <Bi
-                ar="جميع الأسعار المُدخلة هنا بدون قيمة الضريبة (١٥٪). تُحتسب الضريبة تلقائيًا عند إصدار الفاتورة."
+                ar="جميع الأسعار المُدخلة هنا بدون قيمة الضريبة (15٪). تُحتسب الضريبة تلقائيًا عند إصدار الفاتورة."
                 en="All prices entered here are excluding VAT (15%). VAT is added automatically at invoicing."
               />
             </div>
@@ -1397,7 +1397,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs"><Bi ar="صور إضافية (حتى ٥ صور)" en="Additional images (up to 5)" /></Label>
+                  <Label className="text-xs"><Bi ar="صور إضافية (حتى 5 صور)" en="Additional images (up to 5)" /></Label>
                   <ImageUploader providerId={businessId} maxImages={5}
                     onChange={(rows: UploadedImageRow[]) => setGalleryUrls(rows.map(r => r.url_large))} />
                 </div>
@@ -1858,7 +1858,7 @@ const RentalItemEditForm: React.FC<{
     }
     if (form.provider_note.trim()) specs.provider_note = form.provider_note.trim();
     const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
-    if (allImages.length > 6) { toast.error(bi('الحد الأقصى صورة غلاف + ٥ صور إضافية','Limit: 1 cover + 5 additional images')); return; }
+    if (allImages.length > 6) { toast.error(bi('الحد الأقصى صورة غلاف + 5 صور إضافية','Limit: 1 cover + 5 additional images')); return; }
     setSaving(true);
     const { error } = await RentalItems.updateItem(item.id, {
       name_ar: form.name_ar,
@@ -1932,7 +1932,7 @@ const RentalItemEditForm: React.FC<{
       </div>
 
       <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
-        <Bi ar="السعر بدون قيمة الضريبة (١٥٪) — تُحتسب عند الفوترة." en="Price is excluding VAT (15%) — added at invoicing." />
+        <Bi ar="السعر بدون قيمة الضريبة (15٪) — تُحتسب عند الفوترة." en="Price is excluding VAT (15%) — added at invoicing." />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <div className="space-y-1">
@@ -2011,7 +2011,7 @@ const RentalItemEditForm: React.FC<{
       {/* Images */}
       <div className="space-y-3">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <Bi ar="الصور (غلاف + حتى ٥ إضافية)" en="Images (cover + up to 5 additional)" />
+          <Bi ar="الصور (غلاف + حتى 5 إضافية)" en="Images (cover + up to 5 additional)" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -2052,7 +2052,7 @@ const RentalItemEditForm: React.FC<{
                 }} />
             ) : (
               <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 rounded-md px-2 py-1.5">
-                <Bi ar="تم بلوغ الحد الأقصى (٥ صور). احذف صورة لإضافة أخرى." en="Limit reached (5 images). Remove one to add another." />
+                <Bi ar="تم بلوغ الحد الأقصى (5 صور). احذف صورة لإضافة أخرى." en="Limit reached (5 images). Remove one to add another." />
               </div>
             )}
           </div>

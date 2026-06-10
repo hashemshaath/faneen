@@ -220,7 +220,7 @@ const ProviderLeadDetails: React.FC = () => {
             </span>
             <span className="text-xs text-muted-foreground">درجة المطابقة: <span className="tech-content">{lead.match_score}</span></span>
             <span className="text-xs text-muted-foreground tech-content ms-auto">
-              {new Date(lead.created_at).toLocaleString('ar-SA-u-nu-latn')}
+              {new Date(lead.created_at).toLocaleString('en-US')}
             </span>
           </div>
 

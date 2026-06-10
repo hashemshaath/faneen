@@ -4,17 +4,32 @@ import { join } from 'node:path';
 import { globSync } from 'glob';
 
 /**
- * Phase 5A scope: enforce Latin-digits / Latin-formatting policy in all
- * public-core pages. No raw 'ar-SA' locale calls for number/date display.
- * (PDF export files and admin/dashboard are out of scope and excluded.)
+ * Phase 5A + 5B scope: enforce Latin-digits / Latin-formatting policy across
+ * public-core, secondary public pages, admin panel, and provider dashboard.
+ * No Arabic-Indic digit literals, no `toLocaleString('ar...')` calls.
+ * PDF export and the digit-normalization helper itself remain excluded.
  */
 const SCOPE_GLOBS = [
+  // Public core (Phase 5A)
   'src/pages/Index.tsx',
   'src/pages/Search.tsx',
   'src/pages/Quote.tsx',
   'src/pages/Auth.tsx',
   'src/pages/Onboarding.tsx',
   'src/components/home/**/*.{ts,tsx}',
+  // Secondary public (Phase 5B)
+  'src/pages/About.tsx',
+  'src/pages/Contact.tsx',
+  'src/pages/Categories.tsx',
+  'src/pages/ForProviders.tsx',
+  'src/pages/Membership.tsx',
+  'src/pages/Offers.tsx',
+  'src/pages/Privacy.tsx',
+  'src/pages/Terms.tsx',
+  'src/pages/SectorLanding.tsx',
+  // Admin + Dashboard (Phase 5B — numbers/codes/dates only)
+  'src/pages/admin/**/*.{ts,tsx}',
+  'src/pages/dashboard/**/*.{ts,tsx}',
 ];
 
 const files = SCOPE_GLOBS.flatMap((g) => globSync(g, { cwd: process.cwd() }));

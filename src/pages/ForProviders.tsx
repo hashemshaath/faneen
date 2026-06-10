@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useBi } from '@/components/common/Bilingual';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
@@ -213,6 +214,7 @@ const FALLBACK_FAQ = [
 
 const ForProviders = () => {
   const { isRTL } = useLanguage();
+  const bi = useBi();
   const { track } = useLandingTracking(true);
   const membershipVisibility = useMembershipVisibility();
 
@@ -243,17 +245,11 @@ const ForProviders = () => {
     (isRTL ? ar : en) || ar || en || '';
 
   const seoTitle = pick(settings?.seo_title_ar, settings?.seo_title_en) ||
-    (isRTL
-      ? 'سجّل جهتك كمزود خدمة على قطاعات | بروفايل واضح وفرص منظمة'
-      : 'Register your business on Qitaat | Clear profile, organized opportunities');
+    (bi('سجّل جهتك كمزود خدمة على قطاعات | بروفايل واضح وفرص منظمة', 'Register your business on Qitaat | Clear profile, organized opportunities'));
   const seoDesc = pick(settings?.seo_desc_ar, settings?.seo_desc_en) ||
-    (isRTL
-      ? 'منصة قطاعات تساعد مصانع وورش ومعارض وموردين وشركات تنفيذ على عرض خدماتهم بشكل منظم واستقبال طلبات مرتبطة بتخصصهم.'
-      : 'Qitaat helps factories, workshops, showrooms, suppliers and install companies present their services clearly and receive opportunities matched to their scope.');
+    (bi('منصة قطاعات تساعد مصانع وورش ومعارض وموردين وشركات تنفيذ على عرض خدماتهم بشكل منظم واستقبال طلبات مرتبطة بتخصصهم.', 'Qitaat helps factories, workshops, showrooms, suppliers and install companies present their services clearly and receive opportunities matched to their scope.'));
 
-  const socialTitle = isRTL
-    ? 'سجّل جهتك كمزود خدمة على قطاعات'
-    : 'Register your business on Qitaat';
+  const socialTitle = bi('سجّل جهتك كمزود خدمة على قطاعات', 'Register your business on Qitaat');
 
   usePageMeta({
     title: seoTitle,
@@ -268,7 +264,7 @@ const ForProviders = () => {
 
   useMultiJsonLd(useMemo(() => {
     const blocks: Record<string, unknown>[] = [
-      { '@context': 'https://schema.org', '@type': 'WebPage', name: seoTitle, description: seoDesc, url: 'https://qitaat.com/for-providers', inLanguage: isRTL ? 'ar' : 'en' },
+      { '@context': 'https://schema.org', '@type': 'WebPage', name: seoTitle, description: seoDesc, url: 'https://qitaat.com/for-providers', inLanguage: bi('ar', 'en') },
       {
         '@context': 'https://schema.org', '@type': 'Organization',
         '@id': 'https://qitaat.com/#organization',
@@ -287,17 +283,17 @@ const ForProviders = () => {
       },
       {
         '@context': 'https://schema.org', '@type': 'Service',
-        name: isRTL ? 'قطاعات — منصة لمزودي خدمات البناء والصناعات الخفيفة' : 'Qitaat — platform for construction & light-industry providers',
+        name: bi('قطاعات — منصة لمزودي خدمات البناء والصناعات الخفيفة', 'Qitaat — platform for construction & light-industry providers'),
         description: seoDesc,
         provider: { '@type': 'Organization', name: 'Qitaat قِطاعات', url: 'https://qitaat.com' },
-        serviceType: isRTL ? 'منصة دليل أعمال صناعية' : 'Industrial Business Directory',
+        serviceType: bi('منصة دليل أعمال صناعية', 'Industrial Business Directory'),
         areaServed: [{ '@type': 'Country', name: 'Saudi Arabia' }],
       },
       {
         '@context': 'https://schema.org', '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: 'https://qitaat.com/' },
-          { '@type': 'ListItem', position: 2, name: isRTL ? 'لمزودي الخدمات' : 'For Providers', item: 'https://qitaat.com/for-providers' },
+          { '@type': 'ListItem', position: 1, name: bi('الرئيسية', 'Home'), item: 'https://qitaat.com/' },
+          { '@type': 'ListItem', position: 2, name: bi('لمزودي الخدمات', 'For Providers'), item: 'https://qitaat.com/for-providers' },
         ],
       },
     ];
@@ -372,40 +368,36 @@ const ForProviders = () => {
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="secondary" className="mb-5 px-3 py-1.5 text-xs font-medium gap-1.5 inline-flex items-center backdrop-blur">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              {isRTL ? 'لمزودي خدمات البناء والصناعات الخفيفة' : 'For construction & light-industry providers'}
+              {bi('لمزودي خدمات البناء والصناعات الخفيفة', 'For construction & light-industry providers')}
             </Badge>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.25] mb-5 max-w-3xl mx-auto">
-              {pick(hero?.title_ar, hero?.title_en) || (isRTL
-                ? 'سجّل جهتك كمزود خدمة وابدأ من بروفايل واضح'
-                : 'Register your business and start from a clear profile')}
+              {pick(hero?.title_ar, hero?.title_en) || (bi('سجّل جهتك كمزود خدمة وابدأ من بروفايل واضح', 'Register your business and start from a clear profile'))}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-7 max-w-2xl mx-auto leading-relaxed">
-              {pick(hero?.subtitle_ar, hero?.subtitle_en) || (isRTL
-                ? 'قطاعات تساعد المصانع والورش والمعارض والموردين وشركات التنفيذ على عرض خدماتهم بطريقة منظمة، واستقبال طلبات مرتبطة بنطاق عملهم.'
-                : 'Qitaat helps factories, workshops, showrooms, suppliers and install companies present services clearly and receive scope-matched requests.')}
+              {pick(hero?.subtitle_ar, hero?.subtitle_en) || (bi('قطاعات تساعد المصانع والورش والمعارض والموردين وشركات التنفيذ على عرض خدماتهم بطريقة منظمة، واستقبال طلبات مرتبطة بنطاق عملهم.', 'Qitaat helps factories, workshops, showrooms, suppliers and install companies present services clearly and receive scope-matched requests.'))}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
               <Button asChild size="lg" className="h-12 px-7 text-base shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                 onClick={onPrimaryCta('hero', 'primary')}>
                 <Link to={hero?.cta_primary_href || PROVIDER_SIGNUP}>
-                  {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (isRTL ? 'سجّل جهتك كمزود خدمة' : 'Register your business')}
+                  {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (bi('سجّل جهتك كمزود خدمة', 'Register your business'))}
                   <ArrowFwd className="w-4 h-4 ms-2" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="h-12 px-7 text-base w-full sm:w-auto"
                 onClick={() => track({ event_type: 'cta_click', section: 'hero', cta_id: 'secondary' })}>
                 <Link to={hero?.cta_secondary_href || '/sectors'}>
-                  {pick(hero?.cta_secondary_label_ar, hero?.cta_secondary_label_en) || (isRTL ? 'استكشف القطاعات' : 'Explore sectors')}
+                  {pick(hero?.cta_secondary_label_ar, hero?.cta_secondary_label_en) || (bi('استكشف القطاعات', 'Explore sectors'))}
                 </Link>
               </Button>
             </div>
 
             <ul className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs md:text-sm text-muted-foreground">
-              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'بروفايل عام للجهة' : 'Public business profile'}</li>
-              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'خدمات وقطاعات منظّمة' : 'Organized services & sectors'}</li>
-              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'علامات تجارية مرتبطة' : 'Linked brands'}</li>
-              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'فرص وطلبات أوضح' : 'Clearer opportunities & requests'}</li>
+              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{bi('بروفايل عام للجهة', 'Public business profile')}</li>
+              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{bi('خدمات وقطاعات منظّمة', 'Organized services & sectors')}</li>
+              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{bi('علامات تجارية مرتبطة', 'Linked brands')}</li>
+              <li className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{bi('فرص وطلبات أوضح', 'Clearer opportunities & requests')}</li>
             </ul>
 
             {/* Real DB stats only — no hard-coded satisfaction figure. */}
@@ -431,12 +423,12 @@ const ForProviders = () => {
       <section className="py-12 md:py-16 border-y border-border/40 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-8">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'من يستخدم قطاعات' : 'Who uses Qitaat'}</Badge>
+            <Badge variant="outline" className="mb-3">{bi('من يستخدم قطاعات', 'Who uses Qitaat')}</Badge>
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              {isRTL ? 'مساحة لكل جهة في القطاع' : 'A space for every kind of provider'}
+              {bi('مساحة لكل جهة في القطاع', 'A space for every kind of provider')}
             </h2>
             <p className="text-sm md:text-base text-muted-foreground">
-              {isRTL ? 'صيغة عرض موحّدة، مع تفاصيل تناسب نشاطك.' : 'A consistent format with details tailored to your activity.'}
+              {bi('صيغة عرض موحّدة، مع تفاصيل تناسب نشاطك.', 'A consistent format with details tailored to your activity.')}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -452,7 +444,7 @@ const ForProviders = () => {
                   <Link to={PROVIDER_SIGNUP}
                     onClick={onPrimaryCta('audience_card', a.key)}
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:gap-2.5 transition-all">
-                    {isRTL ? 'سجّل جهتك' : 'Register your business'} <ArrowFwd className="w-4 h-4" />
+                    {bi('سجّل جهتك', 'Register your business')} <ArrowFwd className="w-4 h-4" />
                   </Link>
                 </Card>
               );
@@ -465,14 +457,14 @@ const ForProviders = () => {
       <section id="why" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'لماذا تسجّل جهتك' : 'Why register'}</Badge>
-            <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(why?.title_ar, why?.title_en) || (isRTL ? 'بروفايل واضح وفرص مرتبطة بتخصصك' : 'A clear profile and opportunities matched to your scope')}</h2>
-            <p className="text-muted-foreground">{pick(why?.subtitle_ar, why?.subtitle_en) || (isRTL ? 'أربعة أسباب عملية للتسجيل' : 'Four practical reasons to register')}</p>
+            <Badge variant="outline" className="mb-3">{bi('لماذا تسجّل جهتك', 'Why register')}</Badge>
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(why?.title_ar, why?.title_en) || (bi('بروفايل واضح وفرص مرتبطة بتخصصك', 'A clear profile and opportunities matched to your scope'))}</h2>
+            <p className="text-muted-foreground">{pick(why?.subtitle_ar, why?.subtitle_en) || (bi('أربعة أسباب عملية للتسجيل', 'Four practical reasons to register'))}</p>
           </div>
           <div className="max-w-5xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9] relative">
             <img
               src={why?.image_url || whyImage}
-              alt={pick(why?.title_ar, why?.title_en) || (isRTL ? 'بروفايل مزود خدمة منظّم' : 'An organized provider profile')}
+              alt={pick(why?.title_ar, why?.title_en) || (bi('بروفايل مزود خدمة منظّم', 'An organized provider profile'))}
               className="w-full h-full object-cover"
               loading="lazy"
               decoding="async"
@@ -502,12 +494,12 @@ const ForProviders = () => {
       <section id="features" className="py-14 md:py-20 bg-muted/20 border-y border-border/40 scroll-mt-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'ماذا يمكنك أن تدير' : 'What you can manage'}</Badge>
+            <Badge variant="outline" className="mb-3">{bi('ماذا يمكنك أن تدير', 'What you can manage')}</Badge>
             <h2 className="text-2xl md:text-4xl font-bold mb-3">
-              {isRTL ? 'قدرات تساعد جهتك على الظهور والتنظيم' : 'Capabilities that help you appear and stay organized'}
+              {bi('قدرات تساعد جهتك على الظهور والتنظيم', 'Capabilities that help you appear and stay organized')}
             </h2>
             <p className="text-muted-foreground">
-              {isRTL ? 'مزايا قابلة للتفعيل حسب نشاطك وحسب الخطة والإعدادات.' : 'Features that can be enabled based on your activity, plan and settings.'}
+              {bi('مزايا قابلة للتفعيل حسب نشاطك وحسب الخطة والإعدادات.', 'Features that can be enabled based on your activity, plan and settings.')}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -553,14 +545,14 @@ const ForProviders = () => {
       <section id="how" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'كيف تبدأ' : 'How to start'}</Badge>
-            <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(how?.title_ar, how?.title_en) || (isRTL ? 'خمس خطوات من التسجيل إلى أول فرصة' : 'Five steps from signup to first opportunity')}</h2>
-            <p className="text-muted-foreground">{pick(how?.subtitle_ar, how?.subtitle_en) || (isRTL ? 'مرشد بالعربية وقابل للإكمال لاحقًا' : 'Arabic-guided and resumable later')}</p>
+            <Badge variant="outline" className="mb-3">{bi('كيف تبدأ', 'How to start')}</Badge>
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(how?.title_ar, how?.title_en) || (bi('خمس خطوات من التسجيل إلى أول فرصة', 'Five steps from signup to first opportunity'))}</h2>
+            <p className="text-muted-foreground">{pick(how?.subtitle_ar, how?.subtitle_en) || (bi('مرشد بالعربية وقابل للإكمال لاحقًا', 'Arabic-guided and resumable later'))}</p>
           </div>
           <div className="max-w-5xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9] relative">
             <img
               src={how?.image_url || howImage}
-              alt={pick(how?.title_ar, how?.title_en) || (isRTL ? 'لوحة إدارة لمزود الخدمة' : 'Provider management dashboard')}
+              alt={pick(how?.title_ar, how?.title_en) || (bi('لوحة إدارة لمزود الخدمة', 'Provider management dashboard'))}
               className="w-full h-full object-cover"
               loading="lazy"
               decoding="async"
@@ -587,9 +579,9 @@ const ForProviders = () => {
       <section className="py-12 md:py-16 bg-muted/20 border-y border-border/40">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-8">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'القطاعات' : 'Sectors'}</Badge>
+            <Badge variant="outline" className="mb-3">{bi('القطاعات', 'Sectors')}</Badge>
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              {isRTL ? 'قطاعات الصناعات الخفيفة المدعومة' : 'Supported light-industry sectors'}
+              {bi('قطاعات الصناعات الخفيفة المدعومة', 'Supported light-industry sectors')}
             </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -614,35 +606,35 @@ const ForProviders = () => {
           <div className="text-center mb-8">
             <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5" />
-              {isRTL ? 'الثقة والتوثيق' : 'Trust & verification'}
+              {bi('الثقة والتوثيق', 'Trust & verification')}
             </Badge>
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              {isRTL ? 'مراجعة قبل النشر، لا ضمان للنتائج' : 'Reviewed before publishing — outcomes are not guaranteed'}
+              {bi('مراجعة قبل النشر، لا ضمان للنتائج', 'Reviewed before publishing — outcomes are not guaranteed')}
             </h2>
           </div>
           <Card className="p-6 md:p-8 border-border/50">
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm leading-relaxed">
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-foreground/90">{isRTL ? 'تخضع بيانات الجهة للمراجعة قبل ظهورها للعموم.' : 'Business details are reviewed before going public.'}</span>
+                <span className="text-foreground/90">{bi('تخضع بيانات الجهة للمراجعة قبل ظهورها للعموم.', 'Business details are reviewed before going public.')}</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-foreground/90">{isRTL ? 'العلامات التجارية تُربط بعد اعتمادها من إدارة المنصة.' : 'Brands are linked only after platform approval.'}</span>
+                <span className="text-foreground/90">{bi('العلامات التجارية تُربط بعد اعتمادها من إدارة المنصة.', 'Brands are linked only after platform approval.')}</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-foreground/90">{isRTL ? 'أعمال المعرض تُراجَع قبل النشر.' : 'Showcase submissions are reviewed before publishing.'}</span>
+                <span className="text-foreground/90">{bi('أعمال المعرض تُراجَع قبل النشر.', 'Showcase submissions are reviewed before publishing.')}</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-foreground/90">{isRTL ? 'لا نضمن نتائج التنفيذ ولا قرارات العملاء.' : 'We do not guarantee execution outcomes or client decisions.'}</span>
+                <span className="text-foreground/90">{bi('لا نضمن نتائج التنفيذ ولا قرارات العملاء.', 'We do not guarantee execution outcomes or client decisions.')}</span>
               </li>
             </ul>
             <p className="text-xs text-muted-foreground mt-5">
-              {isRTL ? 'لمعرفة كيف نتحقق من بيانات الجهات،' : 'To see how we verify business details,'}{' '}
+              {bi('لمعرفة كيف نتحقق من بيانات الجهات،', 'To see how we verify business details,')}{' '}
               <Link to="/about#trust" className="text-primary hover:underline underline-offset-4">
-                {isRTL ? 'اطلع على تفاصيل التوثيق' : 'read the verification overview'}
+                {bi('اطلع على تفاصيل التوثيق', 'read the verification overview')}
               </Link>.
             </p>
           </Card>
@@ -653,29 +645,27 @@ const ForProviders = () => {
       <section id="membership" className="py-12 md:py-16 bg-muted/20 border-y border-border/40 scroll-mt-32">
         <div className="container mx-auto px-4 max-w-3xl">
           <Card className="p-6 md:p-8 text-center">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'العضوية' : 'Membership'}</Badge>
+            <Badge variant="outline" className="mb-3">{bi('العضوية', 'Membership')}</Badge>
             <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              {isRTL ? 'بعض المزايا قد تختلف حسب الخطة' : 'Some features may vary by plan'}
+              {bi('بعض المزايا قد تختلف حسب الخطة', 'Some features may vary by plan')}
             </h2>
             <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
-              {isRTL
-                ? 'يمكن بدء التسجيل وإعداد البروفايل دون رسوم تسجيل. تفاصيل الخطط، المزايا، والظهور تُعرض كاملة على صفحة العضوية.'
-                : 'You can register and set up a profile with no signup fees. Full plan details, features and visibility are listed on the membership page.'}
+              {bi('يمكن بدء التسجيل وإعداد البروفايل دون رسوم تسجيل. تفاصيل الخطط، المزايا، والظهور تُعرض كاملة على صفحة العضوية.', 'You can register and set up a profile with no signup fees. Full plan details, features and visibility are listed on the membership page.')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               {membershipVisibility.membershipPathOrNull ? (
                 <Button asChild size="lg" className="h-12 px-7"
                   onClick={() => track({ event_type: 'cta_click', section: 'membership', cta_id: 'view_plans' })}>
-                  <Link to={membershipVisibility.membershipPathOrNull}>{isRTL ? 'اعرض خطط العضوية' : 'See membership plans'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
+                  <Link to={membershipVisibility.membershipPathOrNull}>{bi('اعرض خطط العضوية', 'See membership plans')} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
                 </Button>
               ) : (
                 <Button asChild size="lg" variant="outline" className="h-12 px-7">
-                  <Link to="/contact">{isRTL ? 'تواصل مع المبيعات' : 'Talk to sales'}</Link>
+                  <Link to="/contact">{bi('تواصل مع المبيعات', 'Talk to sales')}</Link>
                 </Button>
               )}
               <Button asChild size="lg" variant="outline" className="h-12 px-6"
                 onClick={onPrimaryCta('membership', 'signup')}>
-                <Link to={PROVIDER_SIGNUP}>{isRTL ? 'سجّل جهتك' : 'Register your business'}</Link>
+                <Link to={PROVIDER_SIGNUP}>{bi('سجّل جهتك', 'Register your business')}</Link>
               </Button>
             </div>
           </Card>
@@ -686,8 +676,8 @@ const ForProviders = () => {
       <section id="faq" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-10">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'استفسارات' : 'FAQ'}</Badge>
-            <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'أسئلة قد تساعدك قبل التسجيل' : 'Questions that may help before you register'}</h2>
+            <Badge variant="outline" className="mb-3">{bi('استفسارات', 'FAQ')}</Badge>
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">{bi('أسئلة قد تساعدك قبل التسجيل', 'Questions that may help before you register')}</h2>
           </div>
           <Accordion type="single" collapsible className="space-y-2">
             {(faq.length > 0
@@ -724,36 +714,34 @@ const ForProviders = () => {
         </div>
         <div className="container mx-auto px-4 text-center text-primary-foreground">
           <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
-            {pick(finalCta?.title_ar, finalCta?.title_en) || (isRTL ? 'ابدأ ببناء بروفايل جهتك اليوم' : 'Start building your business profile today')}
+            {pick(finalCta?.title_ar, finalCta?.title_en) || (bi('ابدأ ببناء بروفايل جهتك اليوم', 'Start building your business profile today'))}
           </h2>
           <p className="text-base md:text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            {pick(finalCta?.subtitle_ar, finalCta?.subtitle_en) || (isRTL
-              ? 'سجّل جهتك، أكمل بياناتك، وابدأ الظهور للعملاء والمقاولين في القطاعات التي تخدمها.'
-              : 'Register your business, complete your details, and start appearing to clients and contractors in the sectors you serve.')}
+            {pick(finalCta?.subtitle_ar, finalCta?.subtitle_en) || (bi('سجّل جهتك، أكمل بياناتك، وابدأ الظهور للعملاء والمقاولين في القطاعات التي تخدمها.', 'Register your business, complete your details, and start appearing to clients and contractors in the sectors you serve.'))}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <Button asChild size="lg" variant="secondary" className="h-12 px-8 text-base shadow-xl"
               onClick={onPrimaryCta('final', 'primary')}>
               <Link to={finalCta?.cta_primary_href || PROVIDER_SIGNUP}>
-                {pick(finalCta?.cta_primary_label_ar, finalCta?.cta_primary_label_en) || (isRTL ? 'سجّل جهتك كمزود خدمة' : 'Register your business')}
+                {pick(finalCta?.cta_primary_label_ar, finalCta?.cta_primary_label_en) || (bi('سجّل جهتك كمزود خدمة', 'Register your business'))}
                 <ArrowFwd className="w-4 h-4 ms-2" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-8 text-base bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
               onClick={() => track({ event_type: 'cta_click', section: 'final', cta_id: 'secondary' })}>
               <Link to={finalCta?.cta_secondary_href || '/contact'}>
-                {pick(finalCta?.cta_secondary_label_ar, finalCta?.cta_secondary_label_en) || (isRTL ? 'تواصل معنا' : 'Contact us')}
+                {pick(finalCta?.cta_secondary_label_ar, finalCta?.cta_secondary_label_en) || (bi('تواصل معنا', 'Contact us'))}
               </Link>
             </Button>
           </div>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm opacity-90">
-            <Link to="/sectors" className="hover:underline underline-offset-4">{isRTL ? 'القطاعات' : 'Sectors'}</Link>
+            <Link to="/sectors" className="hover:underline underline-offset-4">{bi('القطاعات', 'Sectors')}</Link>
             <span className="opacity-50">·</span>
-            <Link to="/services" className="hover:underline underline-offset-4">{isRTL ? 'الخدمات' : 'Services'}</Link>
+            <Link to="/services" className="hover:underline underline-offset-4">{bi('الخدمات', 'Services')}</Link>
             <span className="opacity-50">·</span>
-            <Link to="/brands" className="hover:underline underline-offset-4">{isRTL ? 'العلامات' : 'Brands'}</Link>
+            <Link to="/brands" className="hover:underline underline-offset-4">{bi('العلامات', 'Brands')}</Link>
             <span className="opacity-50">·</span>
-            <Link to="/showcase" className="hover:underline underline-offset-4">{isRTL ? 'المعرض' : 'Showcase'}</Link>
+            <Link to="/showcase" className="hover:underline underline-offset-4">{bi('المعرض', 'Showcase')}</Link>
           </div>
         </div>
       </section>

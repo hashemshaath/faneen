@@ -128,11 +128,11 @@ const AdminGoogleServices = () => {
 
                 <div className="mt-4 grid grid-cols-3 gap-3 text-center text-xs">
                   <div className="rounded-lg border border-border bg-card p-2">
-                    <div className="text-muted-foreground"><Bi ar="نجاح ٢٤س" en="OK 24h" /></div>
+                    <div className="text-muted-foreground"><Bi ar="نجاح 24س" en="OK 24h" /></div>
                     <div className="mt-0.5 font-semibold tech-content text-emerald-600">{usage?.ok ?? 0}</div>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-2">
-                    <div className="text-muted-foreground"><Bi ar="فشل ٢٤س" en="Err 24h" /></div>
+                    <div className="text-muted-foreground"><Bi ar="فشل 24س" en="Err 24h" /></div>
                     <div className="mt-0.5 font-semibold tech-content text-rose-600">{usage?.err ?? 0}</div>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-2">

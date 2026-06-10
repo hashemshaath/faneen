@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useBi } from '@/components/common/Bilingual';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -19,7 +20,9 @@ import {
 } from 'lucide-react';
 
 /* ───────── Hero ───────── */
-const AboutHero = ({ isRTL }: { isRTL: boolean }) => (
+const AboutHero = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
+  return (
   <section className="relative overflow-hidden bg-primary text-primary-foreground pt-28 sm:pt-36 pb-20 sm:pb-28">
     <div className="absolute inset-0 pointer-events-none">
       <div className="absolute -top-24 -start-24 w-[28rem] h-[28rem] rounded-full bg-accent/10 blur-3xl" />
@@ -29,23 +32,22 @@ const AboutHero = ({ isRTL }: { isRTL: boolean }) => (
     <div className="container relative px-4 sm:px-6 text-center max-w-3xl">
       <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10 backdrop-blur mb-6 animate-fade-in">
         <Sparkles className="w-3.5 h-3.5 text-accent" />
-        <span className="text-xs font-body font-medium text-accent">{isRTL ? 'تعرّف على قِطاعات' : 'Get to know Qitaat'}</span>
+        <span className="text-xs font-body font-medium text-accent">{bi('تعرّف على قِطاعات', 'Get to know Qitaat')}</span>
       </div>
       <h1 className="font-heading font-black text-3xl sm:text-5xl md:text-6xl leading-tight mb-5 tracking-tight">
         {isRTL ? (<>نُعيد تعريف <span className="text-primary">قِطاعات الصناعة</span></>) : (<>Reimagining the <span className="text-primary">Industrial Sectors</span></>)}
       </h1>
       <p className="text-sm sm:text-lg text-primary-foreground/70 font-body leading-relaxed max-w-2xl mx-auto">
-        {isRTL
-          ? 'قِطاعات هي المنصة العربية الأولى التي تربط أصحاب المشاريع بأفضل مزودي الخدمات في الألمنيوم والزجاج والخشب والحديد — بأدوات احترافية، عقود محمية، وضمانات حقيقية.'
-          : 'Qitaat is the leading Arabic platform that connects project owners with the best service providers in aluminum, glass, wood, and steel — with professional tools, protected contracts, and real warranties.'}
+        {bi('قِطاعات هي المنصة العربية الأولى التي تربط أصحاب المشاريع بأفضل مزودي الخدمات في الألمنيوم والزجاج والخشب والحديد — بأدوات احترافية، عقود محمية، وضمانات حقيقية.', 'Qitaat is the leading Arabic platform that connects project owners with the best service providers in aluminum, glass, wood, and steel — with professional tools, protected contracts, and real warranties.')}
       </p>
       <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-        <Button asChild variant="hero" size="lg"><Link to="/search">{isRTL ? 'استكشف المزودين' : 'Explore Providers'}</Link></Button>
-        <Button asChild variant="heroOutline" size="lg"><Link to="/contact">{isRTL ? 'تواصل معنا' : 'Contact Us'}</Link></Button>
+        <Button asChild variant="hero" size="lg"><Link to="/search">{bi('استكشف المزودين', 'Explore Providers')}</Link></Button>
+        <Button asChild variant="heroOutline" size="lg"><Link to="/contact">{bi('تواصل معنا', 'Contact Us')}</Link></Button>
       </div>
-    </div>
-  </section>
-);
+     </div>
+   </section>
+   );
+ };
 
 /* ───────── Live stats strip ───────── */
 const StatItem = ({
@@ -87,6 +89,7 @@ const StatItem = ({
 };
 
 const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>();
   const { data, isLoading } = useQuery({
     queryKey: ['about-stats'],
@@ -103,22 +106,22 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
   });
 
   const items = [
-    { icon: Building2, end: data?.biz ?? 0, label: isRTL ? 'مزود خدمة' : 'Providers',
-      sub: isRTL ? 'مفعّلون ومتحقَّق منهم' : 'Active & verified',
+    { icon: Building2, end: data?.biz ?? 0, label: bi('مزود خدمة', 'Providers'),
+      sub: bi('مفعّلون ومتحقَّق منهم', 'Active & verified'),
       accent: 'from-warning to-warning' },
-    { icon: Star, end: data?.rev ?? 0, label: isRTL ? 'تقييم' : 'Reviews',
-      sub: isRTL ? 'تقييمات حقيقية موثقة' : 'Real verified reviews',
+    { icon: Star, end: data?.rev ?? 0, label: bi('تقييم', 'Reviews'),
+      sub: bi('تقييمات حقيقية موثقة', 'Real verified reviews'),
       accent: 'from-success to-success' },
-    { icon: FolderOpen, end: data?.proj ?? 0, label: isRTL ? 'مشروع' : 'Projects',
-      sub: isRTL ? 'منجزة ومنشورة' : 'Completed & published',
+    { icon: FolderOpen, end: data?.proj ?? 0, label: bi('مشروع', 'Projects'),
+      sub: bi('منجزة ومنشورة', 'Completed & published'),
       accent: 'from-info to-info' },
-    { icon: Users, end: data?.users ?? 0, label: isRTL ? 'عضو' : 'Members',
-      sub: isRTL ? 'يثقون بقِطاعات' : 'Trust Qitaat',
+    { icon: Users, end: data?.users ?? 0, label: bi('عضو', 'Members'),
+      sub: bi('يثقون بقِطاعات', 'Trust Qitaat'),
       accent: 'from-secondary to-secondary' },
   ];
 
   return (
-    <section className="relative -mt-14 sm:-mt-20 z-10" aria-label={isRTL ? 'إحصائيات حية' : 'Live statistics'}>
+    <section className="relative -mt-14 sm:-mt-20 z-10" aria-label={bi('إحصائيات حية', 'Live statistics')}>
       <div className="container px-4 sm:px-6">
         <div ref={ref} className="relative">
           {/* Glow under the card */}
@@ -129,11 +132,11 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-accent" />
                 <span className="text-xs font-heading font-bold text-foreground">
-                  {isRTL ? 'أرقامنا تتحدث' : 'Our Numbers Speak'}
+                  {bi('أرقامنا تتحدث', 'Our Numbers Speak')}
                 </span>
               </div>
               <span className="text-[10px] text-muted-foreground font-body tech-content">
-                {isRTL ? 'محدّث مباشرة' : 'Live updated'}
+                {bi('محدّث مباشرة', 'Live updated')}
               </span>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -159,30 +162,25 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
 
 /* ───────── Mission / Vision / Values ───────── */
 const PillarsSection = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>();
   const pillars = [
     {
       icon: Target,
-      title: isRTL ? 'رسالتنا' : 'Our Mission',
-      desc: isRTL
-        ? 'تمكين قطاع الصناعة العربي عبر منصة موثوقة تجمع المزودين والعملاء في بيئة شفافة، احترافية، ومحمية.'
-        : 'Empowering the Arab industrial sector through a trusted platform that connects providers and clients in a transparent, professional, and protected environment.',
+      title: bi('رسالتنا', 'Our Mission'),
+      desc: bi('تمكين قطاع الصناعة العربي عبر منصة موثوقة تجمع المزودين والعملاء في بيئة شفافة، احترافية، ومحمية.', 'Empowering the Arab industrial sector through a trusted platform that connects providers and clients in a transparent, professional, and protected environment.'),
       tone: 'from-warning/15 to-warning/5 text-warning dark:text-warning',
     },
     {
       icon: Eye,
-      title: isRTL ? 'رؤيتنا' : 'Our Vision',
-      desc: isRTL
-        ? 'أن نكون البوابة الرقمية الأولى لأعمال الألمنيوم والزجاج والخشب والحديد في الوطن العربي بحلول 2030.'
-        : 'To become the leading digital gateway for aluminum, glass, wood, and steel businesses in the Arab world by 2030.',
+      title: bi('رؤيتنا', 'Our Vision'),
+      desc: bi('أن نكون البوابة الرقمية الأولى لأعمال الألمنيوم والزجاج والخشب والحديد في الوطن العربي بحلول 2030.', 'To become the leading digital gateway for aluminum, glass, wood, and steel businesses in the Arab world by 2030.'),
       tone: 'from-success/15 to-success/5 text-success dark:text-success',
     },
     {
       icon: Heart,
-      title: isRTL ? 'قيمنا' : 'Our Values',
-      desc: isRTL
-        ? 'الثقة، الجودة، الشفافية، والابتكار — أربعة مبادئ تحكم كل قرار وكل ميزة نطلقها.'
-        : 'Trust, Quality, Transparency, and Innovation — four principles that guide every decision and feature we ship.',
+      title: bi('قيمنا', 'Our Values'),
+      desc: bi('الثقة، الجودة، الشفافية، والابتكار — أربعة مبادئ تحكم كل قرار وكل ميزة نطلقها.', 'Trust, Quality, Transparency, and Innovation — four principles that guide every decision and feature we ship.'),
       tone: 'from-info/15 to-info/5 text-info dark:text-info',
     },
   ];
@@ -190,12 +188,12 @@ const PillarsSection = ({ isRTL }: { isRTL: boolean }) => {
     <section className="py-16 sm:py-24" aria-labelledby="pillars-heading">
       <div className="container px-4 sm:px-6">
         <div className="text-center mb-10 sm:mb-14 max-w-2xl mx-auto">
-          <span className="inline-block text-eyebrow text-accent mb-3">{isRTL ? 'هويّتنا' : 'Our Identity'}</span>
+          <span className="inline-block text-eyebrow text-accent mb-3">{bi('هويّتنا', 'Our Identity')}</span>
           <h2 id="pillars-heading" className="ds-h2 font-heading font-bold text-foreground mb-3">
-            {isRTL ? 'ما الذي يحرّكنا كل يوم' : 'What Drives Us Every Day'}
+            {bi('ما الذي يحرّكنا كل يوم', 'What Drives Us Every Day')}
           </h2>
           <p className="text-body-sm text-muted-foreground">
-            {isRTL ? 'مبادئ واضحة، أهداف طموحة، وقيم لا نتنازل عنها.' : 'Clear principles, ambitious goals, and values we never compromise on.'}
+            {bi('مبادئ واضحة، أهداف طموحة، وقيم لا نتنازل عنها.', 'Clear principles, ambitious goals, and values we never compromise on.')}
           </p>
         </div>
         <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
@@ -226,6 +224,7 @@ const PillarsSection = ({ isRTL }: { isRTL: boolean }) => {
 
 /* ───────── Sectors we serve ───────── */
 const SectorsSection = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
   const sectors = [
     { ar: 'الألمنيوم', en: 'Aluminum', emoji: '🪟' },
     { ar: 'الزجاج', en: 'Glass', emoji: '🔲' },
@@ -238,12 +237,12 @@ const SectorsSection = ({ isRTL }: { isRTL: boolean }) => {
     <section className="py-16 sm:py-20 bg-gradient-to-b from-muted/30 via-background to-background">
       <div className="container px-4 sm:px-6">
         <div className="text-center mb-10 max-w-2xl mx-auto">
-          <span className="inline-block text-eyebrow text-accent mb-3">{isRTL ? 'القطاعات' : 'Sectors'}</span>
+          <span className="inline-block text-eyebrow text-accent mb-3">{bi('القطاعات', 'Sectors')}</span>
           <h2 className="ds-h2 font-heading font-bold text-foreground mb-3">
-            {isRTL ? 'القطاعات التي نخدمها' : 'Sectors We Serve'}
+            {bi('القطاعات التي نخدمها', 'Sectors We Serve')}
           </h2>
           <p className="text-body-sm text-muted-foreground">
-            {isRTL ? 'تخصص عميق في أكثر من ستة قطاعات صناعية متكاملة.' : 'Deep specialization across six interconnected industrial sectors.'}
+            {bi('تخصص عميق في أكثر من ستة قطاعات صناعية متكاملة.', 'Deep specialization across six interconnected industrial sectors.')}
           </p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -267,42 +266,43 @@ type JourneyStep = {
 };
 
 const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>();
   const steps: JourneyStep[] = [
     {
       icon: Lightbulb, year: '2023',
-      title: isRTL ? 'الفكرة والبحث' : 'Idea & Research',
-      desc: isRTL ? 'دراسة عميقة للسوق وتحديد فجوة الثقة بين العملاء ومزودي الخدمة.' : 'Deep market study identifying the trust gap between clients and providers.',
+      title: bi('الفكرة والبحث', 'Idea & Research'),
+      desc: bi('دراسة عميقة للسوق وتحديد فجوة الثقة بين العملاء ومزودي الخدمة.', 'Deep market study identifying the trust gap between clients and providers.'),
       highlights: isRTL ? ['أبحاث ميدانية', 'تحليل السوق'] : ['Field research', 'Market analysis'],
       status: 'done', accent: 'from-warning to-warning',
     },
     {
       icon: Layers, year: '2024',
-      title: isRTL ? 'إطلاق المنصة' : 'Platform Launch',
-      desc: isRTL ? 'انطلاقة قِطاعات مع أكثر من 6 قطاعات صناعية وأدوات احترافية متكاملة.' : 'Qitaat launches with 6+ industrial sectors and integrated tools.',
+      title: bi('إطلاق المنصة', 'Platform Launch'),
+      desc: bi('انطلاقة قِطاعات مع أكثر من 6 قطاعات صناعية وأدوات احترافية متكاملة.', 'Qitaat launches with 6+ industrial sectors and integrated tools.'),
       highlights: isRTL ? ['6 قطاعات', 'بحث متقدم', 'ملفات احترافية'] : ['6 sectors', 'Advanced search', 'Pro profiles'],
       status: 'done', accent: 'from-success to-success',
     },
     {
       icon: FileSignature, year: '2025',
-      title: isRTL ? 'الأدوات الذكية' : 'Smart Tools',
-      desc: isRTL ? 'إطلاق العقود المحمية، التقسيط المرن، الضمانات الرقمية، ومحفظة آمنة.' : 'Protected contracts, flexible installments, digital warranties, and secure wallet.',
+      title: bi('الأدوات الذكية', 'Smart Tools'),
+      desc: bi('إطلاق العقود المحمية، التقسيط المرن، الضمانات الرقمية، ومحفظة آمنة.', 'Protected contracts, flexible installments, digital warranties, and secure wallet.'),
       highlights: isRTL ? ['عقود محمية', 'تقسيط', 'ضمانات', 'محفظة'] : ['Protected contracts', 'Installments', 'Warranties', 'Wallet'],
       status: 'live', accent: 'from-info to-info',
     },
     {
       icon: Rocket, year: '2026',
-      title: isRTL ? 'التوسّع والذكاء الاصطناعي' : 'Expansion & AI',
-      desc: isRTL ? 'توسع إقليمي، ميزات مدعومة بالذكاء الاصطناعي، وتجربة موحَّدة عبر الأجهزة.' : 'Regional expansion, AI-powered features, and a unified cross-device experience.',
+      title: bi('التوسّع والذكاء الاصطناعي', 'Expansion & AI'),
+      desc: bi('توسع إقليمي، ميزات مدعومة بالذكاء الاصطناعي، وتجربة موحَّدة عبر الأجهزة.', 'Regional expansion, AI-powered features, and a unified cross-device experience.'),
       highlights: isRTL ? ['توسع إقليمي', 'ذكاء اصطناعي', 'تطبيقات الجوال'] : ['Regional rollout', 'AI features', 'Mobile apps'],
       status: 'next', accent: 'from-secondary to-secondary',
     },
   ];
 
   const statusLabel = (s: JourneyStep['status']) => {
-    if (s === 'done') return isRTL ? 'مكتمل' : 'Completed';
-    if (s === 'live') return isRTL ? 'جارٍ الآن' : 'In progress';
-    return isRTL ? 'قادم' : 'Upcoming';
+    if (s === 'done') return bi('مكتمل', 'Completed');
+    if (s === 'live') return bi('جارٍ الآن', 'In progress');
+    return bi('قادم', 'Upcoming');
   };
   const statusClasses = (s: JourneyStep['status']) =>
     s === 'done' ? 'bg-success/15 text-success dark:text-success border-success/30'
@@ -314,12 +314,12 @@ const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
       <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(hsl(var(--accent)) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       <div className="container px-4 sm:px-6 relative">
         <div className="text-center mb-12 sm:mb-16 max-w-2xl mx-auto">
-          <span className="inline-block text-eyebrow text-accent mb-3">{isRTL ? 'رحلتنا' : 'Our Journey'}</span>
+          <span className="inline-block text-eyebrow text-accent mb-3">{bi('رحلتنا', 'Our Journey')}</span>
           <h2 id="journey-heading" className="ds-h2 font-heading font-bold text-foreground mb-3">
-            {isRTL ? 'من فكرة إلى منصّة رائدة' : 'From an Idea to a Leading Platform'}
+            {bi('من فكرة إلى منصّة رائدة', 'From an Idea to a Leading Platform')}
           </h2>
           <p className="text-body-sm text-muted-foreground">
-            {isRTL ? 'كل مرحلة بُنيت على ثقة عملائنا وتعاون مزوّدينا.' : 'Every milestone built on customer trust and provider collaboration.'}
+            {bi('كل مرحلة بُنيت على ثقة عملائنا وتعاون مزوّدينا.', 'Every milestone built on customer trust and provider collaboration.')}
           </p>
         </div>
 
@@ -382,19 +382,20 @@ const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
 
 /* ───────── Trust / Promises ───────── */
 const PromisesSection = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
   const items = [
-    { icon: ShieldCheck, t: isRTL ? 'بيئة موثوقة' : 'Trusted Environment', d: isRTL ? 'كل مزود خدمة مفعّل لديه سجل تجاري نشط ومُتحقَّق منه.' : 'Every active provider holds a verified commercial registration.' },
-    { icon: Wallet, t: isRTL ? 'دفع محمي' : 'Protected Payments', d: isRTL ? 'محفظة رقمية وعقود تحمي حق الطرفين في كل مرحلة.' : 'A digital wallet and contracts that protect both parties at every stage.' },
-    { icon: Handshake, t: isRTL ? 'تواصل مباشر' : 'Direct Contact', d: isRTL ? 'لا وسطاء ولا عمولات خفيّة بينك وبين مزود الخدمة.' : 'No middlemen, no hidden commissions between you and the provider.' },
-    { icon: BadgeCheck, t: isRTL ? 'ضمانات حقيقية' : 'Real Warranties', d: isRTL ? 'تتبّع رقمي للضمانات وقابلية التحقق منها في أي وقت.' : 'Digital warranty tracking that you can verify any time.' },
+    { icon: ShieldCheck, t: bi('بيئة موثوقة', 'Trusted Environment'), d: bi('كل مزود خدمة مفعّل لديه سجل تجاري نشط ومُتحقَّق منه.', 'Every active provider holds a verified commercial registration.') },
+    { icon: Wallet, t: bi('دفع محمي', 'Protected Payments'), d: bi('محفظة رقمية وعقود تحمي حق الطرفين في كل مرحلة.', 'A digital wallet and contracts that protect both parties at every stage.') },
+    { icon: Handshake, t: bi('تواصل مباشر', 'Direct Contact'), d: bi('لا وسطاء ولا عمولات خفيّة بينك وبين مزود الخدمة.', 'No middlemen, no hidden commissions between you and the provider.') },
+    { icon: BadgeCheck, t: bi('ضمانات حقيقية', 'Real Warranties'), d: bi('تتبّع رقمي للضمانات وقابلية التحقق منها في أي وقت.', 'Digital warranty tracking that you can verify any time.') },
   ];
   return (
     <section className="py-16 sm:py-20 bg-gradient-to-b from-background via-muted/20 to-background">
       <div className="container px-4 sm:px-6">
         <div className="text-center mb-10 max-w-2xl mx-auto">
-          <span className="inline-block text-eyebrow text-accent mb-3">{isRTL ? 'وعودنا' : 'Our Promises'}</span>
+          <span className="inline-block text-eyebrow text-accent mb-3">{bi('وعودنا', 'Our Promises')}</span>
           <h2 className="ds-h2 font-heading font-bold text-foreground mb-3">
-            {isRTL ? 'لماذا يثق العملاء بقِطاعات' : 'Why Customers Trust Qitaat'}
+            {bi('لماذا يثق العملاء بقِطاعات', 'Why Customers Trust Qitaat')}
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -418,6 +419,7 @@ const PromisesSection = ({ isRTL }: { isRTL: boolean }) => {
 
 /* ───────── Contact card ───────── */
 const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
+  const bi = useBi();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   return (
     <section className="py-16 sm:py-24">
@@ -430,35 +432,35 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
           <div className="relative grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="font-heading font-black text-2xl sm:text-4xl mb-3 leading-tight">
-                {isRTL ? 'هل لديك سؤال أو فكرة شراكة؟' : 'Have a question or partnership idea?'}
+                {bi('هل لديك سؤال أو فكرة شراكة؟', 'Have a question or partnership idea?')}
               </h2>
               <p className="text-primary-foreground/70 text-sm sm:text-base leading-relaxed">
-                {isRTL ? 'فريقنا جاهز للرد على استفساراتك خلال ساعات العمل، ونرحب بفرص التعاون مع الشركاء والمستثمرين.' : 'Our team is ready to answer your questions during working hours, and we welcome partnership and investment opportunities.'}
+                {bi('فريقنا جاهز للرد على استفساراتك خلال ساعات العمل، ونرحب بفرص التعاون مع الشركاء والمستثمرين.', 'Our team is ready to answer your questions during working hours, and we welcome partnership and investment opportunities.')}
               </p>
               <div className="flex flex-wrap items-center gap-3 mt-6">
-                <Button asChild variant="hero" size="lg"><Link to="/contact">{isRTL ? 'صفحة التواصل' : 'Contact Page'} <Arrow className="w-4 h-4" /></Link></Button>
+                <Button asChild variant="hero" size="lg"><Link to="/contact">{bi('صفحة التواصل', 'Contact Page')} <Arrow className="w-4 h-4" /></Link></Button>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">
               <a href="mailto:care@qitaat.com" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
                 <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><Mail className="w-5 h-5 text-accent" /></div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'دعم العملاء' : 'Customer Care'}</div>
+                  <div className="text-xs text-primary-foreground/60 font-body">{bi('دعم العملاء', 'Customer Care')}</div>
                   <div className="font-heading font-bold text-sm tech-content truncate">care@qitaat.com</div>
                 </div>
               </a>
               <a href="https://wa.me/966569220777" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
                 <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><Mail className="w-5 h-5 text-accent" /></div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'واتساب / جوال' : 'WhatsApp / Phone'}</div>
+                  <div className="text-xs text-primary-foreground/60 font-body">{bi('واتساب / جوال', 'WhatsApp / Phone')}</div>
                   <div className="font-heading font-bold text-sm tech-content truncate">+966 56 922 0777</div>
                 </div>
               </a>
               <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10">
                 <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><MapPin className="w-5 h-5 text-accent" /></div>
                 <div className="flex-1">
-                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'الموقع' : 'Location'}</div>
-                  <div className="font-heading font-bold text-sm">{isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia'}</div>
+                  <div className="text-xs text-primary-foreground/60 font-body">{bi('الموقع', 'Location')}</div>
+                  <div className="font-heading font-bold text-sm">{bi('المملكة العربية السعودية', 'Saudi Arabia')}</div>
                 </div>
               </div>
             </div>
@@ -471,23 +473,16 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
 
 const About = () => {
   const { isRTL, language } = useLanguage();
+  const bi = useBi();
   usePageMeta({
-    title: isRTL
-      ? 'من نحن — قصة قِطاعات ورؤيتنا للصناعات'
-      : 'About Qitaat — Our Story & Industrial Vision',
-    description: isRTL
-      ? 'قِطاعات: منصة تربط أصحاب المشاريع بأفضل مزودي الألمنيوم والزجاج والحديد والخشب — عقود محمية، تقسيط مرن، وضمانات موثوقة في السعودية والخليج.'
-      : 'Qitaat connects project owners with top aluminum, glass, steel and wood providers — protected contracts, flexible installments and trusted reviews across Saudi & Gulf.',
+    title: bi('من نحن — قصة قِطاعات ورؤيتنا للصناعات', 'About Qitaat — Our Story & Industrial Vision'),
+    description: bi('قِطاعات: منصة تربط أصحاب المشاريع بأفضل مزودي الألمنيوم والزجاج والحديد والخشب — عقود محمية، تقسيط مرن، وضمانات موثوقة في السعودية والخليج.', 'Qitaat connects project owners with top aluminum, glass, steel and wood providers — protected contracts, flexible installments and trusted reviews across Saudi & Gulf.'),
     canonical: 'https://qitaat.com/about',
     ogType: 'website',
     ogImage: 'https://qitaat.com/og-image.jpg',
-    ogTitle: isRTL ? 'قِطاعات — منصة قطاعات الصناعة في العالم العربي' : 'Qitaat — Industrial Sectors Platform in the Arab World',
-    ogDescription: isRTL
-      ? 'تعرّف على رؤية ومسيرة قِطاعات والقطاعات الصناعية التي نخدمها: ألمنيوم، زجاج، حديد، خشب، خزائن وتشطيبات.'
-      : 'Discover Qitaat\'s vision and journey across the industrial sectors we serve: aluminum, glass, steel, wood, cabinets and finishes.',
-    keywords: isRTL
-      ? 'من نحن قِطاعات, منصة الألمنيوم, دليل مزودي الزجاج, شركات الحديد السعودية, ورش الخشب, عقود محمية, ضمان الواجهات, تقسيط الكلادينج, تقييمات صناعية'
-      : 'about Qitaat, aluminum platform, glass providers directory, Saudi steel companies, wood workshops, protected contracts, facade warranty, cladding installments, industrial reviews',
+    ogTitle: bi('قِطاعات — منصة قطاعات الصناعة في العالم العربي', 'Qitaat — Industrial Sectors Platform in the Arab World'),
+    ogDescription: bi('تعرّف على رؤية ومسيرة قِطاعات والقطاعات الصناعية التي نخدمها: ألمنيوم، زجاج، حديد، خشب، خزائن وتشطيبات.', 'Discover Qitaat\'s vision and journey across the industrial sectors we serve: aluminum, glass, steel, wood, cabinets and finishes.'),
+    keywords: bi('من نحن قِطاعات, منصة الألمنيوم, دليل مزودي الزجاج, شركات الحديد السعودية, ورش الخشب, عقود محمية, ضمان الواجهات, تقسيط الكلادينج, تقييمات صناعية', 'about Qitaat, aluminum platform, glass providers directory, Saudi steel companies, wood workshops, protected contracts, facade warranty, cladding installments, industrial reviews'),
   });
 
   useMultiJsonLd(useMemo(() => {

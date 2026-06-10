@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
+import { useBi } from '@/components/common/Bilingual';
 import { Link, useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,6 +47,7 @@ type BizRow = {
 const SectorLanding: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isRTL, language } = useLanguage();
+  const bi = useBi();
 
   const sectorSlug = slug as SectorSlug;
   const sector = sectorSlug && SECTOR_KEYWORDS[sectorSlug] ? SECTOR_KEYWORDS[sectorSlug] : null;
@@ -231,12 +233,12 @@ const SectorLanding: React.FC = () => {
       type: 'sector',
       title: selectedCityName
         ? `${meta?.name || ''} — ${selectedCityName}`
-        : (meta?.name || (isRTL ? 'قطاع' : 'Sector')),
-      subtitle: meta?.tagline || (isRTL ? 'دليل قِطاعات' : 'Qitaat directory'),
+        : (meta?.name || (bi('قطاع', 'Sector'))),
+      subtitle: meta?.tagline || (bi('دليل قِطاعات', 'Qitaat directory')),
     }),
     ogImageAlt: selectedCityName
       ? `${meta?.name || ''} — ${selectedCityName}`
-      : (meta?.name || (isRTL ? 'قطاع' : 'Sector')),
+      : (meta?.name || (bi('قطاع', 'Sector'))),
     ogType: 'website',
     noindex: !meta,
   });
@@ -260,7 +262,7 @@ const SectorLanding: React.FC = () => {
         : null;
       const breadcrumb = {
         ...buildBreadcrumbList([
-        { name: isRTL ? 'القطاعات' : 'Sectors', url: '/sectors' },
+        { name: bi('القطاعات', 'Sectors'), url: '/sectors' },
         { name: meta.name, url: `/sectors/${sector.slug}` },
         ...(selectedCityName
           ? [{ name: selectedCityName, url: selectedCitySlug
@@ -281,7 +283,7 @@ const SectorLanding: React.FC = () => {
               : `${meta.name} in ${selectedCityName}. ${meta.description}`)
           : meta.description,
         url: pageUrl,
-        inLanguage: isRTL ? 'ar' : 'en',
+        inLanguage: bi('ar', 'en'),
         keywords: meta.keywords,
         ...(selectedCityName
           ? {
@@ -347,7 +349,7 @@ const SectorLanding: React.FC = () => {
             ? (isRTL ? `${g.title_ar} — ${selectedCityName}` : `${g.title_en} — ${selectedCityName}`)
             : (isRTL ? g.title_ar : g.title_en),
           description: isRTL ? g.excerpt_ar : g.excerpt_en,
-          inLanguage: isRTL ? 'ar' : 'en',
+          inLanguage: bi('ar', 'en'),
           ...(cityBlock ? { about: cityBlock, areaServed: cityBlock } : {}),
           step: (isRTL ? g.steps_ar : g.steps_en).map((s, i) => ({
             '@type': 'HowToStep',
@@ -394,9 +396,9 @@ const SectorLanding: React.FC = () => {
       <header className="bg-primary pt-24 pb-10">
         <div className="container px-4">
           <nav className="flex items-center gap-2 text-sm text-primary-foreground/60 mb-3" aria-label="breadcrumb">
-            <Link to="/" className="hover:text-gold transition-colors">{isRTL ? 'الرئيسية' : 'Home'}</Link>
+            <Link to="/" className="hover:text-gold transition-colors">{bi('الرئيسية', 'Home')}</Link>
             <span>/</span>
-            <Link to="/sectors" className="hover:text-gold transition-colors">{isRTL ? 'القطاعات' : 'Sectors'}</Link>
+            <Link to="/sectors" className="hover:text-gold transition-colors">{bi('القطاعات', 'Sectors')}</Link>
             <span>/</span>
             <span className="text-primary-foreground">{meta.name}</span>
           </nav>
@@ -406,7 +408,7 @@ const SectorLanding: React.FC = () => {
           <p className="mt-2 text-primary-foreground/80 text-sm sm:text-base max-w-2xl">{meta.tagline}</p>
           <p className="mt-3 text-primary-foreground/60 text-xs sm:text-sm max-w-3xl leading-relaxed">{meta.description}</p>
           <p className="mt-4 text-primary-foreground/50 text-xs">
-            {businesses.length} {isRTL ? 'مزود مدرج' : 'listed providers'}
+            {businesses.length} {bi('مزود مدرج', 'listed providers')}
           </p>
         </div>
       </header>
@@ -428,9 +430,9 @@ const SectorLanding: React.FC = () => {
             value={cityId}
             onChange={(e) => setCityId(e.target.value)}
             className="h-11 rounded-xl border bg-background px-3 text-sm min-w-[160px]"
-            aria-label={isRTL ? 'المدينة' : 'City'}
+            aria-label={bi('المدينة', 'City')}
           >
-            <option value="all">{isRTL ? 'كل المدن' : 'All cities'}</option>
+            <option value="all">{bi('كل المدن', 'All cities')}</option>
             {topCities.map((c) => (
               <option key={c.id} value={c.id}>
                 {(language === 'ar' ? c.name_ar : (c.name_en || c.name_ar))} ({c.count})
@@ -441,9 +443,9 @@ const SectorLanding: React.FC = () => {
             value={String(minRating)}
             onChange={(e) => setMinRating(Number(e.target.value))}
             className="h-11 rounded-xl border bg-background px-3 text-sm"
-            aria-label={isRTL ? 'التقييم' : 'Rating'}
+            aria-label={bi('التقييم', 'Rating')}
           >
-            <option value="0">{isRTL ? 'كل التقييمات' : 'Any rating'}</option>
+            <option value="0">{bi('كل التقييمات', 'Any rating')}</option>
             <option value="3">★ 3+</option>
             <option value="4">★ 4+</option>
             <option value="4.5">★ 4.5+</option>
@@ -455,7 +457,7 @@ const SectorLanding: React.FC = () => {
             onClick={() => setVerifiedOnly(!verifiedOnly)}
           >
             <ShieldCheck className="w-4 h-4" />
-            {isRTL ? 'موثّق فقط' : 'Verified only'}
+            {bi('موثّق فقط', 'Verified only')}
           </Button>
         </div>
 
@@ -465,7 +467,7 @@ const SectorLanding: React.FC = () => {
             <div className="flex items-center gap-2 mb-2">
               <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                {isRTL ? 'فلترة سريعة بالمدينة' : 'Quick city filter'}
+                {bi('فلترة سريعة بالمدينة', 'Quick city filter')}
               </span>
               {(cityId !== 'all' || query || verifiedOnly || minRating > 0) && (
                 <button
@@ -474,7 +476,7 @@ const SectorLanding: React.FC = () => {
                   className="ms-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="w-3 h-3" />
-                  {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+                  {bi('مسح الفلاتر', 'Clear filters')}
                 </button>
               )}
             </div>
@@ -597,7 +599,7 @@ const SectorLanding: React.FC = () => {
       <main className="container py-8 px-4">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-muted-foreground">
-            {filtered.length} {isRTL ? 'نتيجة' : 'results'}
+            {filtered.length} {bi('نتيجة', 'results')}
           </p>
         </div>
         {isLoading ? (
@@ -610,10 +612,10 @@ const SectorLanding: React.FC = () => {
           <div className="text-center py-16 space-y-3">
             <Building2 className="w-12 h-12 text-muted-foreground/30 mx-auto" />
             <p className="text-muted-foreground">
-              {isRTL ? 'لا توجد نتائج مطابقة' : 'No matching providers'}
+              {bi('لا توجد نتائج مطابقة', 'No matching providers')}
             </p>
             <Link to="/search">
-              <Button variant="outline">{isRTL ? 'الذهاب إلى البحث الشامل' : 'Open advanced search'}</Button>
+              <Button variant="outline">{bi('الذهاب إلى البحث الشامل', 'Open advanced search')}</Button>
             </Link>
           </div>
         ) : (
@@ -666,7 +668,7 @@ const SectorLanding: React.FC = () => {
               disabled={page === 1}
               onClick={() => { setPage(Math.max(1, page - 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
             >
-              {isRTL ? 'السابق' : 'Previous'}
+              {bi('السابق', 'Previous')}
             </Button>
             <span className="text-sm text-muted-foreground tech-content">{page} / {totalPages}</span>
             <Button
@@ -674,7 +676,7 @@ const SectorLanding: React.FC = () => {
               disabled={page === totalPages}
               onClick={() => { setPage(Math.min(totalPages, page + 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
             >
-              {isRTL ? 'التالي' : 'Next'}
+              {bi('التالي', 'Next')}
             </Button>
           </nav>
         )}
@@ -684,7 +686,7 @@ const SectorLanding: React.FC = () => {
       {relatedSectors.length > 0 && (
         <section className="container px-4 pb-12">
           <h2 className="font-heading text-lg font-bold mb-4">
-            {isRTL ? 'قطاعات ذات صلة' : 'Related sectors'}
+            {bi('قطاعات ذات صلة', 'Related sectors')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {relatedSectors.map((rs) => (
@@ -708,24 +710,24 @@ const SectorLanding: React.FC = () => {
 
       {/* Cross-link to services & brands hubs (internal linking — SEO-6) */}
       <section className="container px-4 pb-12">
-        <nav aria-label={isRTL ? 'استكشف المزيد' : 'Explore more'} className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+        <nav aria-label={bi('استكشف المزيد', 'Explore more')} className="rounded-2xl border border-border bg-card p-4 sm:p-6">
           <h2 className="font-heading text-base font-bold mb-3">
-            {isRTL ? 'استكشف المزيد في قِطاعات' : 'Explore more on Qitaat'}
+            {bi('استكشف المزيد في قِطاعات', 'Explore more on Qitaat')}
           </h2>
           <ul className="flex flex-wrap gap-2 text-sm">
             <li>
               <Link to="/services" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
-                {isRTL ? 'خدمات ذات صلة' : 'Related services'}
+                {bi('خدمات ذات صلة', 'Related services')}
               </Link>
             </li>
             <li>
               <Link to="/brands" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
-                {isRTL ? 'العلامات التجارية' : 'Brands directory'}
+                {bi('العلامات التجارية', 'Brands directory')}
               </Link>
             </li>
             <li>
               <Link to="/sectors" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
-                {isRTL ? 'كل القطاعات' : 'All sectors'}
+                {bi('كل القطاعات', 'All sectors')}
               </Link>
             </li>
           </ul>
@@ -743,22 +745,21 @@ const SectorLanding: React.FC = () => {
  */
 export const SectorsIndex: React.FC = () => {
   const { isRTL } = useLanguage();
+  const bi = useBi();
   usePageMeta({
-    title: buildSeoTitle({ kind: 'category', lang: isRTL ? 'ar' : 'en', name: isRTL ? 'القطاعات الصناعية' : 'Industrial Sectors' }),
-    description: buildSeoDescription({ kind: 'category', lang: isRTL ? 'ar' : 'en', customDescription: isRTL
-      ? 'استعرض القطاعات الصناعية الرئيسية في دليل قِطاعات: الألمنيوم، الحديد، الزجاج، الخشب، والخزائن. اختر القطاع لاستكشاف أفضل المصانع والورش.'
-      : 'Browse Qitaat top industrial sectors: aluminum, iron, glass, wood and cabinets. Pick a sector to explore the best factories and workshops.' }),
+    title: buildSeoTitle({ kind: 'category', lang: bi('ar', 'en'), name: bi('القطاعات الصناعية', 'Industrial Sectors') }),
+    description: buildSeoDescription({ kind: 'category', lang: bi('ar', 'en'), customDescription: bi('استعرض القطاعات الصناعية الرئيسية في دليل قِطاعات: الألمنيوم، الحديد، الزجاج، الخشب، والخزائن. اختر القطاع لاستكشاف أفضل المصانع والورش.', 'Browse Qitaat top industrial sectors: aluminum, iron, glass, wood and cabinets. Pick a sector to explore the best factories and workshops.') }),
     keywords: ALL_SECTORS.flatMap((s) => (isRTL ? s.keywords_ar : s.keywords_en)).slice(0, 24).join(', '),
     canonical: 'https://qitaat.com/sectors',
   });
 
   useMultiJsonLd(
     useMemo(() => {
-      const breadcrumb = buildBreadcrumbList([{ name: isRTL ? 'القطاعات' : 'Sectors', url: '/sectors' }])!;
+      const breadcrumb = buildBreadcrumbList([{ name: bi('القطاعات', 'Sectors'), url: '/sectors' }])!;
       const list = {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
-        name: isRTL ? 'القطاعات الصناعية' : 'Industrial sectors',
+        name: bi('القطاعات الصناعية', 'Industrial sectors'),
         numberOfItems: ALL_SECTORS.length,
         itemListElement: ALL_SECTORS.map((s, i) => ({
           '@type': 'ListItem',
@@ -777,12 +778,10 @@ export const SectorsIndex: React.FC = () => {
       <header className="bg-primary pt-24 pb-10">
         <div className="container px-4">
           <h1 className="font-heading text-3xl font-bold text-primary-foreground">
-            {isRTL ? 'قطاعات قِطاعات' : 'Qitaat Sectors'}
+            {bi('قطاعات قِطاعات', 'Qitaat Sectors')}
           </h1>
           <p className="mt-2 text-primary-foreground/70 text-sm">
-            {isRTL
-              ? 'اختر قطاعاً لاستكشاف أفضل المصانع والورش'
-              : 'Pick a sector to explore the best factories and workshops'}
+            {bi('اختر قطاعاً لاستكشاف أفضل المصانع والورش', 'Pick a sector to explore the best factories and workshops')}
           </p>
         </div>
       </header>
