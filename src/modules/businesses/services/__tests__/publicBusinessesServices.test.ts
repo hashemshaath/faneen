@@ -201,8 +201,10 @@ describe('P-21 public/SEO businesses read migration', () => {
     ]) {
       expect(src).toContain(col);
     }
-    expect(src).toContain('queryKey: ["business", username]');
-    expect(src).toContain('enabled: !!username');
+    // Username is normalized (trim + lowercase + decodeURIComponent) so
+    // the cache key is keyed on the normalized form. See profileHref.ts.
+    expect(src).toContain('queryKey: ["business", normalized]');
+    expect(src).toContain('enabled: !!normalized');
     // No direct businesses table read remains in this file.
     expect(src).not.toMatch(/\.from\(["']businesses["']\)/);
     // PII-MASKING — sensitive contact fields must never appear in the public

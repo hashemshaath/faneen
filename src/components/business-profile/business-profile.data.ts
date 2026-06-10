@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getPublicBusinessByUsername } from "@/modules/businesses";
+import { normalizeUsername } from "@/lib/business/profileHref";
 import {
   listServicesByBusiness,
   listBranchesByBusiness,
@@ -107,8 +108,11 @@ const PUBLIC_BUSINESS_SELECT =
   'cities(id, name_ar, name_en), ' +
   'countries(name_ar, name_en, code)';
 
-// Public profile data rarely changes between visits; a 5-minute stale window
-// keeps tab switches and revisits instant while still picking up edits.
+// Provider edits must surface on the public profile without a hard reload.
+// We use a short stale window for the headline profile row and force a
+// refetch on mount, while keeping derived collections (services, branches,
+// reviews, ...) on a longer window since they change less often.
+const PROFILE_HEADLINE_STALE_MS = 30 * 1000;
 const PROFILE_STALE_MS = 5 * 60 * 1000;
 
 /**
@@ -126,12 +130,13 @@ export const BUSINESS_PROFILE_JOIN_WHITELIST = {
 
 export const BUSINESS_PROFILE_SELECT = PUBLIC_BUSINESS_SELECT;
 
-export const useBusinessByUsername = (username: string) =>
-  useQuery({
-    queryKey: ["business", username],
+export const useBusinessByUsername = (username: string) => {
+  const normalized = normalizeUsername(username);
+  return useQuery({
+    queryKey: ["business", normalized],
     queryFn: async () => {
       const { data, error } = await getPublicBusinessByUsername<BusinessWithJoins>({
-        username,
+        username: normalized,
         select: PUBLIC_BUSINESS_SELECT,
       });
 
@@ -141,14 +146,19 @@ export const useBusinessByUsername = (username: string) =>
         // to a column that no longer exists on `cities` or `countries`).
         const reason = error instanceof Error ? error.message : JSON.stringify(error);
         // eslint-disable-next-line no-console
-        console.error('[business-profile] fetch failed', { username, reason });
+        console.error('[business-profile] fetch failed', { username: normalized, reason });
         throw error;
       }
       return data;
     },
-    enabled: !!username,
-    staleTime: PROFILE_STALE_MS,
+    enabled: !!normalized,
+    staleTime: PROFILE_HEADLINE_STALE_MS,
+    // Ensure that when the user navigates from /dashboard/business-edit back
+    // to /{username} the fresh row is fetched even if a previous visit
+    // populated the cache within the staleTime window.
+    refetchOnMount: "always",
   });
+};
 
 export const usePortfolio = (businessId: string | undefined) =>
   useQuery({
