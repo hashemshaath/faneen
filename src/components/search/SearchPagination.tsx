@@ -11,6 +11,10 @@ interface Props {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  /** @deprecated only here for back-compat with the deprecated SearchResults shim */
+  totalItems?: number;
+  /** @deprecated only here for back-compat with the deprecated SearchResults shim */
+  itemsPerPage?: number;
 }
 
 export const SearchPagination = ({ currentPage, totalPages, onPageChange }: Props) => {

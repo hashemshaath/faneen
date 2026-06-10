@@ -7,7 +7,11 @@
  */
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Props { count?: number }
+interface Props {
+  count?: number;
+  /** @deprecated kept for back-compat with the deprecated SearchResults shim */
+  viewMode?: 'grid' | 'list' | 'map' | 'split';
+}
 
 export const SearchResultsSkeleton = ({ count = 8 }: Props) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" aria-busy="true">
