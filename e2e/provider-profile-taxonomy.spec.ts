@@ -3,35 +3,80 @@ import { test, expect } from "../playwright-fixture";
 /**
  * E2E regression — Provider Profile Routing + Taxonomy Freshness.
  *
- * The `/ajanetworking` provider profile must:
- *   1. Resolve and render (not 404 / not stuck on a loader).
- *   2. Display a real taxonomy label (NOT the "غير مصنّف" / "Unclassified"
- *      fallback badge) — its database links to taxonomy_categories are
- *      published, so any RLS / cache regression that hides them is a P0.
+ * REQUIRED CI GATE. Runs cross-browser via `playwright.cross-browser.config.ts`
+ * (Chromium + Firefox + WebKit) and as a regular spec via `playwright.config.ts`
+ * on Chromium. Any failure must block merge / deploy.
  *
- * Keep this lightweight and resilient: we only assert the negative
- * (no "غير مصنّف" / no "Unclassified") rather than coupling to the exact
- * label, which can evolve.
+ * The `/ajanetworking` provider profile must, in every browser:
+ *   1. Resolve and render (not 404 / not stuck on a loader).
+ *   2. Render the business name (h1, `data-testid="business-profile-name"`).
+ *   3. Render the taxonomy block (`data-testid="business-profile-taxonomy"`).
+ *   4. Render at least one real taxonomy chip
+ *      (`data-testid="business-profile-taxonomy-chip"`) with non-empty text.
+ *   5. Never contain the "غير مصنّف" / "Unclassified" fallback.
+ *   6. Never contain raw slugs (e.g. `aluminum-works`) — labels only.
  */
 const TARGET_USERNAME = "ajanetworking";
 
+const FORBIDDEN_FALLBACKS = ["غير مصنّف", "Unclassified"] as const;
+// Raw taxonomy slugs must NEVER leak into the UI — labels only.
+const FORBIDDEN_SLUGS = [
+  "aluminum-works",
+  "technology-systems",
+  "aluminum-glass-facades",
+] as const;
+
 test.describe(`Provider profile /${TARGET_USERNAME}`, () => {
-  test("resolves and never renders the 'غير مصنّف' fallback", async ({ page }) => {
+  test("renders a real taxonomy label and never the fallback", async ({ page }) => {
     await page.goto(`/${TARGET_USERNAME}`);
     await page.waitForLoadState("networkidle");
 
-    // Page resolved — must NOT be the 404 screen.
+    // 1. Not a 404 screen.
     await expect(
       page.locator("text=404").or(page.locator("text=غير موجودة")),
     ).toHaveCount(0);
 
-    // Header h1 must be present (business name is rendered there).
-    await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
+    // 2. Business name renders — wait for the stable test id rather than
+    //    any h1 (auth/marketing pages also use h1).
+    const nameEl = page.getByTestId("business-profile-name");
+    await expect(nameEl).toBeVisible({ timeout: 20_000 });
+    await expect(nameEl).not.toHaveText("");
 
-    // Taxonomy freshness — the public profile must NOT render the
-    // "غير مصنّف" / "Unclassified" fallback for this known-good provider.
-    await expect(page.locator("body")).not.toContainText("غير مصنّف");
-    await expect(page.locator("body")).not.toContainText("Unclassified");
+    // 3. Taxonomy block renders (the section is rendered conditionally only
+    //    when a label exists, which itself catches a "no data at all" bug).
+    const taxonomy = page.getByTestId("business-profile-taxonomy");
+    await expect(taxonomy).toBeVisible({ timeout: 20_000 });
+
+    // 4. At least one real chip with non-empty, non-fallback text.
+    const chips = page.getByTestId("business-profile-taxonomy-chip");
+    await expect(chips.first()).toBeVisible({ timeout: 20_000 });
+    const count = await chips.count();
+    expect(count, "expected at least one taxonomy chip").toBeGreaterThan(0);
+
+    const chipTexts: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const txt = (await chips.nth(i).innerText()).trim();
+      expect(txt, `chip #${i} must not be empty`).not.toBe("");
+      for (const bad of FORBIDDEN_FALLBACKS) {
+        expect(txt, `chip #${i} must not equal fallback '${bad}'`).not.toBe(bad);
+      }
+      chipTexts.push(txt);
+    }
+    // Surface the actual rendered labels into the report for diagnostics.
+    test.info().annotations.push({
+      type: "taxonomy-chips",
+      description: chipTexts.join(" · "),
+    });
+
+    // 5. Page must not contain the fallback ANYWHERE.
+    const body = page.locator("body");
+    for (const bad of FORBIDDEN_FALLBACKS) {
+      await expect(body, `body must not contain '${bad}'`).not.toContainText(bad);
+    }
+    // 6. No raw slugs leaking into the rendered UI.
+    for (const slug of FORBIDDEN_SLUGS) {
+      await expect(body, `body must not contain raw slug '${slug}'`).not.toContainText(slug);
+    }
   });
 
   // Exercise the RTL provider-profile path across narrow + tablet widths to
@@ -57,16 +102,22 @@ test.describe(`Provider profile /${TARGET_USERNAME}`, () => {
       // Sanity — we actually exercised the RTL path.
       await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
 
-      // Page resolved.
-      await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
+      // Page resolved — wait for the business name test id.
+      await expect(page.getByTestId("business-profile-name")).toBeVisible({ timeout: 20_000 });
 
-      // Give React Query a beat to settle any deferred taxonomy refetch — we
-      // want to catch flashes too, not just the final paint.
-      await page.waitForTimeout(750);
+      // Wait for the taxonomy block to appear before asserting absence of
+      // the fallback — guarantees React Query has settled and we are not
+      // racing the request.
+      await expect(page.getByTestId("business-profile-taxonomy")).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByTestId("business-profile-taxonomy-chip").first()).toBeVisible({
+        timeout: 20_000,
+      });
 
       // Strict negative assertions — taxonomy must render real labels.
-      await expect(page.locator("body")).not.toContainText("غير مصنّف");
-      await expect(page.locator("body")).not.toContainText("Unclassified");
+      const body = page.locator("body");
+      for (const bad of FORBIDDEN_FALLBACKS) {
+        await expect(body).not.toContainText(bad);
+      }
 
       // No horizontal scroll on narrow widths — RTL layout must contain itself.
       if (vp.width <= 414) {
