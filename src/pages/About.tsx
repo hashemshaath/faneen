@@ -44,9 +44,10 @@ const AboutHero = ({ isRTL }: { isRTL: boolean }) => {
         <Button asChild variant="hero" size="lg"><Link to="/search">{bi('استكشف المزودين', 'Explore Providers')}</Link></Button>
         <Button asChild variant="heroOutline" size="lg"><Link to="/contact">{bi('تواصل معنا', 'Contact Us')}</Link></Button>
       </div>
-    </div>
-  </section>
-);
+     </div>
+   </section>
+   );
+ };
 
 /* ───────── Live stats strip ───────── */
 const StatItem = ({
