@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { TechnicalText } from "@/components/ui/technical-text";
 import {
   Select,
   SelectContent,
@@ -179,13 +180,13 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             </div>
             <div className="sm:col-span-1">
               <Label className="text-xs">{bi("البريد الإلكتروني", "Email")}</Label>
-              <Input type="email" value={form.email} onChange={update("email")} dir="auto" maxLength={120} className="h-11 rounded-xl" />
+              <Input type="email" value={form.email} onChange={update("email")} dir="ltr" maxLength={120} className="h-11 rounded-xl tech-content" />
             </div>
           </>
         )}
         <div>
           <Label className="text-xs">{bi("الجوال", "Phone")} *</Label>
-          <Input type="tel" value={form.phone} onChange={update("phone")} className="h-11 rounded-xl tech-content" maxLength={30} />
+          <Input type="tel" value={form.phone} onChange={update("phone")} dir="ltr" className="h-11 rounded-xl tech-content" maxLength={30} />
         </div>
         <div>
           <Label className="text-xs">{bi("طريقة التواصل المفضّلة", "Preferred contact")}</Label>
@@ -219,8 +220,12 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             <SelectContent>
               <SelectItem value="urgent">{bi("عاجل", "Urgent")}</SelectItem>
               <SelectItem value="1_month">{bi("خلال شهر", "Within a month")}</SelectItem>
-              <SelectItem value="1_3_months">{bi("1–3 أشهر", "1–3 months")}</SelectItem>
-              <SelectItem value="3_6_months">{bi("3–6 أشهر", "3–6 months")}</SelectItem>
+              <SelectItem value="1_3_months" textValue={bi("1–3 أشهر", "1–3 months")}>
+                <TechnicalText mono={false}>{bi("1–3 أشهر", "1–3 months")}</TechnicalText>
+              </SelectItem>
+              <SelectItem value="3_6_months" textValue={bi("3–6 أشهر", "3–6 months")}>
+                <TechnicalText mono={false}>{bi("3–6 أشهر", "3–6 months")}</TechnicalText>
+              </SelectItem>
               <SelectItem value="flexible">{bi("مرن", "Flexible")}</SelectItem>
             </SelectContent>
           </Select>
