@@ -148,13 +148,29 @@ export const useBusinessStructuredData = ({
       telephone: undefined,
       email: undefined,
       ...(sameAs.length > 0 ? { sameAs } : {}),
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: business.address || undefined,
-        addressRegion: business.region || undefined,
-        addressLocality: cityName || undefined,
-        addressCountry: business.countries?.code || "SA",
-      },
+      address: (() => {
+        const b = business as typeof business & {
+          street_name?: string | null;
+          district?: string | null;
+          postal_code?: string | null;
+        };
+        const streetAddress =
+          [b.street_name, b.district].filter(Boolean).join("، ") ||
+          b.address ||
+          undefined;
+        const postalCode =
+          typeof b.postal_code === "string" && /^\d{4,10}$/.test(b.postal_code.trim())
+            ? b.postal_code.trim()
+            : undefined;
+        return {
+          "@type": "PostalAddress",
+          streetAddress,
+          addressLocality: cityName || undefined,
+          addressRegion: b.region || undefined,
+          ...(postalCode ? { postalCode } : {}),
+          addressCountry: business.countries?.code || "SA",
+        };
+      })(),
       geo:
         business.latitude && business.longitude
           ? {
