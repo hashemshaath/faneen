@@ -307,7 +307,7 @@ export const useBranches = (businessId: string | undefined) =>
         source: 'public',
         select:
           "id, name_ar, name_en, slug, is_main, " +
-          "district, region, street_name, building_number, " +
+          "address, district, region, street_name, building_number, " +
           "phone, mobile, unified_number, customer_service_phone, " +
           "website, latitude, longitude",
         order: [
@@ -386,21 +386,21 @@ export interface PublicBranchFull {
   is_main: boolean;
   name_ar: string;
   name_en: string | null;
-  description_ar: string | null;
-  description_en: string | null;
+  description_ar?: string | null;
+  description_en?: string | null;
   phone: string | null;
   mobile: string | null;
-  whatsapp: string | null;
+  whatsapp?: string | null;
   customer_service_phone: string | null;
   unified_number: string | null;
-  email: string | null;
+  email?: string | null;
   website: string | null;
   address: string | null;
   region: string | null;
   district: string | null;
   street_name: string | null;
   building_number: string | null;
-  additional_number: string | null;
+  additional_number?: string | null;
   latitude: number | null;
   longitude: number | null;
 }
@@ -418,10 +418,9 @@ export const useBranchBySlug = (
         .from("business_branches_public" as "business_branches")
         .select(
           "id, business_id, slug, is_main, name_ar, name_en, " +
-          "description_ar, description_en, " +
-          "phone, mobile, whatsapp, customer_service_phone, unified_number, " +
-          "email, website, " +
-          "address, region, district, street_name, building_number, additional_number, " +
+          "phone, mobile, customer_service_phone, unified_number, " +
+          "website, " +
+          "address, region, district, street_name, building_number, " +
           "latitude, longitude"
         )
         .eq("business_id", businessId!)

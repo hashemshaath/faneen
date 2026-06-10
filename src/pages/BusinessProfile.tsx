@@ -108,13 +108,15 @@ const BusinessProfile = () => {
   const { data: branchFromUrl } = useBranchBySlug(businessRow?.id, branchSlug);
   // Branch selection lives in local state so switching between branches
   // updates the page in-place without changing the route or remounting.
-  // The URL is still kept in sync via `history.replaceState` from the
-  // switcher so the page stays shareable/refreshable.
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
-  // Seed selection from the URL on first load (deep-link to /:username/:branchSlug).
+  // Seed selection from old deep links once, then normalize the address bar
+  // back to the stable profile URL without a reload.
   useEffect(() => {
     if (branchFromUrl?.id) setSelectedBranchId((prev) => prev ?? branchFromUrl.id);
-  }, [branchFromUrl?.id]);
+    if (branchSlug && username && typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", `/${username}`);
+    }
+  }, [branchFromUrl?.id, branchSlug, username]);
   const { data: branchesList = [] } = useBranches(businessRow?.id);
   // Resolve the active branch from the locally selected id, falling back to
   // the URL-resolved branch while the branches list is still loading.
@@ -123,8 +125,8 @@ const BusinessProfile = () => {
     return branchesList.find((b) => b.id === selectedBranchId) ?? branchFromUrl ?? null;
   }, [selectedBranchId, branchesList, branchFromUrl]);
 
-  // When viewing `/:username/:branchSlug`, swap the contact/location fields
-  // on the business row with the selected branch's values. The screen
+  // When a branch is selected, swap the contact/location fields on the
+  // business row with the selected branch's values. The screen
   // (header, tabs, layout) stays identical — only the data changes.
   const business = useMemo(() => {
     if (!businessRow) return businessRow;
@@ -231,9 +233,7 @@ const BusinessProfile = () => {
         title: businessName,
         subtitle: [categoryName, cityName].filter(Boolean).join(' — ') || 'قِطاعات',
       }),
-    canonical: business
-      ? `https://qitaat.com/${business.username}${branch?.slug ? `/${branch.slug}` : ''}`
-      : undefined,
+    canonical: business ? `https://qitaat.com/${business.username}` : undefined,
     keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
@@ -453,7 +453,6 @@ const BusinessProfile = () => {
               before drilling into tabs. */}
           {business.username && (
             <BusinessBranchSwitcher
-              username={business.username}
               branches={branches as Array<{ id: string; slug?: string | null; name_ar: string; name_en?: string | null; region?: string | null; is_main?: boolean | null }>}
               currentBranchId={selectedBranchId}
               onSelect={(b) => setSelectedBranchId(b?.id ?? null)}
@@ -603,7 +602,8 @@ const BusinessProfile = () => {
                   <BranchesTab
                     businessId={business.id}
                     businessName={businessName}
-                    businessUsername={business.username}
+                    currentBranchId={selectedBranchId}
+                    onSelectBranch={(selectedBranch) => setSelectedBranchId(selectedBranch.id)}
                     isAuthenticated={!!user}
                     onRequestContact={() => handleContactClick("branches_tab")}
                     onRevealContact={handleContactReveal}

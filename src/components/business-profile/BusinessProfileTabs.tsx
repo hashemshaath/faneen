@@ -558,7 +558,8 @@ export const ReviewsTab = ({ business }: { business: any }) => {
 interface BranchesTabProps {
   businessId: string;
   businessName?: string;
-  businessUsername?: string | null;
+  currentBranchId?: string | null;
+  onSelectBranch?: (branch: { id: string }) => void;
   isAuthenticated?: boolean;
   onRequestContact?: () => void;
   onRevealContact?: (kind: "phone" | "email") => void;
@@ -567,7 +568,8 @@ interface BranchesTabProps {
 export const BranchesTab = ({
   businessId,
   businessName,
-  businessUsername,
+  currentBranchId,
+  onSelectBranch,
   isAuthenticated = false,
   onRequestContact,
   onRevealContact,
@@ -708,14 +710,18 @@ export const BranchesTab = ({
                     </p>
                   )}
                   <div className="flex items-center gap-2">
-                    {branch.slug && businessUsername ? (
-                      <Link
-                        to={`/${businessUsername}/${branch.slug}`}
+                    {onSelectBranch ? (
+                      <button
+                        type="button"
+                        onClick={() => onSelectBranch(branch)}
                         dir="auto"
-                        className="truncate font-heading text-sm font-bold text-foreground hover:text-accent transition sm:text-base"
+                        className={cn(
+                          "truncate text-start font-heading text-sm font-bold transition sm:text-base",
+                          currentBranchId === branch.id ? "text-accent" : "text-foreground hover:text-accent",
+                        )}
                       >
                         {name}
-                      </Link>
+                      </button>
                     ) : (
                       <h3 dir="auto" className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
                     )}
@@ -790,25 +796,31 @@ export const BranchesTab = ({
                     <ExternalLink className="h-3 w-3" />
                     {language === "ar" ? "فتح في خرائط Google" : "Open in Google Maps"}
                   </a>
-                  {branch.slug && businessUsername && (
-                    <Link
-                      to={`/${businessUsername}/${branch.slug}`}
+                  {onSelectBranch && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectBranch(branch)}
                       className="inline-flex items-center gap-1.5 text-[10px] font-medium text-accent hover:underline sm:text-xs"
                     >
-                      {language === "ar" ? "صفحة الفرع" : "Branch page"}
-                    </Link>
+                      {currentBranchId === branch.id
+                        ? language === "ar" ? "الفرع الحالي" : "Current branch"
+                        : language === "ar" ? "عرض هذا الفرع" : "View this branch"}
+                    </button>
                   )}
                 </div>
               </div>
             )}
-            {!(branch.latitude && branch.longitude) && branch.slug && businessUsername && (
+            {!(branch.latitude && branch.longitude) && onSelectBranch && (
               <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-                <Link
-                  to={`/${businessUsername}/${branch.slug}`}
+                <button
+                  type="button"
+                  onClick={() => onSelectBranch(branch)}
                   className="inline-flex items-center gap-1.5 text-[10px] font-medium text-accent hover:underline sm:text-xs"
                 >
-                  {language === "ar" ? "صفحة الفرع" : "Branch page"}
-                </Link>
+                  {currentBranchId === branch.id
+                    ? language === "ar" ? "الفرع الحالي" : "Current branch"
+                    : language === "ar" ? "عرض هذا الفرع" : "View this branch"}
+                </button>
               </div>
             )}
           </article>
