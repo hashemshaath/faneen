@@ -36,6 +36,7 @@ const ALLOWLIST: AllowEntry[] = [
   { path: 'src/__tests__/rtlLtrDirectionAudit.test.ts',      reason: 'legacy audit; superseded but kept for back-compat' },
   { path: 'src/__tests__/navUiPolish1.sidebar.test.ts',      reason: 'sidebar test references forbidden patterns by name to assert their absence' },
   { path: 'src/tests/pagePolishRepairs1.test.ts',            reason: 'page-polish audit references forbidden class tokens by name in regex' },
+  { path: 'src/test/form-controls-direction-hygiene.test.ts', reason: 'guard test references the forbidden `text-left` token by name to assert its absence' },
 ];
 
 const isAllowed = (rel: string): boolean =>

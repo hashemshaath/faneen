@@ -27,11 +27,45 @@ const { rpcMock } = vi.hoisted(() => ({
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     rpc: rpcMock,
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({ data: [], error: null })),
-      })),
-    })),
+    from: vi.fn((table: string) => {
+      // Chainable query stub. Tracks the last `.in('id', ids)` call so the
+      // taxonomy validation pre-flight inside setBusinessTaxonomyCategoriesV2
+      // sees rows for every primary/secondary id the test passes in.
+      let lastIds: string[] = [];
+      const chain: Record<string, unknown> = {};
+      const passthrough = () => chain;
+      const inFn = (_col: string, ids: string[]) => {
+        lastIds = Array.isArray(ids) ? ids : [];
+        return chain;
+      };
+      const resolveResult = () => {
+        if (table === 'taxonomy_categories') {
+          // Treat every queried id as a valid primary_activity row.
+          const data = lastIds.map((id) => ({
+            id,
+            is_active: true,
+            is_public: true,
+            is_archived: false,
+            parent_id: null,
+            taxonomy_types: { code: 'primary_activity' },
+          }));
+          return { data, error: null };
+        }
+        return { data: [] as unknown[], error: null };
+      };
+      Object.assign(chain, {
+        select: passthrough,
+        eq: passthrough,
+        in: inFn,
+        order: passthrough,
+        limit: passthrough,
+        maybeSingle: () => Promise.resolve(resolveResult()),
+        single: () => Promise.resolve(resolveResult()),
+        then: (onFulfilled: (v: ReturnType<typeof resolveResult>) => unknown) =>
+          Promise.resolve(onFulfilled(resolveResult())),
+      });
+      return chain;
+    }),
   },
 }));
 

@@ -244,9 +244,8 @@ export const getHomeTaxonomyEntry = (slug: string): HomeTaxonomyEntry | undefine
   HOME_TAXONOMY_BY_SLUG[slug];
 
 /**
- * The 10 sector tiles shown in HomeSectorGrid (5 cols × 2 rows on desktop).
- * The remaining 3 canonical primaries (security-control-systems,
- * equipment-rental, contracting-finishing) stay reachable via the
+ * Sector tiles shown in HomeSectorGrid (currently 8 tiles, 4 cols × 2 rows).
+ * The remaining canonical primaries stay reachable via the
  * "Explore all sectors" link below the grid and via HomeCategoryRows.
  */
 export const HOME_SECTOR_GRID_SLUGS = [

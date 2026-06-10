@@ -35,6 +35,8 @@ const ALLOWED_DIR_PREFIXES = [
   'src/__tests__/navUiPolish1.sidebar.test.ts',
   // Page-polish audit lists physical-direction tokens by name in a regex.
   'src/tests/pagePolishRepairs1.test.ts',
+  // Form-controls hygiene guard references `text-left` by name to assert absence.
+  'src/test/form-controls-direction-hygiene.test.ts',
 ];
 
 const isAllowed = (rel: string) =>

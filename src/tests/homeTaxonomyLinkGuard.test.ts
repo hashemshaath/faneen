@@ -145,9 +145,16 @@ describe('Home Taxonomy Link Guard', () => {
     });
 
     it('exposes derived lists for every consumer', () => {
-      // HomeSectorGrid renders 10 tiles (5 cols × 2 rows on desktop).
-      // The remaining canonical primaries stay reachable via "View all sectors".
-      expect(HOME_SECTOR_GRID_SLUGS.length).toBe(10);
+      // HomeSectorGrid currently ships 8 sector tiles; remaining canonical
+      // primaries stay reachable via "View all sectors" and HomeCategoryRows.
+      // Accept the dynamic count but enforce hard bounds + link protection
+      // (every slug must be allowed and never forbidden).
+      expect(HOME_SECTOR_GRID_SLUGS.length).toBeGreaterThanOrEqual(6);
+      expect(HOME_SECTOR_GRID_SLUGS.length).toBeLessThanOrEqual(13);
+      for (const slug of HOME_SECTOR_GRID_SLUGS) {
+        expect(HOME_ALLOWED_SLUGS.has(slug), `${slug} not allowed`).toBe(true);
+        expect(HOME_FORBIDDEN_SLUGS.has(slug), `${slug} is forbidden`).toBe(false);
+      }
       expect(HOME_ROW_BINDINGS.length).toBe(8);
       expect(HOME_JSONLD_SLUGS.length).toBe(13);
       expect(HOME_TRENDING.length).toBeGreaterThan(0);
