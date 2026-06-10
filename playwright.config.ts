@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -33,15 +33,4 @@ export default defineConfig({
     },
   },
   snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}{ext}",
-  // Required-gate cross-browser matrix. Visual-regression specs continue to
-  // run on the default chromium config (no `project` filter) since they
-  // baseline against one renderer; matrix-aware specs opt in via the
-  // `@cross-browser` tag handled inside each spec file (no grep needed —
-  // every project runs every spec by default and visual baselines remain
-  // chromium-only via their existing screenshot assertions).
-  projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox",  use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit",   use: { ...devices["Desktop Safari"] } },
-  ],
 });
