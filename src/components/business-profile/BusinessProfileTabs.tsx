@@ -41,6 +41,8 @@ import {
   useBranchServiceIds,
 } from "./business-profile.data";
 import { Stars } from "./BusinessProfileHeader";
+import { recordBranchVisit } from "@/modules/branchTelemetry";
+import { track } from "@/lib/analytics-events";
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
