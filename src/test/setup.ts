@@ -33,6 +33,18 @@ if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
 
+// jsdom does not implement URL.createObjectURL / revokeObjectURL.
+// Many dashboard/export flows call them to trigger downloads; without these
+// polyfills any component that touches a Blob URL during a test throws
+// `URL.createObjectURL is not a function`. We install no-op stand-ins ONLY
+// when missing so real environments are untouched.
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = () => 'blob:mock';
+}
+if (typeof URL.revokeObjectURL !== 'function') {
+  URL.revokeObjectURL = () => {};
+}
+
 // jsPDF emits `console.warn("Unable to look up font label for font 'ArabicFont', '<style>'")`
 // in jsdom because the bundled Noto Naskh TTF cannot be fetched via Vite's
 // `?url` import in the test environment, so the Arabic font registration

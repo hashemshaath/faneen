@@ -1,40 +1,55 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
 
 /**
- * UX-REDESIGN-3 — Search & Compare public invariants.
- * Locks the empty/no-result CTA upgrades and the trust disclaimers
- * against regressions while preserving SEO-1..SEO-10A guarantees and
- * the PERF-1D public column allow-lists.
+ * UX-REDESIGN-3 — Search & Compare public invariants (Search V3 era).
+ * Locks the public-route allow-list and trust disclaimers across the
+ * rebuilt /search page (Search V3) and the /compare page, while
+ * preserving SEO-1..SEO-10A guarantees and the PERF-1D public column
+ * allow-list.
  */
-describe('UX-REDESIGN-3 — Search empty/no-result states', () => {
-  const src = read('src/components/search/SearchResults.tsx');
+const v3Dir = 'src/components/search/v3';
+const v3Sources = readdirSync(join(process.cwd(), v3Dir))
+  .filter((n) => n.endsWith('.tsx') || n.endsWith('.ts'))
+  .map((n) => ({ path: join(v3Dir, n), src: read(join(v3Dir, n)) }));
+const searchPage = read('src/pages/SearchV3.tsx');
+const allSearchSources = [{ path: 'src/pages/SearchV3.tsx', src: searchPage }, ...v3Sources];
 
-  it('directory-empty state links only to public-safe routes', () => {
-    expect(src).toContain('href="/for-providers"');
-    expect(src).toContain('href="/sectors"');
-  });
-
-  it('directory-empty state no longer links to dashboard/auth', () => {
-    expect(src).not.toContain('href="/dashboard"');
-    expect(src).not.toContain('href="/auth"');
-    expect(src).not.toMatch(/href=["']\/admin/);
-  });
-
-  it('no-results state surfaces a quote/help CTA and a sectors link', () => {
-    expect(src).toContain('href="/contact"');
-    // Arabic helper copy mandated by UX-REDESIGN-3 brief.
-    expect(src).toContain('لم نجد نتائج مطابقة');
-    expect(src).toContain('جرّب توسيع المدينة أو القطاع');
-  });
-
-  it('no guarantee/PDPL/pricing claims leak into search empty states', () => {
-    for (const banned of ['نضمن', 'تواصل مباشر مضمون', 'PDPL', 'أفضل سعر']) {
-      expect(src.includes(banned), `search empty state leaks: ${banned}`).toBe(false);
+describe('UX-REDESIGN-3 — Search V3 empty/no-result + public-route invariants', () => {
+  it('Search V3 never links into private/admin/auth/onboarding routes', () => {
+    for (const { path, src } of allSearchSources) {
+      for (const re of [
+        /["']\/dashboard(?:\/|["'])/,
+        /["']\/admin(?:\/|["'])/,
+        /["']\/auth(?:["'?])/,
+        /["']\/onboarding(?:\/|["'])/,
+      ]) {
+        expect(re.test(src), `${path} links to a private route via ${re}`).toBe(false);
+      }
     }
+  });
+
+  it('Search V3 empty-state exposes a bilingual "no results" message', () => {
+    const empty = v3Sources.find((s) => s.path.endsWith('SearchEmptyStateV3.tsx'));
+    expect(empty, 'SearchEmptyStateV3.tsx').toBeDefined();
+    expect(empty!.src).toContain('لا توجد نتائج');
+    expect(empty!.src).toMatch(/No results/);
+  });
+
+  it('no guarantee/PDPL/pricing claims leak into Search V3 sources', () => {
+    for (const { path, src } of allSearchSources) {
+      for (const banned of ['نضمن', 'تواصل مباشر مضمون', 'PDPL', 'أفضل سعر']) {
+        expect(src.includes(banned), `${path} leaks banned claim: ${banned}`).toBe(false);
+      }
+    }
+  });
+
+  it('Search V3 routes legacy "/search" through SearchV3', () => {
+    const stub = read('src/pages/Search.tsx');
+    expect(stub).toMatch(/SearchV3/);
   });
 });
 
@@ -104,21 +119,15 @@ describe('UX-REDESIGN-3 — Compare empty/result states', () => {
   });
 });
 
-describe('UX-REDESIGN-3 — Search header hero CTAs', () => {
-  const src = read('src/components/search/SearchHeader.tsx');
+describe('UX-REDESIGN-3 — Search V3 header structure', () => {
+  const src = read('src/components/search/v3/SearchHeaderV3.tsx');
 
-  it('exposes a primary quote CTA and sectors CTA in the hero', () => {
-    expect(src).toContain('to="/contact"');
-    expect(src).toContain('to="/sectors"');
-    expect(src).toContain('اطلب عرض سعر');
-    expect(src).toContain('استكشف القطاعات');
+  it('exposes a sticky toolbar with the bilingual search autocomplete', () => {
+    expect(src).toMatch(/sticky/);
+    expect(src).toMatch(/SearchAutocomplete/);
   });
 
-  it('renders the filter-then-compare helper line', () => {
-    expect(src).toContain('استخدم الفلاتر لتقريب النتائج، ثم قارن قبل التواصل.');
-  });
-
-  it('hero CTAs never link to private/admin/auth routes', () => {
+  it('header never links into private/admin/auth/onboarding routes', () => {
     for (const re of [/to=["']\/dashboard/, /to=["']\/admin/, /to=["']\/auth/, /to=["']\/onboarding/]) {
       expect(src).not.toMatch(re);
     }

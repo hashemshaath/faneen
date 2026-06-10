@@ -107,9 +107,16 @@ describe('PERFORMANCE-ACCESSIBILITY-FINAL-1', () => {
     expect(QUOTE).not.toMatch(/to=["']\/admin/);
   });
 
-  it('CWV: SearchResults lazy-loads SearchMap', () => {
-    const src = read('src/components/search/SearchResults.tsx');
-    expect(src).toMatch(/(?:lazy|lazyRetry)\(\(\)\s*=>\s*import\(["']\.\/SearchMap["']\)/);
+  it('CWV: Search V3 keeps the initial bundle free of leaflet/recharts', () => {
+    // Search V3 deliberately ships no map/chart libs in the initial path —
+    // the prior lazy-loaded SearchMap is gone with the legacy rebuild.
+    const page = read('src/pages/SearchV3.tsx');
+    const results = read('src/components/search/v3/SearchResultsV3.tsx');
+    for (const src of [page, results]) {
+      expect(src).not.toMatch(/from\s+["']leaflet["']/);
+      expect(src).not.toMatch(/from\s+["']react-leaflet["']/);
+      expect(src).not.toMatch(/from\s+["']recharts["']/);
+    }
   });
 
   it('CWV: HomeV2 still preloads hero LCP image', () => {
