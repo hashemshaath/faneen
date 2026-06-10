@@ -14,6 +14,8 @@ import {
   MapPin,
   MapPinned,
   MessageSquare,
+  MessageCircle,
+  Navigation,
   Phone,
   PhoneCall,
   Star,
