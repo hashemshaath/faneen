@@ -34,26 +34,49 @@ test.describe(`Provider profile /${TARGET_USERNAME}`, () => {
     await expect(page.locator("body")).not.toContainText("Unclassified");
   });
 
-  test("mobile viewport + RTL never renders the 'غير مصنّف' fallback", async ({ page, context }) => {
-    // Force Arabic UI by seeding the LanguageContext localStorage key BEFORE
-    // the SPA boots — guarantees document dir="rtl" and Arabic copy.
-    await context.addInitScript(() => {
-      try { localStorage.setItem("qitaat_lang", "ar"); } catch { /* ignore */ }
+  // Exercise the RTL provider-profile path across narrow + tablet widths to
+  // catch layout regressions AND any data-timing race that would surface a
+  // transient "غير مصنّف" fallback on smaller, slower viewports.
+  const RTL_MOBILE_VIEWPORTS = [
+    { name: "xs-360",    width: 360, height: 800 },  // smallest supported (mem://style/layout/mobile-optimization)
+    { name: "iphone-390", width: 390, height: 844 }, // iPhone 12/13/14
+    { name: "tablet-768", width: 768, height: 1024 }, // iPad portrait
+  ] as const;
+
+  for (const vp of RTL_MOBILE_VIEWPORTS) {
+    test(`RTL @ ${vp.name} (${vp.width}px) never renders the 'غير مصنّف' fallback`, async ({ page, context }) => {
+      // Force Arabic UI by seeding the LanguageContext localStorage key BEFORE
+      // the SPA boots — guarantees <html dir="rtl"> and Arabic copy.
+      await context.addInitScript(() => {
+        try { localStorage.setItem("qitaat_lang", "ar"); } catch { /* ignore */ }
+      });
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(`/${TARGET_USERNAME}`);
+      await page.waitForLoadState("networkidle");
+
+      // Sanity — we actually exercised the RTL path.
+      await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+
+      // Page resolved.
+      await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
+
+      // Give React Query a beat to settle any deferred taxonomy refetch — we
+      // want to catch flashes too, not just the final paint.
+      await page.waitForTimeout(750);
+
+      // Strict negative assertions — taxonomy must render real labels.
+      await expect(page.locator("body")).not.toContainText("غير مصنّف");
+      await expect(page.locator("body")).not.toContainText("Unclassified");
+
+      // No horizontal scroll on narrow widths — RTL layout must contain itself.
+      if (vp.width <= 414) {
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+        expect(overflow, `horizontal overflow at ${vp.width}px`).toBeLessThanOrEqual(1);
+      }
     });
-    await page.setViewportSize({ width: 390, height: 844 }); // iPhone 12-class
-    await page.goto(`/${TARGET_USERNAME}`);
-    await page.waitForLoadState("networkidle");
-
-    // Document must be RTL — sanity check we actually exercised the RTL path.
-    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-
-    // Page resolved on mobile.
-    await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
-
-    // Strict negative assertions — taxonomy must render real labels.
-    await expect(page.locator("body")).not.toContainText("غير مصنّف");
-    await expect(page.locator("body")).not.toContainText("Unclassified");
-  });
+  }
 
   test("/q/ alias is not used for company profiles", async ({ page }) => {
     // The provider profile lives at the bare `/:username` route. The `/q/`
