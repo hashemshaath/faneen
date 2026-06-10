@@ -86,7 +86,7 @@ const ROUTES = {
 
 const PrimaryCTA: React.FC<{ to: string; label: string; onClick?: () => void }> = ({ to, label, onClick }) => {
   const { isRTL } = useLanguage();
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const Arrow = bi(ArrowLeft, ArrowRight);
   return (
     <Link to={to} onClick={onClick}>
       <Button variant="primary" size="appLg" className="gap-2">
@@ -380,8 +380,8 @@ export const HeroV2 = () => {
     setKeyboardSlideChange(false);
   }, [active, keyboardSlideChange, bi, SLIDES]);
 
-  const PrevIcon = isRTL ? ArrowRight : ArrowLeft;
-  const NextIcon = isRTL ? ArrowLeft : ArrowRight;
+  const PrevIcon = bi(ArrowRight, ArrowLeft);
+  const NextIcon = bi(ArrowLeft, ArrowRight);
   // A/B test: override slide 0 (LCP slide) with the assigned variant's content.
   const heroAb = useAbVariant<{
     titleAr?: string;
@@ -448,8 +448,8 @@ export const HeroV2 = () => {
       // Don't hijack typing inside the search input
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      const fwd = isRTL ? 'ArrowLeft' : 'ArrowRight';
-      const back = isRTL ? 'ArrowRight' : 'ArrowLeft';
+      const fwd = bi('ArrowLeft', 'ArrowRight');
+      const back = bi('ArrowRight', 'ArrowLeft');
       if (e.key === fwd) { e.preventDefault(); setKeyboardSlideChange(true); goNext(); }
       else if (e.key === back) { e.preventDefault(); setKeyboardSlideChange(true); goPrev(); }
       else if (e.key === 'Home') { e.preventDefault(); setKeyboardSlideChange(true); setActive(0); }
@@ -584,9 +584,7 @@ export const HeroV2 = () => {
             <div
               className="absolute inset-0"
               style={{
-                background: isRTL
-                  ? 'radial-gradient(ellipse 70% 55% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.20) 100%), linear-gradient(to left, rgba(0,0,0,0.55), transparent 60%)'
-                  : 'radial-gradient(ellipse 70% 55% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.20) 100%), linear-gradient(to right, rgba(0,0,0,0.55), transparent 60%)',
+                background: bi('radial-gradient(ellipse 70% 55% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.20) 100%), linear-gradient(to left, rgba(0,0,0,0.55), transparent 60%)', 'radial-gradient(ellipse 70% 55% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.20) 100%), linear-gradient(to right, rgba(0,0,0,0.55), transparent 60%)'),
               }}
             />
           </div>
@@ -810,7 +808,7 @@ export const HeroV2 = () => {
                             />
                             <span className="flex-1 truncate" dir="auto">{it.label}</span>
                             <ArrowLeft
-                              className={`w-3.5 h-3.5 text-muted-foreground/60 ${isRTL ? '' : 'rotate-180'}`}
+                              className={`w-3.5 h-3.5 text-muted-foreground/60 ${bi('', 'rotate-180')}`}
                             />
                           </button>
                         </li>
@@ -898,7 +896,7 @@ export const HeroV2 = () => {
                         : 'border-white/30 opacity-60 hover:opacity-100 hover:border-white/60'
                     }`}
                   >
-                    <img src={s.img} alt={(isRTL ? s.titleAr : s.titleEn) || ''} className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
+                    <img src={s.img} alt={(bi(s.titleAr, s.titleEn)) || ''} className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
                     {isActive && <div className="absolute inset-0 ring-2 ring-secondary/70 rounded-md pointer-events-none" />}
                   </button>
                   );
@@ -971,8 +969,8 @@ export const HeroV2 = () => {
                   // on the GPU so it doesn't trigger layout/paint on every
                   // frame (Lighthouse flagged the previous width animation
                   // as non-composited).
-                  ['--bar-origin' as never]: isRTL ? 'right' : 'left',
-                  transformOrigin: isRTL ? 'right' : 'left',
+                  ['--bar-origin' as never]: bi('right', 'left'),
+                  transformOrigin: bi('right', 'left'),
                   animation: paused || reducedRef.current ? 'none' : 'qitaat-hero-progress 6s linear forwards',
                   transform: 'scaleX(0)',
                 }}

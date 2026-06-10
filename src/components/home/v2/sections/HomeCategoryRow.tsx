@@ -61,7 +61,7 @@ interface Props {
 const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Props) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const Arrow = bi(ArrowLeft, ArrowRight);
   const hasLogo = (b: PublicTaxonomyBusiness): boolean =>
     Boolean(b.logo_url) || isVariantUrls(b.logo_image_variants);
   return (

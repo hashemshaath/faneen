@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useBi } from '@/components/common/Bilingual';
 import { authService, useOtpFlow } from '@/services/auth';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { PhoneInput } from '@/components/auth/PhoneInput';
@@ -75,7 +76,8 @@ const STEP_ORDER: OnboardingStep[] = [
 
 const Onboarding = () => {
   const { t: _t, language: _lang, isRTL } = useLanguage();
-  usePageMeta({ title: isRTL ? 'إعداد الحساب' : 'Account Setup', noindex: true });
+  const bi = useBi();
+  usePageMeta({ title: bi('إعداد الحساب', 'Account Setup'), noindex: true });
   const navigate = useNavigate();
   const { user, profile, refreshProfile, isAdmin, isSuperAdmin } = useAuth();
   const { getTargetRoute } = useRoleRedirect();
@@ -165,7 +167,7 @@ const Onboarding = () => {
     onVerifyOtp: async (code) => {
       const data = await authService.verifyOtp(phone, countryCode, code);
       if (!data?.verified) throw new Error(data?.error || 'Verification failed');
-      toast.success(isRTL ? 'تم التحقق من رقم الجوال بنجاح' : 'Phone verified successfully');
+      toast.success(bi('تم التحقق من رقم الجوال بنجاح', 'Phone verified successfully'));
       await refreshProfile();
       if (accountType === 'business') {
         await completeOnboarding();
@@ -340,9 +342,7 @@ const Onboarding = () => {
                 console.warn('[onboarding] taxonomy persist failed', taxErr);
               }
               toast.warning(
-                isRTL
-                  ? 'تم إنشاء المنشأة، لكن تعذر حفظ التصنيف. يمكنك تحديثه لاحقًا من صفحة تعديل المنشأة.'
-                  : 'Business created, but the classification could not be saved. You can update it later from the business edit page.',
+                bi('تم إنشاء المنشأة، لكن تعذر حفظ التصنيف. يمكنك تحديثه لاحقًا من صفحة تعديل المنشأة.', 'Business created, but the classification could not be saved. You can update it later from the business edit page.'),
               );
             }
           } else if (businessId && taxonomyStatus !== 'ok') {
@@ -350,9 +350,7 @@ const Onboarding = () => {
             // writing legacy `sectors`/`sub_services`. Let the user know they
             // can classify later from the dashboard.
             toast.info(
-              isRTL
-                ? 'تم إنشاء المنشأة، ويمكن تحديث التصنيف لاحقًا من لوحة التحكم.'
-                : 'Business created. You can update the classification later from your dashboard.',
+              bi('تم إنشاء المنشأة، ويمكن تحديث التصنيف لاحقًا من لوحة التحكم.', 'Business created. You can update the classification later from your dashboard.'),
             );
           }
         } catch { /* non-blocking */ }
@@ -364,13 +362,13 @@ const Onboarding = () => {
         track.providerSignupSubmit({});
       }
       track.onboardingCompleted({ account_type: accountType });
-      toast.success(isRTL ? 'تم حفظ بياناتك' : 'Your profile is saved');
+      toast.success(bi('تم حفظ بياناتك', 'Your profile is saved'));
 
       if (accountType !== 'business') navigate('/');
     } catch (err: unknown) {
       toast.error(err instanceof Error && err.message
         ? err.message
-        : (isRTL ? 'تعذّر إكمال التسجيل' : 'Could not complete registration'));
+        : (bi('تعذّر إكمال التسجيل', 'Could not complete registration')));
     } finally {
       setLoading(false);
     }
@@ -379,7 +377,7 @@ const Onboarding = () => {
   const handleSkipPhone = async () => {
     if (accountType === 'business') {
       // Phone is required for business path — bring them back.
-      toast.error(isRTL ? 'رقم جوال مدير الحساب مطلوب' : 'Account manager phone is required');
+      toast.error(bi('رقم جوال مدير الحساب مطلوب', 'Account manager phone is required'));
       return;
     }
     await completeOnboarding();
@@ -387,11 +385,11 @@ const Onboarding = () => {
 
   const handlePhoneSend = async () => {
     if (!phone || phone.length < 7) {
-      toast.error(isRTL ? 'يرجى إدخال رقم جوال صحيح' : 'Please enter a valid phone number');
+      toast.error(bi('يرجى إدخال رقم جوال صحيح', 'Please enter a valid phone number'));
       return;
     }
     const ok = await otp.sendOtp();
-    if (ok) toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
+    if (ok) toast.success(bi('تم إرسال رمز التحقق', 'Verification code sent'));
     else if (otp.error) toast.error(otp.error);
   };
 
@@ -406,11 +404,11 @@ const Onboarding = () => {
     if (!file || !createdBusinessId) return;
     const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
     if (!allowed.includes(file.type)) {
-      toast.error(isRTL ? 'الصيغة المسموحة: JPEG، PNG، PDF' : 'Allowed: JPEG, PNG, PDF');
+      toast.error(bi('الصيغة المسموحة: JPEG، PNG، PDF', 'Allowed: JPEG, PNG, PDF'));
       return;
     }
     if (file.size > 4 * 1024 * 1024) {
-      toast.error(isRTL ? 'حد أقصى 4 ميجا للملف' : 'Max 4 MB per file');
+      toast.error(bi('حد أقصى 4 ميجا للملف', 'Max 4 MB per file'));
       return;
     }
     setCrUploading(true);
@@ -426,10 +424,10 @@ const Onboarding = () => {
       if (upErr) throw upErr;
       setCrDocPath(path);
       setCrDocName(file.name);
-      toast.success(isRTL ? 'تم رفع السجل التجاري' : 'CR document uploaded');
+      toast.success(bi('تم رفع السجل التجاري', 'CR document uploaded'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message
-        : (isRTL ? 'فشل رفع الملف' : 'Upload failed'));
+        : (bi('فشل رفع الملف', 'Upload failed')));
     } finally {
       setCrUploading(false);
       if (crInputRef.current) crInputRef.current.value = '';
@@ -443,12 +441,12 @@ const Onboarding = () => {
     if (!file || !createdBusinessId) return;
     const allowed = ['image/jpeg', 'image/png'];
     if (!allowed.includes(file.type)) {
-      toast.error(isRTL ? 'الصيغة المسموحة للشعار: JPEG، PNG' : 'Allowed logo formats: JPEG, PNG');
+      toast.error(bi('الصيغة المسموحة للشعار: JPEG، PNG', 'Allowed logo formats: JPEG, PNG'));
       if (logoInputRef.current) logoInputRef.current.value = '';
       return;
     }
     if (file.size > 4 * 1024 * 1024) {
-      toast.error(isRTL ? 'حد أقصى 4 ميجا للملف' : 'Max 4 MB per file');
+      toast.error(bi('حد أقصى 4 ميجا للملف', 'Max 4 MB per file'));
       if (logoInputRef.current) logoInputRef.current.value = '';
       return;
     }
@@ -468,10 +466,10 @@ const Onboarding = () => {
       if (upErr) throw upErr;
       const { data: pub } = getPublicImageUrl({ bucket: BUSINESS_ASSETS_BUCKET, path: finalPath });
       setLogoUrl(pub.publicUrl);
-      toast.success(isRTL ? 'تم رفع الشعار' : 'Logo uploaded');
+      toast.success(bi('تم رفع الشعار', 'Logo uploaded'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message
-        : (isRTL ? 'فشل رفع الشعار' : 'Logo upload failed'));
+        : (bi('فشل رفع الشعار', 'Logo upload failed')));
     } finally {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
@@ -490,11 +488,11 @@ const Onboarding = () => {
         }
         await updateBusinessById({ id: createdBusinessId, values });
       }
-      if (!opts.skip) toast.success(isRTL ? 'تم حفظ المستندات' : 'Documents saved');
+      if (!opts.skip) toast.success(bi('تم حفظ المستندات', 'Documents saved'));
       setStep('summary');
     } catch (err) {
       toast.error(err instanceof Error ? err.message
-        : (isRTL ? 'تعذّر حفظ المستندات' : 'Could not save documents'));
+        : (bi('تعذّر حفظ المستندات', 'Could not save documents')));
     } finally { setLoading(false); }
   };
 
@@ -523,10 +521,10 @@ const Onboarding = () => {
         <div className="space-y-6">
           <div className="text-center space-y-2">
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {isRTL ? 'كيف تريد البدء؟' : 'How would you like to start?'}
+              {bi('كيف تريد البدء؟', 'How would you like to start?')}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {isRTL ? 'اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.' : 'Pick the path that fits you — you can add an entity later.'}
+              {bi('اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.', 'Pick the path that fits you — you can add an entity later.')}
             </p>
           </div>
           <div className="grid grid-cols-1 gap-3">
@@ -543,43 +541,43 @@ const Onboarding = () => {
                   }
                 }}
                 className="p-4 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-start group flex items-start gap-3"
-                aria-label={isRTL ? titleAr : titleEn}>
+                aria-label={bi(titleAr, titleEn)}>
                 <div className="rounded-lg bg-gold/10 p-2 shrink-0">
                   <Icon className="w-5 h-5 text-gold" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-heading font-bold text-base text-foreground">{isRTL ? titleAr : titleEn}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{isRTL ? descAr : descEn}</p>
+                  <h3 className="font-heading font-bold text-base text-foreground">{bi(titleAr, titleEn)}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{bi(descAr, descEn)}</p>
                 </div>
               </button>
             ))}
           </div>
 
           <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2">
-            <Label className="text-xs">{isRTL ? 'لديك رمز دعوة؟' : 'Have an invitation token?'}</Label>
+            <Label className="text-xs">{bi('لديك رمز دعوة؟', 'Have an invitation token?')}</Label>
             <div className="flex gap-2">
               <Input value={inviteToken} onChange={(e) => setInviteToken(e.target.value.trim())}
-                placeholder={isRTL ? 'الصق رمز الدعوة' : 'Paste invitation token'} dir="auto" />
+                placeholder={bi('الصق رمز الدعوة', 'Paste invitation token')} dir="auto" />
               <Button variant="outline" disabled={inviteToken.length < 6}
                 onClick={() => navigate(`/invite/${encodeURIComponent(inviteToken)}`)}>
-                {isRTL ? 'متابعة' : 'Continue'}
+                {bi('متابعة', 'Continue')}
               </Button>
             </div>
           </div>
 
           <div className="rounded-xl border border-border/60 bg-muted/10 p-3 space-y-2" data-feature="request-access">
-            <Label className="text-xs">{isRTL ? 'طلب الانضمام لمنشأة قائمة' : 'Request access to an existing entity'}</Label>
+            <Label className="text-xs">{bi('طلب الانضمام لمنشأة قائمة', 'Request access to an existing entity')}</Label>
             {requestAccessSubmittedRef ? (
               <div className="rounded-md bg-success/10 border border-success/30 p-2 text-xs text-success-foreground">
-                {isRTL ? `تم إرسال طلبك (${requestAccessSubmittedRef}).` : `Your request was sent (${requestAccessSubmittedRef}).`}
+                {bi(`تم إرسال طلبك (${requestAccessSubmittedRef}).`, `Your request was sent (${requestAccessSubmittedRef}).`)}
               </div>
             ) : (
               <>
                 <Input value={requestAccessQuery} onChange={(e) => setRequestAccessQuery(e.target.value)}
-                  placeholder={isRTL ? 'اسم المنشأة أو معرّفها' : 'Entity name or reference'} dir="auto" />
+                  placeholder={bi('اسم المنشأة أو معرّفها', 'Entity name or reference')} dir="auto" />
                 <Textarea value={requestAccessMessage}
                   onChange={(e) => setRequestAccessMessage(e.target.value.slice(0, 500))}
-                  placeholder={isRTL ? 'رسالة قصيرة (اختياري)' : 'Short message (optional)'} rows={2} dir="auto" />
+                  placeholder={bi('رسالة قصيرة (اختياري)', 'Short message (optional)')} rows={2} dir="auto" />
                 <div className="flex items-center justify-end">
                   <Button size="sm" variant="outline"
                     disabled={!user || requestAccessQuery.trim().length < 2 || requestAccessSubmitting}
@@ -602,15 +600,15 @@ const Onboarding = () => {
                         if (error) throw error;
                         if (data?.ref_id) {
                           setRequestAccessSubmittedRef(data.ref_id);
-                          toast.success(isRTL ? 'تم إرسال طلب الانضمام' : 'Access request sent');
+                          toast.success(bi('تم إرسال طلب الانضمام', 'Access request sent'));
                         }
                       } catch (err) {
                         toast.error(err instanceof Error && err.message ? err.message
-                          : (isRTL ? 'تعذّر إرسال الطلب' : 'Could not send the request'));
+                          : (bi('تعذّر إرسال الطلب', 'Could not send the request')));
                       } finally { setRequestAccessSubmitting(false); }
                     }}>
                     {requestAccessSubmitting ? <Loader2 className="w-3 h-3 animate-spin" />
-                      : (isRTL ? 'إرسال الطلب' : 'Send request')}
+                      : (bi('إرسال الطلب', 'Send request'))}
                   </Button>
                 </div>
               </>
@@ -627,19 +625,19 @@ const Onboarding = () => {
       <AuthLayout>
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="font-heading font-bold text-2xl text-foreground">{isRTL ? 'مرحباً بك في قِطاعات' : 'Welcome to Qitaat'}</h2>
-            <p className="text-sm text-muted-foreground">{isRTL ? 'اختر نوع حسابك للمتابعة' : 'Choose your account type to continue'}</p>
+            <h2 className="font-heading font-bold text-2xl text-foreground">{bi('مرحباً بك في قِطاعات', 'Welcome to Qitaat')}</h2>
+            <p className="text-sm text-muted-foreground">{bi('اختر نوع حسابك للمتابعة', 'Choose your account type to continue')}</p>
           </div>
           <div className="grid grid-cols-1 gap-4">
             <button onClick={() => { setAccountType('individual'); setStep('details'); }}
               className="p-6 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-center group">
               <User className="w-10 h-10 mx-auto mb-3 text-gold group-hover:scale-110 transition-transform" />
-              <h3 className="font-heading font-bold text-lg">{isRTL ? 'مستخدم عادي' : 'Regular User'}</h3>
+              <h3 className="font-heading font-bold text-lg">{bi('مستخدم عادي', 'Regular User')}</h3>
             </button>
             <button onClick={() => { setAccountType('business'); setStep('business-details'); }}
               className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5 hover:border-gold transition-all text-center group">
               <Building2 className="w-10 h-10 mx-auto mb-3 text-gold group-hover:scale-110 transition-transform" />
-              <h3 className="font-heading font-bold text-lg">{isRTL ? 'منشأة / شركة' : 'Business / Entity'}</h3>
+              <h3 className="font-heading font-bold text-lg">{bi('منشأة / شركة', 'Business / Entity')}</h3>
             </button>
           </div>
         </div>
@@ -668,7 +666,7 @@ const Onboarding = () => {
 
     const onContinue = () => {
       if (!allValid) {
-        toast.error(isRTL ? 'يرجى إكمال الحقول المطلوبة بشكل صحيح' : 'Please complete required fields correctly');
+        toast.error(bi('يرجى إكمال الحقول المطلوبة بشكل صحيح', 'Please complete required fields correctly'));
         return;
       }
       setStep('details');
@@ -682,11 +680,10 @@ const Onboarding = () => {
               <Building2 className="w-6 h-6 text-emerald-600" />
             </div>
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {isRTL ? 'بيانات المنشأة' : 'Business Information'}
+              {bi('بيانات المنشأة', 'Business Information')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {isRTL ? 'الخطوة 1 من 3 — سجّل بيانات منشأتك قبل تسجيل مدير الحساب'
-                     : 'Step 1 of 3 — register business data before the account manager'}
+              {bi('الخطوة 1 من 3 — سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Step 1 of 3 — register business data before the account manager')}
             </p>
             <Progress value={completionPct} className="h-1.5" />
           </div>
@@ -696,7 +693,7 @@ const Onboarding = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">
-                  {isRTL ? 'الاسم كما في السجل التجاري (عربي)' : 'Name as in CR (Arabic)'}
+                  {bi('الاسم كما في السجل التجاري (عربي)', 'Name as in CR (Arabic)')}
                   <span className="text-destructive ms-1">*</span>
                 </Label>
                 <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)}
@@ -704,7 +701,7 @@ const Onboarding = () => {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">
-                  {isRTL ? 'الاسم كما في السجل التجاري (إنجليزي)' : 'Name as in CR (English)'}
+                  {bi('الاسم كما في السجل التجاري (إنجليزي)', 'Name as in CR (English)')}
                   <span className="text-destructive ms-1">*</span>
                 </Label>
                 <Input value={businessNameEn} onChange={(e) => setBusinessNameEn(e.target.value)}
@@ -713,7 +710,7 @@ const Onboarding = () => {
             </div>
 
             <UsernamePicker isRTL={isRTL} required
-              label={isRTL ? 'اسم المستخدم (رابط الملف العام)' : 'Username (public profile URL)'}
+              label={bi('اسم المستخدم (رابط الملف العام)', 'Username (public profile URL)')}
               value={username} onChange={setUsername}
               onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
               excludeUserId={user?.id ?? null} placeholder="my-business" />
@@ -722,7 +719,7 @@ const Onboarding = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">
-                  {isRTL ? 'الرقم الموحد للمنشأة (700)' : 'Unified Entity Number (700)'}
+                  {bi('الرقم الموحد للمنشأة (700)', 'Unified Entity Number (700)')}
                   <span className="text-destructive ms-1">*</span>
                 </Label>
                 <Input value={unifiedNumber}
@@ -730,12 +727,12 @@ const Onboarding = () => {
                   inputMode="numeric" pattern="[0-9]*" placeholder="7XXXXXXXXX" dir="ltr" maxLength={10}
                   className={`tech-content ${unifiedNumber && !unifiedValid ? 'border-destructive' : ''}`} />
                 <p className={`text-[11px] ${unifiedNumber && !unifiedValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
-                  {isRTL ? '10 أرقام تبدأ بـ 7' : '10 digits starting with 7'} ({unifiedNumber.length}/10)
+                  {bi('10 أرقام تبدأ بـ 7', '10 digits starting with 7')} ({unifiedNumber.length}/10)
                 </p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">
-                  {isRTL ? 'البريد الإلكتروني للمنشأة' : 'Business Email'}
+                  {bi('البريد الإلكتروني للمنشأة', 'Business Email')}
                   <span className="text-destructive ms-1">*</span>
                 </Label>
                 <div className="relative">
@@ -750,16 +747,16 @@ const Onboarding = () => {
             {/* Region */}
             <div className="space-y-1.5">
               <Label className="text-xs">
-                {isRTL ? 'المنطقة' : 'Region'} <span className="text-destructive ms-1">*</span>
+                {bi('المنطقة', 'Region')} <span className="text-destructive ms-1">*</span>
               </Label>
               <div className="relative">
                 <MapPin className="absolute top-3 text-muted-foreground w-4 h-4 pointer-events-none z-10" style={{ insetInlineStart: '12px' }} />
                 <select value={regionId} onChange={(e) => setRegionId(e.target.value as SaRegionId)}
                   className="flex h-12 w-full rounded-xl border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   style={{ paddingInlineStart: '40px', paddingInlineEnd: '12px' }}>
-                  <option value="">{isRTL ? '— اختر المنطقة —' : '— Select region —'}</option>
+                  <option value="">{bi('— اختر المنطقة —', '— Select region —')}</option>
                   {SA_REGIONS.map((r) => (
-                    <option key={r.id} value={r.id}>{isRTL ? r.name_ar : r.name_en}</option>
+                    <option key={r.id} value={r.id}>{bi(r.name_ar, r.name_en)}</option>
                   ))}
                 </select>
               </div>
@@ -768,14 +765,14 @@ const Onboarding = () => {
             {/* CR number (optional) */}
             <div className="space-y-1.5">
               <Label className="text-xs">
-                {isRTL ? 'رقم السجل التجاري' : 'Commercial Registration (CR)'}
-                <span className="text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span>
+                {bi('رقم السجل التجاري', 'Commercial Registration (CR)')}
+                <span className="text-muted-foreground ms-1">({bi('اختياري', 'optional')})</span>
               </Label>
               <Input value={crNumber} onChange={(e) => setCrNumber(onlyDigits(e.target.value, 10))}
                 inputMode="numeric" pattern="[0-9]*" placeholder="1010XXXXXX" dir="ltr" maxLength={10}
                 className={`tech-content ${crNumber && !crValid ? 'border-destructive' : ''}`} />
               <p className={`text-[11px] ${crNumber && !crValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
-                {isRTL ? '10 أرقام — أرقام فقط' : '10 digits — numbers only'} ({crNumber.length}/10)
+                {bi('10 أرقام — أرقام فقط', '10 digits — numbers only')} ({crNumber.length}/10)
               </p>
             </div>
 
@@ -794,23 +791,21 @@ const Onboarding = () => {
             {taxonomyStatus !== 'ok' && taxonomyStatus !== 'loading' && (
               <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
                 <p className="text-xs text-muted-foreground">
-                  {isRTL
-                    ? 'تعذّر تحميل التصنيفات الحديثة. يمكنك إكمال التسجيل وتحديث التصنيف لاحقًا من لوحة التحكم.'
-                    : 'Could not load the latest classifications. You can complete registration and update them later from your dashboard.'}
+                  {bi('تعذّر تحميل التصنيفات الحديثة. يمكنك إكمال التسجيل وتحديث التصنيف لاحقًا من لوحة التحكم.', 'Could not load the latest classifications. You can complete registration and update them later from your dashboard.')}
                 </p>
               </div>
             )}
 
             <Button onClick={onContinue} disabled={!allValid || loading}
               className="w-full" variant="hero">
-              {isRTL ? 'متابعة لتسجيل مدير الحساب' : 'Continue to account manager'}
-              <ArrowRight className={`w-4 h-4 ms-1 ${isRTL ? 'rotate-180' : ''}`} />
+              {bi('متابعة لتسجيل مدير الحساب', 'Continue to account manager')}
+              <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
             </Button>
           </div>
 
           <button onClick={() => setStep('intent')}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            {bi('→', '←')} {bi('رجوع', 'Back')}
           </button>
         </div>
       </AuthLayout>
@@ -821,11 +816,11 @@ const Onboarding = () => {
   if (step === 'details') {
     const onNext = () => {
       if (!fullName.trim()) {
-        toast.error(isRTL ? 'يرجى إدخال اسم مدير الحساب' : 'Please enter the account manager name');
+        toast.error(bi('يرجى إدخال اسم مدير الحساب', 'Please enter the account manager name'));
         return;
       }
       if (accountType === 'business' && (!phone || phone.length < 7)) {
-        toast.error(isRTL ? 'رقم جوال مدير الحساب مطلوب' : 'Account manager phone is required');
+        toast.error(bi('رقم جوال مدير الحساب مطلوب', 'Account manager phone is required'));
         return;
       }
       if (phone && phone.length >= 7) setStep('phone-verify');
@@ -840,24 +835,23 @@ const Onboarding = () => {
             </div>
             <h2 className="font-heading font-bold text-2xl text-foreground">
               {accountType === 'business'
-                ? (isRTL ? 'مدير الحساب' : 'Account Manager')
-                : (isRTL ? 'أكمل بياناتك' : 'Complete your profile')}
+                ? (bi('مدير الحساب', 'Account Manager'))
+                : (bi('أكمل بياناتك', 'Complete your profile'))}
             </h2>
             {accountType === 'business' && (
               <p className="text-xs text-muted-foreground">
-                {isRTL ? 'الخطوة 2 من 3 — مسؤول المنشأة الرئيسي'
-                       : 'Step 2 of 3 — primary entity manager'}
+                {bi('الخطوة 2 من 3 — مسؤول المنشأة الرئيسي', 'Step 2 of 3 — primary entity manager')}
               </p>
             )}
             <Progress value={completionPct} className="h-1.5" />
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>{isRTL ? 'الاسم الكامل' : 'Full Name'} <span className="text-destructive">*</span></Label>
+              <Label>{bi('الاسم الكامل', 'Full Name')} <span className="text-destructive">*</span></Label>
               <div className="relative">
                 <User className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                 <Input value={fullName} onChange={(e) => setFullName(e.target.value)}
-                  placeholder={isRTL ? 'أدخل اسمك الكامل' : 'Enter your full name'}
+                  placeholder={bi('أدخل اسمك الكامل', 'Enter your full name')}
                   style={{ paddingInlineStart: '40px' }} />
               </div>
             </div>
@@ -867,12 +861,12 @@ const Onboarding = () => {
             <Button onClick={onNext} disabled={!fullName.trim() || loading}
               className="w-full" variant="hero">
               {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-              {isRTL ? 'متابعة' : 'Continue'}
+              {bi('متابعة', 'Continue')}
             </Button>
           </div>
           <button onClick={() => setStep(accountType === 'business' ? 'business-details' : 'intent')}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            {bi('→', '←')} {bi('رجوع', 'Back')}
           </button>
         </div>
       </AuthLayout>
@@ -889,22 +883,21 @@ const Onboarding = () => {
               <Phone className="w-8 h-8 text-gold" />
             </div>
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {isRTL ? 'التحقق من رقم الجوال' : 'Verify Phone Number'}
+              {bi('التحقق من رقم الجوال', 'Verify Phone Number')}
             </h2>
             <p className="text-sm text-muted-foreground tech-content">
-              {isRTL ? `سنرسل رمز تحقق إلى ${countryCode}${phone}`
-                     : `We'll send a verification code to ${countryCode}${phone}`}
+              {bi(`سنرسل رمز تحقق إلى ${countryCode}${phone}`, `We'll send a verification code to ${countryCode}${phone}`)}
             </p>
           </div>
           {!otp.otpStep ? (
             <div className="space-y-4">
               <Button onClick={handlePhoneSend} disabled={otp.loading} className="w-full" variant="hero">
                 {otp.loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-                {isRTL ? 'إرسال رمز التحقق' : 'Send Verification Code'}
+                {bi('إرسال رمز التحقق', 'Send Verification Code')}
               </Button>
               {accountType !== 'business' && (
                 <Button onClick={handleSkipPhone} variant="ghost" className="w-full text-muted-foreground">
-                  {isRTL ? 'تخطي التحقق الآن' : 'Skip verification for now'}
+                  {bi('تخطي التحقق الآن', 'Skip verification for now')}
                 </Button>
               )}
             </div>
@@ -912,12 +905,12 @@ const Onboarding = () => {
             <div className="space-y-4">
               {otp.demoOtp && (
                 <div className="p-3 rounded-lg bg-gold/10 border border-gold/20 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">{isRTL ? 'رمز تجريبي' : 'Demo code'}</p>
+                  <p className="text-xs text-muted-foreground mb-1">{bi('رمز تجريبي', 'Demo code')}</p>
                   <p className="font-mono text-2xl font-bold text-gold tracking-widest">{otp.demoOtp}</p>
                 </div>
               )}
               <div className="space-y-2">
-                <Label>{isRTL ? 'رمز التحقق' : 'Verification Code'}</Label>
+                <Label>{bi('رمز التحقق', 'Verification Code')}</Label>
                 <Input value={otp.otpCode} onChange={(e) => otp.setCode(e.target.value)}
                   placeholder="000000" className="text-center text-2xl tracking-[0.5em] font-mono"
                   dir="ltr" maxLength={6} />
@@ -925,21 +918,21 @@ const Onboarding = () => {
               <Button onClick={handlePhoneVerify} disabled={otp.loading || otp.otpCode.length !== 6}
                 className="w-full" variant="hero">
                 {otp.loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <Check className="w-4 h-4 me-2" />}
-                {isRTL ? 'تحقق' : 'Verify'}
+                {bi('تحقق', 'Verify')}
               </Button>
               <div className="flex items-center justify-between text-sm">
                 <button onClick={handlePhoneSend} disabled={otp.cooldown > 0 || otp.loading}
                   className="text-gold hover:underline disabled:text-muted-foreground">
                   {otp.cooldown > 0
-                    ? `${isRTL ? 'إعادة الإرسال بعد' : 'Resend in'} ${otp.cooldown}${isRTL ? ' ثانية' : 's'}`
-                    : (isRTL ? 'إعادة إرسال الرمز' : 'Resend code')}
+                    ? `${bi('إعادة الإرسال بعد', 'Resend in')} ${otp.cooldown}${bi(' ثانية', 's')}`
+                    : (bi('إعادة إرسال الرمز', 'Resend code'))}
                 </button>
               </div>
             </div>
           )}
           <button onClick={() => { setStep('details'); otp.resetOtp(); }}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            {bi('→', '←')} {bi('رجوع', 'Back')}
           </button>
         </div>
       </AuthLayout>
@@ -956,27 +949,25 @@ const Onboarding = () => {
               <FileText className="w-6 h-6 text-emerald-600" />
             </div>
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {isRTL ? 'مستندات التوثيق' : 'Verification Documents'}
+              {bi('مستندات التوثيق', 'Verification Documents')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {isRTL ? 'الخطوة 3 من 3 — يمكنك تخطي هذه الخطوة وإضافة المستندات لاحقاً'
-                     : 'Step 3 of 3 — you can skip and add documents later'}
+              {bi('الخطوة 3 من 3 — يمكنك تخطي هذه الخطوة وإضافة المستندات لاحقاً', 'Step 3 of 3 — you can skip and add documents later')}
             </p>
           </div>
 
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 flex items-start gap-2">
             <Sparkles className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">
-              {isRTL ? 'رفع المستندات يزيد ثقة العملاء ويسرّع اعتماد منشأتك من فريق المراجعة.'
-                     : 'Uploading documents builds client trust and speeds up the review team approval.'}
+              {bi('رفع المستندات يزيد ثقة العملاء ويسرّع اعتماد منشأتك من فريق المراجعة.', 'Uploading documents builds client trust and speeds up the review team approval.')}
             </p>
           </div>
 
           {/* Logo upload */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold">
-              {isRTL ? 'لوجو / شعار المنشأة' : 'Business Logo'}
-              <span className="text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span>
+              {bi('لوجو / شعار المنشأة', 'Business Logo')}
+              <span className="text-muted-foreground ms-1">({bi('اختياري', 'optional')})</span>
             </Label>
             <input ref={logoInputRef} type="file" accept="image/jpeg,image/png"
               onChange={handleLogoFileChange} className="hidden" />
@@ -987,16 +978,16 @@ const Onboarding = () => {
                     className="w-14 h-14 rounded-lg object-cover border border-border/60 shrink-0" loading="lazy" decoding="async"/>
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">
-                      {isRTL ? 'تم رفع الشعار' : 'Logo uploaded'}
+                      {bi('تم رفع الشعار', 'Logo uploaded')}
                     </p>
                     <button type="button" onClick={() => logoInputRef.current?.click()}
                       className="text-[11px] text-emerald-600 hover:underline">
-                      {isRTL ? 'تغيير الصورة' : 'Change image'}
+                      {bi('تغيير الصورة', 'Change image')}
                     </button>
                   </div>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => setLogoUrl('')}
-                  aria-label={isRTL ? 'حذف' : 'Remove'}>
+                  aria-label={bi('حذف', 'Remove')}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -1008,25 +999,24 @@ const Onboarding = () => {
                   ? <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
                   : <Upload className="w-6 h-6 text-muted-foreground" />}
                 <p className="text-sm font-medium text-foreground">
-                  {logoUploading ? (isRTL ? 'جاري الرفع...' : 'Uploading…')
-                                : (isRTL ? 'اضغط لرفع الشعار' : 'Click to upload logo')}
+                  {logoUploading ? (bi('جاري الرفع...', 'Uploading…'))
+                                : (bi('اضغط لرفع الشعار', 'Click to upload logo'))}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {isRTL ? 'JPEG / PNG — حد أقصى 4 ميجا' : 'JPEG / PNG — max 4 MB'}
+                  {bi('JPEG / PNG — حد أقصى 4 ميجا', 'JPEG / PNG — max 4 MB')}
                 </p>
               </button>
             )}
             <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'الصيغ المسموحة: JPEG، PNG — حد أقصى 4 ميجا.'
-                     : 'Allowed formats: JPEG, PNG — max 4 MB.'}
+              {bi('الصيغ المسموحة: JPEG، PNG — حد أقصى 4 ميجا.', 'Allowed formats: JPEG, PNG — max 4 MB.')}
             </p>
           </div>
 
           {/* CR document upload */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold">
-              {isRTL ? 'صورة السجل التجاري' : 'Commercial Registration Scan'}
-              <span className="text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span>
+              {bi('صورة السجل التجاري', 'Commercial Registration Scan')}
+              <span className="text-muted-foreground ms-1">({bi('اختياري', 'optional')})</span>
             </Label>
             <input ref={crInputRef} type="file" accept="image/jpeg,image/png,application/pdf"
               onChange={handleCrFileChange} className="hidden" />
@@ -1037,13 +1027,13 @@ const Onboarding = () => {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">{crDocName}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {isRTL ? 'تم الرفع بنجاح' : 'Uploaded successfully'}
+                      {bi('تم الرفع بنجاح', 'Uploaded successfully')}
                     </p>
                   </div>
                 </div>
                 <Button size="sm" variant="ghost"
                   onClick={() => { setCrDocPath(''); setCrDocName(''); }}
-                  aria-label={isRTL ? 'حذف' : 'Remove'}>
+                  aria-label={bi('حذف', 'Remove')}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -1055,12 +1045,11 @@ const Onboarding = () => {
                   ? <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
                   : <Upload className="w-6 h-6 text-muted-foreground" />}
                 <p className="text-sm font-medium text-foreground">
-                  {crUploading ? (isRTL ? 'جاري الرفع...' : 'Uploading…')
-                              : (isRTL ? 'اضغط لرفع الملف' : 'Click to upload')}
+                  {crUploading ? (bi('جاري الرفع...', 'Uploading…'))
+                              : (bi('اضغط لرفع الملف', 'Click to upload'))}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {isRTL ? 'JPEG / PNG / PDF — حد أقصى 4 ميجا'
-                         : 'JPEG / PNG / PDF — max 4 MB'}
+                  {bi('JPEG / PNG / PDF — حد أقصى 4 ميجا', 'JPEG / PNG / PDF — max 4 MB')}
                 </p>
               </button>
             )}
@@ -1069,13 +1058,13 @@ const Onboarding = () => {
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between">
             <Button variant="ghost" onClick={() => finalizeDocuments({ skip: true })}
               disabled={loading} className="text-muted-foreground">
-              {isRTL ? 'تخطي الآن' : 'Skip for now'}
+              {bi('تخطي الآن', 'Skip for now')}
             </Button>
             <Button variant="hero" onClick={() => finalizeDocuments()}
               disabled={loading} className="sm:w-64">
               {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-              {isRTL ? 'حفظ ومتابعة' : 'Save and continue'}
-              <ArrowRight className={`w-4 h-4 ms-1 ${isRTL ? 'rotate-180' : ''}`} />
+              {bi('حفظ ومتابعة', 'Save and continue')}
+              <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
             </Button>
           </div>
         </div>
@@ -1091,7 +1080,7 @@ const Onboarding = () => {
     if (!logoUrl) missing.push({ ar: 'الشعار', en: 'Logo' });
     if (!crDocPath) missing.push({ ar: 'السجل التجاري', en: 'CR scan' });
     const readyToSubmit = completionPct >= 60 && missing.length <= 2;
-    const Arrow = isRTL ? ArrowLeft : ArrowRight;
+    const Arrow = bi(ArrowLeft, ArrowRight);
 
     return (
       <AuthLayout>
@@ -1101,7 +1090,7 @@ const Onboarding = () => {
               <CheckCircle2 className="w-8 h-8 text-success" />
             </div>
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {isRTL ? 'تم حفظ بيانات منشأتك' : 'Your business profile is saved'}
+              {bi('تم حفظ بيانات منشأتك', 'Your business profile is saved')}
             </h2>
             {accountType === 'business' && (
               <div className="flex justify-center" data-feature="entity-verification-badge">
@@ -1111,26 +1100,25 @@ const Onboarding = () => {
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              {isRTL ? 'يمكنك إكمال أي بيانات ناقصة من لوحة التحكم ثم إرسال الملف للمراجعة.'
-                     : 'You can complete remaining fields from the dashboard and submit your profile for review.'}
+              {bi('يمكنك إكمال أي بيانات ناقصة من لوحة التحكم ثم إرسال الملف للمراجعة.', 'You can complete remaining fields from the dashboard and submit your profile for review.')}
             </p>
           </div>
 
           <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">{isRTL ? 'نسبة الإكمال' : 'Completion'}</span>
+              <span className="text-muted-foreground">{bi('نسبة الإكمال', 'Completion')}</span>
               <span className="tech-content font-bold text-foreground">{completionPct}%</span>
             </div>
             <Progress value={completionPct} className="h-2" />
             {missing.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  {isRTL ? 'بيانات يُنصح بإكمالها:' : 'Recommended to complete:'}
+                  {bi('بيانات يُنصح بإكمالها:', 'Recommended to complete:')}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {missing.map((m) => (
                     <span key={m.en} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2 py-0.5 text-[11px]">
-                      <AlertCircle className="w-3 h-3 text-warning" />{isRTL ? m.ar : m.en}
+                      <AlertCircle className="w-3 h-3 text-warning" />{bi(m.ar, m.en)}
                     </span>
                   ))}
                 </div>
@@ -1140,12 +1128,12 @@ const Onboarding = () => {
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
             <Button variant="ghost" onClick={() => navigate('/dashboard/business-edit')} className="text-sm">
-              {isRTL ? 'إكمال البيانات الآن' : 'Complete fields now'}
+              {bi('إكمال البيانات الآن', 'Complete fields now')}
             </Button>
             <Button variant="hero" className="sm:w-72"
               onClick={() => navigate(readyToSubmit ? '/dashboard#provider-readiness' : '/dashboard')}>
-              {readyToSubmit ? (isRTL ? 'الانتقال للمراجعة' : 'Go to review')
-                             : (isRTL ? 'الذهاب إلى لوحة التحكم' : 'Go to dashboard')}
+              {readyToSubmit ? (bi('الانتقال للمراجعة', 'Go to review'))
+                             : (bi('الذهاب إلى لوحة التحكم', 'Go to dashboard'))}
               <Arrow className="w-4 h-4 ms-1" />
             </Button>
           </div>
@@ -1153,12 +1141,10 @@ const Onboarding = () => {
           {/* SERVICE-ACTIVATION-GOVERNANCE-4 — services handoff copy */}
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <p className="text-xs text-foreground/80 flex-1">
-              {isRTL
-                ? 'يمكنك إدارة خدماتك لاحقًا من صفحة إدارة الخدمات، وتفعيل أو إيقاف الخدمات حسب عضويتك وحالة المراجعة.'
-                : 'You can manage your services later from the Services page, activating or pausing each one based on your membership and review status.'}
+              {bi('يمكنك إدارة خدماتك لاحقًا من صفحة إدارة الخدمات، وتفعيل أو إيقاف الخدمات حسب عضويتك وحالة المراجعة.', 'You can manage your services later from the Services page, activating or pausing each one based on your membership and review status.')}
             </p>
             <Button size="sm" variant="outline" onClick={() => navigate('/dashboard/services')}>
-              {isRTL ? 'إدارة الخدمات' : 'Manage services'}
+              {bi('إدارة الخدمات', 'Manage services')}
             </Button>
           </div>
         </div>

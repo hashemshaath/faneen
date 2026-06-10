@@ -100,7 +100,7 @@ if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
 const HomeSectorGrid = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const Arrow = bi(ArrowLeft, ArrowRight);
   // CMS-aware tiles. Falls back to SECTORS verbatim if DB has no overrides
   // — so the rendered output is byte-identical to the current homepage
   // until an admin actively edits a tile.

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useBi } from '@/components/common/Bilingual';
 
 /**
  * Shared homepage primitives extracted from HomeV2.tsx for PERF-1C
@@ -78,7 +79,8 @@ export const SectionCover: React.FC<{
 
 export const PrimaryCTA: React.FC<{ to: string; label: string; onClick?: () => void }> = ({ to, label, onClick }) => {
   const { isRTL } = useLanguage();
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const bi = useBi();
+  const Arrow = bi(ArrowLeft, ArrowRight);
   return (
     <Link to={to} onClick={onClick}>
       <Button variant="primary" size="appLg" className="gap-2">

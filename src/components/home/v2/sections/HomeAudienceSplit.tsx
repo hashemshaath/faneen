@@ -14,7 +14,7 @@ import { Section } from './_shared';
 const HomeAudienceSplit = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const Arrow = bi(ArrowLeft, ArrowRight);
   return (
     <Section className="border-t border-border/40">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">

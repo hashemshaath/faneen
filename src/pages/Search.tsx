@@ -3,6 +3,7 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useBi } from '@/components/common/Bilingual';
 import { Footer } from '@/components/layout/Footer';
 import { SearchHeader } from '@/components/search/SearchHeader';
 import { SearchFilters } from '@/components/search/SearchFilters';
@@ -45,7 +46,7 @@ const SearchPage = () => {
 
   // Default keyword bag = all sectors (the search hub touches every vertical).
   const allSectorKeywords = ALL_SECTORS.flatMap((s) =>
-    isRTL ? s.keywords_ar : s.keywords_en,
+    bi(s.keywords_ar, s.keywords_en),
   ).slice(0, 24).join(', ');
 
   const isMobile = useIsMobile();
@@ -127,41 +128,35 @@ const SearchPage = () => {
   const cityMeta = useMemo(() => {
     if (!selectedCity) return null;
     const entry =
-      findCityKeywords(isRTL ? selectedCity.name_ar : selectedCity.name_en) ||
+      findCityKeywords(bi(selectedCity.name_ar, selectedCity.name_en)) ||
       findCityKeywords(selectedCity.name_en) ||
       findCityKeywords(selectedCity.name_ar);
     if (!entry) return null;
     return {
-      name: isRTL ? entry.name_ar : entry.name_en,
-      region: isRTL ? entry.region_ar : entry.region_en,
+      name: bi(entry.name_ar, entry.name_en),
+      region: bi(entry.region_ar, entry.region_en),
       keywords: getCityKeywordsString(entry),
     };
   }, [selectedCity, isRTL]);
 
   // Title segment that surfaces the city in the page title (e.g. "— الرياض").
-  const cityTitleSuffix = cityMeta ? (isRTL ? ` — ${cityMeta.name}` : ` — ${cityMeta.name}`) : '';
+  const cityTitleSuffix = cityMeta ? (bi(` — ${cityMeta.name}`, ` — ${cityMeta.name}`)) : '';
   const lang = isRTL ? 'ar' as const : 'en' as const;
   const _legacyTitle = sectorMeta
-    ? (isRTL
-        ? `${sectorMeta.name}${cityTitleSuffix} — نتائج "${searchQuery}"`
-        : `${sectorMeta.name}${cityTitleSuffix} — results for "${searchQuery}"`)
+    ? (bi(`${sectorMeta.name}${cityTitleSuffix} — نتائج "${searchQuery}"`, `${sectorMeta.name}${cityTitleSuffix} — results for "${searchQuery}"`))
     : searchQuery
-      ? (isRTL ? `نتائج البحث عن "${searchQuery}"${cityTitleSuffix}` : `Search results for "${searchQuery}"${cityTitleSuffix}`)
+      ? (bi(`نتائج البحث عن "${searchQuery}"${cityTitleSuffix}`, `Search results for "${searchQuery}"${cityTitleSuffix}`))
       : cityMeta
-        ? (isRTL ? `مزودو الخدمات في ${cityMeta.name}` : `Service providers in ${cityMeta.name}`)
+        ? (bi(`مزودو الخدمات في ${cityMeta.name}`, `Service providers in ${cityMeta.name}`))
         : '';
   const _legacyDesc = sectorMeta
     ? (cityMeta
-        ? (isRTL
-            ? `${sectorMeta.description} — متوفر في ${cityMeta.name} (${cityMeta.region}).`
-            : `${sectorMeta.description} — available in ${cityMeta.name} (${cityMeta.region}).`)
+        ? (bi(`${sectorMeta.description} — متوفر في ${cityMeta.name} (${cityMeta.region}).`, `${sectorMeta.description} — available in ${cityMeta.name} (${cityMeta.region}).`))
         : sectorMeta.description)
     : searchQuery
       ? (isRTL ? `نتائج البحث عن ${searchQuery}${cityMeta ? ` في ${cityMeta.name}` : ''} في دليل قِطاعات` : `Search results for ${searchQuery}${cityMeta ? ` in ${cityMeta.name}` : ''} in Qitaat directory`)
       : cityMeta
-        ? (isRTL
-            ? `استعرض أفضل مصانع وورش الألمنيوم والحديد والزجاج والخشب والخزائن في ${cityMeta.name} و${cityMeta.region}.`
-            : `Browse the best aluminum, iron, glass, wood and cabinet providers in ${cityMeta.name} and the ${cityMeta.region}.`)
+        ? (bi(`استعرض أفضل مصانع وورش الألمنيوم والحديد والزجاج والخشب والخزائن في ${cityMeta.name} و${cityMeta.region}.`, `Browse the best aluminum, iron, glass, wood and cabinet providers in ${cityMeta.name} and the ${cityMeta.region}.`))
         : '';
 
   usePageMeta({
@@ -301,7 +296,7 @@ const SearchPage = () => {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-        { '@type': 'ListItem', position: 2, name: isRTL ? 'البحث' : 'Search', item: 'https://qitaat.com/search' },
+        { '@type': 'ListItem', position: 2, name: bi('البحث', 'Search'), item: 'https://qitaat.com/search' },
         ...(sectorMeta
           ? [{ '@type': 'ListItem', position: 3, name: sectorMeta.name, item: `https://qitaat.com/search?q=${encodeURIComponent(sectorMeta.name)}` }]
           : []),
@@ -312,7 +307,7 @@ const SearchPage = () => {
       '@type': 'WebSite',
       url: 'https://qitaat.com',
       name: 'قِطاعات Qitaat',
-      inLanguage: isRTL ? 'ar' : 'en',
+      inLanguage: bi('ar', 'en'),
       potentialAction: {
         '@type': 'SearchAction',
         target: {
@@ -330,8 +325,8 @@ const SearchPage = () => {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
         name: sectorMeta
-          ? (isRTL ? `أفضل مزودي ${sectorMeta.name}` : `Top ${sectorMeta.name} providers`)
-          : (isRTL ? 'أفضل مزودي الخدمات' : 'Top service providers'),
+          ? (bi(`أفضل مزودي ${sectorMeta.name}`, `Top ${sectorMeta.name} providers`))
+          : (bi('أفضل مزودي الخدمات', 'Top service providers')),
         numberOfItems: top.length,
         keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
         itemListElement: top.map((b, i) => ({
