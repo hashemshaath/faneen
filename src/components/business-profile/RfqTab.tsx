@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { TechnicalText } from "@/components/ui/technical-text";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,8 @@ interface RfqTabProps {
 type ContactMethod = "whatsapp" | "call" | "email";
 type Timeline = "urgent" | "1_month" | "1_3_months" | "3_6_months" | "flexible";
 type ServiceLocation = "project_site" | "provider_location" | "not_sure";
+
+const MIXED_TIMELINE_VALUES = new Set<Timeline>(["1_3_months", "3_6_months"]);
 
 interface RfqFormState {
   name: string;
@@ -71,6 +74,18 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
 
   const update = (k: keyof RfqFormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }));
+
+  const timelineLabel = (value: Timeline) => {
+    const labels: Record<Timeline, string> = {
+      urgent: bi("عاجل", "Urgent"),
+      "1_month": bi("خلال شهر", "Within a month"),
+      "1_3_months": bi("1–3 أشهر", "1–3 months"),
+      "3_6_months": bi("3–6 أشهر", "3–6 months"),
+      flexible: bi("مرن", "Flexible"),
+    };
+    const label = labels[value];
+    return MIXED_TIMELINE_VALUES.has(value) ? <TechnicalText mono={false}>{label}</TechnicalText> : label;
+  };
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -179,13 +194,13 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             </div>
             <div className="sm:col-span-1">
               <Label className="text-xs">{bi("البريد الإلكتروني", "Email")}</Label>
-              <Input type="email" value={form.email} onChange={update("email")} dir="auto" maxLength={120} className="h-11 rounded-xl" />
+              <Input type="email" value={form.email} onChange={update("email")} dir="ltr" maxLength={120} className="h-11 rounded-xl tech-content" />
             </div>
           </>
         )}
         <div>
           <Label className="text-xs">{bi("الجوال", "Phone")} *</Label>
-          <Input type="tel" value={form.phone} onChange={update("phone")} className="h-11 rounded-xl tech-content" maxLength={30} />
+          <Input type="tel" value={form.phone} onChange={update("phone")} dir="ltr" className="h-11 rounded-xl tech-content" maxLength={30} />
         </div>
         <div>
           <Label className="text-xs">{bi("طريقة التواصل المفضّلة", "Preferred contact")}</Label>
@@ -193,7 +208,9 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             value={form.contact_method}
             onValueChange={(v) => setForm((p) => ({ ...p, contact_method: v as typeof p.contact_method }))}
           >
-            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-11 rounded-xl">
+              <span className="min-w-0 flex-1 text-start">{timelineLabel(form.timeline)}</span>
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="whatsapp">{bi("واتساب", "WhatsApp")}</SelectItem>
               <SelectItem value="call">{bi("اتصال", "Call")}</SelectItem>
@@ -219,8 +236,12 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             <SelectContent>
               <SelectItem value="urgent">{bi("عاجل", "Urgent")}</SelectItem>
               <SelectItem value="1_month">{bi("خلال شهر", "Within a month")}</SelectItem>
-              <SelectItem value="1_3_months">{bi("1–3 أشهر", "1–3 months")}</SelectItem>
-              <SelectItem value="3_6_months">{bi("3–6 أشهر", "3–6 months")}</SelectItem>
+              <SelectItem value="1_3_months" textValue={bi("1–3 أشهر", "1–3 months")}>
+                <TechnicalText mono={false}>{bi("1–3 أشهر", "1–3 months")}</TechnicalText>
+              </SelectItem>
+              <SelectItem value="3_6_months" textValue={bi("3–6 أشهر", "3–6 months")}>
+                <TechnicalText mono={false}>{bi("3–6 أشهر", "3–6 months")}</TechnicalText>
+              </SelectItem>
               <SelectItem value="flexible">{bi("مرن", "Flexible")}</SelectItem>
             </SelectContent>
           </Select>

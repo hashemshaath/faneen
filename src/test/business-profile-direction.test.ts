@@ -6,6 +6,7 @@ const files = [
   'src/components/business-profile/BusinessProfileHeader.tsx',
   'src/components/business-profile/OverviewTab.tsx',
   'src/components/business-profile/BusinessProfileTabs.tsx',
+  'src/components/business-profile/RfqTab.tsx',
 ];
 
 const read = (p: string) => readFileSync(path.resolve(p), 'utf8');
@@ -40,5 +41,22 @@ describe('Business profile RTL/LTR direction hygiene', () => {
     const src = read('src/components/business-profile/BusinessProfileTabs.tsx');
     expect(src).not.toMatch(/dir=\{item\.dir \|\| undefined\}/);
     expect(src).toMatch(/dir=\{item\.dir \|\| "auto"\}/);
+  });
+
+  it('RFQ mixed timeline values are rendered as isolated LTR technical text', () => {
+    const src = read('src/components/business-profile/RfqTab.tsx');
+    expect(src).toMatch(/import \{ TechnicalText \} from "@\/components\/ui\/technical-text"/);
+    expect(src).toMatch(/MIXED_TIMELINE_VALUES/);
+    expect(src).toMatch(/timelineLabel\(form\.timeline\)/);
+    expect(src).toMatch(/<TechnicalText mono=\{false\}>\{bi\("1–3 أشهر", "1–3 months"\)\}<\/TechnicalText>/);
+    expect(src).toMatch(/<TechnicalText mono=\{false\}>\{bi\("3–6 أشهر", "3–6 months"\)\}<\/TechnicalText>/);
+  });
+
+  it('RFQ phone/email/budget inputs stay technical LTR and avoid Arabic-Indic literals', () => {
+    const src = read('src/components/business-profile/RfqTab.tsx');
+    expect(src).toMatch(/type="tel"[^>]*dir="ltr"[^>]*tech-content/s);
+    expect(src).toMatch(/type="email"[^>]*dir="ltr"[^>]*tech-content/s);
+    expect(src).toMatch(/type="number" inputMode="numeric"[^>]*tech-content/s);
+    expect(src).not.toMatch(/[٠-٩]/);
   });
 });
