@@ -9,7 +9,10 @@ import {
   GitBranch,
   Globe,
   MapPin,
+  Phone,
+  Sparkles,
   Star,
+  TrendingUp,
   Wrench,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -131,39 +134,91 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
           </p>
         )}
 
-        <dl className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 sm:text-sm">
-          <div className="rounded-xl bg-muted/40 px-3 py-2 dark:bg-muted/15">
-            <dt className="text-[10px] text-muted-foreground sm:text-[11px]">
-              {bi("سنوات النشاط", "Years active")}
-            </dt>
-            <dd className="mt-0.5 font-heading text-base font-bold text-foreground sm:text-lg tech-content">
-              {yearsActive}+
-            </dd>
+        <dl className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 sm:gap-3 sm:text-sm">
+          {/* Years active — gradient + animated trending pulse */}
+          <div className="group relative overflow-hidden rounded-xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent px-3 py-2.5 transition-all hover:border-accent/40 hover:shadow-md dark:from-accent/15 dark:via-accent/5">
+            <div className="absolute -end-3 -top-3 h-12 w-12 rounded-full bg-accent/10 blur-xl transition-opacity group-hover:opacity-100" />
+            <div className="relative flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+                  {bi("سنوات النشاط", "Years active")}
+                </dt>
+                <dd className="mt-0.5 flex items-baseline gap-1">
+                  <span className="font-heading text-lg font-black text-foreground tech-content sm:text-2xl">{yearsActive}</span>
+                  <span className="text-[10px] font-bold text-accent sm:text-xs">+</span>
+                </dd>
+                <div className="mt-0.5 text-[9px] text-muted-foreground/80 sm:text-[10px]">
+                  {bi(`منذ ${memberYear}`, `since ${memberYear}`)}
+                </div>
+              </div>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                <TrendingUp className="h-3.5 w-3.5" />
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl bg-muted/40 px-3 py-2 dark:bg-muted/15">
-            <dt className="text-[10px] text-muted-foreground sm:text-[11px]">
-              {bi("التصنيف", "Sector")}
-            </dt>
-            <dd dir="auto" className="mt-0.5 truncate font-heading text-sm font-semibold text-foreground sm:text-base">
-              {categoryName}
-            </dd>
+
+          {/* Sector / classification */}
+          <div className="group relative overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-primary/8 via-primary/3 to-transparent px-3 py-2.5 transition-all hover:border-primary/30 hover:shadow-md dark:from-primary/15">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+                  {bi("التصنيف", "Sector")}
+                </dt>
+                <dd dir="auto" className="mt-0.5 line-clamp-2 font-heading text-[12px] font-bold text-foreground sm:text-[13px]">
+                  {categoryName}
+                </dd>
+              </div>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl bg-muted/40 px-3 py-2 dark:bg-muted/15">
-            <dt className="text-[10px] text-muted-foreground sm:text-[11px]">
-              {bi("المقر الرئيسي", "Head office")}
-            </dt>
-            <dd dir="auto" className="mt-0.5 truncate font-heading text-sm font-semibold text-foreground sm:text-base">
-              {cityName || "—"}
-            </dd>
+
+          {/* Head office city */}
+          <div className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-muted/60 to-muted/10 px-3 py-2.5 transition-all hover:border-accent/30 hover:shadow-md dark:from-muted/30 dark:to-muted/5 dark:border-border/20">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+                  {bi("المقر الرئيسي", "Head office")}
+                </dt>
+                <dd dir="auto" className="mt-0.5 truncate font-heading text-[13px] font-bold text-foreground sm:text-[15px]">
+                  {cityName || "—"}
+                </dd>
+              </div>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground/70 dark:bg-foreground/10">
+                <MapPin className="h-3.5 w-3.5" />
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl bg-muted/40 px-3 py-2 dark:bg-muted/15">
-            <dt className="text-[10px] text-muted-foreground sm:text-[11px]">
-              {bi("الفروع", "Branches")}
-            </dt>
-            <dd className="mt-0.5 font-heading text-base font-bold text-foreground sm:text-lg tech-content">
-              {branches.length}
-            </dd>
-          </div>
+
+          {/* Branches count — clickable */}
+          <button
+            type="button"
+            onClick={() => branches.length > 0 && onJumpToTab?.("branches")}
+            disabled={branches.length === 0}
+            className="group relative overflow-hidden rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent px-3 py-2.5 text-start transition-all hover:border-emerald-500/40 hover:shadow-md disabled:cursor-default disabled:hover:border-emerald-500/20 disabled:hover:shadow-none dark:from-emerald-500/15"
+            aria-label={bi("عرض الفروع", "View branches")}
+          >
+            <div className="absolute -end-3 -bottom-3 h-12 w-12 rounded-full bg-emerald-500/10 blur-xl" />
+            <div className="relative flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+                  {bi("الفروع النشطة", "Active branches")}
+                </dt>
+                <dd className="mt-0.5 flex items-baseline gap-1">
+                  <span className="font-heading text-lg font-black text-foreground tech-content sm:text-2xl">{branches.length}</span>
+                  {branches.length > 0 && (
+                    <span className="text-[9px] text-emerald-600 dark:text-emerald-400 sm:text-[10px]">
+                      {bi("نشط", "live")}
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                <GitBranch className="h-3.5 w-3.5" />
+              </div>
+            </div>
+          </button>
         </dl>
 
         {hasAnySpecialties ? (
@@ -425,45 +480,101 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
         )}
       </section>
 
-      {/* Location / branches */}
+      {/* Location / branches — live, rich cards */}
       <section className="rounded-2xl border border-border/40 bg-card p-4 dark:border-border/20 sm:p-5">
-        <SectionTitle icon={MapPin} title={bi("الموقع والفروع", "Location & branches")} />
-        <ul className="space-y-2 text-[12px] sm:text-sm">
-          {cityName && (
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 text-accent" />
-              <span dir="auto">{cityName}</span>
-            </li>
-          )}
-          {business.address && (
-            <li className="flex items-start gap-2 text-muted-foreground">
-              <Building2 className="mt-0.5 h-3.5 w-3.5 text-accent" />
-              <span dir="auto" className="line-clamp-2">{business.address}</span>
-            </li>
-          )}
-          <li className="flex items-center gap-2 text-muted-foreground">
-            <GitBranch className="h-3.5 w-3.5 text-accent" />
-            <span>
-              {bi(`${branches.length} فرع نشط`, `${branches.length} active branches`)}
-            </span>
-          </li>
-          <li className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5 text-accent" />
-            <span className="tech-content">
-              {bi(`عضو منذ ${memberYear}`, `Member since ${memberYear}`)}
-            </span>
-          </li>
-        </ul>
-        {branches.length > 0 && (
-          <button
-            type="button"
-            onClick={() => onJumpToTab?.("branches")}
-            className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline sm:text-xs"
-          >
-            {bi("عرض كل الفروع", "View all branches")}
-            <ArrowIcon className="h-3 w-3" />
-          </button>
+        <SectionTitle
+          icon={MapPin}
+          title={bi("الموقع والفروع", "Location & branches")}
+          action={
+            branches.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => onJumpToTab?.("branches")}
+                className="text-[11px] font-medium text-accent hover:underline sm:text-xs"
+              >
+                {bi(`الكل (${branches.length})`, `All (${branches.length})`)}
+              </button>
+            ) : null
+          }
+        />
+        {branches.length === 0 ? (
+          <p className="text-sm italic text-muted-foreground/70">
+            {bi("لا توجد فروع منشورة بعد.", "No branches published yet.")}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {branches.slice(0, 3).map((br) => {
+              const branchName = getLocalizedValue(language, br.name_ar, br.name_en);
+              const addr = [br.district, br.street_name, br.address]
+                .filter((p): p is string => Boolean(p));
+              const addressLine = Array.from(new Set(addr)).join("، ");
+              const phone = br.phone || br.mobile || br.unified_number;
+              return (
+                <li
+                  key={br.id}
+                  className={`group relative overflow-hidden rounded-xl border p-3 transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                    br.is_main
+                      ? "border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent dark:border-accent/25"
+                      : "border-border/40 bg-muted/20 hover:border-accent/30 dark:border-border/20 dark:bg-muted/10"
+                  }`}
+                >
+                  {br.is_main && (
+                    <span className="absolute end-2 top-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold text-accent-foreground">
+                      <Star className="h-2.5 w-2.5 fill-current" />
+                      {bi("المقر الرئيسي", "Head office")}
+                    </span>
+                  )}
+                  <div className="flex items-start gap-2.5">
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${br.is_main ? "bg-accent/20 text-accent" : "bg-foreground/5 text-foreground/70 dark:bg-foreground/10"}`}>
+                      <Building2 className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <h4 dir="auto" className="line-clamp-1 font-heading text-[13px] font-bold text-foreground sm:text-sm">
+                          {branchName}
+                        </h4>
+                        <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" aria-hidden />
+                      </div>
+                      {addressLine && (
+                        <p dir="auto" className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+                          <MapPin className="me-0.5 inline h-3 w-3 text-accent/70" />
+                          {addressLine}
+                        </p>
+                      )}
+                      {phone && (
+                        <a
+                          href={`tel:${phone}`}
+                          dir="ltr"
+                          className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline tech-content"
+                        >
+                          <Phone className="h-3 w-3" />
+                          {phone}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
+
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/30 pt-3 dark:border-border/20">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground sm:text-xs">
+            <Calendar className="h-3.5 w-3.5 text-accent" />
+            <span className="tech-content">{bi(`عضو منذ ${memberYear}`, `Member since ${memberYear}`)}</span>
+          </span>
+          {branches.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onJumpToTab?.("branches")}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline sm:text-xs"
+            >
+              {bi("كل الفروع", "All branches")}
+              <ArrowIcon className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       </section>
 
       {/* Featured portfolio strip */}
