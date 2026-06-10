@@ -243,13 +243,13 @@ const DashboardAssets: React.FC = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className={`size-4 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} text-muted-foreground`} />
+              <Search className="size-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground" />
               <Input
                 dir="auto"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder={bi('ابحث باسم الصنف أو الماركة أو المعرف…','Search by item, brand or ref…')}
-                className={isRTL ? 'pr-9' : 'pl-9'}
+                className="ps-9"
               />
             </div>
             <div className="flex items-center gap-2">

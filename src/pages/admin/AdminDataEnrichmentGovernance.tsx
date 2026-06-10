@@ -184,7 +184,7 @@ function RecordCard({ r, t, onChanged }: { r: EnrichmentRecord; t: (a: string, e
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-sm">
             <span className="font-medium">{r.normalized?.name_ar || r.normalized?.name_en || r.external_ref || r.id.slice(0, 8)}</span>
-            <span className="ml-2 text-muted-foreground">· {r.source_key}</span>
+            <span className="ms-2 text-muted-foreground">· {r.source_key}</span>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline">{r.status}</Badge>
@@ -228,7 +228,7 @@ function ConflictCard({ r, t, onChanged }: { r: EnrichmentRecord; t: (a: string,
                   variant={c.resolved?.source === v.source ? "default" : "outline"}
                   onClick={() => choose(i, v.source, v.value)}
                 >
-                  <span className="font-mono mr-2">{v.source}</span>{v.value ?? "—"} · {v.confidence}%
+                  <span className="font-mono me-2">{v.source}</span>{v.value ?? "—"} · {v.confidence}%
                 </Button>
               ))}
             </div>
