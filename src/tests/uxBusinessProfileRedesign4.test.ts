@@ -14,6 +14,7 @@ describe('UX-REDESIGN-4 — public BusinessProfile', () => {
   const page = read('src/pages/BusinessProfile.tsx');
   const trust = read('src/components/business-profile/BusinessProfileTrustStrip.tsx');
   const sticky = read('src/components/business-profile/BusinessProfileStickyCta.tsx');
+  const structured = read('src/components/business-profile/useBusinessStructuredData.ts');
 
   it('renders the trust strip and sticky CTA on the public profile', () => {
     expect(page).toContain('BusinessProfileTrustStrip');
@@ -65,7 +66,11 @@ describe('UX-REDESIGN-4 — public BusinessProfile', () => {
   });
 
   it('preserves LocalBusiness JSON-LD and canonical metadata', () => {
-    expect(page).toContain("'LocalBusiness'");
+    // LocalBusiness JSON-LD is composed by the shared structured-data helper
+    // and emitted via useMultiJsonLd. The page wires the helper + canonical;
+    // the literal "LocalBusiness" lives in the helper, not the page file.
+    expect(structured).toContain('"LocalBusiness"');
+    expect(page).toContain('useBusinessStructuredData');
     expect(page).toMatch(/canonical:\s*business\s*\?\s*`https:\/\/qitaat\.com\//);
     expect(page).toContain('useMultiJsonLd');
   });

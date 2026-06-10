@@ -27,11 +27,25 @@ const { rpcMock } = vi.hoisted(() => ({
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     rpc: rpcMock,
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({ data: [], error: null })),
-      })),
-    })),
+    from: vi.fn(() => {
+      // Chainable query stub: select(...).in(...) / .eq(...) all return the
+      // same chain and resolve to an empty result set when awaited.
+      const result = { data: [] as unknown[], error: null };
+      const chain: Record<string, unknown> = {};
+      const passthrough = () => chain;
+      Object.assign(chain, {
+        select: passthrough,
+        eq: passthrough,
+        in: passthrough,
+        order: passthrough,
+        limit: passthrough,
+        maybeSingle: () => Promise.resolve(result),
+        single: () => Promise.resolve(result),
+        then: (onFulfilled: (v: typeof result) => unknown) =>
+          Promise.resolve(onFulfilled(result)),
+      });
+      return chain;
+    }),
   },
 }));
 
