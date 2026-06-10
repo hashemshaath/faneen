@@ -265,7 +265,7 @@ const SectorBrief: React.FC = () => {
                           {list.map((p) => (
                             <li key={p.id}>
                               <Link
-                                to={`/business/${p.username}`}
+                                to={`/${p.username}`}
                                 className="flex items-center gap-3 rounded-lg p-2 -m-2 hover:bg-muted/60 transition-colors"
                               >
                                 <div className="w-9 h-9 rounded-lg bg-muted shrink-0 overflow-hidden flex items-center justify-center">
