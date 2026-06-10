@@ -22,6 +22,7 @@ import { getMembershipTierLabel } from '@/modules/memberships';
 
 const Offers = () => {
   const { isRTL, language } = useLanguage();
+  const bi = useBi();
   const lang = language === 'ar' ? 'ar' as const : 'en' as const;
   usePageMeta({
     title: buildSeoTitle({ kind: 'offer', lang, name: language === 'ar' ? 'العروض والتخفيضات' : 'Offers & Deals' }),

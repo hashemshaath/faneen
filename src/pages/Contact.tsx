@@ -21,6 +21,7 @@ import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 const Contact = () => {
   const { isRTL, language } = useLanguage();
+  const bi = useBi();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);

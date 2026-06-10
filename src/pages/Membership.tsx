@@ -59,6 +59,7 @@ const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
 const Membership = () => {
   const { language, isRTL } = useLanguage();
+  const bi = useBi();
   const membershipVisibility = useMembershipVisibility();
   usePageMeta({
     title: language === 'ar'

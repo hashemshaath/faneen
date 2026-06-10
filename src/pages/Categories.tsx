@@ -49,6 +49,7 @@ type CategoryBusinessRow = {
 const Categories = () => {
   const { slug } = useParams<{ slug?: string }>();
   const { isRTL, language } = useLanguage();
+  const bi = useBi();
   const lang = isRTL ? 'ar' as const : 'en' as const;
 
   const { data: categories = [], isLoading } = useQuery<CategoryRow[]>({
