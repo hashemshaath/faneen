@@ -615,6 +615,16 @@ const BusinessProfile = () => {
                   />
                   </TabsContent>
                 )}
+                <TabsContent value="brands" className="mt-0">
+                  <Suspense fallback={<TabFallback />}>
+                    <BrandsTab
+                      businessId={business.id}
+                      isOwner={isOwner}
+                      ownerUserId={user?.id ?? null}
+                      sectorId={(business as { sector_id?: string | null }).sector_id ?? null}
+                    />
+                  </Suspense>
+                </TabsContent>
                 {canSee("reviews") && (
                   <TabsContent value="reviews" className="mt-0">
                     <ReviewsTab business={business} />
