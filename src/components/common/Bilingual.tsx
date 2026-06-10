@@ -12,13 +12,13 @@
 import React from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
-export const pickBi = (isRTL: boolean, ar: string, en: string): string =>
-  isRTL ? ar : en;
+export const pickBi = <T,>(isRTL: boolean, ar: T, en: T): T =>
+  (isRTL ? ar : en);
 
 export function useBi() {
   const { isRTL } = useLanguage();
   return React.useCallback(
-    (ar: string, en: string) => (isRTL ? ar : en),
+    <T,>(ar: T, en: T): T => (isRTL ? ar : en),
     [isRTL],
   );
 }
