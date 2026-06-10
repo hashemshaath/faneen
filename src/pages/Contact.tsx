@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useBi } from '@/components/common/Bilingual';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
@@ -52,13 +53,13 @@ const Contact = () => {
   };
 
   usePageMeta({
-    title: isRTL ? 'تواصل معنا | قِطاعات' : 'Contact Us | Qitaat',
-    description: isRTL ? 'تواصل مع فريق قِطاعات للدعم الفني أو الاستفسارات أو الشراكات' : 'Contact Qitaat team for support, inquiries or partnerships',
+    title: bi('تواصل معنا | قِطاعات', 'Contact Us | Qitaat'),
+    description: bi('تواصل مع فريق قِطاعات للدعم الفني أو الاستفسارات أو الشراكات', 'Contact Qitaat team for support, inquiries or partnerships'),
     canonical: 'https://qitaat.com/contact',
-    ogTitle: isRTL ? 'تواصل مع قِطاعات' : 'Contact Qitaat',
-    ogDescription: isRTL ? 'تواصل مع فريق قِطاعات للدعم والشراكات والاستفسارات.' : 'Get in touch with the Qitaat team.',
+    ogTitle: bi('تواصل مع قِطاعات', 'Contact Qitaat'),
+    ogDescription: bi('تواصل مع فريق قِطاعات للدعم والشراكات والاستفسارات.', 'Get in touch with the Qitaat team.'),
     ogImage: ogImageFor('contact'),
-    keywords: isRTL ? 'تواصل, قِطاعات, دعم, شراكات' : 'contact, qitaat, support, partnerships',
+    keywords: bi('تواصل, قِطاعات, دعم, شراكات', 'contact, qitaat, support, partnerships'),
   });
 
   useMultiJsonLd(useMemo(() => {
@@ -71,7 +72,7 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      toast.error(isRTL ? 'يرجى تعبئة جميع الحقول المطلوبة' : 'Please fill all required fields');
+      toast.error(bi('يرجى تعبئة جميع الحقول المطلوبة', 'Please fill all required fields'));
       return;
     }
 
@@ -117,20 +118,20 @@ const Contact = () => {
       const attribution = getAttributionPayload();
       // Canonical contact event (Phase 6). `quote_request_submit` deprecated.
       track.contactFormSubmitted({ contact_type: 'contact_form', ...attribution });
-      toast.success(isRTL ? 'تم إرسال رسالتك بنجاح' : 'Message sent successfully');
+      toast.success(bi('تم إرسال رسالتك بنجاح', 'Message sent successfully'));
     } catch {
-      toast.error(isRTL ? 'حدث خطأ، يرجى المحاولة لاحقاً' : 'An error occurred, please try again');
+      toast.error(bi('حدث خطأ، يرجى المحاولة لاحقاً', 'An error occurred, please try again'));
     } finally {
       setLoading(false);
     }
   };
 
   const contactInfo = [
-    { icon: Mail, label: isRTL ? 'البريد الإلكتروني (دعم العملاء)' : 'Email (Customer Care)', value: 'care@qitaat.com', href: 'mailto:care@qitaat.com' },
-    { icon: Mail, label: isRTL ? 'البريد الرسمي (مراسلات)' : 'Official Email', value: 'info@qitaat.com', href: 'mailto:info@qitaat.com' },
-    { icon: Phone, label: isRTL ? 'الهاتف' : 'Phone', value: '+966 56 922 0777', href: 'tel:+966569220777' },
-    { icon: MessageCircle, label: isRTL ? 'واتساب' : 'WhatsApp', value: '+966 56 922 0777', href: 'https://wa.me/966569220777' },
-    { icon: MapPin, label: isRTL ? 'العنوان' : 'Address', value: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia' },
+    { icon: Mail, label: bi('البريد الإلكتروني (دعم العملاء)', 'Email (Customer Care)'), value: 'care@qitaat.com', href: 'mailto:care@qitaat.com' },
+    { icon: Mail, label: bi('البريد الرسمي (مراسلات)', 'Official Email'), value: 'info@qitaat.com', href: 'mailto:info@qitaat.com' },
+    { icon: Phone, label: bi('الهاتف', 'Phone'), value: '+966 56 922 0777', href: 'tel:+966569220777' },
+    { icon: MessageCircle, label: bi('واتساب', 'WhatsApp'), value: '+966 56 922 0777', href: 'https://wa.me/966569220777' },
+    { icon: MapPin, label: bi('العنوان', 'Address'), value: bi('المملكة العربية السعودية', 'Saudi Arabia') },
   ];
 
   return (
@@ -139,7 +140,7 @@ const Contact = () => {
       <div className="bg-primary pt-24 pb-10">
         <div className="container-app">
           <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-foreground">
-            {isRTL ? 'تواصل معنا' : 'Contact Us'}
+            {bi('تواصل معنا', 'Contact Us')}
           </h1>
         </div>
       </div>
@@ -171,58 +172,58 @@ const Contact = () => {
               <div className="card-ds card-pad-lg flex flex-col items-center justify-center text-center gap-4">
                 <CheckCircle className="w-16 h-16 text-secondary" />
                 <h2 className="text-xl font-heading font-bold text-foreground">
-                  {isRTL ? 'تم إرسال رسالتك بنجاح!' : 'Message sent successfully!'}
+                  {bi('تم إرسال رسالتك بنجاح!', 'Message sent successfully!')}
                 </h2>
                 <p className="text-muted-foreground">
-                  {isRTL ? 'سنقوم بالرد عليك في أقرب وقت. تم إرسال تأكيد إلى بريدك الإلكتروني.' : 'We\'ll get back to you soon. A confirmation has been sent to your email.'}
+                  {bi('سنقوم بالرد عليك في أقرب وقت. تم إرسال تأكيد إلى بريدك الإلكتروني.', 'We\'ll get back to you soon. A confirmation has been sent to your email.')}
                 </p>
                 <Button variant="outline" onClick={() => { setSent(false); setForm({ name: '', email: '', subject: '', message: '' }); }}>
-                  {isRTL ? 'إرسال رسالة أخرى' : 'Send another message'}
+                  {bi('إرسال رسالة أخرى', 'Send another message')}
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} onFocusCapture={handleFormStart} className="card-ds card-pad-md space-y-5">
                 <h2 className="text-lg font-heading font-bold text-foreground">
-                  {isRTL ? 'أرسل لنا رسالة' : 'Send us a message'}
+                  {bi('أرسل لنا رسالة', 'Send us a message')}
                 </h2>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{isRTL ? 'الاسم *' : 'Name *'}</Label>
+                    <Label>{bi('الاسم *', 'Name *')}</Label>
                     <Input
                       value={form.name}
                       onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder={isRTL ? 'أدخل اسمك' : 'Your name'}
+                      placeholder={bi('أدخل اسمك', 'Your name')}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{isRTL ? 'البريد الإلكتروني *' : 'Email *'}</Label>
+                    <Label>{bi('البريد الإلكتروني *', 'Email *')}</Label>
                     <Input
                       type="email"
                       value={form.email}
                       onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))}
-                      placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Your email'}
+                      placeholder={bi('أدخل بريدك الإلكتروني', 'Your email')}
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'الموضوع' : 'Subject'}</Label>
+                  <Label>{bi('الموضوع', 'Subject')}</Label>
                   <Input
                     value={form.subject}
                     onChange={(e) => setForm(f => ({ ...f, subject: e.target.value }))}
-                    placeholder={isRTL ? 'موضوع الرسالة' : 'Message subject'}
+                    placeholder={bi('موضوع الرسالة', 'Message subject')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'الرسالة *' : 'Message *'}</Label>
+                  <Label>{bi('الرسالة *', 'Message *')}</Label>
                   <Textarea
                     value={form.message}
                     onChange={(e) => setForm(f => ({ ...f, message: e.target.value }))}
-                    placeholder={isRTL ? 'اكتب رسالتك هنا...' : 'Write your message here...'}
+                    placeholder={bi('اكتب رسالتك هنا...', 'Write your message here...')}
                     rows={5}
                     required
                   />
@@ -231,8 +232,8 @@ const Contact = () => {
                 <Button type="submit" size="appLg" disabled={loading} className="w-full gap-2">
                   <Send className="ic-sm" />
                   {loading
-                    ? (isRTL ? 'جاري الإرسال...' : 'Sending...')
-                    : (isRTL ? 'إرسال الرسالة' : 'Send Message')
+                    ? (bi('جاري الإرسال...', 'Sending...'))
+                    : (bi('إرسال الرسالة', 'Send Message'))
                   }
                 </Button>
               </form>

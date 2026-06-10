@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useBi } from '@/components/common/Bilingual';
 import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { Link } from 'react-router-dom';
@@ -154,30 +155,30 @@ const Offers = () => {
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(var(--accent) / 0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, hsl(var(--accent) / 0.2) 0%, transparent 40%)" }} />
         <div className="container-app relative z-10 text-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4 shadow-lg shadow-accent/30">
-            <Megaphone className={`w-8 h-8 sm:w-10 sm:h-10 text-accent-foreground ${isRTL ? '-scale-x-100' : ''}`} />
+            <Megaphone className={`w-8 h-8 sm:w-10 sm:h-10 text-accent-foreground ${bi('-scale-x-100', '')}`} />
           </div>
           <h1 className="font-heading font-bold text-2xl sm:text-4xl text-surface-nav-foreground mb-3">
-            {isRTL ? 'العروض والإعلانات' : 'Offers & Promotions'}
+            {bi('العروض والإعلانات', 'Offers & Promotions')}
           </h1>
           <p className="text-surface-nav-foreground/60 font-body max-w-lg mx-auto text-sm sm:text-base">
-            {isRTL ? 'تصفح أحدث العروض والخصومات والفيديوهات الترويجية من مزودي الخدمة المعتمدين' : 'Browse latest offers, discounts, and promotional videos from verified providers'}
+            {bi('تصفح أحدث العروض والخصومات والفيديوهات الترويجية من مزودي الخدمة المعتمدين', 'Browse latest offers, discounts, and promotional videos from verified providers')}
           </p>
 
           {/* Stats Bar — direction-agnostic centered layout */}
           {!isLoading && (
             <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-6 sm:mt-8 max-w-2xl mx-auto">
               {[
-                { icon: Megaphone, label: isRTL ? 'إجمالي العروض' : 'Total', value: stats.total, color: 'text-accent', bg: 'bg-accent/10', mirror: true },
-                { icon: Tag, label: isRTL ? 'عروض خاصة' : 'Offers', value: stats.offers, color: 'text-success', bg: 'bg-success/15' },
-                { icon: Video, label: isRTL ? 'فيديو' : 'Videos', value: stats.videos, color: 'text-info', bg: 'bg-info/15' },
-                { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews, color: 'text-secondary', bg: 'bg-secondary/15' },
+                { icon: Megaphone, label: bi('إجمالي العروض', 'Total'), value: stats.total, color: 'text-accent', bg: 'bg-accent/10', mirror: true },
+                { icon: Tag, label: bi('عروض خاصة', 'Offers'), value: stats.offers, color: 'text-success', bg: 'bg-success/15' },
+                { icon: Video, label: bi('فيديو', 'Videos'), value: stats.videos, color: 'text-info', bg: 'bg-info/15' },
+                { icon: Eye, label: bi('مشاهدة', 'Views'), value: stats.totalViews, color: 'text-secondary', bg: 'bg-secondary/15' },
               ].map((s, i) => (
                 <div
                   key={i}
                   className="flex flex-col items-center justify-center gap-1.5 bg-surface-nav-foreground/[0.06] backdrop-blur-sm border border-surface-nav-foreground/10 rounded-xl px-2 py-3 text-center"
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.bg}`}>
-                    <s.icon className={`w-4 h-4 ${s.color} ${s.mirror && isRTL ? '-scale-x-100' : ''}`} />
+                    <s.icon className={`w-4 h-4 ${s.color} ${s.mirror && bi('-scale-x-100', '')}`} />
                   </div>
                   <div className="font-heading font-bold text-surface-nav-foreground text-sm sm:text-base leading-none tech-content">
                     {s.value.toLocaleString()}
@@ -201,8 +202,8 @@ const Offers = () => {
               dir="auto"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isRTL ? 'ابحث في العروض، المزودين، الأوصاف…' : 'Search offers, providers, descriptions…'}
-              aria-label={isRTL ? 'البحث في العروض' : 'Search offers'}
+              placeholder={bi('ابحث في العروض، المزودين، الأوصاف…', 'Search offers, providers, descriptions…')}
+              aria-label={bi('البحث في العروض', 'Search offers')}
               className="ps-9 h-11 rounded-xl bg-card border-border/60 focus-visible:ring-accent"
             />
           </div>
@@ -212,35 +213,35 @@ const Offers = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="recent">{isRTL ? 'الأحدث' : 'Most recent'}</SelectItem>
-              <SelectItem value="popular">{isRTL ? 'الأكثر مشاهدة' : 'Most viewed'}</SelectItem>
-              <SelectItem value="ending">{isRTL ? 'ينتهي قريباً' : 'Ending soon'}</SelectItem>
-              <SelectItem value="discount">{isRTL ? 'أعلى خصم' : 'Highest discount'}</SelectItem>
+              <SelectItem value="recent">{bi('الأحدث', 'Most recent')}</SelectItem>
+              <SelectItem value="popular">{bi('الأكثر مشاهدة', 'Most viewed')}</SelectItem>
+              <SelectItem value="ending">{bi('ينتهي قريباً', 'Ending soon')}</SelectItem>
+              <SelectItem value="discount">{bi('أعلى خصم', 'Highest discount')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Filter Tabs */}
-        <Tabs dir={isRTL ? 'rtl' : 'ltr'} value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs dir={bi('rtl', 'ltr')} value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="sticky top-[64px] z-10 -mx-4 px-4 py-2 bg-background/85 backdrop-blur-md border-y border-border/40 sm:border-0 sm:bg-transparent sm:backdrop-blur-none sm:py-0 sm:static sm:mx-0 sm:px-0 flex items-center justify-center overflow-x-auto no-scrollbar">
             <TabsList className="bg-muted/50 dark:bg-muted/30 rounded-xl p-1 inline-flex">
               <TabsTrigger value="all" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                {isRTL ? 'الكل' : 'All'}
+                {bi('الكل', 'All')}
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.total}</Badge>
               </TabsTrigger>
               <TabsTrigger value="offer" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 <Tag className="ic-xs" />
-                {isRTL ? 'عروض' : 'Offers'}
+                {bi('عروض', 'Offers')}
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.offers}</Badge>
               </TabsTrigger>
               <TabsTrigger value="ad" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 <Megaphone className="ic-xs" />
-                {isRTL ? 'إعلانات' : 'Ads'}
+                {bi('إعلانات', 'Ads')}
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.ads}</Badge>
               </TabsTrigger>
               <TabsTrigger value="video" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 <Video className="ic-xs" />
-                {isRTL ? 'فيديو' : 'Videos'}
+                {bi('فيديو', 'Videos')}
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.videos}</Badge>
               </TabsTrigger>
             </TabsList>
@@ -269,17 +270,17 @@ const Offers = () => {
                   <Megaphone className="w-10 h-10 opacity-30" />
                 </div>
                 <p className="text-lg font-heading font-bold mb-1 text-foreground">
-                  {searchQuery ? (isRTL ? 'لا توجد نتائج مطابقة' : 'No matching results') : (isRTL ? 'لا توجد عروض حالياً' : 'No promotions available')}
+                  {searchQuery ? (bi('لا توجد نتائج مطابقة', 'No matching results')) : (bi('لا توجد عروض حالياً', 'No promotions available'))}
                 </p>
                 <p className="text-sm">
-                  {searchQuery ? (isRTL ? 'جرّب كلمات مفتاحية مختلفة' : 'Try different keywords') : (isRTL ? 'تابعنا لمعرفة أحدث العروض والإعلانات' : 'Stay tuned for the latest offers')}
+                  {searchQuery ? (bi('جرّب كلمات مفتاحية مختلفة', 'Try different keywords')) : (bi('تابعنا لمعرفة أحدث العروض والإعلانات', 'Stay tuned for the latest offers'))}
                 </p>
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
                     className="mt-4 inline-flex items-center gap-1.5 text-sm font-heading text-accent hover:underline"
                   >
-                    {isRTL ? 'مسح البحث' : 'Clear search'}
+                    {bi('مسح البحث', 'Clear search')}
                   </button>
                 )}
               </div>
@@ -336,19 +337,19 @@ const Offers = () => {
                           )}
                           {p.promotion_type !== 'offer' && (
                             <Badge className="bg-accent text-accent-foreground text-[10px] shadow-lg">
-                              {p.promotion_type === 'video' ? (isRTL ? 'فيديو' : 'Video') : (isRTL ? 'إعلان' : 'Ad')}
+                              {p.promotion_type === 'video' ? (bi('فيديو', 'Video')) : (bi('إعلان', 'Ad'))}
                             </Badge>
                           )}
                           {isNewPromo && (
                             <Badge className="bg-success text-white text-[10px] shadow-lg flex items-center gap-0.5">
                               <Flame className="w-2.5 h-2.5" />
-                              {isRTL ? 'جديد' : 'New'}
+                              {bi('جديد', 'New')}
                             </Badge>
                           )}
                           {expiringSoon && (
                             <Badge className="bg-urgent text-white text-[10px] shadow-lg flex items-center gap-0.5 animate-pulse">
                               <Clock className="w-2.5 h-2.5" />
-                              {isRTL ? 'ينتهي قريباً' : 'Ending soon'}
+                              {bi('ينتهي قريباً', 'Ending soon')}
                             </Badge>
                           )}
                         </div>
@@ -369,7 +370,7 @@ const Offers = () => {
                               biz.membership_tier === 'premium' ? 'bg-accent text-accent-foreground' :
                               'bg-info/90 text-white'
                             }`}>
-                              {getMembershipTierLabel(biz.membership_tier, isRTL ? 'ar' : 'en')}
+                              {getMembershipTierLabel(biz.membership_tier, bi('ar', 'en'))}
                             </Badge>
                           </div>
                         )}
@@ -434,7 +435,7 @@ const Offers = () => {
                           <span className="flex items-center gap-1.5 min-w-0">
                             <Calendar className="ic-2xs" />
                             <span className="tech-content truncate">
-                              {new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+                              {new Date(p.start_date).toLocaleDateString(bi('ar-SA-u-nu-latn', 'en-US'))}
                             </span>
                             {p.end_date && (
                               <>
@@ -442,7 +443,7 @@ const Offers = () => {
                                   ? <ArrowLeft className="w-3 h-3 opacity-60" />
                                   : <ArrowRight className="w-3 h-3 opacity-60" />}
                                 <span className="tech-content truncate">
-                                  {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+                                  {new Date(p.end_date).toLocaleDateString(bi('ar-SA-u-nu-latn', 'en-US'))}
                                 </span>
                               </>
                             )}
