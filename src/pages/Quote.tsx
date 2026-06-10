@@ -695,7 +695,7 @@ const Quote: React.FC = () => {
                       <Label htmlFor="q-city"><Bi ar="المدينة" en="City" /></Label>
                       <Input
                         id="q-city"
-                        dir="auto"
+                        dir={isRTL ? 'rtl' : 'ltr'}
                         className="h-12 mt-1.5"
                         placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
                         value={form.city}
@@ -709,7 +709,7 @@ const Quote: React.FC = () => {
                       </Label>
                       <Input
                         id="q-district"
-                        dir="auto"
+                        dir={isRTL ? 'rtl' : 'ltr'}
                         className="h-12 mt-1.5"
                         placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
                         value={form.district}
@@ -750,7 +750,7 @@ const Quote: React.FC = () => {
                       <Label htmlFor="q-desc"><Bi ar="وصف المشروع" en="Project description" /></Label>
                       <Textarea
                         id="q-desc"
-                        dir="auto"
+                        dir={isRTL ? 'rtl' : 'ltr'}
                         rows={5}
                         className="mt-1.5"
                         placeholder={bi(
@@ -767,7 +767,7 @@ const Quote: React.FC = () => {
                         <Label htmlFor="q-meas"><Bi ar="المقاسات التقريبية" en="Approx. measurements" /></Label>
                         <Input
                           id="q-meas"
-                          dir="auto"
+                          dir={isRTL ? 'rtl' : 'ltr'}
                           className="h-12 mt-1.5 tech-content"
                           placeholder={bi('مثال: 3 شبابيك، كل شباك 120×100 سم', 'e.g. 3 windows, 120×100 cm each')}
                           value={form.measurements}
@@ -778,7 +778,7 @@ const Quote: React.FC = () => {
                         <Label htmlFor="q-qty"><Bi ar="الكمية (إن وجدت)" en="Quantity (if any)" /></Label>
                         <Input
                           id="q-qty"
-                          dir="auto"
+                          dir={isRTL ? 'rtl' : 'ltr'}
                           className="h-12 mt-1.5"
                           placeholder={bi('مثال: 5 وحدات', 'e.g. 5 units')}
                           value={form.quantity}
