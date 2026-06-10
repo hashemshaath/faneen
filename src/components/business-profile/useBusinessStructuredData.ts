@@ -360,6 +360,5 @@ export const useBusinessStructuredData = ({
       ...serviceEntities,
       ...reviewEntities,
     ];
-  }, [business, services, reviews, certifications, awards, categoryName, cityName, language, businessName]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [business, services, reviews, certifications, awards, branches, categoryName, cityName, language, businessName]);
 };
