@@ -842,7 +842,7 @@ export const HeroV2 = () => {
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
               <PrimaryCTA
                 to={ROUTES.quote}
-                label={bi('منصة شاملة لكل القطاعات الصناعية', 'A complete platform for every industrial sector')}
+                label={bi('استكشف كل القطاعات الصناعية', 'Explore every industrial sector')}
                 onClick={() => trackAbClick('hero_headline')}
               />
               <Link to={ROUTES.signupProvider}>
