@@ -1,9 +1,10 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldAlert } from 'lucide-react';
+import { Info, UserCheck } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
 import { VerifiedBadge } from './VerifiedBadge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type Size = 'xs' | 'sm' | 'md';
 
@@ -17,6 +18,8 @@ interface VerificationStatusBadgeProps {
   requestHref?: string;
   /** Hide the unverified pill entirely (e.g. dense card grids). */
   hideWhenUnverified?: boolean;
+  /** Business id used to build the public claim CTA (`/claim/:id`). */
+  businessId?: string | null;
   className?: string;
 }
 
@@ -41,6 +44,7 @@ export const VerificationStatusBadge = memo(({
   ownerView = false,
   requestHref = '/dashboard/badge',
   hideWhenUnverified = false,
+  businessId,
   className,
 }: VerificationStatusBadgeProps) => {
   const { language, isRTL } = useLanguage();
@@ -51,34 +55,65 @@ export const VerificationStatusBadge = memo(({
   }
   if (hideWhenUnverified) return null;
 
-  const label = isRTL
-    ? (ownerView ? 'اطلب التوثيق' : 'غير موثّقة بعد')
-    : (ownerView ? 'Request verification' : 'Not verified');
+  // Owner: keep the legacy "Request verification" CTA pointing at the
+  // dashboard flow. Public visitors: surface a "Claim this business" CTA
+  // (مطالبة بالحساب) plus an info tooltip with help text.
+  const ownerLabel = isRTL ? 'اطلب التوثيق' : 'Request verification';
+  const claimLabel = isRTL ? 'مطالبة بالحساب' : 'Claim this business';
+  const helpText = isRTL
+    ? 'إذا كانت هذه جهتك، يمكنك المطالبة بالحساب لإثبات ملكيتها وإدارة بياناتها. سنطلب وثائق تثبت العلاقة قبل اعتماد الملكية.'
+    : 'If this is your business, claim the account to prove ownership and manage its data. We will ask for documents to verify the relationship before approval.';
 
   const pillClass = cn(
-    'inline-flex items-center rounded-md font-body font-semibold border bg-muted text-muted-foreground border-border',
+    'inline-flex items-center rounded-md font-body font-semibold border bg-muted text-muted-foreground border-border transition-colors',
     styles.wrap,
-    ownerView && 'hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer',
+    'hover:bg-accent hover:text-accent-foreground cursor-pointer',
     className,
-  );
-
-  const inner = (
-    <>
-      <ShieldAlert className={styles.icon} />
-      {label}
-    </>
   );
 
   if (ownerView) {
     return (
-      <Link to={requestHref} className={pillClass} lang={language} aria-label={label}>
-        {inner}
+      <Link to={requestHref} className={pillClass} lang={language} aria-label={ownerLabel}>
+        <UserCheck className={styles.icon} />
+        {ownerLabel}
       </Link>
     );
   }
+
+  if (!businessId) {
+    // Without a business id we cannot build the claim link — render nothing
+    // rather than a dead pill.
+    return null;
+  }
+
   return (
-    <span className={pillClass} lang={language} aria-label={label} title={label}>
-      {inner}
+    <span className="inline-flex items-center gap-1">
+      <Link
+        to={`/claim/${businessId}`}
+        className={pillClass}
+        lang={language}
+        aria-label={claimLabel}
+        data-testid="business-claim-cta"
+      >
+        <UserCheck className={styles.icon} />
+        {claimLabel}
+      </Link>
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={isRTL ? 'معلومات عن المطالبة بالحساب' : 'About claiming the account'}
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <Info className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[260px] text-xs leading-relaxed">
+            {helpText}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </span>
   );
 });

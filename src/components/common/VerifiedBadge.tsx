@@ -1,61 +1,47 @@
 import { memo } from 'react';
-import { ShieldCheck } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
 
 /**
- * Unified "Verified" badge used across the app.
- * Visual contract (saqf-style):
- *  - emerald color tokens
- *  - ShieldCheck icon (NEVER BadgeCheck / CheckCircle2 / ✓ glyph)
- *  - Arabic label "شركة موثقة" (or "موثقة" in compact size), English "Verified"
+ * Unified "Verified" badge used across the app — Twitter/X style.
+ * Visual contract:
+ *  - Twitter-blue color (#1D9BF0)
+ *  - BadgeCheck icon (scalloped badge with check, X-style)
+ *  - ICON ONLY — no text label anywhere; accessible name via aria-label.
  *
- * Variants:
- *  - size: 'xs' (compact chip for cards/lists), 'sm' (default), 'md' (profile header)
- *  - iconOnly: render only the icon (e.g. inline next to a title)
+ * Size scale:
+ *  - xs (lists/cards), sm (default), md (profile header)
  */
 
 type Size = 'xs' | 'sm' | 'md';
 
 interface VerifiedBadgeProps {
   size?: Size;
+  /** Deprecated — kept for API compatibility. Badge is always icon-only. */
   iconOnly?: boolean;
   className?: string;
 }
 
-const sizeStyles: Record<Size, { wrap: string; icon: string }> = {
-  xs: { wrap: 'px-1.5 py-0 h-4 text-[9px] gap-1', icon: 'w-2.5 h-2.5' },
-  sm: { wrap: 'px-2 py-0.5 text-[10px] gap-1', icon: 'w-3 h-3' },
-  md: { wrap: 'px-2.5 py-1 text-xs gap-1.5', icon: 'w-3.5 h-3.5' },
+const iconSize: Record<Size, string> = {
+  xs: 'w-3.5 h-3.5',
+  sm: 'w-4 h-4',
+  md: 'w-5 h-5',
 };
 
-export const VerifiedBadge = memo(({ size = 'sm', iconOnly = false, className }: VerifiedBadgeProps) => {
-  const { language, isRTL } = useLanguage();
-  const styles = sizeStyles[size];
-  const label = isRTL
-    ? (size === 'md' ? 'شركة موثقة' : 'موثقة')
-    : 'Verified';
-
-  if (iconOnly) {
-    return (
-      <ShieldCheck
-        aria-label={label}
-        className={cn('text-success dark:text-success shrink-0', styles.icon, className)}
-      />
-    );
-  }
-
+export const VerifiedBadge = memo(({ size = 'sm', className }: VerifiedBadgeProps) => {
+  const { isRTL } = useLanguage();
+  const label = isRTL ? 'موثقة' : 'Verified';
   return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-md font-body font-semibold border bg-success/10 text-success dark:text-success border-success/20',
-        styles.wrap,
-        className,
-      )}
-      lang={language}
-    >
-      <ShieldCheck className={styles.icon} />
-      {label}
+    <span title={label} aria-label={label} className="inline-flex shrink-0 items-center">
+      <BadgeCheck
+        aria-hidden="true"
+        className={cn(
+          'text-[#1D9BF0] dark:text-[#1D9BF0] fill-[#1D9BF0]/15',
+          iconSize[size],
+          className,
+        )}
+      />
     </span>
   );
 });

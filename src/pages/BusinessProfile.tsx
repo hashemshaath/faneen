@@ -56,7 +56,6 @@ import {
   useBranchBySlug,
 } from "@/components/business-profile/business-profile.data";
 import { useReviews, useCertifications, useAwards } from "@/components/business-profile/business-profile.data";
-import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
 import { ShareMenu } from "@/components/business-profile/ShareMenu";
@@ -430,13 +429,6 @@ const BusinessProfile = () => {
           activeOffersCount={activeOffersCount}
           topServices={services}
           selectedBranch={branch ?? null}
-        />
-
-        <BusinessProfileTrustStrip
-          isVerified={!!business.is_verified}
-          serviceCount={services.length}
-          projectCount={projects.length}
-          businessId={business.id}
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
