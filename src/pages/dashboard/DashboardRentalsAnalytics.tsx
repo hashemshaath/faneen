@@ -704,7 +704,7 @@ const DashboardRentalsAnalytics: React.FC = () => {
         <>
           {/* Alerts banner */}
           {alerts.length > 0 && !alertsMuted && (
-            <Card className="p-3 mb-4 rounded-xl border-l-4 border-l-amber-500 bg-amber-500/5 print:hidden">
+            <Card className="p-3 mb-4 rounded-xl border-s-4 border-s-amber-500 bg-amber-500/5 print:hidden">
               <div className="flex items-start gap-3">
                 <div className="size-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <AlertTriangle className="size-5" />
@@ -933,7 +933,7 @@ const DashboardRentalsAnalytics: React.FC = () => {
 
           {/* Inline interactive detail panel (no popup) */}
           {detail && detailData && (
-            <Card className="p-4 rounded-xl mt-4 border-l-4 border-l-primary/70 animate-in fade-in slide-in-from-bottom-2">
+            <Card className="p-4 rounded-xl mt-4 border-s-4 border-s-primary/70 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center justify-between mb-3 gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <Badge variant="secondary" className="rounded-full">
