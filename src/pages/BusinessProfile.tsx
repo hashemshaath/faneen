@@ -240,10 +240,19 @@ const BusinessProfile = () => {
       business?.logo_url ||
       ogImageFor(business?.username || 'business', {
         type: 'business',
-        title: businessName,
+        title: branch ? `${businessName} — ${getLocalizedValue(language, branch.name_ar, branch.name_en)}` : businessName,
         subtitle: [categoryName, cityName].filter(Boolean).join(' — ') || 'قِطاعات',
       }),
-    canonical: business ? `https://qitaat.com/${business.username}` : undefined,
+    ogImageAlt: branch
+      ? `${businessName} — ${getLocalizedValue(language, branch.name_ar, branch.name_en)}`
+      : businessName || undefined,
+    ogTitle: seoTitle,
+    ogDescription: seoDesc,
+    canonical: business
+      ? (branch && (branch as { slug?: string | null }).slug
+          ? `https://qitaat.com/${business.username}/${(branch as { slug: string }).slug}`
+          : `https://qitaat.com/${business.username}`)
+      : undefined,
     keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
