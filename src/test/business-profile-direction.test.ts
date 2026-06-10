@@ -65,7 +65,7 @@ describe('Business profile RTL/LTR direction hygiene', () => {
     expect(src).toMatch(/dir="ltr"[\s\S]{0,180}technical-ltr/);
     expect(src).toMatch(/<span dir="ltr" className="tech-content font-medium">\{username\}<\/span>/);
     expect(src).toMatch(/href=\{`tel:\$\{phone\}`\}/);
-    expect(src).toMatch(/dir="ltr"[\s\S]{0,220}technical-ltr[\s\S]{0,180}\{phone\}/);
+    expect(src).toMatch(/href=\{`tel:\$\{phone\}`\}[\s\S]*dir="ltr"[\s\S]*technical-ltr[\s\S]*\{phone\}/);
   });
 
   it('footer technical contact values are explicit LTR instead of inheriting RTL', () => {
