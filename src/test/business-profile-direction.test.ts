@@ -46,6 +46,8 @@ describe('Business profile RTL/LTR direction hygiene', () => {
   it('RFQ mixed timeline values are rendered as isolated LTR technical text', () => {
     const src = read('src/components/business-profile/RfqTab.tsx');
     expect(src).toMatch(/import \{ TechnicalText \} from "@\/components\/ui\/technical-text"/);
+    expect(src).toMatch(/MIXED_TIMELINE_VALUES/);
+    expect(src).toMatch(/timelineLabel\(form\.timeline\)/);
     expect(src).toMatch(/<TechnicalText mono=\{false\}>\{bi\("1–3 أشهر", "1–3 months"\)\}<\/TechnicalText>/);
     expect(src).toMatch(/<TechnicalText mono=\{false\}>\{bi\("3–6 أشهر", "3–6 months"\)\}<\/TechnicalText>/);
   });
