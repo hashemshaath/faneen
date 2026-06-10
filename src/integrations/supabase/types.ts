@@ -21618,6 +21618,10 @@ export type Database = {
         Args: { _business_id: string; _user_id: string }
         Returns: boolean
       }
+      is_public_business_profile: {
+        Args: { _business_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_valid_username: { Args: { _username: string }; Returns: Json }
       is_work_order_member: {
