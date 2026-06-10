@@ -102,7 +102,12 @@ export async function getRegistrationPrimaryActivities(): Promise<TaxonomyCatego
     getPublicTaxonomyCategoriesByType('primary_activity'),
     getPublicTaxonomyCategoriesByType('sector'),
   ]);
-  return [...primary, ...sector];
+  // Primaries must be top-level only — children of a sector are specialties,
+  // not primary activities. Without this filter, sub-categories that are
+  // also `show_in_registration=true` (e.g. cable subtypes) would surface
+  // as standalone primary activities and be detached from their parent.
+  const topLevel = (rows: TaxonomyCategory[]) => rows.filter((r) => !r.parent_id);
+  return [...topLevel(primary), ...topLevel(sector)];
 }
 
 /** Returns active children of a parent category (used for secondary activities). */
