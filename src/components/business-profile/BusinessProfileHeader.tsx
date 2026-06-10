@@ -93,6 +93,19 @@ interface BusinessProfileHeaderProps {
   branchCount: number;
   activeOffersCount?: number;
   topServices?: Array<{ name_ar: string; name_en?: string | null }>;
+  /**
+   * When the route is `/:username/:branchSlug`, the parent passes the
+   * resolved branch so the header can show "City — فرع X" plus the branch
+   * address. When undefined, the header renders the main business location.
+   */
+  selectedBranch?: {
+    name_ar: string;
+    name_en?: string | null;
+    region?: string | null;
+    district?: string | null;
+    address?: string | null;
+    is_main?: boolean | null;
+  } | null;
 }
 
 export const BusinessProfileHeader = ({
@@ -104,6 +117,7 @@ export const BusinessProfileHeader = ({
   branchCount,
   activeOffersCount = 0,
   topServices = [],
+  selectedBranch = null,
 }: BusinessProfileHeaderProps) => {
   const { user } = useAuth();
   const isOwner = !!user?.id && user.id === business?.user_id;
@@ -115,6 +129,12 @@ export const BusinessProfileHeader = ({
     business.short_description_en || business.description_en,
   );
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
+  const branchLabel = selectedBranch
+    ? getLocalizedValue(language, selectedBranch.name_ar, selectedBranch.name_en)
+    : '';
+  const branchAddressParts = selectedBranch
+    ? [selectedBranch.district, selectedBranch.region, selectedBranch.address].filter(Boolean)
+    : [];
   // Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
   // name is intentionally not used for display. When no modern taxonomy is
   // available we show a localized "Unclassified" label.
@@ -261,7 +281,11 @@ export const BusinessProfileHeader = ({
                     {cityName && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 text-accent" />
-                        <span dir="auto">{cityName}</span>
+                        <span dir="auto">
+                          {branchLabel
+                            ? `${cityName} — ${language === 'ar' ? (selectedBranch?.is_main ? 'المركز الرئيسي' : `فرع ${branchLabel}`) : (selectedBranch?.is_main ? 'Head office' : `${branchLabel} branch`)}`
+                            : cityName}
+                        </span>
                       </div>
                     )}
                     {business.contact_person && (
@@ -280,6 +304,13 @@ export const BusinessProfileHeader = ({
                       <span>{memberDate}</span>
                     </div>
                   </div>
+
+                  {selectedBranch && branchAddressParts.length > 0 && (
+                    <div className="mt-1.5 flex items-start gap-1 text-[11px] text-muted-foreground/90 sm:text-xs">
+                      <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-accent/60" />
+                      <span dir="auto">{branchAddressParts.join('، ')}</span>
+                    </div>
+                  )}
 
                   <BusinessIdentityStrip
                     business={business}

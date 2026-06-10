@@ -5,14 +5,12 @@ import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilder";
 import {
   CalendarClock,
-  ClipboardList,
-  FileSignature,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
   Inbox,
   LayoutDashboard,
-  MessageCircleQuestion,
+  MessageSquare,
   Phone,
   Shield,
   Star,
@@ -47,6 +45,7 @@ import {
   ReviewsTab,
   ServicesTab,
 } from "@/components/business-profile/BusinessProfileTabs";
+import { BusinessBranchSwitcher } from "@/components/business-profile/BusinessBranchSwitcher";
 import {
   useBranches,
   useBusinessByUsername,
@@ -73,12 +72,6 @@ import { track } from "@/lib/analytics-events";
 
 // Heavy / below-the-fold tabs + widgets are code-split so the initial
 // profile render only ships the Overview tab + Header chunks.
-const RfqTab = lazy(() =>
-  import("@/components/business-profile/RfqTab").then((m) => ({ default: m.RfqTab })),
-);
-const QATab = lazy(() =>
-  import("@/components/business-profile/QATab").then((m) => ({ default: m.QATab })),
-);
 const RequestsAsBeneficiaryTab = lazy(() =>
   import("@/components/business-profile/RequestsTab").then((m) => ({
     default: m.RequestsAsBeneficiaryTab,
@@ -388,11 +381,9 @@ const BusinessProfile = () => {
 
   const tabs = [
     { value: "overview", label: language === "ar" ? "نظرة عامة" : "Overview", icon: LayoutDashboard },
-    { value: "rfq", label: language === "ar" ? "طلب عرض سعر" : "Request quote", icon: ClipboardList },
     canSee("services") && services.length > 0 && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench, count: services.length },
     canSee("projects") && projects.length > 0 && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
     canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
-    { value: "qa", label: language === "ar" ? "أسئلة وأجوبة" : "Q&A", icon: MessageCircleQuestion },
     canSee("requests_as_beneficiary") && { value: "requests", label: language === "ar" ? "طلبات مطروحة" : "Public requests", icon: Inbox },
     canSee("branches") && branches.length > 0 && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
     canSee("reviews") && { value: "reviews", label: language === "ar" ? "التقييمات" : "Reviews", icon: Star, count: business.rating_count ?? 0 },
@@ -438,6 +429,7 @@ const BusinessProfile = () => {
           branchCount={branches.length}
           activeOffersCount={activeOffersCount}
           topServices={services}
+          selectedBranch={branch ?? null}
         />
 
         <BusinessProfileTrustStrip
@@ -448,8 +440,21 @@ const BusinessProfile = () => {
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
-          {/* Quick actions — share menu, favorites, booking */}
-          <div className="mb-4 flex items-center justify-end gap-2">
+          {/* Branch switcher — sits above the quick actions so visitors can
+              jump between the head office view and any specific branch
+              before drilling into tabs. */}
+          {business.username && (
+            <BusinessBranchSwitcher
+              username={business.username}
+              branches={branches as Array<{ id: string; slug?: string | null; name_ar: string; name_en?: string | null; region?: string | null; is_main?: boolean | null }>}
+              currentBranchSlug={branchSlug}
+            />
+          )}
+
+          {/* Quick actions — visit request, contact request, share. The
+              "Contact" icon button mirrors the branch-resolved phone so the
+              visitor always sees the right channel for the page they're on. */}
+          <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
             <ShareMenu
               businessId={business.id}
               businessName={businessName}
@@ -478,18 +483,46 @@ const BusinessProfile = () => {
               }}
             >
               <CalendarClock className="ic-sm" />
-              {language === "ar" ? "حجز موعد" : "Book appointment"}
+              {language === "ar" ? "طلب زيارة" : "Request visit"}
             </Button>
             <Button
               variant="default"
               size="app"
               className="gap-2"
-              onClick={() => setActiveTab("rfq")}
-              aria-label={language === "ar" ? "طلب عقد" : "Request a contract"}
+              onClick={() => handleContactClick("header_request_contact")}
+              aria-label={language === "ar" ? "طلب تواصل" : "Request contact"}
             >
-              <FileSignature className="ic-sm" />
-              {language === "ar" ? "طلب عقد" : "Request contract"}
+              <MessageSquare className="ic-sm" />
+              {language === "ar" ? "طلب تواصل" : "Request contact"}
             </Button>
+            {/* Direct contact — uses the branch-resolved phone when a branch
+                is selected, falling back to the main business phone. Guests
+                hit the lead-capture sheet; authenticated users get a real
+                tel: link with reveal tracking. */}
+            {(business.phone || business.mobile) && (
+              user ? (
+                <a
+                  href={`tel:${business.phone || business.mobile}`}
+                  onClick={() => handleContactReveal("phone")}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 text-xs font-medium text-foreground hover:border-accent/40 hover:text-accent sm:text-sm"
+                  aria-label={language === "ar" ? "اتصال مباشر" : "Call directly"}
+                >
+                  <Phone className="ic-sm" />
+                  {language === "ar" ? "اتصل" : "Call"}
+                </a>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="app"
+                  className="gap-2"
+                  onClick={() => handleContactClick("header_call_intent")}
+                  aria-label={language === "ar" ? "اتصال" : "Call"}
+                >
+                  <Phone className="ic-sm" />
+                  {language === "ar" ? "اتصل" : "Call"}
+                </Button>
+              )
+            )}
           </div>
 
           <section
@@ -533,21 +566,6 @@ const BusinessProfile = () => {
               <div className="mt-3 rounded-2xl bg-background/70 p-1.5 sm:mt-6 sm:rounded-3xl sm:p-3">
                 <TabsContent value="overview" className="mt-0">
                   <OverviewTab business={business} onJumpToTab={setActiveTab} />
-                </TabsContent>
-                <TabsContent value="rfq" className="mt-0">
-                  <Suspense fallback={<TabFallback />}>
-                    <RfqTab
-                      businessId={business.id}
-                      businessName={businessName}
-                      sector={(business.categories as { slug?: string } | null)?.slug || categoryName || "other"}
-                      city={cityName || (business.cities as { name_ar?: string } | null)?.name_ar || "—"}
-                    />
-                  </Suspense>
-                </TabsContent>
-                <TabsContent value="qa" className="mt-0">
-                  <Suspense fallback={<TabFallback />}>
-                    <QATab businessId={business.id} businessName={businessName} />
-                  </Suspense>
                 </TabsContent>
                 {canSee("services") && (
                   <TabsContent value="services" className="mt-0">
