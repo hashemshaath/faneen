@@ -105,14 +105,30 @@ const BusinessProfile = () => {
   const [contactSheetOpen, setContactSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const { data: businessRow, isLoading, error } = useBusinessByUsername(username || "");
-  const { data: branch } = useBranchBySlug(businessRow?.id, branchSlug);
+  const { data: branchFromUrl } = useBranchBySlug(businessRow?.id, branchSlug);
+  // Branch selection lives in local state so switching between branches
+  // updates the page in-place without changing the route or remounting.
+  // The URL is still kept in sync via `history.replaceState` from the
+  // switcher so the page stays shareable/refreshable.
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  // Seed selection from the URL on first load (deep-link to /:username/:branchSlug).
+  useEffect(() => {
+    if (branchFromUrl?.id) setSelectedBranchId((prev) => prev ?? branchFromUrl.id);
+  }, [branchFromUrl?.id]);
+  const { data: branchesList = [] } = useBranches(businessRow?.id);
+  // Resolve the active branch from the locally selected id, falling back to
+  // the URL-resolved branch while the branches list is still loading.
+  const branch = useMemo(() => {
+    if (!selectedBranchId) return null;
+    return branchesList.find((b) => b.id === selectedBranchId) ?? branchFromUrl ?? null;
+  }, [selectedBranchId, branchesList, branchFromUrl]);
 
   // When viewing `/:username/:branchSlug`, swap the contact/location fields
   // on the business row with the selected branch's values. The screen
   // (header, tabs, layout) stays identical — only the data changes.
   const business = useMemo(() => {
     if (!businessRow) return businessRow;
-    if (!branchSlug || !branch) return businessRow;
+    if (!branch) return businessRow;
     return {
       ...businessRow,
       phone: branch.phone ?? businessRow.phone ?? null,
