@@ -27,6 +27,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
 import { cn } from "@/lib/utils";
 import { maskPhone, maskEmail } from "@/lib/masking";
+import { fmtNum } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { recordPortfolioView } from "@/modules/portfolio/views";
 import {
@@ -151,20 +152,20 @@ export const ServicesTab = ({
                   <Wrench className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="mb-1 line-clamp-2 font-heading text-[13px] font-bold text-foreground leading-tight sm:text-base">{name}</h3>
+                  <h3 dir="auto" className="mb-1 line-clamp-2 font-heading text-[13px] font-bold text-foreground leading-tight sm:text-base">{name}</h3>
                   {description && (
-                    <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground sm:mb-3 sm:text-sm">
+                    <p dir="auto" className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground sm:mb-3 sm:text-sm">
                       {description}
                     </p>
                   )}
 
                   {(service.price_from || service.price_to) && (
-                    <div className="inline-flex items-center gap-1 rounded-md bg-accent/5 px-2 py-1 text-[11px] dark:bg-accent/10 sm:gap-1.5 sm:rounded-lg sm:px-2.5 sm:py-1.5 sm:text-sm">
+                    <div dir="ltr" className="inline-flex items-center gap-1 rounded-md bg-accent/5 px-2 py-1 text-[11px] dark:bg-accent/10 sm:gap-1.5 sm:rounded-lg sm:px-2.5 sm:py-1.5 sm:text-sm">
                       <DollarSign className="h-3 w-3 text-accent sm:h-3.5 sm:w-3.5" />
                       <span className="tech-content font-semibold text-foreground">
-                        {service.price_from && service.price_from.toLocaleString()}
+                        {service.price_from ? fmtNum(Number(service.price_from)) : ""}
                         {service.price_from && service.price_to && " - "}
-                        {service.price_to && service.price_to.toLocaleString()}
+                        {service.price_to ? fmtNum(Number(service.price_to)) : ""}
                       </span>
                       <span className="tech-content text-[10px] text-muted-foreground">{service.currency_code}</span>
                     </div>
@@ -245,11 +246,11 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
               </div>
 
               <div className="space-y-1.5 p-2.5 sm:space-y-2 sm:p-4">
-                <h3 className="line-clamp-2 font-heading text-[12px] font-bold text-foreground leading-tight transition-colors group-hover:text-accent sm:text-sm">
+                <h3 dir="auto" className="line-clamp-2 font-heading text-[12px] font-bold text-foreground leading-tight transition-colors group-hover:text-accent sm:text-sm">
                   {title}
                 </h3>
                 {description && (
-                  <p className="hidden line-clamp-2 text-[10px] leading-relaxed text-muted-foreground sm:block sm:text-xs">
+                  <p dir="auto" className="hidden line-clamp-2 text-[10px] leading-relaxed text-muted-foreground sm:block sm:text-xs">
                     {description}
                   </p>
                 )}
@@ -258,7 +259,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
                     {cityName && (
                       <span className="flex items-center gap-0.5 truncate">
                         <MapPin className="h-2.5 w-2.5 text-accent/50" />
-                        <span className="truncate">{cityName}</span>
+                        <span dir="auto" className="truncate">{cityName}</span>
                       </span>
                     )}
                     {project.duration_days && (
@@ -270,8 +271,8 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
                     )}
                   </div>
                   {project.project_cost && (
-                    <span className="tech-content shrink-0 text-[10px] font-semibold text-accent sm:text-xs">
-                      {project.project_cost.toLocaleString()} {project.currency_code}
+                    <span dir="ltr" className="tech-content shrink-0 text-[10px] font-semibold text-accent sm:text-xs">
+                      {fmtNum(Number(project.project_cost))} {project.currency_code}
                     </span>
                   )}
                 </div>
@@ -710,12 +711,13 @@ export const BranchesTab = ({
                     {branch.slug && businessUsername ? (
                       <Link
                         to={`/${businessUsername}/${branch.slug}`}
+                        dir="auto"
                         className="truncate font-heading text-sm font-bold text-foreground hover:text-accent transition sm:text-base"
                       >
                         {name}
                       </Link>
                     ) : (
-                      <h3 className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
+                      <h3 dir="auto" className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
                     )}
                     {branch.is_main && (
                       <Badge className="shrink-0 border-accent/30 bg-accent/10 text-[10px] text-accent">
@@ -729,7 +731,7 @@ export const BranchesTab = ({
               {addressParts.length > 0 && (
                 <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
                   <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent/50" />
-                  <span>{addressParts.join("، ")}</span>
+                  <span dir="auto">{addressParts.join("، ")}</span>
                 </div>
               )}
             </div>
@@ -760,7 +762,7 @@ export const BranchesTab = ({
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] text-muted-foreground/70">{item.label}</p>
                         <p
-                          dir={item.dir || undefined}
+                          dir={item.dir || "auto"}
                           className={cn(
                             "truncate text-xs font-medium text-foreground sm:text-sm",
                             item.dir && "tech-content",
@@ -917,7 +919,7 @@ export const ContactTab = ({
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] text-muted-foreground sm:text-xs">{item.label}</p>
                 <p
-                  dir={item.dir || undefined}
+                  dir={item.dir || "auto"}
                   className={cn("truncate text-sm font-medium text-foreground", item.dir && "tech-content")}
                 >
                   {item.value}
@@ -935,9 +937,9 @@ export const ContactTab = ({
           {language === "ar" ? "الموقع" : "Location"}
         </h3>
         <div className="mb-3 space-y-2 text-xs text-muted-foreground sm:text-sm">
-          {addressParts.length > 0 && <p>{addressParts.join("، ")}</p>}
-          {business.address && <p>{business.address}</p>}
-          {(cityName || countryName) && <p>{[cityName, countryName].filter(Boolean).join("، ")}</p>}
+          {addressParts.length > 0 && <p dir="auto">{addressParts.join("، ")}</p>}
+          {business.address && <p dir="auto">{business.address}</p>}
+          {(cityName || countryName) && <p dir="auto">{[cityName, countryName].filter(Boolean).join("، ")}</p>}
           {/* national_id removed from public view for security */}
           {business.additional_number && (
             <p className="flex items-center gap-1.5">

@@ -15,6 +15,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue } from "@/lib/direction";
 import { useBi } from "@/components/common/Bilingual";
+import { fmtNum } from "@/lib/format";
 import { Stars } from "./BusinessProfileHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -123,7 +124,7 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
       <section className="rounded-2xl border border-border/40 bg-card p-4 dark:border-border/20 sm:p-5 lg:col-span-2">
         <SectionTitle icon={Building2} title={bi("نبذة عن الجهة", "About this provider")} />
         {desc ? (
-          <p className="text-sm leading-relaxed text-muted-foreground sm:text-[15px]">{desc}</p>
+          <p dir="auto" className="text-sm leading-relaxed text-muted-foreground sm:text-[15px]">{desc}</p>
         ) : (
           <p className="text-sm italic text-muted-foreground/70">
             {bi("لم تُضف الجهة وصفاً بعد.", "This provider hasn't added a description yet.")}
@@ -143,7 +144,7 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
             <dt className="text-[10px] text-muted-foreground sm:text-[11px]">
               {bi("التصنيف", "Sector")}
             </dt>
-            <dd className="mt-0.5 truncate font-heading text-sm font-semibold text-foreground sm:text-base">
+            <dd dir="auto" className="mt-0.5 truncate font-heading text-sm font-semibold text-foreground sm:text-base">
               {categoryName}
             </dd>
           </div>
@@ -151,7 +152,7 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
             <dt className="text-[10px] text-muted-foreground sm:text-[11px]">
               {bi("المقر الرئيسي", "Head office")}
             </dt>
-            <dd className="mt-0.5 truncate font-heading text-sm font-semibold text-foreground sm:text-base">
+            <dd dir="auto" className="mt-0.5 truncate font-heading text-sm font-semibold text-foreground sm:text-base">
               {cityName || "—"}
             </dd>
           </div>
@@ -331,19 +332,19 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
                   <div className="flex items-start gap-2">
                     <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
                     <div className="min-w-0">
-                      <h4 className="line-clamp-1 font-heading text-[13px] font-semibold text-foreground">
+                      <h4 dir="auto" className="line-clamp-1 font-heading text-[13px] font-semibold text-foreground">
                         {name}
                       </h4>
                       {description && (
-                        <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                        <p dir="auto" className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
                           {description}
                         </p>
                       )}
                       {(s.price_from || s.price_to) && (
-                        <p className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-accent tech-content">
-                          {s.price_from?.toLocaleString()}
+                        <p dir="ltr" className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-accent tech-content">
+                          {s.price_from != null ? fmtNum(Number(s.price_from)) : ""}
                           {s.price_from && s.price_to ? " - " : ""}
-                          {s.price_to?.toLocaleString()} {s.currency_code}
+                          {s.price_to != null ? fmtNum(Number(s.price_to)) : ""} {s.currency_code}
                         </p>
                       )}
                     </div>
@@ -413,7 +414,7 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
                     )}
                   </div>
                   <div className="p-2">
-                    <h4 className="line-clamp-2 font-heading text-[12px] font-semibold text-foreground group-hover:text-accent">
+                    <h4 dir="auto" className="line-clamp-2 font-heading text-[12px] font-semibold text-foreground group-hover:text-accent">
                       {title}
                     </h4>
                   </div>
@@ -431,13 +432,13 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
           {cityName && (
             <li className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-accent" />
-              <span>{cityName}</span>
+              <span dir="auto">{cityName}</span>
             </li>
           )}
           {business.address && (
             <li className="flex items-start gap-2 text-muted-foreground">
               <Building2 className="mt-0.5 h-3.5 w-3.5 text-accent" />
-              <span className="line-clamp-2">{business.address}</span>
+              <span dir="auto" className="line-clamp-2">{business.address}</span>
             </li>
           )}
           <li className="flex items-center gap-2 text-muted-foreground">
@@ -498,7 +499,7 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    <p className="line-clamp-1 text-[10px] text-white">{title}</p>
+                    <p dir="auto" className="line-clamp-1 text-[10px] text-white">{title}</p>
                   </div>
                 </button>
               );
