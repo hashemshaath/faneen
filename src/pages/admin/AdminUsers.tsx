@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { pickBi } from '@/components/common/Bilingual';
 import { CrQuickScanInline } from '@/components/admin/CrQuickScanInline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -130,7 +131,7 @@ function friendlyFor(field: 'username' | 'email' | 'phone', code: string, isRTL:
     'phone:invalid': 'Phone is invalid or already in use',
   };
   const key = `${field}:${code}`;
-  return (isRTL ? ar[key] : en[key]) ?? (isRTL ? 'تعذّر الحفظ' : 'Could not save');
+  return (isRTL ? ar[key] : en[key]) ?? (pickBi(isRTL, 'تعذّر الحفظ', 'Could not save'));
 }
 import type { NormalizedRpcError } from '@/services/rpc';
 
@@ -199,24 +200,24 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
 };
 
 const formatRelative = (dateStr: string | null | undefined, isRTL: boolean): string => {
-  if (!dateStr) return isRTL ? 'غير محدد' : 'N/A';
-  const d = new Date(dateStr); if (isNaN(d.getTime())) return isRTL ? 'غير محدد' : 'N/A';
+  if (!dateStr) return pickBi(isRTL, 'غير محدد', 'N/A');
+  const d = new Date(dateStr); if (isNaN(d.getTime())) return pickBi(isRTL, 'غير محدد', 'N/A');
   const diff = (Date.now() - d.getTime()) / 1000;
-  if (diff < 60) return isRTL ? 'الآن' : 'now';
+  if (diff < 60) return pickBi(isRTL, 'الآن', 'now');
   if (diff < 3600) return isRTL ? `منذ ${Math.floor(diff/60)} د` : `${Math.floor(diff/60)}m ago`;
   if (diff < 86400) return isRTL ? `منذ ${Math.floor(diff/3600)} س` : `${Math.floor(diff/3600)}h ago`;
   if (diff < 86400*30) return isRTL ? `منذ ${Math.floor(diff/86400)} يوم` : `${Math.floor(diff/86400)}d ago`;
-  return formatDate(dateStr, isRTL ? 'ar' : 'en');
+  return formatDate(dateStr, pickBi(isRTL, 'ar', 'en'));
 };
 
 const getPasswordValidationMessage = (password: string, isRTL: boolean): string | null => {
   if (!password) return null;
-  if (password.length < 8) return isRTL ? 'كلمة المرور يجب أن تكون 8 حروف على الأقل' : 'Password must be at least 8 characters';
-  if (/\s/.test(password)) return isRTL ? 'كلمة المرور يجب ألا تحتوي على مسافات' : 'Password must not contain spaces';
+  if (password.length < 8) return pickBi(isRTL, 'كلمة المرور يجب أن تكون 8 حروف على الأقل', 'Password must be at least 8 characters');
+  if (/\s/.test(password)) return pickBi(isRTL, 'كلمة المرور يجب ألا تحتوي على مسافات', 'Password must not contain spaces');
   const cnt = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9\s]/].filter(r => r.test(password)).length;
-  if (cnt < 3) return isRTL ? 'استخدم 3 أنواع على الأقل: كبيرة، صغيرة، أرقام، رموز' : 'Use at least 3 of: upper, lower, numbers, symbols';
+  if (cnt < 3) return pickBi(isRTL, 'استخدم 3 أنواع على الأقل: كبيرة، صغيرة، أرقام، رموز', 'Use at least 3 of: upper, lower, numbers, symbols');
   if (['password', 'qwerty', 'admin', '123456', 'qitaat'].some(w => password.toLowerCase().includes(w)))
-    return isRTL ? 'تجنب الكلمات الشائعة' : 'Avoid common words';
+    return pickBi(isRTL, 'تجنب الكلمات الشائعة', 'Avoid common words');
   return null;
 };
 
@@ -288,10 +289,10 @@ const UserDetailPanel = React.memo(({
   if (isLoading) return <div className="px-4 pb-4"><Skeleton className="h-20 rounded-xl" /></div>;
   if (!data) return null;
   const stats = [
-    { label: isRTL ? 'العقود' : 'Contracts', val: data.contracts, icon: FileText, color: 'text-info bg-info/10' },
-    { label: isRTL ? 'الرسائل' : 'Messages', val: data.messages, icon: MessageSquare, color: 'text-success bg-success/10' },
-    { label: isRTL ? 'التقييمات' : 'Reviews', val: data.reviews, icon: Star, color: 'text-warning bg-warning/10' },
-    { label: isRTL ? 'الطلبات' : 'Requests', val: data.leadRequests.length, icon: Inbox, color: 'text-accent bg-accent/10' },
+    { label: pickBi(isRTL, 'العقود', 'Contracts'), val: data.contracts, icon: FileText, color: 'text-info bg-info/10' },
+    { label: pickBi(isRTL, 'الرسائل', 'Messages'), val: data.messages, icon: MessageSquare, color: 'text-success bg-success/10' },
+    { label: pickBi(isRTL, 'التقييمات', 'Reviews'), val: data.reviews, icon: Star, color: 'text-warning bg-warning/10' },
+    { label: pickBi(isRTL, 'الطلبات', 'Requests'), val: data.leadRequests.length, icon: Inbox, color: 'text-accent bg-accent/10' },
   ];
   const officialEmail = profile.email && !isSyntheticPhoneEmail(profile.email) ? profile.email : null;
   return (
@@ -300,20 +301,20 @@ const UserDetailPanel = React.memo(({
       <div>
         <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
           <Users className="w-3 h-3" />
-          {isRTL ? 'بيانات الحساب' : 'Account info'}
+          {pickBi(isRTL, 'بيانات الحساب', 'Account info')}
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
           <div className="rounded-lg bg-card border border-border/30 p-2">
-            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الرسمي' : 'Official email'}</p>
+            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Mail className="w-3 h-3" />{pickBi(isRTL, 'البريد الرسمي', 'Official email')}</p>
             <p className="font-medium break-all tech-content">{officialEmail || '—'}</p>
           </div>
           <div className="rounded-lg bg-card border border-border/30 p-2">
-            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Phone className="w-3 h-3" />{isRTL ? 'الهاتف' : 'Phone'}</p>
+            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Phone className="w-3 h-3" />{pickBi(isRTL, 'الهاتف', 'Phone')}</p>
             <p className="font-medium tech-content">{profile.phone || '—'}</p>
           </div>
           <div className="rounded-lg bg-card border border-border/30 p-2">
-            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Calendar className="w-3 h-3" />{isRTL ? 'تاريخ التسجيل' : 'Joined'}</p>
-            <p className="font-medium tech-content">{new Date(profile.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</p>
+            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Calendar className="w-3 h-3" />{pickBi(isRTL, 'تاريخ التسجيل', 'Joined')}</p>
+            <p className="font-medium tech-content">{new Date(profile.created_at).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en'))}</p>
           </div>
         </div>
       </div>
@@ -340,7 +341,7 @@ const UserDetailPanel = React.memo(({
                 </span>
                 <span className="font-mono tech-content text-success shrink-0">{b.business_ref_id ?? '—'}</span>
                 <Badge variant="outline" className="text-[9px] px-1 py-0">{b.role}</Badge>
-                {b.is_primary_manager && <Badge variant="outline" className="text-[9px] border-accent/40 text-accent px-1 py-0">{isRTL ? 'رئيسي' : 'Primary'}</Badge>}
+                {b.is_primary_manager && <Badge variant="outline" className="text-[9px] border-accent/40 text-accent px-1 py-0">{pickBi(isRTL, 'رئيسي', 'Primary')}</Badge>}
                 {b.is_verified && <Check className="w-3 h-3 text-success" />}
                 {b.business_username && (
                   <Button asChild size="icon" variant="ghost" className="h-6 w-6 rounded-md">
@@ -372,16 +373,16 @@ const UserDetailPanel = React.memo(({
                   <span className="font-mono tech-content text-success shrink-0">{link.business.ref_id}</span>
                   {!link.isActive && (
                     <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed px-1 py-0">
-                      {isRTL ? 'غير نشط' : 'inactive'}
+                      {pickBi(isRTL, 'غير نشط', 'inactive')}
                     </Badge>
                   )}
                   {isSuperAdmin && !lockedOwner && link.staffId ? (
                     <Select value={link.role} onValueChange={(v) => onChangeStaffRole(link, v as StaffRole)}>
                       <SelectTrigger className="h-7 w-24 text-[10px] rounded-lg"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="manager">{isRTL ? 'مدير' : 'Manager'}</SelectItem>
-                        <SelectItem value="editor">{isRTL ? 'محرر' : 'Editor'}</SelectItem>
-                        <SelectItem value="viewer">{isRTL ? 'مشاهد' : 'Viewer'}</SelectItem>
+                        <SelectItem value="manager">{pickBi(isRTL, 'مدير', 'Manager')}</SelectItem>
+                        <SelectItem value="editor">{pickBi(isRTL, 'محرر', 'Editor')}</SelectItem>
+                        <SelectItem value="viewer">{pickBi(isRTL, 'مشاهد', 'Viewer')}</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
@@ -392,7 +393,7 @@ const UserDetailPanel = React.memo(({
                   {isSuperAdmin && !lockedOwner && link.staffId && (
                     <button
                       onClick={() => onRemoveStaff(link)}
-                      title={isRTL ? 'إزالة الصلاحية' : 'Remove access'}
+                      title={pickBi(isRTL, 'إزالة الصلاحية', 'Remove access')}
                       className="p-1 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       <X className="w-3 h-3" />
@@ -419,7 +420,7 @@ const UserDetailPanel = React.memo(({
                 {c.total_amount != null && (
                   <span className="tech-content text-muted-foreground shrink-0">{c.total_amount} {c.currency ?? 'SAR'}</span>
                 )}
-                <span className="text-muted-foreground shrink-0 tech-content">{new Date(c.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</span>
+                <span className="text-muted-foreground shrink-0 tech-content">{new Date(c.created_at).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en'))}</span>
               </div>
             ))}
           </div>
@@ -435,9 +436,9 @@ const UserDetailPanel = React.memo(({
             {data.leadRequests.map((l) => (
               <div key={l.id} className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
                 <Inbox className="w-3 h-3 text-warning shrink-0" />
-                <span className="truncate flex-1 font-medium">{l.name || l.subject || (isRTL ? 'طلب' : 'Request')}</span>
+                <span className="truncate flex-1 font-medium">{l.name || l.subject || (pickBi(isRTL, 'طلب', 'Request'))}</span>
                 <Badge variant="outline" className="text-[9px] px-1 py-0">{l.status ?? '—'}</Badge>
-                <span className="text-muted-foreground shrink-0 tech-content">{new Date(l.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</span>
+                <span className="text-muted-foreground shrink-0 tech-content">{new Date(l.created_at).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en'))}</span>
               </div>
             ))}
           </div>
@@ -445,7 +446,7 @@ const UserDetailPanel = React.memo(({
       )}
       {data.recentActivity.length > 0 && (
         <div>
-          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="w-3 h-3" />{isRTL ? 'آخر نشاط إداري' : 'Recent Admin Activity'}</p>
+          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="w-3 h-3" />{pickBi(isRTL, 'آخر نشاط إداري', 'Recent Admin Activity')}</p>
           <div className="space-y-1">
             {data.recentActivity.map((a, i) => (
               <div key={i} className="flex items-center gap-2 text-[11px] rounded-lg bg-background/50 px-2 py-1.5">
@@ -509,14 +510,12 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
 
   const handleCopy = useCallback((value: string, label: string) => {
     if (!isSuperAdmin && (label.includes('بريد') || label.toLowerCase().includes('email') || label.includes('هاتف') || label.toLowerCase().includes('phone'))) {
-      toast.error(isRTL
-        ? 'هذه البيانات الحساسة متاحة فقط لمدير النظام (Super Admin).'
-        : 'This sensitive data is only available to Super Admins.');
+      toast.error(pickBi(isRTL, 'هذه البيانات الحساسة متاحة فقط لمدير النظام (Super Admin).', 'This sensitive data is only available to Super Admins.'));
       return;
     }
     navigator.clipboard?.writeText(value).then(
       () => toast.success(isRTL ? `تم نسخ ${label}` : `${label} copied`),
-      () => toast.error(isRTL ? 'فشل النسخ' : 'Copy failed'),
+      () => toast.error(pickBi(isRTL, 'فشل النسخ', 'Copy failed')),
     );
   }, [isRTL, isSuperAdmin]);
 
@@ -543,10 +542,10 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <button onClick={onToggleExpand} className="font-heading font-bold text-sm hover:text-accent transition-colors text-start truncate">
-                {profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+                {profile.full_name || (pickBi(isRTL, 'بدون اسم', 'No name'))}
               </button>
-              {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>}
-              {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>}
+              {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{pickBi(isRTL, 'أنت', 'You')}</Badge>}
+              {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{pickBi(isRTL, 'معطّل', 'Disabled')}</Badge>}
               {!compact && (
                 <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
                   <Clock className="w-2.5 h-2.5" />{formatRelative(profile.updated_at, isRTL)}
@@ -556,9 +555,9 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
             {!compact && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
               {displayedEmail && officialEmail && (
-                <button onClick={() => handleCopy(officialEmail, isRTL ? 'البريد' : 'Email')}
+                <button onClick={() => handleCopy(officialEmail, pickBi(isRTL, 'البريد', 'Email'))}
                   className={`flex items-center gap-1 text-[11px] truncate max-w-[200px] transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
-                  title={canSeePII ? (isRTL ? 'نسخ البريد' : 'Copy email') : (isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only')}>
+                  title={canSeePII ? (pickBi(isRTL, 'نسخ البريد', 'Copy email')) : (pickBi(isRTL, 'متاح فقط لمدير النظام', 'Super Admin only'))}>
                   <Mail className="w-3 h-3 shrink-0" />
                   <span className="truncate">{displayedEmail}</span>
                   {canSeePII
@@ -567,9 +566,9 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 </button>
               )}
               {displayedPhone && (
-                <button onClick={() => handleCopy(profile.phone!, isRTL ? 'الهاتف' : 'Phone')}
+                <button onClick={() => handleCopy(profile.phone!, pickBi(isRTL, 'الهاتف', 'Phone'))}
                   className={`flex items-center gap-1 text-[11px] tech-content transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
-                  title={canSeePII ? (isRTL ? 'نسخ الهاتف' : 'Copy phone') : (isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only')}>
+                  title={canSeePII ? (pickBi(isRTL, 'نسخ الهاتف', 'Copy phone')) : (pickBi(isRTL, 'متاح فقط لمدير النظام', 'Super Admin only'))}>
                   <Phone className="w-3 h-3 shrink-0" />{displayedPhone}
                   {canSeePII
                     ? <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
@@ -585,8 +584,8 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 <AccIcon className="w-2.5 h-2.5" />{isRTL ? accType.labelAr : accType.labelEn}
               </Badge>
               {profile.ref_id && (
-                <button onClick={() => handleCopy(profile.ref_id, isRTL ? 'المعرّف' : 'Ref ID')}
-                  title={isRTL ? 'نسخ المعرّف' : 'Copy Ref ID'}
+                <button onClick={() => handleCopy(profile.ref_id, pickBi(isRTL, 'المعرّف', 'Ref ID'))}
+                  title={pickBi(isRTL, 'نسخ المعرّف', 'Copy Ref ID')}
                   className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0 rounded-md border border-border/40 font-mono tech-content text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors">
                   <Hash className="w-2.5 h-2.5" />{profile.ref_id}
                 </button>
@@ -606,7 +605,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 );
               })}
               {roles.length === 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed"><Shield className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'عضو عادي' : 'Member'}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed"><Shield className="w-2.5 h-2.5 me-0.5" />{pickBi(isRTL, 'عضو عادي', 'Member')}</Badge>
               )}
             </div>
             {businessLinks.length > 0 && (
@@ -644,42 +643,42 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={onToggleExpand}>
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
-            </TooltipTrigger><TooltipContent>{isRTL ? 'التفاصيل' : 'Details'}</TooltipContent></Tooltip>
+            </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'التفاصيل', 'Details')}</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)}>
                 <Pencil className="w-4 h-4" />
               </Button>
-            </TooltipTrigger><TooltipContent>{isRTL ? 'تعديل' : 'Edit'}</TooltipContent></Tooltip>
+            </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'تعديل', 'Edit')}</TooltipContent></Tooltip>
             {canManageUser && isSuperAdmin && (
               <Tooltip><TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onPassword(profile)}>
                   <KeyRound className="w-4 h-4" />
                 </Button>
-              </TooltipTrigger><TooltipContent>{isRTL ? 'كلمة المرور' : 'Password'}</TooltipContent></Tooltip>
+              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'كلمة المرور', 'Password')}</TooltipContent></Tooltip>
             )}
             {canManageUser && (
               <Tooltip><TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-success' : 'text-warning'}`} onClick={() => onToggleBan(profile)}>
                   {isBanned ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
                 </Button>
-              </TooltipTrigger><TooltipContent>{isBanned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}</TooltipContent></Tooltip>
+              </TooltipTrigger><TooltipContent>{isBanned ? (pickBi(isRTL, 'تفعيل', 'Enable')) : (pickBi(isRTL, 'تعطيل', 'Disable'))}</TooltipContent></Tooltip>
             )}
             {canManageUser && (
               <Tooltip><TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => onDelete(profile)}>
                   <UserX className="w-4 h-4" />
                 </Button>
-              </TooltipTrigger><TooltipContent>{isRTL ? 'حذف' : 'Delete'}</TooltipContent></Tooltip>
+              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'حذف', 'Delete')}</TooltipContent></Tooltip>
             )}
             {isSuperAdmin && (addingRole ? (
               <div className="flex items-center gap-1">
                 <Select value={pickedRole} onValueChange={setPickedRole}>
                   <SelectTrigger className="h-8 w-28 text-xs rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
-                    <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
-                    <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
-                    <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
+                    <SelectItem value="super_admin">{pickBi(isRTL, 'مشرف أعلى', 'Super Admin')}</SelectItem>
+                    <SelectItem value="admin">{pickBi(isRTL, 'مشرف', 'Admin')}</SelectItem>
+                    <SelectItem value="moderator">{pickBi(isRTL, 'مشرف محتوى', 'Moderator')}</SelectItem>
+                    <SelectItem value="user">{pickBi(isRTL, 'مستخدم', 'User')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button size="sm" className="h-8 w-8 p-0 rounded-xl" onClick={() => { onAddRole(profile.user_id, pickedRole); setAddingRole(false); }}>
@@ -694,7 +693,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => setAddingRole(true)}>
                   <UserPlus className="w-4 h-4" />
                 </Button>
-              </TooltipTrigger><TooltipContent>{isRTL ? 'إضافة صلاحية' : 'Add Role'}</TooltipContent></Tooltip>
+              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'إضافة صلاحية', 'Add Role')}</TooltipContent></Tooltip>
             ))}
           </TooltipProvider>
         </div>
@@ -905,9 +904,9 @@ const AdminUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
       queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
       closePanel();
-      toast.success(isRTL ? 'تم إنشاء المستخدم' : 'User created');
+      toast.success(pickBi(isRTL, 'تم إنشاء المستخدم', 'User created'));
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإنشاء' : 'Failed to create')),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل الإنشاء', 'Failed to create'))),
   });
 
   // Keyboard shortcuts: ⌘K / Ctrl+K to focus search, Esc to clear panel/selection
@@ -956,7 +955,7 @@ const AdminUsers = () => {
     const target = profiles.find(p => p.user_id === pending);
     sessionStorage.removeItem('qitaat_admin_users_pending_focus');
     if (!target) {
-      toast.error(isRTL ? 'المستخدم غير موجود في القائمة' : 'User not found in list');
+      toast.error(pickBi(isRTL, 'المستخدم غير موجود في القائمة', 'User not found in list'));
       return;
     }
     setTab('users');
@@ -1068,14 +1067,14 @@ const AdminUsers = () => {
     onSuccess: (_d, v) => {
       void logAdminActivity({ action: 'user.role.grant', entityType: 'profile', entityId: v.userId, details: { role: v.role } });
       queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
-      toast.success(isRTL ? 'تم إضافة الصلاحية' : 'Role added');
+      toast.success(pickBi(isRTL, 'تم إضافة الصلاحية', 'Role added'));
     },
     onError: (err: unknown) => {
       const code = (err as { normalized?: NormalizedRpcError })?.normalized?.code;
       toast.error(
         code === 'DUPLICATE_KEY'
-          ? (isRTL ? 'الصلاحية موجودة' : 'Role exists')
-          : (isRTL ? 'فشل إضافة الصلاحية' : 'Failed to add role')
+          ? (pickBi(isRTL, 'الصلاحية موجودة', 'Role exists'))
+          : (pickBi(isRTL, 'فشل إضافة الصلاحية', 'Failed to add role'))
       );
     },
   });
@@ -1085,9 +1084,9 @@ const AdminUsers = () => {
     onSuccess: (_d, id) => {
       void logAdminActivity({ action: 'user.role.revoke', entityType: 'user_roles', entityId: id });
       queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
-      toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed');
+      toast.success(pickBi(isRTL, 'تم إزالة الصلاحية', 'Role removed'));
     },
-    onError: () => toast.error(isRTL ? 'فشل الإزالة' : 'Failed to remove'),
+    onError: () => toast.error(pickBi(isRTL, 'فشل الإزالة', 'Failed to remove')),
   });
 
   const updateStaffRoleMutation = useMutation({
@@ -1096,9 +1095,9 @@ const AdminUsers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
-      toast.success(isRTL ? 'تم تحديث الصلاحية' : 'Permission updated');
+      toast.success(pickBi(isRTL, 'تم تحديث الصلاحية', 'Permission updated'));
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التحديث' : 'Failed to update')),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل التحديث', 'Failed to update'))),
   });
 
   const removeStaffMutation = useMutation({
@@ -1107,9 +1106,9 @@ const AdminUsers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
-      toast.success(isRTL ? 'تمت الإزالة من المنشأة' : 'Removed from business');
+      toast.success(pickBi(isRTL, 'تمت الإزالة من المنشأة', 'Removed from business'));
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإزالة' : 'Failed to remove')),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل الإزالة', 'Failed to remove'))),
   });
 
   const updateProfileMutation = useMutation({
@@ -1121,12 +1120,12 @@ const AdminUsers = () => {
       void logAdminActivity({ action: 'user.profile.update', entityType: 'profile', entityId: v.profileId, details: { fields: Object.keys(v.data) } });
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
       closePanel();
-      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+      toast.success(pickBi(isRTL, 'تم التحديث', 'Updated'));
     },
     onError: (err: unknown) => {
       const raw = err instanceof Error ? err.message : (typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '');
       const parsed = parseProfileSaveError(raw, isRTL);
-      let friendly = parsed.friendly ?? (isRTL ? 'فشل التحديث' : 'Failed to update');
+      let friendly = parsed.friendly ?? (pickBi(isRTL, 'فشل التحديث', 'Failed to update'));
       const next: typeof editFieldErrors = {};
       const rawNext: typeof editFieldRawCodes = {};
       if (parsed.field === 'username') {
@@ -1145,7 +1144,7 @@ const AdminUsers = () => {
         next.phone = parsed.friendly!;
         rawNext.phone = parsed.rawCode;
       } else if (raw) {
-        friendly = (isRTL ? 'فشل التحديث: ' : 'Update failed: ') + raw;
+        friendly = (pickBi(isRTL, 'فشل التحديث: ', 'Update failed: ')) + raw;
       }
       if (Object.keys(next).length > 0) setEditFieldErrors(prev => ({ ...prev, ...next }));
       if (Object.keys(rawNext).length > 0) setEditFieldRawCodes(prev => ({ ...prev, ...rawNext }));
@@ -1178,9 +1177,9 @@ const AdminUsers = () => {
     onSuccess: (_, v) => {
       void logAdminActivity({ action: v.isBanned ? 'user.disable' : 'user.enable', entityType: 'profile', entityId: v.profileId });
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
-      toast.success(v.isBanned ? (isRTL ? 'تم التعطيل' : 'Disabled') : (isRTL ? 'تم التفعيل' : 'Enabled'));
+      toast.success(v.isBanned ? (pickBi(isRTL, 'تم التعطيل', 'Disabled')) : (pickBi(isRTL, 'تم التفعيل', 'Enabled')));
     },
-    onError: () => toast.error(isRTL ? 'فشل' : 'Failed'),
+    onError: () => toast.error(pickBi(isRTL, 'فشل', 'Failed')),
   });
 
   // Apply a structured suspension (permanent or until a given timestamp + optional reason).
@@ -1207,9 +1206,9 @@ const AdminUsers = () => {
         details: { until: v.until, reason: v.reason },
       });
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
-      toast.success(isRTL ? 'تم تطبيق الإيقاف' : 'Suspension applied');
+      toast.success(pickBi(isRTL, 'تم تطبيق الإيقاف', 'Suspension applied'));
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإيقاف' : 'Failed to suspend')),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (pickBi(isRTL, 'فشل الإيقاف', 'Failed to suspend'))),
   });
 
   // Link an existing business to the user via business_staff with a selected role.
@@ -1230,13 +1229,13 @@ const AdminUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
       setLinkForm({ businessId: '', role: 'viewer' });
       setLinkSearch('');
-      toast.success(isRTL ? 'تم ربط المنشأة' : 'Business linked');
+      toast.success(pickBi(isRTL, 'تم ربط المنشأة', 'Business linked'));
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : '';
       toast.error(msg.includes('duplicate') || msg.includes('unique')
-        ? (isRTL ? 'هذا المستخدم مرتبط بالفعل بهذه المنشأة' : 'User is already linked to this business')
-        : (isRTL ? 'فشل ربط المنشأة' : 'Failed to link business'));
+        ? (pickBi(isRTL, 'هذا المستخدم مرتبط بالفعل بهذه المنشأة', 'User is already linked to this business'))
+        : (pickBi(isRTL, 'فشل ربط المنشأة', 'Failed to link business')));
     },
   });
 
@@ -1251,7 +1250,7 @@ const AdminUsers = () => {
       setSelected(new Set());
       toast.success(isRTL ? `تم ${v.isBanned ? 'تعطيل' : 'تفعيل'} ${v.ids.length} حساب` : `${v.ids.length} accounts ${v.isBanned ? 'disabled' : 'enabled'}`);
     },
-    onError: () => toast.error(isRTL ? 'فشلت العملية الجماعية' : 'Bulk action failed'),
+    onError: () => toast.error(pickBi(isRTL, 'فشلت العملية الجماعية', 'Bulk action failed')),
   });
 
   const changePasswordMutation = useMutation({
@@ -1263,9 +1262,9 @@ const AdminUsers = () => {
     onSuccess: (_d, v) => {
       void logAdminActivity({ action: 'user.password.change', entityType: 'auth.users', entityId: v.targetUserId });
       closePanel();
-      toast.success(isRTL ? 'تم تغيير كلمة المرور' : 'Password changed');
+      toast.success(pickBi(isRTL, 'تم تغيير كلمة المرور', 'Password changed'));
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل' : 'Failed')),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (pickBi(isRTL, 'فشل', 'Failed'))),
   });
 
   const sendResetLinkMutation = useMutation({
@@ -1276,9 +1275,9 @@ const AdminUsers = () => {
     },
     onSuccess: (_d, targetUserId) => {
       void logAdminActivity({ action: 'user.password.reset_link', entityType: 'auth.users', entityId: targetUserId });
-      toast.success(isRTL ? 'تم إرسال الرابط' : 'Link sent');
+      toast.success(pickBi(isRTL, 'تم إرسال الرابط', 'Link sent'));
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل' : 'Failed')),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (pickBi(isRTL, 'فشل', 'Failed'))),
   });
 
   const deleteUserMutation = useMutation({
@@ -1292,9 +1291,9 @@ const AdminUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
       queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
       closePanel();
-      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
+      toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted'));
     },
-    onError: () => toast.error(isRTL ? 'فشل الحذف' : 'Failed to delete'),
+    onError: () => toast.error(pickBi(isRTL, 'فشل الحذف', 'Failed to delete')),
   });
 
   const openEdit = useCallback((profile: Profile) => {
@@ -1336,7 +1335,7 @@ const AdminUsers = () => {
     const nameEn = editForm.full_name_en.trim();
     const combined = nameAr || nameEn || editForm.full_name.trim();
     if (!combined) {
-      const msg = isRTL ? 'الاسم مطلوب (عربي أو إنجليزي)' : 'Name required (AR or EN)';
+      const msg = pickBi(isRTL, 'الاسم مطلوب (عربي أو إنجليزي)', 'Name required (AR or EN)');
       setEditFieldErrors({ full_name_ar: msg, full_name_en: msg });
       toast.error(msg);
       return;
@@ -1362,9 +1361,7 @@ const AdminUsers = () => {
       data.phone_national = editForm.phone_national || null;
       const nextEmail = editForm.email.trim();
       if (nextEmail && isSyntheticPhoneEmail(nextEmail)) {
-        const msg = isRTL
-          ? 'البريد الرسمي لا يمكن أن ينتهي بـ @phone.qitaat.local — هذا معرّف داخلي لتسجيل الدخول بالهاتف.'
-          : 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.';
+        const msg = pickBi(isRTL, 'البريد الرسمي لا يمكن أن ينتهي بـ @phone.qitaat.local — هذا معرّف داخلي لتسجيل الدخول بالهاتف.', 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.');
         setEditFieldErrors({ email: msg });
         toast.error(msg);
         return;
@@ -1477,9 +1474,9 @@ const AdminUsers = () => {
   }, [profiles]);
 
   const accountTypePie = useMemo(() => [
-    { name: isRTL ? 'أفراد' : 'Individuals', value: profiles.filter(p => p.account_type === 'individual').length, color: 'hsl(217 91% 60%)' },
-    { name: isRTL ? 'مزودي خدمة' : 'Providers', value: profiles.filter(p => p.account_type === 'business').length, color: 'hsl(160 84% 39%)' },
-    { name: isRTL ? 'شركات' : 'Companies', value: profiles.filter(p => p.account_type === 'company').length, color: 'hsl(271 91% 65%)' },
+    { name: pickBi(isRTL, 'أفراد', 'Individuals'), value: profiles.filter(p => p.account_type === 'individual').length, color: 'hsl(217 91% 60%)' },
+    { name: pickBi(isRTL, 'مزودي خدمة', 'Providers'), value: profiles.filter(p => p.account_type === 'business').length, color: 'hsl(160 84% 39%)' },
+    { name: pickBi(isRTL, 'شركات', 'Companies'), value: profiles.filter(p => p.account_type === 'company').length, color: 'hsl(271 91% 65%)' },
   ], [profiles, isRTL]);
 
   const tierBar = useMemo(() => Object.entries(stats.tierDist).map(([k, v]) => ({
@@ -1503,7 +1500,7 @@ const AdminUsers = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `users_${new Date().toISOString().split('T')[0]}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم التصدير' : 'Exported');
+    toast.success(pickBi(isRTL, 'تم التصدير', 'Exported'));
   };
 
   const toggleSelect = useCallback((id: string) => {
@@ -1529,7 +1526,7 @@ const AdminUsers = () => {
   };
 
   if (!user) {
-    return <DashboardLayout><div className="flex items-center justify-center h-96"><p className="text-muted-foreground">{isRTL ? 'يرجى تسجيل الدخول' : 'Please log in'}</p></div></DashboardLayout>;
+    return <DashboardLayout><div className="flex items-center justify-center h-96"><p className="text-muted-foreground">{pickBi(isRTL, 'يرجى تسجيل الدخول', 'Please log in')}</p></div></DashboardLayout>;
   }
 
   return (
@@ -1546,28 +1543,26 @@ const AdminUsers = () => {
               </div>
               <div className="min-w-0">
                 <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground leading-tight">
-                  {isRTL ? 'إدارة المستخدمين' : 'User Management'}
+                  {pickBi(isRTL, 'إدارة المستخدمين', 'User Management')}
                 </h1>
                 <p className="text-muted-foreground font-body mt-1 text-sm">
-                  {isRTL
-                    ? 'إدارة شاملة للحسابات، الصلاحيات، والمنشآت المرتبطة'
-                    : 'Unified control for accounts, roles, and linked businesses'}
+                  {pickBi(isRTL, 'إدارة شاملة للحسابات، الصلاحيات، والمنشآت المرتبطة', 'Unified control for accounts, roles, and linked businesses')}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline" size="sm" className="rounded-xl gap-2 h-9 bg-card/60 backdrop-blur" onClick={() => refetchProfiles()}>
                 <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
+                <span className="hidden sm:inline">{pickBi(isRTL, 'تحديث', 'Refresh')}</span>
               </Button>
               <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2 rounded-xl h-9 bg-card/60 backdrop-blur">
                 <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
+                <span className="hidden sm:inline">{pickBi(isRTL, 'تصدير CSV', 'Export CSV')}</span>
               </Button>
               {isAdmin && (
                 <Button size="sm" className="gap-2 rounded-xl h-9 shadow-md" onClick={() => openCreatePanel()}>
                   <UserPlus className="w-4 h-4" />
-                  <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
+                  <span className="hidden sm:inline">{pickBi(isRTL, 'إنشاء مستخدم', 'New User')}</span>
                 </Button>
               )}
             </div>
@@ -1575,12 +1570,12 @@ const AdminUsers = () => {
           {/* Inline KPI strip — always visible */}
           <div className="relative mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
             {([
-              { icon: Users, label: isRTL ? 'الإجمالي' : 'Total', val: stats.totalUsers, color: 'text-primary bg-primary/10' },
-              { icon: Briefcase, label: isRTL ? 'مزودين' : 'Providers', val: stats.providers, color: 'text-success bg-success/10' },
-              { icon: UserCheck, label: isRTL ? 'مكتمل' : 'Onboarded', val: stats.onboarded, color: 'text-info bg-info/10' },
-              { icon: Crown, label: isRTL ? 'فريق' : 'Staff', val: stats.superAdmins + stats.admins + stats.moderators, color: 'text-accent bg-accent/10' },
-              { icon: Ban, label: isRTL ? 'معطّل' : 'Disabled', val: stats.bannedCount, color: 'text-destructive bg-destructive/10' },
-              { icon: TrendingUp, label: isRTL ? '7 أيام' : '7d', val: stats.recentUsers, color: 'text-warning bg-warning/10' },
+              { icon: Users, label: pickBi(isRTL, 'الإجمالي', 'Total'), val: stats.totalUsers, color: 'text-primary bg-primary/10' },
+              { icon: Briefcase, label: pickBi(isRTL, 'مزودين', 'Providers'), val: stats.providers, color: 'text-success bg-success/10' },
+              { icon: UserCheck, label: pickBi(isRTL, 'مكتمل', 'Onboarded'), val: stats.onboarded, color: 'text-info bg-info/10' },
+              { icon: Crown, label: pickBi(isRTL, 'فريق', 'Staff'), val: stats.superAdmins + stats.admins + stats.moderators, color: 'text-accent bg-accent/10' },
+              { icon: Ban, label: pickBi(isRTL, 'معطّل', 'Disabled'), val: stats.bannedCount, color: 'text-destructive bg-destructive/10' },
+              { icon: TrendingUp, label: pickBi(isRTL, '7 أيام', '7d'), val: stats.recentUsers, color: 'text-warning bg-warning/10' },
             ]).map((s, i) => {
               const Icon = s.icon;
               return (
@@ -1601,19 +1596,19 @@ const AdminUsers = () => {
         {/* Tabs — consolidated to 3 (Staff/Disabled moved to scope chips) */}
         <Tabs value={tab} onValueChange={(v) => { setTab(v as typeof tab); setPage(1); setSelected(new Set()); }}>
           <TabsList className="grid w-full grid-cols-3 h-auto p-1 rounded-2xl bg-muted/40">
-            <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2.5"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
-            <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2.5"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2.5"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
+            <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2.5"><Sparkles className="w-3.5 h-3.5" />{pickBi(isRTL, 'نظرة عامة', 'Overview')}</TabsTrigger>
+            <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2.5"><Users className="w-3.5 h-3.5" />{pickBi(isRTL, 'المستخدمون', 'Users')}</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2.5"><BarChart3 className="w-3.5 h-3.5" />{pickBi(isRTL, 'تحليلات', 'Analytics')}</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW */}
           <TabsContent value="overview" className="space-y-5 mt-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <KpiCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-              <KpiCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-success/10 to-success/5" iconBg="bg-success/15 text-success" />
+              <KpiCard icon={Users} label={pickBi(isRTL, 'إجمالي المستخدمين', 'Total Users')} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
+              <KpiCard icon={Briefcase} label={pickBi(isRTL, 'مزودي الخدمات', 'Providers')} value={stats.providers} gradient="from-success/10 to-success/5" iconBg="bg-success/15 text-success" />
               <KpiCard
                 icon={UserCheck}
-                label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'}
+                label={pickBi(isRTL, 'مكتمل التسجيل', 'Onboarded')}
                 value={stats.onboarded}
                 gradient="from-info/10 to-info/5"
                 iconBg="bg-info/15 text-info"
@@ -1630,7 +1625,7 @@ const AdminUsers = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2 rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><TrendingUp className="w-4 h-4 text-accent" />{isRTL ? 'تسجيلات آخر 30 يوم' : 'Signups (30 days)'}</h3>
+                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><TrendingUp className="w-4 h-4 text-accent" />{pickBi(isRTL, 'تسجيلات آخر 30 يوم', 'Signups (30 days)')}</h3>
                 <div className="h-56">
                   <ResponsiveContainer>
                     <AreaChart data={signupSeries}>
@@ -1640,19 +1635,19 @@ const AdminUsers = () => {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="label" tick={{ fontSize: 10 }} reversed={isRTL} />
-                      <YAxis tick={{ fontSize: 10 }} orientation={isRTL ? 'right' : 'left'} />
+                      <YAxis tick={{ fontSize: 10 }} orientation={pickBi(isRTL, 'right', 'left')} />
                       <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-                      <Area type="monotone" dataKey="total" stroke="hsl(var(--accent))" fill="url(#colTotal)" name={isRTL ? 'الكل' : 'Total'} />
-                      <Area type="monotone" dataKey="providers" stroke="hsl(160 84% 39%)" fill="url(#colProv)" name={isRTL ? 'مزودين' : 'Providers'} />
+                      <Area type="monotone" dataKey="total" stroke="hsl(var(--accent))" fill="url(#colTotal)" name={pickBi(isRTL, 'الكل', 'Total')} />
+                      <Area type="monotone" dataKey="providers" stroke="hsl(160 84% 39%)" fill="url(#colProv)" name={pickBi(isRTL, 'مزودين', 'Providers')} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
               <div className="rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><Activity className="w-4 h-4 text-accent" />{isRTL ? 'آخر النشاط الإداري' : 'Recent Admin Activity'}</h3>
+                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><Activity className="w-4 h-4 text-accent" />{pickBi(isRTL, 'آخر النشاط الإداري', 'Recent Admin Activity')}</h3>
                 <div className="space-y-2 max-h-56 overflow-y-auto no-scrollbar">
                   {recentAdminActivity.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-6">{isRTL ? 'لا يوجد نشاط' : 'No activity'}</p>
+                    <p className="text-xs text-muted-foreground text-center py-6">{pickBi(isRTL, 'لا يوجد نشاط', 'No activity')}</p>
                   ) : recentAdminActivity.slice(0, 12).map(a => (
                     <div key={a.id} className="flex items-start gap-2 rounded-xl bg-muted/30 px-2.5 py-1.5">
                       <div className="w-2 h-2 rounded-full bg-accent mt-1.5 shrink-0" />
@@ -1711,7 +1706,7 @@ const AdminUsers = () => {
                   <div className="relative flex-1">
                     <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                     <Input ref={searchInputRef} value={searchTerm} onChange={e => handleSearchChange(e.target.value)}
-                     placeholder={isRTL ? 'بحث بالاسم، البريد، الجوال، أو رقم USR/ENT' : 'Search by name, email, phone, USR or ENT'}
+                     placeholder={pickBi(isRTL, 'بحث بالاسم، البريد، الجوال، أو رقم USR/ENT', 'Search by name, email, phone, USR or ENT')}
                       className="ps-10 pe-16 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background" dir="auto" />
                     <kbd className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-border/40 bg-background/80 text-[10px] text-muted-foreground font-mono pointer-events-none"
                       style={{ insetInlineEnd: '10px' }}>
@@ -1721,40 +1716,40 @@ const AdminUsers = () => {
                   <Select value={filterRole} onValueChange={(v) => { setFilterRole(v); setPage(1); }}>
                     <SelectTrigger className="w-full md:w-40 h-10 rounded-xl"><Filter className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{isRTL ? 'كل الصلاحيات' : 'All Roles'}</SelectItem>
-                      <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
-                      <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
-                      <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
-                      <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
-                      <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
+                      <SelectItem value="all">{pickBi(isRTL, 'كل الصلاحيات', 'All Roles')}</SelectItem>
+                      <SelectItem value="super_admin">{pickBi(isRTL, 'مشرف أعلى', 'Super Admin')}</SelectItem>
+                      <SelectItem value="admin">{pickBi(isRTL, 'مشرف', 'Admin')}</SelectItem>
+                      <SelectItem value="moderator">{pickBi(isRTL, 'مشرف محتوى', 'Moderator')}</SelectItem>
+                      <SelectItem value="user">{pickBi(isRTL, 'مستخدم', 'User')}</SelectItem>
+                      <SelectItem value="no_role">{pickBi(isRTL, 'بدون صلاحيات', 'No Role')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={filterAccountType} onValueChange={(v) => { setFilterAccountType(v); setPage(1); }}>
                     <SelectTrigger className="w-full md:w-40 h-10 rounded-xl"><Building2 className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{isRTL ? 'كل الأنواع' : 'All Types'}</SelectItem>
-                      <SelectItem value="individual">{isRTL ? 'أفراد' : 'Individuals'}</SelectItem>
-                      <SelectItem value="business">{isRTL ? 'مزودين' : 'Providers'}</SelectItem>
-                      <SelectItem value="company">{isRTL ? 'شركات' : 'Companies'}</SelectItem>
+                      <SelectItem value="all">{pickBi(isRTL, 'كل الأنواع', 'All Types')}</SelectItem>
+                      <SelectItem value="individual">{pickBi(isRTL, 'أفراد', 'Individuals')}</SelectItem>
+                      <SelectItem value="business">{pickBi(isRTL, 'مزودين', 'Providers')}</SelectItem>
+                      <SelectItem value="company">{pickBi(isRTL, 'شركات', 'Companies')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={filterTier} onValueChange={(v) => { setFilterTier(v); setPage(1); }}>
                     <SelectTrigger className="w-full md:w-36 h-10 rounded-xl"><Sparkles className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
-                      <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
-                      <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
-                      <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
-                      <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                      <SelectItem value="all">{pickBi(isRTL, 'كل العضويات', 'All Tiers')}</SelectItem>
+                      <SelectItem value="free">{pickBi(isRTL, 'مجاني', 'Free')}</SelectItem>
+                      <SelectItem value="basic">{pickBi(isRTL, 'أساسي', 'Basic')}</SelectItem>
+                      <SelectItem value="premium">{pickBi(isRTL, 'مميز', 'Premium')}</SelectItem>
+                      <SelectItem value="enterprise">{pickBi(isRTL, 'مؤسسات', 'Enterprise')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={filterBusinessLink} onValueChange={(v) => { setFilterBusinessLink(v as typeof filterBusinessLink); setPage(1); }}>
                     <SelectTrigger className="w-full md:w-44 h-10 rounded-xl"><Link2 className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{isRTL ? 'كل الارتباطات' : 'All links'}</SelectItem>
-                      <SelectItem value="none">{isRTL ? 'بدون منشآت' : 'No business'}</SelectItem>
-                      <SelectItem value="single">{isRTL ? 'منشأة واحدة' : 'Single business'}</SelectItem>
-                      <SelectItem value="multi">{isRTL ? 'عدة منشآت' : 'Multiple businesses'}</SelectItem>
+                      <SelectItem value="all">{pickBi(isRTL, 'كل الارتباطات', 'All links')}</SelectItem>
+                      <SelectItem value="none">{pickBi(isRTL, 'بدون منشآت', 'No business')}</SelectItem>
+                      <SelectItem value="single">{pickBi(isRTL, 'منشأة واحدة', 'Single business')}</SelectItem>
+                      <SelectItem value="multi">{pickBi(isRTL, 'عدة منشآت', 'Multiple businesses')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1769,28 +1764,28 @@ const AdminUsers = () => {
                       onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); setFilterBusinessLink('all'); setFilterScope('all'); }}
                       className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                     >
-                      <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+                      <X className="w-3 h-3" />{pickBi(isRTL, 'مسح الفلاتر', 'Clear filters')}
                     </button>
                   )}
                   <div className="ms-auto flex items-center gap-1.5 flex-wrap">
                     <div className="inline-flex rounded-lg border border-border/30 p-0.5 bg-muted/30">
                       <button onClick={() => setDensity('comfortable')}
                         className={`p-1 rounded ${density === 'comfortable' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
-                        title={isRTL ? 'مريح' : 'Comfortable'} aria-label={isRTL ? 'مريح' : 'Comfortable'}>
+                        title={pickBi(isRTL, 'مريح', 'Comfortable')} aria-label={pickBi(isRTL, 'مريح', 'Comfortable')}>
                         <LayoutList className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => setDensity('compact')}
                         className={`p-1 rounded ${density === 'compact' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
-                        title={isRTL ? 'مضغوط' : 'Compact'} aria-label={isRTL ? 'مضغوط' : 'Compact'}>
+                        title={pickBi(isRTL, 'مضغوط', 'Compact')} aria-label={pickBi(isRTL, 'مضغوط', 'Compact')}>
                         <Rows3 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <span className="text-[11px] text-muted-foreground">{isRTL ? 'ترتيب:' : 'Sort:'}</span>
+                    <span className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'ترتيب:', 'Sort:')}</span>
                     {([
-                      ['created_at', isRTL ? 'الأحدث' : 'Date'],
-                      ['full_name', isRTL ? 'الاسم' : 'Name'],
-                      ['membership_tier', isRTL ? 'العضوية' : 'Tier'],
-                      ['account_type', isRTL ? 'النوع' : 'Type'],
+                      ['created_at', pickBi(isRTL, 'الأحدث', 'Date')],
+                      ['full_name', pickBi(isRTL, 'الاسم', 'Name')],
+                      ['membership_tier', pickBi(isRTL, 'العضوية', 'Tier')],
+                      ['account_type', pickBi(isRTL, 'النوع', 'Type')],
                     ] as const).map(([k, lbl]) => (
                       <button key={k} onClick={() => cycleSort(k)}
                         className={`text-[11px] gap-1 inline-flex items-center px-2 py-1 rounded-lg border transition-colors
@@ -1807,7 +1802,7 @@ const AdminUsers = () => {
               {selected.size > 0 && (
                 <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex items-center gap-3 flex-wrap animate-in slide-in-from-top-1">
                   <Badge className="bg-accent text-accent-foreground gap-1"><Check className="w-3 h-3" />{selected.size}</Badge>
-                  <span className="text-xs text-foreground">{isRTL ? 'محدد' : 'selected'}</span>
+                  <span className="text-xs text-foreground">{pickBi(isRTL, 'محدد', 'selected')}</span>
                   <div className="ms-auto flex items-center gap-2 flex-wrap">
                     <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8" onClick={() => {
                       const selectedProfiles = sorted.filter(p => selected.has(p.id));
@@ -1825,7 +1820,7 @@ const AdminUsers = () => {
                       URL.revokeObjectURL(url);
                       toast.success(isRTL ? `تم تصدير ${selectedProfiles.length}` : `Exported ${selectedProfiles.length}`);
                     }}>
-                      <Download className="w-3.5 h-3.5" />{isRTL ? 'تصدير المحدد' : 'Export'}
+                      <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'تصدير المحدد', 'Export')}
                     </Button>
                     {isSuperAdmin && (<>
                     <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-warning border-warning"
@@ -1838,23 +1833,23 @@ const AdminUsers = () => {
                         }).map(p => p.id);
                         const skipped = selected.size - safeIds.length;
                         if (safeIds.length === 0) {
-                          toast.error(isRTL ? 'لا يمكن تعطيل حسابك أو حسابات المشرفين' : 'Cannot disable your own account or admin accounts');
+                          toast.error(pickBi(isRTL, 'لا يمكن تعطيل حسابك أو حسابات المشرفين', 'Cannot disable your own account or admin accounts'));
                           return;
                         }
                         if (skipped > 0) toast.warning(isRTL ? `تم تجاهل ${skipped} حساب محمي` : `Skipped ${skipped} protected account(s)`);
                         bulkBanMutation.mutate({ ids: safeIds, isBanned: true });
                       }}
                       disabled={bulkBanMutation.isPending}>
-                      <Ban className="w-3.5 h-3.5" />{isRTL ? 'تعطيل' : 'Disable'}
+                      <Ban className="w-3.5 h-3.5" />{pickBi(isRTL, 'تعطيل', 'Disable')}
                     </Button>
                     <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-success border-success"
                       onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: false })}
                       disabled={bulkBanMutation.isPending}>
-                      <UserCheck className="w-3.5 h-3.5" />{isRTL ? 'تفعيل' : 'Enable'}
+                      <UserCheck className="w-3.5 h-3.5" />{pickBi(isRTL, 'تفعيل', 'Enable')}
                     </Button>
                     </>)}
                     <Button variant="ghost" size="sm" className="rounded-xl h-8" onClick={() => setSelected(new Set())}>
-                      <X className="w-3.5 h-3.5" />{isRTL ? 'إلغاء' : 'Clear'}
+                      <X className="w-3.5 h-3.5" />{pickBi(isRTL, 'إلغاء', 'Clear')}
                     </Button>
                   </div>
                 </div>
@@ -1866,7 +1861,7 @@ const AdminUsers = () => {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-heading font-bold text-lg flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><UserPlus className="w-4 h-4 text-accent" /></div>
-                      {isRTL ? 'إنشاء مستخدم جديد' : 'Create New User'}
+                      {pickBi(isRTL, 'إنشاء مستخدم جديد', 'Create New User')}
                     </h3>
                     <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
                   </div>
@@ -1890,9 +1885,9 @@ const AdminUsers = () => {
                         required
                       />
                     </div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد *' : 'Email *'}</Label>
+                    <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'البريد *', 'Email *')}</Label>
                       <Input type="email" dir="ltr" value={createForm.email} onChange={e => setCreateForm(p => ({ ...p, email: e.target.value }))} className="h-10 rounded-xl" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'كلمة المرور *' : 'Password *'}</Label>
+                    <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'كلمة المرور *', 'Password *')}</Label>
                       <Input type="text" dir="ltr" value={createForm.password} onChange={e => setCreateForm(p => ({ ...p, password: e.target.value }))} className="h-10 rounded-xl tech-content" placeholder="8+ chars" /></div>
                     <PhoneField
                       value={{ countryCode: createForm.phone_country_code, national: createForm.phone_national }}
@@ -1900,41 +1895,41 @@ const AdminUsers = () => {
                       onE164Change={(e164) => setCreateForm(p => ({ ...p, phone: e164 }))}
                       optional
                     />
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+                    <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'نوع الحساب', 'Account Type')}</Label>
                       <Select value={createForm.account_type} onValueChange={v => setCreateForm(p => ({ ...p, account_type: v }))}>
                         <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
-                          <SelectItem value="business">{isRTL ? 'مزود خدمة' : 'Provider'}</SelectItem>
-                          <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                          <SelectItem value="individual">{pickBi(isRTL, 'فرد', 'Individual')}</SelectItem>
+                          <SelectItem value="business">{pickBi(isRTL, 'مزود خدمة', 'Provider')}</SelectItem>
+                          <SelectItem value="company">{pickBi(isRTL, 'شركة', 'Company')}</SelectItem>
                         </SelectContent>
                       </Select></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'العضوية' : 'Tier'}</Label>
+                    <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'العضوية', 'Tier')}</Label>
                       <Select value={createForm.membership_tier} onValueChange={v => setCreateForm(p => ({ ...p, membership_tier: v }))}>
                         <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
-                          <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
-                          <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
-                          <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                          <SelectItem value="free">{pickBi(isRTL, 'مجاني', 'Free')}</SelectItem>
+                          <SelectItem value="basic">{pickBi(isRTL, 'أساسي', 'Basic')}</SelectItem>
+                          <SelectItem value="premium">{pickBi(isRTL, 'مميز', 'Premium')}</SelectItem>
+                          <SelectItem value="enterprise">{pickBi(isRTL, 'مؤسسات', 'Enterprise')}</SelectItem>
                         </SelectContent>
                       </Select></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الصلاحية' : 'Role'}</Label>
+                    <div className="space-y-1.5"><Label className="text-xs">{pickBi(isRTL, 'الصلاحية', 'Role')}</Label>
                       <Select value={createForm.role} onValueChange={v => setCreateForm(p => ({ ...p, role: v }))}>
                         <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
-                          <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
-                          <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
-                          <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
+                          <SelectItem value="none">{pickBi(isRTL, 'بدون', 'None')}</SelectItem>
+                          <SelectItem value="moderator">{pickBi(isRTL, 'مشرف محتوى', 'Moderator')}</SelectItem>
+                          <SelectItem value="admin">{pickBi(isRTL, 'مشرف', 'Admin')}</SelectItem>
+                          <SelectItem value="super_admin">{pickBi(isRTL, 'مشرف أعلى', 'Super Admin')}</SelectItem>
                         </SelectContent>
                       </Select></div>
                   </div>
                   <Separator className="my-4" />
                   <div className="flex items-center gap-2 justify-end">
-                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                     <Button onClick={() => createUserMutation.mutate(createForm)} disabled={createUserMutation.isPending || !createForm.email || !createForm.password || !createForm.full_name} className="rounded-xl gap-2">
-                      {createUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'إنشاء' : 'Create'}
+                      {createUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{pickBi(isRTL, 'إنشاء', 'Create')}
                     </Button>
                   </div>
                 </div>
@@ -1965,7 +1960,7 @@ const AdminUsers = () => {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-heading font-bold text-base sm:text-lg truncate">
-                              {editingProfile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+                              {editingProfile.full_name || (pickBi(isRTL, 'بدون اسم', 'No name'))}
                             </h3>
                             {editingProfile.ref_id && (
                               <Badge variant="outline" className="font-mono text-[10px] tech-content gap-0.5">
@@ -1974,7 +1969,7 @@ const AdminUsers = () => {
                             )}
                             {editingProfile.is_banned && (
                               <Badge variant="destructive" className="text-[10px] gap-0.5 px-1.5 py-0">
-                                <Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}
+                                <Ban className="w-2.5 h-2.5" />{pickBi(isRTL, 'معطّل', 'Disabled')}
                               </Badge>
                             )}
                           </div>
@@ -2003,25 +1998,25 @@ const AdminUsers = () => {
                       <TabsList className="grid w-full grid-cols-4 h-10 rounded-xl bg-muted/50 p-1">
                         <TabsTrigger value="profile" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                           <Pencil className="w-3.5 h-3.5" />
-                          {isRTL ? 'البيانات' : 'Profile'}
+                          {pickBi(isRTL, 'البيانات', 'Profile')}
                         </TabsTrigger>
                         <TabsTrigger value="permissions" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                           <Shield className="w-3.5 h-3.5" />
-                          {isRTL ? 'الصلاحيات' : 'Permissions'}
+                          {pickBi(isRTL, 'الصلاحيات', 'Permissions')}
                           {editingRoles.length > 0 && (
                             <span className="ms-0.5 px-1.5 py-0 rounded-full bg-accent/15 text-accent text-[10px] font-bold tech-content">{editingRoles.length}</span>
                           )}
                         </TabsTrigger>
                         <TabsTrigger value="businesses" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                           <Building2 className="w-3.5 h-3.5" />
-                          {isRTL ? 'الجهات' : 'Businesses'}
+                          {pickBi(isRTL, 'الجهات', 'Businesses')}
                           {editingLinks.length > 0 && (
                             <span className="ms-0.5 px-1.5 py-0 rounded-full bg-success/15 text-success text-[10px] font-bold tech-content">{editingLinks.length}</span>
                           )}
                         </TabsTrigger>
                         <TabsTrigger value="suspension" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                           <ShieldOff className="w-3.5 h-3.5" />
-                          {isRTL ? 'الإيقاف' : 'Suspension'}
+                          {pickBi(isRTL, 'الإيقاف', 'Suspension')}
                           {editingProfile.is_banned && (
                             <span className="ms-0.5 px-1.5 py-0 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold tech-content">!</span>
                           )}
@@ -2063,7 +2058,7 @@ const AdminUsers = () => {
                         {isSuperAdmin ? (
                           <>
                             <div className="space-y-1.5" data-field-error="email">
-                              <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                              <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{pickBi(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
                               <EmailLiveHint value={editForm.email} isRTL={isRTL} />
                               <Input
                                 type="email" dir="ltr"
@@ -2109,29 +2104,29 @@ const AdminUsers = () => {
                         ) : (
                           <div className="md:col-span-1 rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
                             <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-warning" />
-                            <span>{isRTL ? 'تعديل البريد والهاتف متاح فقط لمدير النظام (Super Admin).' : 'Email & phone editing is restricted to Super Admins.'}</span>
+                            <span>{pickBi(isRTL, 'تعديل البريد والهاتف متاح فقط لمدير النظام (Super Admin).', 'Email & phone editing is restricted to Super Admins.')}</span>
                           </div>
                         )}
                         <div className="space-y-1.5">
-                          <Label className="text-xs flex items-center gap-1"><Briefcase className="w-3 h-3" />{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+                          <Label className="text-xs flex items-center gap-1"><Briefcase className="w-3 h-3" />{pickBi(isRTL, 'نوع الحساب', 'Account Type')}</Label>
                           <Select value={editForm.account_type} onValueChange={v => setEditForm(p => ({ ...p, account_type: v }))}>
                             <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
-                              <SelectItem value="business">{isRTL ? 'مزود خدمة' : 'Provider'}</SelectItem>
-                              <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                              <SelectItem value="individual">{pickBi(isRTL, 'فرد', 'Individual')}</SelectItem>
+                              <SelectItem value="business">{pickBi(isRTL, 'مزود خدمة', 'Provider')}</SelectItem>
+                              <SelectItem value="company">{pickBi(isRTL, 'شركة', 'Company')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs flex items-center gap-1"><Crown className="w-3 h-3" />{isRTL ? 'العضوية' : 'Membership Tier'}</Label>
+                          <Label className="text-xs flex items-center gap-1"><Crown className="w-3 h-3" />{pickBi(isRTL, 'العضوية', 'Membership Tier')}</Label>
                           <Select value={editForm.membership_tier} onValueChange={v => setEditForm(p => ({ ...p, membership_tier: v }))}>
                             <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
-                              <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
-                              <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
-                              <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                              <SelectItem value="free">{pickBi(isRTL, 'مجاني', 'Free')}</SelectItem>
+                              <SelectItem value="basic">{pickBi(isRTL, 'أساسي', 'Basic')}</SelectItem>
+                              <SelectItem value="premium">{pickBi(isRTL, 'مميز', 'Premium')}</SelectItem>
+                              <SelectItem value="enterprise">{pickBi(isRTL, 'مؤسسات', 'Enterprise')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -2139,13 +2134,13 @@ const AdminUsers = () => {
                       <Separator />
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <p className="text-[11px] text-muted-foreground">
-                          {isRTL ? 'سيتم تسجيل أي تعديل في سجل النشاط الإداري.' : 'All changes are logged in the admin activity log.'}
+                          {pickBi(isRTL, 'سيتم تسجيل أي تعديل في سجل النشاط الإداري.', 'All changes are logged in the admin activity log.')}
                         </p>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                          <Button variant="outline" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                           <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} className="rounded-xl gap-2">
                             {updateProfileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                            {isRTL ? 'حفظ التعديلات' : 'Save Changes'}
+                            {pickBi(isRTL, 'حفظ التعديلات', 'Save Changes')}
                           </Button>
                         </div>
                       </div>
@@ -2156,7 +2151,7 @@ const AdminUsers = () => {
                       {!isSuperAdmin && (
                         <div className="rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
                           <Lock className="w-3.5 h-3.5 shrink-0 text-warning" />
-                          {isRTL ? 'إدارة صلاحيات النظام متاحة فقط لمدير النظام (Super Admin).' : 'System role management is restricted to Super Admins.'}
+                          {pickBi(isRTL, 'إدارة صلاحيات النظام متاحة فقط لمدير النظام (Super Admin).', 'System role management is restricted to Super Admins.')}
                         </div>
                       )}
                       <div>
@@ -2167,7 +2162,7 @@ const AdminUsers = () => {
                         {editingRoles.length === 0 ? (
                           <div className="rounded-xl border border-dashed border-border/40 bg-muted/20 p-4 text-center">
                             <Shield className="w-5 h-5 text-muted-foreground/50 mx-auto mb-1" />
-                            <p className="text-[11px] text-muted-foreground">{isRTL ? 'لا توجد صلاحيات نظام مُسندة — عضو عادي.' : 'No system roles assigned — regular member.'}</p>
+                            <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'لا توجد صلاحيات نظام مُسندة — عضو عادي.', 'No system roles assigned — regular member.')}</p>
                           </div>
                         ) : (
                           <div className="space-y-1.5">
@@ -2191,7 +2186,7 @@ const AdminUsers = () => {
                                       disabled={removeRoleMutation.isPending}
                                       className="h-8 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10 gap-1 text-[11px]">
                                       <X className="w-3.5 h-3.5" />
-                                      {isRTL ? 'إزالة' : 'Revoke'}
+                                      {pickBi(isRTL, 'إزالة', 'Revoke')}
                                     </Button>
                                   ) : (
                                     <Lock className="w-3.5 h-3.5 text-muted-foreground/50" />
@@ -2206,7 +2201,7 @@ const AdminUsers = () => {
                         <div>
                           <p className="text-[11px] font-bold text-muted-foreground mb-2 flex items-center gap-1">
                             <UserPlus className="w-3 h-3" />
-                            {isRTL ? 'منح صلاحية إضافية' : 'Grant additional role'}
+                            {pickBi(isRTL, 'منح صلاحية إضافية', 'Grant additional role')}
                           </p>
                           <div className="flex flex-wrap items-center gap-2">
                             {availableRolesToAdd.map(rk => {
@@ -2233,22 +2228,22 @@ const AdminUsers = () => {
                     <TabsContent value="businesses" className="p-5 pt-4 m-0 space-y-4">
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         <div className="rounded-xl border border-border/30 bg-card p-2.5">
-                          <p className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي' : 'Total'}</p>
+                          <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'الإجمالي', 'Total')}</p>
                           <p className="text-lg font-bold tech-content">{editingLinks.length}</p>
                         </div>
                         <div className="rounded-xl border border-success/20 bg-success/5 p-2.5">
-                          <p className="text-[10px] text-muted-foreground">{isRTL ? 'مالك' : 'Owned'}</p>
+                          <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'مالك', 'Owned')}</p>
                           <p className="text-lg font-bold tech-content text-success">{ownedByEntityCount}</p>
                         </div>
                         <div className="rounded-xl border border-info/20 bg-info/5 p-2.5">
-                          <p className="text-[10px] text-muted-foreground">{isRTL ? 'عضو فريق' : 'Staff'}</p>
+                          <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'عضو فريق', 'Staff')}</p>
                           <p className="text-lg font-bold tech-content text-info">{staffCount}</p>
                         </div>
                       </div>
                       {editingLinks.length === 0 ? (
                         <div className="rounded-xl border border-dashed border-border/40 bg-muted/20 p-6 text-center">
                           <Building2 className="w-6 h-6 text-muted-foreground/50 mx-auto mb-1.5" />
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'هذا المستخدم غير مرتبط بأي منشأة بعد.' : 'This user is not linked to any business yet.'}</p>
+                          <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'هذا المستخدم غير مرتبط بأي منشأة بعد.', 'This user is not linked to any business yet.')}</p>
                         </div>
                       ) : (
                         <div className="space-y-1.5 max-h-[420px] overflow-auto pe-1">
@@ -2274,7 +2269,7 @@ const AdminUsers = () => {
                                     )}
                                     {!link.isActive && (
                                       <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed px-1 py-0">
-                                        {isRTL ? 'غير نشط' : 'inactive'}
+                                        {pickBi(isRTL, 'غير نشط', 'inactive')}
                                       </Badge>
                                     )}
                                   </div>
@@ -2286,7 +2281,7 @@ const AdminUsers = () => {
                                     {link.business.username && (
                                       <Link to={`/${link.business.username}`} target="_blank" rel="noreferrer"
                                         className="text-[10px] text-muted-foreground hover:text-accent inline-flex items-center gap-0.5">
-                                        <Link2 className="w-2.5 h-2.5" />{isRTL ? 'فتح الصفحة' : 'View'}
+                                        <Link2 className="w-2.5 h-2.5" />{pickBi(isRTL, 'فتح الصفحة', 'View')}
                                       </Link>
                                     )}
                                   </div>
@@ -2295,9 +2290,9 @@ const AdminUsers = () => {
                                   <Select value={link.role} onValueChange={(v) => updateStaffRoleMutation.mutate({ staffId: link.staffId!, role: v as StaffRole })}>
                                     <SelectTrigger className="h-8 w-28 text-[11px] rounded-lg shrink-0"><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="manager">{isRTL ? 'مدير' : 'Manager'}</SelectItem>
-                                      <SelectItem value="editor">{isRTL ? 'محرر' : 'Editor'}</SelectItem>
-                                      <SelectItem value="viewer">{isRTL ? 'مشاهد' : 'Viewer'}</SelectItem>
+                                      <SelectItem value="manager">{pickBi(isRTL, 'مدير', 'Manager')}</SelectItem>
+                                      <SelectItem value="editor">{pickBi(isRTL, 'محرر', 'Editor')}</SelectItem>
+                                      <SelectItem value="viewer">{pickBi(isRTL, 'مشاهد', 'Viewer')}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 ) : (
@@ -2310,7 +2305,7 @@ const AdminUsers = () => {
                                   <Button
                                     variant="ghost" size="icon"
                                     onClick={() => removeStaffMutation.mutate(link.staffId!)}
-                                    title={isRTL ? 'إزالة الصلاحية' : 'Remove access'}
+                                    title={pickBi(isRTL, 'إزالة الصلاحية', 'Remove access')}
                                     className="h-8 w-8 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10 shrink-0">
                                     <X className="w-3.5 h-3.5" />
                                   </Button>
@@ -2338,24 +2333,24 @@ const AdminUsers = () => {
                           <div className="rounded-xl border border-dashed border-accent/30 bg-accent/5 p-3 space-y-2">
                             <p className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
                               <Plus className="w-3 h-3" />
-                              {isRTL ? 'ربط منشأة جديدة بهذا المستخدم' : 'Link a new business to this user'}
+                              {pickBi(isRTL, 'ربط منشأة جديدة بهذا المستخدم', 'Link a new business to this user')}
                             </p>
                             <Input
                               value={linkSearch}
                               onChange={(e) => setLinkSearch(e.target.value)}
-                              placeholder={isRTL ? 'ابحث بالاسم أو المعرّف أو @المعرّف' : 'Search by name, ref, or @username'}
+                              placeholder={pickBi(isRTL, 'ابحث بالاسم أو المعرّف أو @المعرّف', 'Search by name, ref, or @username')}
                               dir="auto"
                               className="h-9 rounded-lg text-xs"
                             />
                             <div className="flex items-center gap-2">
                               <Select value={linkForm.businessId} onValueChange={(v) => setLinkForm(p => ({ ...p, businessId: v }))}>
                                 <SelectTrigger className="h-9 rounded-lg text-xs flex-1">
-                                  <SelectValue placeholder={isRTL ? 'اختر منشأة' : 'Select a business'} />
+                                  <SelectValue placeholder={pickBi(isRTL, 'اختر منشأة', 'Select a business')} />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-72">
                                   {candidates.length === 0 ? (
                                     <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-                                      {isRTL ? 'لا توجد منشآت متاحة' : 'No businesses available'}
+                                      {pickBi(isRTL, 'لا توجد منشآت متاحة', 'No businesses available')}
                                     </div>
                                   ) : candidates.map(b => (
                                     <SelectItem key={b.id} value={b.id}>
@@ -2368,9 +2363,9 @@ const AdminUsers = () => {
                               <Select value={linkForm.role} onValueChange={(v) => setLinkForm(p => ({ ...p, role: v as StaffRole }))}>
                                 <SelectTrigger className="h-9 w-28 rounded-lg text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="manager">{isRTL ? 'مدير' : 'Manager'}</SelectItem>
-                                  <SelectItem value="editor">{isRTL ? 'محرر' : 'Editor'}</SelectItem>
-                                  <SelectItem value="viewer">{isRTL ? 'مشاهد' : 'Viewer'}</SelectItem>
+                                  <SelectItem value="manager">{pickBi(isRTL, 'مدير', 'Manager')}</SelectItem>
+                                  <SelectItem value="editor">{pickBi(isRTL, 'محرر', 'Editor')}</SelectItem>
+                                  <SelectItem value="viewer">{pickBi(isRTL, 'مشاهد', 'Viewer')}</SelectItem>
                                 </SelectContent>
                               </Select>
                               <Button
@@ -2383,14 +2378,14 @@ const AdminUsers = () => {
                                 disabled={!linkForm.businessId || linkBusinessMutation.isPending}
                                 className="h-9 rounded-lg gap-1.5 text-xs">
                                 {linkBusinessMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
-                                {isRTL ? 'ربط' : 'Link'}
+                                {pickBi(isRTL, 'ربط', 'Link')}
                               </Button>
                             </div>
                           </div>
                         );
                       })()}
                       <div className="flex items-center justify-end pt-2">
-                        <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إغلاق' : 'Close'}</Button>
+                        <Button variant="outline" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إغلاق', 'Close')}</Button>
                       </div>
                     </TabsContent>
 
@@ -2399,7 +2394,7 @@ const AdminUsers = () => {
                       {!isSuperAdmin && (
                         <div className="rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
                           <Lock className="w-3.5 h-3.5 shrink-0 text-warning" />
-                          {isRTL ? 'إدارة الإيقاف متاحة فقط لمدير النظام (Super Admin).' : 'Suspension is restricted to Super Admins.'}
+                          {pickBi(isRTL, 'إدارة الإيقاف متاحة فقط لمدير النظام (Super Admin).', 'Suspension is restricted to Super Admins.')}
                         </div>
                       )}
                       {(() => {
@@ -2415,18 +2410,18 @@ const AdminUsers = () => {
                                 {editingProfile.is_banned ? <Ban className="w-4 h-4 text-destructive" /> : <UserCheck className="w-4 h-4 text-success" />}
                                 <p className="text-xs font-bold">
                                   {editingProfile.is_banned
-                                    ? (bu ? (isRTL ? 'موقوف مؤقتاً' : 'Temporarily suspended') : (isRTL ? 'موقوف دائماً' : 'Permanently suspended'))
-                                    : (isRTL ? 'الحساب نشط' : 'Account is active')}
+                                    ? (bu ? (pickBi(isRTL, 'موقوف مؤقتاً', 'Temporarily suspended')) : (pickBi(isRTL, 'موقوف دائماً', 'Permanently suspended')))
+                                    : (pickBi(isRTL, 'الحساب نشط', 'Account is active'))}
                                 </p>
                               </div>
                               {editingProfile.is_banned && (
                                 <div className="text-[11px] text-muted-foreground space-y-0.5">
                                   {bu && (
                                     <p className="tech-content">
-                                      {isRTL ? 'ينتهي:' : 'Ends:'} <span className="font-bold">{new Date(bu).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</span>
+                                      {pickBi(isRTL, 'ينتهي:', 'Ends:')} <span className="font-bold">{new Date(bu).toLocaleString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en'))}</span>
                                     </p>
                                   )}
-                                  {reason && <p>{isRTL ? 'السبب:' : 'Reason:'} <span className="font-medium">{reason}</span></p>}
+                                  {reason && <p>{pickBi(isRTL, 'السبب:', 'Reason:')} <span className="font-medium">{reason}</span></p>}
                                 </div>
                               )}
                             </div>
@@ -2434,7 +2429,7 @@ const AdminUsers = () => {
                             {/* Mode selector */}
                             <div>
                               <Label className="text-[11px] font-bold text-muted-foreground mb-2 block">
-                                {isRTL ? 'نوع الإيقاف' : 'Suspension type'}
+                                {pickBi(isRTL, 'نوع الإيقاف', 'Suspension type')}
                               </Label>
                               <div className="grid grid-cols-2 gap-2">
                                 <button
@@ -2446,9 +2441,9 @@ const AdminUsers = () => {
                                 >
                                   <div className="flex items-center gap-1.5 mb-1">
                                     <Timer className="w-4 h-4 text-warning" />
-                                    <p className="text-xs font-bold">{isRTL ? 'إيقاف مؤقت' : 'Temporary'}</p>
+                                    <p className="text-xs font-bold">{pickBi(isRTL, 'إيقاف مؤقت', 'Temporary')}</p>
                                   </div>
-                                  <p className="text-[10px] text-muted-foreground">{isRTL ? 'يُرفع تلقائياً عند انتهاء المدة' : 'Auto-lifts at expiry'}</p>
+                                  <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'يُرفع تلقائياً عند انتهاء المدة', 'Auto-lifts at expiry')}</p>
                                 </button>
                                 <button
                                   type="button"
@@ -2459,9 +2454,9 @@ const AdminUsers = () => {
                                 >
                                   <div className="flex items-center gap-1.5 mb-1">
                                     <Ban className="w-4 h-4 text-destructive" />
-                                    <p className="text-xs font-bold">{isRTL ? 'إيقاف دائم' : 'Permanent'}</p>
+                                    <p className="text-xs font-bold">{pickBi(isRTL, 'إيقاف دائم', 'Permanent')}</p>
                                   </div>
-                                  <p className="text-[10px] text-muted-foreground">{isRTL ? 'يبقى حتى يقوم الأدمن برفعه' : 'Until admin lifts it'}</p>
+                                  <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'يبقى حتى يقوم الأدمن برفعه', 'Until admin lifts it')}</p>
                                 </button>
                               </div>
                             </div>
@@ -2469,14 +2464,14 @@ const AdminUsers = () => {
                             {/* Quick presets + custom datetime */}
                             {suspendForm.mode === 'temporary' && (
                               <div className="space-y-2">
-                                <Label className="text-[11px] font-bold text-muted-foreground">{isRTL ? 'مدة سريعة' : 'Quick presets'}</Label>
+                                <Label className="text-[11px] font-bold text-muted-foreground">{pickBi(isRTL, 'مدة سريعة', 'Quick presets')}</Label>
                                 <div className="flex flex-wrap gap-1.5">
                                   {[
-                                    { label: isRTL ? '1 ساعة' : '1 hour', ms: 3600_000 },
-                                    { label: isRTL ? '24 ساعة' : '24 hours', ms: 86400_000 },
-                                    { label: isRTL ? '7 أيام' : '7 days', ms: 7 * 86400_000 },
-                                    { label: isRTL ? '30 يوم' : '30 days', ms: 30 * 86400_000 },
-                                    { label: isRTL ? '90 يوم' : '90 days', ms: 90 * 86400_000 },
+                                    { label: pickBi(isRTL, '1 ساعة', '1 hour'), ms: 3600_000 },
+                                    { label: pickBi(isRTL, '24 ساعة', '24 hours'), ms: 86400_000 },
+                                    { label: pickBi(isRTL, '7 أيام', '7 days'), ms: 7 * 86400_000 },
+                                    { label: pickBi(isRTL, '30 يوم', '30 days'), ms: 30 * 86400_000 },
+                                    { label: pickBi(isRTL, '90 يوم', '90 days'), ms: 90 * 86400_000 },
                                   ].map(p => (
                                     <Button key={p.label} type="button" variant="outline" size="sm" disabled={disabled}
                                       onClick={() => setSuspendForm(s => ({ ...s, until: new Date(Date.now() + p.ms).toISOString().slice(0, 16) }))}
@@ -2486,7 +2481,7 @@ const AdminUsers = () => {
                                   ))}
                                 </div>
                                 <div className="space-y-1.5">
-                                  <Label className="text-xs flex items-center gap-1"><Calendar className="w-3 h-3" />{isRTL ? 'ينتهي في' : 'Ends at'}</Label>
+                                  <Label className="text-xs flex items-center gap-1"><Calendar className="w-3 h-3" />{pickBi(isRTL, 'ينتهي في', 'Ends at')}</Label>
                                   <Input
                                     type="datetime-local"
                                     value={suspendForm.until}
@@ -2500,11 +2495,11 @@ const AdminUsers = () => {
                             )}
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs">{isRTL ? 'سبب الإيقاف (اختياري — يُسجَّل بالتدقيق)' : 'Reason (optional — logged to audit)'}</Label>
+                              <Label className="text-xs">{pickBi(isRTL, 'سبب الإيقاف (اختياري — يُسجَّل بالتدقيق)', 'Reason (optional — logged to audit)')}</Label>
                               <Input
                                 value={suspendForm.reason}
                                 onChange={(e) => setSuspendForm(p => ({ ...p, reason: e.target.value }))}
-                                placeholder={isRTL ? 'مثال: مخالفة سياسات النشر' : 'e.g. policy violation'}
+                                placeholder={pickBi(isRTL, 'مثال: مخالفة سياسات النشر', 'e.g. policy violation')}
                                 maxLength={200}
                                 disabled={disabled}
                                 dir="auto"
@@ -2522,19 +2517,19 @@ const AdminUsers = () => {
                                   disabled={disabled}
                                   className="rounded-xl gap-2 text-success border-success/40 hover:bg-success/10">
                                   {toggleBanMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
-                                  {isRTL ? 'رفع الإيقاف الآن' : 'Lift suspension'}
+                                  {pickBi(isRTL, 'رفع الإيقاف الآن', 'Lift suspension')}
                                 </Button>
                               ) : <span />}
                               <Button
                                 onClick={() => {
                                   if (suspendForm.mode === 'temporary') {
                                     if (!suspendForm.until) {
-                                      toast.error(isRTL ? 'حدد تاريخ الانتهاء' : 'Pick an end date');
+                                      toast.error(pickBi(isRTL, 'حدد تاريخ الانتهاء', 'Pick an end date'));
                                       return;
                                     }
                                     const untilDate = new Date(suspendForm.until);
                                     if (untilDate.getTime() <= Date.now()) {
-                                      toast.error(isRTL ? 'تاريخ الانتهاء يجب أن يكون في المستقبل' : 'End date must be in the future');
+                                      toast.error(pickBi(isRTL, 'تاريخ الانتهاء يجب أن يكون في المستقبل', 'End date must be in the future'));
                                       return;
                                     }
                                     suspendMutation.mutate({
@@ -2557,14 +2552,14 @@ const AdminUsers = () => {
                                 className="rounded-xl gap-2">
                                 {suspendMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (suspendForm.mode === 'permanent' ? <Ban className="w-4 h-4" /> : <Timer className="w-4 h-4" />)}
                                 {suspendForm.mode === 'permanent'
-                                  ? (isRTL ? 'إيقاف دائم' : 'Suspend permanently')
-                                  : (isRTL ? 'إيقاف مؤقت' : 'Suspend temporarily')}
+                                  ? (pickBi(isRTL, 'إيقاف دائم', 'Suspend permanently'))
+                                  : (pickBi(isRTL, 'إيقاف مؤقت', 'Suspend temporarily'))}
                               </Button>
                             </div>
                             {isSelf && (
                               <p className="text-[11px] text-warning flex items-center gap-1">
                                 <AlertTriangle className="w-3 h-3" />
-                                {isRTL ? 'لا يمكنك إيقاف حسابك بنفسك.' : 'You cannot suspend your own account.'}
+                                {pickBi(isRTL, 'لا يمكنك إيقاف حسابك بنفسك.', 'You cannot suspend your own account.')}
                               </p>
                             )}
                           </>
@@ -2581,17 +2576,17 @@ const AdminUsers = () => {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-heading font-bold text-lg flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><Lock className="w-4 h-4 text-accent" /></div>
-                      {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                      {pickBi(isRTL, 'تغيير كلمة المرور', 'Change Password')}
                       <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
                     </h3>
                     <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
                   </div>
                   <div className="max-w-md space-y-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs">{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                      <Label className="text-xs">{pickBi(isRTL, 'كلمة المرور الجديدة', 'New Password')}</Label>
                       <div className="relative">
                         <Input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                          placeholder={isRTL ? '8+ مع أرقام ورموز' : '8+ with numbers and symbols'} minLength={8} className="pe-10 h-10 rounded-xl" />
+                          placeholder={pickBi(isRTL, '8+ مع أرقام ورموز', '8+ with numbers and symbols')} minLength={8} className="pe-10 h-10 rounded-xl" />
                         <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
                           {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -2601,12 +2596,12 @@ const AdminUsers = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <Button onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
                         disabled={changePasswordMutation.isPending || !!passwordValidationMessage || !newPassword} className="rounded-xl gap-2">
-                        {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'تغيير' : 'Change'}
+                        {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{pickBi(isRTL, 'تغيير', 'Change')}
                       </Button>
                       <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5 rounded-xl">
-                        <Send className="w-4 h-4" />{isRTL ? 'إرسال رابط' : 'Send Link'}
+                        <Send className="w-4 h-4" />{pickBi(isRTL, 'إرسال رابط', 'Send Link')}
                       </Button>
-                      <Button variant="ghost" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                      <Button variant="ghost" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                     </div>
                   </div>
                 </div>
@@ -2617,7 +2612,7 @@ const AdminUsers = () => {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-heading font-bold text-lg flex items-center gap-2 text-destructive">
                       <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center"><AlertTriangle className="w-4 h-4 text-destructive" /></div>
-                      {isRTL ? 'تأكيد حذف الحساب' : 'Confirm Deletion'}
+                      {pickBi(isRTL, 'تأكيد حذف الحساب', 'Confirm Deletion')}
                     </h3>
                     <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
                   </div>
@@ -2626,9 +2621,9 @@ const AdminUsers = () => {
                   </p>
                   <div className="flex items-center gap-2">
                     <Button variant="destructive" onClick={() => deleteUserMutation.mutate(activePanel.userId)} disabled={deleteUserMutation.isPending} className="rounded-xl gap-2">
-                      {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'حذف نهائي' : 'Delete'}
+                      {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{pickBi(isRTL, 'حذف نهائي', 'Delete')}
                     </Button>
-                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                   </div>
                 </div>
               )}
@@ -2641,8 +2636,8 @@ const AdminUsers = () => {
                   <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
                     <Users className="w-8 h-8 text-accent/30" />
                   </div>
-                  <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
-                  <p className="text-xs text-muted-foreground">{isRTL ? 'جرّب تغيير الفلاتر' : 'Try changing filters'}</p>
+                  <p className="font-heading font-bold text-sm mb-1">{pickBi(isRTL, 'لا توجد نتائج', 'No results')}</p>
+                  <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'جرّب تغيير الفلاتر', 'Try changing filters')}</p>
                 </div>
               ) : (
                 <>
@@ -2682,7 +2677,7 @@ const AdminUsers = () => {
                     <div className="flex items-center justify-between gap-2 pt-2">
                       <Button variant="outline" size="sm" className="rounded-xl gap-1" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
                         {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                        {isRTL ? 'السابق' : 'Prev'}
+                        {pickBi(isRTL, 'السابق', 'Prev')}
                       </Button>
                       <div className="flex items-center gap-1">
                         {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
@@ -2701,7 +2696,7 @@ const AdminUsers = () => {
                         })}
                       </div>
                       <Button variant="outline" size="sm" className="rounded-xl gap-1" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
-                        {isRTL ? 'التالي' : 'Next'}
+                        {pickBi(isRTL, 'التالي', 'Next')}
                         {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </Button>
                     </div>
@@ -2714,14 +2709,14 @@ const AdminUsers = () => {
           {/* ANALYTICS */}
           <TabsContent value="analytics" className="space-y-5 mt-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <KpiCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-secondary/10 to-secondary/5" iconBg="bg-secondary/15 text-secondary" />
-              <KpiCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
-              <KpiCard icon={ShieldCheck} label={isRTL ? 'مشرفي محتوى' : 'Moderators'} value={stats.moderators} gradient="from-warning/10 to-warning/5" iconBg="bg-warning/15 text-warning" />
-              <KpiCard icon={Ban} label={isRTL ? 'معطّلون' : 'Disabled'} value={stats.bannedCount} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
+              <KpiCard icon={ShieldAlert} label={pickBi(isRTL, 'مشرف أعلى', 'Super Admins')} value={stats.superAdmins} gradient="from-secondary/10 to-secondary/5" iconBg="bg-secondary/15 text-secondary" />
+              <KpiCard icon={Crown} label={pickBi(isRTL, 'المشرفين', 'Admins')} value={stats.admins} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
+              <KpiCard icon={ShieldCheck} label={pickBi(isRTL, 'مشرفي محتوى', 'Moderators')} value={stats.moderators} gradient="from-warning/10 to-warning/5" iconBg="bg-warning/15 text-warning" />
+              <KpiCard icon={Ban} label={pickBi(isRTL, 'معطّلون', 'Disabled')} value={stats.bannedCount} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm mb-3">{isRTL ? 'توزيع أنواع الحسابات' : 'Account Type Distribution'}</h3>
+                <h3 className="font-heading font-bold text-sm mb-3">{pickBi(isRTL, 'توزيع أنواع الحسابات', 'Account Type Distribution')}</h3>
                 <div className="h-64">
                   <ResponsiveContainer>
                     <PieChart>
@@ -2735,13 +2730,13 @@ const AdminUsers = () => {
                 </div>
               </div>
               <div className="rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm mb-3">{isRTL ? 'توزيع العضويات' : 'Membership Tiers'}</h3>
+                <h3 className="font-heading font-bold text-sm mb-3">{pickBi(isRTL, 'توزيع العضويات', 'Membership Tiers')}</h3>
                 <div className="h-64">
                   <ResponsiveContainer>
                     <BarChart data={tierBar}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} reversed={isRTL} />
-                      <YAxis tick={{ fontSize: 11 }} orientation={isRTL ? 'right' : 'left'} />
+                      <YAxis tick={{ fontSize: 11 }} orientation={pickBi(isRTL, 'right', 'left')} />
                       <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
                       <Bar dataKey="count" fill="hsl(var(--accent))" radius={[8, 8, 0, 0]} />
                     </BarChart>
@@ -2771,10 +2766,10 @@ export const EmailLiveHint: React.FC<{ value: string; isRTL: boolean }> = ({ val
   return (
     <div data-testid="email-live-hint" className="min-h-[1rem] text-[11px] flex items-center gap-1.5">
       {ok ? (
-        <span className="text-success">{isRTL ? '✓ تنسيق صالح' : '✓ Valid format'}</span>
+        <span className="text-success">{pickBi(isRTL, '✓ تنسيق صالح', '✓ Valid format')}</span>
       ) : (
         <span className="text-destructive flex items-center gap-1.5">
-          <span>{isRTL ? 'تنسيق غير صحيح' : 'Invalid format'}</span>
+          <span>{pickBi(isRTL, 'تنسيق غير صحيح', 'Invalid format')}</span>
           <code className="tech-content text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
             invalid_format
           </code>
