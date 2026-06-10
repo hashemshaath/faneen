@@ -37,6 +37,7 @@ const SearchPage = () => {
 
   const searchQuery = searchParams.get('q') || '';
   const isRTL = language === 'ar';
+  const bi = useBi();
 
   // Detect a sector from the query (e.g. "ألمنيوم" → aluminum) and lift its
   // meta into the page so search results inherit sector-specific keywords,
