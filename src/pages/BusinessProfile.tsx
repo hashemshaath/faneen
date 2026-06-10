@@ -148,11 +148,11 @@ const BusinessProfile = () => {
       latitude: branch.latitude ?? businessRow.latitude ?? null,
       longitude: branch.longitude ?? businessRow.longitude ?? null,
     } as typeof businessRow;
-  }, [businessRow, branchSlug, branch]);
+  }, [businessRow, branch]);
 
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
-  const { data: branches = [] } = useBranches(business?.id);
+  const branches = branchesList;
   const { data: reviews = [] } = useReviews(business?.id);
   const { data: certifications = [] } = useCertifications(business?.id);
   const { data: awards = [] } = useAwards(business?.id);
@@ -455,7 +455,8 @@ const BusinessProfile = () => {
             <BusinessBranchSwitcher
               username={business.username}
               branches={branches as Array<{ id: string; slug?: string | null; name_ar: string; name_en?: string | null; region?: string | null; is_main?: boolean | null }>}
-              currentBranchSlug={branchSlug}
+              currentBranchId={selectedBranchId}
+              onSelect={(b) => setSelectedBranchId(b?.id ?? null)}
             />
           )}
 
