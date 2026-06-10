@@ -174,7 +174,7 @@ const Blog = () => {
         '@type': 'Organization',
         name: 'قِطاعات Qitaat',
         url: 'https://qitaat.com',
-        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' },
+        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
       },
     };
     const itemList = {
