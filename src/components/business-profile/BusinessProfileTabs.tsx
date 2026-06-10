@@ -710,12 +710,13 @@ export const BranchesTab = ({
                     {branch.slug && businessUsername ? (
                       <Link
                         to={`/${businessUsername}/${branch.slug}`}
+                        dir="auto"
                         className="truncate font-heading text-sm font-bold text-foreground hover:text-accent transition sm:text-base"
                       >
                         {name}
                       </Link>
                     ) : (
-                      <h3 className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
+                      <h3 dir="auto" className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
                     )}
                     {branch.is_main && (
                       <Badge className="shrink-0 border-accent/30 bg-accent/10 text-[10px] text-accent">
@@ -729,7 +730,7 @@ export const BranchesTab = ({
               {addressParts.length > 0 && (
                 <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
                   <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent/50" />
-                  <span>{addressParts.join("، ")}</span>
+                  <span dir="auto">{addressParts.join("، ")}</span>
                 </div>
               )}
             </div>
@@ -760,7 +761,7 @@ export const BranchesTab = ({
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] text-muted-foreground/70">{item.label}</p>
                         <p
-                          dir={item.dir || undefined}
+                          dir={item.dir || "auto"}
                           className={cn(
                             "truncate text-xs font-medium text-foreground sm:text-sm",
                             item.dir && "tech-content",
@@ -917,7 +918,7 @@ export const ContactTab = ({
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] text-muted-foreground sm:text-xs">{item.label}</p>
                 <p
-                  dir={item.dir || undefined}
+                  dir={item.dir || "auto"}
                   className={cn("truncate text-sm font-medium text-foreground", item.dir && "tech-content")}
                 >
                   {item.value}
@@ -935,9 +936,9 @@ export const ContactTab = ({
           {language === "ar" ? "الموقع" : "Location"}
         </h3>
         <div className="mb-3 space-y-2 text-xs text-muted-foreground sm:text-sm">
-          {addressParts.length > 0 && <p>{addressParts.join("، ")}</p>}
-          {business.address && <p>{business.address}</p>}
-          {(cityName || countryName) && <p>{[cityName, countryName].filter(Boolean).join("، ")}</p>}
+          {addressParts.length > 0 && <p dir="auto">{addressParts.join("، ")}</p>}
+          {business.address && <p dir="auto">{business.address}</p>}
+          {(cityName || countryName) && <p dir="auto">{[cityName, countryName].filter(Boolean).join("، ")}</p>}
           {/* national_id removed from public view for security */}
           {business.additional_number && (
             <p className="flex items-center gap-1.5">
