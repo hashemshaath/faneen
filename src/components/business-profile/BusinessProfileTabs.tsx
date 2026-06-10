@@ -41,6 +41,8 @@ import {
   useBranchServiceIds,
 } from "./business-profile.data";
 import { Stars } from "./BusinessProfileHeader";
+import { recordBranchVisit } from "@/modules/branchTelemetry";
+import { track } from "@/lib/analytics-events";
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
@@ -799,12 +801,36 @@ export const BranchesTab = ({
                     : null;
               if (!callNumber && !waNumber && !mapHref) return null;
               const sanitizeWa = (n: string) => n.replace(/[^\d+]/g, "").replace(/^\+/, "");
+              // Per-branch prefilled WhatsApp message — "quote request" template.
+              const bizLabel = businessName ? `${businessName} — ${name}` : name;
+              const waText =
+                language === "ar"
+                  ? `السلام عليكم،\nأرغب في الحصول على عرض سعر من ${bizLabel}.\nشكراً لكم.`
+                  : `Hello,\nI'd like to request a price quote from ${bizLabel}.\nThank you.`;
+              const waHref = waNumber
+                ? `https://wa.me/${sanitizeWa(waNumber)}?text=${encodeURIComponent(waText)}`
+                : null;
+              const trackBranch = (
+                kind: "call" | "whatsapp" | "map",
+                dbEvent: "phone_reveal" | "whatsapp_click" | "share",
+              ) => {
+                void recordBranchVisit({ businessId, branchId: branch.id, eventType: dbEvent });
+                track.leadContactClick({
+                  business_slug: branch.slug || undefined,
+                  contact_type: kind,
+                  source_page: "branch_card",
+                  is_authenticated: isAuthenticated,
+                });
+              };
               return (
                 <div className="grid grid-cols-3 gap-2 border-t border-border/20 p-3 dark:border-border/10 sm:p-4">
                   {callNumber ? (
                     <a
                       href={`tel:${callNumber}`}
-                      onClick={() => onRevealContact?.("phone")}
+                      onClick={() => {
+                        trackBranch("call", "phone_reveal");
+                        onRevealContact?.("phone");
+                      }}
                       className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-accent/10 text-[11px] font-medium text-accent transition hover:bg-accent/15 sm:text-xs"
                       aria-label={language === "ar" ? "اتصال" : "Call"}
                     >
@@ -821,12 +847,15 @@ export const BranchesTab = ({
                       {language === "ar" ? "اتصال" : "Call"}
                     </button>
                   )}
-                  {waNumber ? (
+                  {waHref ? (
                     <a
-                      href={`https://wa.me/${sanitizeWa(waNumber)}`}
+                      href={waHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => onRevealContact?.("phone")}
+                      onClick={() => {
+                        trackBranch("whatsapp", "whatsapp_click");
+                        onRevealContact?.("phone");
+                      }}
                       className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 text-[11px] font-medium text-emerald-600 transition hover:bg-emerald-500/15 dark:text-emerald-400 sm:text-xs"
                       aria-label="WhatsApp"
                     >
@@ -848,6 +877,7 @@ export const BranchesTab = ({
                       href={mapHref}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => trackBranch("map", "share")}
                       className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-sky-500/10 text-[11px] font-medium text-sky-600 transition hover:bg-sky-500/15 dark:text-sky-400 sm:text-xs"
                       aria-label={language === "ar" ? "الموقع" : "Map"}
                     >

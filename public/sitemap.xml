@@ -7,6 +7,9 @@
     <loc>https://qitaat.com/functions/v1/sitemap?type=businesses</loc>
   </sitemap>
   <sitemap>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=branches</loc>
+  </sitemap>
+  <sitemap>
     <loc>https://qitaat.com/functions/v1/sitemap?type=blog</loc>
   </sitemap>
   <sitemap>
