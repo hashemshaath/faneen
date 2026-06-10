@@ -109,10 +109,14 @@ const BusinessProfile = () => {
   // Branch selection lives in local state so switching between branches
   // updates the page in-place without changing the route or remounting.
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
-  // Seed selection from the URL on first load (deep-link to /:username/:branchSlug).
+  // Seed selection from old deep links once, then normalize the address bar
+  // back to the stable profile URL without a reload.
   useEffect(() => {
     if (branchFromUrl?.id) setSelectedBranchId((prev) => prev ?? branchFromUrl.id);
-  }, [branchFromUrl?.id]);
+    if (branchSlug && username && typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", `/${username}`);
+    }
+  }, [branchFromUrl?.id, branchSlug, username]);
   const { data: branchesList = [] } = useBranches(businessRow?.id);
   // Resolve the active branch from the locally selected id, falling back to
   // the URL-resolved branch while the branches list is still loading.
@@ -229,9 +233,7 @@ const BusinessProfile = () => {
         title: businessName,
         subtitle: [categoryName, cityName].filter(Boolean).join(' — ') || 'قِطاعات',
       }),
-    canonical: business
-      ? `https://qitaat.com/${business.username}${branch?.slug ? `/${branch.slug}` : ''}`
-      : undefined,
+    canonical: business ? `https://qitaat.com/${business.username}` : undefined,
     keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
@@ -600,7 +602,8 @@ const BusinessProfile = () => {
                   <BranchesTab
                     businessId={business.id}
                     businessName={businessName}
-                    businessUsername={business.username}
+                    currentBranchId={selectedBranchId}
+                    onSelectBranch={(selectedBranch) => setSelectedBranchId(selectedBranch.id)}
                     isAuthenticated={!!user}
                     onRequestContact={() => handleContactClick("branches_tab")}
                     onRevealContact={handleContactReveal}
