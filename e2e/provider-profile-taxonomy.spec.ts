@@ -34,6 +34,27 @@ test.describe(`Provider profile /${TARGET_USERNAME}`, () => {
     await expect(page.locator("body")).not.toContainText("Unclassified");
   });
 
+  test("mobile viewport + RTL never renders the 'غير مصنّف' fallback", async ({ page, context }) => {
+    // Force Arabic UI by seeding the LanguageContext localStorage key BEFORE
+    // the SPA boots — guarantees document dir="rtl" and Arabic copy.
+    await context.addInitScript(() => {
+      try { localStorage.setItem("qitaat_lang", "ar"); } catch { /* ignore */ }
+    });
+    await page.setViewportSize({ width: 390, height: 844 }); // iPhone 12-class
+    await page.goto(`/${TARGET_USERNAME}`);
+    await page.waitForLoadState("networkidle");
+
+    // Document must be RTL — sanity check we actually exercised the RTL path.
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+
+    // Page resolved on mobile.
+    await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
+
+    // Strict negative assertions — taxonomy must render real labels.
+    await expect(page.locator("body")).not.toContainText("غير مصنّف");
+    await expect(page.locator("body")).not.toContainText("Unclassified");
+  });
+
   test("/q/ alias is not used for company profiles", async ({ page }) => {
     // The provider profile lives at the bare `/:username` route. The `/q/`
     // prefix is reserved for quote requests and must not steal the
