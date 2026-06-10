@@ -15,7 +15,7 @@ import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearc
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
 import { HOME_TRENDING, type HomeTrendingItem } from '@/components/home/v2/data/homeTaxonomy';
 import heroSlide2 from '@/assets/home/hero-slide-2.webp';
-import heroSlide3 from '@/assets/home/hero-slide-3.webp';
+import heroSlide3 from '@/assets/home/hero-slide-3-rental-1920.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 // Responsive hero variants (768/1280/1920). Without an explicit srcset the
 // browser always pulled the full 1920×1080 source even on a 412px mobile
@@ -24,9 +24,9 @@ import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 import heroSlide2_768 from '@/assets/home/hero-slide-2-768.webp';
 import heroSlide2_1280 from '@/assets/home/hero-slide-2-1280.webp';
 import heroSlide2_1920 from '@/assets/home/hero-slide-2-1920.webp';
-import heroSlide3_768 from '@/assets/home/hero-slide-3-768.webp';
-import heroSlide3_1280 from '@/assets/home/hero-slide-3-1280.webp';
-import heroSlide3_1920 from '@/assets/home/hero-slide-3-1920.webp';
+import heroSlide3_768 from '@/assets/home/hero-slide-3-rental-768.webp';
+import heroSlide3_1280 from '@/assets/home/hero-slide-3-rental-1280.webp';
+import heroSlide3_1920 from '@/assets/home/hero-slide-3-rental-1920.webp';
 import heroSlide4_768 from '@/assets/home/hero-slide-4-768.webp';
 import heroSlide4_1280 from '@/assets/home/hero-slide-4-1280.webp';
 
