@@ -5,14 +5,12 @@ import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilder";
 import {
   CalendarClock,
-  ClipboardList,
-  FileSignature,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
   Inbox,
   LayoutDashboard,
-  MessageCircleQuestion,
+  MessageSquare,
   Phone,
   Shield,
   Star,
@@ -47,6 +45,7 @@ import {
   ReviewsTab,
   ServicesTab,
 } from "@/components/business-profile/BusinessProfileTabs";
+import { BusinessBranchSwitcher } from "@/components/business-profile/BusinessBranchSwitcher";
 import {
   useBranches,
   useBusinessByUsername,
@@ -73,12 +72,6 @@ import { track } from "@/lib/analytics-events";
 
 // Heavy / below-the-fold tabs + widgets are code-split so the initial
 // profile render only ships the Overview tab + Header chunks.
-const RfqTab = lazy(() =>
-  import("@/components/business-profile/RfqTab").then((m) => ({ default: m.RfqTab })),
-);
-const QATab = lazy(() =>
-  import("@/components/business-profile/QATab").then((m) => ({ default: m.QATab })),
-);
 const RequestsAsBeneficiaryTab = lazy(() =>
   import("@/components/business-profile/RequestsTab").then((m) => ({
     default: m.RequestsAsBeneficiaryTab,
