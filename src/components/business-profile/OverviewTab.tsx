@@ -480,45 +480,101 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
         )}
       </section>
 
-      {/* Location / branches */}
+      {/* Location / branches — live, rich cards */}
       <section className="rounded-2xl border border-border/40 bg-card p-4 dark:border-border/20 sm:p-5">
-        <SectionTitle icon={MapPin} title={bi("الموقع والفروع", "Location & branches")} />
-        <ul className="space-y-2 text-[12px] sm:text-sm">
-          {cityName && (
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 text-accent" />
-              <span dir="auto">{cityName}</span>
-            </li>
-          )}
-          {business.address && (
-            <li className="flex items-start gap-2 text-muted-foreground">
-              <Building2 className="mt-0.5 h-3.5 w-3.5 text-accent" />
-              <span dir="auto" className="line-clamp-2">{business.address}</span>
-            </li>
-          )}
-          <li className="flex items-center gap-2 text-muted-foreground">
-            <GitBranch className="h-3.5 w-3.5 text-accent" />
-            <span>
-              {bi(`${branches.length} فرع نشط`, `${branches.length} active branches`)}
-            </span>
-          </li>
-          <li className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5 text-accent" />
-            <span className="tech-content">
-              {bi(`عضو منذ ${memberYear}`, `Member since ${memberYear}`)}
-            </span>
-          </li>
-        </ul>
-        {branches.length > 0 && (
-          <button
-            type="button"
-            onClick={() => onJumpToTab?.("branches")}
-            className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline sm:text-xs"
-          >
-            {bi("عرض كل الفروع", "View all branches")}
-            <ArrowIcon className="h-3 w-3" />
-          </button>
+        <SectionTitle
+          icon={MapPin}
+          title={bi("الموقع والفروع", "Location & branches")}
+          action={
+            branches.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => onJumpToTab?.("branches")}
+                className="text-[11px] font-medium text-accent hover:underline sm:text-xs"
+              >
+                {bi(`الكل (${branches.length})`, `All (${branches.length})`)}
+              </button>
+            ) : null
+          }
+        />
+        {branches.length === 0 ? (
+          <p className="text-sm italic text-muted-foreground/70">
+            {bi("لا توجد فروع منشورة بعد.", "No branches published yet.")}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {branches.slice(0, 3).map((br) => {
+              const branchName = getLocalizedValue(language, br.name_ar, br.name_en);
+              const addr = [br.district, br.street_name, br.address]
+                .filter((p): p is string => Boolean(p));
+              const addressLine = Array.from(new Set(addr)).join("، ");
+              const phone = br.phone || br.mobile || br.unified_number;
+              return (
+                <li
+                  key={br.id}
+                  className={`group relative overflow-hidden rounded-xl border p-3 transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                    br.is_main
+                      ? "border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent dark:border-accent/25"
+                      : "border-border/40 bg-muted/20 hover:border-accent/30 dark:border-border/20 dark:bg-muted/10"
+                  }`}
+                >
+                  {br.is_main && (
+                    <span className="absolute end-2 top-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold text-accent-foreground">
+                      <Star className="h-2.5 w-2.5 fill-current" />
+                      {bi("المقر الرئيسي", "Head office")}
+                    </span>
+                  )}
+                  <div className="flex items-start gap-2.5">
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${br.is_main ? "bg-accent/20 text-accent" : "bg-foreground/5 text-foreground/70 dark:bg-foreground/10"}`}>
+                      <Building2 className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <h4 dir="auto" className="line-clamp-1 font-heading text-[13px] font-bold text-foreground sm:text-sm">
+                          {branchName}
+                        </h4>
+                        <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" aria-hidden />
+                      </div>
+                      {addressLine && (
+                        <p dir="auto" className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+                          <MapPin className="me-0.5 inline h-3 w-3 text-accent/70" />
+                          {addressLine}
+                        </p>
+                      )}
+                      {phone && (
+                        <a
+                          href={`tel:${phone}`}
+                          dir="ltr"
+                          className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline tech-content"
+                        >
+                          <Phone className="h-3 w-3" />
+                          {phone}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
+
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/30 pt-3 dark:border-border/20">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground sm:text-xs">
+            <Calendar className="h-3.5 w-3.5 text-accent" />
+            <span className="tech-content">{bi(`عضو منذ ${memberYear}`, `Member since ${memberYear}`)}</span>
+          </span>
+          {branches.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onJumpToTab?.("branches")}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline sm:text-xs"
+            >
+              {bi("كل الفروع", "All branches")}
+              <ArrowIcon className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       </section>
 
       {/* Featured portfolio strip */}
