@@ -59,4 +59,18 @@ describe('Business profile RTL/LTR direction hygiene', () => {
     expect(src).toMatch(/type="number" inputMode="numeric"[^>]*tech-content/s);
     expect(src).not.toMatch(/[٠-٩]/);
   });
+
+  it('business identity username and phone pills force isolated LTR ordering', () => {
+    const src = read('src/components/business/BusinessIdentityStrip.tsx');
+    expect(src).toMatch(/dir="ltr"[\s\S]{0,180}technical-ltr/);
+    expect(src).toMatch(/<span dir="ltr" className="tech-content font-medium">\{username\}<\/span>/);
+    expect(src).toMatch(/href=\{`tel:\$\{phone\}`\}/);
+    expect(src).toMatch(/dir="ltr"[\s\S]{0,220}technical-ltr[\s\S]{0,180}\{phone\}/);
+  });
+
+  it('footer technical contact values are explicit LTR instead of inheriting RTL', () => {
+    const src = read('src/components/layout/footer/FooterBrand.tsx');
+    expect(src).toMatch(/technical: true/);
+    expect(src).toMatch(/dir=\{item\.technical \? "ltr" : "auto"\}/);
+  });
 });

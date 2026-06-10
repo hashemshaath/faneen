@@ -51,11 +51,12 @@ export function BusinessIdentityStrip({
 
   const usernamePill = username ? (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/40 ${pad} ${txt} text-foreground`}
+      dir="ltr"
+      className={`inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/40 ${pad} ${txt} text-foreground technical-ltr`}
       title={isAr ? 'اسم المستخدم' : 'Username'}
     >
       <AtSign className="h-3 w-3 text-accent" />
-      <span className="tech-content font-medium">{username}</span>
+      <span dir="ltr" className="tech-content font-medium">{username}</span>
     </span>
   ) : null;
 
@@ -68,6 +69,7 @@ export function BusinessIdentityStrip({
         <Link
           to={`/${username}`}
           onClick={(e) => e.stopPropagation()}
+          dir="ltr"
           className="hover:opacity-80 transition-opacity"
           aria-label={isAr ? `الانتقال إلى صفحة ${username}` : `Open ${username} profile`}
         >
@@ -79,7 +81,8 @@ export function BusinessIdentityStrip({
         <a
           href={`tel:${phone}`}
           onClick={(e) => e.stopPropagation()}
-          className={`inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/40 ${pad} ${txt} text-foreground hover:bg-accent/10 hover:border-accent/30 transition-colors`}
+          dir="ltr"
+          className={`inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/40 ${pad} ${txt} text-foreground hover:bg-accent/10 hover:border-accent/30 transition-colors technical-ltr`}
           title={isAr ? 'الرقم الرئيسي' : 'Primary phone'}
         >
           <Phone className="h-3 w-3 text-accent" />
