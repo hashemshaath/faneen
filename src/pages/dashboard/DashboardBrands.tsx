@@ -26,6 +26,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { pickBi } from '@/components/common/Bilingual';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
