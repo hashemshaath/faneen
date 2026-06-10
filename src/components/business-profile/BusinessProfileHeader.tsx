@@ -212,7 +212,7 @@ export const BusinessProfileHeader = ({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-3">
-                    <h1 className="font-heading text-base font-bold text-foreground leading-tight sm:text-3xl line-clamp-2">
+                    <h1 dir="auto" className="font-heading text-base font-bold text-foreground leading-tight sm:text-3xl line-clamp-2">
                       {name}
                     </h1>
                     <VerificationStatusBadge
@@ -235,20 +235,20 @@ export const BusinessProfileHeader = ({
                   </div>
 
                   {categoryName && (
-                    <span className="text-xs font-medium text-accent sm:text-sm">{categoryName}</span>
+                    <span dir="auto" className="text-xs font-medium text-accent sm:text-sm">{categoryName}</span>
                   )}
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground sm:mt-3 sm:gap-x-3 sm:gap-y-1.5 sm:text-sm">
                     {cityName && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 text-accent" />
-                        <span>{cityName}</span>
+                        <span dir="auto">{cityName}</span>
                       </div>
                     )}
                     {business.contact_person && (
                       <div className="flex items-center gap-1">
                         <User className="h-3.5 w-3.5 text-accent" />
-                        <span className="truncate max-w-[120px]">{business.contact_person}</span>
+                        <span dir="auto" className="truncate max-w-[120px]">{business.contact_person}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1">
@@ -287,7 +287,7 @@ export const BusinessProfileHeader = ({
               </div>
 
               {shortDesc && (
-                <p className="mt-2 hidden max-w-3xl text-sm leading-relaxed text-muted-foreground sm:block sm:mt-3">{shortDesc}</p>
+                <p dir="auto" className="mt-2 hidden max-w-3xl text-sm leading-relaxed text-muted-foreground sm:block sm:mt-3">{shortDesc}</p>
               )}
 
               {topServices.length > 0 && (
@@ -298,6 +298,7 @@ export const BusinessProfileHeader = ({
                     return (
                       <span
                         key={idx}
+                        dir="auto"
                         className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary/5 text-primary border border-primary/15 text-[11px] sm:text-xs font-body truncate max-w-[180px]"
                       >
                         {label}
@@ -316,7 +317,7 @@ export const BusinessProfileHeader = ({
 
           {/* Mobile description (full width below logo+name) */}
           {shortDesc && (
-            <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground sm:hidden">{shortDesc}</p>
+            <p dir="auto" className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground sm:hidden">{shortDesc}</p>
           )}
 
           {/* Mobile quick action row */}
