@@ -499,10 +499,10 @@ const BusinessProfile = () => {
                 is selected, falling back to the main business phone. Guests
                 hit the lead-capture sheet; authenticated users get a real
                 tel: link with reveal tracking. */}
-            {(business.phone || business.mobile || business.whatsapp) && (
+            {(business.phone || business.mobile) && (
               user ? (
                 <a
-                  href={`tel:${business.phone || business.mobile || business.whatsapp}`}
+                  href={`tel:${business.phone || business.mobile}`}
                   onClick={() => handleContactReveal("phone")}
                   className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 text-xs font-medium text-foreground hover:border-accent/40 hover:text-accent sm:text-sm"
                   aria-label={language === "ar" ? "اتصال مباشر" : "Call directly"}
