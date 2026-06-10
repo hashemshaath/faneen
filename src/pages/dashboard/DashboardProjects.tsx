@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useTransition } from 'react';
+import { pickBi } from "@/components/common/Bilingual";
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -375,19 +376,19 @@ const DashboardProjects = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-project-taxonomy'] });
       closeForm();
-      toast.success(editId ? (isRTL ? 'تم التحديث' : 'Updated') : (isRTL ? 'تم الإضافة' : 'Added'));
+      toast.success(editId ? (pickBi(isRTL, 'تم التحديث', 'Updated')) : (pickBi(isRTL, 'تم الإضافة', 'Added')));
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('projects').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setDeleteConfirm(null); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setDeleteConfirm(null); toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted')); },
   });
 
   const toggleFeaturedMut = useMutation({
     mutationFn: async (p: any) => { const { error } = await supabase.from('projects').update({ is_featured: !p.is_featured }).eq('id', p.id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); toast.success(pickBi(isRTL, 'تم التحديث', 'Updated')); },
   });
 
   const reorderMut = useMutation({
@@ -399,12 +400,12 @@ const DashboardProjects = () => {
 
   const bulkDeleteMut = useMutation({
     mutationFn: async () => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('projects').delete().eq('id', id))); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setSelectedIds(new Set()); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setSelectedIds(new Set()); toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted')); },
   });
 
   const bulkStatusMut = useMutation({
     mutationFn: async (status: string) => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('projects').update({ status }).eq('id', id))); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setSelectedIds(new Set()); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setSelectedIds(new Set()); toast.success(pickBi(isRTL, 'تم التحديث', 'Updated')); },
   });
 
   /* ─── Callbacks ─── */
@@ -434,7 +435,7 @@ const DashboardProjects = () => {
     const primary = links.find((l) => l.role === 'primary_activity');
     setEditId(null);
     setForm({
-      title_ar: p.title_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
+      title_ar: p.title_ar + (pickBi(isRTL, ' (نسخة)', ' (copy)')),
       title_en: p.title_en ? p.title_en + ' (copy)' : '',
       description_ar: p.description_ar || '', description_en: p.description_en || '',
       cover_image_url: p.cover_image_url || '', client_name: p.client_name || '',
@@ -508,14 +509,14 @@ const DashboardProjects = () => {
     const url = URL.createObjectURL(blob);
     Object.assign(document.createElement('a'), { href: url, download: `projects_${new Date().toISOString().slice(0, 10)}.csv` }).click();
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم التصدير' : 'Exported');
+    toast.success(pickBi(isRTL, 'تم التصدير', 'Exported'));
   }, [projects, isRTL]);
 
   const filterOptions = useMemo(() => [
-    { key: 'all' as const, label: isRTL ? 'الكل' : 'All', count: stats.total, icon: Layers },
-    { key: 'published' as const, label: isRTL ? 'منشور' : 'Published', count: stats.published, icon: Eye },
-    { key: 'draft' as const, label: isRTL ? 'مسودة' : 'Draft', count: stats.draft, icon: EyeOff },
-    { key: 'featured' as const, label: isRTL ? 'مميز' : 'Featured', count: stats.featured, icon: Star },
+    { key: 'all' as const, label: pickBi(isRTL, 'الكل', 'All'), count: stats.total, icon: Layers },
+    { key: 'published' as const, label: pickBi(isRTL, 'منشور', 'Published'), count: stats.published, icon: Eye },
+    { key: 'draft' as const, label: pickBi(isRTL, 'مسودة', 'Draft'), count: stats.draft, icon: EyeOff },
+    { key: 'featured' as const, label: pickBi(isRTL, 'مميز', 'Featured'), count: stats.featured, icon: Star },
   ], [isRTL, stats]);
 
   const galleryProject = projects.find((p) => p.id === galleryProjectId);
@@ -526,18 +527,18 @@ const DashboardProjects = () => {
         <PageHeader
           icon={FolderOpen}
           tone="primary"
-          eyebrow={isRTL ? 'الأعمال' : 'Work'}
-          title={isRTL ? 'المشاريع المنجزة' : 'Completed Projects'}
-          subtitle={isRTL ? `${stats.total} مشروع · ${stats.published} منشور` : `${stats.total} projects · ${stats.published} published`}
+          eyebrow={pickBi(isRTL, 'الأعمال', 'Work')}
+          title={pickBi(isRTL, 'المشاريع المنجزة', 'Completed Projects')}
+          subtitle={pickBi(isRTL, `${stats.total} مشروع · ${stats.published} منشور`, `${stats.total} projects · ${stats.published} published`)}
           actions={
             <>
               {projects.length > 0 && (
                 <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
-                  <Download className="w-3.5 h-3.5 me-1" />{isRTL ? 'تصدير' : 'Export'}
+                  <Download className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'تصدير', 'Export')}
                 </Button>
               )}
               <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-                <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة مشروع' : 'Add Project'}
+                <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة مشروع', 'Add Project')}
               </Button>
             </>
           }
@@ -547,11 +548,11 @@ const DashboardProjects = () => {
         {projects.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
             {[
-              { l: isRTL ? 'إجمالي' : 'Total', v: stats.total, icon: FolderOpen, cls: 'text-primary bg-primary/10' },
-              { l: isRTL ? 'منشور' : 'Published', v: stats.published, icon: Eye, cls: 'text-primary bg-primary/10' },
-              { l: isRTL ? 'مسودة' : 'Draft', v: stats.draft, icon: EyeOff, cls: 'text-muted-foreground bg-muted' },
-              { l: isRTL ? 'مميز' : 'Featured', v: stats.featured, icon: Star, cls: 'text-accent bg-accent/10' },
-              { l: isRTL ? 'الاكتمال' : 'Complete', v: stats.completeness, icon: BarChart3, cls: 'text-primary bg-primary/10', suffix: '%' },
+              { l: pickBi(isRTL, 'إجمالي', 'Total'), v: stats.total, icon: FolderOpen, cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'منشور', 'Published'), v: stats.published, icon: Eye, cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'مسودة', 'Draft'), v: stats.draft, icon: EyeOff, cls: 'text-muted-foreground bg-muted' },
+              { l: pickBi(isRTL, 'مميز', 'Featured'), v: stats.featured, icon: Star, cls: 'text-accent bg-accent/10' },
+              { l: pickBi(isRTL, 'الاكتمال', 'Complete'), v: stats.completeness, icon: BarChart3, cls: 'text-primary bg-primary/10', suffix: '%' },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border/40 bg-card/50">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.cls}`}>
@@ -572,7 +573,7 @@ const DashboardProjects = () => {
             <Zap className="w-4 h-4 text-primary shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-medium">{isRTL ? 'اكتمال بيانات المشاريع' : 'Project completeness'}</span>
+                <span className="text-[11px] font-medium">{pickBi(isRTL, 'اكتمال بيانات المشاريع', 'Project completeness')}</span>
                 <span className="text-[11px] font-bold text-primary">{stats.completeness}%</span>
               </div>
               <Progress value={stats.completeness} className="h-1" />
@@ -589,7 +590,7 @@ const DashboardProjects = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     {editId ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
-                    {editId ? (isRTL ? 'تعديل المشروع' : 'Edit Project') : (isRTL ? 'إضافة مشروع جديد' : 'New Project')}
+                    {editId ? (pickBi(isRTL, 'تعديل المشروع', 'Edit Project')) : (pickBi(isRTL, 'إضافة مشروع جديد', 'New Project'))}
                   </CardTitle>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm}><X className="w-4 h-4" /></Button>
                 </div>
@@ -599,16 +600,16 @@ const DashboardProjects = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'العنوان (عربي)', 'Title (Arabic)')} <span className="text-destructive">*</span></Label>
                       <FieldAiActions value={form.title_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
                         onTranslated={v => setForm(f => ({ ...f, title_en: v }))}
                         onImproved={v => setForm(f => ({ ...f, title_ar: v }))} />
                     </div>
-                    <Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder={isRTL ? 'مثال: تركيب واجهات زجاجية' : 'e.g. Glass facade installation'} className="h-9" />
+                    <Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder={pickBi(isRTL, 'مثال: تركيب واجهات زجاجية', 'e.g. Glass facade installation')} className="h-9" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'العنوان (إنجليزي)', 'Title (English)')}</Label>
                       <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
                         onTranslated={v => setForm(f => ({ ...f, title_ar: v }))}
                         onImproved={v => setForm(f => ({ ...f, title_en: v }))} />
@@ -620,32 +621,32 @@ const DashboardProjects = () => {
                 {/* Category, City, Status */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'التصنيف' : 'Category'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{pickBi(isRTL, 'التصنيف', 'Category')}</Label>
                     <Select value={form.taxonomy_category_id || 'none'} onValueChange={v => setForm(f => ({ ...f, taxonomy_category_id: v === 'none' ? '' : v }))}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'غير مصنّف' : 'Uncategorized'} /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder={pickBi(isRTL, 'غير مصنّف', 'Uncategorized')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{isRTL ? 'غير مصنّف' : 'Uncategorized'}</SelectItem>
+                        <SelectItem value="none">{pickBi(isRTL, 'غير مصنّف', 'Uncategorized')}</SelectItem>
                         {pickerCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'المدينة' : 'City'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{pickBi(isRTL, 'المدينة', 'City')}</Label>
                     <Select value={form.city_id || 'none'} onValueChange={v => setForm(f => ({ ...f, city_id: v === 'none' ? '' : v }))}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder={pickBi(isRTL, 'اختر', 'Select')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
+                        <SelectItem value="none">{pickBi(isRTL, 'بدون', 'None')}</SelectItem>
                         {cities.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'الحالة' : 'Status'}</Label>
+                    <Label className="text-xs font-medium">{pickBi(isRTL, 'الحالة', 'Status')}</Label>
                     <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
-                        <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
+                        <SelectItem value="published">{pickBi(isRTL, 'منشور', 'Published')}</SelectItem>
+                        <SelectItem value="draft">{pickBi(isRTL, 'مسودة', 'Draft')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -653,7 +654,7 @@ const DashboardProjects = () => {
 
                 {/* Cover Image */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                  <Label className="text-xs font-medium">{pickBi(isRTL, 'صورة الغلاف', 'Cover Image')}</Label>
                   <ImageUpload
                     bucket="project-images"
                     pipeline="project"
@@ -663,7 +664,7 @@ const DashboardProjects = () => {
                     onUploadedMeta={(meta) => setForm(f => ({ ...f, cover_image_asset_id: meta.imageAssetId ?? '' }))}
                     onRemove={() => setForm(f => ({ ...f, cover_image_url: '', cover_image_asset_id: '' }))}
                     compact
-                    placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'}
+                    placeholder={pickBi(isRTL, 'اضغط لرفع صورة (يُفضل 16:9)', 'Click to upload (16:9 recommended)')}
                   />
                 </div>
 
@@ -671,16 +672,16 @@ const DashboardProjects = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'الوصف (عربي)', 'Description (Arabic)')}</Label>
                       <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
                         onTranslated={v => setForm(f => ({ ...f, description_en: v }))}
                         onImproved={v => setForm(f => ({ ...f, description_ar: v }))} />
                     </div>
-                    <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} placeholder={isRTL ? 'وصف المشروع...' : 'Project description...'} className="resize-none text-sm" />
+                    <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} placeholder={pickBi(isRTL, 'وصف المشروع...', 'Project description...')} className="resize-none text-sm" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                      <Label className="text-xs font-medium">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (English)')}</Label>
                       <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
                         onTranslated={v => setForm(f => ({ ...f, description_ar: v }))}
                         onImproved={v => setForm(f => ({ ...f, description_en: v }))} />
@@ -692,11 +693,11 @@ const DashboardProjects = () => {
                 {/* Project Details */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'العميل' : 'Client'}</Label>
-                    <Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} placeholder={isRTL ? 'اسم العميل' : 'Client'} className="h-9" />
+                    <Label className="text-xs font-medium flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{pickBi(isRTL, 'العميل', 'Client')}</Label>
+                    <Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} placeholder={pickBi(isRTL, 'اسم العميل', 'Client')} className="h-9" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'التكلفة' : 'Cost'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{pickBi(isRTL, 'التكلفة', 'Cost')}</Label>
                     <div className="flex gap-1">
                       <Input type="number" value={form.project_cost} onChange={e => setForm(f => ({ ...f, project_cost: e.target.value }))} dir="ltr" className="flex-1 h-9" />
                       <Select value={form.currency_code} onValueChange={v => setForm(f => ({ ...f, currency_code: v }))}>
@@ -706,11 +707,11 @@ const DashboardProjects = () => {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{isRTL ? 'المدة (أيام)' : 'Duration'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{pickBi(isRTL, 'المدة (أيام)', 'Duration')}</Label>
                     <Input type="number" value={form.duration_days} onChange={e => setForm(f => ({ ...f, duration_days: e.target.value }))} dir="ltr" className="h-9" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{isRTL ? 'تاريخ الإنجاز' : 'Date'}</Label>
+                    <Label className="text-xs font-medium flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{pickBi(isRTL, 'تاريخ الإنجاز', 'Date')}</Label>
                     <Input type="date" value={form.completion_date} onChange={e => setForm(f => ({ ...f, completion_date: e.target.value }))} dir="ltr" className="h-9" />
                   </div>
                 </div>
@@ -719,17 +720,17 @@ const DashboardProjects = () => {
                 <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
                   <Switch checked={form.is_featured} onCheckedChange={v => setForm(f => ({ ...f, is_featured: v }))} />
                   <div>
-                    <span className="text-xs font-medium">{isRTL ? 'مشروع مميز' : 'Featured Project'}</span>
-                    <p className="text-[10px] text-muted-foreground">{isRTL ? 'يظهر بشكل بارز' : 'Displayed prominently'}</p>
+                    <span className="text-xs font-medium">{pickBi(isRTL, 'مشروع مميز', 'Featured Project')}</span>
+                    <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'يظهر بشكل بارز', 'Displayed prominently')}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-2 pt-1">
                   <Button onClick={() => saveMut.mutate()} disabled={!form.title_ar.trim() || saveMut.isPending} variant="hero" className="flex-1 h-9">
                     {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
-                    {saveMut.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
+                    {saveMut.isPending ? (pickBi(isRTL, 'جاري الحفظ...', 'Saving...')) : editId ? (pickBi(isRTL, 'تحديث', 'Update')) : (pickBi(isRTL, 'إضافة', 'Add'))}
                   </Button>
-                  <Button variant="outline" className="h-9" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button variant="outline" className="h-9" onClick={closeForm}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -744,7 +745,7 @@ const DashboardProjects = () => {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Images className="w-4 h-4 text-primary" />
-                  {isRTL ? 'معرض الصور' : 'Image Gallery'}
+                  {pickBi(isRTL, 'معرض الصور', 'Image Gallery')}
                 </CardTitle>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setGalleryProjectId(null)}><X className="w-4 h-4" /></Button>
               </div>
@@ -766,7 +767,7 @@ const DashboardProjects = () => {
                 maxImages={20}
                 maxSizeMB={5}
               />
-              <p className="text-[10px] text-muted-foreground mt-2">{isRTL ? `${galleryImages.length} / 20 صورة` : `${galleryImages.length} / 20 images`}</p>
+              <p className="text-[10px] text-muted-foreground mt-2">{pickBi(isRTL, `${galleryImages.length} / 20 صورة`, `${galleryImages.length} / 20 images`)}</p>
             </CardContent>
           </Card>
         )}
@@ -777,7 +778,7 @@ const DashboardProjects = () => {
             <div className="flex items-center gap-2">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input placeholder={isRTL ? 'ابحث...' : 'Search...'} value={searchQuery}
+                <Input placeholder={pickBi(isRTL, 'ابحث...', 'Search...')} value={searchQuery}
                   onChange={e => startTransition(() => setSearchQuery(e.target.value))}
                   className="ps-8 h-8 text-xs" />
               </div>
@@ -787,7 +788,7 @@ const DashboardProjects = () => {
                     <Tag className="w-3 h-3" /><SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                    <SelectItem value="all">{pickBi(isRTL, 'الكل', 'All')}</SelectItem>
                     {usedCategories.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -796,7 +797,7 @@ const DashboardProjects = () => {
                 <button className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}><LayoutGrid className="w-3.5 h-3.5" /></button>
                 <button className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}><List className="w-3.5 h-3.5" /></button>
               </div>
-              <button onClick={toggleSelectAll} className="p-1.5 rounded-lg border border-border/40 hover:bg-muted/50 transition-colors" title={isRTL ? 'تحديد الكل' : 'Select All'}>
+              <button onClick={toggleSelectAll} className="p-1.5 rounded-lg border border-border/40 hover:bg-muted/50 transition-colors" title={pickBi(isRTL, 'تحديد الكل', 'Select All')}>
                 <CheckCircle2 className={`w-3.5 h-3.5 ${selectedIds.size === filteredProjects.length && filteredProjects.length > 0 ? 'text-primary' : 'text-muted-foreground/40'}`} />
               </button>
             </div>
@@ -818,10 +819,10 @@ const DashboardProjects = () => {
         {/* Bulk Actions */}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-2 p-2 rounded-xl bg-primary/5 border border-primary/15 animate-in fade-in-0 duration-150">
-            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{selectedIds.size} {isRTL ? 'محددة' : 'selected'}</Badge>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkStatusMut.mutate('published')} disabled={bulkStatusMut.isPending}><Eye className="w-3 h-3 me-0.5" />{isRTL ? 'نشر' : 'Publish'}</Button>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkStatusMut.mutate('draft')} disabled={bulkStatusMut.isPending}><EyeOff className="w-3 h-3 me-0.5" />{isRTL ? 'مسودة' : 'Draft'}</Button>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive" onClick={() => bulkDeleteMut.mutate()} disabled={bulkDeleteMut.isPending}><Trash2 className="w-3 h-3 me-0.5" />{isRTL ? 'حذف' : 'Del'}</Button>
+            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{selectedIds.size} {pickBi(isRTL, 'محددة', 'selected')}</Badge>
+            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkStatusMut.mutate('published')} disabled={bulkStatusMut.isPending}><Eye className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'نشر', 'Publish')}</Button>
+            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkStatusMut.mutate('draft')} disabled={bulkStatusMut.isPending}><EyeOff className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'مسودة', 'Draft')}</Button>
+            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive" onClick={() => bulkDeleteMut.mutate()} disabled={bulkDeleteMut.isPending}><Trash2 className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'حذف', 'Del')}</Button>
             <button className="ms-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSelectedIds(new Set())}><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
@@ -831,12 +832,12 @@ const DashboardProjects = () => {
           <div className="flex items-center gap-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5 animate-in fade-in-0 slide-in-from-top-1 duration-150">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-medium">{isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}</p>
-              <p className="text-[11px] text-muted-foreground">{isRTL ? 'سيتم حذف المشروع وجميع صوره' : 'Project and all images will be deleted'}</p>
+              <p className="text-sm font-medium">{pickBi(isRTL, 'تأكيد الحذف', 'Confirm Delete')}</p>
+              <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'سيتم حذف المشروع وجميع صوره', 'Project and all images will be deleted')}</p>
             </div>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteConfirm(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteConfirm(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
             <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => deleteConfirm && deleteMut.mutate(deleteConfirm)} disabled={deleteMut.isPending}>
-              {deleteMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{isRTL ? 'حذف' : 'Delete'}
+              {deleteMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{pickBi(isRTL, 'حذف', 'Delete')}
             </Button>
           </div>
         )}
@@ -851,15 +852,15 @@ const DashboardProjects = () => {
             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <FolderOpen className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد مشاريع بعد' : 'No projects yet'}</h3>
-            <p className="text-sm text-muted-foreground max-w-xs mb-5">{isRTL ? 'أضف مشاريعك المنجزة لعرضها للعملاء' : 'Add your completed projects to showcase'}</p>
-            <Button variant="hero" size="sm" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{isRTL ? 'أضف أول مشروع' : 'Add First Project'}</Button>
+            <h3 className="text-base font-semibold mb-1">{pickBi(isRTL, 'لا توجد مشاريع بعد', 'No projects yet')}</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mb-5">{pickBi(isRTL, 'أضف مشاريعك المنجزة لعرضها للعملاء', 'Add your completed projects to showcase')}</p>
+            <Button variant="hero" size="sm" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{pickBi(isRTL, 'أضف أول مشروع', 'Add First Project')}</Button>
           </div>
         ) : filteredProjects.length === 0 ? (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <Search className="w-7 h-7 mb-2" />
-            <p className="text-sm font-medium">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
-            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearchQuery(''); setStatusFilter('all'); setCategoryFilter('all'); }}>{isRTL ? 'إعادة تعيين' : 'Reset filters'}</button>
+            <p className="text-sm font-medium">{pickBi(isRTL, 'لا توجد نتائج', 'No results')}</p>
+            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearchQuery(''); setStatusFilter('all'); setCategoryFilter('all'); }}>{pickBi(isRTL, 'إعادة تعيين', 'Reset filters')}</button>
           </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
