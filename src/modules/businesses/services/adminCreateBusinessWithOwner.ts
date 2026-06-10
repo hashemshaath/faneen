@@ -27,7 +27,6 @@ export interface AdminCreateBusinessPayload {
   name_en?: string | null;
   phone?: string | null;
   email?: string | null;
-  category_id?: string | null;
   city_id?: string | null;
   region?: string | null;
   region_en?: string | null;
