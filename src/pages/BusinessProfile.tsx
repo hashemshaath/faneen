@@ -125,8 +125,8 @@ const BusinessProfile = () => {
     return branchesList.find((b) => b.id === selectedBranchId) ?? branchFromUrl ?? null;
   }, [selectedBranchId, branchesList, branchFromUrl]);
 
-  // When viewing `/:username/:branchSlug`, swap the contact/location fields
-  // on the business row with the selected branch's values. The screen
+  // When a branch is selected, swap the contact/location fields on the
+  // business row with the selected branch's values. The screen
   // (header, tabs, layout) stays identical — only the data changes.
   const business = useMemo(() => {
     if (!businessRow) return businessRow;
