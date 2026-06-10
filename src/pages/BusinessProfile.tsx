@@ -108,8 +108,6 @@ const BusinessProfile = () => {
   const { data: branchFromUrl } = useBranchBySlug(businessRow?.id, branchSlug);
   // Branch selection lives in local state so switching between branches
   // updates the page in-place without changing the route or remounting.
-  // The URL is still kept in sync via `history.replaceState` from the
-  // switcher so the page stays shareable/refreshable.
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   // Seed selection from the URL on first load (deep-link to /:username/:branchSlug).
   useEffect(() => {
@@ -453,7 +451,6 @@ const BusinessProfile = () => {
               before drilling into tabs. */}
           {business.username && (
             <BusinessBranchSwitcher
-              username={business.username}
               branches={branches as Array<{ id: string; slug?: string | null; name_ar: string; name_en?: string | null; region?: string | null; is_main?: boolean | null }>}
               currentBranchId={selectedBranchId}
               onSelect={(b) => setSelectedBranchId(b?.id ?? null)}
