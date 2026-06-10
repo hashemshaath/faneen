@@ -17,7 +17,7 @@ import { Section, SectionCover } from './_shared';
 const PlatformFeaturesSection = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const Arrow = bi(ArrowLeft, ArrowRight);
 
   const items: Array<{
     to: string;

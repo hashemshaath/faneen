@@ -219,7 +219,7 @@ const QuoteSpecialtyPicker: React.FC<{
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
         <Bi
-          ar={isRTL ? 'سيساعد المزودين على فهم احتياجك بدقة أكبر.' : ''}
+          ar="سيساعد المزودين على فهم احتياجك بدقة أكبر."
           en="Helps providers understand your need more precisely."
         />
       </p>
@@ -434,7 +434,7 @@ const Quote: React.FC = () => {
         ? 'after-quotes'
         : form.budgetMode === 'no' ? 'no-budget' : null,
       metadata: {
-        locale: isRTL ? 'ar' : 'en',
+        locale: bi('ar', 'en'),
         // Safe Batch 3 — Persist the canonical taxonomy slugs in metadata so
         // the matcher / future analytics never have to re-resolve.
         taxonomy_primary_slug: form.sector || null,
@@ -574,8 +574,8 @@ const Quote: React.FC = () => {
   }
 
   const progressPct = (step / TOTAL_STEPS) * 100;
-  const Chevron = isRTL ? ChevronLeft : ChevronRight;
-  const ChevronBack = isRTL ? ChevronRight : ChevronLeft;
+  const Chevron = bi(ChevronLeft, ChevronRight);
+  const ChevronBack = bi(ChevronRight, ChevronLeft);
 
   return (
     <div className="min-h-screen bg-background">
