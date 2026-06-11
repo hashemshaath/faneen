@@ -506,7 +506,7 @@ const ClaimBusiness: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </Shell>
   );
 };
 
