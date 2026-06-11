@@ -65,11 +65,11 @@ interface Allow {
 const ALLOWLIST: ReadonlyArray<Allow> = [
   {
     file: 'src/pages/admin/AdminBusinesses.tsx',
-    max: 40,
+    max: 4,
     reason:
-      'Large legacy admin form: dynamic create/edit state, Supabase joined business+branches+images shape, CSV export.',
+      'Remaining residue after Phase-1 reduction: two `useState<any>` form stores (edit/create) and two `as any` casts on `admin_activity_log` / `portfolio_items` inserts whose typed payloads are wider than what we actually persist.',
     followUp:
-      'Extract typed CreateBusinessForm / EditBusinessForm and a BusinessRow type from listBusinesses; replace setForm((f: any) => ...) with React.SetStateAction.',
+      'Phase 2 — replace `useState<any>` with explicit AdminBusinessEditForm / AdminBusinessCreateForm interfaces (currently risky because hundreds of dot-accessors assume implicit any); then drop the two insert `as any` casts by aligning payloads to generated `Insert` row types.',
   },
   {
     file: 'src/pages/admin/AdminMemberships.tsx',

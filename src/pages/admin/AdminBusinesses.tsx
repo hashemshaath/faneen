@@ -107,9 +107,17 @@ import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import type {
+  AdminBusinessImageColumns,
+  AdminBusinessImageVariants,
+  AdminBusinessCsvRow,
+  AdminBusinessBranchLite,
+  AdminBusinessBranchType,
+  AdminBusinessOwnerRow,
+} from './adminBusinesses.types';
 
 // Fix leaflet icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -181,16 +189,16 @@ const reverseGeocode = async (lat: number, lng: number) => {
 };
 
 /* ─── CSV Export ─── */
-const exportCSV = (businesses: any[], language: string) => {
+const exportCSV = (businesses: ReadonlyArray<AdminBusinessCsvRow>, language: string) => {
   // Phase 18f — legacy `category_id` removed from CSV. Activity classification
   // now lives in `business_taxonomy_categories` and is admin-managed inline.
   const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
-  const rows = businesses.map((b: any) => [
+  const rows = businesses.map((b) => [
     b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
     b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
-    `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at).toLocaleDateString(),
+    `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at ?? '').toLocaleDateString(),
   ]);
-  const csv = [headers, ...rows].map(r => r.map((c: any) => `"${c}"`).join(',')).join('\n');
+  const csv = [headers, ...rows].map(r => r.map((c) => `"${c}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -319,12 +327,9 @@ const AdminBusinesses = () => {
     address_en: '',
   });
   const [createForm, setCreateForm] = useState<any>(emptyCreateForm());
-  const setCField = (k: string, v: unknown) => setCreateForm((f: any) => ({ ...f, [k]: v }));
+  const setCField = (k: string, v: unknown) => setCreateForm((f) => ({ ...f, [k]: v }));
   // Owner autocomplete (search profiles by name/email/username/ref_id)
-  const [ownerResults, setOwnerResults] = useState<Array<{
-    user_id: string; full_name: string | null; full_name_ar: string | null; full_name_en: string | null;
-    email: string | null; username: string | null; ref_id: string | null; avatar_url: string | null;
-  }>>([]);
+  const [ownerResults, setOwnerResults] = useState<AdminBusinessOwnerRow[]>([]);
   const [ownerSearching, setOwnerSearching] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
@@ -569,7 +574,8 @@ const AdminBusinesses = () => {
   const updateBizMutation = useMutation({
     mutationFn: async () => {
       const id = editingBiz.id;
-      const payload: any = {
+      const efImg = editForm as AdminBusinessImageColumns;
+      const payload: Record<string, unknown> = {
         name_ar: editForm.name_ar, name_en: editForm.name_en || null,
         short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
@@ -584,10 +590,10 @@ const AdminBusinesses = () => {
         country_id: editForm.country_id || null, city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
         // Phase 2.2 image-pipeline link columns (admin edit). Null-safe.
-        logo_image_asset_id: (editForm as any).logo_image_asset_id || null,
-        cover_image_asset_id: (editForm as any).cover_image_asset_id || null,
-        logo_image_variants: (editForm as any).logo_image_variants || null,
-        cover_image_variants: (editForm as any).cover_image_variants || null,
+        logo_image_asset_id: efImg.logo_image_asset_id || null,
+        cover_image_asset_id: efImg.cover_image_asset_id || null,
+        logo_image_variants: efImg.logo_image_variants || null,
+        cover_image_variants: efImg.cover_image_variants || null,
         seo_title_ar: editForm.seo_title_ar || null, seo_title_en: editForm.seo_title_en || null,
         seo_description_ar: editForm.seo_description_ar || null, seo_description_en: editForm.seo_description_en || null,
         seo_keywords: String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean),
@@ -628,7 +634,7 @@ const AdminBusinesses = () => {
   const resolveOwner = useCallback(async () => {
     const q = (createForm.owner_query || '').trim();
     if (!q) return;
-    setCreateForm((f: any) => ({ ...f, resolving_owner: true, owner_error: '', resolved_user_id: '', resolved_owner_label: '' }));
+    setCreateForm((f) => ({ ...f, resolving_owner: true, owner_error: '', resolved_user_id: '', resolved_owner_label: '' }));
     try {
       let userId: string | null = null;
       let label = '';
@@ -648,12 +654,12 @@ const AdminBusinesses = () => {
         if (data) { userId = data.user_id as string; label = `${data.full_name ?? ''} (${data.email ?? ''})`.trim(); }
       }
       if (!userId) {
-        setCreateForm((f: any) => ({ ...f, resolving_owner: false, owner_error: pickBi(isRTL, 'لم يتم العثور على المستخدم', 'User not found') }));
+        setCreateForm((f) => ({ ...f, resolving_owner: false, owner_error: pickBi(isRTL, 'لم يتم العثور على المستخدم', 'User not found') }));
         return;
       }
-      setCreateForm((f: any) => ({ ...f, resolving_owner: false, resolved_user_id: userId!, resolved_owner_label: label }));
+      setCreateForm((f) => ({ ...f, resolving_owner: false, resolved_user_id: userId!, resolved_owner_label: label }));
     } catch (e) {
-      setCreateForm((f: any) => ({
+      setCreateForm((f) => ({
         ...f,
         resolving_owner: false,
         owner_error: e instanceof Error ? e.message : (pickBi(isRTL, 'فشل البحث', 'Lookup failed')),
@@ -688,7 +694,7 @@ const AdminBusinesses = () => {
         });
         if (error) throw error;
         // Promote exact email/username/ref_id match to top
-        const rows = (data || []) as any[];
+        const rows = (data ?? []) as AdminBusinessOwnerRow[];
         rows.sort((a, b) => {
           const ax = (a.email === lower || a.username === lower || a.ref_id === upper) ? 0 : 1;
           const bx = (b.email === lower || b.username === lower || b.ref_id === upper) ? 0 : 1;
@@ -950,7 +956,7 @@ const AdminBusinesses = () => {
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
       const wantsMain = !!branchForm.is_main;
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         business_id: editingBiz.id,
         name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
         is_active: branchForm.is_active,
@@ -968,11 +974,11 @@ const AdminBusinesses = () => {
       };
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
-        const { error } = await updateBusinessBranchById(editingBranchId, payload);
+        const { error } = await updateBusinessBranchById(editingBranchId, payload as never);
         if (error) throw error;
       } else {
         // Insert without is_main; if wantsMain we promote via RPC below.
-        const { data, error } = await insertBusinessBranchReturning(payload, 'id', 'single');
+        const { data, error } = await insertBusinessBranchReturning(payload as never, 'id', 'single');
         if (error) throw error;
         targetBranchId = (data as unknown as { id: string } | null)?.id ?? null;
       }
@@ -1072,7 +1078,7 @@ const AdminBusinesses = () => {
       }
       if (e.key === 'e' || e.key === 'E') {
         e.preventDefault();
-        exportCSV(filteredRef.current as any[], language);
+        exportCSV(filteredRef.current as AdminBusinessCsvRow[], language);
       }
       if (e.key === 'Escape') {
         if (editingBiz) setEditingBiz(null);
@@ -1160,7 +1166,7 @@ const AdminBusinesses = () => {
         return;
       }
       const a = res.address;
-      setEditForm((prev: any) => ({
+      setEditForm((prev) => ({
         ...prev,
         national_id: code,
         region: a.region_ar ?? prev.region,
@@ -1185,6 +1191,7 @@ const AdminBusinesses = () => {
   /* ─── Edit Open ─── */
   const openEdit = (biz: Record<string, unknown>) => {
     setServicesPanel(null);
+    const bizImg = biz as AdminBusinessImageColumns;
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
       short_description_ar: biz.short_description_ar || '', short_description_en: biz.short_description_en || '',
@@ -1193,10 +1200,10 @@ const AdminBusinesses = () => {
       address: biz.address || '',
       country_id: biz.country_id || '', city_id: biz.city_id || '',
       logo_url: biz.logo_url || '', cover_url: biz.cover_url || '',
-      logo_image_asset_id: (biz as any).logo_image_asset_id || null,
-      cover_image_asset_id: (biz as any).cover_image_asset_id || null,
-      logo_image_variants: (biz as any).logo_image_variants || null,
-      cover_image_variants: (biz as any).cover_image_variants || null,
+      logo_image_asset_id: bizImg.logo_image_asset_id || null,
+      cover_image_asset_id: bizImg.cover_image_asset_id || null,
+      logo_image_variants: bizImg.logo_image_variants || null,
+      cover_image_variants: bizImg.cover_image_variants || null,
       seo_title_ar: biz.seo_title_ar || '', seo_title_en: biz.seo_title_en || '',
       seo_description_ar: biz.seo_description_ar || '', seo_description_en: biz.seo_description_en || '',
       seo_keywords: Array.isArray(biz.seo_keywords) ? biz.seo_keywords.join(', ') : '',
@@ -1228,7 +1235,7 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const translationCompleteness = useCallback((b: Record<string, any>) => {
+  const translationCompleteness = useCallback((b: Record<string, unknown>) => {
     const ar = !!(b.name_ar && b.short_description_ar && b.description_ar);
     const en = !!(b.name_en && b.short_description_en && b.description_en);
     return { ar, en, full: ar && en };
@@ -1589,7 +1596,7 @@ const AdminBusinesses = () => {
                       <span className="text-xs font-medium truncate">{createForm.resolved_owner_label}</span>
                     </div>
                     <Button type="button" variant="ghost" size="sm" className="h-7 text-[11px] rounded-lg"
-                      onClick={() => setCreateForm((f: any) => ({ ...f, resolved_user_id: '', resolved_owner_label: '', owner_query: '' }))}>
+                      onClick={() => setCreateForm((f) => ({ ...f, resolved_user_id: '', resolved_owner_label: '', owner_query: '' }))}>
                       <X className="w-3 h-3 me-1" /> {pickBi(isRTL, 'تغيير', 'Change')}
                     </Button>
                   </div>
@@ -1628,7 +1635,7 @@ const AdminBusinesses = () => {
                                 key={u.user_id}
                                 type="button"
                                 onClick={() => {
-                                  setCreateForm((f: any) => ({
+                                  setCreateForm((f) => ({
                                     ...f,
                                     resolved_user_id: u.user_id,
                                     resolved_owner_label: `${displayName}${u.ref_id ? ` (${u.ref_id})` : ''}${u.email ? ` · ${u.email}` : ''}`,
@@ -1737,7 +1744,7 @@ const AdminBusinesses = () => {
                   username: createForm.username,
                 }}
                 onChange={(next) => {
-                  setCreateForm((f: any) => ({
+                  setCreateForm((f) => ({
                     ...f,
                     name_ar: next.full_name_ar,
                     name_en: next.full_name_en,
@@ -1756,7 +1763,7 @@ const AdminBusinesses = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <PhoneField
                   value={{ countryCode: createForm.phone_cc, national: createForm.phone_national }}
-                  onChange={(next) => setCreateForm((f: any) => ({ ...f, phone_cc: next.countryCode, phone_national: next.national }))}
+                  onChange={(next) => setCreateForm((f) => ({ ...f, phone_cc: next.countryCode, phone_national: next.national }))}
                   label={pickBi(isRTL, 'رقم التواصل الرسمي للمنشأة', 'Official entity contact number')}
                   optional
                 />
@@ -2301,14 +2308,14 @@ const AdminBusinesses = () => {
                           onValueChange={(v) => {
                             const nextIsMain = v === 'main';
                             if (nextIsMain) {
-                              const currentMain = branches.find((b: any) => b.is_main && b.id !== editingBranchId);
+                              const currentMain = branches.find((b: AdminBusinessBranchLite) => b.is_main && b.id !== editingBranchId);
                               if (currentMain && !confirm(isRTL
                                 ? `سيتم إلغاء "${currentMain.name_ar}" كمركز رئيسي وتعيين هذا الموقع بدلاً منه. متابعة؟`
                                 : `"${currentMain.name_ar}" will be unset as headquarters and this location will replace it. Continue?`)) {
                                 return;
                               }
                             }
-                            setBranchForm((f) => ({ ...f, branch_type: v as any, is_main: nextIsMain }));
+                            setBranchForm((f) => ({ ...f, branch_type: v as AdminBusinessBranchType, is_main: nextIsMain }));
                           }}
                         >
                           <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -2642,7 +2649,7 @@ const AdminBusinesses = () => {
                         <TableCell className="py-2.5">
                           <div className="flex items-center gap-2.5">
                             <Avatar className="w-8 h-8 border border-border/50">
-                              <AvatarImage src={(biz as any).logo_image_variants?.thumbnail || (biz as any).logo_image_variants?.card || biz.logo_url || undefined} />
+                              <AvatarImage src={(biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.thumbnail || (biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.card || biz.logo_url || undefined} />
                               <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{biz.name_ar?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
@@ -2736,7 +2743,7 @@ const AdminBusinesses = () => {
                         </button>
                         <div className="relative shrink-0">
                           <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-2 ring-border/10">
-                            <AvatarImage src={(biz as any).logo_image_variants?.thumbnail || (biz as any).logo_image_variants?.card || biz.logo_url || undefined} />
+                            <AvatarImage src={(biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.thumbnail || (biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.card || biz.logo_url || undefined} />
                             <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
                               {biz.name_ar?.charAt(0)}
                             </AvatarFallback>
