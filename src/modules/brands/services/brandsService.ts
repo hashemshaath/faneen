@@ -154,8 +154,14 @@ export async function adminListBrandLinkSummaries(brandIds: string[]): Promise<A
 }
 
 export async function adminGetBrand(id: string) {
+  // Accept either a UUID or a slug so admin URLs can be SEO-friendly
+  // (e.g. /admin/brands/somfy) while remaining backward compatible with the
+  // legacy /admin/brands/<uuid> links scattered across notifications & logs.
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   const { data, error } = await sb
-    .from('brand_catalog').select('*').eq('id', id).maybeSingle();
+    .from('brand_catalog').select('*')
+    .eq(isUuid ? 'id' : 'slug', id)
+    .maybeSingle();
   if (error) throw error;
   return data as Brand | null;
 }
@@ -605,6 +611,76 @@ export async function listProviderBrandLinksForBrand(brandId: string) {
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as ProviderBrandLink[];
+}
+
+// ----------------------- ADMIN: DIRECT PROVIDER LINK ---------------------
+
+/**
+ * Admin search for provider businesses by name / username / ref_id.
+ * Used by the "Link provider" form on /admin/brands/:idOrSlug.
+ */
+export async function adminSearchBusinessesForBrand(term: string, limit = 10) {
+  const t = term.trim();
+  if (!t) return [] as Array<{ id: string; name_ar: string | null; name_en: string | null; username: string | null; ref_id: string | null }>;
+  const { data, error } = await sb
+    .from('businesses')
+    .select('id, name_ar, name_en, username, ref_id')
+    .or(`name_ar.ilike.%${t}%,name_en.ilike.%${t}%,username.ilike.%${t}%,ref_id.ilike.%${t}%`)
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** List the active services of a given business so the admin can pick one to link. */
+export async function adminListBusinessServices(businessId: string) {
+  const { data, error } = await sb
+    .from('business_services')
+    .select('id, name_ar, name_en, is_active')
+    .eq('business_id', businessId)
+    .order('name_ar', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as Array<{ id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }>;
+}
+
+/**
+ * Admin-only: insert a verified provider→brand link directly. RLS allows
+ * inserts when `has_admin_access(auth.uid())` so no RPC is required.
+ */
+export async function adminCreateProviderBrandLink(args: {
+  brandId: string;
+  businessId: string;
+  businessServiceId: string;
+  relationshipType: ProviderBrandRelationship;
+  authorizationStatus?: 'verified' | 'unverified' | 'pending';
+}) {
+  const { data: { user } } = await getCurrentUser();
+  const { data, error } = await sb
+    .from('business_service_brands')
+    .insert({
+      brand_id: args.brandId,
+      business_id: args.businessId,
+      business_service_id: args.businessServiceId,
+      relationship_type: args.relationshipType,
+      authorization_status: args.authorizationStatus ?? 'verified',
+      submitted_by: user?.id ?? null,
+      reviewed_by: user?.id ?? null,
+      reviewed_at: new Date().toISOString(),
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+  await writeBrandAuditLog({
+    brand_id: args.brandId,
+    provider_brand_link_id: (data as { id: string }).id,
+    action: 'provider_brand_link_admin_created',
+    new_values: {
+      business_id: args.businessId,
+      business_service_id: args.businessServiceId,
+      relationship_type: args.relationshipType,
+      authorization_status: args.authorizationStatus ?? 'verified',
+    },
+  });
+  return data as ProviderBrandLink;
 }
 
 export async function listBrandRequestsForBrand(brandId: string) {
