@@ -3785,6 +3785,79 @@ export type Database = {
           },
         ]
       }
+      business_service_brand_products: {
+        Row: {
+          brand_id: string
+          brand_product_id: string
+          business_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          provider_brand_link_id: string
+        }
+        Insert: {
+          brand_id: string
+          brand_product_id: string
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider_brand_link_id: string
+        }
+        Update: {
+          brand_id?: string
+          brand_product_id?: string
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider_brand_link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_service_brand_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brand_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brand_products_brand_product_id_fkey"
+            columns: ["brand_product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brand_products_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brand_products_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brand_products_provider_brand_link_id_fkey"
+            columns: ["provider_brand_link_id"]
+            isOneToOne: false
+            referencedRelation: "business_service_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_service_brands: {
         Row: {
           authorization_document_url: string | null

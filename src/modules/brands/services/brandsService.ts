@@ -652,6 +652,7 @@ export async function adminCreateProviderBrandLink(args: {
   businessServiceId: string;
   relationshipType: ProviderBrandRelationship;
   authorizationStatus?: 'verified' | 'unverified' | 'pending';
+  productIds?: string[];
 }) {
   const { data: { user } } = await getCurrentUser();
   const { data, error } = await sb
@@ -669,15 +670,26 @@ export async function adminCreateProviderBrandLink(args: {
     .select('*')
     .single();
   if (error) throw error;
+  const linkId = (data as { id: string }).id;
+  if (args.productIds && args.productIds.length > 0) {
+    await adminSetProviderBrandLinkProducts({
+      providerBrandLinkId: linkId,
+      brandId: args.brandId,
+      businessId: args.businessId,
+      productIds: args.productIds,
+      mode: 'add',
+    });
+  }
   await writeBrandAuditLog({
     brand_id: args.brandId,
-    provider_brand_link_id: (data as { id: string }).id,
+    provider_brand_link_id: linkId,
     action: 'provider_brand_link_admin_created',
     new_values: {
       business_id: args.businessId,
       business_service_id: args.businessServiceId,
       relationship_type: args.relationshipType,
       authorization_status: args.authorizationStatus ?? 'verified',
+      product_ids: args.productIds ?? [],
     },
   });
   return data as ProviderBrandLink;
@@ -695,6 +707,7 @@ export async function adminLinkBrandToAllServices(args: {
   businessId: string;
   relationshipType: ProviderBrandRelationship;
   authorizationStatus?: 'verified' | 'unverified' | 'pending';
+  productIds?: string[];
 }) {
   const { data: { user } } = await getCurrentUser();
   const status = args.authorizationStatus ?? 'verified';
@@ -737,6 +750,25 @@ export async function adminLinkBrandToAllServices(args: {
     .select('id');
   if (error) throw error;
 
+  // Apply product scoping to ALL links for this (brand, business) pair so the
+  // selection is consistent regardless of which service row carries it.
+  if (args.productIds && args.productIds.length > 0) {
+    const { data: allLinks } = await sb
+      .from('business_service_brands')
+      .select('id')
+      .eq('brand_id', args.brandId)
+      .eq('business_id', args.businessId);
+    for (const l of (allLinks ?? []) as Array<{ id: string }>) {
+      await adminSetProviderBrandLinkProducts({
+        providerBrandLinkId: l.id,
+        brandId: args.brandId,
+        businessId: args.businessId,
+        productIds: args.productIds,
+        mode: 'add',
+      });
+    }
+  }
+
   await writeBrandAuditLog({
     brand_id: args.brandId,
     action: 'provider_brand_link_admin_bulk_created',
@@ -746,10 +778,95 @@ export async function adminLinkBrandToAllServices(args: {
       inserted: (data ?? []).length,
       relationship_type: args.relationshipType,
       authorization_status: status,
+      product_ids: args.productIds ?? [],
     },
   });
 
   return { servicesTotal: services.length, inserted: (data ?? []).length };
+}
+
+// ---------------- Provider→Brand link PRODUCT scoping ----------------
+
+export interface ProviderBrandLinkProduct {
+  id: string;
+  provider_brand_link_id: string;
+  brand_product_id: string;
+  business_id: string;
+  brand_id: string;
+  created_at: string;
+  product?: {
+    id: string;
+    name_ar: string | null;
+    name_en: string | null;
+    image_url: string | null;
+    model_number: string | null;
+    status: string;
+  } | null;
+}
+
+export async function listProviderBrandLinkProducts(providerBrandLinkId: string) {
+  const { data, error } = await sb
+    .from('business_service_brand_products')
+    .select('id, provider_brand_link_id, brand_product_id, business_id, brand_id, created_at, product:brand_products!business_service_brand_products_brand_product_id_fkey(id, name_ar, name_en, image_url, model_number, status)')
+    .eq('provider_brand_link_id', providerBrandLinkId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ProviderBrandLinkProduct[];
+}
+
+/**
+ * Return the union of product ids attached to ANY of the provider's links to
+ * this brand (across all of that provider's services). Useful to pre-fill the
+ * "specific products" picker when re-opening the form.
+ */
+export async function listProviderBrandProductsForBusiness(brandId: string, businessId: string) {
+  const { data, error } = await sb
+    .from('business_service_brand_products')
+    .select('brand_product_id')
+    .eq('brand_id', brandId)
+    .eq('business_id', businessId);
+  if (error) throw error;
+  const ids = Array.from(new Set(((data ?? []) as Array<{ brand_product_id: string }>).map((r) => r.brand_product_id)));
+  return ids;
+}
+
+export async function adminSetProviderBrandLinkProducts(args: {
+  providerBrandLinkId: string;
+  brandId: string;
+  businessId: string;
+  productIds: string[];
+  mode?: 'add' | 'replace';
+}) {
+  const { data: { user } } = await getCurrentUser();
+  if (args.mode === 'replace') {
+    const { error: delErr } = await sb
+      .from('business_service_brand_products')
+      .delete()
+      .eq('provider_brand_link_id', args.providerBrandLinkId);
+    if (delErr) throw delErr;
+  }
+  if (args.productIds.length === 0) return { inserted: 0 };
+  const rows = args.productIds.map((pid) => ({
+    provider_brand_link_id: args.providerBrandLinkId,
+    brand_product_id: pid,
+    business_id: args.businessId,
+    brand_id: args.brandId,
+    created_by: user?.id ?? null,
+  }));
+  const { data, error } = await sb
+    .from('business_service_brand_products')
+    .upsert(rows, { onConflict: 'provider_brand_link_id,brand_product_id', ignoreDuplicates: true })
+    .select('id');
+  if (error) throw error;
+  return { inserted: (data ?? []).length };
+}
+
+export async function adminRemoveProviderBrandLinkProduct(rowId: string) {
+  const { error } = await sb
+    .from('business_service_brand_products')
+    .delete()
+    .eq('id', rowId);
+  if (error) throw error;
 }
 
 export async function listBrandRequestsForBrand(brandId: string) {

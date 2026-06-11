@@ -41,6 +41,8 @@ import {
   brandProductStatusLabel, brandProductRequestStatusLabel,
   adminSearchBusinessesForBrand, adminListBusinessServices, adminCreateProviderBrandLink,
   adminLinkBrandToAllServices,
+  listProviderBrandLinkProducts, adminSetProviderBrandLinkProducts,
+  adminRemoveProviderBrandLinkProduct,
   type BrandProduct, type BrandProductRequest,
 } from '@/modules/brands';
 
@@ -90,6 +92,12 @@ const AdminBrandDetail: React.FC = () => {
   const [linkBusinessLabel, setLinkBusinessLabel] = useState<string>('');
   const [linkServiceId, setLinkServiceId] = useState<string>('__all__');
   const [linkRelationship, setLinkRelationship] = useState<string>('authorized_distributor');
+  // Scope toggle: link covers the whole brand, or only specific products.
+  const [linkScope, setLinkScope] = useState<'all' | 'products'>('all');
+  const [linkProductIds, setLinkProductIds] = useState<string[]>([]);
+  // Per-link expansion + add-product UI state.
+  const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
+  const [addProductForLinkId, setAddProductForLinkId] = useState<string>('');
 
   const brandQ = useQuery({
     queryKey: ['admin-brand-detail', idParam],
@@ -220,6 +228,7 @@ const AdminBrandDetail: React.FC = () => {
     // helper which auto-creates a placeholder service when the business has
     // none, so the brand can still be attached.
     mutationFn: async () => {
+      const productIds = linkScope === 'products' ? linkProductIds : undefined;
       if (linkServiceId && linkServiceId !== '__all__') {
         await adminCreateProviderBrandLink({
           brandId: id,
@@ -227,6 +236,7 @@ const AdminBrandDetail: React.FC = () => {
           businessServiceId: linkServiceId,
           relationshipType: linkRelationship as never,
           authorizationStatus: 'verified',
+          productIds,
         });
         return { mode: 'single' as const, inserted: 1 };
       }
@@ -235,6 +245,7 @@ const AdminBrandDetail: React.FC = () => {
         businessId: linkBusinessId,
         relationshipType: linkRelationship as never,
         authorizationStatus: 'verified',
+        productIds,
       });
       return { mode: 'all' as const, ...res };
     },
@@ -246,7 +257,38 @@ const AdminBrandDetail: React.FC = () => {
         : pickBi(isRTL, 'تم ربط المزود', 'Provider linked');
       toast.success(msg);
       setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('__all__');
+      setLinkScope('all'); setLinkProductIds([]);
       qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
+      qc.invalidateQueries({ queryKey: ['admin-brand-link-products'] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const addLinkProduct = useMutation({
+    mutationFn: async (args: { linkId: string; productId: string; businessId: string }) => {
+      await adminSetProviderBrandLinkProducts({
+        providerBrandLinkId: args.linkId,
+        brandId: id,
+        businessId: args.businessId,
+        productIds: [args.productId],
+        mode: 'add',
+      });
+    },
+    onSuccess: () => {
+      toast.success(pickBi(isRTL, 'تمت إضافة المنتج', 'Product added'));
+      setAddProductForLinkId('');
+      qc.invalidateQueries({ queryKey: ['admin-brand-link-products'] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const removeLinkProduct = useMutation({
+    mutationFn: async (rowId: string) => {
+      await adminRemoveProviderBrandLinkProduct(rowId);
+    },
+    onSuccess: () => {
+      toast.success(pickBi(isRTL, 'تمت الإزالة', 'Removed'));
+      qc.invalidateQueries({ queryKey: ['admin-brand-link-products'] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
@@ -762,11 +804,56 @@ const AdminBrandDetail: React.FC = () => {
                   </select>
                 </div>
               </div>
+              {/* Scope: whole brand vs specific products */}
+              <div className="rounded-md border bg-background/50 p-2 space-y-2">
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="font-medium">{pickBi(isRTL, 'نطاق الربط:', 'Link scope:')}</span>
+                  <label className="inline-flex items-center gap-1 cursor-pointer">
+                    <input type="radio" name="link-scope" checked={linkScope === 'all'}
+                      onChange={() => { setLinkScope('all'); setLinkProductIds([]); }} />
+                    <span>{pickBi(isRTL, 'العلامة كاملة', 'Whole brand')}</span>
+                  </label>
+                  <label className="inline-flex items-center gap-1 cursor-pointer">
+                    <input type="radio" name="link-scope" checked={linkScope === 'products'}
+                      onChange={() => setLinkScope('products')} />
+                    <span>{pickBi(isRTL, 'منتجات محددة', 'Specific products')}</span>
+                  </label>
+                  <span className="text-muted-foreground ms-auto">
+                    {pickBi(isRTL, `المنتجات المتاحة: ${productsQ.data?.length ?? 0}`, `${productsQ.data?.length ?? 0} available`)}
+                  </span>
+                </div>
+                {linkScope === 'products' && (
+                  (productsQ.data ?? []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {pickBi(isRTL, 'لا توجد منتجات لهذه العلامة. أضف منتجات أولاً من قسم منتجات العلامة أدناه.', 'No products for this brand yet. Add some from the Brand products section below.')}
+                    </p>
+                  ) : (
+                    <div className="max-h-40 overflow-auto rounded border bg-background p-2 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                      {(productsQ.data ?? []).map((p: BrandProduct) => {
+                        const checked = linkProductIds.includes(p.id);
+                        const pname = locale === 'ar' ? (p.name_ar ?? p.name_en ?? '') : (p.name_en ?? p.name_ar ?? '');
+                        return (
+                          <label key={p.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/40 rounded px-1 py-0.5">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => setLinkProductIds((prev) => e.target.checked ? [...prev, p.id] : prev.filter((x) => x !== p.id))}
+                            />
+                            {p.image_url && <img src={p.image_url} alt="" className="w-5 h-5 rounded object-cover" />}
+                            <span className="truncate" dir="auto">{pname || p.id.slice(0, 8)}</span>
+                            {p.model_number && <code className="tech-content text-[10px] text-muted-foreground ms-auto">{p.model_number}</code>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )
+                )}
+              </div>
               <div className="flex items-center justify-end">
                 <Button
                   size="sm"
                   onClick={() => createLink.mutate()}
-                  disabled={!linkBusinessId || createLink.isPending}
+                  disabled={!linkBusinessId || createLink.isPending || (linkScope === 'products' && linkProductIds.length === 0)}
                 >
                   {createLink.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
                   {pickBi(isRTL, 'ربط واعتماد', 'Link & verify')}
@@ -797,6 +884,31 @@ const AdminBrandDetail: React.FC = () => {
                             <ExternalLink className="w-3 h-3" />{pickBi(isRTL, 'مستند التفويض', 'Auth doc')}
                           </a>
                         )}
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            className="text-[11px] text-primary underline"
+                            onClick={() => setExpandedLinkId((cur) => cur === l.id ? null : l.id)}
+                          >
+                            {expandedLinkId === l.id
+                              ? pickBi(isRTL, 'إخفاء المنتجات', 'Hide products')
+                              : pickBi(isRTL, 'إدارة المنتجات المرتبطة', 'Manage scoped products')}
+                          </button>
+                          {expandedLinkId === l.id && (
+                            <LinkProductsEditor
+                              linkId={l.id}
+                              businessId={l.business_id}
+                              brandProducts={productsQ.data ?? []}
+                              isRTL={isRTL}
+                              locale={locale}
+                              addProductForLinkId={addProductForLinkId}
+                              setAddProductForLinkId={setAddProductForLinkId}
+                              onAdd={(productId) => addLinkProduct.mutate({ linkId: l.id, productId, businessId: l.business_id })}
+                              onRemove={(rowId) => removeLinkProduct.mutate(rowId)}
+                              addPending={addLinkProduct.isPending}
+                            />
+                          )}
+                        </div>
                       </div>
                       {l.authorization_status === 'pending' && (
                         <div className="flex gap-2">
@@ -1078,3 +1190,90 @@ function FieldLabeled({ label, children }: { label: string; children: React.Reac
 }
 
 export default AdminBrandDetail;
+
+function LinkProductsEditor({
+  linkId, businessId, brandProducts, isRTL, locale,
+  addProductForLinkId, setAddProductForLinkId,
+  onAdd, onRemove, addPending,
+}: {
+  linkId: string;
+  businessId: string;
+  brandProducts: BrandProduct[];
+  isRTL: boolean;
+  locale: 'ar' | 'en';
+  addProductForLinkId: string;
+  setAddProductForLinkId: (v: string) => void;
+  onAdd: (productId: string) => void;
+  onRemove: (rowId: string) => void;
+  addPending: boolean;
+}) {
+  const q = useQuery({
+    queryKey: ['admin-brand-link-products', linkId],
+    queryFn: () => listProviderBrandLinkProducts(linkId),
+    enabled: !!linkId,
+  });
+  const rows = q.data ?? [];
+  const linkedIds = new Set(rows.map((r) => r.brand_product_id));
+  const available = brandProducts.filter((p) => !linkedIds.has(p.id));
+
+  return (
+    <div className="mt-2 p-2 rounded border bg-muted/30 space-y-2">
+      <div className="text-[11px] text-muted-foreground">
+        {rows.length === 0
+          ? pickBi(isRTL, 'النطاق الحالي: العلامة كاملة (لا توجد منتجات محددة).', 'Current scope: whole brand (no specific products).')
+          : pickBi(isRTL, `النطاق الحالي: ${rows.length} منتج محدد.`, `Current scope: ${rows.length} specific product(s).`)}
+      </div>
+      {rows.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {rows.map((r) => {
+            const name = r.product
+              ? (locale === 'ar' ? (r.product.name_ar ?? r.product.name_en ?? '') : (r.product.name_en ?? r.product.name_ar ?? ''))
+              : r.brand_product_id.slice(0, 8);
+            return (
+              <span key={r.id} className="inline-flex items-center gap-1 rounded-full bg-background border px-2 py-0.5 text-[11px]">
+                {r.product?.image_url && <img src={r.product.image_url} alt="" className="w-4 h-4 rounded object-cover" />}
+                <span className="truncate max-w-[160px]" dir="auto">{name}</span>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => onRemove(r.id)}
+                  aria-label={pickBi(isRTL, 'إزالة', 'Remove')}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {available.length > 0 ? (
+        <div className="flex items-center gap-2">
+          <select
+            value={addProductForLinkId === linkId ? '' : ''}
+            onChange={(e) => {
+              const pid = e.target.value;
+              if (!pid) return;
+              setAddProductForLinkId(linkId);
+              onAdd(pid);
+            }}
+            disabled={addPending}
+            className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+          >
+            <option value="">{pickBi(isRTL, 'إضافة منتج…', 'Add product…')}</option>
+            {available.map((p) => (
+              <option key={p.id} value={p.id}>
+                {locale === 'ar' ? (p.name_ar ?? p.name_en ?? p.id.slice(0, 8)) : (p.name_en ?? p.name_ar ?? p.id.slice(0, 8))}
+                {p.model_number ? ` — ${p.model_number}` : ''}
+              </option>
+            ))}
+          </select>
+          <span className="text-[10px] text-muted-foreground tech-content">{businessId.slice(0, 6)}</span>
+        </div>
+      ) : brandProducts.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'لا توجد منتجات لهذه العلامة بعد.', 'No brand products yet.')}</p>
+      ) : (
+        <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'كل المنتجات مضافة.', 'All products already added.')}</p>
+      )}
+    </div>
+  );
+}
