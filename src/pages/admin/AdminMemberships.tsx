@@ -48,6 +48,67 @@ import { AdminPromoCodesPanel } from '@/components/membership/AdminPromoCodesPan
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
 
+/* ─── Admin Memberships local types (no `any`) ─── */
+type AdminMembershipPlanRow = Database['public']['Tables']['membership_plans']['Row'];
+type AdminMembershipSubscriptionRow = Database['public']['Tables']['membership_subscriptions']['Row'];
+
+type AdminMembershipLimitsInput = Record<string, unknown> | undefined;
+
+interface AdminMembershipSubscriptionWithPlan extends AdminMembershipSubscriptionRow {
+  plan: { name_ar: string | null; name_en: string | null; tier: string | null } | null;
+}
+
+type AdminMembershipProfileLite = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  membership_tier: string | null;
+};
+
+type AdminMembershipBusinessLite = {
+  id: string;
+  name_ar: string | null;
+  name_en: string | null;
+  membership_tier: string | null;
+  logo_url: string | null;
+  is_verified: boolean | null;
+  is_active: boolean | null;
+};
+
+interface AdminMembershipEnrichedSubscription extends AdminMembershipSubscriptionWithPlan {
+  profile: AdminMembershipProfileLite | null;
+  business: AdminMembershipBusinessLite | null;
+}
+
+/**
+ * Editing state shape used by the inline plan form.
+ * - On edit: a full plan row is loaded.
+ * - On create: only `tier` + `_new: true` are set, the form fields drive the rest.
+ */
+type AdminMembershipEditingPlan = Partial<AdminMembershipPlanRow> & {
+  tier: AdminMembershipPlanRow['tier'];
+  _new?: boolean;
+};
+
+interface AdminMembershipPlanCardProps {
+  plan: AdminMembershipPlanRow;
+  isRTL: boolean;
+  language: string;
+  subsCount: number;
+  onEdit: (p: AdminMembershipPlanRow) => void;
+}
+
+interface AdminMembershipSubRowProps {
+  sub: AdminMembershipEnrichedSubscription;
+  isRTL: boolean;
+  language: string;
+  plans: AdminMembershipPlanRow[];
+  onCancel: (id: string) => void;
+  onRenew: (sub: AdminMembershipEnrichedSubscription) => void;
+  onUpgrade: (sub: AdminMembershipEnrichedSubscription) => void;
+}
+
 /* ─── Admin Usage Report ─── */
 type UsageReportRow = {
   business_id: string;
