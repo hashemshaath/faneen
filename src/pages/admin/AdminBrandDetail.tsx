@@ -128,10 +128,25 @@ const AdminBrandDetail: React.FC = () => {
     setIdentityDirty(false);
   }, [brand]);
 
+  // Build a rich, brand-specific document title + description. Admin pages are
+  // noindex so this won't be crawled, but the proper <title> still drives the
+  // browser tab label, bookmarks, history, and screen readers.
+  const brandTitleName = brand
+    ? (isRTL
+        ? (brand.name_ar || brand.name_en || brand.slug || '')
+        : (brand.name_en || brand.name_ar || brand.slug || ''))
+    : '';
   usePageMeta({
     title: brand
-      ? (pickBi(isRTL, `${brand.name_ar} — إدارة العلامات`, `${brand.name_en ?? brand.name_ar} — Brand Admin`))
-      : (pickBi(isRTL, 'تفاصيل العلامة', 'Brand detail')),
+      ? pickBi(isRTL,
+          `${brandTitleName} — إدارة العلامة · قِطاعات`,
+          `${brandTitleName} — Brand admin · Qitaat`)
+      : pickBi(isRTL, 'تفاصيل العلامة · قِطاعات', 'Brand detail · Qitaat'),
+    description: brand
+      ? pickBi(isRTL,
+          `إدارة بيانات العلامة "${brandTitleName}" — الاعتماد، المزوّدون، القطاعات، المنتجات، والتدقيق.`,
+          `Manage the "${brandTitleName}" brand — approval, providers, sectors, products, and audit log.`)
+      : undefined,
     noindex: true,
   });
 
