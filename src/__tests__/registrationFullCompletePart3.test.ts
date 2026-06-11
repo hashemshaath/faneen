@@ -59,10 +59,17 @@ describe('Part 3 (refreshed) — admin access requests navigation', () => {
     expect(APP).toMatch(/path="\/admin\/entity-access-requests"[\s\S]{0,200}requireAdmin/);
   });
 
-  it('sidebar exposes an Access Requests entry pointing at the admin route', () => {
-    expect(SIDEBAR).toContain("'/admin/entity-access-requests'");
-    expect(SIDEBAR).toContain('Access Requests');
-    expect(SIDEBAR).toContain('طلبات الانضمام');
+  it('sidebar surfaces Access Requests via the Accounts & Approvals hub', () => {
+    // `/admin/entity-access-requests` is intentionally hidden from the
+    // top-level sidebar — it is fully merged into the Accounts & Approvals
+    // hub at `/admin/identity` (tabbed Approvals inbox). The standalone
+    // route stays reachable from row actions and search. Lock in:
+    //   1) sidebar links the hub that owns the queue, and
+    //   2) the hub documents the merge so the entry isn't accidentally
+    //      restored as a duplicate top-level link.
+    expect(SIDEBAR).toContain("'/admin/identity'");
+    expect(SIDEBAR).toContain('Accounts & Approvals');
+    expect(SIDEBAR).toMatch(/entity-access-requests[\s\S]{0,200}intentionally hidden/);
   });
 
   it('admin queue uses service layer (no direct table writes from UI)', () => {
