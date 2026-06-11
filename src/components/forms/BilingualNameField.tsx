@@ -4,13 +4,18 @@
  * Three inputs: Arabic name, English name, optional username (@handle).
  * Auto-fills `full_name` from AR or EN when consumers need a single string.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Languages, Building2 } from 'lucide-react';
+import { User, Languages, Building2, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
 import { UsernamePicker, type UsernameCheckReason } from '@/components/common/UsernamePicker';
+import { Button } from '@/components/ui/button';
+import { invokeBlogAiTools } from '@/modules/ai';
+import { useAiSettings } from '@/hooks/useAiSettings';
+import { stripMarkdown } from '@/lib/blog-ai-utils';
+import { toast } from 'sonner';
 
 export interface BilingualNameValue {
   full_name_ar: string;
@@ -46,6 +51,12 @@ export interface BilingualNameFieldProps {
    *   Used for companies/organizations/government entities.
    */
   subject?: 'person' | 'entity';
+  /**
+   * Enable one-click AR↔EN reverse translation buttons next to each label.
+   * Calls the existing `blog-ai-tools` edge function (action=translate).
+   * Off by default to keep current behaviour for existing consumers.
+   */
+  enableTranslate?: boolean;
 }
 
 export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
@@ -62,8 +73,40 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   onUsernameValidChange,
   usernameServerError = null,
   subject = 'person',
+  enableTranslate = false,
 }) => {
   const { isRTL } = useLanguage();
+  const { settings } = useAiSettings();
+  const [translating, setTranslating] = useState<'ar' | 'en' | null>(null);
+  const handleTranslate = async (from: 'ar' | 'en') => {
+    const text = (from === 'ar' ? value.full_name_ar : value.full_name_en) || '';
+    if (!text.trim()) {
+      toast.info(isRTL ? 'لا يوجد نص لترجمته' : 'Nothing to translate');
+      return;
+    }
+    setTranslating(from);
+    try {
+      const { data, error } = await invokeBlogAiTools({
+        action: 'translate',
+        text,
+        sourceLang: from,
+        targetLang: from === 'ar' ? 'en' : 'ar',
+        tone: settings?.default_tone,
+        model: settings?.default_model,
+        translationInstructions: settings?.translation_instructions || undefined,
+      });
+      if (error) throw error;
+      const result = stripMarkdown(String((data as { result?: string } | null)?.result ?? '')).trim();
+      if (!result) throw new Error('Empty translation');
+      update(from === 'ar' ? { full_name_en: result } : { full_name_ar: result });
+      toast.success(isRTL ? 'تمت الترجمة' : 'Translated');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(isRTL ? `تعذّرت الترجمة: ${msg}` : `Translation failed: ${msg}`);
+    } finally {
+      setTranslating(null);
+    }
+  };
   const isEntity = subject === 'entity';
   const FieldIcon = isEntity ? Building2 : User;
   const labelAr = isEntity
@@ -98,6 +141,18 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
           <Languages className="w-3.5 h-3.5 text-muted-foreground" />
           {labelAr}
           {required && <span className="text-destructive">*</span>}
+          {enableTranslate && (
+            <Button
+              type="button" size="sm" variant="ghost"
+              className="ms-auto h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+              disabled={disabled || translating !== null}
+              onClick={() => handleTranslate('ar')}
+              title={isRTL ? 'ترجمة من العربي إلى الإنجليزي' : 'Translate Arabic → English'}
+            >
+              {translating === 'ar' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+              <span>→ EN</span>
+            </Button>
+          )}
         </Label>
         <div className="relative">
           <FieldIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -119,6 +174,18 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
           <Languages className="w-3.5 h-3.5 text-muted-foreground" />
           {labelEn}
           {required && <span className="text-destructive">*</span>}
+          {enableTranslate && (
+            <Button
+              type="button" size="sm" variant="ghost"
+              className="ms-auto h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+              disabled={disabled || translating !== null}
+              onClick={() => handleTranslate('en')}
+              title={isRTL ? 'ترجمة من الإنجليزي إلى العربي' : 'Translate English → Arabic'}
+            >
+              {translating === 'en' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+              <span>→ AR</span>
+            </Button>
+          )}
         </Label>
         <div className="relative">
           <FieldIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

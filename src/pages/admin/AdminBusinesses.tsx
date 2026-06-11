@@ -1797,6 +1797,7 @@ const AdminBusinesses = () => {
                 required
                 excludeUserId={null}
                 subject="entity"
+                enableTranslate
               />
 
               {/* Contact + classification */}
