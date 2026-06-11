@@ -64,14 +64,6 @@ interface Allow {
 }
 const ALLOWLIST: ReadonlyArray<Allow> = [
   {
-    file: 'src/pages/admin/AdminMemberships.tsx',
-    max: 17,
-    reason:
-      'Plan/subscription join shape and dynamic limits JSON; PlanCard/SubCard props typed informally.',
-    followUp:
-      'Introduce MembershipPlanRow + MembershipSubscriptionRow from supabase types; type PlanCard/SubCard props.',
-  },
-  {
     file: 'src/pages/admin/AdminActivityLog.tsx',
     max: 4,
     reason:
