@@ -404,9 +404,7 @@ const LimitsEditor = React.memo(({ limits, onChange, isRTL, language }: {
 LimitsEditor.displayName = 'LimitsEditor';
 
 /* ─── Subscription Row ─── */
-const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onUpgrade }: {
-  sub: any; isRTL: boolean; language: string; plans: any[]; onCancel: (id: string) => void; onRenew: (sub: any) => void; onUpgrade: (sub: any) => void;
-}) => {
+const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onUpgrade }: AdminMembershipSubRowProps) => {
   const plan = sub.plan;
   const Icon = tierIcons[plan?.tier] || Zap;
   const colors = tierColors[plan?.tier] || tierColors.free;
