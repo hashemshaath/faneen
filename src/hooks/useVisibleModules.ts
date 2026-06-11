@@ -51,6 +51,8 @@ const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
   warranty: ['/dashboard/warranties', '/dashboard/warranty'],
   memberships: ['/membership', '/dashboard/memberships'],
   membership_credits: ['/dashboard/provider/membership', '/dashboard/membership-credits'],
+  payments: ['/dashboard/installments', '/dashboard/payments', '/dashboard/billing'],
+  credits: ['/dashboard/provider/membership', '/dashboard/credits'],
   rewards_store: ['/dashboard/loyalty/store', '/dashboard/rewards'],
   communication_prefs: ['/dashboard/communication-preferences', '/dashboard/settings/communication'],
   staff: ['/dashboard/settings/staff', '/dashboard/team'],
