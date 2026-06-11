@@ -425,8 +425,9 @@ const AdminContactMessages = () => {
   };
 
   // Keyboard shortcuts
+  const keyHandlerRef = useRef<(e: KeyboardEvent) => void>(() => {});
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    keyHandlerRef.current = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.key === '/') { e.preventDefault(); document.getElementById('contact-search')?.focus(); }
@@ -449,10 +450,12 @@ const AdminContactMessages = () => {
         if (e.key === 's') updateMutation.mutate({ ids: [focusedId], patch: { starred: !focused?.starred } });
       }
     };
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => keyHandlerRef.current(e);
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedId, filtered, focused]);
+  }, []);
 
   const buildExportRows = useCallback((source: ContactMessage[]): ContactExportRow[] =>
     source.map(m => ({

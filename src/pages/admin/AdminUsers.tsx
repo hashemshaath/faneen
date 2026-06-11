@@ -823,7 +823,12 @@ const AdminUsers = () => {
 
   // Auto-open create panel when navigated with ?create=provider|business|company|individual
   const [searchParams, setSearchParams] = useSearchParams();
+  const openCreatePanelRef = useRef<(t: 'individual' | 'business' | 'company') => void>(() => {});
+  const lastConsumedParamsRef = useRef<string>('');
+  useEffect(() => { openCreatePanelRef.current = openCreatePanel; });
   useEffect(() => {
+    const sig = searchParams.toString();
+    if (lastConsumedParamsRef.current === sig) return;
     const createParam = searchParams.get('create');
     const typeParam = searchParams.get('type');
     const roleParam = searchParams.get('role');
@@ -864,7 +869,7 @@ const AdminUsers = () => {
       const preset = createParam === 'provider' ? 'business' : createParam;
       const allowed = ['individual', 'business', 'company'];
       if (allowed.includes(preset)) {
-        openCreatePanel(preset as 'individual' | 'business' | 'company');
+        openCreatePanelRef.current(preset as 'individual' | 'business' | 'company');
       }
       next.delete('create');
       mutated = true;
@@ -878,10 +883,12 @@ const AdminUsers = () => {
     }
 
     if (mutated) {
+      lastConsumedParamsRef.current = next.toString();
       setSearchParams(next, { replace: true });
+    } else {
+      lastConsumedParamsRef.current = sig;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, searchParams]);
+  }, [isAdmin, searchParams, setSearchParams]);
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
@@ -949,22 +956,24 @@ const AdminUsers = () => {
 
   // Consume pending ?focus=<user_id> after profiles load: switch to users tab,
   // expand the row, jump to the page containing it, and open the edit panel.
+  const openEditRef = useRef<(p: Profile) => void>(() => {});
+  const isRTLRef = useRef(isRTL);
+  useEffect(() => { isRTLRef.current = isRTL; }, [isRTL]);
   useEffect(() => {
     const pending = sessionStorage.getItem('qitaat_admin_users_pending_focus');
     if (!pending || profiles.length === 0) return;
     const target = profiles.find(p => p.user_id === pending);
     sessionStorage.removeItem('qitaat_admin_users_pending_focus');
     if (!target) {
-      toast.error(pickBi(isRTL, 'المستخدم غير موجود في القائمة', 'User not found in list'));
+      toast.error(pickBi(isRTLRef.current, 'المستخدم غير موجود في القائمة', 'User not found in list'));
       return;
     }
     setTab('users');
     setExpanded(prev => new Set(prev).add(target.id));
-    openEdit(target);
+    openEditRef.current(target);
     setTimeout(() => {
       document.getElementById(`user-row-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 200);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles]);
 
   const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
@@ -1327,6 +1336,7 @@ const AdminUsers = () => {
     setLinkForm({ businessId: '', role: 'viewer' });
     setLinkSearch('');
   }, [isSuperAdmin]);
+  useEffect(() => { openEditRef.current = openEdit; });
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
