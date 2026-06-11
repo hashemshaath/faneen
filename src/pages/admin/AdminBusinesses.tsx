@@ -1983,86 +1983,8 @@ const AdminBusinesses = () => {
                 </TabsContent>
 
                 {/* ── Address Tab ── */}
-                <TabsContent value="address" className="space-y-4 mt-3">
-                  <div>
-                    <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
-                      <MapPinned className="w-3 h-3" />
-                      {pickBi(isRTL, 'تحديد الموقع على الخريطة', 'Pick Location on Map')}
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground mb-2">
-                      {pickBi(isRTL, 'انقر على الخريطة لتحديد الموقع وتعبئة حقول العنوان تلقائياً', 'Click on map to pick location and auto-fill address fields')}
-                    </p>
-                    <LocationPicker lat={parseFloat(editForm.latitude) || 0} lng={parseFloat(editForm.longitude) || 0}
-                      onPick={handleMapPick} isRTL={isRTL} />
-                    {geocoding && (
-                      <div className="flex items-center gap-2 mt-2 text-xs text-primary">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        {pickBi(isRTL, 'جاري استخراج بيانات العنوان...', 'Extracting address data...')}
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <div>
-                        <Label className="text-[10px]">{pickBi(isRTL, 'خط العرض', 'Latitude')}</Label>
-                        <Input value={editForm.latitude} onChange={e => setField('latitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
-                      </div>
-                      <div>
-                        <Label className="text-[10px]">{pickBi(isRTL, 'خط الطول', 'Longitude')}</Label>
-                        <Input value={editForm.longitude} onChange={e => setField('longitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <Label className="text-xs">{pickBi(isRTL, 'الدولة', 'Country')}</Label>
-                    <Select value={editForm.country_id} onValueChange={v => { setField('country_id', v); setField('city_id', ''); }}>
-                      <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={pickBi(isRTL, 'اختر', 'Select')} /></SelectTrigger>
-                      <SelectContent>
-                        {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* Unified address microservice — same component used in branch editor (SPL + Region → City → District + street/building/additional). */}
-                  <NationalAddressForm
-                    isRTL={isRTL}
-                    value={{
-                      short_address: editForm.short_address ?? null,
-                      region: editForm.region ?? null,
-                      region_en: editForm.region_en ?? null,
-                      city_id: editForm.city_id ?? null,
-                      district: editForm.district ?? null,
-                      district_en: editForm.district_en ?? null,
-                      street_name: editForm.street_name ?? null,
-                      street_name_en: editForm.street_name_en ?? null,
-                      building_number: editForm.building_number ?? null,
-                      additional_number: editForm.additional_number ?? null,
-                      post_code: editForm.post_code ?? null,
-                      address: editForm.address ?? null,
-                      address_en: editForm.address_en ?? null,
-                      address_manual: editForm.address_manual ?? false,
-                    } as NationalAddressValue}
-                    onChange={(next) => setEditForm((f: Record<string, unknown>) => ({
-                      ...f,
-                      short_address: next.short_address ?? '',
-                      region: next.region ?? '',
-                      region_en: next.region_en ?? '',
-                      city_id: next.city_id ?? '',
-                      district: next.district ?? '',
-                      district_en: next.district_en ?? '',
-                      street_name: next.street_name ?? '',
-                      street_name_en: next.street_name_en ?? '',
-                      building_number: next.building_number ?? '',
-                      additional_number: next.additional_number ?? '',
-                      post_code: next.post_code ?? '',
-                      address: next.address ?? '',
-                      address_en: next.address_en ?? '',
-                      address_manual: next.address_manual ?? false,
-                    }))}
-                  />
-                  <div>
-                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الوطني', 'National ID')}</Label>
-                    <Input value={editForm.national_id} onChange={e => setField('national_id', e.target.value)} dir="ltr" className="mt-1 max-w-xs" />
-                  </div>
-                </TabsContent>
+                {/* Address tab removed — addresses live on branches now.
+                    See the Branches tab for the per-location address editor. */}
 
                 {/* ── Content Tab ── */}
                 <TabsContent value="content" className="space-y-4 mt-3">
