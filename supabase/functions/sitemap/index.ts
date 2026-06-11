@@ -15,7 +15,7 @@ const BASE = "https://qitaat.com";
 // don't leak the internal Supabase Functions host in robots/sitemap output.
 const FUNC = `${BASE}/functions/v1/sitemap`;
 
-const TYPES = ["static", "businesses", "branches", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands", "help"] as const;
+const TYPES = ["static", "businesses", "branches", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands", "help", "rentals"] as const;
 type SitemapType = (typeof TYPES)[number];
 
 function esc(s: string) {
@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
         { loc: "/blog", priority: "0.8", changefreq: "daily" },
         { loc: "/profile-systems", priority: "0.7", changefreq: "weekly" },
         { loc: "/brands", priority: "0.85", changefreq: "daily" },
+        { loc: "/rentals", priority: "0.85", changefreq: "daily" },
         { loc: "/compare", priority: "0.6", changefreq: "weekly" },
         { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly" },
         { loc: "/membership", priority: "0.6", changefreq: "monthly" },
