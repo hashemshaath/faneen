@@ -859,20 +859,19 @@ export const BranchesTab = ({
                     </button>
                   )}
                   {waHref ? (
-                    <a
-                      href={waHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
                       onClick={() => {
-                        trackBranch("whatsapp", "whatsapp_click");
-                        onRevealContact?.("phone");
+                        setWaDraft(waText);
+                        setWaEditorOpen((cur) => (cur === branch.id ? null : branch.id));
                       }}
                       className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 text-[11px] font-medium text-emerald-600 transition hover:bg-emerald-500/15 dark:text-emerald-400 sm:text-xs"
                       aria-label="WhatsApp"
+                      aria-expanded={waEditorOpen === branch.id}
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
                       {language === "ar" ? "واتساب" : "WhatsApp"}
-                    </a>
+                    </button>
                   ) : (
                     <button
                       type="button"
