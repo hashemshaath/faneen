@@ -62,27 +62,15 @@ const ALLOWLIST: ReadonlyArray<Entry> = [
   },
   {
     file: 'src/pages/admin/AdminBusinesses.tsx',
-    count: 2,
-    reason: '(1) Debounced search sync depends only on input. (2) Focus-target effect must react only to focus param + businesses, not the unstable openEdit closure.',
+    count: 1,
+    reason: 'Focus-target effect must react only to focus param + businesses, not the unstable openEdit closure.',
     followup: 'Stabilize openEdit with useEvent (when available).',
   },
   {
     file: 'src/pages/admin/AdminContactMessages.tsx',
-    count: 3,
-    reason: '(1) Debounced search input sync. (2) Auto-mark-as-read on focus change must not re-run on mutation identity change. (3) Keyboard shortcut handler must avoid reattaching on every mutation reference change.',
-    followup: 'Wrap mutations and updateParam in useEvent-style stable callbacks.',
-  },
-  {
-    file: 'src/pages/admin/AdminEntityAccessRequests.tsx',
-    count: 1,
-    reason: 'Mount-only data load; deps would trigger duplicate fetches during admin review session.',
-    followup: 'Migrate to react-query and remove the manual effect.',
-  },
-  {
-    file: 'src/pages/admin/AdminServiceActivations.tsx',
-    count: 1,
-    reason: 'URL param sync effect must react only to filter slice changes; including searchParams/setSearchParams loops.',
-    followup: 'Encapsulate filter ↔ URL sync into a dedicated hook.',
+    count: 2,
+    reason: '(1) Auto-mark-as-read on focus change must not re-run on mutation identity change. (2) Keyboard shortcut handler must avoid reattaching on every mutation reference change.',
+    followup: 'Wrap mutations in useEvent-style stable callbacks.',
   },
   {
     file: 'src/pages/admin/AdminUsers.tsx',
