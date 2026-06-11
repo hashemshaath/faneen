@@ -310,6 +310,102 @@ const DashboardBranches: React.FC = () => {
           }
         />
 
+        {pendingMainTransfer && (() => {
+          const target = (branches ?? []).find(b => b.id === pendingMainTransfer);
+          const currentMain = (branches ?? []).find(b => b.is_main && b.id !== pendingMainTransfer);
+          if (!target) return null;
+          const Arrow = isRTL ? ArrowLeft : ArrowRight;
+          const Cell = ({ b, label }: { b: BranchRow | undefined; label: string }) => (
+            <div className="flex-1 min-w-[220px] rounded-xl border border-border/60 bg-background/60 p-4 space-y-1.5">
+              <div className="text-xs font-medium text-muted-foreground">{label}</div>
+              {b ? (
+                <>
+                  <div className="font-semibold" dir="auto">{b.name_ar}</div>
+                  <div className="text-xs text-muted-foreground tech-content">{b.ref_id ?? '—'}</div>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <Badge variant="outline" className="text-[10px]">
+                      {b.branch_type ?? (b.is_main ? 'main' : 'branch')}
+                    </Badge>
+                    {b.is_main && (
+                      <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] gap-1">
+                        <Star className="w-3 h-3 fill-current" />
+                        {t(isRTL, 'رئيسي حالياً', 'Currently main')}
+                      </Badge>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  {t(isRTL, 'لا يوجد فرع رئيسي حالي', 'No current main branch')}
+                </div>
+              )}
+            </div>
+          );
+          return (
+            <Card className="border-amber-500/40 bg-amber-500/[0.04]" data-testid="branch-main-transfer-diff">
+              <CardHeader className="p-5 pb-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">
+                      {t(isRTL, 'تأكيد نقل صفة الفرع الرئيسي', 'Confirm main branch transfer')}
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      {t(isRTL,
+                        'راجع الفرق قبل وبعد النقل. سيتم تنفيذ العملية بشكل ذرّي وتسجيلها في سجل التدقيق.',
+                        'Review the before/after diff. The change is applied atomically and recorded in the audit log.')}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-5 pt-0 space-y-4">
+                <div className="flex items-stretch gap-3 flex-wrap">
+                  <Cell b={currentMain} label={t(isRTL, 'الرئيسي قبل النقل', 'Main — before')} />
+                  <div className="flex items-center justify-center px-1 text-muted-foreground">
+                    <Arrow className="w-5 h-5" />
+                  </div>
+                  <Cell b={target} label={t(isRTL, 'الرئيسي بعد النقل', 'Main — after')} />
+                </div>
+
+                <div className="rounded-xl bg-muted/40 p-3 text-xs space-y-1.5">
+                  <div className="font-medium">{t(isRTL, 'ما سيحدث:', 'What will happen:')}</div>
+                  <ul className="ms-4 list-disc space-y-0.5 text-muted-foreground">
+                    {currentMain && (
+                      <li>
+                        {t(isRTL,
+                          `إلغاء صفة "رئيسي" عن ${currentMain.name_ar} وإعادة نوعه إلى "branch".`,
+                          `Remove "main" from ${currentMain.name_ar} and reset its type to "branch".`)}
+                      </li>
+                    )}
+                    <li>
+                      {t(isRTL,
+                        `تعيين ${target.name_ar} كفرع رئيسي ونوعه "main".`,
+                        `Set ${target.name_ar} as main with type "main".`)}
+                    </li>
+                    <li>
+                      {t(isRTL,
+                        'تسجيل التغيير في business_branch_audit_log مع المستخدم والوقت والقيم قبل/بعد.',
+                        'Record the change in business_branch_audit_log with actor, timestamp, and before/after values.')}
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button onClick={handleConfirmSetMain} disabled={busy} className="gap-2 h-11">
+                    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4" />}
+                    {t(isRTL, 'تأكيد النقل', 'Confirm transfer')}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setPendingMainTransfer(null)} disabled={busy} className="h-11">
+                    {t(isRTL, 'إلغاء', 'Cancel')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {creating && (
           <Card className="border-primary/40">
             <CardContent className="p-5 flex items-end gap-3 flex-wrap">
