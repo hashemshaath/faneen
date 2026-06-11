@@ -272,13 +272,13 @@ const AdminBusinesses = () => {
   useEffect(() => { setSearchInput(search); }, [search]);
   // Latest refs so the 300ms debounce reschedules ONLY on input change,
   // matching prior behavior without an exhaustive-deps suppression.
-  const searchRef = useRef(search);
+  const latestSearchRef = useRef(search);
   const updateParamRef = useRef(updateParam);
-  useEffect(() => { searchRef.current = search; }, [search]);
+  useEffect(() => { latestSearchRef.current = search; }, [search]);
   useEffect(() => { updateParamRef.current = updateParam; }, [updateParam]);
   useEffect(() => {
     const t = setTimeout(() => {
-      if (searchInput !== searchRef.current) updateParamRef.current({ q: searchInput || null, page: null });
+      if (searchInput !== latestSearchRef.current) updateParamRef.current({ q: searchInput || null, page: null });
     }, 300);
     return () => clearTimeout(t);
   }, [searchInput]);
