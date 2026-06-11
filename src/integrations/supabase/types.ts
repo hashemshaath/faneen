@@ -3161,6 +3161,7 @@ export type Database = {
           additional_number: string | null
           address: string | null
           address_id: string | null
+          branch_type: Database["public"]["Enums"]["branch_type"]
           building_number: string | null
           business_id: string
           city_id: string | null
@@ -3213,6 +3214,7 @@ export type Database = {
           additional_number?: string | null
           address?: string | null
           address_id?: string | null
+          branch_type?: Database["public"]["Enums"]["branch_type"]
           building_number?: string | null
           business_id: string
           city_id?: string | null
@@ -3265,6 +3267,7 @@ export type Database = {
           additional_number?: string | null
           address?: string | null
           address_id?: string | null
+          branch_type?: Database["public"]["Enums"]["branch_type"]
           building_number?: string | null
           business_id?: string
           city_id?: string | null
@@ -22923,6 +22926,7 @@ export type Database = {
         | "completed"
         | "no_show"
       branch_inquiry_status: "pending" | "in_review" | "responded" | "closed"
+      branch_type: "main" | "branch" | "warehouse" | "admin_office"
       business_approval_status:
         | "draft"
         | "submitted"
@@ -23262,6 +23266,7 @@ export const Constants = {
         "no_show",
       ],
       branch_inquiry_status: ["pending", "in_review", "responded", "closed"],
+      branch_type: ["main", "branch", "warehouse", "admin_office"],
       business_approval_status: [
         "draft",
         "submitted",

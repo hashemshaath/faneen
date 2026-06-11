@@ -938,6 +938,7 @@ const AdminBusinesses = () => {
 
   const emptyBranch = () => ({
     name_ar: '', name_en: '', is_main: false, is_active: true,
+    branch_type: 'branch' as 'main' | 'branch' | 'warehouse' | 'admin_office',
     contact_person: '', phone: '', mobile: '', unified_number: '', customer_service_phone: '',
     email: '', website: '',
     country_id: '', city_id: '', region: '', district: '', street_name: '',
@@ -953,6 +954,7 @@ const AdminBusinesses = () => {
         business_id: editingBiz.id,
         name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
         is_active: branchForm.is_active,
+        branch_type: branchForm.branch_type || 'branch',
         contact_person: branchForm.contact_person || null, phone: branchForm.phone || null,
         mobile: branchForm.mobile || null, unified_number: branchForm.unified_number || null,
         customer_service_phone: branchForm.customer_service_phone || null,
@@ -1802,72 +1804,19 @@ const AdminBusinesses = () => {
                 </div>
               </div>
 
-              {/* ─── Section 4: National address ─── */}
-              <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                  <Label className="text-xs font-semibold">
-                    {pickBi(isRTL, '4) العنوان الوطني التفصيلي للمنشأة', '4) National detailed address')}
-                  </Label>
-                  <span className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, '(اختر المنطقة لتظهر المدن التابعة لها)', '(pick region to see its cities)')}</span>
-                </div>
-
-                <RegionCitySelector
-                  value={{ region_id: createForm.region_id, city_id: createForm.city_id }}
-                  onChange={(next) => setCreateForm((f: any) => ({ ...f, region_id: next.region_id || '', city_id: next.city_id || '' }))}
-                  regionLabel={pickBi(isRTL, 'المنطقة', 'Region')}
-                  cityLabel={pickBi(isRTL, 'المدينة', 'City')}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'الحي (عربي)', 'District (AR)')}</Label>
-                    <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.district} onChange={(e) => setCField('district', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'مثال: العليا', 'e.g. Al Olaya')} className="h-10 rounded-xl flex-1" />
-                      <FieldAiActions value={createForm.district} lang="ar" fieldType="short_text" compact isRTL={isRTL}
-                        onTranslated={(t) => setCField('district_en', t)} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'الحي (English)', 'District (EN)')}</Label>
-                    <Input value={createForm.district_en} onChange={(e) => setCField('district_en', e.target.value)} dir="ltr" placeholder="e.g. Al Olaya" className="h-10 rounded-xl" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الشارع (عربي)', 'Street name (AR)')}</Label>
-                    <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.street_name} onChange={(e) => setCField('street_name', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'مثال: شارع الأمير محمد', 'e.g. Prince Mohammed St')} className="h-10 rounded-xl flex-1" />
-                      <FieldAiActions value={createForm.street_name} lang="ar" fieldType="short_text" compact isRTL={isRTL}
-                        onTranslated={(t) => setCField('street_name_en', t)} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الشارع (English)', 'Street name (EN)')}</Label>
-                    <Input value={createForm.street_name_en} onChange={(e) => setCField('street_name_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'رقم المبنى', 'Building number')}</Label>
-                    <Input value={createForm.building_number} onChange={(e) => setCField('building_number', e.target.value)} dir="ltr" placeholder="1234" className="h-10 rounded-xl tech-content" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الإضافي (العنوان الوطني)', 'Additional number (national address)')}</Label>
-                    <Input value={createForm.additional_number} onChange={(e) => setCField('additional_number', e.target.value)} dir="ltr" placeholder="5678" className="h-10 rounded-xl tech-content" />
-                  </div>
-
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'العنوان التفصيلي (عربي)', 'Detailed address (AR)')}</Label>
-                    <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.address} onChange={(e) => setCField('address', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'الحي - الشارع - معالم قريبة', 'District - street - landmarks')} className="h-10 rounded-xl flex-1" />
-                      <FieldAiActions value={createForm.address} lang="ar" fieldType="short_text" compact isRTL={isRTL}
-                        onTranslated={(t) => setCField('address_en', t)} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'العنوان التفصيلي (English)', 'Detailed address (EN)')}</Label>
-                    <Input value={createForm.address_en} onChange={(e) => setCField('address_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
-                  </div>
-                </div>
+              {/* Section 4 (National address) removed — addresses are now managed
+                  per-branch from the Branches tab after creating the entity. The
+                  main branch (branch_type = 'main') is the source of truth for
+                  the business address. */}
+              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                <p>
+                  {pickBi(
+                    isRTL,
+                    'العنوان يُدار من تبويب "الفروع" بعد الإنشاء. أضف الفرع الرئيسي (المركز الرئيسي) ثم باقي الفروع/المستودعات/المكاتب الإدارية.',
+                    'Address is managed from the "Branches" tab after creation. Add the main branch (headquarters) first, then any branches / warehouses / admin offices.',
+                  )}
+                </p>
               </div>
 
               <Separator className="my-2" />
@@ -1931,10 +1880,9 @@ const AdminBusinesses = () => {
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-10 h-9 rounded-xl">
+                <TabsList className="w-full grid grid-cols-9 h-9 rounded-xl">
                   <TabsTrigger value="info" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المعلومات', 'Info')}</TabsTrigger>
                   <TabsTrigger value="owner" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المسؤول', 'Owner')}</TabsTrigger>
-                  <TabsTrigger value="address" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العنوان', 'Address')}</TabsTrigger>
                   <TabsTrigger value="content" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المحتوى', 'Content')}</TabsTrigger>
                   <TabsTrigger value="media" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
                   <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
@@ -2037,86 +1985,8 @@ const AdminBusinesses = () => {
                 </TabsContent>
 
                 {/* ── Address Tab ── */}
-                <TabsContent value="address" className="space-y-4 mt-3">
-                  <div>
-                    <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
-                      <MapPinned className="w-3 h-3" />
-                      {pickBi(isRTL, 'تحديد الموقع على الخريطة', 'Pick Location on Map')}
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground mb-2">
-                      {pickBi(isRTL, 'انقر على الخريطة لتحديد الموقع وتعبئة حقول العنوان تلقائياً', 'Click on map to pick location and auto-fill address fields')}
-                    </p>
-                    <LocationPicker lat={parseFloat(editForm.latitude) || 0} lng={parseFloat(editForm.longitude) || 0}
-                      onPick={handleMapPick} isRTL={isRTL} />
-                    {geocoding && (
-                      <div className="flex items-center gap-2 mt-2 text-xs text-primary">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        {pickBi(isRTL, 'جاري استخراج بيانات العنوان...', 'Extracting address data...')}
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <div>
-                        <Label className="text-[10px]">{pickBi(isRTL, 'خط العرض', 'Latitude')}</Label>
-                        <Input value={editForm.latitude} onChange={e => setField('latitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
-                      </div>
-                      <div>
-                        <Label className="text-[10px]">{pickBi(isRTL, 'خط الطول', 'Longitude')}</Label>
-                        <Input value={editForm.longitude} onChange={e => setField('longitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <Label className="text-xs">{pickBi(isRTL, 'الدولة', 'Country')}</Label>
-                    <Select value={editForm.country_id} onValueChange={v => { setField('country_id', v); setField('city_id', ''); }}>
-                      <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={pickBi(isRTL, 'اختر', 'Select')} /></SelectTrigger>
-                      <SelectContent>
-                        {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* Unified address microservice — same component used in branch editor (SPL + Region → City → District + street/building/additional). */}
-                  <NationalAddressForm
-                    isRTL={isRTL}
-                    value={{
-                      short_address: editForm.short_address ?? null,
-                      region: editForm.region ?? null,
-                      region_en: editForm.region_en ?? null,
-                      city_id: editForm.city_id ?? null,
-                      district: editForm.district ?? null,
-                      district_en: editForm.district_en ?? null,
-                      street_name: editForm.street_name ?? null,
-                      street_name_en: editForm.street_name_en ?? null,
-                      building_number: editForm.building_number ?? null,
-                      additional_number: editForm.additional_number ?? null,
-                      post_code: editForm.post_code ?? null,
-                      address: editForm.address ?? null,
-                      address_en: editForm.address_en ?? null,
-                      address_manual: editForm.address_manual ?? false,
-                    } as NationalAddressValue}
-                    onChange={(next) => setEditForm((f: Record<string, unknown>) => ({
-                      ...f,
-                      short_address: next.short_address ?? '',
-                      region: next.region ?? '',
-                      region_en: next.region_en ?? '',
-                      city_id: next.city_id ?? '',
-                      district: next.district ?? '',
-                      district_en: next.district_en ?? '',
-                      street_name: next.street_name ?? '',
-                      street_name_en: next.street_name_en ?? '',
-                      building_number: next.building_number ?? '',
-                      additional_number: next.additional_number ?? '',
-                      post_code: next.post_code ?? '',
-                      address: next.address ?? '',
-                      address_en: next.address_en ?? '',
-                      address_manual: next.address_manual ?? false,
-                    }))}
-                  />
-                  <div>
-                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الوطني', 'National ID')}</Label>
-                    <Input value={editForm.national_id} onChange={e => setField('national_id', e.target.value)} dir="ltr" className="mt-1 max-w-xs" />
-                  </div>
-                </TabsContent>
+                {/* Address tab removed — addresses live on branches now.
+                    See the Branches tab for the per-location address editor. */}
 
                 {/* ── Content Tab ── */}
                 <TabsContent value="content" className="space-y-4 mt-3">
@@ -2348,13 +2218,28 @@ const AdminBusinesses = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-sm font-medium truncate">{language === 'ar' ? br.name_ar : (br.name_en || br.name_ar)}</p>
-                            {br.is_main && <Badge className="text-[8px] h-4 bg-primary/10 text-primary border-0">{pickBi(isRTL, 'رئيسي', 'Main')}</Badge>}
+                            {(() => {
+                              const t = ((br as unknown as { branch_type?: string }).branch_type) ?? (br.is_main ? 'main' : 'branch');
+                              const map: Record<string, { ar: string; en: string; cls: string }> = {
+                                main:         { ar: 'المركز الرئيسي', en: 'Headquarters', cls: 'bg-primary/10 text-primary' },
+                                branch:       { ar: 'فرع',           en: 'Branch',       cls: 'bg-blue-500/10 text-blue-700 dark:text-blue-300' },
+                                warehouse:    { ar: 'مستودع',        en: 'Warehouse',    cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+                                admin_office: { ar: 'مكتب إداري',    en: 'Admin office', cls: 'bg-violet-500/10 text-violet-700 dark:text-violet-300' },
+                              };
+                              const m = map[t] ?? map.branch;
+                              return <Badge className={`text-[8px] h-4 border-0 ${m.cls}`}>{pickBi(isRTL, m.ar, m.en)}</Badge>;
+                            })()}
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
                             {br.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.phone}</span>}
                             {br.mobile && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.mobile}</span>}
                             {br.unified_number && <span>{br.unified_number}</span>}
-                            {br.district && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{br.district}</span>}
+                            {(br.address || br.district) && (
+                              <span className="flex items-center gap-0.5 truncate max-w-[280px]">
+                                <MapPin className="w-2.5 h-2.5 shrink-0" />
+                                <span className="truncate">{br.address || [br.district, br.street_name].filter(Boolean).join(' · ')}</span>
+                              </span>
+                            )}
                             {br.contact_person && <span className="flex items-center gap-0.5"><Users className="w-2.5 h-2.5" />{br.contact_person}</span>}
                           </div>
                         </div>
@@ -2364,6 +2249,7 @@ const AdminBusinesses = () => {
                             setEditingBranchId(br.id);
                             setBranchForm({
                               name_ar: br.name_ar, name_en: br.name_en || '', is_main: br.is_main, is_active: br.is_active,
+                              branch_type: ((br as unknown as { branch_type?: string }).branch_type as 'main' | 'branch' | 'warehouse' | 'admin_office') ?? (br.is_main ? 'main' : 'branch'),
                               contact_person: br.contact_person || '', phone: br.phone || '', mobile: br.mobile || '',
                               unified_number: br.unified_number || '', customer_service_phone: br.customer_service_phone || '',
                               email: br.email || '', website: br.website || '', country_id: br.country_id || '',
@@ -2405,6 +2291,35 @@ const AdminBusinesses = () => {
                       <div>
                         <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
                         <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{pickBi(isRTL, 'نوع الموقع', 'Location type')} *</Label>
+                        <Select
+                          value={branchForm.branch_type || 'branch'}
+                          onValueChange={(v) => {
+                            const nextIsMain = v === 'main';
+                            if (nextIsMain) {
+                              const currentMain = branches.find((b: any) => b.is_main && b.id !== editingBranchId);
+                              if (currentMain && !confirm(isRTL
+                                ? `سيتم إلغاء "${currentMain.name_ar}" كمركز رئيسي وتعيين هذا الموقع بدلاً منه. متابعة؟`
+                                : `"${currentMain.name_ar}" will be unset as headquarters and this location will replace it. Continue?`)) {
+                                return;
+                              }
+                            }
+                            setBranchForm((f) => ({ ...f, branch_type: v as any, is_main: nextIsMain }));
+                          }}
+                        >
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="main">{pickBi(isRTL, 'المركز الرئيسي', 'Headquarters (main)')}</SelectItem>
+                            <SelectItem value="branch">{pickBi(isRTL, 'فرع', 'Branch')}</SelectItem>
+                            <SelectItem value="warehouse">{pickBi(isRTL, 'مستودع', 'Warehouse')}</SelectItem>
+                            <SelectItem value="admin_office">{pickBi(isRTL, 'مكتب إداري', 'Admin office')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {pickBi(isRTL, 'المركز الرئيسي يُستخدم كعنوان المنشأة الافتراضي. مسموح بمركز رئيسي واحد فقط.', 'Headquarters is used as the default business address. Only one headquarters is allowed.')}
+                        </p>
                       </div>
                       <Separator />
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{pickBi(isRTL, 'بيانات التواصل', 'Contact Info')}</p>
@@ -2488,22 +2403,6 @@ const AdminBusinesses = () => {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <Switch checked={branchForm.is_main} onCheckedChange={v => {
-                            if (v) {
-                              const currentMain = branches.find((b: any) => b.is_main && b.id !== editingBranchId);
-                              if (currentMain && !confirm(isRTL
-                                ? `سيتم إلغاء "${currentMain.name_ar}" كفرع رئيسي وتعيين هذا الفرع بدلاً منه. متابعة؟`
-                                : `"${currentMain.name_ar}" will be unset as main and this branch will replace it. Continue?`)) {
-                                return;
-                              }
-                            } else if (branchForm.is_main && !confirm(pickBi(isRTL, 'هل تريد إلغاء كون هذا الفرع رئيسياً؟ يجب تعيين فرع آخر كرئيسي.', 'Unset this branch as main? You must set another branch as main.'))) {
-                              return;
-                            }
-                            setBranchForm((f) => ({ ...f, is_main: v }));
-                          }} />
-                          <span className="text-xs">{pickBi(isRTL, 'فرع رئيسي', 'Main Branch')}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <Switch checked={branchForm.is_active} onCheckedChange={v => setBranchForm((f) => ({ ...f, is_active: v }))} />
                           <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
                         </div>
@@ -2516,13 +2415,18 @@ const AdminBusinesses = () => {
                     </div>
                   ) : (
                     <Button variant="outline" className="w-full gap-1.5" onClick={() => {
-                      // First branch auto-syncs as main (DB trigger guarantees this);
-                      // pre-check the switch so the form mirrors what will be saved.
+                      // First location defaults to "main" (headquarters); subsequent
+                      // ones default to "branch" and admins can switch to warehouse
+                      // or admin_office.
                       const isFirst = branches.length === 0;
-                      setBranchForm({ ...emptyBranch(), is_main: isFirst });
+                      setBranchForm({
+                        ...emptyBranch(),
+                        is_main: isFirst,
+                        branch_type: isFirst ? 'main' : 'branch',
+                      });
                       setEditingBranchId(null);
                     }}>
-                      <Plus className="w-3.5 h-3.5" /> {pickBi(isRTL, 'إضافة فرع جديد', 'Add New Branch')}
+                      <Plus className="w-3.5 h-3.5" /> {pickBi(isRTL, 'إضافة موقع جديد (فرع / مستودع / مكتب)', 'Add new location (branch / warehouse / office)')}
                     </Button>
                   )}
                 </TabsContent>
