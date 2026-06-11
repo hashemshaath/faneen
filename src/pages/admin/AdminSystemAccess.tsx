@@ -20,6 +20,7 @@ import {
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   listSystemModules,
+  listAllSystemModules,
   listAllOverrides,
   listAuditLog,
   type SystemModule,
@@ -27,6 +28,13 @@ import {
   type ScopeType,
   type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
+import {
+  classifyModule,
+  MODULE_STATUS_LABELS,
+  LINKED_ROUTES_BADGE,
+  DISABLE_WARNING_TEXT,
+  ACTIVATE_BLOCKED_TEXT,
+} from '@/modules/systemAccess/moduleStatus';
 import { updateBusinessSystemAccess } from '@/modules/systemAccess/services/updateBusinessSystemAccess';
 import { useBusinessAccessInvalidation } from '@/hooks/useBusinessAccessInvalidation';
 import { ACCESS_LABELS } from '@/modules/systemAccess/accessResolution';
@@ -75,7 +83,9 @@ const AdminSystemAccess: React.FC = () => {
 
   const modulesQuery = useQuery({
     queryKey: ['system-modules'],
-    queryFn: listSystemModules,
+    // Admin console must see every catalog entry (including not-ready ones)
+    // so it can render a clear status badge per module.
+    queryFn: listAllSystemModules,
     staleTime: 60_000,
   });
 
@@ -315,6 +325,18 @@ const AdminSystemAccess: React.FC = () => {
     if (m.is_core && !nextEnabled) {
       toast.error(pickBi(isRTL, 'لا يمكن إخفاء الأنظمة الأساسية', 'Core modules cannot be disabled'));
       return;
+    }
+    const info = classifyModule(m, {
+      effectiveEnabled: ov => false,
+    } as never);
+    if (nextEnabled && !info.canActivate) {
+      toast.error(pickBi(isRTL, ACTIVATE_BLOCKED_TEXT.ar, ACTIVATE_BLOCKED_TEXT.en));
+      return;
+    }
+    if (!nextEnabled) {
+      // Inline confirmation lives in the row (warning text); the toast
+      // here mirrors the same copy so the operator always sees it.
+      toast.warning(pickBi(isRTL, DISABLE_WARNING_TEXT.ar, DISABLE_WARNING_TEXT.en));
     }
     setMutation.mutate({
       moduleKey: m.key,
