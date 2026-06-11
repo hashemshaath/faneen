@@ -348,7 +348,7 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             }}
             dir="auto"
             className="mt-1 h-11 rounded-xl"
-            placeholder={t(isRTL, 'اكتب للبحث أو اكتب يدويًا', 'Type to search or enter manually')}
+            placeholder={t(isRTL, 'اسم الحي (عربي)', 'District (Arabic)')}
             maxLength={120}
           />
           {showDistrictDropdown && (districtOpts.length > 0 || districtLoading) && (
@@ -374,7 +374,62 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
               ))}
             </div>
           )}
+          <Input
+            value={value.district_en ?? ''}
+            onChange={(e) => patch({ district_en: e.target.value || null })}
+            dir="ltr"
+            className="mt-2 h-11 rounded-xl"
+            placeholder={t(isRTL, 'الحي (إنجليزي) — اختياري', 'District (English) — optional')}
+            maxLength={120}
+          />
         </div>
+      </div>
+
+      {/* Within a complex / industrial city / commercial center */}
+      <div className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-3">
+        <Label className="text-xs font-bold text-foreground">
+          {t(isRTL, 'ضمن مركز / مجمع / مدينة صناعية (اختياري)', 'Inside a center / compound / industrial city (optional)')}
+        </Label>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <div>
+            <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (عربي)', 'Center name (Arabic)')}</Label>
+            <Input
+              value={value.complex_name ?? ''}
+              onChange={(e) => patch({ complex_name: e.target.value || null })}
+              dir="rtl"
+              className="mt-1 h-11 rounded-xl"
+              placeholder={t(isRTL, 'مثال: مدينة الرياض الصناعية', 'e.g. Riyadh Industrial City')}
+              maxLength={160}
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (إنجليزي)', 'Center name (English)')}</Label>
+            <Input
+              value={value.complex_name_en ?? ''}
+              onChange={(e) => patch({ complex_name_en: e.target.value || null })}
+              dir="ltr"
+              className="mt-1 h-11 rounded-xl"
+              placeholder="e.g. Riyadh Industrial City"
+              maxLength={160}
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'رقم الموقع', 'Site number')}</Label>
+            <Input
+              value={value.site_number ?? ''}
+              onChange={(e) => patch({ site_number: e.target.value || null })}
+              dir="ltr"
+              className="mt-1 h-11 rounded-xl tech-content"
+              placeholder="16"
+              maxLength={20}
+            />
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {t(isRTL,
+            'تُضاف هذه البيانات تلقائياً إلى بداية العنوان التفصيلي — مثل: «مدينة الرياض الصناعية — موقع 16».',
+            'These fields are prepended automatically to the detailed address — e.g. "Riyadh Industrial City — Site 16".')}
+        </p>
       </div>
 
       {/* Street + structured */}
