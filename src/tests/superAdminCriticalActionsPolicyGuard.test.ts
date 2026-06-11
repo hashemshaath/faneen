@@ -81,8 +81,10 @@ describe('SUPER ADMIN CRITICAL ACTIONS POLICY GUARD', () => {
         hasSuperAdminGate,
         `${name} is missing super_admin gate in ${entry!.file}`,
       ).toBe(true);
-      // And must pin search_path.
-      expect(/SET\s+search_path\s+TO\s+'public'/i.test(body)).toBe(true);
+      // And must pin search_path (accept both `TO 'public'` and `= public`).
+      expect(
+        /SET\s+search_path\s+(TO\s+'?public'?|=\s+'?public'?)/i.test(body),
+      ).toBe(true);
       // And must be SECURITY DEFINER.
       expect(/SECURITY DEFINER/i.test(body)).toBe(true);
     },
