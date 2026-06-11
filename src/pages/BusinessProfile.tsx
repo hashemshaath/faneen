@@ -46,7 +46,8 @@ import {
   ReviewsTab,
   ServicesTab,
 } from "@/components/business-profile/BusinessProfileTabs";
-import { BusinessBranchSwitcher } from "@/components/business-profile/BusinessBranchSwitcher";
+// BusinessBranchSwitcher removed — the Branches tab already exposes the same
+// list of branches with richer details, so the redundant top bar was dropped.
 import {
   useBranches,
   useBusinessByUsername,
@@ -469,17 +470,6 @@ const BusinessProfile = () => {
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
-          {/* Branch switcher — sits above the quick actions so visitors can
-              jump between the head office view and any specific branch
-              before drilling into tabs. */}
-          {business.username && (
-            <BusinessBranchSwitcher
-              branches={branches as Array<{ id: string; slug?: string | null; name_ar: string; name_en?: string | null; region?: string | null; is_main?: boolean | null }>}
-              currentBranchId={selectedBranchId}
-              onSelect={(b) => setSelectedBranchId(b?.id ?? null)}
-            />
-          )}
-
           {/* Quick actions — visit request, contact request, share. The
               "Contact" icon button mirrors the branch-resolved phone so the
               visitor always sees the right channel for the page they're on. */}
