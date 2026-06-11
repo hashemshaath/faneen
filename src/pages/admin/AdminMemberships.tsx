@@ -1105,8 +1105,8 @@ const AdminMemberships = () => {
                   <CardContent className="p-4 sm:p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                        {(editingPlan as any)._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
-                        {(editingPlan as any)._new
+                        {editingPlan._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
+                        {editingPlan._new
                           ? (pickBi(isRTL, 'إنشاء خطة جديدة', 'Create Plan'))
                           : (pickBi(isRTL, 'تعديل الخطة', 'Edit Plan'))}
                         <Badge className={cn('text-[9px]', tierColors[editingPlan.tier]?.badge)}>{editingPlan.tier}</Badge>
