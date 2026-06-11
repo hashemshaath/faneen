@@ -139,12 +139,12 @@ const PLAN_TIER_PROGRESS: Record<string, string> = {
   enterprise: 'bg-secondary',
 };
 
-const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
+const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: AdminMembershipPlanCardProps) => {
   const Icon = tierIcons[plan.tier] || Zap;
   const colors = tierColors[plan.tier] || tierColors.free;
   const features = Array.isArray(plan.features) ? plan.features : [];
-  const limits = parseLimits(plan.limits as Record<string, any> | undefined);
-  const extraKeys = getExtraLimitKeys(plan.limits as Record<string, unknown> | undefined);
+  const limits = parseLimits(plan.limits as AdminMembershipLimitsInput);
+  const extraKeys = getExtraLimitKeys(plan.limits as AdminMembershipLimitsInput);
   const enabledBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean' && limits[f.key] === true).length;
   const totalBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean').length;
   const benefitPct = totalBoolLimits > 0 ? Math.round((enabledBoolLimits / totalBoolLimits) * 100) : 0;
