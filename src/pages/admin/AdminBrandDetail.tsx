@@ -88,7 +88,7 @@ const AdminBrandDetail: React.FC = () => {
   const [linkSearch, setLinkSearch] = useState('');
   const [linkBusinessId, setLinkBusinessId] = useState<string>('');
   const [linkBusinessLabel, setLinkBusinessLabel] = useState<string>('');
-  const [linkServiceId, setLinkServiceId] = useState<string>('');
+  const [linkServiceId, setLinkServiceId] = useState<string>('__all__');
   const [linkRelationship, setLinkRelationship] = useState<string>('authorized_distributor');
 
   const brandQ = useQuery({
@@ -230,7 +230,7 @@ const AdminBrandDetail: React.FC = () => {
             `Linked to ${res.servicesTotal} service(s) — ${res.inserted} new`)
         : pickBi(isRTL, 'تم ربط المزود', 'Provider linked');
       toast.success(msg);
-      setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('');
+      setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('__all__');
       qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
