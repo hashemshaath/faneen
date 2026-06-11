@@ -41,6 +41,11 @@ export interface AddressFields {
   street_name_en?: string | null;
   address?: string | null;
   address_en?: string | null;
+  /** Optional: name of the compound / industrial city / commercial center. */
+  complex_name?: string | null;
+  complex_name_en?: string | null;
+  /** Optional: site / plot number inside the named complex. */
+  site_number?: string | null;
   source?: AddressSource;
   verified_at?: string | null;
   is_verified?: boolean;
