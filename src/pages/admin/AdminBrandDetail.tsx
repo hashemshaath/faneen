@@ -41,6 +41,8 @@ import {
   brandProductStatusLabel, brandProductRequestStatusLabel,
   adminSearchBusinessesForBrand, adminListBusinessServices, adminCreateProviderBrandLink,
   adminLinkBrandToAllServices,
+  listProviderBrandLinkProducts, adminSetProviderBrandLinkProducts,
+  adminRemoveProviderBrandLinkProduct,
   type BrandProduct, type BrandProductRequest,
 } from '@/modules/brands';
 
@@ -90,6 +92,12 @@ const AdminBrandDetail: React.FC = () => {
   const [linkBusinessLabel, setLinkBusinessLabel] = useState<string>('');
   const [linkServiceId, setLinkServiceId] = useState<string>('__all__');
   const [linkRelationship, setLinkRelationship] = useState<string>('authorized_distributor');
+  // Scope toggle: link covers the whole brand, or only specific products.
+  const [linkScope, setLinkScope] = useState<'all' | 'products'>('all');
+  const [linkProductIds, setLinkProductIds] = useState<string[]>([]);
+  // Per-link expansion + add-product UI state.
+  const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
+  const [addProductForLinkId, setAddProductForLinkId] = useState<string>('');
 
   const brandQ = useQuery({
     queryKey: ['admin-brand-detail', idParam],
