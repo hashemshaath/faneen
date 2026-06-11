@@ -22,6 +22,22 @@ import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel'
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { listAllUserRoles, grantRole, revokeRoleByUserAndRole, adminResetPassword, listPasswordResetLogs } from '@/modules/identity';
 
+interface AccessProfileRow {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  ref_id: string | null;
+  account_type: string | null;
+  is_onboarded: boolean | null;
+  phone_verified: boolean | null;
+  membership_tier: string | null;
+  created_at: string | null;
+  is_banned: boolean | null;
+}
+
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
   const d = new Date(dateStr);
@@ -61,7 +77,7 @@ const AdminAccessManagement = () => {
         orderBy: { column: 'created_at', ascending: false },
       });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as AccessProfileRow[];
     },
     enabled: !!user,
   });
