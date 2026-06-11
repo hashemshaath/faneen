@@ -30,10 +30,9 @@ import heroSlide3_1920 from '@/assets/home/hero-slide-3-rental-1920.webp';
 import heroSlide4_768 from '@/assets/home/hero-slide-4-768.webp';
 import heroSlide4_1280 from '@/assets/home/hero-slide-4-1280.webp';
 
-// Slide 1 (LCP) is served from /public/hero/* so the URL is stable and
-// matches the static <img> inlined in index.html. This lets the browser
-// reuse the same cached decode between the pre-React static hero and the
-// post-mount HeroV2 image — no duplicate network fetch.
+// Slide 1 (LCP) is served from /public/hero/* so the URL is stable across
+// builds and matches the <link rel="preload"> below — the browser starts
+// fetching it in parallel with the HeroV2 JS chunk.
 const heroSlide1 = '/hero/slide-1-1920.webp';
 const heroSlide1_768 = '/hero/slide-1-768.webp';
 const heroSlide1_1280 = '/hero/slide-1-1280.webp';
