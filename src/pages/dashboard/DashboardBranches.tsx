@@ -236,6 +236,7 @@ const DashboardBranches: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pendingMainTransfer, setPendingMainTransfer] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!businessId || !draftName.trim()) return;
@@ -254,20 +255,21 @@ const DashboardBranches: React.FC = () => {
     setExpandedId(((data as any)?.id ?? null));
   };
 
-  const handleSetMain = async (branchId: string) => {
-    const currentMain = (branches ?? []).find((b) => b.is_main && b.id !== branchId);
-    const target = (branches ?? []).find((b) => b.id === branchId);
-    const msg = currentMain
-      ? t(isRTL,
-          `سيتم إلغاء "${currentMain.name_ar}" كفرع رئيسي وتعيين "${target?.name_ar ?? ''}" بدلاً منه. متابعة؟`,
-          `"${currentMain.name_ar}" will be unset as main and "${target?.name_ar ?? ''}" will replace it. Continue?`)
-      : t(isRTL, 'تعيين هذا الفرع كرئيسي؟', 'Set this branch as main?');
-    if (!confirm(msg)) return;
+  // Open the inline confirmation panel instead of a popup (no-popup policy)
+  const handleRequestSetMain = (branchId: string) => {
+    setPendingMainTransfer(branchId);
+    // Smooth-scroll to top so the diff panel is visible
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleConfirmSetMain = async () => {
+    if (!pendingMainTransfer) return;
     setBusy(true);
-    const { error } = await setMainBranch(branchId);
+    const { error } = await setMainBranch(pendingMainTransfer);
     setBusy(false);
     if (error) { toast.error(t(isRTL, 'تعذر تعيين الفرع الرئيسي', 'Failed to set main branch')); return; }
     toast.success(t(isRTL, 'تم تعيين الفرع كرئيسي', 'Branch set as main'));
+    setPendingMainTransfer(null);
     qc.invalidateQueries({ queryKey: ['branches', businessId] });
   };
 
