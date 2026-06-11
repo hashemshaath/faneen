@@ -938,7 +938,7 @@ const AdminBusinesses = () => {
 
   const emptyBranch = () => ({
     name_ar: '', name_en: '', is_main: false, is_active: true,
-    branch_type: 'branch' as 'main' | 'branch' | 'warehouse' | 'admin_office',
+    branch_type: 'branch' as 'main' | 'branch' | 'warehouse' | 'admin_office' | 'regional_office' | 'head_office',
     contact_person: '', phone: '', mobile: '', unified_number: '', customer_service_phone: '',
     email: '', website: '',
     country_id: '', city_id: '', region: '', district: '', street_name: '',
@@ -2221,10 +2221,12 @@ const AdminBusinesses = () => {
                             {(() => {
                               const t = ((br as unknown as { branch_type?: string }).branch_type) ?? (br.is_main ? 'main' : 'branch');
                               const map: Record<string, { ar: string; en: string; cls: string }> = {
-                                main:         { ar: 'المركز الرئيسي', en: 'Headquarters', cls: 'bg-primary/10 text-primary' },
-                                branch:       { ar: 'فرع',           en: 'Branch',       cls: 'bg-blue-500/10 text-blue-700 dark:text-blue-300' },
-                                warehouse:    { ar: 'مستودع',        en: 'Warehouse',    cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-                                admin_office: { ar: 'مكتب إداري',    en: 'Admin office', cls: 'bg-violet-500/10 text-violet-700 dark:text-violet-300' },
+                                main:           { ar: 'المركز الرئيسي', en: 'Headquarters',     cls: 'bg-primary/10 text-primary' },
+                                branch:         { ar: 'فرع',           en: 'Branch',           cls: 'bg-blue-500/10 text-blue-700 dark:text-blue-300' },
+                                warehouse:      { ar: 'مستودع',        en: 'Warehouse',        cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+                                admin_office:   { ar: 'مكتب إداري',    en: 'Admin office',     cls: 'bg-violet-500/10 text-violet-700 dark:text-violet-300' },
+                                regional_office:{ ar: 'إدارة إقليمية', en: 'Regional office',  cls: 'bg-teal-500/10 text-teal-700 dark:text-teal-300' },
+                                head_office:    { ar: 'الإدارة العامة', en: 'Head office',     cls: 'bg-rose-500/10 text-rose-700 dark:text-rose-300' },
                               };
                               const m = map[t] ?? map.branch;
                               return <Badge className={`text-[8px] h-4 border-0 ${m.cls}`}>{pickBi(isRTL, m.ar, m.en)}</Badge>;
@@ -2249,7 +2251,7 @@ const AdminBusinesses = () => {
                             setEditingBranchId(br.id);
                             setBranchForm({
                               name_ar: br.name_ar, name_en: br.name_en || '', is_main: br.is_main, is_active: br.is_active,
-                              branch_type: ((br as unknown as { branch_type?: string }).branch_type as 'main' | 'branch' | 'warehouse' | 'admin_office') ?? (br.is_main ? 'main' : 'branch'),
+                              branch_type: ((br as unknown as { branch_type?: string }).branch_type as 'main' | 'branch' | 'warehouse' | 'admin_office' | 'regional_office' | 'head_office') ?? (br.is_main ? 'main' : 'branch'),
                               contact_person: br.contact_person || '', phone: br.phone || '', mobile: br.mobile || '',
                               unified_number: br.unified_number || '', customer_service_phone: br.customer_service_phone || '',
                               email: br.email || '', website: br.website || '', country_id: br.country_id || '',
@@ -2315,6 +2317,8 @@ const AdminBusinesses = () => {
                             <SelectItem value="branch">{pickBi(isRTL, 'فرع', 'Branch')}</SelectItem>
                             <SelectItem value="warehouse">{pickBi(isRTL, 'مستودع', 'Warehouse')}</SelectItem>
                             <SelectItem value="admin_office">{pickBi(isRTL, 'مكتب إداري', 'Admin office')}</SelectItem>
+                            <SelectItem value="regional_office">{pickBi(isRTL, 'إدارة إقليمية', 'Regional office')}</SelectItem>
+                            <SelectItem value="head_office">{pickBi(isRTL, 'الإدارة العامة', 'Head office')}</SelectItem>
                           </SelectContent>
                         </Select>
                         <p className="text-[10px] text-muted-foreground mt-1">

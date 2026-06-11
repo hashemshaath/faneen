@@ -22926,7 +22926,13 @@ export type Database = {
         | "completed"
         | "no_show"
       branch_inquiry_status: "pending" | "in_review" | "responded" | "closed"
-      branch_type: "main" | "branch" | "warehouse" | "admin_office"
+      branch_type:
+        | "main"
+        | "branch"
+        | "warehouse"
+        | "admin_office"
+        | "regional_office"
+        | "head_office"
       business_approval_status:
         | "draft"
         | "submitted"
@@ -23266,7 +23272,14 @@ export const Constants = {
         "no_show",
       ],
       branch_inquiry_status: ["pending", "in_review", "responded", "closed"],
-      branch_type: ["main", "branch", "warehouse", "admin_office"],
+      branch_type: [
+        "main",
+        "branch",
+        "warehouse",
+        "admin_office",
+        "regional_office",
+        "head_office",
+      ],
       business_approval_status: [
         "draft",
         "submitted",
