@@ -1336,6 +1336,7 @@ const AdminUsers = () => {
     setLinkForm({ businessId: '', role: 'viewer' });
     setLinkSearch('');
   }, [isSuperAdmin]);
+  useEffect(() => { openEditRef.current = openEdit; });
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
