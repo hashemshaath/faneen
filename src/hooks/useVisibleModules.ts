@@ -63,13 +63,6 @@ export const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
     '/dashboard/operations/feed',
     '/dashboard/operations-feed',
   ],
-  operations_log: [
-    '/dashboard/activity',
-    '/dashboard/operations',
-    '/dashboard/operations/feed',
-    '/dashboard/operations-feed',
-    '/dashboard/audit',
-  ],
   private_sectors: ['/dashboard/private-sectors'],
   installments: ['/dashboard/installments', '/dashboard/billing/installments'],
   staff_management: [
@@ -84,6 +77,19 @@ export const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
     '/dashboard/rentals/calendar',
     '/dashboard/rentals/analytics',
     '/rentals',
+  ],
+  procurement: ['/dashboard/procurement'],
+  client_sites: ['/dashboard/sites'],
+  my_requests: ['/dashboard/my-requests'],
+  // Operations Center is an executive view over operations data —
+  // keep it gated by the same key that owns the operations log.
+  operations_log: [
+    '/dashboard/activity',
+    '/dashboard/operations',
+    '/dashboard/operations/feed',
+    '/dashboard/operations-feed',
+    '/dashboard/operations-center',
+    '/dashboard/audit',
   ],
 };
 
