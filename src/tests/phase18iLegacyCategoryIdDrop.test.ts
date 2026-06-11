@@ -19,48 +19,57 @@ import { join } from 'path';
 describe('Phase 18i: legacy category_id columns dropped + views rebuilt on taxonomy', () => {
   const dir = 'supabase/migrations';
   const files = readdirSync(dir).sort();
-  const recent = files
-    .slice(-6)
+  // Phase 18i shipped long ago and is no longer in the trailing migrations
+  // window — scan the full migration history so the guard remains valid as
+  // newer migrations land. For view-shape assertions we re-derive the LATEST
+  // CREATE/REPLACE definition below so later rebuilds (not earlier drafts)
+  // are what gets validated.
+  const all = files
     .map((f) => readFileSync(join(dir, f), 'utf8'))
     .join('\n\n');
 
+  const lastViewDefinition = (viewName: string): string | null => {
+    const re = new RegExp(
+      String.raw`CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+public\.${viewName}[\s\S]*?;`,
+      'gi',
+    );
+    const matches = all.match(re);
+    return matches && matches.length > 0 ? matches[matches.length - 1] : null;
+  };
+
   it('drops businesses.category_id', () => {
-    expect(recent).toMatch(
+    expect(all).toMatch(
       /ALTER TABLE\s+(?:public\.)?businesses\s+DROP COLUMN(?:\s+IF EXISTS)?\s+category_id/i,
     );
   });
 
   it('drops business_services.category_id', () => {
-    expect(recent).toMatch(
+    expect(all).toMatch(
       /ALTER TABLE\s+(?:public\.)?business_services\s+DROP COLUMN(?:\s+IF EXISTS)?\s+category_id/i,
     );
   });
 
   it('rebuilds category_public_counts on taxonomy tables', () => {
-    expect(recent).toMatch(/CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+public\.category_public_counts/i);
-    expect(recent).toMatch(/business_taxonomy_categories/);
-    expect(recent).toMatch(/business_service_taxonomy_categories/);
+    const body = lastViewDefinition('category_public_counts');
+    expect(body, 'latest category_public_counts view definition not found').toBeTruthy();
+    expect(body!).toMatch(/business_taxonomy_categories/);
+    expect(body!).toMatch(/business_service_taxonomy_categories/);
   });
 
   it('category_public_counts no longer references businesses.category_id or business_services.category_id', () => {
-    const viewMatch = recent.match(
-      /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+public\.category_public_counts[\s\S]*?;/i,
-    );
-    expect(viewMatch, 'view definition not found in recent migrations').toBeTruthy();
-    const body = viewMatch![0];
+    const body = lastViewDefinition('category_public_counts');
+    expect(body, 'latest category_public_counts view definition not found').toBeTruthy();
     // The rebuilt view must not read from the legacy `categories` rollup or
     // the dropped `bs.category_id` / `b.category_id` predicates.
-    expect(body).not.toMatch(/\bbs\.category_id\b/);
-    expect(body).not.toMatch(/\bb\.category_id\b/);
-    expect(body).not.toMatch(/\bbp\.category_id\b/);
-    expect(body).not.toMatch(/FROM\s+(?:public\.)?categories\b/i);
+    expect(body!).not.toMatch(/\bbs\.category_id\b/);
+    expect(body!).not.toMatch(/\bb\.category_id\b/);
+    expect(body!).not.toMatch(/\bbp\.category_id\b/);
+    expect(body!).not.toMatch(/FROM\s+(?:public\.)?categories\b/i);
   });
 
   it('businesses_public view no longer exposes category_id', () => {
-    const viewMatch = recent.match(
-      /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+public\.businesses_public[\s\S]*?;/i,
-    );
-    expect(viewMatch, 'view definition not found in recent migrations').toBeTruthy();
-    expect(viewMatch![0]).not.toMatch(/\bcategory_id\b/);
+    const body = lastViewDefinition('businesses_public');
+    expect(body, 'latest businesses_public view definition not found').toBeTruthy();
+    expect(body!).not.toMatch(/\bcategory_id\b/);
   });
 });
