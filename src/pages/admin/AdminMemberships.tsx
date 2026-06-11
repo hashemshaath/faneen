@@ -48,6 +48,67 @@ import { AdminPromoCodesPanel } from '@/components/membership/AdminPromoCodesPan
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
 
+/* ─── Admin Memberships local types (no `any`) ─── */
+type AdminMembershipPlanRow = Database['public']['Tables']['membership_plans']['Row'];
+type AdminMembershipSubscriptionRow = Database['public']['Tables']['membership_subscriptions']['Row'];
+
+type AdminMembershipLimitsInput = Record<string, unknown> | undefined;
+
+interface AdminMembershipSubscriptionWithPlan extends AdminMembershipSubscriptionRow {
+  plan: { name_ar: string | null; name_en: string | null; tier: string | null } | null;
+}
+
+type AdminMembershipProfileLite = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  membership_tier: string | null;
+};
+
+type AdminMembershipBusinessLite = {
+  id: string;
+  name_ar: string | null;
+  name_en: string | null;
+  membership_tier: string | null;
+  logo_url: string | null;
+  is_verified: boolean | null;
+  is_active: boolean | null;
+};
+
+interface AdminMembershipEnrichedSubscription extends AdminMembershipSubscriptionWithPlan {
+  profile: AdminMembershipProfileLite | null;
+  business: AdminMembershipBusinessLite | null;
+}
+
+/**
+ * Editing state shape used by the inline plan form.
+ * - On edit: a full plan row is loaded.
+ * - On create: only `tier` + `_new: true` are set, the form fields drive the rest.
+ */
+type AdminMembershipEditingPlan = Partial<AdminMembershipPlanRow> & {
+  tier: AdminMembershipPlanRow['tier'];
+  _new?: boolean;
+};
+
+interface AdminMembershipPlanCardProps {
+  plan: AdminMembershipPlanRow;
+  isRTL: boolean;
+  language: string;
+  subsCount: number;
+  onEdit: (p: AdminMembershipPlanRow) => void;
+}
+
+interface AdminMembershipSubRowProps {
+  sub: AdminMembershipEnrichedSubscription;
+  isRTL: boolean;
+  language: string;
+  plans: AdminMembershipPlanRow[];
+  onCancel: (id: string) => void;
+  onRenew: (sub: AdminMembershipEnrichedSubscription) => void;
+  onUpgrade: (sub: AdminMembershipEnrichedSubscription) => void;
+}
+
 /* ─── Admin Usage Report ─── */
 type UsageReportRow = {
   business_id: string;
@@ -78,12 +139,12 @@ const PLAN_TIER_PROGRESS: Record<string, string> = {
   enterprise: 'bg-secondary',
 };
 
-const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
+const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: AdminMembershipPlanCardProps) => {
   const Icon = tierIcons[plan.tier] || Zap;
   const colors = tierColors[plan.tier] || tierColors.free;
   const features = Array.isArray(plan.features) ? plan.features : [];
-  const limits = parseLimits(plan.limits as Record<string, any> | undefined);
-  const extraKeys = getExtraLimitKeys(plan.limits as Record<string, unknown> | undefined);
+  const limits = parseLimits(plan.limits as AdminMembershipLimitsInput);
+  const extraKeys = getExtraLimitKeys(plan.limits as AdminMembershipLimitsInput);
   const enabledBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean' && limits[f.key] === true).length;
   const totalBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean').length;
   const benefitPct = totalBoolLimits > 0 ? Math.round((enabledBoolLimits / totalBoolLimits) * 100) : 0;
@@ -343,9 +404,7 @@ const LimitsEditor = React.memo(({ limits, onChange, isRTL, language }: {
 LimitsEditor.displayName = 'LimitsEditor';
 
 /* ─── Subscription Row ─── */
-const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onUpgrade }: {
-  sub: any; isRTL: boolean; language: string; plans: any[]; onCancel: (id: string) => void; onRenew: (sub: any) => void; onUpgrade: (sub: any) => void;
-}) => {
+const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onUpgrade }: AdminMembershipSubRowProps) => {
   const plan = sub.plan;
   const Icon = tierIcons[plan?.tier] || Zap;
   const colors = tierColors[plan?.tier] || tierColors.free;
@@ -466,14 +525,14 @@ const AdminMemberships = () => {
   const [, startTransition] = useTransition();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const [editingPlan, setEditingPlan] = useState<any | null>(null);
+  const [editingPlan, setEditingPlan] = useState<AdminMembershipEditingPlan | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tierFilter, setTierFilter] = useState('all');
   const [featuresText, setFeaturesText] = useState('');
   const [editLimits, setEditLimits] = useState<Record<string, number | boolean>>({});
-  const [upgradeSub, setUpgradeSub] = useState<any | null>(null);
+  const [upgradeSub, setUpgradeSub] = useState<AdminMembershipEnrichedSubscription | null>(null);
   const [upgradeTargetPlan, setUpgradeTargetPlan] = useState('');
   const [upgradeCycle, setUpgradeCycle] = useState('monthly');
   const [form, setForm] = useState({
@@ -652,11 +711,11 @@ const AdminMemberships = () => {
     mutationFn: async () => {
       if (!editingPlan) return;
       const features = featuresText.split('\n').map(l => l.trim()).filter(Boolean);
-      const originalLimits = (editingPlan as any)?.limits as Record<string, unknown> | null | undefined;
+      const originalLimits = (editingPlan.limits ?? null) as Record<string, unknown> | null;
       const limits = limitsToJson(editLimits, originalLimits);
-      const isNew = !(editingPlan as any).id;
+      const isNew = !editingPlan.id;
       if (isNew) {
-        const tier = (editingPlan as any).tier || 'free';
+        const tier = editingPlan.tier || 'free';
         const { error } = await insertMembershipPlan({
           tier,
           name_ar: form.name_ar, name_en: form.name_en,
@@ -668,7 +727,7 @@ const AdminMemberships = () => {
         if (error) throw error;
       } else {
         const { error } = await updateMembershipPlanById({
-          id: (editingPlan as any).id,
+          id: editingPlan.id as string,
           values: {
             name_ar: form.name_ar, name_en: form.name_en,
             description_ar: form.description_ar || null, description_en: form.description_en || null,
@@ -742,7 +801,7 @@ const AdminMemberships = () => {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const handleRenew = useCallback(async (sub: any) => {
+  const handleRenew = useCallback(async (sub: AdminMembershipEnrichedSubscription) => {
     if (!sub.plan_id || !sub.user_id) return;
     try {
       const { error } = await subscribeToPlan({
@@ -758,11 +817,11 @@ const AdminMemberships = () => {
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   }, [isRTL, queryClient]);
 
-  const openEdit = useCallback((plan: any) => {
+  const openEdit = useCallback((plan: AdminMembershipPlanRow) => {
     setEditingPlan(plan);
     const features = Array.isArray(plan.features) ? (plan.features as string[]).join('\n') : '';
     setFeaturesText(features);
-    setEditLimits(parseLimits(plan.limits as Record<string, any> | undefined));
+    setEditLimits(parseLimits(plan.limits as AdminMembershipLimitsInput));
     setForm({
       name_ar: plan.name_ar, name_en: plan.name_en,
       description_ar: plan.description_ar || '', description_en: plan.description_en || '',
@@ -1046,8 +1105,8 @@ const AdminMemberships = () => {
                   <CardContent className="p-4 sm:p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                        {(editingPlan as any)._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
-                        {(editingPlan as any)._new
+                        {editingPlan._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
+                        {editingPlan._new
                           ? (pickBi(isRTL, 'إنشاء خطة جديدة', 'Create Plan'))
                           : (pickBi(isRTL, 'تعديل الخطة', 'Edit Plan'))}
                         <Badge className={cn('text-[9px]', tierColors[editingPlan.tier]?.badge)}>{editingPlan.tier}</Badge>
