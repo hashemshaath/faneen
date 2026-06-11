@@ -114,6 +114,11 @@ import type {
   AdminBusinessBranchLite,
   AdminBusinessBranchType,
   AdminBusinessOwnerRow,
+  AdminCreateBusinessFormState,
+  AdminEditBusinessFormState,
+  AdminActivityLogInsert,
+  PortfolioItemInsert,
+  AdminJson,
 } from './adminBusinesses.types';
 
 // Fix leaflet icons
@@ -285,7 +290,7 @@ const AdminBusinesses = () => {
   const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editForm, setEditForm] = useState<AdminEditBusinessFormState>({});
   // ── Create new business (admin) ──
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
@@ -326,8 +331,9 @@ const AdminBusinesses = () => {
     address: '',
     address_en: '',
   });
-  const [createForm, setCreateForm] = useState<any>(emptyCreateForm());
-  const setCField = (k: string, v: unknown) => setCreateForm((f) => ({ ...f, [k]: v }));
+  const [createForm, setCreateForm] = useState<AdminCreateBusinessFormState>(emptyCreateForm());
+  const setCField = (k: string, v: unknown) =>
+    setCreateForm((f) => ({ ...f, [k]: v }) as AdminCreateBusinessFormState);
   // Owner autocomplete (search profiles by name/email/username/ref_id)
   const [ownerResults, setOwnerResults] = useState<AdminBusinessOwnerRow[]>([]);
   const [ownerSearching, setOwnerSearching] = useState(false);
@@ -342,7 +348,7 @@ const AdminBusinesses = () => {
   const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
 
   const setField = useCallback((key: string, value: unknown) => {
-    setEditForm((f) => ({ ...f, [key]: value }));
+    setEditForm((f) => ({ ...f, [key]: value }) as AdminEditBusinessFormState);
   }, []);
 
   // When a workflow panel (create / edit / services) is open we collapse
