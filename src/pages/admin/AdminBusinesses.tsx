@@ -1262,6 +1262,7 @@ const AdminBusinesses = () => {
     setEditingBiz(biz);
     scrollToTop();
   };
+  useEffect(() => { openEditRef.current = openEdit; });
 
   const openServices = (bizId: string) => {
     setEditingBiz(null);
