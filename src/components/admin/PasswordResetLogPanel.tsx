@@ -58,7 +58,7 @@ export const PasswordResetLogPanel: React.FC = () => {
         limit: 500,
       });
       if (error) throw error;
-      return data as any[];
+      return data ?? [];
     },
   });
 

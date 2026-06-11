@@ -22,6 +22,22 @@ import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel'
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { listAllUserRoles, grantRole, revokeRoleByUserAndRole, adminResetPassword, listPasswordResetLogs } from '@/modules/identity';
 
+interface AccessProfileRow {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  ref_id: string | null;
+  account_type: string | null;
+  is_onboarded: boolean | null;
+  phone_verified: boolean | null;
+  membership_tier: string | null;
+  created_at: string | null;
+  is_banned: boolean | null;
+}
+
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
   const d = new Date(dateStr);
@@ -61,7 +77,7 @@ const AdminAccessManagement = () => {
         orderBy: { column: 'created_at', ascending: false },
       });
       if (error) throw error;
-      return data as any[];
+      return (data ?? []) as AccessProfileRow[];
     },
     enabled: !!user,
   });
@@ -143,9 +159,9 @@ const AdminAccessManagement = () => {
   // Stats
   const stats = useMemo(() => {
     const total = profiles.length;
-    const verified = profiles.filter((p: any) => p.phone_verified).length;
-    const onboarded = profiles.filter((p: any) => p.is_onboarded).length;
-    const banned = profiles.filter((p: any) => p.is_banned).length;
+    const verified = profiles.filter((p) => p.phone_verified).length;
+    const onboarded = profiles.filter((p) => p.is_onboarded).length;
+    const banned = profiles.filter((p) => p.is_banned).length;
     const recentResets = resetLogs.filter(l => {
       const d = new Date(l.created_at);
       return d.getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000;
