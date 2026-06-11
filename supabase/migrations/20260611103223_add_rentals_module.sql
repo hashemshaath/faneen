@@ -10,6 +10,6 @@ VALUES
 ON CONFLICT (key) DO UPDATE SET
   route = EXCLUDED.route,
   label_ar = EXCLUDED.label_ar,
-  label_en = EXCLUDED.label en,
+  label_en = EXCLUDED.label_en,
   is_active = true,
   updated_at = now();
