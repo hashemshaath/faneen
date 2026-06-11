@@ -286,6 +286,30 @@ Deno.serve(async (req) => {
           }));
         }
       }
+    } else if (type === "rentals") {
+      // Public rental items: only published & approved entries with a real SEO slug.
+      // Mirrors the filters used by RentalItems.listPublishedItems / getPublishedItemBySlug
+      // so the sitemap never advertises pending / rejected / unpublished items.
+      entries.push(entry(`${BASE}/rentals`, { lastmod: today, changefreq: "daily", priority: "0.85" }));
+      const { data, error } = await supabase
+        .from("rental_items")
+        .select("seo_slug, updated_at")
+        .eq("is_published", true)
+        .eq("status", "approved")
+        .not("seo_slug", "is", null)
+        .limit(10000);
+      if (error) console.error("rentals sitemap error:", error.message);
+      if (data) {
+        for (const r of data) {
+          const slug = (r as { seo_slug?: string | null }).seo_slug;
+          if (!slug) continue;
+          entries.push(entry(`${BASE}/rentals/${encodeURIComponent(slug)}`, {
+            lastmod: toDate((r as { updated_at?: string | null }).updated_at ?? null),
+            changefreq: "weekly",
+            priority: "0.7",
+          }));
+        }
+      }
     }
 
     return new Response(wrapUrlset(entries), { headers: HEADERS });
