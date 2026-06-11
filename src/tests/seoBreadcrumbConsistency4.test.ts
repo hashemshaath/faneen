@@ -27,7 +27,15 @@ describe('SEO-4 — BreadcrumbList consistency on deep public pages', () => {
       const src = read(f);
       const hasInline = /'@type':\s*'BreadcrumbList'/.test(src);
       const hasHelper = /buildBreadcrumbList\s*\(/.test(src);
-      expect(hasInline || hasHelper, `${f} is missing a BreadcrumbList`).toBe(true);
+      // Some pages delegate structured-data assembly to a dedicated hook.
+      // BusinessProfile, for example, emits BreadcrumbList via
+      // `useBusinessStructuredData`. Accept that as equivalent here.
+      let hasDelegated = false;
+      if (f === 'src/pages/BusinessProfile.tsx' && /useBusinessStructuredData/.test(src)) {
+        const hook = read('src/components/business-profile/useBusinessStructuredData.ts');
+        hasDelegated = /buildBreadcrumbList\s*\(/.test(hook) || /'@type':\s*'BreadcrumbList'/.test(hook);
+      }
+      expect(hasInline || hasHelper || hasDelegated, `${f} is missing a BreadcrumbList`).toBe(true);
     }
   });
 
