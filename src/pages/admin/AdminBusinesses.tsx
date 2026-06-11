@@ -1166,7 +1166,7 @@ const AdminBusinesses = () => {
         return;
       }
       const a = res.address;
-      setEditForm((prev: any) => ({
+      setEditForm((prev) => ({
         ...prev,
         national_id: code,
         region: a.region_ar ?? prev.region,
