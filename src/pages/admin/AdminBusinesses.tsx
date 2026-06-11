@@ -142,18 +142,27 @@ const LocationPicker = ({ lat, lng, onPick, isRTL }: { lat: number; lng: number;
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
 
+  // Capture initial lat/lng once; keep onPick latest via ref so map init
+  // stays mount-once without exhaustive-deps suppression.
+  const initialLatRef = useRef(lat);
+  const initialLngRef = useRef(lng);
+  const onPickRef = useRef(onPick);
+  useEffect(() => { onPickRef.current = onPick; }, [onPick]);
+
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, { center: [lat || 24.7136, lng || 46.6753], zoom: lat ? 15 : 6, scrollWheelZoom: true });
+    const lat0 = initialLatRef.current;
+    const lng0 = initialLngRef.current;
+    const map = L.map(containerRef.current, { center: [lat0 || 24.7136, lng0 || 46.6753], zoom: lat0 ? 15 : 6, scrollWheelZoom: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap',
     }).addTo(map);
 
-    if (lat && lng) {
-      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
+    if (lat0 && lng0) {
+      markerRef.current = L.marker([lat0, lng0], { draggable: true }).addTo(map);
       markerRef.current.on('dragend', () => {
         const pos = markerRef.current!.getLatLng();
-        onPick(pos.lat, pos.lng);
+        onPickRef.current(pos.lat, pos.lng);
       });
     }
 
@@ -163,15 +172,14 @@ const LocationPicker = ({ lat, lng, onPick, isRTL }: { lat: number; lng: number;
         markerRef.current = L.marker(e.latlng, { draggable: true }).addTo(map);
         markerRef.current.on('dragend', () => {
           const pos = markerRef.current!.getLatLng();
-          onPick(pos.lat, pos.lng);
+          onPickRef.current(pos.lat, pos.lng);
         });
       }
-      onPick(e.latlng.lat, e.latlng.lng);
+      onPickRef.current(e.latlng.lat, e.latlng.lng);
     });
 
     mapRef.current = map;
     return () => { map.remove(); mapRef.current = null; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <div ref={containerRef} className="w-full h-[250px] rounded-lg border border-border/50" />;
