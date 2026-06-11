@@ -202,108 +202,199 @@ const ClaimBusiness: React.FC = () => {
     }
   }, [user, form, files, businessId, isRTL]);
 
-  // Render
+  // Centered shell used by every state so the page always shows Navbar + Footer.
+  const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+      <main className="flex-1 pt-20 sm:pt-24 pb-12">{children}</main>
+      <Footer />
+    </div>
+  );
+
+  // Render — loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-64 rounded-2xl" />
+      <Shell>
+        <div className="container-app max-w-3xl space-y-4">
+          <Skeleton className="h-40 rounded-3xl" />
+          <Skeleton className="h-64 rounded-3xl" />
         </div>
-      </div>
+      </Shell>
     );
   }
 
   if (notFound || !biz) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="max-w-md w-full rounded-2xl border border-border bg-card p-8 text-center space-y-3">
-          <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
-          <h1 className="text-lg font-bold">{isRTL ? 'المنشأة غير موجودة' : 'Entity not found'}</h1>
-          <p className="text-sm text-muted-foreground">
-            {isRTL ? 'تأكّد من صحة الرابط الذي وصلك.' : 'Please verify the link you received.'}
-          </p>
-          <Button asChild variant="outline" className="rounded-xl mt-2">
-            <Link to="/"><ArrowLeft className="w-4 h-4 me-2" /> {isRTL ? 'العودة للرئيسية' : 'Back to home'}</Link>
-          </Button>
+      <Shell>
+        <div className="container-app max-w-md">
+          <div className="rounded-3xl border border-border bg-card p-8 text-center space-y-3 shadow-sm">
+            <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
+            <h1 className="text-lg font-bold">{isRTL ? 'المنشأة غير موجودة' : 'Entity not found'}</h1>
+            <p className="text-sm text-muted-foreground">
+              {isRTL ? 'تأكّد من صحة الرابط الذي وصلك.' : 'Please verify the link you received.'}
+            </p>
+            <Button asChild variant="outline" className="rounded-xl mt-2">
+              <Link to="/"><ArrowLeft className="w-4 h-4 me-2" /> {isRTL ? 'العودة للرئيسية' : 'Back to home'}</Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      </Shell>
     );
   }
 
   if (!biz.placeholder_owner) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="max-w-md w-full rounded-2xl border border-border bg-card p-8 text-center space-y-3">
-          <ShieldCheck className="w-12 h-12 mx-auto text-success" />
-          <h1 className="text-lg font-bold">{isRTL ? 'هذه المنشأة لها مالك بالفعل' : 'Entity already has an owner'}</h1>
-          <p className="text-sm text-muted-foreground">
-            {isRTL ? 'لا يمكن المطالبة بمنشأة مملوكة لمستخدم نشط.' : 'You cannot claim an entity that already has an active owner.'}
-          </p>
-          <Button asChild variant="outline" className="rounded-xl mt-2">
-            <Link to="/"><ArrowLeft className="w-4 h-4 me-2" /> {isRTL ? 'العودة للرئيسية' : 'Back to home'}</Link>
-          </Button>
+      <Shell>
+        <div className="container-app max-w-md">
+          <div className="rounded-3xl border border-border bg-card p-8 text-center space-y-3 shadow-sm">
+            <ShieldCheck className="w-12 h-12 mx-auto text-success" />
+            <h1 className="text-lg font-bold">{isRTL ? 'هذه المنشأة لها مالك بالفعل' : 'Entity already has an owner'}</h1>
+            <p className="text-sm text-muted-foreground">
+              {isRTL ? 'لا يمكن المطالبة بمنشأة مملوكة لمستخدم نشط.' : 'You cannot claim an entity that already has an active owner.'}
+            </p>
+            <Button asChild variant="outline" className="rounded-xl mt-2">
+              <Link to="/"><ArrowLeft className="w-4 h-4 me-2" /> {isRTL ? 'العودة للرئيسية' : 'Back to home'}</Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      </Shell>
     );
   }
 
   if (submittedId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="max-w-lg w-full rounded-2xl border border-success/40 bg-success/5 p-8 text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-success/15 flex items-center justify-center">
-            <CheckCircle2 className="w-9 h-9 text-success" />
+      <Shell>
+        <div className="container-app max-w-lg">
+          <div className="rounded-3xl border border-success/40 bg-gradient-to-b from-success/5 to-background p-8 text-center space-y-4 shadow-sm">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-success/15 flex items-center justify-center">
+              <CheckCircle2 className="w-9 h-9 text-success" />
+            </div>
+            <h1 className="text-xl font-bold">{isRTL ? 'تم استلام طلبك' : 'Claim received'}</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {isRTL
+                ? 'سيقوم فريق الإدارة بمراجعة طلبك خلال 24 - 72 ساعة. ستصلك رسالة بنتيجة المراجعة على البريد المرفق.'
+                : 'Our team will review your claim within 24 - 72 hours. You will receive an email with the result.'}
+            </p>
+            <div className="text-[12px] text-muted-foreground bg-card border border-border rounded-xl p-3">
+              <div>{isRTL ? 'رقم الطلب' : 'Request ID'}</div>
+              <div className="font-mono tech-content text-[11px] mt-1 break-all">{submittedId}</div>
+            </div>
+            <Button asChild className="rounded-xl">
+              <Link to="/"><ArrowLeft className="w-4 h-4 me-2" /> {isRTL ? 'العودة للرئيسية' : 'Back to home'}</Link>
+            </Button>
           </div>
-          <h1 className="text-xl font-bold">{isRTL ? 'تم استلام طلبك' : 'Claim received'}</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {isRTL
-              ? 'سيقوم فريق الإدارة بمراجعة طلبك خلال 24 - 72 ساعة. ستصلك رسالة بنتيجة المراجعة على البريد المرفق.'
-              : 'Our team will review your claim within 24 - 72 hours. You will receive an email with the result.'}
-          </p>
-          <div className="text-[12px] text-muted-foreground bg-card border border-border rounded-xl p-3">
-            <div>{isRTL ? 'رقم الطلب' : 'Request ID'}</div>
-            <div className="font-mono tech-content text-[11px] mt-1 break-all">{submittedId}</div>
-          </div>
-          <Button asChild className="rounded-xl">
-            <Link to="/"><ArrowLeft className="w-4 h-4 me-2" /> {isRTL ? 'العودة للرئيسية' : 'Back to home'}</Link>
-          </Button>
         </div>
-      </div>
+      </Shell>
     );
   }
 
   const bizName = (isRTL ? biz.name_ar : biz.name_en) || biz.name_ar || biz.name_en || '—';
+  const profileHref = biz.username ? `/${encodeURIComponent(biz.username)}` : null;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-2xl mx-auto space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <BrandLogo />
-          <Badge variant="outline" className="rounded-lg bg-success/10 text-success border-success/30 gap-1">
-            <ShieldCheck className="w-3 h-3" /> {isRTL ? 'متاحة للمطالبة' : 'Claimable'}
-          </Badge>
-        </div>
-
-        {/* Business card */}
-        <div className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4">
-          {biz.logo_url ? (
-            <img src={biz.logo_url} alt={bizName} className="w-16 h-16 rounded-xl object-cover border border-border" loading="lazy" />
-          ) : (
-            <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-primary" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <h1 className="text-base font-bold truncate" dir="auto">{bizName}</h1>
-            {biz.region && <p className="text-[12px] text-muted-foreground mt-0.5" dir="auto">{biz.region}</p>}
-            {biz.pending_claims_count > 0 && (
-              <p className="text-[11px] text-warning mt-1">
-                {isRTL ? `يوجد ${biz.pending_claims_count} طلب/طلبات أخرى معلّقة على نفس المنشأة` : `${biz.pending_claims_count} other pending claim(s) on this entity`}
-              </p>
+    <Shell>
+      <div className="container-app max-w-3xl space-y-5">
+        {/* Hero — welcoming, professional, branded */}
+        <section
+          className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-accent/5 to-background p-6 sm:p-8"
+          dir={isRTL ? 'rtl' : 'ltr'}
+        >
+          <div className="pointer-events-none absolute -top-16 -end-16 w-56 h-56 rounded-full bg-primary/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -start-10 w-56 h-56 rounded-full bg-accent/10 blur-3xl" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+            {biz.logo_url ? (
+              <img
+                src={biz.logo_url}
+                alt={bizName}
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-border bg-card shadow-sm shrink-0"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                <Building2 className="w-10 h-10 text-primary" />
+              </div>
             )}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <Badge variant="outline" className="rounded-lg bg-success/10 text-success border-success/30 gap-1">
+                  <ShieldCheck className="w-3 h-3" /> {isRTL ? 'متاحة للمطالبة' : 'Claimable'}
+                </Badge>
+                {biz.ref_id && (
+                  <Badge variant="outline" className="rounded-lg gap-1 tech-content">
+                    <Hash className="w-3 h-3" /> {biz.ref_id}
+                  </Badge>
+                )}
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold leading-tight" dir="auto">{bizName}</h1>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+                {biz.region && <span dir="auto">{biz.region}</span>}
+                {profileHref && (
+                  <Link
+                    to={profileHref}
+                    className="inline-flex items-center gap-1 text-accent hover:underline"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    {isRTL ? 'عرض الملف العام' : 'View public profile'}
+                  </Link>
+                )}
+                {biz.pending_claims_count > 0 && (
+                  <span className="text-warning">
+                    {isRTL
+                      ? `${biz.pending_claims_count} طلب آخر قيد المراجعة`
+                      : `${biz.pending_claims_count} other pending claim(s)`}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
+
+          <h2 className="relative mt-6 text-base sm:text-lg font-bold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-accent" />
+            {isRTL
+              ? 'مرحبًا بك — استلم ملكية منشأتك على قِطاعات'
+              : 'Welcome — take ownership of your business on Qitaat'}
+          </h2>
+          <p className="relative mt-1.5 text-[13px] sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
+            {isRTL
+              ? 'أكمل النموذج بالأسفل لإثبات صلتك بالمنشأة. بعد الموافقة، ستتمكن من تعديل بيانات الجهة، إضافة الخدمات والفروع، واستقبال طلبات العملاء مباشرة.'
+              : 'Complete the form below to verify your relationship. Once approved, you can edit the entity profile, add services and branches, and receive customer requests directly.'}
+          </p>
+
+          {/* Trust strip */}
+          <div className="relative mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+            {[
+              { icon: ShieldCheck, ar: 'تحقّق آمن', en: 'Secure verification' },
+              { icon: Clock, ar: 'مراجعة 24-72 ساعة', en: '24-72h review' },
+              { icon: Lock, ar: 'بياناتك محمية', en: 'Your data is protected' },
+            ].map(({ icon: Icon, ar, en }) => (
+              <div
+                key={en}
+                className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/70 px-2.5 py-2 text-[11px] sm:text-[12px]"
+              >
+                <Icon className="w-3.5 h-3.5 text-accent shrink-0" />
+                <span className="truncate">{isRTL ? ar : en}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Steps card */}
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 text-[13px] leading-relaxed">
+          <p className="font-semibold mb-2">{isRTL ? 'كيف تعمل عملية المطالبة؟' : 'How does the claim work?'}</p>
+          <ol className="grid sm:grid-cols-3 gap-3">
+            {[
+              { n: 1, ar: 'تعبئة بياناتك ورفع إثبات الملكية', en: 'Fill in your details and upload proof' },
+              { n: 2, ar: 'مراجعة الفريق خلال 24-72 ساعة', en: 'Team review within 24-72 hours' },
+              { n: 3, ar: 'نقل الملكية لحسابك', en: 'Ownership transferred to your account' },
+            ].map((s) => (
+              <li key={s.n} className="flex items-start gap-2.5">
+                <span className="shrink-0 w-7 h-7 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center tech-content">
+                  {s.n}
+                </span>
+                <span className="text-muted-foreground mt-0.5">{isRTL ? s.ar : s.en}</span>
+              </li>
+            ))}
+          </ol>
         </div>
 
         {/* Intro */}
