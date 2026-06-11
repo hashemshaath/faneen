@@ -72,14 +72,6 @@ const ALLOWLIST: ReadonlyArray<Allow> = [
       'Define ActivityLogDetails discriminated union keyed by `action`; type buildDetailItems / buildSummary.',
   },
   {
-    file: 'src/pages/admin/AdminProviderAnalytics.tsx',
-    max: 6,
-    reason:
-      'Reads ad-hoc event rows + joined business shape used only for analytics aggregation.',
-    followUp:
-      'Introduce ProviderAnalyticsEvent and ProviderBusinessLite row types.',
-  },
-  {
     file: 'src/pages/admin/AdminMembershipRejections.tsx',
     max: 2,
     reason:

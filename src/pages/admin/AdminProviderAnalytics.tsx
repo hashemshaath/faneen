@@ -12,6 +12,13 @@ import {
   BarChart3, Eye, MousePointerClick, ExternalLink, TrendingUp, Users, Clock,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import type {
+  ProviderAnalyticsEventRow,
+  ProviderAnalyticsClickRow,
+  ProviderBusinessLite,
+  ProviderAnalyticsAggregate,
+  ProviderAnalyticsTopRow,
+} from './adminProviderAnalytics.types';
 
 type Period = '24h' | '7d' | '30d' | 'all';
 
@@ -40,7 +47,8 @@ const AdminProviderAnalytics = () => {
         query = query.gte('created_at', d.toISOString());
       }
       const { data, count } = await query;
-      const events = data as any[] || [];
+      const events: ProviderAnalyticsEventRow[] =
+        (data as ProviderAnalyticsEventRow[] | null) ?? [];
       return {
         total: count || 0,
         section_views: events.filter(e => e.event_type === 'section_view').length,
@@ -68,9 +76,11 @@ const AdminProviderAnalytics = () => {
       if (!data || data.length === 0) return [];
 
       // Aggregate clicks per provider
-      const map = new Map<string, { id: string; username: string; clicks: number }>();
-      for (const row of data as any[]) {
+      const rows = data as ProviderAnalyticsClickRow[];
+      const map = new Map<string, ProviderAnalyticsAggregate>();
+      for (const row of rows) {
         const key = row.provider_id;
+        if (!key) continue;
         const existing = map.get(key);
         if (existing) {
           existing.clicks++;
@@ -82,13 +92,17 @@ const AdminProviderAnalytics = () => {
 
       // Fetch business details for top providers
       const ids = sorted.map(p => p.id);
-      const businesses = await listPublicProvidersForAnalytics<{ id: string }>(ids);
-      const bizMap = new Map(businesses.map((b: any) => [b.id, b]));
+      const businesses =
+        await listPublicProvidersForAnalytics<ProviderBusinessLite>(ids);
+      const bizMap = new Map<string, ProviderBusinessLite>(
+        businesses.map((b) => [b.id, b] as const),
+      );
 
-      return sorted.map(p => ({
+      const result: ProviderAnalyticsTopRow[] = sorted.map((p) => ({
         ...p,
         business: bizMap.get(p.id) || null,
       }));
+      return result;
     },
   });
 
@@ -221,7 +235,7 @@ const AdminProviderAnalytics = () => {
           ) : (
             <div className="divide-y divide-border/10">
               {topProviders.map((provider, idx) => {
-                const biz = provider.business as any;
+                const biz = provider.business;
                 const name = biz
                   ? (isRTL ? biz.name_ar : biz.name_en || biz.name_ar)
                   : provider.username || '—';
@@ -237,9 +251,9 @@ const AdminProviderAnalytics = () => {
 
                     {/* Avatar */}
                     <Avatar className="w-10 h-10 rounded-xl ring-1 ring-border/10">
-                      <AvatarImage src={biz?.logo_url} className="object-cover" />
+                      <AvatarImage src={biz?.logo_url ?? undefined} className="object-cover" />
                       <AvatarFallback className="rounded-xl bg-accent/10 text-accent font-bold text-sm">
-                        {name.charAt(0)}
+                        {(name ?? '—').charAt(0)}
                       </AvatarFallback>
                     </Avatar>
 
