@@ -85,6 +85,19 @@ export const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
     '/dashboard/rentals/analytics',
     '/rentals',
   ],
+  procurement: ['/dashboard/procurement'],
+  client_sites: ['/dashboard/sites'],
+  my_requests: ['/dashboard/my-requests'],
+  // Operations Center is an executive view over operations data —
+  // keep it gated by the same key that owns the operations log.
+  operations_log: [
+    '/dashboard/activity',
+    '/dashboard/operations',
+    '/dashboard/operations/feed',
+    '/dashboard/operations-feed',
+    '/dashboard/operations-center',
+    '/dashboard/audit',
+  ],
 };
 
 export function useVisibleModules(): UseVisibleModulesResult {
