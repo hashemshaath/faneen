@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   Building2, Loader2, ShieldCheck, Upload, X, CheckCircle2,
   AlertCircle, FileText, ArrowLeft, Mail, Phone, User,
+  Hash, ExternalLink, Sparkles, Clock, Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,10 +17,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BrandLogo } from '@/components/common/BrandLogo';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 interface ClaimableBusiness {
   id: string;
+  ref_id: string | null;
+  username: string | null;
   name_ar: string | null;
   name_en: string | null;
   logo_url: string | null;
