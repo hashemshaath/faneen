@@ -114,6 +114,11 @@ import type {
   AdminBusinessBranchLite,
   AdminBusinessBranchType,
   AdminBusinessOwnerRow,
+  AdminCreateBusinessFormState,
+  AdminEditBusinessFormState,
+  AdminActivityLogInsert,
+  PortfolioItemInsert,
+  AdminJson,
 } from './adminBusinesses.types';
 
 // Fix leaflet icons
@@ -285,7 +290,7 @@ const AdminBusinesses = () => {
   const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editForm, setEditForm] = useState<AdminEditBusinessFormState>({});
   // ── Create new business (admin) ──
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
@@ -326,8 +331,9 @@ const AdminBusinesses = () => {
     address: '',
     address_en: '',
   });
-  const [createForm, setCreateForm] = useState<any>(emptyCreateForm());
-  const setCField = (k: string, v: unknown) => setCreateForm((f) => ({ ...f, [k]: v }));
+  const [createForm, setCreateForm] = useState<AdminCreateBusinessFormState>(emptyCreateForm());
+  const setCField = (k: string, v: unknown) =>
+    setCreateForm((f) => ({ ...f, [k]: v }) as AdminCreateBusinessFormState);
   // Owner autocomplete (search profiles by name/email/username/ref_id)
   const [ownerResults, setOwnerResults] = useState<AdminBusinessOwnerRow[]>([]);
   const [ownerSearching, setOwnerSearching] = useState(false);
@@ -342,7 +348,7 @@ const AdminBusinesses = () => {
   const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
 
   const setField = useCallback((key: string, value: unknown) => {
-    setEditForm((f) => ({ ...f, [key]: value }));
+    setEditForm((f) => ({ ...f, [key]: value }) as AdminEditBusinessFormState);
   }, []);
 
   // When a workflow panel (create / edit / services) is open we collapse
@@ -486,9 +492,14 @@ const AdminBusinesses = () => {
 
   /* ─── Mutations ─── */
   const logAction = async (action: string, entityId: string, details: Record<string, unknown>) => {
-    await supabase.from('admin_activity_log').insert({
-      user_id: user!.id, action, entity_type: 'business', entity_id: entityId, details,
-    } as any);
+    const payload: AdminActivityLogInsert = {
+      user_id: user!.id,
+      action,
+      entity_type: 'business',
+      entity_id: entityId,
+      details: details as AdminJson,
+    };
+    await supabase.from('admin_activity_log').insert(payload);
   };
 
   const toggleMutation = useMutation({
@@ -926,9 +937,13 @@ const AdminBusinesses = () => {
 
   const addPortfolioMutation = useMutation({
     mutationFn: async (url: string) => {
-      const { error } = await supabase.from('portfolio_items').insert({
-        business_id: editingBiz.id, title_ar: 'صورة', media_url: url, media_type: 'image',
-      } as any);
+      const payload: PortfolioItemInsert = {
+        business_id: editingBiz.id,
+        title_ar: 'صورة',
+        media_url: url,
+        media_type: 'image',
+      };
+      const { error } = await supabase.from('portfolio_items').insert(payload);
       if (error) throw error;
     },
     onSuccess: () => refetchPortfolio(),
@@ -1223,7 +1238,7 @@ const AdminBusinesses = () => {
       mobile: biz.mobile || '', customer_service_phone: biz.customer_service_phone || '',
       is_active: biz.is_active, is_verified: biz.is_verified,
       membership_tier: biz.membership_tier,
-    });
+    } as AdminEditBusinessFormState);
     setEditingBiz(biz);
     scrollToTop();
   };
@@ -1235,7 +1250,11 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const translationCompleteness = useCallback((b: Record<string, unknown>) => {
+  const translationCompleteness = useCallback((b: {
+    name_ar?: unknown; name_en?: unknown;
+    short_description_ar?: unknown; short_description_en?: unknown;
+    description_ar?: unknown; description_en?: unknown;
+  }) => {
     const ar = !!(b.name_ar && b.short_description_ar && b.description_ar);
     const en = !!(b.name_en && b.short_description_en && b.description_en);
     return { ar, en, full: ar && en };

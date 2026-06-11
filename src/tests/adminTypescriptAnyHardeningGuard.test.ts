@@ -64,14 +64,6 @@ interface Allow {
 }
 const ALLOWLIST: ReadonlyArray<Allow> = [
   {
-    file: 'src/pages/admin/AdminBusinesses.tsx',
-    max: 4,
-    reason:
-      'Remaining residue after Phase-1 reduction: two `useState<any>` form stores (edit/create) and two `as any` casts on `admin_activity_log` / `portfolio_items` inserts whose typed payloads are wider than what we actually persist.',
-    followUp:
-      'Phase 2 — replace `useState<any>` with explicit AdminBusinessEditForm / AdminBusinessCreateForm interfaces (currently risky because hundreds of dot-accessors assume implicit any); then drop the two insert `as any` casts by aligning payloads to generated `Insert` row types.',
-  },
-  {
     file: 'src/pages/admin/AdminMemberships.tsx',
     max: 17,
     reason:
