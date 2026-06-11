@@ -61,22 +61,10 @@ const ALLOWLIST: ReadonlyArray<Entry> = [
     followup: 'Extract a stable filter signature via useMemo and depend on it.',
   },
   {
-    file: 'src/pages/admin/AdminBusinesses.tsx',
-    count: 1,
-    reason: 'Focus-target effect must react only to focus param + businesses, not the unstable openEdit closure.',
-    followup: 'Stabilize openEdit with useEvent (when available).',
-  },
-  {
     file: 'src/pages/admin/AdminContactMessages.tsx',
-    count: 2,
-    reason: '(1) Auto-mark-as-read on focus change must not re-run on mutation identity change. (2) Keyboard shortcut handler must avoid reattaching on every mutation reference change.',
+    count: 1,
+    reason: 'Auto-mark-as-read on focus change must not re-run on mutation identity change.',
     followup: 'Wrap mutations in useEvent-style stable callbacks.',
-  },
-  {
-    file: 'src/pages/admin/AdminUsers.tsx',
-    count: 2,
-    reason: '(1) Focus param resolver runs on admin/searchParams change; including handlers would re-run on every render. (2) Pending-focus resolver depends on profiles list arrival only.',
-    followup: 'Refactor focus handling into a small state machine hook.',
   },
 ];
 
