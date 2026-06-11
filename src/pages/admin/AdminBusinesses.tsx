@@ -2308,14 +2308,14 @@ const AdminBusinesses = () => {
                           onValueChange={(v) => {
                             const nextIsMain = v === 'main';
                             if (nextIsMain) {
-                              const currentMain = branches.find((b: any) => b.is_main && b.id !== editingBranchId);
+                              const currentMain = branches.find((b: AdminBusinessBranchLite) => b.is_main && b.id !== editingBranchId);
                               if (currentMain && !confirm(isRTL
                                 ? `سيتم إلغاء "${currentMain.name_ar}" كمركز رئيسي وتعيين هذا الموقع بدلاً منه. متابعة؟`
                                 : `"${currentMain.name_ar}" will be unset as headquarters and this location will replace it. Continue?`)) {
                                 return;
                               }
                             }
-                            setBranchForm((f) => ({ ...f, branch_type: v as any, is_main: nextIsMain }));
+                            setBranchForm((f) => ({ ...f, branch_type: v as AdminBusinessBranchType, is_main: nextIsMain }));
                           }}
                         >
                           <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
