@@ -67,6 +67,7 @@ describe('ACCESS-GOVERNANCE-FINAL-1 — single source of truth', () => {
     const callers = rgFiles(/getUserVisibleModules|useVisibleModules/);
     const allowed = new Set([
       'src/modules/systemAccess/index.ts',
+      'src/modules/systemAccess/moduleStatus.ts',
       'src/hooks/useVisibleModules.ts',
       'src/hooks/useEffectiveBusinessAccess.ts',
       'src/hooks/useMembershipVisibility.ts',
