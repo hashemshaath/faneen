@@ -12,7 +12,7 @@
  * Persistence is the caller's job (must go through `upsertPrimaryAddress`).
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, MapPinned, Search, ChevronsUpDown } from 'lucide-react';
+import { Loader2, MapPinned, Search, ChevronsUpDown, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ import { listActiveCities } from '@/modules/locations/services/listActiveCities'
 import { nationalAddressLookup } from '@/modules/locations';
 import { searchDistricts, type DistrictRow } from '@/modules/addresses/services/districts';
 import { buildAddressLine } from '@/modules/addresses/helpers/buildAddressLine';
+import { invokeBlogAiTools } from '@/modules/ai';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -78,8 +79,52 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
   const [districtLoading, setDistrictLoading] = useState(false);
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const districtBlurTimer = useRef<number | null>(null);
+  const [translating, setTranslating] = useState<string | null>(null);
 
   const patch = (p: Partial<NationalAddressValue>) => onChange({ ...value, ...p });
+
+  const runTranslate = async (
+    key: string,
+    text: string,
+    from: 'ar' | 'en',
+    apply: (translated: string) => void,
+  ) => {
+    const src = (text || '').trim();
+    if (!src) { toast.info(t(isRTL, 'لا يوجد نص لترجمته', 'Nothing to translate')); return; }
+    setTranslating(key);
+    try {
+      const { data, error } = await invokeBlogAiTools({
+        action: 'translate',
+        text: src,
+        sourceLang: from,
+        targetLang: from === 'ar' ? 'en' : 'ar',
+      });
+      if (error) throw error;
+      const result = ((data as { result?: string } | null)?.result || '').trim();
+      if (!result) throw new Error('Empty translation');
+      apply(result);
+      toast.success(t(isRTL, 'تمت الترجمة', 'Translated'));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t(isRTL, 'فشلت الترجمة', 'Translation failed'));
+    } finally {
+      setTranslating(null);
+    }
+  };
+
+  const TranslateBtn: React.FC<{ k: string; from: 'ar' | 'en'; onClick: () => void }> = ({ k, from, onClick }) => (
+    <Button
+      type="button" size="sm" variant="ghost"
+      className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+      disabled={translating !== null}
+      onClick={onClick}
+      title={from === 'ar'
+        ? t(isRTL, 'ترجمة من العربي إلى الإنجليزي', 'Translate Arabic → English')
+        : t(isRTL, 'ترجمة من الإنجليزي إلى العربي', 'Translate English → Arabic')}
+    >
+      {translating === k ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+      <span>{from === 'ar' ? '→ EN' : '→ AR'}</span>
+    </Button>
+  );
 
   // Load cities once.
   useEffect(() => {
