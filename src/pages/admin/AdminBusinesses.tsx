@@ -1191,6 +1191,7 @@ const AdminBusinesses = () => {
   /* ─── Edit Open ─── */
   const openEdit = (biz: Record<string, unknown>) => {
     setServicesPanel(null);
+    const bizImg = biz as AdminBusinessImageColumns;
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
       short_description_ar: biz.short_description_ar || '', short_description_en: biz.short_description_en || '',
@@ -1199,10 +1200,10 @@ const AdminBusinesses = () => {
       address: biz.address || '',
       country_id: biz.country_id || '', city_id: biz.city_id || '',
       logo_url: biz.logo_url || '', cover_url: biz.cover_url || '',
-      logo_image_asset_id: (biz as any).logo_image_asset_id || null,
-      cover_image_asset_id: (biz as any).cover_image_asset_id || null,
-      logo_image_variants: (biz as any).logo_image_variants || null,
-      cover_image_variants: (biz as any).cover_image_variants || null,
+      logo_image_asset_id: bizImg.logo_image_asset_id || null,
+      cover_image_asset_id: bizImg.cover_image_asset_id || null,
+      logo_image_variants: bizImg.logo_image_variants || null,
+      cover_image_variants: bizImg.cover_image_variants || null,
       seo_title_ar: biz.seo_title_ar || '', seo_title_en: biz.seo_title_en || '',
       seo_description_ar: biz.seo_description_ar || '', seo_description_en: biz.seo_description_en || '',
       seo_keywords: Array.isArray(biz.seo_keywords) ? biz.seo_keywords.join(', ') : '',
