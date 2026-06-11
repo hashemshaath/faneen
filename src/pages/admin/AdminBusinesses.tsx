@@ -634,7 +634,7 @@ const AdminBusinesses = () => {
   const resolveOwner = useCallback(async () => {
     const q = (createForm.owner_query || '').trim();
     if (!q) return;
-    setCreateForm((f: any) => ({ ...f, resolving_owner: true, owner_error: '', resolved_user_id: '', resolved_owner_label: '' }));
+    setCreateForm((f) => ({ ...f, resolving_owner: true, owner_error: '', resolved_user_id: '', resolved_owner_label: '' }));
     try {
       let userId: string | null = null;
       let label = '';
@@ -654,12 +654,12 @@ const AdminBusinesses = () => {
         if (data) { userId = data.user_id as string; label = `${data.full_name ?? ''} (${data.email ?? ''})`.trim(); }
       }
       if (!userId) {
-        setCreateForm((f: any) => ({ ...f, resolving_owner: false, owner_error: pickBi(isRTL, 'لم يتم العثور على المستخدم', 'User not found') }));
+        setCreateForm((f) => ({ ...f, resolving_owner: false, owner_error: pickBi(isRTL, 'لم يتم العثور على المستخدم', 'User not found') }));
         return;
       }
-      setCreateForm((f: any) => ({ ...f, resolving_owner: false, resolved_user_id: userId!, resolved_owner_label: label }));
+      setCreateForm((f) => ({ ...f, resolving_owner: false, resolved_user_id: userId!, resolved_owner_label: label }));
     } catch (e) {
-      setCreateForm((f: any) => ({
+      setCreateForm((f) => ({
         ...f,
         resolving_owner: false,
         owner_error: e instanceof Error ? e.message : (pickBi(isRTL, 'فشل البحث', 'Lookup failed')),
