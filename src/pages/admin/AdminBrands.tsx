@@ -409,7 +409,7 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
           )}
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <Link to={`/admin/brands/${brand.id}`} className="font-semibold truncate hover:underline">{name}</Link>
+              <Link to={`/admin/brands/${brand.slug || brand.id}`} className="font-semibold truncate hover:underline">{name}</Link>
               {brand.ref_id && <code className="tech-content text-xs bg-muted px-2 py-0.5 rounded">{brand.ref_id}</code>}
               <Badge variant="outline" className="text-xs">{pick(brandStatusLabel[brand.status], locale)}</Badge>
               {brand.verification_status !== 'unverified' && (
@@ -448,7 +448,7 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.id}`}><Link2 className="w-4 h-4 me-1" />{pickBi(isRTL, 'تحسين وربط', 'Improve & link')}</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.slug || brand.id}`}><Link2 className="w-4 h-4 me-1" />{pickBi(isRTL, 'تحسين وربط', 'Improve & link')}</Link></Button>
           {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
             <>
               <Button size="sm" onClick={onApprove}><Check className="w-4 h-4 me-1" />{pickBi(isRTL, 'اعتماد', 'Approve')}</Button>
