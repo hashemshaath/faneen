@@ -804,11 +804,56 @@ const AdminBrandDetail: React.FC = () => {
                   </select>
                 </div>
               </div>
+              {/* Scope: whole brand vs specific products */}
+              <div className="rounded-md border bg-background/50 p-2 space-y-2">
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="font-medium">{pickBi(isRTL, 'نطاق الربط:', 'Link scope:')}</span>
+                  <label className="inline-flex items-center gap-1 cursor-pointer">
+                    <input type="radio" name="link-scope" checked={linkScope === 'all'}
+                      onChange={() => { setLinkScope('all'); setLinkProductIds([]); }} />
+                    <span>{pickBi(isRTL, 'العلامة كاملة', 'Whole brand')}</span>
+                  </label>
+                  <label className="inline-flex items-center gap-1 cursor-pointer">
+                    <input type="radio" name="link-scope" checked={linkScope === 'products'}
+                      onChange={() => setLinkScope('products')} />
+                    <span>{pickBi(isRTL, 'منتجات محددة', 'Specific products')}</span>
+                  </label>
+                  <span className="text-muted-foreground ms-auto">
+                    {pickBi(isRTL, `المنتجات المتاحة: ${productsQ.data?.length ?? 0}`, `${productsQ.data?.length ?? 0} available`)}
+                  </span>
+                </div>
+                {linkScope === 'products' && (
+                  (productsQ.data ?? []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {pickBi(isRTL, 'لا توجد منتجات لهذه العلامة. أضف منتجات أولاً من قسم منتجات العلامة أدناه.', 'No products for this brand yet. Add some from the Brand products section below.')}
+                    </p>
+                  ) : (
+                    <div className="max-h-40 overflow-auto rounded border bg-background p-2 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                      {(productsQ.data ?? []).map((p: BrandProduct) => {
+                        const checked = linkProductIds.includes(p.id);
+                        const pname = locale === 'ar' ? (p.name_ar ?? p.name_en ?? '') : (p.name_en ?? p.name_ar ?? '');
+                        return (
+                          <label key={p.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/40 rounded px-1 py-0.5">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => setLinkProductIds((prev) => e.target.checked ? [...prev, p.id] : prev.filter((x) => x !== p.id))}
+                            />
+                            {p.image_url && <img src={p.image_url} alt="" className="w-5 h-5 rounded object-cover" />}
+                            <span className="truncate" dir="auto">{pname || p.id.slice(0, 8)}</span>
+                            {p.model_number && <code className="tech-content text-[10px] text-muted-foreground ms-auto">{p.model_number}</code>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )
+                )}
+              </div>
               <div className="flex items-center justify-end">
                 <Button
                   size="sm"
                   onClick={() => createLink.mutate()}
-                  disabled={!linkBusinessId || createLink.isPending}
+                  disabled={!linkBusinessId || createLink.isPending || (linkScope === 'products' && linkProductIds.length === 0)}
                 >
                   {createLink.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
                   {pickBi(isRTL, 'ربط واعتماد', 'Link & verify')}
