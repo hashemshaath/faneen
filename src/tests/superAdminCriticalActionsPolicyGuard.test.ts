@@ -29,7 +29,9 @@ const SUPER_ADMIN_ONLY: readonly string[] = [
   'admin_identity_duplicates_report',
   'admin_identity_integrity_report',
   'admin_rotate_client_site_qr_token',
-  'admin_convert_lead_to_contract',
+  // Module-override RPCs were tightened from (admin OR super_admin) to
+  // super_admin only in migration 20260611_*super_admin_critical_actions_tighten.
+  // `admin_convert_lead_to_contract` is single-entity → stays Level-2 admin.
 ];
 
 interface LatestBody {
@@ -74,7 +76,7 @@ describe('SUPER ADMIN CRITICAL ACTIONS POLICY GUARD', () => {
       // Accept either is_super_admin(...) or has_role(..., 'super_admin').
       const hasSuperAdminGate =
         /\bis_super_admin\s*\(/i.test(body) ||
-        /has_role\s*\([^)]*'super_admin'/i.test(body);
+        /has_role\s*\([\s\S]*?'super_admin'/i.test(body);
       expect(
         hasSuperAdminGate,
         `${name} is missing super_admin gate in ${entry!.file}`,
