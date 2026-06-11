@@ -270,10 +270,17 @@ const AdminBusinesses = () => {
   }, [searchParams, setSearchParams]);
   const [searchInput, setSearchInput] = useState(search);
   useEffect(() => { setSearchInput(search); }, [search]);
+  // Latest refs so the 300ms debounce reschedules ONLY on input change,
+  // matching prior behavior without an exhaustive-deps suppression.
+  const latestSearchRef = useRef(search);
+  const updateParamRef = useRef(updateParam);
+  useEffect(() => { latestSearchRef.current = search; }, [search]);
+  useEffect(() => { updateParamRef.current = updateParam; }, [updateParam]);
   useEffect(() => {
-    const t = setTimeout(() => { if (searchInput !== search) updateParam({ q: searchInput || null, page: null }); }, 300);
+    const t = setTimeout(() => {
+      if (searchInput !== latestSearchRef.current) updateParamRef.current({ q: searchInput || null, page: null });
+    }, 300);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
   const setFilterStatus = (v: string) => updateParam({ status: v === 'all' ? null : v, page: null });
   const setFilterTier = (v: string) => updateParam({ tier: v === 'all' ? null : v, page: null });

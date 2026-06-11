@@ -116,8 +116,7 @@ const AdminServiceActivations: React.FC = () => {
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminStatus, providerStatus, requiresReviewOnly, premiumOnly, featuredOnly, tierFilter]);
+  }, [adminStatus, providerStatus, requiresReviewOnly, premiumOnly, featuredOnly, tierFilter, searchParams, setSearchParams]);
 
   const { data: rows = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-service-activations', filters],
