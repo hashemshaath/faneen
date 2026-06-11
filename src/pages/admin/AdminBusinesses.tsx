@@ -1635,7 +1635,7 @@ const AdminBusinesses = () => {
                                 key={u.user_id}
                                 type="button"
                                 onClick={() => {
-                                  setCreateForm((f: any) => ({
+                                  setCreateForm((f) => ({
                                     ...f,
                                     resolved_user_id: u.user_id,
                                     resolved_owner_label: `${displayName}${u.ref_id ? ` (${u.ref_id})` : ''}${u.email ? ` · ${u.email}` : ''}`,
