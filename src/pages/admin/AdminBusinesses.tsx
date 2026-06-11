@@ -1878,10 +1878,9 @@ const AdminBusinesses = () => {
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-10 h-9 rounded-xl">
+                <TabsList className="w-full grid grid-cols-9 h-9 rounded-xl">
                   <TabsTrigger value="info" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المعلومات', 'Info')}</TabsTrigger>
                   <TabsTrigger value="owner" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المسؤول', 'Owner')}</TabsTrigger>
-                  <TabsTrigger value="address" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العنوان', 'Address')}</TabsTrigger>
                   <TabsTrigger value="content" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المحتوى', 'Content')}</TabsTrigger>
                   <TabsTrigger value="media" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
                   <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
