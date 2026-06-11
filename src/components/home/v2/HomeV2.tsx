@@ -9,7 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import {
   ArrowLeft, ArrowRight, Search, ShieldCheck, Activity, MapPin,
-  Play, Pause, Sparkles, Clock, TrendingUp,
+  Play, Pause, Clock, TrendingUp,
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
@@ -108,8 +108,8 @@ export const HeroV2 = () => {
       tagAr: 'منصة قِطاعات', tagEn: 'Qitaat platform',
       titleAr: 'مزودو الخدمات الصناعية والتشطيبات في مكان واحد',
       titleEn: 'Industrial and finishing service providers — in one place',
-      subAr: 'ابحث عن ورش ومصانع ومقاولين موثوقين، واطلب عرض سعر في خطوات بسيطة.',
-      subEn: 'Find trusted workshops, factories and contractors — and request a quote in a few simple steps.',
+      subAr: 'المنصة الصناعية الشاملة التي تجمع المصانع، الورش، المقاولين، تأجير المعدات، وسلاسل التوريد في مكان واحد.',
+      subEn: 'The comprehensive industrial platform — factories, workshops, contractors, equipment rental and supply chains in one place.',
     },
     {
       img: heroSlide2,
@@ -591,19 +591,24 @@ export const HeroV2 = () => {
 
           {/* Top bar — tag + autoplay toggle */}
           <div className="absolute top-0 inset-x-0 p-5 sm:p-7 flex items-center justify-between z-10">
-            <span
+            <div
               key={`tag-${active}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs font-semibold text-white animate-fade-in motion-reduce:animate-none"
+              className="flex items-center gap-3 animate-fade-in motion-reduce:animate-none"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              {bi(slide.tagAr, slide.tagEn)}
-              <span className="opacity-50">·</span>
-              <span className="opacity-90">
-                {String(active + 1).padStart(2, '0')}
-                <span className="opacity-50"> / </span>
-                {String(SLIDES.length).padStart(2, '0')}
+              <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em]">
+                Qitaat
               </span>
-            </span>
+              <span aria-hidden="true" className="h-[2px] w-8 bg-emerald-500" />
+              <span className="text-white/85 text-xs sm:text-sm font-medium">
+                {bi(slide.tagAr, slide.tagEn)}
+                <span className="opacity-50 mx-1.5">·</span>
+                <span className="tech-content opacity-90">
+                  {String(active + 1).padStart(2, '0')}
+                  <span className="opacity-50"> / </span>
+                  {String(SLIDES.length).padStart(2, '0')}
+                </span>
+              </span>
+            </div>
             <button
               type="button"
               id="hero-toggle-autoplay"
@@ -616,8 +621,8 @@ export const HeroV2 = () => {
             </button>
           </div>
 
-          {/* Centered content */}
-          <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 sm:px-8 py-20 sm:py-28 min-h-[inherit]">
+          {/* Start-aligned content (RTL: right-aligned) — Immersive Industrial Hub layout */}
+          <div className="relative z-10 flex flex-col items-start justify-center text-start px-5 sm:px-10 lg:px-16 pt-24 sm:pt-28 pb-44 sm:pb-52 min-h-[inherit] max-w-6xl mx-auto w-full">
             {/*
               Slide content wrapper acts as the semantic "slide" element.
               The image stack above is aria-hidden (decorative), and #hero-live-region
@@ -642,7 +647,7 @@ export const HeroV2 = () => {
                 {bi(slide.titleAr, slide.titleEn)}
               </h1>
               <p
-                className="font-body text-base sm:text-lg md:text-xl text-white/95 mt-5 sm:mt-6 leading-relaxed max-w-2xl mx-auto"
+                className="font-body text-base sm:text-lg md:text-xl text-white/95 mt-5 sm:mt-6 leading-relaxed max-w-2xl"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 4px 14px rgba(0,0,0,0.45)' }}
               >
                 {bi(slide.subAr, slide.subEn)}
@@ -652,7 +657,7 @@ export const HeroV2 = () => {
             {/* Search bar */}
             <div
               ref={acContainerRef}
-              className="mt-7 sm:mt-8 w-full max-w-xl relative"
+              className="mt-7 sm:mt-8 w-full max-w-2xl relative"
               onBlur={(e) => {
                 // Close the autocomplete when focus leaves the entire combobox
                 // (Tab / Shift+Tab to outside). Use relatedTarget so internal
@@ -839,7 +844,7 @@ export const HeroV2 = () => {
             </div>
 
             {/* CTAs */}
-            <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <PrimaryCTA
                 to={ROUTES.quote}
                 label={bi('استكشف كل القطاعات الصناعية', 'Explore every industrial sector')}
@@ -849,26 +854,48 @@ export const HeroV2 = () => {
                 <Button
                   variant="outline"
                   size="appLg"
-                  className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20 hover:text-white"
+                  className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20 hover:text-white w-full sm:w-auto"
                 >
                   {bi('أضف منشأتك', 'Add your business')}
                 </Button>
               </Link>
             </div>
+          </div>
 
-            {/* Trust strip */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] sm:text-xs text-white/70">
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> {bi('مزودون موثّقون', 'Verified providers')}</span>
-              <span className="opacity-40">·</span>
-              <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-300" /> {bi('تغطية المملكة', 'Saudi-wide coverage')}</span>
-              <span className="opacity-40">·</span>
-              <span className="inline-flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-amber-300" /> {bi('بدون عمولة على العميل', 'No fees for customers')}</span>
+          {/* Trust strip — absolutely positioned bottom-start (RTL: bottom-right) */}
+          <div className="hidden md:flex absolute bottom-20 start-10 lg:start-16 z-10 items-center gap-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 flex items-center justify-center bg-emerald-500/20 rounded-xl ring-1 ring-emerald-400/30">
+                <ShieldCheck className="w-5 h-5 text-emerald-300" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-white font-semibold text-sm">{bi('مزودون موثّقون', 'Verified providers')}</p>
+                <p className="text-white/50 text-[11px]">{bi('فحص شامل قبل النشر', 'Vetted before listing')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 flex items-center justify-center bg-sky-500/20 rounded-xl ring-1 ring-sky-400/30">
+                <MapPin className="w-5 h-5 text-sky-300" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-white font-semibold text-sm">{bi('تغطية المملكة', 'Saudi-wide coverage')}</p>
+                <p className="text-white/50 text-[11px]">{bi('من الرياض إلى جدة والدمام', 'Riyadh · Jeddah · Dammam')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 flex items-center justify-center bg-amber-500/20 rounded-xl ring-1 ring-amber-400/30">
+                <Activity className="w-5 h-5 text-amber-300" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-white font-semibold text-sm">{bi('بدون عمولة على العميل', 'No fees for customers')}</p>
+                <p className="text-white/50 text-[11px]">{bi('تسعير شفاف ومباشر', 'Transparent direct pricing')}</p>
+              </div>
             </div>
           </div>
 
-          {/* Bottom controls — thumbnails + arrows */}
+          {/* Bottom controls — thumbnails + arrows (end-aligned to balance trust strip on start) */}
           <div className="absolute bottom-0 inset-x-0 z-10 px-4 sm:px-6 pb-4 sm:pb-5">
-            <div className="flex items-end justify-between gap-3">
+            <div className="flex items-end justify-between md:justify-end gap-4">
               {/* Thumbnails (md+) */}
               <div className="hidden md:flex items-center gap-2">
                 {SLIDES.map((s, i) => {
