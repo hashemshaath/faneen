@@ -5,7 +5,7 @@
  * - Inline edit, visibility toggle, image upload trigger
  * - All persistence is real DB (no dummy state)
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Bi, useBi } from '@/components/common/Bilingual';
