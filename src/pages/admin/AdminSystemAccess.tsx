@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
-  listSystemModules,
   listAllSystemModules,
   listAllOverrides,
   listAuditLog,
@@ -30,7 +29,6 @@ import {
 } from '@/modules/systemAccess';
 import {
   classifyModule,
-  MODULE_STATUS_LABELS,
   LINKED_ROUTES_BADGE,
   DISABLE_WARNING_TEXT,
   ACTIVATE_BLOCKED_TEXT,
