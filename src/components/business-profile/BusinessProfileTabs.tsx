@@ -43,6 +43,7 @@ import {
 import { Stars } from "./BusinessProfileHeader";
 import { recordBranchVisit } from "@/modules/branchTelemetry";
 import { track } from "@/lib/analytics-events";
+import { BranchAnalyticsPanel } from "./BranchAnalyticsPanel";
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
@@ -567,6 +568,7 @@ interface BranchesTabProps {
   isAuthenticated?: boolean;
   onRequestContact?: () => void;
   onRevealContact?: (kind: "phone" | "email") => void;
+  isOwner?: boolean;
 }
 
 export const BranchesTab = ({
@@ -577,10 +579,14 @@ export const BranchesTab = ({
   isAuthenticated = false,
   onRequestContact,
   onRevealContact,
+  isOwner = false,
 }: BranchesTabProps) => {
   const { language } = useLanguage();
   const { data: branches, isLoading } = useBranches(businessId);
   const [regionFilter, setRegionFilter] = useState<string>("all");
+  // Inline WhatsApp message editor — per-branch open state + draft text.
+  const [waEditorOpen, setWaEditorOpen] = useState<string | null>(null);
+  const [waDraft, setWaDraft] = useState<string>("");
 
   if (isLoading) {
     return (
@@ -604,6 +610,11 @@ export const BranchesTab = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+      {isOwner && branches && branches.length > 0 && (
+        <div className="sm:col-span-2">
+          <BranchAnalyticsPanel businessId={businessId} branches={branches} />
+        </div>
+      )}
       {!isAuthenticated && onRequestContact && (
         <div className="rounded-2xl border border-accent/20 bg-accent/5 p-3 sm:col-span-2 sm:p-4">
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
