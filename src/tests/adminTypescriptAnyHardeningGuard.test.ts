@@ -38,15 +38,13 @@ const ANY_PATTERNS: ReadonlyArray<RegExp> = [
 ];
 
 function countAny(src: string): number {
-  let n = 0;
-  // Strip block + line comments and string literals so we don't count
-  // matches inside docs/regex/log strings.
+  // Only strip block + line comments. Stripping string literals is unsafe
+  // here because JSX/TSX bodies routinely contain unbalanced apostrophes
+  // (`don't`, `it's`, etc.) which would consume large code spans.
   const cleaned = src
     .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\/\/[^\n]*/g, '')
-    .replace(/'([^'\\]|\\.)*'/g, "''")
-    .replace(/"([^"\\]|\\.)*"/g, '""')
-    .replace(/`([^`\\]|\\.)*`/g, '``');
+    .replace(/\/\/[^\n]*/g, '');
+  let n = 0;
   for (const re of ANY_PATTERNS) {
     const m = cleaned.match(re);
     if (m) n += m.length;
