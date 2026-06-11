@@ -172,7 +172,11 @@ export interface ModuleStatusInfo {
 export function isRealDashboardRoute(route: string | null | undefined): boolean {
   if (!route) return false;
   if (REGISTERED_DASHBOARD_ROUTES.has(route)) return true;
+  // Prefix-match only against multi-segment registered routes so the
+  // root `/dashboard` does not act as a wildcard parent for ghost
+  // routes like `/dashboard/ai` or `/dashboard/documents`.
   for (const r of REGISTERED_DASHBOARD_ROUTES) {
+    if (r === '/dashboard' || r === '/') continue;
     if (route.startsWith(r + '/')) return true;
   }
   return false;
