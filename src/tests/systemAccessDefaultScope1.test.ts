@@ -112,8 +112,13 @@ describe('SYSTEM-ACCESS-DEFAULT-SCOPE-1 — UI helper copy', () => {
   });
 
   it('entity scope helper copy states it is gated by the business plan', () => {
-    expect(src).toMatch(/يخضع لباقة المنشأة/);
-    expect(src).toMatch(/يمكن للسوبر أدمن التجاوز/);
+    // The entity-scope helper now frames admin direct-edits relative to
+    // the business plan ("regardless of the business plan") and notes
+    // that every change is recorded in the audit log with an [admin direct]
+    // marker — admins may bypass the plan, but the relationship to the
+    // business plan must still be surfaced to the operator.
+    expect(src).toMatch(/باقة المنشأة/);
+    expect(src).toMatch(/admin direct/);
   });
 
   it('user scope helper copy is shown when a user is selected', () => {
