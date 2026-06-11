@@ -591,19 +591,24 @@ export const HeroV2 = () => {
 
           {/* Top bar — tag + autoplay toggle */}
           <div className="absolute top-0 inset-x-0 p-5 sm:p-7 flex items-center justify-between z-10">
-            <span
+            <div
               key={`tag-${active}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs font-semibold text-white animate-fade-in motion-reduce:animate-none"
+              className="flex items-center gap-3 animate-fade-in motion-reduce:animate-none"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              {bi(slide.tagAr, slide.tagEn)}
-              <span className="opacity-50">·</span>
-              <span className="opacity-90">
-                {String(active + 1).padStart(2, '0')}
-                <span className="opacity-50"> / </span>
-                {String(SLIDES.length).padStart(2, '0')}
+              <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em]">
+                Qitaat
               </span>
-            </span>
+              <span aria-hidden="true" className="h-[2px] w-8 bg-emerald-500" />
+              <span className="text-white/85 text-xs sm:text-sm font-medium">
+                {bi(slide.tagAr, slide.tagEn)}
+                <span className="opacity-50 mx-1.5">·</span>
+                <span className="tech-content opacity-90">
+                  {String(active + 1).padStart(2, '0')}
+                  <span className="opacity-50"> / </span>
+                  {String(SLIDES.length).padStart(2, '0')}
+                </span>
+              </span>
+            </div>
             <button
               type="button"
               id="hero-toggle-autoplay"
