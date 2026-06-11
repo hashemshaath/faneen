@@ -327,12 +327,9 @@ const AdminBusinesses = () => {
     address_en: '',
   });
   const [createForm, setCreateForm] = useState<any>(emptyCreateForm());
-  const setCField = (k: string, v: unknown) => setCreateForm((f: any) => ({ ...f, [k]: v }));
+  const setCField = (k: string, v: unknown) => setCreateForm((f) => ({ ...f, [k]: v }));
   // Owner autocomplete (search profiles by name/email/username/ref_id)
-  const [ownerResults, setOwnerResults] = useState<Array<{
-    user_id: string; full_name: string | null; full_name_ar: string | null; full_name_en: string | null;
-    email: string | null; username: string | null; ref_id: string | null; avatar_url: string | null;
-  }>>([]);
+  const [ownerResults, setOwnerResults] = useState<AdminBusinessOwnerRow[]>([]);
   const [ownerSearching, setOwnerSearching] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
