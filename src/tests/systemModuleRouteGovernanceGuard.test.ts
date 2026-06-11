@@ -148,7 +148,9 @@ describe('Guard 3 — route aliases cover legacy + canonical paths', () => {
   it.each(ALIAS_REQUIREMENTS)(
     'module %s alias entry exists and covers all required paths',
     (key, paths) => {
-      const entryRe = new RegExp(`${key}\\s*:\\s*\\[([^\\]]+)\\]`);
+      // (^|[^A-Za-z0-9_]) word-boundary so `credits` doesn't match
+      // `membership_credits`.
+      const entryRe = new RegExp(`(?:^|[^A-Za-z0-9_])${key}\\s*:\\s*\\[([^\\]]+)\\]`, 'm');
       const match = VISIBLE.match(entryRe);
       expect(match, `MODULE_ROUTE_ALIASES is missing entry for ${key}`).toBeTruthy();
       const body = match![1];
