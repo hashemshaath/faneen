@@ -71,8 +71,15 @@ describe('Registration consolidated — business-details collects all entity dat
   it('completion validation requires all 6 mandatory entity fields', () => {
     // The total field count drives the on-screen completeness bar.
     expect(ONBOARDING).toContain('total += 6;');
+    // The continue-button gate now layers crValid and a taxonomy branch
+    // on top of the same core fields. Validation still requires unified
+    // number, business email, region, and a sector choice (legacy sectors
+    // are the fallback while taxonomy is loading/failed) — locked here.
     expect(ONBOARDING).toMatch(
-      /unifiedValid && emailValid && !!regionId && sectors\.length > 0/,
+      /unifiedValid && emailValid && !!regionId && crValid/,
+    );
+    expect(ONBOARDING).toMatch(
+      /taxonomyStatus === 'ok'[\s\S]{0,200}entityTypeCategoryId[\s\S]{0,200}primaryActivityCategoryIds/,
     );
   });
 
@@ -80,7 +87,11 @@ describe('Registration consolidated — business-details collects all entity dat
     expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}name_en:\s*businessNameEn/);
     expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}unified_number:\s*unifiedNumber/);
     expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}region:\s*selectedRegion/);
-    expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}sectors,/);
+    // Phase 2.1-b removed legacy `sectors`/`sub_services` from the
+    // createBusiness payload (onboarding is taxonomy-only). The region's
+    // English label is the new companion of `region:` and must persist.
+    expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}region_en:\s*selectedRegion/);
+    expect(ONBOARDING).not.toMatch(/createBusiness\([\s\S]{0,800}\bsectors,/);
   });
 
   it('authService.createBusiness accepts and forwards the extras payload', () => {
