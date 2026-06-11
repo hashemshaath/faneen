@@ -375,10 +375,16 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
 
         {/* District (search-as-you-type) */}
         <div className="relative">
-          <Label className="text-xs font-medium text-muted-foreground inline-flex items-center gap-1">
-            {t(isRTL, 'الحي', 'District')}
-            <ChevronsUpDown className="w-3 h-3 opacity-60" />
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium text-muted-foreground inline-flex items-center gap-1">
+              {t(isRTL, 'الحي', 'District')}
+              <ChevronsUpDown className="w-3 h-3 opacity-60" />
+            </Label>
+            <TranslateBtn
+              k="district-ar" from="ar"
+              onClick={() => runTranslate('district-ar', value.district ?? '', 'ar', (r) => patch({ district_en: r }))}
+            />
+          </div>
           <Input
             value={districtQuery || value.district || ''}
             onChange={(e) => {
@@ -419,11 +425,17 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
               ))}
             </div>
           )}
+          <div className="mt-2 flex items-center justify-end">
+            <TranslateBtn
+              k="district-en" from="en"
+              onClick={() => runTranslate('district-en', value.district_en ?? '', 'en', (r) => { patch({ district: r }); setDistrictQuery(r); })}
+            />
+          </div>
           <Input
             value={value.district_en ?? ''}
             onChange={(e) => patch({ district_en: e.target.value || null })}
             dir="ltr"
-            className="mt-2 h-11 rounded-xl"
+            className="mt-1 h-11 rounded-xl"
             placeholder={t(isRTL, 'الحي (إنجليزي) — اختياري', 'District (English) — optional')}
             maxLength={120}
           />
@@ -437,7 +449,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         </Label>
         <div className="grid sm:grid-cols-3 gap-3">
           <div>
-            <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (عربي)', 'Center name (Arabic)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (عربي)', 'Center name (Arabic)')}</Label>
+              <TranslateBtn
+                k="complex-ar" from="ar"
+                onClick={() => runTranslate('complex-ar', value.complex_name ?? '', 'ar', (r) => patch({ complex_name_en: r }))}
+              />
+            </div>
             <Input
               value={value.complex_name ?? ''}
               onChange={(e) => patch({ complex_name: e.target.value || null })}
@@ -448,7 +466,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             />
           </div>
           <div>
-            <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (إنجليزي)', 'Center name (English)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (إنجليزي)', 'Center name (English)')}</Label>
+              <TranslateBtn
+                k="complex-en" from="en"
+                onClick={() => runTranslate('complex-en', value.complex_name_en ?? '', 'en', (r) => patch({ complex_name: r }))}
+              />
+            </div>
             <Input
               value={value.complex_name_en ?? ''}
               onChange={(e) => patch({ complex_name_en: e.target.value || null })}
@@ -482,7 +506,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="sm:col-span-3 grid sm:grid-cols-2 gap-3">
             <div>
-            <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (عربي)', 'Street (Arabic)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (عربي)', 'Street (Arabic)')}</Label>
+              <TranslateBtn
+                k="street-ar" from="ar"
+                onClick={() => runTranslate('street-ar', value.street_name ?? '', 'ar', (r) => patch({ street_name_en: r }))}
+              />
+            </div>
             <Input
               value={value.street_name ?? ''}
               onChange={(e) => patch({ street_name: e.target.value || null })}
@@ -492,7 +522,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             />
             </div>
             <div>
-            <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (إنجليزي)', 'Street (English)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (إنجليزي)', 'Street (English)')}</Label>
+              <TranslateBtn
+                k="street-en" from="en"
+                onClick={() => runTranslate('street-en', value.street_name_en ?? '', 'en', (r) => patch({ street_name: r }))}
+              />
+            </div>
             <Input
               value={value.street_name_en ?? ''}
               onChange={(e) => patch({ street_name_en: e.target.value || null })}
@@ -556,7 +592,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         </div>
         <div className="mt-1 grid sm:grid-cols-2 gap-2">
           <div>
-            <span className="text-[10px] text-muted-foreground">{t(isRTL, 'عربي', 'Arabic')}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">{t(isRTL, 'عربي', 'Arabic')}</span>
+              <TranslateBtn
+                k="address-ar" from="ar"
+                onClick={() => runTranslate('address-ar', value.address ?? '', 'ar', (r) => onChange({ ...value, address_en: r, address_manual: true }))}
+              />
+            </div>
             <Input
               value={value.address ?? ''}
               onChange={(e) => onChange({ ...value, address: e.target.value, address_manual: true })}
@@ -567,7 +609,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             />
           </div>
           <div>
-            <span className="text-[10px] text-muted-foreground">{t(isRTL, 'إنجليزي', 'English')}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">{t(isRTL, 'إنجليزي', 'English')}</span>
+              <TranslateBtn
+                k="address-en" from="en"
+                onClick={() => runTranslate('address-en', value.address_en ?? '', 'en', (r) => onChange({ ...value, address: r, address_manual: true }))}
+              />
+            </div>
             <Input
               value={value.address_en ?? ''}
               onChange={(e) => onChange({ ...value, address_en: e.target.value, address_manual: true })}
