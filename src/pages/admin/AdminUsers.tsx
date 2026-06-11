@@ -823,7 +823,11 @@ const AdminUsers = () => {
 
   // Auto-open create panel when navigated with ?create=provider|business|company|individual
   const [searchParams, setSearchParams] = useSearchParams();
+  const openCreatePanelRef = useRef<(t: 'individual' | 'business' | 'company') => void>(() => {});
+  const lastConsumedParamsRef = useRef<string>('');
   useEffect(() => {
+    const sig = searchParams.toString();
+    if (lastConsumedParamsRef.current === sig) return;
     const createParam = searchParams.get('create');
     const typeParam = searchParams.get('type');
     const roleParam = searchParams.get('role');
@@ -864,7 +868,7 @@ const AdminUsers = () => {
       const preset = createParam === 'provider' ? 'business' : createParam;
       const allowed = ['individual', 'business', 'company'];
       if (allowed.includes(preset)) {
-        openCreatePanel(preset as 'individual' | 'business' | 'company');
+        openCreatePanelRef.current(preset as 'individual' | 'business' | 'company');
       }
       next.delete('create');
       mutated = true;
@@ -878,10 +882,12 @@ const AdminUsers = () => {
     }
 
     if (mutated) {
+      lastConsumedParamsRef.current = next.toString();
       setSearchParams(next, { replace: true });
+    } else {
+      lastConsumedParamsRef.current = sig;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, searchParams]);
+  }, [isAdmin, searchParams, setSearchParams]);
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
