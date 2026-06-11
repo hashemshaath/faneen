@@ -39,6 +39,7 @@ import {
   adminDeleteBrandProduct,
   listBrandProductRequests, adminApproveBrandProductRequest, adminRejectBrandProductRequest,
   brandProductStatusLabel, brandProductRequestStatusLabel,
+  adminSearchBusinessesForBrand, adminListBusinessServices, adminCreateProviderBrandLink,
   type BrandProduct, type BrandProductRequest,
 } from '@/modules/brands';
 
@@ -81,6 +82,13 @@ const AdminBrandDetail: React.FC = () => {
   });
   const [rejectingReqId, setRejectingReqId] = useState<string | null>(null);
   const [reqRejectReason, setReqRejectReason] = useState('');
+
+  // ---- Admin: directly link a provider business+service to this brand ----
+  const [linkSearch, setLinkSearch] = useState('');
+  const [linkBusinessId, setLinkBusinessId] = useState<string>('');
+  const [linkBusinessLabel, setLinkBusinessLabel] = useState<string>('');
+  const [linkServiceId, setLinkServiceId] = useState<string>('');
+  const [linkRelationship, setLinkRelationship] = useState<string>('authorized_distributor');
 
   const brandQ = useQuery({
     queryKey: ['admin-brand-detail', idParam],
