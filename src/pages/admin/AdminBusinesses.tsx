@@ -359,6 +359,29 @@ const AdminBusinesses = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [branchForm, setBranchForm] = useState<any | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
+  const [branchTranslating, setBranchTranslating] = useState<'ar' | 'en' | null>(null);
+  const translateBranchName = useCallback(async (from: 'ar' | 'en') => {
+    const text = ((from === 'ar' ? branchForm?.name_ar : branchForm?.name_en) || '').trim();
+    if (!text) { toast.info(pickBi(isRTL, 'لا يوجد نص لترجمته', 'Nothing to translate')); return; }
+    setBranchTranslating(from);
+    try {
+      const { data, error } = await invokeBlogAiTools({
+        action: 'translate',
+        text,
+        sourceLang: from,
+        targetLang: from === 'ar' ? 'en' : 'ar',
+      });
+      if (error) throw error;
+      const result = ((data as { result?: string } | null)?.result || '').trim();
+      if (!result) throw new Error('Empty translation');
+      setBranchForm((f) => f ? ({ ...f, ...(from === 'ar' ? { name_en: result } : { name_ar: result }) }) : f);
+      toast.success(pickBi(isRTL, 'تمت الترجمة', 'Translated'));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : pickBi(isRTL, 'فشلت الترجمة', 'Translation failed'));
+    } finally {
+      setBranchTranslating(null);
+    }
+  }, [branchForm, isRTL]);
   const [isPending, startTransition] = useTransition();
   const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
 
@@ -2335,11 +2358,35 @@ const AdminBusinesses = () => {
                         </Button>
                       </div>
                       <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)')} *</Label>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)')} *</Label>
+                          <Button
+                            type="button" size="sm" variant="ghost"
+                            className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+                            disabled={branchTranslating !== null}
+                            onClick={() => translateBranchName('ar')}
+                            title={pickBi(isRTL, 'ترجمة من العربي إلى الإنجليزي', 'Translate Arabic → English')}
+                          >
+                            {branchTranslating === 'ar' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                            <span>→ EN</span>
+                          </Button>
+                        </div>
                         <Input value={branchForm.name_ar} onChange={e => setBranchForm((f) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
                       </div>
                       <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
+                          <Button
+                            type="button" size="sm" variant="ghost"
+                            className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+                            disabled={branchTranslating !== null}
+                            onClick={() => translateBranchName('en')}
+                            title={pickBi(isRTL, 'ترجمة من الإنجليزي إلى العربي', 'Translate English → Arabic')}
+                          >
+                            {branchTranslating === 'en' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                            <span>→ AR</span>
+                          </Button>
+                        </div>
                         <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
                       </div>
                       <div>
