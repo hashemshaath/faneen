@@ -711,11 +711,11 @@ const AdminMemberships = () => {
     mutationFn: async () => {
       if (!editingPlan) return;
       const features = featuresText.split('\n').map(l => l.trim()).filter(Boolean);
-      const originalLimits = (editingPlan as any)?.limits as Record<string, unknown> | null | undefined;
+      const originalLimits = (editingPlan.limits ?? null) as Record<string, unknown> | null;
       const limits = limitsToJson(editLimits, originalLimits);
-      const isNew = !(editingPlan as any).id;
+      const isNew = !editingPlan.id;
       if (isNew) {
-        const tier = (editingPlan as any).tier || 'free';
+        const tier = editingPlan.tier || 'free';
         const { error } = await insertMembershipPlan({
           tier,
           name_ar: form.name_ar, name_en: form.name_en,
@@ -727,7 +727,7 @@ const AdminMemberships = () => {
         if (error) throw error;
       } else {
         const { error } = await updateMembershipPlanById({
-          id: (editingPlan as any).id,
+          id: editingPlan.id as string,
           values: {
             name_ar: form.name_ar, name_en: form.name_en,
             description_ar: form.description_ar || null, description_en: form.description_en || null,
