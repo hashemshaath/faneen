@@ -1078,7 +1078,7 @@ const AdminBusinesses = () => {
       }
       if (e.key === 'e' || e.key === 'E') {
         e.preventDefault();
-        exportCSV(filteredRef.current as any[], language);
+        exportCSV(filteredRef.current as AdminBusinessCsvRow[], language);
       }
       if (e.key === 'Escape') {
         if (editingBiz) setEditingBiz(null);
