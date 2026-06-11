@@ -2218,13 +2218,28 @@ const AdminBusinesses = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-sm font-medium truncate">{language === 'ar' ? br.name_ar : (br.name_en || br.name_ar)}</p>
-                            {br.is_main && <Badge className="text-[8px] h-4 bg-primary/10 text-primary border-0">{pickBi(isRTL, 'رئيسي', 'Main')}</Badge>}
+                            {(() => {
+                              const t = ((br as unknown as { branch_type?: string }).branch_type) ?? (br.is_main ? 'main' : 'branch');
+                              const map: Record<string, { ar: string; en: string; cls: string }> = {
+                                main:         { ar: 'المركز الرئيسي', en: 'Headquarters', cls: 'bg-primary/10 text-primary' },
+                                branch:       { ar: 'فرع',           en: 'Branch',       cls: 'bg-blue-500/10 text-blue-700 dark:text-blue-300' },
+                                warehouse:    { ar: 'مستودع',        en: 'Warehouse',    cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+                                admin_office: { ar: 'مكتب إداري',    en: 'Admin office', cls: 'bg-violet-500/10 text-violet-700 dark:text-violet-300' },
+                              };
+                              const m = map[t] ?? map.branch;
+                              return <Badge className={`text-[8px] h-4 border-0 ${m.cls}`}>{pickBi(isRTL, m.ar, m.en)}</Badge>;
+                            })()}
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
                             {br.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.phone}</span>}
                             {br.mobile && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.mobile}</span>}
                             {br.unified_number && <span>{br.unified_number}</span>}
-                            {br.district && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{br.district}</span>}
+                            {(br.address || br.district) && (
+                              <span className="flex items-center gap-0.5 truncate max-w-[280px]">
+                                <MapPin className="w-2.5 h-2.5 shrink-0" />
+                                <span className="truncate">{br.address || [br.district, br.street_name].filter(Boolean).join(' · ')}</span>
+                              </span>
+                            )}
                             {br.contact_person && <span className="flex items-center gap-0.5"><Users className="w-2.5 h-2.5" />{br.contact_person}</span>}
                           </div>
                         </div>
@@ -2234,6 +2249,7 @@ const AdminBusinesses = () => {
                             setEditingBranchId(br.id);
                             setBranchForm({
                               name_ar: br.name_ar, name_en: br.name_en || '', is_main: br.is_main, is_active: br.is_active,
+                              branch_type: ((br as unknown as { branch_type?: string }).branch_type as 'main' | 'branch' | 'warehouse' | 'admin_office') ?? (br.is_main ? 'main' : 'branch'),
                               contact_person: br.contact_person || '', phone: br.phone || '', mobile: br.mobile || '',
                               unified_number: br.unified_number || '', customer_service_phone: br.customer_service_phone || '',
                               email: br.email || '', website: br.website || '', country_id: br.country_id || '',
