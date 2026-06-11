@@ -64,14 +64,6 @@ interface Allow {
 }
 const ALLOWLIST: ReadonlyArray<Allow> = [
   {
-    file: 'src/pages/admin/AdminActivityLog.tsx',
-    max: 4,
-    reason:
-      'Heterogeneous jsonb `details` payload per action type — narrowing per-action requires a discriminated union.',
-    followUp:
-      'Define ActivityLogDetails discriminated union keyed by `action`; type buildDetailItems / buildSummary.',
-  },
-  {
     file: 'src/pages/admin/AdminMembershipRejections.tsx',
     max: 2,
     reason:

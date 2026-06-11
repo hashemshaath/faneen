@@ -21,6 +21,12 @@ import { ar, enUS } from 'date-fns/locale';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
+import {
+  type AdminActivityLogRow,
+  asDetailsRecord,
+  getDetailString,
+  isChangePair,
+} from './adminActivityLog.types';
 
 /* ─── Action Config ─── */
 type Bi = { ar: string; en: string };
@@ -164,17 +170,22 @@ interface DetailItem {
   value?: string;
 }
 
-const buildDetailItems = (details: any, action: string, isRTL: boolean): DetailItem[] => {
-  if (!details || typeof details !== 'object') return [];
+const buildDetailItems = (
+  rawDetails: unknown,
+  _action: string,
+  isRTL: boolean,
+): DetailItem[] => {
+  const details = asDetailsRecord(rawDetails);
+  if (!details) return [];
   const items: DetailItem[] = [];
 
   // Handle "changes" object (update actions)
-  if (details.changes && typeof details.changes === 'object') {
-    for (const [field, change] of Object.entries(details.changes)) {
+  const changes = asDetailsRecord(details.changes);
+  if (changes) {
+    for (const [field, change] of Object.entries(changes)) {
       const label = pick(fieldLabels[field], isRTL, field);
-      if (change && typeof change === 'object' && 'old' in (change as any)) {
-        const c = change as { old: unknown; new: unknown };
-        items.push({ label, oldVal: formatValue(c.old, isRTL), newVal: formatValue(c.new, isRTL) });
+      if (isChangePair(change)) {
+        items.push({ label, oldVal: formatValue(change.old, isRTL), newVal: formatValue(change.new, isRTL) });
       } else {
         items.push({ label, value: formatValue(change, isRTL) });
       }
@@ -182,16 +193,20 @@ const buildDetailItems = (details: any, action: string, isRTL: boolean): DetailI
   }
 
   // Handle role fields
-  if (details.role) {
-    items.push({ label: pick(tx.role, isRTL, 'Role'), value: pick(roleLabels[details.role], isRTL, details.role) });
+  const role = getDetailString(details, 'role');
+  if (role) {
+    items.push({ label: pick(tx.role, isRTL, 'Role'), value: pick(roleLabels[role], isRTL, role) });
   }
-  if (details.old_role && details.new_role) {
-    items.push({ label: pick(tx.role, isRTL, 'Role'), oldVal: pick(roleLabels[details.old_role], isRTL, details.old_role), newVal: pick(roleLabels[details.new_role], isRTL, details.new_role) });
+  const oldRole = getDetailString(details, 'old_role');
+  const newRole = getDetailString(details, 'new_role');
+  if (oldRole && newRole) {
+    items.push({ label: pick(tx.role, isRTL, 'Role'), oldVal: pick(roleLabels[oldRole], isRTL, oldRole), newVal: pick(roleLabels[newRole], isRTL, newRole) });
   }
 
   // Handle setting fields
-  if (details.setting_key) {
-    items.push({ label: pick(tx.key, isRTL, 'Key'), value: details.setting_key });
+  const settingKey = getDetailString(details, 'setting_key');
+  if (settingKey) {
+    items.push({ label: pick(tx.key, isRTL, 'Key'), value: settingKey });
   }
   if (details.setting_value !== undefined && details.setting_value !== null) {
     items.push({ label: pick(tx.value, isRTL, 'Value'), value: formatValue(details.setting_value, isRTL) });
@@ -201,52 +216,68 @@ const buildDetailItems = (details: any, action: string, isRTL: boolean): DetailI
   }
 
   // Handle reason
-  if (details.reason) {
-    items.push({ label: pick(tx.reason, isRTL, 'Reason'), value: details.reason });
+  const reason = getDetailString(details, 'reason');
+  if (reason) {
+    items.push({ label: pick(tx.reason, isRTL, 'Reason'), value: reason });
   }
 
   // Handle business name
-  if (details.business_name) {
-    items.push({ label: pick(tx.businessName, isRTL, 'Business name'), value: details.business_name });
+  const businessName = getDetailString(details, 'business_name');
+  if (businessName) {
+    items.push({ label: pick(tx.businessName, isRTL, 'Business name'), value: businessName });
   }
 
   return items;
 };
 
 /* ─── Build a human-readable summary ─── */
-const buildSummary = (log: any, getProfileName: (id: string) => string, isRTL: boolean): string => {
-  const details = log.details;
+const buildSummary = (
+  log: AdminActivityLogRow,
+  getProfileName: (id: string) => string,
+  isRTL: boolean,
+): string => {
+  const details = asDetailsRecord(log.details);
   const action = log.action;
   const entityLabel = log.entity_type ? pick(entityLabels[log.entity_type], isRTL, log.entity_type) : '';
 
-  if (action === 'role_assigned' && details?.role) {
-    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    const r = pick(roleLabels[details.role], isRTL, details.role);
-    return (isRTL ? tx.granted.ar : tx.granted.en)(r, targetName);
+  const targetUserId = getDetailString(details, 'target_user_id');
+  const targetName = targetUserId ? getProfileName(targetUserId) : '';
+
+  if (action === 'role_assigned') {
+    const role = getDetailString(details, 'role');
+    if (role) {
+      const r = pick(roleLabels[role], isRTL, role);
+      return (isRTL ? tx.granted.ar : tx.granted.en)(r, targetName);
+    }
   }
-  if (action === 'role_removed' && details?.role) {
-    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    const r = pick(roleLabels[details.role], isRTL, details.role);
-    return (isRTL ? tx.revoked.ar : tx.revoked.en)(r, targetName);
+  if (action === 'role_removed') {
+    const role = getDetailString(details, 'role');
+    if (role) {
+      const r = pick(roleLabels[role], isRTL, role);
+      return (isRTL ? tx.revoked.ar : tx.revoked.en)(r, targetName);
+    }
   }
-  if (action === 'role_updated' && details?.old_role && details?.new_role) {
-    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    const o = pick(roleLabels[details.old_role], isRTL, details.old_role);
-    const n = pick(roleLabels[details.new_role], isRTL, details.new_role);
-    return (isRTL ? tx.changedRole.ar : tx.changedRole.en)(o, n, targetName);
+  if (action === 'role_updated') {
+    const oldRole = getDetailString(details, 'old_role');
+    const newRole = getDetailString(details, 'new_role');
+    if (oldRole && newRole) {
+      const o = pick(roleLabels[oldRole], isRTL, oldRole);
+      const n = pick(roleLabels[newRole], isRTL, newRole);
+      return (isRTL ? tx.changedRole.ar : tx.changedRole.en)(o, n, targetName);
+    }
   }
-  if (action === 'update' && details?.changes) {
-    const fields = Object.keys(details.changes).map(f => pick(fieldLabels[f], isRTL, f));
-    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    const sep = isRTL ? '، ' : ', ';
-    return (isRTL ? tx.edited.ar : tx.edited.en)(fields.join(sep), targetName, entityLabel);
+  if (action === 'update') {
+    const changes = asDetailsRecord(details?.changes);
+    if (changes) {
+      const fields = Object.keys(changes).map(f => pick(fieldLabels[f], isRTL, f));
+      const sep = isRTL ? '، ' : ', ';
+      return (isRTL ? tx.edited.ar : tx.edited.en)(fields.join(sep), targetName, entityLabel);
+    }
   }
   if (action === 'user_disabled') {
-    const targetName = details?.target_user_id ? getProfileName(details.target_user_id) : '';
     return (isRTL ? tx.disabled.ar : tx.disabled.en)(targetName);
   }
   if (action === 'user_enabled') {
-    const targetName = details?.target_user_id ? getProfileName(details.target_user_id) : '';
     return (isRTL ? tx.enabled.ar : tx.enabled.en)(targetName);
   }
 
@@ -266,7 +297,7 @@ const getDateGroup = (dateStr: string, isRTL: boolean): string => {
 
 /* ─── Log Item Component ─── */
 const LogItem = React.memo(({ log, getProfileName, isRTL }: {
-  log: any; getProfileName: (id: string) => string; isRTL: boolean;
+  log: AdminActivityLogRow; getProfileName: (id: string) => string; isRTL: boolean;
 }) => {
   const [expanded, setExpanded] = useState(false);
   const config = actionConfig[log.action] || { ar: log.action, en: log.action, color: 'text-muted-foreground', iconBg: 'bg-muted', icon: Activity };
@@ -275,7 +306,7 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
   const detailItems = buildDetailItems(log.details, log.action, isRTL);
   const adminName = getProfileName(log.user_id);
   const hasDetails = detailItems.length > 0;
-  const targetUserId: string | undefined = log.details?.target_user_id;
+  const targetUserId: string | undefined = getDetailString(asDetailsRecord(log.details), 'target_user_id');
 
   return (
     <div className="group relative flex gap-3 py-3.5 px-4 hover:bg-muted/20 transition-colors">
