@@ -621,8 +621,8 @@ export const HeroV2 = () => {
             </button>
           </div>
 
-          {/* Centered content */}
-          <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 sm:px-8 py-20 sm:py-28 min-h-[inherit]">
+          {/* Start-aligned content (RTL: right-aligned) — Immersive Industrial Hub layout */}
+          <div className="relative z-10 flex flex-col items-start justify-center text-start px-5 sm:px-10 lg:px-16 pt-24 sm:pt-28 pb-44 sm:pb-52 min-h-[inherit] max-w-6xl mx-auto w-full">
             {/*
               Slide content wrapper acts as the semantic "slide" element.
               The image stack above is aria-hidden (decorative), and #hero-live-region
@@ -647,7 +647,7 @@ export const HeroV2 = () => {
                 {bi(slide.titleAr, slide.titleEn)}
               </h1>
               <p
-                className="font-body text-base sm:text-lg md:text-xl text-white/95 mt-5 sm:mt-6 leading-relaxed max-w-2xl mx-auto"
+                className="font-body text-base sm:text-lg md:text-xl text-white/95 mt-5 sm:mt-6 leading-relaxed max-w-2xl"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 4px 14px rgba(0,0,0,0.45)' }}
               >
                 {bi(slide.subAr, slide.subEn)}
@@ -657,7 +657,7 @@ export const HeroV2 = () => {
             {/* Search bar */}
             <div
               ref={acContainerRef}
-              className="mt-7 sm:mt-8 w-full max-w-xl relative"
+              className="mt-7 sm:mt-8 w-full max-w-2xl relative"
               onBlur={(e) => {
                 // Close the autocomplete when focus leaves the entire combobox
                 // (Tab / Shift+Tab to outside). Use relatedTarget so internal
