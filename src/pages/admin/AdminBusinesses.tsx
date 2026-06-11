@@ -2649,7 +2649,7 @@ const AdminBusinesses = () => {
                         <TableCell className="py-2.5">
                           <div className="flex items-center gap-2.5">
                             <Avatar className="w-8 h-8 border border-border/50">
-                              <AvatarImage src={(biz as any).logo_image_variants?.thumbnail || (biz as any).logo_image_variants?.card || biz.logo_url || undefined} />
+                              <AvatarImage src={(biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.thumbnail || (biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.card || biz.logo_url || undefined} />
                               <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{biz.name_ar?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
@@ -2743,7 +2743,7 @@ const AdminBusinesses = () => {
                         </button>
                         <div className="relative shrink-0">
                           <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-2 ring-border/10">
-                            <AvatarImage src={(biz as any).logo_image_variants?.thumbnail || (biz as any).logo_image_variants?.card || biz.logo_url || undefined} />
+                            <AvatarImage src={(biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.thumbnail || (biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.card || biz.logo_url || undefined} />
                             <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
                               {biz.name_ar?.charAt(0)}
                             </AvatarFallback>
