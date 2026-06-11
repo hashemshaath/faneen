@@ -78,25 +78,47 @@ const SortBtn: React.FC<{
   );
 };
 
+/** Filters applied to the rejections list / export. */
+interface RejectionsFilters {
+  reason: string;
+  refId: string;
+  businessId: string;
+  userId: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
+/**
+ * Minimal structural shape of the chainable PostgREST filter builder
+ * methods we use. Each call returns the same builder type so the chain
+ * preserves its generic param through `applyFilters`.
+ */
+interface RejectionsFilterChain<Q> {
+  eq(column: string, value: string): Q;
+  or(filters: string): Q;
+  gte(column: string, value: string): Q;
+  lte(column: string, value: string): Q;
+}
+
 /** Apply current filters to a Supabase filter builder. Shared by table query + export. */
-// Supabase chainable builder typing is intentionally loose here.
- 
-function applyFilters(q: any, f: { reason: string; refId: string; businessId: string; userId: string; dateFrom: string; dateTo: string }): any {
-  let qq = q;
-  if (f.reason !== 'all') qq = qq.eq('reason_code', f.reason);
+function applyFilters<Q>(q: Q, f: RejectionsFilters): Q {
+  let qq = q as Q & RejectionsFilterChain<Q>;
+  const chain = (next: Q): Q & RejectionsFilterChain<Q> =>
+    next as Q & RejectionsFilterChain<Q>;
+  if (f.reason !== 'all') qq = chain(qq.eq('reason_code', f.reason));
   if (f.refId.trim()) {
     const s = f.refId.trim();
-    qq = qq.or(`attempted_business_ref_id.ilike.%${s}%,actual_business_ref_id.ilike.%${s}%`);
+    qq = chain(qq.or(`attempted_business_ref_id.ilike.%${s}%,actual_business_ref_id.ilike.%${s}%`));
   }
   if (f.businessId.trim() && UUID_RX.test(f.businessId.trim()))
-    qq = qq.eq('attempted_business_id', f.businessId.trim());
+    qq = chain(qq.eq('attempted_business_id', f.businessId.trim()));
   if (f.userId.trim() && UUID_RX.test(f.userId.trim()))
-    qq = qq.eq('user_id', f.userId.trim());
-  if (f.dateFrom) qq = qq.gte('created_at', new Date(f.dateFrom).toISOString());
+    qq = chain(qq.eq('user_id', f.userId.trim()));
+  if (f.dateFrom) qq = chain(qq.gte('created_at', new Date(f.dateFrom).toISOString()));
   if (f.dateTo) {
     const end = new Date(f.dateTo);
     end.setHours(23, 59, 59, 999);
-    qq = qq.lte('created_at', end.toISOString());
+    qq = chain(qq.lte('created_at', end.toISOString()));
   }
   return qq;
 }
