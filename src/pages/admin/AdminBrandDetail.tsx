@@ -662,6 +662,77 @@ const AdminBrandDetail: React.FC = () => {
             <p className="text-xs text-muted-foreground mb-3">
               {pickBi(isRTL, 'نوع العلاقة (وكيل حصري، موزع معتمد، مُصنِّع، إلخ) يُحدَّد من قِبل المزود ويُعتمَد من هنا.', 'Relationship type (exclusive agent, authorized distributor, manufacturer, etc.) is declared by the provider and approved here.')}
             </p>
+
+            {/* Admin-only: directly link a provider business+service to this brand. */}
+            <div className="mb-4 rounded-lg border border-dashed bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Plus className="w-4 h-4" />
+                {pickBi(isRTL, 'إضافة وربط مزود بالعلامة', 'Link a provider to this brand')}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                <div className="md:col-span-5 relative">
+                  <Input
+                    value={linkBusinessId ? linkBusinessLabel : linkSearch}
+                    onChange={(e) => { setLinkSearch(e.target.value); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId(''); }}
+                    placeholder={pickBi(isRTL, 'ابحث عن جهة بالاسم أو الرمز…', 'Search business by name or ref…')}
+                    className="h-10"
+                  />
+                  {linkSearch.trim().length >= 2 && !linkBusinessId && (linkSearchQ.data?.length ?? 0) > 0 && (
+                    <div className="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border bg-background shadow-md">
+                      {(linkSearchQ.data ?? []).map((b) => {
+                        const bname = locale === 'ar' ? (b.name_ar ?? b.name_en ?? '') : (b.name_en ?? b.name_ar ?? '');
+                        return (
+                          <button
+                            key={b.id}
+                            type="button"
+                            className="w-full text-start px-3 py-2 hover:bg-muted text-sm flex items-center justify-between gap-2"
+                            onClick={() => { setLinkBusinessId(b.id); setLinkBusinessLabel(bname || b.username || b.ref_id || b.id.slice(0, 8)); setLinkSearch(''); }}
+                          >
+                            <span className="truncate" dir="auto">{bname || b.username || b.id.slice(0, 8)}</span>
+                            {b.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{b.ref_id}</code>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                <div className="md:col-span-4">
+                  <select
+                    value={linkServiceId}
+                    onChange={(e) => setLinkServiceId(e.target.value)}
+                    disabled={!linkBusinessId || linkServicesQ.isLoading}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">{pickBi(isRTL, 'اختر الخدمة…', 'Select service…')}</option>
+                    {(linkServicesQ.data ?? []).map((s) => (
+                      <option key={s.id} value={s.id}>{locale === 'ar' ? (s.name_ar ?? s.name_en ?? s.id.slice(0,8)) : (s.name_en ?? s.name_ar ?? s.id.slice(0,8))}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-3">
+                  <select
+                    value={linkRelationship}
+                    onChange={(e) => setLinkRelationship(e.target.value)}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {(['manufacturer','official_agent','authorized_distributor','distributor','reseller','importer','installer','fabricator','maintenance_provider','showroom','supplier','other'] as const).map((rt) => (
+                      <option key={rt} value={rt}>{pick(relationshipLabel[rt], locale)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => createLink.mutate()}
+                  disabled={!linkBusinessId || !linkServiceId || createLink.isPending}
+                >
+                  {createLink.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
+                  {pickBi(isRTL, 'ربط واعتماد', 'Link & verify')}
+                </Button>
+              </div>
+            </div>
+
             {linksQ.isLoading ? <Skeleton className="h-24" /> : (linksQ.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد علاقات بعد', 'No provider links yet')}</p>
             ) : (
