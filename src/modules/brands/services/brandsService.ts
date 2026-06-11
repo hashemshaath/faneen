@@ -683,6 +683,75 @@ export async function adminCreateProviderBrandLink(args: {
   return data as ProviderBrandLink;
 }
 
+/**
+ * Admin-only: link a brand to ALL services of a provider. If the provider has
+ * no services yet, a generic placeholder service ("خدمات عامة") is created so
+ * the link can be recorded (business_service_brands.business_service_id is
+ * NOT NULL). Existing links are skipped via the unique
+ * (business_service_id, brand_id) constraint.
+ */
+export async function adminLinkBrandToAllServices(args: {
+  brandId: string;
+  businessId: string;
+  relationshipType: ProviderBrandRelationship;
+  authorizationStatus?: 'verified' | 'unverified' | 'pending';
+}) {
+  const { data: { user } } = await getCurrentUser();
+  const status = args.authorizationStatus ?? 'verified';
+
+  // Load active services for this business.
+  let services = await adminListBusinessServices(args.businessId);
+  services = services.filter((s) => s.is_active !== false);
+
+  // No services? Create a single placeholder so the brand can still be linked.
+  if (services.length === 0) {
+    const { data: created, error: createErr } = await sb
+      .from('business_services')
+      .insert({
+        business_id: args.businessId,
+        name_ar: 'خدمات عامة',
+        name_en: 'General services',
+        is_active: true,
+      })
+      .select('id, name_ar, name_en, is_active')
+      .single();
+    if (createErr) throw createErr;
+    services = [created as { id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }];
+  }
+
+  // Insert one link per service; ignore duplicates so re-running is idempotent.
+  const rows = services.map((s) => ({
+    brand_id: args.brandId,
+    business_id: args.businessId,
+    business_service_id: s.id,
+    relationship_type: args.relationshipType,
+    authorization_status: status,
+    submitted_by: user?.id ?? null,
+    reviewed_by: user?.id ?? null,
+    reviewed_at: new Date().toISOString(),
+  }));
+
+  const { data, error } = await sb
+    .from('business_service_brands')
+    .upsert(rows, { onConflict: 'business_service_id,brand_id', ignoreDuplicates: true })
+    .select('id');
+  if (error) throw error;
+
+  await writeBrandAuditLog({
+    brand_id: args.brandId,
+    action: 'provider_brand_link_admin_bulk_created',
+    new_values: {
+      business_id: args.businessId,
+      service_count: services.length,
+      inserted: (data ?? []).length,
+      relationship_type: args.relationshipType,
+      authorization_status: status,
+    },
+  });
+
+  return { servicesTotal: services.length, inserted: (data ?? []).length };
+}
+
 export async function listBrandRequestsForBrand(brandId: string) {
   const { data, error } = await sb
     .from('brand_addition_requests')
