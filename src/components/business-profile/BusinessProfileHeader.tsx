@@ -138,18 +138,31 @@ export const BusinessProfileHeader = ({
   // the underlying record (no dedicated column yet on the public view, so
   // this is a forward-compatible read).
   const cityName = selectedBranch
-    ? (selectedBranch as { city?: string | null }).city || selectedBranch.region || null
+    ? (selectedBranch as { city?: string | null }).city
+        || getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en)
+        || selectedBranch.region
+        || null
     : getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en) || business.region || null;
-  const streetPart = selectedBranch
-    ? (selectedBranch as { street_name?: string | null }).street_name || selectedBranch.address || null
-    : business.street_name || business.address || null;
+  const rawStreet = selectedBranch
+    ? (selectedBranch as { street_name?: string | null }).street_name || null
+    : business.street_name || null;
+  const rawDistrict = selectedBranch ? selectedBranch.district : business.district;
+  // Localized prefixes — only prepend when the value isn't already prefixed.
+  const districtPrefix = isRTL ? 'حي ' : 'Dist. ';
+  const streetPrefix = isRTL ? 'شارع ' : 'St. ';
+  const formattedDistrict = rawDistrict
+    ? (rawDistrict.trim().startsWith(districtPrefix.trim()) ? rawDistrict : `${districtPrefix}${rawDistrict}`)
+    : null;
+  const formattedStreet = rawStreet
+    ? (rawStreet.trim().startsWith(streetPrefix.trim()) ? rawStreet : `${streetPrefix}${rawStreet}`)
+    : null;
   const postalCode = selectedBranch
     ? (selectedBranch as { postal_code?: string | null }).postal_code || null
     : (business as { postal_code?: string | null }).postal_code || null;
   const addressParts = [
     cityName,
-    selectedBranch ? selectedBranch.district : business.district,
-    streetPart,
+    formattedDistrict,
+    formattedStreet,
     postalCode,
   ].filter((part): part is string => Boolean(part));
   const fullAddress = Array.from(new Set(addressParts)).join('، ');
