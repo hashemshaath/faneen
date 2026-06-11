@@ -50,7 +50,12 @@ describe('HELP-CENTER-ADMIN-2', () => {
   });
 
   it('HelpLauncherFloating mounted in App + covers required pages', () => {
-    expect(app).toMatch(/<HelpLauncherFloating/);
+    // The launcher is now rendered exclusively through <DeferredAppOverlays>
+    // (off the critical path). Accept either a direct mount or the
+    // deferred-overlays bundle that wraps it.
+    const overlays = read('src/components/DeferredAppOverlays.tsx');
+    expect(app).toMatch(/<DeferredAppOverlays\b/);
+    expect(overlays).toMatch(/<HelpLauncherFloating/);
     const required = [
       'dashboard.work-orders', 'dashboard.work-order-detail', 'dashboard.production-board',
       'dashboard.procurement', 'dashboard.procurement-detail', 'dashboard.contracts',
