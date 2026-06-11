@@ -801,7 +801,7 @@ const AdminMemberships = () => {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const handleRenew = useCallback(async (sub: any) => {
+  const handleRenew = useCallback(async (sub: AdminMembershipEnrichedSubscription) => {
     if (!sub.plan_id || !sub.user_id) return;
     try {
       const { error } = await subscribeToPlan({
@@ -817,11 +817,11 @@ const AdminMemberships = () => {
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   }, [isRTL, queryClient]);
 
-  const openEdit = useCallback((plan: any) => {
+  const openEdit = useCallback((plan: AdminMembershipPlanRow) => {
     setEditingPlan(plan);
     const features = Array.isArray(plan.features) ? (plan.features as string[]).join('\n') : '';
     setFeaturesText(features);
-    setEditLimits(parseLimits(plan.limits as Record<string, any> | undefined));
+    setEditLimits(parseLimits(plan.limits as AdminMembershipLimitsInput));
     setForm({
       name_ar: plan.name_ar, name_en: plan.name_en,
       description_ar: plan.description_ar || '', description_en: plan.description_en || '',
