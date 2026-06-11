@@ -47,6 +47,11 @@ export interface NationalAddressValue {
   post_code: string | null;
   address: string | null;
   address_en: string | null;
+  /** Optional: name of the compound / industrial city / commercial center. */
+  complex_name?: string | null;
+  complex_name_en?: string | null;
+  /** Optional: site / plot number inside that complex. */
+  site_number?: string | null;
   /** Whether the detailed address line was edited manually / pulled from SPL. */
   address_manual?: boolean;
 }
@@ -139,6 +144,8 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
       street_name: value.street_name, street_name_en: value.street_name_en,
       building_number: value.building_number,
       additional_number: value.additional_number, post_code: value.post_code,
+      complex_name: value.complex_name, complex_name_en: value.complex_name_en,
+      site_number: value.site_number,
     };
     const composedAr = buildAddressLine(base, 'ar');
     const composedEn = buildAddressLine(base, 'en');
@@ -156,6 +163,7 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
     value.district, value.district_en,
     value.street_name, value.street_name_en,
     value.building_number, value.additional_number, value.post_code,
+    value.complex_name, value.complex_name_en, value.site_number,
   ]);
 
   // ── SPL lookup ──────────────────────────────────────────────────────────
