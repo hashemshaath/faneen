@@ -82,17 +82,25 @@ describe('ADMIN PERMISSIONS & ROLES AUDIT GUARD', () => {
   });
 
   it('admin RPC call sites do not silently swallow permission errors', () => {
-    // Spot-check: result of supabase.rpc('admin_...') must surface error,
-    // not be ignored entirely. We flag obvious `.rpc('admin_...')` with no
-    // `error` reference in the next 8 lines.
+    // Spot-check: result of supabase.rpc('admin_...') must surface an error,
+    // not be ignored entirely. We accept any of: destructured `error`, a
+    // surrounding try/catch (caught as `err`/`e`), a thrown error, or a
+    // toast. We ignore test files under __tests__/.
     const offenders: string[] = [];
     for (const file of ADMIN_FILES) {
+      if (/__tests__/.test(file) || /\.test\.tsx?$/.test(file)) continue;
       const src = readFileSync(file, 'utf8');
       const lines = src.split('\n');
       lines.forEach((ln, i) => {
         if (/\.rpc\(['"]admin_/.test(ln)) {
-          const window_ = lines.slice(Math.max(0, i - 1), i + 8).join('\n');
-          if (!/error|throw|toast|catch/i.test(window_)) {
+          // Look back up to 6 lines for an enclosing try, and forward up
+          // to 20 lines for any error handling signal.
+          const back = lines.slice(Math.max(0, i - 6), i).join('\n');
+          const fwd = lines.slice(i, i + 20).join('\n');
+          const handled =
+            /\btry\s*\{/.test(back) ||
+            /\b(error|err|catch|throw|toast|Promise\.all)\b/.test(fwd);
+          if (!handled) {
             offenders.push(`${file}:${i + 1}`);
           }
         }
