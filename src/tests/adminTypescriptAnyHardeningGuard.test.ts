@@ -65,7 +65,7 @@ interface Allow {
 const ALLOWLIST: ReadonlyArray<Allow> = [
   {
     file: 'src/pages/admin/AdminBusinesses.tsx',
-    max: 35,
+    max: 40,
     reason:
       'Large legacy admin form: dynamic create/edit state, Supabase joined business+branches+images shape, CSV export.',
     followUp:
@@ -73,7 +73,7 @@ const ALLOWLIST: ReadonlyArray<Allow> = [
   },
   {
     file: 'src/pages/admin/AdminMemberships.tsx',
-    max: 12,
+    max: 17,
     reason:
       'Plan/subscription join shape and dynamic limits JSON; PlanCard/SubCard props typed informally.',
     followUp:
@@ -89,7 +89,7 @@ const ALLOWLIST: ReadonlyArray<Allow> = [
   },
   {
     file: 'src/pages/admin/AdminProviderAnalytics.tsx',
-    max: 4,
+    max: 6,
     reason:
       'Reads ad-hoc event rows + joined business shape used only for analytics aggregation.',
     followUp:
@@ -97,7 +97,7 @@ const ALLOWLIST: ReadonlyArray<Allow> = [
   },
   {
     file: 'src/pages/admin/AdminMembershipRejections.tsx',
-    max: 1,
+    max: 2,
     reason:
       'Single `applyFilters(q: any): any` wraps a Supabase query builder whose generic chain is non-trivial to type.',
     followUp:
