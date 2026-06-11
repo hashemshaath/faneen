@@ -1235,7 +1235,7 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const translationCompleteness = useCallback((b: Record<string, any>) => {
+  const translationCompleteness = useCallback((b: Record<string, unknown>) => {
     const ar = !!(b.name_ar && b.short_description_ar && b.description_ar);
     const en = !!(b.name_en && b.short_description_en && b.description_en);
     return { ar, en, full: ar && en };
