@@ -893,9 +893,9 @@ export const HeroV2 = () => {
             </div>
           </div>
 
-          {/* Bottom controls — thumbnails + arrows */}
+          {/* Bottom controls — thumbnails + arrows (end-aligned to balance trust strip on start) */}
           <div className="absolute bottom-0 inset-x-0 z-10 px-4 sm:px-6 pb-4 sm:pb-5">
-            <div className="flex items-end justify-between gap-3">
+            <div className="flex items-end justify-between md:justify-end gap-4">
               {/* Thumbnails (md+) */}
               <div className="hidden md:flex items-center gap-2">
                 {SLIDES.map((s, i) => {
