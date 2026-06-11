@@ -79,6 +79,12 @@ export const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
     '/dashboard/settings/staff-access',
     '/dashboard/invitations',
   ],
+  rentals: [
+    '/dashboard/rentals',
+    '/dashboard/rentals/calendar',
+    '/dashboard/rentals/analytics',
+    '/rentals',
+  ],
 };
 
 export function useVisibleModules(): UseVisibleModulesResult {
