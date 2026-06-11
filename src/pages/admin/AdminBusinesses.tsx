@@ -2415,13 +2415,18 @@ const AdminBusinesses = () => {
                     </div>
                   ) : (
                     <Button variant="outline" className="w-full gap-1.5" onClick={() => {
-                      // First branch auto-syncs as main (DB trigger guarantees this);
-                      // pre-check the switch so the form mirrors what will be saved.
+                      // First location defaults to "main" (headquarters); subsequent
+                      // ones default to "branch" and admins can switch to warehouse
+                      // or admin_office.
                       const isFirst = branches.length === 0;
-                      setBranchForm({ ...emptyBranch(), is_main: isFirst });
+                      setBranchForm({
+                        ...emptyBranch(),
+                        is_main: isFirst,
+                        branch_type: isFirst ? 'main' : 'branch',
+                      });
                       setEditingBranchId(null);
                     }}>
-                      <Plus className="w-3.5 h-3.5" /> {pickBi(isRTL, 'إضافة فرع جديد', 'Add New Branch')}
+                      <Plus className="w-3.5 h-3.5" /> {pickBi(isRTL, 'إضافة موقع جديد (فرع / مستودع / مكتب)', 'Add new location (branch / warehouse / office)')}
                     </Button>
                   )}
                 </TabsContent>
