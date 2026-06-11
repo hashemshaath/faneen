@@ -49,14 +49,16 @@ describe('FULL ADMIN CONTROL CENTER CONSISTENCY GUARD', () => {
   });
 
   it('no admin page leaves a TODO/coming-soon marker without explicit not-ready handling', () => {
-    const markers = /(TODO|FIXME|coming\s*soon)/i;
     const offenders: string[] = [];
     for (const file of ADMIN_FILES) {
       const src = readFileSync(file, 'utf8');
-      if (!markers.test(src)) continue;
-      // Only fail if the marker is on a UI line and there's no acknowledged
-      // "not ready" / "غير جاهز" guard nearby.
-      if (!/(not\s*ready|غير\s*جاهز|placeholder=)/i.test(src)) {
+      // Strip comments before checking — TODOs in code comments are fine,
+      // we only care about TODO/coming-soon strings rendered in the UI.
+      const stripped = src
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '');
+      const uiMarker = /["'`>][^"'`<]*\b(TODO|coming\s*soon)\b[^"'`<]*["'`<]/i;
+      if (uiMarker.test(stripped) && !/(not\s*ready|غير\s*جاهز)/i.test(stripped)) {
         offenders.push(file);
       }
     }
