@@ -21,6 +21,8 @@ Allow: /profile-systems
 Allow: /profile-systems/
 Allow: /sectors
 Allow: /sectors/
+Allow: /rentals
+Allow: /rentals/
 Allow: /compare$
 Allow: /compare-profiles$
 Allow: /membership

@@ -15,7 +15,7 @@ const BASE = "https://qitaat.com";
 // don't leak the internal Supabase Functions host in robots/sitemap output.
 const FUNC = `${BASE}/functions/v1/sitemap`;
 
-const TYPES = ["static", "businesses", "branches", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands", "help"] as const;
+const TYPES = ["static", "businesses", "branches", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands", "help", "rentals"] as const;
 type SitemapType = (typeof TYPES)[number];
 
 function esc(s: string) {
@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
         { loc: "/blog", priority: "0.8", changefreq: "daily" },
         { loc: "/profile-systems", priority: "0.7", changefreq: "weekly" },
         { loc: "/brands", priority: "0.85", changefreq: "daily" },
+        { loc: "/rentals", priority: "0.85", changefreq: "daily" },
         { loc: "/compare", priority: "0.6", changefreq: "weekly" },
         { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly" },
         { loc: "/membership", priority: "0.6", changefreq: "monthly" },
@@ -282,6 +283,30 @@ Deno.serve(async (req) => {
             lastmod: toDate(a.updated_at),
             changefreq: "monthly",
             priority: "0.6",
+          }));
+        }
+      }
+    } else if (type === "rentals") {
+      // Public rental items: only published & approved entries with a real SEO slug.
+      // Mirrors the filters used by RentalItems.listPublishedItems / getPublishedItemBySlug
+      // so the sitemap never advertises pending / rejected / unpublished items.
+      entries.push(entry(`${BASE}/rentals`, { lastmod: today, changefreq: "daily", priority: "0.85" }));
+      const { data, error } = await supabase
+        .from("rental_items")
+        .select("seo_slug, updated_at")
+        .eq("is_published", true)
+        .eq("status", "approved")
+        .not("seo_slug", "is", null)
+        .limit(10000);
+      if (error) console.error("rentals sitemap error:", error.message);
+      if (data) {
+        for (const r of data) {
+          const slug = (r as { seo_slug?: string | null }).seo_slug;
+          if (!slug) continue;
+          entries.push(entry(`${BASE}/rentals/${encodeURIComponent(slug)}`, {
+            lastmod: toDate((r as { updated_at?: string | null }).updated_at ?? null),
+            changefreq: "weekly",
+            priority: "0.7",
           }));
         }
       }

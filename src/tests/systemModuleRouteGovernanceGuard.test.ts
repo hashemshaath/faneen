@@ -69,6 +69,7 @@ const EXPECTED_ACTIVE_MODULES: Record<string, string> = {
   quote_inbox: '/dashboard/rfq/inbox',
   quote_requests: '/dashboard/rfq',
   quotes: '/dashboard/provider/leads',
+  rentals: '/dashboard/rentals',
   reviews: '/dashboard/reviews',
   rewards_store: '/dashboard/loyalty/store',
   service_areas: '/dashboard/provider/service-areas',
@@ -143,6 +144,12 @@ describe('Guard 3 — route aliases cover legacy + canonical paths', () => {
     ['credits', ['/dashboard/provider/membership', '/dashboard/credits']],
     ['staff_management', ['/dashboard/settings/staff', '/dashboard/team']],
     ['activity_log', ['/dashboard/operations/feed', '/dashboard/activity']],
+    ['rentals', [
+      '/dashboard/rentals',
+      '/dashboard/rentals/calendar',
+      '/dashboard/rentals/analytics',
+      '/rentals',
+    ]],
   ];
 
   it.each(ALIAS_REQUIREMENTS)(

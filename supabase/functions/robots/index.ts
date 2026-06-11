@@ -21,6 +21,8 @@ Allow: /blog
 Allow: /blog/
 Allow: /profile-systems
 Allow: /profile-systems/
+Allow: /rentals
+Allow: /rentals/
 Allow: /compare$
 Allow: /compare-profiles$
 Allow: /membership
