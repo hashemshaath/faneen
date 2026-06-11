@@ -186,6 +186,34 @@ const AdminBrandDetail: React.FC = () => {
   const bizMap = new Map((bizQ.data ?? []).map((b) => [b.id, b]));
   const sectorMap = new Map((allSectorsQ.data ?? []).map((s) => [s.id, s]));
 
+  // Search businesses for the admin "link provider" form.
+  const linkSearchQ = useQuery({
+    queryKey: ['admin-brand-link-business-search', linkSearch],
+    queryFn: () => adminSearchBusinessesForBrand(linkSearch, 8),
+    enabled: linkSearch.trim().length >= 2,
+    staleTime: 30_000,
+  });
+  const linkServicesQ = useQuery({
+    queryKey: ['admin-brand-link-business-services', linkBusinessId],
+    queryFn: () => adminListBusinessServices(linkBusinessId),
+    enabled: !!linkBusinessId,
+  });
+  const createLink = useMutation({
+    mutationFn: () => adminCreateProviderBrandLink({
+      brandId: id,
+      businessId: linkBusinessId,
+      businessServiceId: linkServiceId,
+      relationshipType: linkRelationship as never,
+      authorizationStatus: 'verified',
+    }),
+    onSuccess: () => {
+      toast.success(pickBi(isRTL, 'تم ربط المزود', 'Provider linked'));
+      setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('');
+      qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin-brand-detail', id] });
     qc.invalidateQueries({ queryKey: ['admin-brands'] });
