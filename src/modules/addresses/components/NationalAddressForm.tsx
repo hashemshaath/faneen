@@ -12,7 +12,7 @@
  * Persistence is the caller's job (must go through `upsertPrimaryAddress`).
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, MapPinned, Search, ChevronsUpDown } from 'lucide-react';
+import { Loader2, MapPinned, Search, ChevronsUpDown, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ import { listActiveCities } from '@/modules/locations/services/listActiveCities'
 import { nationalAddressLookup } from '@/modules/locations';
 import { searchDistricts, type DistrictRow } from '@/modules/addresses/services/districts';
 import { buildAddressLine } from '@/modules/addresses/helpers/buildAddressLine';
+import { invokeBlogAiTools } from '@/modules/ai';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -78,8 +79,52 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
   const [districtLoading, setDistrictLoading] = useState(false);
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const districtBlurTimer = useRef<number | null>(null);
+  const [translating, setTranslating] = useState<string | null>(null);
 
   const patch = (p: Partial<NationalAddressValue>) => onChange({ ...value, ...p });
+
+  const runTranslate = async (
+    key: string,
+    text: string,
+    from: 'ar' | 'en',
+    apply: (translated: string) => void,
+  ) => {
+    const src = (text || '').trim();
+    if (!src) { toast.info(t(isRTL, 'لا يوجد نص لترجمته', 'Nothing to translate')); return; }
+    setTranslating(key);
+    try {
+      const { data, error } = await invokeBlogAiTools({
+        action: 'translate',
+        text: src,
+        sourceLang: from,
+        targetLang: from === 'ar' ? 'en' : 'ar',
+      });
+      if (error) throw error;
+      const result = ((data as { result?: string } | null)?.result || '').trim();
+      if (!result) throw new Error('Empty translation');
+      apply(result);
+      toast.success(t(isRTL, 'تمت الترجمة', 'Translated'));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t(isRTL, 'فشلت الترجمة', 'Translation failed'));
+    } finally {
+      setTranslating(null);
+    }
+  };
+
+  const TranslateBtn: React.FC<{ k: string; from: 'ar' | 'en'; onClick: () => void }> = ({ k, from, onClick }) => (
+    <Button
+      type="button" size="sm" variant="ghost"
+      className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+      disabled={translating !== null}
+      onClick={onClick}
+      title={from === 'ar'
+        ? t(isRTL, 'ترجمة من العربي إلى الإنجليزي', 'Translate Arabic → English')
+        : t(isRTL, 'ترجمة من الإنجليزي إلى العربي', 'Translate English → Arabic')}
+    >
+      {translating === k ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+      <span>{from === 'ar' ? '→ EN' : '→ AR'}</span>
+    </Button>
+  );
 
   // Load cities once.
   useEffect(() => {
@@ -330,10 +375,16 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
 
         {/* District (search-as-you-type) */}
         <div className="relative">
-          <Label className="text-xs font-medium text-muted-foreground inline-flex items-center gap-1">
-            {t(isRTL, 'الحي', 'District')}
-            <ChevronsUpDown className="w-3 h-3 opacity-60" />
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium text-muted-foreground inline-flex items-center gap-1">
+              {t(isRTL, 'الحي', 'District')}
+              <ChevronsUpDown className="w-3 h-3 opacity-60" />
+            </Label>
+            <TranslateBtn
+              k="district-ar" from="ar"
+              onClick={() => runTranslate('district-ar', value.district ?? '', 'ar', (r) => patch({ district_en: r }))}
+            />
+          </div>
           <Input
             value={districtQuery || value.district || ''}
             onChange={(e) => {
@@ -374,11 +425,17 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
               ))}
             </div>
           )}
+          <div className="mt-2 flex items-center justify-end">
+            <TranslateBtn
+              k="district-en" from="en"
+              onClick={() => runTranslate('district-en', value.district_en ?? '', 'en', (r) => { patch({ district: r }); setDistrictQuery(r); })}
+            />
+          </div>
           <Input
             value={value.district_en ?? ''}
             onChange={(e) => patch({ district_en: e.target.value || null })}
             dir="ltr"
-            className="mt-2 h-11 rounded-xl"
+            className="mt-1 h-11 rounded-xl"
             placeholder={t(isRTL, 'الحي (إنجليزي) — اختياري', 'District (English) — optional')}
             maxLength={120}
           />
@@ -392,7 +449,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         </Label>
         <div className="grid sm:grid-cols-3 gap-3">
           <div>
-            <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (عربي)', 'Center name (Arabic)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (عربي)', 'Center name (Arabic)')}</Label>
+              <TranslateBtn
+                k="complex-ar" from="ar"
+                onClick={() => runTranslate('complex-ar', value.complex_name ?? '', 'ar', (r) => patch({ complex_name_en: r }))}
+              />
+            </div>
             <Input
               value={value.complex_name ?? ''}
               onChange={(e) => patch({ complex_name: e.target.value || null })}
@@ -403,7 +466,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             />
           </div>
           <div>
-            <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (إنجليزي)', 'Center name (English)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] font-medium text-muted-foreground">{t(isRTL, 'اسم المركز (إنجليزي)', 'Center name (English)')}</Label>
+              <TranslateBtn
+                k="complex-en" from="en"
+                onClick={() => runTranslate('complex-en', value.complex_name_en ?? '', 'en', (r) => patch({ complex_name: r }))}
+              />
+            </div>
             <Input
               value={value.complex_name_en ?? ''}
               onChange={(e) => patch({ complex_name_en: e.target.value || null })}
@@ -437,7 +506,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="sm:col-span-3 grid sm:grid-cols-2 gap-3">
             <div>
-            <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (عربي)', 'Street (Arabic)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (عربي)', 'Street (Arabic)')}</Label>
+              <TranslateBtn
+                k="street-ar" from="ar"
+                onClick={() => runTranslate('street-ar', value.street_name ?? '', 'ar', (r) => patch({ street_name_en: r }))}
+              />
+            </div>
             <Input
               value={value.street_name ?? ''}
               onChange={(e) => patch({ street_name: e.target.value || null })}
@@ -447,7 +522,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             />
             </div>
             <div>
-            <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (إنجليزي)', 'Street (English)')}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (إنجليزي)', 'Street (English)')}</Label>
+              <TranslateBtn
+                k="street-en" from="en"
+                onClick={() => runTranslate('street-en', value.street_name_en ?? '', 'en', (r) => patch({ street_name: r }))}
+              />
+            </div>
             <Input
               value={value.street_name_en ?? ''}
               onChange={(e) => patch({ street_name_en: e.target.value || null })}
@@ -511,7 +592,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         </div>
         <div className="mt-1 grid sm:grid-cols-2 gap-2">
           <div>
-            <span className="text-[10px] text-muted-foreground">{t(isRTL, 'عربي', 'Arabic')}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">{t(isRTL, 'عربي', 'Arabic')}</span>
+              <TranslateBtn
+                k="address-ar" from="ar"
+                onClick={() => runTranslate('address-ar', value.address ?? '', 'ar', (r) => onChange({ ...value, address_en: r, address_manual: true }))}
+              />
+            </div>
             <Input
               value={value.address ?? ''}
               onChange={(e) => onChange({ ...value, address: e.target.value, address_manual: true })}
@@ -522,7 +609,13 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             />
           </div>
           <div>
-            <span className="text-[10px] text-muted-foreground">{t(isRTL, 'إنجليزي', 'English')}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">{t(isRTL, 'إنجليزي', 'English')}</span>
+              <TranslateBtn
+                k="address-en" from="en"
+                onClick={() => runTranslate('address-en', value.address_en ?? '', 'en', (r) => onChange({ ...value, address: r, address_manual: true }))}
+              />
+            </div>
             <Input
               value={value.address_en ?? ''}
               onChange={(e) => onChange({ ...value, address_en: e.target.value, address_manual: true })}
