@@ -87,9 +87,9 @@ const AdminEntityAccessRequests: React.FC = () => {
     if (filter !== 'pending') next.set('status', filter); else next.delete('status');
     if (query) next.set('q', query); else next.delete('q');
     if (sort !== 'newest') next.set('sort', sort); else next.delete('sort');
+    if (next.toString() === searchParams.toString()) return;
     setSearchParams(next, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, query, sort]);
+  }, [filter, query, sort, searchParams, setSearchParams]);
 
   const setFilter = (next: StatusFilter) => {
     // The search query is intentionally preserved across status switches.

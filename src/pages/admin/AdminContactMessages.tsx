@@ -190,12 +190,17 @@ const AdminContactMessages = () => {
     setSearchParams(sp, { replace: false });
   }, [searchParams, setSearchParams]);
 
+  // Latest refs so the 300ms debounce reschedules ONLY on input change,
+  // matching prior behavior without an exhaustive-deps suppression.
+  const searchRef = useRef(search);
+  const updateParamRef = useRef(updateParam);
+  useEffect(() => { searchRef.current = search; }, [search]);
+  useEffect(() => { updateParamRef.current = updateParam; }, [updateParam]);
   useEffect(() => {
     const t = setTimeout(() => {
-      if (searchInput !== search) updateParam({ q: searchInput || null, page: null });
+      if (searchInput !== searchRef.current) updateParamRef.current({ q: searchInput || null, page: null });
     }, 300);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
   useEffect(() => { setSearchInput(search); }, [search]);
 
