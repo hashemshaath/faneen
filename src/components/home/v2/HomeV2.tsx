@@ -9,7 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import {
   ArrowLeft, ArrowRight, Search, ShieldCheck, Activity, MapPin,
-  Play, Pause, Sparkles, Clock, TrendingUp,
+  Play, Pause, Clock, TrendingUp,
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
@@ -108,8 +108,8 @@ export const HeroV2 = () => {
       tagAr: 'منصة قِطاعات', tagEn: 'Qitaat platform',
       titleAr: 'مزودو الخدمات الصناعية والتشطيبات في مكان واحد',
       titleEn: 'Industrial and finishing service providers — in one place',
-      subAr: 'ابحث عن ورش ومصانع ومقاولين موثوقين، واطلب عرض سعر في خطوات بسيطة.',
-      subEn: 'Find trusted workshops, factories and contractors — and request a quote in a few simple steps.',
+      subAr: 'المنصة الصناعية الشاملة التي تجمع المصانع، الورش، المقاولين، تأجير المعدات، وسلاسل التوريد في مكان واحد.',
+      subEn: 'The comprehensive industrial platform — factories, workshops, contractors, equipment rental and supply chains in one place.',
     },
     {
       img: heroSlide2,
