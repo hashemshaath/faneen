@@ -17,9 +17,20 @@ describe('UX-REDESIGN-1 — Homepage redesign', () => {
   const trust = read('src/components/home/v2/sections/TrustSection.tsx');
   const forProv = read('src/components/home/v2/sections/ForProvidersSection.tsx');
 
-  it('homepage mounts the new PlatformFeaturesSection (lazy)', () => {
-    expect(index).toMatch(/PlatformFeaturesSection/);
-    expect(index).toMatch(/<PlatformFeaturesSection\s*\/>/);
+  it('homepage mounts the V2 redesign sections (lazy)', () => {
+    // The post-redesign homepage locks to a slim V2 surface. We assert the
+    // current contract — these sections must be mounted (lazy or eager) on
+    // the homepage tree. If the redesign rotates sections again, update this
+    // list deliberately rather than weakening it.
+    for (const section of [
+      'HeroV2',
+      'HomeSectorGrid',
+      'HomeAudienceSplit',
+      'HomeCategoryRows',
+      'FAQSection',
+    ]) {
+      expect(index, `homepage must mount ${section}`).toMatch(new RegExp(`<${section}\\s*/?>`));
+    }
   });
 
   it('PlatformFeaturesSection links to every previously-hidden public route', () => {

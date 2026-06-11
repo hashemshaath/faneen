@@ -101,7 +101,7 @@ const cases: HubCase[] = [
     name: 'BusinessProfileHub',
     Component: DashboardBusinessProfileHub,
     titleAr: 'بيانات المنشأة',
-    tabKeys: ['business', 'branches', 'entities', 'visibility'],
+    tabKeys: ['business', 'branches', 'entities', 'credentials', 'visibility'],
     firstTabLabelAr: 'بيانات المنشأة',
     secondTabLabelAr: 'الفروع',
     secondTabKey: 'branches',
