@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Deny realtime messages by default" ON public.messages;
