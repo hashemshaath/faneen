@@ -669,7 +669,24 @@ export async function adminCreateProviderBrandLink(args: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {
+    await writeBrandAuditLog({
+      brand_id: args.brandId,
+      action: 'provider_brand_link_admin_create_failed',
+      new_values: {
+        business_id: args.businessId,
+        business_service_id: args.businessServiceId,
+        relationship_type: args.relationshipType,
+        authorization_status: args.authorizationStatus ?? 'verified',
+        product_ids: args.productIds ?? [],
+        error_code: error.code ?? null,
+        error_message: error.message ?? null,
+        error_details: error.details ?? null,
+        error_hint: error.hint ?? null,
+      },
+    });
+    throw new Error(humanizeBrandLinkError(error, 'create'));
+  }
   const linkId = (data as { id: string }).id;
   if (args.productIds && args.productIds.length > 0) {
     await adminSetProviderBrandLinkProducts({
@@ -728,7 +745,20 @@ export async function adminLinkBrandToAllServices(args: {
       })
       .select('id, name_ar, name_en, is_active')
       .single();
-    if (createErr) throw createErr;
+    if (createErr) {
+      await writeBrandAuditLog({
+        brand_id: args.brandId,
+        action: 'provider_brand_link_admin_placeholder_service_failed',
+        new_values: {
+          business_id: args.businessId,
+          error_code: createErr.code ?? null,
+          error_message: createErr.message ?? null,
+          error_details: createErr.details ?? null,
+          error_hint: createErr.hint ?? null,
+        },
+      });
+      throw new Error(humanizeBrandLinkError(createErr, 'service'));
+    }
     services = [created as { id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }];
   }
 
@@ -748,7 +778,24 @@ export async function adminLinkBrandToAllServices(args: {
     .from('business_service_brands')
     .upsert(rows, { onConflict: 'business_service_id,brand_id', ignoreDuplicates: true })
     .select('id');
-  if (error) throw error;
+  if (error) {
+    await writeBrandAuditLog({
+      brand_id: args.brandId,
+      action: 'provider_brand_link_admin_bulk_failed',
+      new_values: {
+        business_id: args.businessId,
+        service_count: services.length,
+        relationship_type: args.relationshipType,
+        authorization_status: status,
+        product_ids: args.productIds ?? [],
+        error_code: error.code ?? null,
+        error_message: error.message ?? null,
+        error_details: error.details ?? null,
+        error_hint: error.hint ?? null,
+      },
+    });
+    throw new Error(humanizeBrandLinkError(error, 'create'));
+  }
 
   // Apply product scoping to ALL links for this (brand, business) pair so the
   // selection is consistent regardless of which service row carries it.
@@ -914,6 +961,38 @@ async function writeBrandAuditLog(payload: {
      
     console.warn('[writeBrandAuditLog]', e);
   }
+}
+
+/**
+ * Convert a Postgres/PostgREST error into a clear bilingual message. Focuses
+ * on permission/RLS failures (the most common cause when an admin tries to
+ * link a provider) so the toast tells the user *why* the save failed, not just
+ * the raw "permission denied" string.
+ */
+function humanizeBrandLinkError(
+  err: { code?: string | null; message?: string | null; details?: string | null; hint?: string | null },
+  kind: 'create' | 'service',
+): string {
+  const code = (err.code ?? '').toString();
+  const msg = (err.message ?? '').toString();
+  const lower = msg.toLowerCase();
+  // PostgREST/Postgres permission codes
+  const isPerm = code === '42501' || code === 'PGRST301' || lower.includes('permission denied') || lower.includes('row-level security') || lower.includes('rls');
+  if (isPerm) {
+    return kind === 'service'
+      ? 'تعذّر إنشاء خدمة عامة للمزوّد بسبب صلاحيات قاعدة البيانات (RLS) على جدول business_services. يلزم منح صلاحية الإدراج للمشرف أو إضافة خدمة يدوياً للمزود قبل الربط. الكود: ' + (code || 'permission_denied')
+      : 'تعذّر حفظ ربط المزوّد بسبب صلاحيات قاعدة البيانات (RLS) على جدول business_service_brands. تأكد من تفعيل صلاحية الإدراج للمشرف. الكود: ' + (code || 'permission_denied');
+  }
+  if (code === '23505' || lower.includes('duplicate')) {
+    return 'هذا الربط موجود مسبقاً لنفس الخدمة والعلامة.';
+  }
+  if (code === '23503' || lower.includes('foreign key')) {
+    return 'مرجع غير صالح: تحقّق من المزوّد أو الخدمة أو العلامة المختارة.';
+  }
+  if (code === '23502' || lower.includes('not-null') || lower.includes('null value')) {
+    return 'حقل إلزامي مفقود في بيانات الربط: ' + (err.details || msg || 'تحقّق من النموذج');
+  }
+  return (msg || 'فشل حفظ ربط المزوّد') + (err.hint ? ` — ${err.hint}` : '');
 }
 
 // ------------------------ ADMIN: REQUEST DETAIL/STATE --------------------
