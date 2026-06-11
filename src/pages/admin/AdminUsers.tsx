@@ -825,6 +825,7 @@ const AdminUsers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const openCreatePanelRef = useRef<(t: 'individual' | 'business' | 'company') => void>(() => {});
   const lastConsumedParamsRef = useRef<string>('');
+  useEffect(() => { openCreatePanelRef.current = openCreatePanel; });
   useEffect(() => {
     const sig = searchParams.toString();
     if (lastConsumedParamsRef.current === sig) return;
