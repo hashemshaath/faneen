@@ -188,6 +188,8 @@ export type Database = {
           address_type: string
           building_number: string | null
           city_id: string | null
+          complex_name: string | null
+          complex_name_en: string | null
           country_code: string
           country_id: string | null
           created_at: string
@@ -208,6 +210,7 @@ export type Database = {
           region: string | null
           region_en: string | null
           short_address: string | null
+          site_number: string | null
           source: string
           street_name: string | null
           street_name_en: string | null
@@ -222,6 +225,8 @@ export type Database = {
           address_type?: string
           building_number?: string | null
           city_id?: string | null
+          complex_name?: string | null
+          complex_name_en?: string | null
           country_code?: string
           country_id?: string | null
           created_at?: string
@@ -242,6 +247,7 @@ export type Database = {
           region?: string | null
           region_en?: string | null
           short_address?: string | null
+          site_number?: string | null
           source?: string
           street_name?: string | null
           street_name_en?: string | null
@@ -256,6 +262,8 @@ export type Database = {
           address_type?: string
           building_number?: string | null
           city_id?: string | null
+          complex_name?: string | null
+          complex_name_en?: string | null
           country_code?: string
           country_id?: string | null
           created_at?: string
@@ -276,6 +284,7 @@ export type Database = {
           region?: string | null
           region_en?: string | null
           short_address?: string | null
+          site_number?: string | null
           source?: string
           street_name?: string | null
           street_name_en?: string | null
@@ -3160,11 +3169,14 @@ export type Database = {
         Row: {
           additional_number: string | null
           address: string | null
+          address_en: string | null
           address_id: string | null
           branch_type: Database["public"]["Enums"]["branch_type"]
           building_number: string | null
           business_id: string
           city_id: string | null
+          complex_name: string | null
+          complex_name_en: string | null
           contact_person: string | null
           country_id: string | null
           created_at: string
@@ -3172,6 +3184,7 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           district: string | null
+          district_en: string | null
           email: string | null
           floor_number: string | null
           id: string
@@ -3191,8 +3204,10 @@ export type Database = {
           phone_national: string | null
           ref_id: string | null
           region: string | null
+          region_en: string | null
           sales_manager_staff_id: string | null
           short_address: string | null
+          site_number: string | null
           slug: string | null
           social_facebook: string | null
           social_instagram: string | null
@@ -3203,6 +3218,7 @@ export type Database = {
           social_youtube: string | null
           sort_order: number
           street_name: string | null
+          street_name_en: string | null
           unified_number: string | null
           unit_number: string | null
           updated_at: string
@@ -3213,11 +3229,14 @@ export type Database = {
         Insert: {
           additional_number?: string | null
           address?: string | null
+          address_en?: string | null
           address_id?: string | null
           branch_type?: Database["public"]["Enums"]["branch_type"]
           building_number?: string | null
           business_id: string
           city_id?: string | null
+          complex_name?: string | null
+          complex_name_en?: string | null
           contact_person?: string | null
           country_id?: string | null
           created_at?: string
@@ -3225,6 +3244,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          district_en?: string | null
           email?: string | null
           floor_number?: string | null
           id?: string
@@ -3244,8 +3264,10 @@ export type Database = {
           phone_national?: string | null
           ref_id?: string | null
           region?: string | null
+          region_en?: string | null
           sales_manager_staff_id?: string | null
           short_address?: string | null
+          site_number?: string | null
           slug?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -3256,6 +3278,7 @@ export type Database = {
           social_youtube?: string | null
           sort_order?: number
           street_name?: string | null
+          street_name_en?: string | null
           unified_number?: string | null
           unit_number?: string | null
           updated_at?: string
@@ -3266,11 +3289,14 @@ export type Database = {
         Update: {
           additional_number?: string | null
           address?: string | null
+          address_en?: string | null
           address_id?: string | null
           branch_type?: Database["public"]["Enums"]["branch_type"]
           building_number?: string | null
           business_id?: string
           city_id?: string | null
+          complex_name?: string | null
+          complex_name_en?: string | null
           contact_person?: string | null
           country_id?: string | null
           created_at?: string
@@ -3278,6 +3304,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          district_en?: string | null
           email?: string | null
           floor_number?: string | null
           id?: string
@@ -3297,8 +3324,10 @@ export type Database = {
           phone_national?: string | null
           ref_id?: string | null
           region?: string | null
+          region_en?: string | null
           sales_manager_staff_id?: string | null
           short_address?: string | null
+          site_number?: string | null
           slug?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -3309,6 +3338,7 @@ export type Database = {
           social_youtube?: string | null
           sort_order?: number
           street_name?: string | null
+          street_name_en?: string | null
           unified_number?: string | null
           unit_number?: string | null
           updated_at?: string

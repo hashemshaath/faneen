@@ -15,11 +15,25 @@ export function buildAddressLine(
   const district = isAr ? (a.district ?? '') : (a.district_en ?? a.district ?? '');
   const street   = isAr ? (a.street_name ?? '') : (a.street_name_en ?? a.street_name ?? '');
   const region   = isAr ? (a.region ?? '') : (a.region_en ?? a.region ?? '');
+  const complex  = isAr ? (a.complex_name ?? '') : (a.complex_name_en ?? a.complex_name ?? '');
+  const site     = (a.site_number ?? '').toString().trim();
   const b = (a.building_number ?? '').toString().trim();
   const x = (a.additional_number ?? '').toString().trim();
   const post = (a.post_code ?? '').toString().trim();
 
   const seg: string[] = [];
+  const cTrim = (complex ?? '').trim();
+  if (cTrim || site) {
+    if (isAr) {
+      if (cTrim && site) seg.push(`${cTrim} — موقع ${site}`);
+      else if (cTrim)    seg.push(cTrim);
+      else               seg.push(`موقع ${site}`);
+    } else {
+      if (cTrim && site) seg.push(`${cTrim} — Site ${site}`);
+      else if (cTrim)    seg.push(cTrim);
+      else               seg.push(`Site ${site}`);
+    }
+  }
   const dTrim = (district ?? '').trim();
   if (dTrim) {
     if (isAr) {
