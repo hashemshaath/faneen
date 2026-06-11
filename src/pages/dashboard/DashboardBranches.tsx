@@ -6,6 +6,7 @@ import {
   Building2, MapPin, Phone, Mail, Globe, Plus, Save, Trash2, Star,
   ChevronDown, ChevronUp, ExternalLink, Loader2, UserCog, Tag, Boxes,
   Instagram, Facebook, Linkedin, Youtube, MessageCircle,
+  ShieldAlert, ArrowRight, ArrowLeft,
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -61,6 +62,7 @@ interface BranchRow {
   sort_order: number;
   name_ar: string;
   name_en: string | null;
+  branch_type?: string | null;
   description_ar: string | null;
   description_en: string | null;
   phone: string | null;
