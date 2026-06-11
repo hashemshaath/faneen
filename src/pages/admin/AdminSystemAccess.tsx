@@ -34,6 +34,9 @@ import {
   LINKED_ROUTES_BADGE,
   DISABLE_WARNING_TEXT,
   ACTIVATE_BLOCKED_TEXT,
+  NO_PAGE_HINT_TEXT,
+  isRealDashboardRoute,
+  DEAD_MODULE_KEYS,
 } from '@/modules/systemAccess/moduleStatus';
 import { updateBusinessSystemAccess } from '@/modules/systemAccess/services/updateBusinessSystemAccess';
 import { useBusinessAccessInvalidation } from '@/hooks/useBusinessAccessInvalidation';
@@ -326,10 +329,9 @@ const AdminSystemAccess: React.FC = () => {
       toast.error(pickBi(isRTL, 'لا يمكن إخفاء الأنظمة الأساسية', 'Core modules cannot be disabled'));
       return;
     }
-    const info = classifyModule(m, {
-      effectiveEnabled: ov => false,
-    } as never);
-    if (nextEnabled && !info.canActivate) {
+    const isDead = (DEAD_MODULE_KEYS as readonly string[]).includes(m.key);
+    const canActivate = !isDead && isRealDashboardRoute(m.route);
+    if (nextEnabled && !canActivate) {
       toast.error(pickBi(isRTL, ACTIVATE_BLOCKED_TEXT.ar, ACTIVATE_BLOCKED_TEXT.en));
       return;
     }
