@@ -49,22 +49,10 @@ const ALLOWLIST: ReadonlyArray<Entry> = [
     followup: 'Move form reset into the owner-load query onSuccess and remove the effect.',
   },
   {
-    file: 'src/components/admin/CategoryAdminPanel.tsx',
-    count: 1,
-    reason: '`load` is a stable in-component async loader; including it would create a new reference each render and refetch on every keystroke.',
-    followup: 'Wrap loader in useCallback or migrate to react-query, then drop the disable.',
-  },
-  {
     file: 'src/pages/admin/approvalsCenter/ApprovalsInbox.tsx',
     count: 2,
     reason: '(1) Status auto-broaden must fire only on category change, not on status. (2) Memoized aggregation depends on a flattened updatedAt fingerprint to avoid recomputing on every query identity flip.',
     followup: 'Replace with a derived selector once approvals queries return a single aggregated query.',
-  },
-  {
-    file: 'src/pages/admin/AdminIdentity.tsx',
-    count: 1,
-    reason: 'One-shot admin bootstrap effect; adding reactive deps would refetch and reset local review state.',
-    followup: 'Split bootstrap from reactive filters and remove the disable.',
   },
   {
     file: 'src/pages/admin/AdminHomeSectors.tsx',
@@ -74,21 +62,15 @@ const ALLOWLIST: ReadonlyArray<Entry> = [
   },
   {
     file: 'src/pages/admin/AdminBusinesses.tsx',
-    count: 3,
-    reason: '(1) Leaflet map init runs once on mount. (2) Debounced search sync depends only on input. (3) Focus-target effect must react only to focus param + businesses, not the unstable openEdit closure.',
-    followup: 'Stabilize openEdit with useEvent (when available) and split map init into a ref-based hook.',
+    count: 2,
+    reason: '(1) Debounced search sync depends only on input. (2) Focus-target effect must react only to focus param + businesses, not the unstable openEdit closure.',
+    followup: 'Stabilize openEdit with useEvent (when available).',
   },
   {
     file: 'src/pages/admin/AdminContactMessages.tsx',
     count: 3,
     reason: '(1) Debounced search input sync. (2) Auto-mark-as-read on focus change must not re-run on mutation identity change. (3) Keyboard shortcut handler must avoid reattaching on every mutation reference change.',
     followup: 'Wrap mutations and updateParam in useEvent-style stable callbacks.',
-  },
-  {
-    file: 'src/pages/admin/AdminEmailDeliverability.tsx',
-    count: 1,
-    reason: 'Realtime channel subscription is mount-once; depending on queryClient/isRTL would tear down and re-subscribe the channel on every render.',
-    followup: 'Move subscription into a dedicated hook with explicit deps.',
   },
   {
     file: 'src/pages/admin/AdminEntityAccessRequests.tsx',

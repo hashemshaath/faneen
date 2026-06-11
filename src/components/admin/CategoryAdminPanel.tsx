@@ -5,7 +5,7 @@
  * - Inline edit, visibility toggle, image upload trigger
  * - All persistence is real DB (no dummy state)
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Bi, useBi } from '@/components/common/Bilingual';
@@ -284,16 +284,16 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase.from(categoryTable)
       .select('id,ref_id,slug,name_ar,name_en,icon,sort_order,is_active,default_image_url,description_ar,description_en')
       .order('sort_order');
     setCats((data as unknown as CategoryRow[] | null) ?? []);
     setLoading(false);
-  };
+  }, [categoryTable]);
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [categoryTable]);
+  useEffect(() => { void load(); }, [load]);
 
   const loadItems = async (catId: string) => {
     setItemsLoading(prev => new Set(prev).add(catId));

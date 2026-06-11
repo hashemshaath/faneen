@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -105,6 +105,11 @@ const AdminEmailDeliverability: React.FC = () => {
     [windowMinutes],
   );
 
+  // Latest-isRTL ref so realtime channel can read current language for toast
+  // strings WITHOUT tearing down & re-subscribing on language flips.
+  const isRTLRef = useRef(isRTL);
+  useEffect(() => { isRTLRef.current = isRTL; }, [isRTL]);
+
   // Realtime subscription: refresh logs/alerts/stats whenever a new event lands
   useEffect(() => {
     const channel = supabase
@@ -115,27 +120,27 @@ const AdminEmailDeliverability: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ['email-stats'] });
         const row = (payload.new ?? payload.old) as EmailLogRow | undefined;
         if (row && payload.eventType === 'INSERT') {
+          const rtl = isRTLRef.current;
           if (row.status === 'sent') {
-            toast.success(isRTL ? `تم تسليم: ${row.recipient_email}` : `Delivered: ${row.recipient_email}`, { duration: 3000 });
+            toast.success(rtl ? `تم تسليم: ${row.recipient_email}` : `Delivered: ${row.recipient_email}`, { duration: 3000 });
           } else if (row.status === 'bounced') {
-            toast.error(isRTL ? `ارتداد: ${row.recipient_email}` : `Bounced: ${row.recipient_email}`);
+            toast.error(rtl ? `ارتداد: ${row.recipient_email}` : `Bounced: ${row.recipient_email}`);
           } else if (row.status === 'complained') {
-            toast.error(isRTL ? `شكوى spam: ${row.recipient_email}` : `Complaint: ${row.recipient_email}`);
+            toast.error(rtl ? `شكوى spam: ${row.recipient_email}` : `Complaint: ${row.recipient_email}`);
           } else if (row.status === 'failed' || row.status === 'dlq') {
-            toast.error(isRTL ? `فشل الإرسال: ${row.recipient_email}` : `Failed: ${row.recipient_email}`);
+            toast.error(rtl ? `فشل الإرسال: ${row.recipient_email}` : `Failed: ${row.recipient_email}`);
           }
         }
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'email_deliverability_alerts' }, () => {
         queryClient.invalidateQueries({ queryKey: ['email-alerts'] });
-        toast.warning(isRTL ? 'تنبيه جديد: ارتفاع في معدل الفشل/الارتداد' : 'New deliverability alert');
+        toast.warning(isRTLRef.current ? 'تنبيه جديد: ارتفاع في معدل الفشل/الارتداد' : 'New deliverability alert');
       })
       .subscribe((status) => {
         setLiveConnected(status === 'SUBSCRIBED');
       });
     return () => { supabase.removeChannel(channel); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRTL]);
+  }, [queryClient]);
 
   // Stats
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({

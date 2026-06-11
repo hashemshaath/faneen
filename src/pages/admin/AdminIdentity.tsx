@@ -196,8 +196,7 @@ const AdminIdentity: React.FC = () => {
       setSearchTerm(v);
       setDeferredSearch(v);
     } catch { /* ignore */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  }, [tab, tabSearchKey]);
 
   const handleSearchChange = useCallback((val: string) => {
     setSearchTerm(val);
