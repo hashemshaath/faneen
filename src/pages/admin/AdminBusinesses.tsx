@@ -2292,6 +2292,35 @@ const AdminBusinesses = () => {
                         <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
                         <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
                       </div>
+                      <div>
+                        <Label className="text-xs">{pickBi(isRTL, 'نوع الموقع', 'Location type')} *</Label>
+                        <Select
+                          value={branchForm.branch_type || 'branch'}
+                          onValueChange={(v) => {
+                            const nextIsMain = v === 'main';
+                            if (nextIsMain) {
+                              const currentMain = branches.find((b: any) => b.is_main && b.id !== editingBranchId);
+                              if (currentMain && !confirm(isRTL
+                                ? `سيتم إلغاء "${currentMain.name_ar}" كمركز رئيسي وتعيين هذا الموقع بدلاً منه. متابعة؟`
+                                : `"${currentMain.name_ar}" will be unset as headquarters and this location will replace it. Continue?`)) {
+                                return;
+                              }
+                            }
+                            setBranchForm((f) => ({ ...f, branch_type: v as any, is_main: nextIsMain }));
+                          }}
+                        >
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="main">{pickBi(isRTL, 'المركز الرئيسي', 'Headquarters (main)')}</SelectItem>
+                            <SelectItem value="branch">{pickBi(isRTL, 'فرع', 'Branch')}</SelectItem>
+                            <SelectItem value="warehouse">{pickBi(isRTL, 'مستودع', 'Warehouse')}</SelectItem>
+                            <SelectItem value="admin_office">{pickBi(isRTL, 'مكتب إداري', 'Admin office')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {pickBi(isRTL, 'المركز الرئيسي يُستخدم كعنوان المنشأة الافتراضي. مسموح بمركز رئيسي واحد فقط.', 'Headquarters is used as the default business address. Only one headquarters is allowed.')}
+                        </p>
+                      </div>
                       <Separator />
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{pickBi(isRTL, 'بيانات التواصل', 'Contact Info')}</p>
                       <div>
