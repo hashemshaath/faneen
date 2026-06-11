@@ -23,7 +23,6 @@ import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer } fr
 import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
 import {
   type AdminActivityLogRow,
-  type AdminActivityLogDetailsRecord,
   asDetailsRecord,
   getDetailString,
   isChangePair,
