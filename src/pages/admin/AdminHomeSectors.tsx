@@ -8,7 +8,7 @@
  * Those live in the Taxonomy Center. Here we only adjust which canonical
  * primaries appear on the home grid, their order, and their tile copy.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, Save, ArrowUp, ArrowDown, Eye, EyeOff, RotateCcw } from 'lucide-react';
