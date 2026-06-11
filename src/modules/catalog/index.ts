@@ -67,6 +67,12 @@ export {
   detachPromotionFromBranch,
 } from './services/branches/mutations';
 export {
+  computeMainBranchTransferPlan,
+  validateSingleMainInvariant,
+  type BranchLike,
+  type MainBranchTransferPlan,
+} from './services/branches/mainTransfer';
+export {
   listAdminServiceAreasWithBusinesses,
   countAllServiceAreas,
 } from './services/serviceAreas/admin';
