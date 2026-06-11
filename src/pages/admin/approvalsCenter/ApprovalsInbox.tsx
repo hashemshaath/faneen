@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -261,11 +261,16 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
 
   // Switching into "All entities" should not be hidden by the default
   // pending-only filter — auto-broaden to "all statuses" the first time.
+  // Status is read via ref so the dep list stays `[category]` (the only
+  // trigger), without depending on `status` which would re-broaden when
+  // the admin later narrows the filter.
+  const statusRef = useRef(status);
+  useEffect(() => { statusRef.current = status; }, [status]);
   useEffect(() => {
-    if (category === 'all_businesses' && status === 'pending') {
+    if (category === 'all_businesses' && statusRef.current === 'pending') {
       setStatus('all');
     }
-  }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [category]);
 
   // Persist filter selections (per-tab feel; this tab's state lives here).
   useEffect(() => {

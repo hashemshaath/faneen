@@ -43,28 +43,16 @@ type Entry = {
 
 const ALLOWLIST: ReadonlyArray<Entry> = [
   {
-    file: 'src/components/admin/BusinessOwnerPanel.tsx',
-    count: 1,
-    reason: 'Effect resets form only when the selected owner identity changes; depending on the whole owner object would clobber unsaved edits on every refetch.',
-    followup: 'Move form reset into the owner-load query onSuccess and remove the effect.',
-  },
-  {
     file: 'src/pages/admin/approvalsCenter/ApprovalsInbox.tsx',
-    count: 2,
-    reason: '(1) Status auto-broaden must fire only on category change, not on status. (2) Memoized aggregation depends on a flattened updatedAt fingerprint to avoid recomputing on every query identity flip.',
-    followup: 'Replace with a derived selector once approvals queries return a single aggregated query.',
-  },
-  {
-    file: 'src/pages/admin/AdminHomeSectors.tsx',
     count: 1,
-    reason: 'Effect syncs URL search params only when the named filter slice changes; depending on the full searchParams object loops.',
-    followup: 'Extract a stable filter signature via useMemo and depend on it.',
+    reason: 'Memoized aggregation depends on a flattened `dataUpdatedAt` fingerprint of N parallel queries to recompute only when fresh data arrives; depending on the raw `queries` array would recompute every render.',
+    followup: 'Collapse the six approvals queries into a single aggregated query and depend on its data directly.',
   },
   {
     file: 'src/pages/admin/AdminContactMessages.tsx',
     count: 1,
-    reason: 'Auto-mark-as-read on focus change must not re-run on mutation identity change.',
-    followup: 'Wrap mutations in useEvent-style stable callbacks.',
+    reason: 'Auto-mark-as-read on focus change must trigger exactly once per focus change; including `focused`/`updateMutation` in deps would re-mark a message that the admin manually flipped back to unread after re-focusing.',
+    followup: 'Move auto-mark-as-read into a focus-id state machine that distinguishes admin-driven status changes from initial focus.',
   },
 ];
 
