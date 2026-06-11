@@ -107,8 +107,8 @@ export const HeroV2 = () => {
       tagAr: 'منصة قِطاعات', tagEn: 'Qitaat platform',
       titleAr: 'مزودو الخدمات الصناعية والتشطيبات في مكان واحد',
       titleEn: 'Industrial and finishing service providers — in one place',
-      subAr: 'المنصة الصناعية الشاملة التي تجمع المصانع، الورش، المقاولين، تأجير المعدات، وسلاسل التوريد في مكان واحد.',
-      subEn: 'The comprehensive industrial platform — factories, workshops, contractors, equipment rental and supply chains in one place.',
+      subAr: 'منصة شاملة لقطاع التشييد والبناء — تجمع المصانع، الورش، المقاولين، وتأجير المعدات في مكان واحد.',
+      subEn: 'A comprehensive platform for the construction sector — factories, workshops, contractors, and equipment rental in one place.',
     },
     {
       img: heroSlide2,
