@@ -125,18 +125,29 @@ export const BusinessOwnerPanel: React.FC<Props> = ({
   const [profileForm, setProfileForm] = useState<Partial<OwnerProfile>>({});
   const [profileDirty, setProfileDirty] = useState(false);
 
+  // Owner-load reset: refill the form ONLY when the loaded owner identity
+  // changes. Field-level refetches on the same owner must not clobber the
+  // admin's in-flight edits. The latest owner snapshot is read via ref so
+  // the dep array stays exhaustive (`ownerId` only).
+  const ownerRef = React.useRef(owner);
+  React.useEffect(() => { ownerRef.current = owner; });
+  const ownerId = owner?.id ?? null;
+  const lastLoadedOwnerIdRef = React.useRef<string | null>(null);
   React.useEffect(() => {
-    if (owner) {
-      setProfileForm({
-        full_name_ar: owner.full_name_ar,
-        full_name_en: owner.full_name_en,
-        username: owner.username,
-        phone: owner.phone,
-        is_banned: owner.is_banned,
-      });
-      setProfileDirty(false);
-    }
-  }, [owner?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!ownerId) return;
+    if (lastLoadedOwnerIdRef.current === ownerId) return;
+    const snap = ownerRef.current;
+    if (!snap) return;
+    lastLoadedOwnerIdRef.current = ownerId;
+    setProfileForm({
+      full_name_ar: snap.full_name_ar,
+      full_name_en: snap.full_name_en,
+      username: snap.username,
+      phone: snap.phone,
+      is_banned: snap.is_banned,
+    });
+    setProfileDirty(false);
+  }, [ownerId]);
 
   const setPF = <K extends keyof OwnerProfile>(k: K, v: OwnerProfile[K]) => {
     setProfileForm((p) => ({ ...p, [k]: v }));

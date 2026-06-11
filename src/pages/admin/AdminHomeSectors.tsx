@@ -105,8 +105,10 @@ const AdminHomeSectors: React.FC = () => {
   );
 
   const [drafts, setDrafts] = useState<Record<string, RowState>>({});
-  const stateFor = (row: HomeSectorRow): RowState =>
-    drafts[row.id] ?? initialRowState(row);
+  const stateFor = useCallback(
+    (row: HomeSectorRow): RowState => drafts[row.id] ?? initialRowState(row),
+    [drafts],
+  );
 
   const update = (row: HomeSectorRow, patch: Partial<RowState>) => {
     setDrafts((d) => ({
@@ -161,8 +163,7 @@ const AdminHomeSectors: React.FC = () => {
     () => [...eligible]
       .filter((r) => stateFor(r).show)
       .sort((a, b) => stateFor(a).position - stateFor(b).position),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [eligible, drafts],
+    [eligible, stateFor],
   );
 
   const swap = (row: HomeSectorRow, dir: -1 | 1) => {
