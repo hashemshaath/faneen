@@ -904,6 +904,64 @@ export const BranchesTab = ({
               );
             })()}
 
+            {waEditorOpen === branch.id && (() => {
+              const waNumberLive = isAuthenticated
+                ? ((branch as { whatsapp?: string | null }).whatsapp || branch.phone || branch.mobile)
+                : null;
+              if (!waNumberLive) return null;
+              const sanitize = (n: string) => n.replace(/[^\d+]/g, "").replace(/^\+/, "");
+              const sendHref = `https://wa.me/${sanitize(waNumberLive)}?text=${encodeURIComponent(waDraft)}`;
+              return (
+                <div className="border-t border-emerald-500/15 bg-emerald-500/5 p-3 sm:p-4">
+                  <label className="mb-1.5 block text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+                    {language === "ar" ? "معاينة الرسالة قبل الإرسال" : "Preview message before sending"}
+                  </label>
+                  <textarea
+                    value={waDraft}
+                    onChange={(e) => setWaDraft(e.target.value)}
+                    dir="auto"
+                    rows={4}
+                    maxLength={1000}
+                    className="w-full rounded-xl border border-emerald-500/30 bg-background p-2.5 text-xs leading-relaxed focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+                  />
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-muted-foreground tech-content">
+                      {waDraft.length}/1000
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWaEditorOpen(null)}
+                        className="rounded-lg px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-muted/40"
+                      >
+                        {language === "ar" ? "إلغاء" : "Cancel"}
+                      </button>
+                      <a
+                        href={sendHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => {
+                          void recordBranchVisit({ businessId, branchId: branch.id, eventType: "whatsapp_click" });
+                          track.leadContactClick({
+                            business_slug: branch.slug || undefined,
+                            contact_type: "whatsapp",
+                            source_page: "branch_card",
+                            is_authenticated: isAuthenticated,
+                          });
+                          onRevealContact?.("phone");
+                          setWaEditorOpen(null);
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        {language === "ar" ? "إرسال عبر واتساب" : "Send on WhatsApp"}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {branch.latitude && branch.longitude && (
               <div className="px-4 pb-4 sm:px-5 sm:pb-5">
                 <div className="flex flex-wrap items-center gap-3">
