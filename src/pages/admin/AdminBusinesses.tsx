@@ -1229,7 +1229,7 @@ const AdminBusinesses = () => {
       mobile: biz.mobile || '', customer_service_phone: biz.customer_service_phone || '',
       is_active: biz.is_active, is_verified: biz.is_verified,
       membership_tier: biz.membership_tier,
-    });
+    } as AdminEditBusinessFormState);
     setEditingBiz(biz);
     scrollToTop();
   };
@@ -1241,7 +1241,11 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const translationCompleteness = useCallback((b: Record<string, unknown>) => {
+  const translationCompleteness = useCallback((b: {
+    name_ar?: unknown; name_en?: unknown;
+    short_description_ar?: unknown; short_description_en?: unknown;
+    description_ar?: unknown; description_en?: unknown;
+  }) => {
     const ar = !!(b.name_ar && b.short_description_ar && b.description_ar);
     const en = !!(b.name_en && b.short_description_en && b.description_en);
     return { ar, en, full: ar && en };
