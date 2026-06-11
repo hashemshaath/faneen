@@ -628,6 +628,7 @@ const BusinessProfile = () => {
                     isAuthenticated={!!user}
                     onRequestContact={() => handleContactClick("branches_tab")}
                     onRevealContact={handleContactReveal}
+                    isOwner={isOwner}
                   />
                   </TabsContent>
                 )}
