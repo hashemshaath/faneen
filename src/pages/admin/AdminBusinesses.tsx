@@ -1802,72 +1802,19 @@ const AdminBusinesses = () => {
                 </div>
               </div>
 
-              {/* ─── Section 4: National address ─── */}
-              <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                  <Label className="text-xs font-semibold">
-                    {pickBi(isRTL, '4) العنوان الوطني التفصيلي للمنشأة', '4) National detailed address')}
-                  </Label>
-                  <span className="text-[10.5px] text-muted-foreground">{pickBi(isRTL, '(اختر المنطقة لتظهر المدن التابعة لها)', '(pick region to see its cities)')}</span>
-                </div>
-
-                <RegionCitySelector
-                  value={{ region_id: createForm.region_id, city_id: createForm.city_id }}
-                  onChange={(next) => setCreateForm((f: any) => ({ ...f, region_id: next.region_id || '', city_id: next.city_id || '' }))}
-                  regionLabel={pickBi(isRTL, 'المنطقة', 'Region')}
-                  cityLabel={pickBi(isRTL, 'المدينة', 'City')}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'الحي (عربي)', 'District (AR)')}</Label>
-                    <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.district} onChange={(e) => setCField('district', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'مثال: العليا', 'e.g. Al Olaya')} className="h-10 rounded-xl flex-1" />
-                      <FieldAiActions value={createForm.district} lang="ar" fieldType="short_text" compact isRTL={isRTL}
-                        onTranslated={(t) => setCField('district_en', t)} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'الحي (English)', 'District (EN)')}</Label>
-                    <Input value={createForm.district_en} onChange={(e) => setCField('district_en', e.target.value)} dir="ltr" placeholder="e.g. Al Olaya" className="h-10 rounded-xl" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الشارع (عربي)', 'Street name (AR)')}</Label>
-                    <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.street_name} onChange={(e) => setCField('street_name', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'مثال: شارع الأمير محمد', 'e.g. Prince Mohammed St')} className="h-10 rounded-xl flex-1" />
-                      <FieldAiActions value={createForm.street_name} lang="ar" fieldType="short_text" compact isRTL={isRTL}
-                        onTranslated={(t) => setCField('street_name_en', t)} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الشارع (English)', 'Street name (EN)')}</Label>
-                    <Input value={createForm.street_name_en} onChange={(e) => setCField('street_name_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'رقم المبنى', 'Building number')}</Label>
-                    <Input value={createForm.building_number} onChange={(e) => setCField('building_number', e.target.value)} dir="ltr" placeholder="1234" className="h-10 rounded-xl tech-content" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{pickBi(isRTL, 'الرقم الإضافي (العنوان الوطني)', 'Additional number (national address)')}</Label>
-                    <Input value={createForm.additional_number} onChange={(e) => setCField('additional_number', e.target.value)} dir="ltr" placeholder="5678" className="h-10 rounded-xl tech-content" />
-                  </div>
-
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'العنوان التفصيلي (عربي)', 'Detailed address (AR)')}</Label>
-                    <div className="flex gap-1.5 items-start">
-                      <Input value={createForm.address} onChange={(e) => setCField('address', e.target.value)} dir="auto" placeholder={pickBi(isRTL, 'الحي - الشارع - معالم قريبة', 'District - street - landmarks')} className="h-10 rounded-xl flex-1" />
-                      <FieldAiActions value={createForm.address} lang="ar" fieldType="short_text" compact isRTL={isRTL}
-                        onTranslated={(t) => setCField('address_en', t)} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'العنوان التفصيلي (English)', 'Detailed address (EN)')}</Label>
-                    <Input value={createForm.address_en} onChange={(e) => setCField('address_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
-                  </div>
-                </div>
+              {/* Section 4 (National address) removed — addresses are now managed
+                  per-branch from the Branches tab after creating the entity. The
+                  main branch (branch_type = 'main') is the source of truth for
+                  the business address. */}
+              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                <p>
+                  {pickBi(
+                    isRTL,
+                    'العنوان يُدار من تبويب "الفروع" بعد الإنشاء. أضف الفرع الرئيسي (المركز الرئيسي) ثم باقي الفروع/المستودعات/المكاتب الإدارية.',
+                    'Address is managed from the "Branches" tab after creation. Add the main branch (headquarters) first, then any branches / warehouses / admin offices.',
+                  )}
+                </p>
               </div>
 
               <Separator className="my-2" />
