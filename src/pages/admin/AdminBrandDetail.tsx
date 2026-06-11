@@ -1190,3 +1190,90 @@ function FieldLabeled({ label, children }: { label: string; children: React.Reac
 }
 
 export default AdminBrandDetail;
+
+function LinkProductsEditor({
+  linkId, businessId, brandProducts, isRTL, locale,
+  addProductForLinkId, setAddProductForLinkId,
+  onAdd, onRemove, addPending,
+}: {
+  linkId: string;
+  businessId: string;
+  brandProducts: BrandProduct[];
+  isRTL: boolean;
+  locale: 'ar' | 'en';
+  addProductForLinkId: string;
+  setAddProductForLinkId: (v: string) => void;
+  onAdd: (productId: string) => void;
+  onRemove: (rowId: string) => void;
+  addPending: boolean;
+}) {
+  const q = useQuery({
+    queryKey: ['admin-brand-link-products', linkId],
+    queryFn: () => listProviderBrandLinkProducts(linkId),
+    enabled: !!linkId,
+  });
+  const rows = q.data ?? [];
+  const linkedIds = new Set(rows.map((r) => r.brand_product_id));
+  const available = brandProducts.filter((p) => !linkedIds.has(p.id));
+
+  return (
+    <div className="mt-2 p-2 rounded border bg-muted/30 space-y-2">
+      <div className="text-[11px] text-muted-foreground">
+        {rows.length === 0
+          ? pickBi(isRTL, 'النطاق الحالي: العلامة كاملة (لا توجد منتجات محددة).', 'Current scope: whole brand (no specific products).')
+          : pickBi(isRTL, `النطاق الحالي: ${rows.length} منتج محدد.`, `Current scope: ${rows.length} specific product(s).`)}
+      </div>
+      {rows.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {rows.map((r) => {
+            const name = r.product
+              ? (locale === 'ar' ? (r.product.name_ar ?? r.product.name_en ?? '') : (r.product.name_en ?? r.product.name_ar ?? ''))
+              : r.brand_product_id.slice(0, 8);
+            return (
+              <span key={r.id} className="inline-flex items-center gap-1 rounded-full bg-background border px-2 py-0.5 text-[11px]">
+                {r.product?.image_url && <img src={r.product.image_url} alt="" className="w-4 h-4 rounded object-cover" />}
+                <span className="truncate max-w-[160px]" dir="auto">{name}</span>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => onRemove(r.id)}
+                  aria-label={pickBi(isRTL, 'إزالة', 'Remove')}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {available.length > 0 ? (
+        <div className="flex items-center gap-2">
+          <select
+            value={addProductForLinkId === linkId ? '' : ''}
+            onChange={(e) => {
+              const pid = e.target.value;
+              if (!pid) return;
+              setAddProductForLinkId(linkId);
+              onAdd(pid);
+            }}
+            disabled={addPending}
+            className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+          >
+            <option value="">{pickBi(isRTL, 'إضافة منتج…', 'Add product…')}</option>
+            {available.map((p) => (
+              <option key={p.id} value={p.id}>
+                {locale === 'ar' ? (p.name_ar ?? p.name_en ?? p.id.slice(0, 8)) : (p.name_en ?? p.name_ar ?? p.id.slice(0, 8))}
+                {p.model_number ? ` — ${p.model_number}` : ''}
+              </option>
+            ))}
+          </select>
+          <span className="text-[10px] text-muted-foreground tech-content">{businessId.slice(0, 6)}</span>
+        </div>
+      ) : brandProducts.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'لا توجد منتجات لهذه العلامة بعد.', 'No brand products yet.')}</p>
+      ) : (
+        <p className="text-[11px] text-muted-foreground">{pickBi(isRTL, 'كل المنتجات مضافة.', 'All products already added.')}</p>
+      )}
+    </div>
+  );
+}
