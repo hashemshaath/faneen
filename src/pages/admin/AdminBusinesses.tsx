@@ -1744,7 +1744,7 @@ const AdminBusinesses = () => {
                   username: createForm.username,
                 }}
                 onChange={(next) => {
-                  setCreateForm((f: any) => ({
+                  setCreateForm((f) => ({
                     ...f,
                     name_ar: next.full_name_ar,
                     name_en: next.full_name_en,
@@ -1763,7 +1763,7 @@ const AdminBusinesses = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <PhoneField
                   value={{ countryCode: createForm.phone_cc, national: createForm.phone_national }}
-                  onChange={(next) => setCreateForm((f: any) => ({ ...f, phone_cc: next.countryCode, phone_national: next.national }))}
+                  onChange={(next) => setCreateForm((f) => ({ ...f, phone_cc: next.countryCode, phone_national: next.national }))}
                   label={pickBi(isRTL, 'رقم التواصل الرسمي للمنشأة', 'Official entity contact number')}
                   optional
                 />
