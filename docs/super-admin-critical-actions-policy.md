@@ -12,8 +12,8 @@ against the migration source.
 
 | RPC | Why |
 | --- | --- |
-| `admin_set_module_override` | Toggles a module platform-wide / per-business override |
-| `admin_clear_module_override` | Same blast radius as the setter |
+| `admin_set_module_override` | Toggles a module platform-wide / per-business override (tightened) |
+| `admin_clear_module_override` | Same blast radius as the setter (tightened) |
 | `admin_reassign_business_owner` | Changes ownership; alters every downstream permission |
 | `admin_transfer_business_ownership` | Same: ownership change |
 | `admin_reject_business_ownership_transfer` | Closes an ownership change flow |
@@ -30,7 +30,6 @@ against the migration source.
 | `admin_list_client_site_operations_notes` / `admin_add_client_site_operations_note` / `admin_log_client_site_contact_action` | Admin notes on tenant data |
 | `admin_rotate_client_site_qr_token` | Security token rotation |
 | `admin_list_contract_pdf_exports` / `admin_contract_pdf_exports_summary` | Cross-tenant export trail |
-| `admin_convert_lead_to_contract` | Cross-tenant write |
 
 ### Level 2 — Restricted Admin (stays `admin`, requires audit + confirmation)
 
@@ -44,6 +43,7 @@ These mutate a **single** entity and have audit logs + UI confirmation.
 | `admin_mark_membership_payment_refunded_manually` | `membership_subscription_events` | Yes |
 | `admin_upgrade_subscription` | `membership_upgrade_audit` | Yes |
 | `admin_create_contract_on_behalf` | `business_audit_log` | Yes |
+| `admin_convert_lead_to_contract` | `lead_request_events` | Yes |
 | `admin_update_business_approval` | `business_audit_log` | Yes |
 | `admin_update_username_status` | `admin_activity_log` | Yes |
 | `admin_update_provider_lead` | `lead_request_events` | Yes |
@@ -66,7 +66,8 @@ These mutate a **single** entity and have audit logs + UI confirmation.
 
 | RPC / Action | Current Gate | Recommended Gate | Reason | Change Now? |
 | --- | --- | --- | --- | --- |
-| `admin_set_module_override` | super_admin | super_admin | platform-wide | No (already correct) |
+| `admin_set_module_override` | admin OR super_admin | super_admin | platform-wide module toggle | **Yes — tightened** |
+| `admin_clear_module_override` | admin OR super_admin | super_admin | platform-wide module toggle | **Yes — tightened** |
 | `admin_reassign_business_owner` | super_admin | super_admin | ownership | No |
 | `admin_bulk_set_user_ban` | super_admin | super_admin | identity mass action | No |
 | `admin_bulk_set_business_active` | super_admin | super_admin | mass deactivation | No |
@@ -74,15 +75,17 @@ These mutate a **single** entity and have audit logs + UI confirmation.
 | Provider credits adjust | admin | admin | single-entity financial; audit + confirm exist | No |
 | Membership manual paid/refund | admin | admin | single-entity financial; audit exists | No |
 | Username status | admin | admin | single-account moderation; audit | No |
-| Convert lead → contract | super_admin | super_admin | cross-tenant write | No |
+| Convert lead → contract | admin | admin | single lead → single contract; audit exists | No |
 
 ## Conclusion
 
-No RPC required tightening. All platform-wide actions already enforce
-`super_admin` server-side via `public.has_role(auth.uid(), 'super_admin')` or
-`public.is_super_admin(...)` with a `42501`/`forbidden` rejection. UI guards
-(`ProtectedRoute requireSuperAdmin` on `/admin/users`, `/admin/identity`,
-`/admin/access-management`) remain a secondary defense layer; primary
-enforcement is in the SECURITY DEFINER functions.
+Two RPCs (`admin_set_module_override`, `admin_clear_module_override`) were
+tightened from `(admin OR super_admin)` to `super_admin` only and now write
+to `admin_activity_log` on every call. All other platform-wide actions
+already enforced `super_admin` server-side via
+`public.has_role(auth.uid(), 'super_admin')` with a `42501`/`forbidden`
+rejection. UI guards (`ProtectedRoute requireSuperAdmin` on `/admin/users`,
+`/admin/identity`, `/admin/access-management`) remain a secondary defense
+layer; primary enforcement is in the SECURITY DEFINER functions.
 
 Decision: **SUPER ADMIN CRITICAL ACTIONS POLICY PASS**.
