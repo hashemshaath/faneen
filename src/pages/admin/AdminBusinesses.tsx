@@ -492,9 +492,14 @@ const AdminBusinesses = () => {
 
   /* ─── Mutations ─── */
   const logAction = async (action: string, entityId: string, details: Record<string, unknown>) => {
-    await supabase.from('admin_activity_log').insert({
-      user_id: user!.id, action, entity_type: 'business', entity_id: entityId, details,
-    } as any);
+    const payload: AdminActivityLogInsert = {
+      user_id: user!.id,
+      action,
+      entity_type: 'business',
+      entity_id: entityId,
+      details: details as AdminJson,
+    };
+    await supabase.from('admin_activity_log').insert(payload);
   };
 
   const toggleMutation = useMutation({
@@ -932,9 +937,13 @@ const AdminBusinesses = () => {
 
   const addPortfolioMutation = useMutation({
     mutationFn: async (url: string) => {
-      const { error } = await supabase.from('portfolio_items').insert({
-        business_id: editingBiz.id, title_ar: 'صورة', media_url: url, media_type: 'image',
-      } as any);
+      const payload: PortfolioItemInsert = {
+        business_id: editingBiz.id,
+        title_ar: 'صورة',
+        media_url: url,
+        media_type: 'image',
+      };
+      const { error } = await supabase.from('portfolio_items').insert(payload);
       if (error) throw error;
     },
     onSuccess: () => refetchPortfolio(),
