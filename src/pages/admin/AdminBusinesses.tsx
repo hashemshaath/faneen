@@ -694,7 +694,7 @@ const AdminBusinesses = () => {
         });
         if (error) throw error;
         // Promote exact email/username/ref_id match to top
-        const rows = (data || []) as any[];
+        const rows = (data ?? []) as AdminBusinessOwnerRow[];
         rows.sort((a, b) => {
           const ax = (a.email === lower || a.username === lower || a.ref_id === upper) ? 0 : 1;
           const bx = (b.email === lower || b.username === lower || b.ref_id === upper) ? 0 : 1;
