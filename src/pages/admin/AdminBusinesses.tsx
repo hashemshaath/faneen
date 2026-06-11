@@ -954,6 +954,7 @@ const AdminBusinesses = () => {
         business_id: editingBiz.id,
         name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
         is_active: branchForm.is_active,
+        branch_type: branchForm.branch_type || 'branch',
         contact_person: branchForm.contact_person || null, phone: branchForm.phone || null,
         mobile: branchForm.mobile || null, unified_number: branchForm.unified_number || null,
         customer_service_phone: branchForm.customer_service_phone || null,
