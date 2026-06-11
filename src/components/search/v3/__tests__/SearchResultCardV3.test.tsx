@@ -45,7 +45,9 @@ describe('SearchResultCardV3', () => {
 
   it('renders the verified badge when is_verified', () => {
     renderCard({ is_verified: true });
-    expect(screen.getByText(/موثقة|Verified/i)).toBeInTheDocument();
+    // <VerifiedBadge> renders a ShieldCheck/BadgeCheck icon and exposes
+    // the label via aria-label / title rather than visible text.
+    expect(screen.getByLabelText(/موثقة|Verified/i)).toBeInTheDocument();
   });
 
   it('renders the name with dir="auto"', () => {
