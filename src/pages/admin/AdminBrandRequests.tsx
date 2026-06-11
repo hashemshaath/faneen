@@ -369,7 +369,7 @@ function RequestRow(props: {
               <ul className="text-xs space-y-1">
                 {duplicates.slice(0, 5).map((d) => (
                   <li key={d.id} className="flex items-center gap-2">
-                    <Link to={`/admin/brands/${d.id}`} className="underline text-primary truncate">
+                    <Link to={`/admin/brands/${d.slug || d.id}`} className="underline text-primary truncate">
                       {locale === 'ar' ? d.name_ar : (d.name_en ?? d.name_ar)}
                     </Link>
                     {d.ref_id && <code className="tech-content opacity-70">{d.ref_id}</code>}

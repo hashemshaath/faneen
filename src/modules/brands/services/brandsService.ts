@@ -943,6 +943,14 @@ export async function adminApproveBrandRequestRpc(args: {
   });
 
   if (req.user_id) {
+    // Prefer the brand slug in the action URL so notifications open the
+    // SEO-friendly admin route (/admin/brands/<slug>) instead of a UUID.
+    let approvedBrandSlug: string | null = null;
+    if (approvedBrandId) {
+      const { data: br } = await sb
+        .from('brand_catalog').select('slug').eq('id', approvedBrandId).maybeSingle();
+      approvedBrandSlug = (br as { slug?: string | null } | null)?.slug ?? null;
+    }
     createNotificationFireAndForget({
       user_id: req.user_id,
       title_ar: 'تمت الموافقة على طلب العلامة التجارية',
@@ -952,7 +960,9 @@ export async function adminApproveBrandRequestRpc(args: {
       notification_type: 'brand_request_approved',
       reference_type: 'brand_addition_request',
       reference_id: args.requestId,
-      action_url: approvedBrandId ? `/admin/brands/${approvedBrandId}` : '/admin/brand-requests',
+      action_url: approvedBrandId
+        ? `/admin/brands/${approvedBrandSlug || approvedBrandId}`
+        : '/admin/brand-requests',
     }, '[brand_request_approved]');
   }
 
