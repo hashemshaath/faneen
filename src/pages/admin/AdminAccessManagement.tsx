@@ -61,7 +61,7 @@ const AdminAccessManagement = () => {
         orderBy: { column: 'created_at', ascending: false },
       });
       if (error) throw error;
-      return data as any[];
+      return data ?? [];
     },
     enabled: !!user,
   });
@@ -143,9 +143,9 @@ const AdminAccessManagement = () => {
   // Stats
   const stats = useMemo(() => {
     const total = profiles.length;
-    const verified = profiles.filter((p: any) => p.phone_verified).length;
-    const onboarded = profiles.filter((p: any) => p.is_onboarded).length;
-    const banned = profiles.filter((p: any) => p.is_banned).length;
+    const verified = profiles.filter((p) => p.phone_verified).length;
+    const onboarded = profiles.filter((p) => p.is_onboarded).length;
+    const banned = profiles.filter((p) => p.is_banned).length;
     const recentResets = resetLogs.filter(l => {
       const d = new Date(l.created_at);
       return d.getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000;
