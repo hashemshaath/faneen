@@ -44,7 +44,10 @@ import {
 
 const AdminBrandDetail: React.FC = () => {
   useNoIndex();
-  const { id = '' } = useParams<{ id: string }>();
+  // Accept either a UUID or a slug in the URL so admin URLs can be readable
+  // (/admin/brands/somfy) while still honoring legacy /admin/brands/<uuid>.
+  const { id: idParam = '' } = useParams<{ id: string }>();
+  const isUuidParam = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idParam);
   const { isRTL } = useLanguage();
   const locale: 'ar' | 'en' = pickBi(isRTL, 'ar', 'en');
   const qc = useQueryClient();
@@ -80,11 +83,14 @@ const AdminBrandDetail: React.FC = () => {
   const [reqRejectReason, setReqRejectReason] = useState('');
 
   const brandQ = useQuery({
-    queryKey: ['admin-brand-detail', id],
-    queryFn: () => adminGetBrand(id),
-    enabled: !!id,
+    queryKey: ['admin-brand-detail', idParam],
+    queryFn: () => adminGetBrand(idParam),
+    enabled: !!idParam,
   });
   const brand = brandQ.data;
+  // Effective UUID used by every sub-query / mutation. Empty until the brand
+  // resolves when the URL param is a slug — sub-queries are gated by `!!id`.
+  const id = brand?.id ?? (isUuidParam ? idParam : '');
 
   useEffect(() => {
     if (!brand) return;
