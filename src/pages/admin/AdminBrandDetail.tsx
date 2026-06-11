@@ -725,7 +725,11 @@ const AdminBrandDetail: React.FC = () => {
                     disabled={!linkBusinessId || linkServicesQ.isLoading}
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                   >
-                    <option value="">{pickBi(isRTL, 'اختر الخدمة…', 'Select service…')}</option>
+                    <option value="__all__">
+                      {(linkServicesQ.data ?? []).length === 0
+                        ? pickBi(isRTL, 'لا توجد خدمات — سيتم إنشاء خدمة عامة وربطها', 'No services — a general placeholder will be created')
+                        : pickBi(isRTL, 'كل الخدمات (افتراضي)', 'All services (default)')}
+                    </option>
                     {(linkServicesQ.data ?? []).map((s) => (
                       <option key={s.id} value={s.id}>{locale === 'ar' ? (s.name_ar ?? s.name_en ?? s.id.slice(0,8)) : (s.name_en ?? s.name_ar ?? s.id.slice(0,8))}</option>
                     ))}
@@ -747,7 +751,7 @@ const AdminBrandDetail: React.FC = () => {
                 <Button
                   size="sm"
                   onClick={() => createLink.mutate()}
-                  disabled={!linkBusinessId || !linkServiceId || createLink.isPending}
+                  disabled={!linkBusinessId || createLink.isPending}
                 >
                   {createLink.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
                   {pickBi(isRTL, 'ربط واعتماد', 'Link & verify')}
