@@ -2334,15 +2334,38 @@ const AdminBusinesses = () => {
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
-                      <BilingualNameField
-                        valueAr={branchForm.name_ar || ''}
-                        valueEn={branchForm.name_en || ''}
-                        onChangeAr={(v) => setBranchForm((f) => ({ ...f, name_ar: v }))}
-                        onChangeEn={(v) => setBranchForm((f) => ({ ...f, name_en: v }))}
-                        labelAr={pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)') + ' *'}
-                        labelEn={pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}
-                        enableTranslate
-                      />
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)')} *</Label>
+                          <Button
+                            type="button" size="sm" variant="ghost"
+                            className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+                            disabled={branchTranslating !== null}
+                            onClick={() => translateBranchName('ar')}
+                            title={pickBi(isRTL, 'ترجمة من العربي إلى الإنجليزي', 'Translate Arabic → English')}
+                          >
+                            {branchTranslating === 'ar' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                            <span>→ EN</span>
+                          </Button>
+                        </div>
+                        <Input value={branchForm.name_ar} onChange={e => setBranchForm((f) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
+                          <Button
+                            type="button" size="sm" variant="ghost"
+                            className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+                            disabled={branchTranslating !== null}
+                            onClick={() => translateBranchName('en')}
+                            title={pickBi(isRTL, 'ترجمة من الإنجليزي إلى العربي', 'Translate English → Arabic')}
+                          >
+                            {branchTranslating === 'en' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                            <span>→ AR</span>
+                          </Button>
+                        </div>
+                        <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
+                      </div>
                       <div>
                         <Label className="text-xs">{pickBi(isRTL, 'نوع الموقع', 'Location type')} *</Label>
                         <Select
