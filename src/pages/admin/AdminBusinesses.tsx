@@ -2403,22 +2403,6 @@ const AdminBusinesses = () => {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <Switch checked={branchForm.is_main} onCheckedChange={v => {
-                            if (v) {
-                              const currentMain = branches.find((b: any) => b.is_main && b.id !== editingBranchId);
-                              if (currentMain && !confirm(isRTL
-                                ? `سيتم إلغاء "${currentMain.name_ar}" كفرع رئيسي وتعيين هذا الفرع بدلاً منه. متابعة؟`
-                                : `"${currentMain.name_ar}" will be unset as main and this branch will replace it. Continue?`)) {
-                                return;
-                              }
-                            } else if (branchForm.is_main && !confirm(pickBi(isRTL, 'هل تريد إلغاء كون هذا الفرع رئيسياً؟ يجب تعيين فرع آخر كرئيسي.', 'Unset this branch as main? You must set another branch as main.'))) {
-                              return;
-                            }
-                            setBranchForm((f) => ({ ...f, is_main: v }));
-                          }} />
-                          <span className="text-xs">{pickBi(isRTL, 'فرع رئيسي', 'Main Branch')}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <Switch checked={branchForm.is_active} onCheckedChange={v => setBranchForm((f) => ({ ...f, is_active: v }))} />
                           <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
                         </div>
