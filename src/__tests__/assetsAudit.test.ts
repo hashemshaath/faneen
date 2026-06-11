@@ -8,7 +8,12 @@ const SELF = 'src/__tests__/assetsAudit.test.ts';
 
 const rg = (pattern: string): string[] => {
   try {
-    const out = execSync(`rg -n --no-heading ${JSON.stringify(pattern)} src/ supabase/ index.html`, {
+    // Match the basename only when it is used as an actual asset reference:
+    // a path/import segment (`/cat-energy.webp`, `from '.../cat-energy.webp'`).
+    // This prevents false positives from coincidental identifiers in test
+    // fixtures (e.g. taxonomy seed ids that happen to share a basename).
+    const assetRef = `(?:[\\"'/])${pattern}\\.(?:webp|jpg|jpeg|png|gif|svg)`;
+    const out = execSync(`rg -n --no-heading ${JSON.stringify(assetRef)} src/ supabase/ index.html`, {
       cwd: root,
       encoding: 'utf8',
     });
