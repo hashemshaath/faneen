@@ -938,6 +938,7 @@ const AdminBusinesses = () => {
 
   const emptyBranch = () => ({
     name_ar: '', name_en: '', is_main: false, is_active: true,
+    branch_type: 'branch' as 'main' | 'branch' | 'warehouse' | 'admin_office',
     contact_person: '', phone: '', mobile: '', unified_number: '', customer_service_phone: '',
     email: '', website: '',
     country_id: '', city_id: '', region: '', district: '', street_name: '',
