@@ -123,6 +123,15 @@ const BusinessProfile = () => {
     }
   }, [branchFromUrl?.id, branchSlug, username]);
   const { data: branchesList = [] } = useBranches(businessRow?.id);
+  // Auto-select the main branch on initial load so the header/contact
+  // fields (address, district, street) reflect the primary location
+  // instead of any stale top-level business address.
+  useEffect(() => {
+    if (selectedBranchId || branchSlug) return;
+    if (!branchesList.length) return;
+    const main = branchesList.find((b) => b.is_main) ?? branchesList[0];
+    if (main?.id) setSelectedBranchId(main.id);
+  }, [branchesList, selectedBranchId, branchSlug]);
   // Resolve the active branch from the locally selected id, falling back to
   // the URL-resolved branch while the branches list is still loading.
   const branch = useMemo(() => {
