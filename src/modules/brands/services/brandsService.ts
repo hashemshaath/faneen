@@ -963,6 +963,38 @@ async function writeBrandAuditLog(payload: {
   }
 }
 
+/**
+ * Convert a Postgres/PostgREST error into a clear bilingual message. Focuses
+ * on permission/RLS failures (the most common cause when an admin tries to
+ * link a provider) so the toast tells the user *why* the save failed, not just
+ * the raw "permission denied" string.
+ */
+function humanizeBrandLinkError(
+  err: { code?: string | null; message?: string | null; details?: string | null; hint?: string | null },
+  kind: 'create' | 'service',
+): string {
+  const code = (err.code ?? '').toString();
+  const msg = (err.message ?? '').toString();
+  const lower = msg.toLowerCase();
+  // PostgREST/Postgres permission codes
+  const isPerm = code === '42501' || code === 'PGRST301' || lower.includes('permission denied') || lower.includes('row-level security') || lower.includes('rls');
+  if (isPerm) {
+    return kind === 'service'
+      ? 'تعذّر إنشاء خدمة عامة للمزوّد بسبب صلاحيات قاعدة البيانات (RLS) على جدول business_services. يلزم منح صلاحية الإدراج للمشرف أو إضافة خدمة يدوياً للمزود قبل الربط. الكود: ' + (code || 'permission_denied')
+      : 'تعذّر حفظ ربط المزوّد بسبب صلاحيات قاعدة البيانات (RLS) على جدول business_service_brands. تأكد من تفعيل صلاحية الإدراج للمشرف. الكود: ' + (code || 'permission_denied');
+  }
+  if (code === '23505' || lower.includes('duplicate')) {
+    return 'هذا الربط موجود مسبقاً لنفس الخدمة والعلامة.';
+  }
+  if (code === '23503' || lower.includes('foreign key')) {
+    return 'مرجع غير صالح: تحقّق من المزوّد أو الخدمة أو العلامة المختارة.';
+  }
+  if (code === '23502' || lower.includes('not-null') || lower.includes('null value')) {
+    return 'حقل إلزامي مفقود في بيانات الربط: ' + (err.details || msg || 'تحقّق من النموذج');
+  }
+  return (msg || 'فشل حفظ ربط المزوّد') + (err.hint ? ` — ${err.hint}` : '');
+}
+
 // ------------------------ ADMIN: REQUEST DETAIL/STATE --------------------
 
 export async function adminGetBrandRequest(id: string) {
