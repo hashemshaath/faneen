@@ -40,6 +40,7 @@ import {
   listBrandProductRequests, adminApproveBrandProductRequest, adminRejectBrandProductRequest,
   brandProductStatusLabel, brandProductRequestStatusLabel,
   adminSearchBusinessesForBrand, adminListBusinessServices, adminCreateProviderBrandLink,
+  adminLinkBrandToAllServices,
   type BrandProduct, type BrandProductRequest,
 } from '@/modules/brands';
 
@@ -87,7 +88,7 @@ const AdminBrandDetail: React.FC = () => {
   const [linkSearch, setLinkSearch] = useState('');
   const [linkBusinessId, setLinkBusinessId] = useState<string>('');
   const [linkBusinessLabel, setLinkBusinessLabel] = useState<string>('');
-  const [linkServiceId, setLinkServiceId] = useState<string>('');
+  const [linkServiceId, setLinkServiceId] = useState<string>('__all__');
   const [linkRelationship, setLinkRelationship] = useState<string>('authorized_distributor');
 
   const brandQ = useQuery({
@@ -199,16 +200,37 @@ const AdminBrandDetail: React.FC = () => {
     enabled: !!linkBusinessId,
   });
   const createLink = useMutation({
-    mutationFn: () => adminCreateProviderBrandLink({
-      brandId: id,
-      businessId: linkBusinessId,
-      businessServiceId: linkServiceId,
-      relationshipType: linkRelationship as never,
-      authorizationStatus: 'verified',
-    }),
-    onSuccess: () => {
-      toast.success(pickBi(isRTL, 'تم ربط المزود', 'Provider linked'));
-      setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('');
+    // `linkServiceId === '__all__'` (or empty when the provider has no
+    // services yet) means "link to every service" — falls back to the bulk
+    // helper which auto-creates a placeholder service when the business has
+    // none, so the brand can still be attached.
+    mutationFn: async () => {
+      if (linkServiceId && linkServiceId !== '__all__') {
+        await adminCreateProviderBrandLink({
+          brandId: id,
+          businessId: linkBusinessId,
+          businessServiceId: linkServiceId,
+          relationshipType: linkRelationship as never,
+          authorizationStatus: 'verified',
+        });
+        return { mode: 'single' as const, inserted: 1 };
+      }
+      const res = await adminLinkBrandToAllServices({
+        brandId: id,
+        businessId: linkBusinessId,
+        relationshipType: linkRelationship as never,
+        authorizationStatus: 'verified',
+      });
+      return { mode: 'all' as const, ...res };
+    },
+    onSuccess: (res) => {
+      const msg = res.mode === 'all'
+        ? pickBi(isRTL,
+            `تم الربط بـ ${res.servicesTotal} خدمة (مضافة: ${res.inserted})`,
+            `Linked to ${res.servicesTotal} service(s) — ${res.inserted} new`)
+        : pickBi(isRTL, 'تم ربط المزود', 'Provider linked');
+      toast.success(msg);
+      setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('__all__');
       qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -673,7 +695,7 @@ const AdminBrandDetail: React.FC = () => {
                 <div className="md:col-span-5 relative">
                   <Input
                     value={linkBusinessId ? linkBusinessLabel : linkSearch}
-                    onChange={(e) => { setLinkSearch(e.target.value); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId(''); }}
+                    onChange={(e) => { setLinkSearch(e.target.value); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('__all__'); }}
                     placeholder={pickBi(isRTL, 'ابحث عن جهة بالاسم أو الرمز…', 'Search business by name or ref…')}
                     className="h-10"
                   />
@@ -703,7 +725,11 @@ const AdminBrandDetail: React.FC = () => {
                     disabled={!linkBusinessId || linkServicesQ.isLoading}
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                   >
-                    <option value="">{pickBi(isRTL, 'اختر الخدمة…', 'Select service…')}</option>
+                    <option value="__all__">
+                      {(linkServicesQ.data ?? []).length === 0
+                        ? pickBi(isRTL, 'لا توجد خدمات — سيتم إنشاء خدمة عامة وربطها', 'No services — a general placeholder will be created')
+                        : pickBi(isRTL, 'كل الخدمات (افتراضي)', 'All services (default)')}
+                    </option>
                     {(linkServicesQ.data ?? []).map((s) => (
                       <option key={s.id} value={s.id}>{locale === 'ar' ? (s.name_ar ?? s.name_en ?? s.id.slice(0,8)) : (s.name_en ?? s.name_ar ?? s.id.slice(0,8))}</option>
                     ))}
@@ -725,7 +751,7 @@ const AdminBrandDetail: React.FC = () => {
                 <Button
                   size="sm"
                   onClick={() => createLink.mutate()}
-                  disabled={!linkBusinessId || !linkServiceId || createLink.isPending}
+                  disabled={!linkBusinessId || createLink.isPending}
                 >
                   {createLink.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
                   {pickBi(isRTL, 'ربط واعتماد', 'Link & verify')}
