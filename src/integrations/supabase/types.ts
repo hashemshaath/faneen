@@ -21115,8 +21115,10 @@ export type Database = {
           name_en: string
           pending_claims_count: number
           placeholder_owner: boolean
+          ref_id: string
           region: string
           sectors: Json
+          username: string
         }[]
       }
       get_client_site_notification_preferences: {
