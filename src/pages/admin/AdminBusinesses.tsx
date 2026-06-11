@@ -2334,14 +2334,15 @@ const AdminBusinesses = () => {
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
-                      <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)')} *</Label>
-                        <Input value={branchForm.name_ar} onChange={e => setBranchForm((f) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
-                        <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
-                      </div>
+                      <BilingualNameField
+                        valueAr={branchForm.name_ar || ''}
+                        valueEn={branchForm.name_en || ''}
+                        onChangeAr={(v) => setBranchForm((f) => ({ ...f, name_ar: v }))}
+                        onChangeEn={(v) => setBranchForm((f) => ({ ...f, name_en: v }))}
+                        labelAr={pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)') + ' *'}
+                        labelEn={pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}
+                        enableTranslate
+                      />
                       <div>
                         <Label className="text-xs">{pickBi(isRTL, 'نوع الموقع', 'Location type')} *</Label>
                         <Select
