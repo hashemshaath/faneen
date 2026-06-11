@@ -47,16 +47,16 @@ function loadLatestBodies(names: readonly string[]): Map<string, LatestBody> {
     if (!statSync(full).isFile()) continue;
     const src = readFileSync(full, 'utf8');
     for (const name of names) {
-      // Match CREATE OR REPLACE FUNCTION public.<name>(...) ... $tag$ body $tag$;
-      // where $tag$ is $$ or $function$ or any $word$.
-      const re = new RegExp(
-        `CREATE OR REPLACE FUNCTION\\s+public\\.${name}\\b[\\s\\S]*?\\$(\\w*)\\$[\\s\\S]*?\\$\\1\\$\\s*;`,
-        'gi',
-      );
-      const matches = src.match(re);
-      if (matches && matches.length > 0) {
-        out.set(name, { body: matches[matches.length - 1], file: f });
-      }
+      const marker = `CREATE OR REPLACE FUNCTION public.${name}`;
+      const idx = src.lastIndexOf(marker);
+      if (idx === -1) continue;
+      // Take a generous slice: from the declaration to the next standalone
+      // CREATE OR REPLACE statement, or end of file.
+      const after = src.slice(idx + marker.length);
+      const nextCreate = after.search(/\nCREATE OR REPLACE\s/);
+      const body =
+        marker + (nextCreate === -1 ? after : after.slice(0, nextCreate));
+      out.set(name, { body, file: f });
     }
   }
   return out;
