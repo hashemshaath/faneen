@@ -47,8 +47,10 @@ function loadLatestBodies(names: readonly string[]): Map<string, LatestBody> {
     if (!statSync(full).isFile()) continue;
     const src = readFileSync(full, 'utf8');
     for (const name of names) {
+      // Match CREATE OR REPLACE FUNCTION public.<name>(...) ... $tag$ body $tag$;
+      // where $tag$ is $$ or $function$ or any $word$.
       const re = new RegExp(
-        `CREATE OR REPLACE FUNCTION\\s+public\\.${name}\\s*\\([\\s\\S]*?\\$function\\$\\s*;`,
+        `CREATE OR REPLACE FUNCTION\\s+public\\.${name}\\b[\\s\\S]*?\\$(\\w*)\\$[\\s\\S]*?\\$\\1\\$\\s*;`,
         'gi',
       );
       const matches = src.match(re);
