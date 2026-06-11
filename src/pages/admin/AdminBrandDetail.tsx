@@ -884,6 +884,31 @@ const AdminBrandDetail: React.FC = () => {
                             <ExternalLink className="w-3 h-3" />{pickBi(isRTL, 'مستند التفويض', 'Auth doc')}
                           </a>
                         )}
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            className="text-[11px] text-primary underline"
+                            onClick={() => setExpandedLinkId((cur) => cur === l.id ? null : l.id)}
+                          >
+                            {expandedLinkId === l.id
+                              ? pickBi(isRTL, 'إخفاء المنتجات', 'Hide products')
+                              : pickBi(isRTL, 'إدارة المنتجات المرتبطة', 'Manage scoped products')}
+                          </button>
+                          {expandedLinkId === l.id && (
+                            <LinkProductsEditor
+                              linkId={l.id}
+                              businessId={l.business_id}
+                              brandProducts={productsQ.data ?? []}
+                              isRTL={isRTL}
+                              locale={locale}
+                              addProductForLinkId={addProductForLinkId}
+                              setAddProductForLinkId={setAddProductForLinkId}
+                              onAdd={(productId) => addLinkProduct.mutate({ linkId: l.id, productId, businessId: l.business_id })}
+                              onRemove={(rowId) => removeLinkProduct.mutate(rowId)}
+                              addPending={addLinkProduct.isPending}
+                            />
+                          )}
+                        </div>
                       </div>
                       {l.authorization_status === 'pending' && (
                         <div className="flex gap-2">
