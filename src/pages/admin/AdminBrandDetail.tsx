@@ -228,6 +228,7 @@ const AdminBrandDetail: React.FC = () => {
     // helper which auto-creates a placeholder service when the business has
     // none, so the brand can still be attached.
     mutationFn: async () => {
+      const productIds = linkScope === 'products' ? linkProductIds : undefined;
       if (linkServiceId && linkServiceId !== '__all__') {
         await adminCreateProviderBrandLink({
           brandId: id,
@@ -235,6 +236,7 @@ const AdminBrandDetail: React.FC = () => {
           businessServiceId: linkServiceId,
           relationshipType: linkRelationship as never,
           authorizationStatus: 'verified',
+          productIds,
         });
         return { mode: 'single' as const, inserted: 1 };
       }
@@ -243,6 +245,7 @@ const AdminBrandDetail: React.FC = () => {
         businessId: linkBusinessId,
         relationshipType: linkRelationship as never,
         authorizationStatus: 'verified',
+        productIds,
       });
       return { mode: 'all' as const, ...res };
     },
@@ -254,7 +257,38 @@ const AdminBrandDetail: React.FC = () => {
         : pickBi(isRTL, 'تم ربط المزود', 'Provider linked');
       toast.success(msg);
       setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('__all__');
+      setLinkScope('all'); setLinkProductIds([]);
       qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
+      qc.invalidateQueries({ queryKey: ['admin-brand-link-products'] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const addLinkProduct = useMutation({
+    mutationFn: async (args: { linkId: string; productId: string; businessId: string }) => {
+      await adminSetProviderBrandLinkProducts({
+        providerBrandLinkId: args.linkId,
+        brandId: id,
+        businessId: args.businessId,
+        productIds: [args.productId],
+        mode: 'add',
+      });
+    },
+    onSuccess: () => {
+      toast.success(pickBi(isRTL, 'تمت إضافة المنتج', 'Product added'));
+      setAddProductForLinkId('');
+      qc.invalidateQueries({ queryKey: ['admin-brand-link-products'] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const removeLinkProduct = useMutation({
+    mutationFn: async (rowId: string) => {
+      await adminRemoveProviderBrandLinkProduct(rowId);
+    },
+    onSuccess: () => {
+      toast.success(pickBi(isRTL, 'تمت الإزالة', 'Removed'));
+      qc.invalidateQueries({ queryKey: ['admin-brand-link-products'] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
