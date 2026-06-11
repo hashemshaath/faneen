@@ -70,6 +70,20 @@ export async function listSystemModules(): Promise<SystemModule[]> {
   return (data ?? []) as SystemModule[];
 }
 
+/**
+ * Admin-only: returns every module in the catalog regardless of
+ * `is_active`. Used by the System Access console so the admin can see
+ * "not ready" modules (no backing page) with a clear status.
+ */
+export async function listAllSystemModules(): Promise<SystemModule[]> {
+  const { data, error } = await (supabase as any)
+    .from('system_modules')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as SystemModule[];
+}
+
 export async function listAllOverrides(): Promise<SystemModuleOverride[]> {
   const { data, error } = await (supabase as any)
     .from('system_module_overrides')

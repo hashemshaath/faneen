@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
-  listSystemModules,
+  listAllSystemModules,
   listAllOverrides,
   listAuditLog,
   type SystemModule,
@@ -27,6 +27,15 @@ import {
   type ScopeType,
   type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
+import {
+  classifyModule,
+  LINKED_ROUTES_BADGE,
+  DISABLE_WARNING_TEXT,
+  ACTIVATE_BLOCKED_TEXT,
+  NO_PAGE_HINT_TEXT,
+  isRealDashboardRoute,
+  DEAD_MODULE_KEYS,
+} from '@/modules/systemAccess/moduleStatus';
 import { updateBusinessSystemAccess } from '@/modules/systemAccess/services/updateBusinessSystemAccess';
 import { useBusinessAccessInvalidation } from '@/hooks/useBusinessAccessInvalidation';
 import { ACCESS_LABELS } from '@/modules/systemAccess/accessResolution';
@@ -75,7 +84,9 @@ const AdminSystemAccess: React.FC = () => {
 
   const modulesQuery = useQuery({
     queryKey: ['system-modules'],
-    queryFn: listSystemModules,
+    // Admin console must see every catalog entry (including not-ready ones)
+    // so it can render a clear status badge per module.
+    queryFn: listAllSystemModules,
     staleTime: 60_000,
   });
 
@@ -315,6 +326,17 @@ const AdminSystemAccess: React.FC = () => {
     if (m.is_core && !nextEnabled) {
       toast.error(pickBi(isRTL, 'لا يمكن إخفاء الأنظمة الأساسية', 'Core modules cannot be disabled'));
       return;
+    }
+    const isDead = (DEAD_MODULE_KEYS as readonly string[]).includes(m.key);
+    const canActivate = !isDead && isRealDashboardRoute(m.route);
+    if (nextEnabled && !canActivate) {
+      toast.error(pickBi(isRTL, ACTIVATE_BLOCKED_TEXT.ar, ACTIVATE_BLOCKED_TEXT.en));
+      return;
+    }
+    if (!nextEnabled) {
+      // Inline confirmation lives in the row (warning text); the toast
+      // here mirrors the same copy so the operator always sees it.
+      toast.warning(pickBi(isRTL, DISABLE_WARNING_TEXT.ar, DISABLE_WARNING_TEXT.en));
     }
     setMutation.mutate({
       moduleKey: m.key,
@@ -711,8 +733,22 @@ const AdminSystemAccess: React.FC = () => {
                         const isPending = (setMutation.isPending || clearMutation.isPending)
                           && (setMutation.variables?.moduleKey === m.key
                               || clearMutation.variables?.moduleKey === m.key);
+                        const info = classifyModule(m, {
+                          effectiveEnabled: effective,
+                          hasDisablingOverride: isOverridden && !ov!.enabled,
+                        });
+                        const statusToneClass =
+                          info.label.tone === 'success'
+                            ? 'bg-success/15 text-success border-success/30'
+                            : info.label.tone === 'destructive'
+                            ? 'bg-destructive/15 text-destructive border-destructive/30'
+                            : info.label.tone === 'warning'
+                            ? 'bg-warning/15 text-warning border-warning/30'
+                            : 'bg-muted text-muted-foreground border-border';
                         return (
                           <div key={m.key}
+                            data-testid={`system-module-row-${m.key}`}
+                            data-module-status={info.status}
                             className={`px-4 py-3 flex items-start gap-3 transition-colors ${
                               isOverridden ? 'bg-accent/5' : ''
                             }`}>
@@ -724,6 +760,22 @@ const AdminSystemAccess: React.FC = () => {
                                 <code className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground tech-content">
                                   {m.key}
                                 </code>
+                                <Badge
+                                  data-testid={`system-module-status-${m.key}`}
+                                  className={`text-[10px] border ${statusToneClass}`}
+                                >
+                                  {isRTL ? info.label.ar : info.label.en}
+                                </Badge>
+                                {info.linkedRoutes.length > 0 && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] gap-1"
+                                    title={info.linkedRoutes.join('  •  ')}
+                                  >
+                                    {pickBi(isRTL, LINKED_ROUTES_BADGE.ar, LINKED_ROUTES_BADGE.en)}
+                                    <span className="tech-content opacity-70">·{info.linkedRoutes.length}</span>
+                                  </Badge>
+                                )}
                                 {m.is_core && (
                                   <Badge variant="outline" className="text-[10px] gap-1 border-warning/40 text-warning">
                                     <Lock className="w-2.5 h-2.5" />
@@ -747,10 +799,34 @@ const AdminSystemAccess: React.FC = () => {
                                   {isRTL ? m.description_ar : m.description_en}
                                 </p>
                               )}
-                              {m.route && (
+                              {info.primaryRoute && (
                                 <code className="text-[10px] text-muted-foreground tech-content mt-1 inline-block">
-                                  {m.route}
+                                  {info.primaryRoute}
                                 </code>
+                              )}
+                              {info.linkedRoutes.length > 0 && (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  {info.linkedRoutes.map((r) => (
+                                    <code
+                                      key={r}
+                                      className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground tech-content"
+                                    >
+                                      {r}
+                                    </code>
+                                  ))}
+                                </div>
+                              )}
+                              {!info.canActivate && (
+                                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-start gap-1">
+                                  <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                                  <span>{pickBi(isRTL, NO_PAGE_HINT_TEXT.ar, NO_PAGE_HINT_TEXT.en)}</span>
+                                </p>
+                              )}
+                              {info.canActivate && effective && !m.is_core && (
+                                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-start gap-1">
+                                  <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0 text-warning" />
+                                  <span>{pickBi(isRTL, DISABLE_WARNING_TEXT.ar, DISABLE_WARNING_TEXT.en)}</span>
+                                </p>
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -773,7 +849,7 @@ const AdminSystemAccess: React.FC = () => {
                                 <Switch
                                   checked={effective}
                                   onCheckedChange={(v) => handleToggle(m, v)}
-                                  disabled={!isAdmin || m.is_core}
+                                  disabled={!isAdmin || m.is_core || (!effective && !info.canActivate)}
                                   aria-label={`Toggle ${m.key}`}
                                 />
                               )}

@@ -39,7 +39,7 @@ interface RouteVisibilityEntry {
 
 const EMPTY: EffectiveVisibility[] = [];
 
-const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
+export const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
   business_info: ['/dashboard/business-edit', '/dashboard/business'],
   service_areas: ['/dashboard/provider/service-areas', '/dashboard/service-areas'],
   verification_badge: ['/dashboard/badge', '/dashboard/verification'],
