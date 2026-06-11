@@ -669,7 +669,24 @@ export async function adminCreateProviderBrandLink(args: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {
+    await writeBrandAuditLog({
+      brand_id: args.brandId,
+      action: 'provider_brand_link_admin_create_failed',
+      new_values: {
+        business_id: args.businessId,
+        business_service_id: args.businessServiceId,
+        relationship_type: args.relationshipType,
+        authorization_status: args.authorizationStatus ?? 'verified',
+        product_ids: args.productIds ?? [],
+        error_code: error.code ?? null,
+        error_message: error.message ?? null,
+        error_details: error.details ?? null,
+        error_hint: error.hint ?? null,
+      },
+    });
+    throw new Error(humanizeBrandLinkError(error, 'create'));
+  }
   const linkId = (data as { id: string }).id;
   if (args.productIds && args.productIds.length > 0) {
     await adminSetProviderBrandLinkProducts({
@@ -728,7 +745,20 @@ export async function adminLinkBrandToAllServices(args: {
       })
       .select('id, name_ar, name_en, is_active')
       .single();
-    if (createErr) throw createErr;
+    if (createErr) {
+      await writeBrandAuditLog({
+        brand_id: args.brandId,
+        action: 'provider_brand_link_admin_placeholder_service_failed',
+        new_values: {
+          business_id: args.businessId,
+          error_code: createErr.code ?? null,
+          error_message: createErr.message ?? null,
+          error_details: createErr.details ?? null,
+          error_hint: createErr.hint ?? null,
+        },
+      });
+      throw new Error(humanizeBrandLinkError(createErr, 'service'));
+    }
     services = [created as { id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }];
   }
 
@@ -748,7 +778,24 @@ export async function adminLinkBrandToAllServices(args: {
     .from('business_service_brands')
     .upsert(rows, { onConflict: 'business_service_id,brand_id', ignoreDuplicates: true })
     .select('id');
-  if (error) throw error;
+  if (error) {
+    await writeBrandAuditLog({
+      brand_id: args.brandId,
+      action: 'provider_brand_link_admin_bulk_failed',
+      new_values: {
+        business_id: args.businessId,
+        service_count: services.length,
+        relationship_type: args.relationshipType,
+        authorization_status: status,
+        product_ids: args.productIds ?? [],
+        error_code: error.code ?? null,
+        error_message: error.message ?? null,
+        error_details: error.details ?? null,
+        error_hint: error.hint ?? null,
+      },
+    });
+    throw new Error(humanizeBrandLinkError(error, 'create'));
+  }
 
   // Apply product scoping to ALL links for this (brand, business) pair so the
   // selection is consistent regardless of which service row carries it.
