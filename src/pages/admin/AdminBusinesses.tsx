@@ -974,11 +974,11 @@ const AdminBusinesses = () => {
       };
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
-        const { error } = await updateBusinessBranchById(editingBranchId, payload);
+        const { error } = await updateBusinessBranchById(editingBranchId, payload as never);
         if (error) throw error;
       } else {
         // Insert without is_main; if wantsMain we promote via RPC below.
-        const { data, error } = await insertBusinessBranchReturning(payload, 'id', 'single');
+        const { data, error } = await insertBusinessBranchReturning(payload as never, 'id', 'single');
         if (error) throw error;
         targetBranchId = (data as unknown as { id: string } | null)?.id ?? null;
       }
