@@ -363,7 +363,7 @@ const DashboardBranches: React.FC = () => {
               businessUsername={businessUsername ?? null}
               isExpanded={expandedId === branch.id}
               onToggle={() => setExpandedId(p => (p === branch.id ? null : branch.id))}
-              onSetMain={() => handleSetMain(branch.id)}
+              onSetMain={() => handleRequestSetMain(branch.id)}
               onDelete={() => handleDelete(branch)}
               staffOptions={staffOptions}
               services={services ?? []}
