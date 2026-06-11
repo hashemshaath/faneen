@@ -71,18 +71,26 @@ const ALLOWLISTED_FILES = new Set(
 describe('ADMIN TYPESCRIPT ANY HARDENING GUARD', () => {
   const adminFiles = ROOTS.flatMap(walk);
 
-  it.each(ALLOWLIST)(
-    '$file is at or under its any-ceiling ($max)',
-    ({ file, max }) => {
-      const full = path.resolve(__dirname, '../..', file);
-      const n = countAny(readFileSync(full, 'utf8'));
-      // Ceiling is hard upper bound; if you cleaned the file, lower `max` here.
-      expect(
-        n,
-        `${file}: any-count ${n} exceeds ceiling ${max}. Either clean the new occurrence or lower the ceiling.`,
-      ).toBeLessThanOrEqual(max);
-    },
-  );
+  // Per-file ceiling assertions (skipped when the allowlist is empty —
+  // admin scope has reached zero allowed `any` usages).
+  if (ALLOWLIST.length > 0) {
+    it.each(ALLOWLIST)(
+      '$file is at or under its any-ceiling ($max)',
+      ({ file, max }) => {
+        const full = path.resolve(__dirname, '../..', file);
+        const n = countAny(readFileSync(full, 'utf8'));
+        // Ceiling is hard upper bound; if you cleaned the file, lower `max` here.
+        expect(
+          n,
+          `${file}: any-count ${n} exceeds ceiling ${max}. Either clean the new occurrence or lower the ceiling.`,
+        ).toBeLessThanOrEqual(max);
+      },
+    );
+  } else {
+    it('allowlist is empty — admin scope is fully any-free', () => {
+      expect(ALLOWLIST).toEqual([]);
+    });
+  }
 
   it('no admin file outside the allowlist may contain `any`-shaped types', () => {
     const offenders: string[] = [];
