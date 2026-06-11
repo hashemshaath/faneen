@@ -3165,6 +3165,54 @@ export type Database = {
           },
         ]
       }
+      business_branch_audit_log: {
+        Row: {
+          action: string
+          branch_id: string
+          business_id: string
+          changed_by: string | null
+          id: string
+          new_branch_type: Database["public"]["Enums"]["branch_type"] | null
+          new_is_main: boolean | null
+          new_name_ar: string | null
+          occurred_at: string
+          old_branch_type: Database["public"]["Enums"]["branch_type"] | null
+          old_is_main: boolean | null
+          old_name_ar: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          branch_id: string
+          business_id: string
+          changed_by?: string | null
+          id?: string
+          new_branch_type?: Database["public"]["Enums"]["branch_type"] | null
+          new_is_main?: boolean | null
+          new_name_ar?: string | null
+          occurred_at?: string
+          old_branch_type?: Database["public"]["Enums"]["branch_type"] | null
+          old_is_main?: boolean | null
+          old_name_ar?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          branch_id?: string
+          business_id?: string
+          changed_by?: string | null
+          id?: string
+          new_branch_type?: Database["public"]["Enums"]["branch_type"] | null
+          new_is_main?: boolean | null
+          new_name_ar?: string | null
+          occurred_at?: string
+          old_branch_type?: Database["public"]["Enums"]["branch_type"] | null
+          old_is_main?: boolean | null
+          old_name_ar?: string | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       business_branches: {
         Row: {
           additional_number: string | null
