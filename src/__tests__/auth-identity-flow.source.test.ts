@@ -29,9 +29,19 @@ describe('AUTH-IDENTITY-VERIFY-1: source-level regression checks', () => {
 
   it('AuthShowcase has no missing image imports', () => {
     const src = read('src/components/auth/AuthShowcase.tsx');
-    expect(src).not.toMatch(/from ['"][^'"]*\.(png|jpe?g|webp|gif)['"]/);
-    // brand industrial visuals via SVG
-    expect(src).toContain('<svg');
+    // The showcase intentionally imports four sector raster slides
+    // (aluminum/glass/steel/wood). Guard only against the legacy
+    // `auth-slide-1/2/3` files that were deleted in the asset cleanup.
+    expect(src).not.toMatch(/auth-slide-(?:1|2|3)\b/);
+    // Each imported image must resolve to a real file under @/assets/auth/.
+    const imports = [...src.matchAll(/from ['"](@\/assets\/[^'"]+\.(?:png|jpe?g|webp|gif))['"]/g)].map((m) => m[1]);
+    expect(imports.length).toBeGreaterThanOrEqual(4);
+    const fs = require('node:fs') as typeof import('node:fs');
+    const path = require('node:path') as typeof import('node:path');
+    for (const spec of imports) {
+      const rel = spec.replace(/^@\//, 'src/');
+      expect(fs.existsSync(path.resolve(__dirname, '..', '..', rel)), `${rel} must exist`).toBe(true);
+    }
   });
 
   it('index.css ships auth-rise + stripe keyframes with reduced-motion guard', () => {

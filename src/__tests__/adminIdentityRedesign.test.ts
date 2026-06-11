@@ -20,12 +20,17 @@ const bizSrc = readFileSync(BIZ, 'utf8');
 
 describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
   it('renders the bilingual title', () => {
-    expect(src).toContain('المستخدمون والمنشآت');
-    expect(src).toContain('Users & Businesses');
+    // Hub was renamed to the unified "Accounts & Approvals" surface.
+    expect(src).toContain('مركز الحسابات والموافقات');
+    expect(src).toContain('Accounts & Approvals');
   });
   it('renders an overview subtitle mentioning stats and dedicated pages', () => {
-    expect(src).toMatch(/نظرة شاملة[\s\S]*الإدارة التفصيلية|للإدارة التفصيلية/);
-    expect(src).toMatch(/consolidated stats overview[\s\S]*dedicated pages/i);
+    // New overview copy describes the unified surface across overview/inbox/directory.
+    expect(src).toMatch(/سطح موحّد[\s\S]*نظرة عامة[\s\S]*صندوق[\s\S]*دليل/);
+    expect(src).toMatch(/Unified surface[\s\S]*accounts[\s\S]*businesses[\s\S]*approvals/i);
+    // Detailed-management footer hint still routes admins to dedicated pages.
+    expect(src).toMatch(/الإدارة التفصيلية[\s\S]*روابط الإجراءات/);
+    expect(src).toMatch(/Detailed management[\s\S]*row actions/i);
   });
   it('uses noindex meta and admin-only shell (DashboardLayout + useNoIndex)', () => {
     expect(src).toContain('useNoIndex');
@@ -36,13 +41,14 @@ describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
 
 describe('ADMIN-IDENTITY-REDESIGN-1 header quick actions', () => {
   it('exposes a New business CTA linking to /admin/businesses', () => {
-    expect(src).toContain('منشأة جديدة');
-    expect(src).toContain('New business');
+    // CTA was tightened to a single-word label in the hero header.
+    expect(src).toMatch(/['"`]منشأة['"`]/);
+    expect(src).toMatch(/['"`]Business['"`]/);
     expect(src).toMatch(/to=["']\/admin\/businesses["']/);
   });
   it('exposes a New user CTA linking to /admin/users', () => {
-    expect(src).toContain('مستخدم جديد');
-    expect(src).toContain('New user');
+    expect(src).toMatch(/['"`]مستخدم['"`]/);
+    expect(src).toMatch(/['"`]User['"`]/);
     expect(src).toMatch(/to=["']\/admin\/users\?create=individual["']/);
   });
   it('exposes a Refresh action wired to invalidateQueries for identity caches', () => {
