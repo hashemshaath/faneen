@@ -62,16 +62,7 @@ interface Allow {
   reason: string;
   followUp: string;
 }
-const ALLOWLIST: ReadonlyArray<Allow> = [
-  {
-    file: 'src/pages/admin/AdminMembershipRejections.tsx',
-    max: 2,
-    reason:
-      'Single `applyFilters(q: any): any` wraps a Supabase query builder whose generic chain is non-trivial to type.',
-    followUp:
-      'Type with PostgrestFilterBuilder<...> generics or move filtering into a typed helper.',
-  },
-];
+const ALLOWLIST: ReadonlyArray<Allow> = [];
 
 const ALLOWLISTED_FILES = new Set(
   ALLOWLIST.map((a) => path.resolve(__dirname, '../..', a.file)),
