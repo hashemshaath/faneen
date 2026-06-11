@@ -695,7 +695,7 @@ const AdminBrandDetail: React.FC = () => {
                 <div className="md:col-span-5 relative">
                   <Input
                     value={linkBusinessId ? linkBusinessLabel : linkSearch}
-                    onChange={(e) => { setLinkSearch(e.target.value); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId(''); }}
+                    onChange={(e) => { setLinkSearch(e.target.value); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('__all__'); }}
                     placeholder={pickBi(isRTL, 'ابحث عن جهة بالاسم أو الرمز…', 'Search business by name or ref…')}
                     className="h-10"
                   />
