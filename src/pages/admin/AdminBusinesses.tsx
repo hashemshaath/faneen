@@ -107,9 +107,17 @@ import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import type {
+  AdminBusinessImageColumns,
+  AdminBusinessImageVariants,
+  AdminBusinessCsvRow,
+  AdminBusinessBranchLite,
+  AdminBusinessBranchType,
+  AdminBusinessOwnerRow,
+} from './adminBusinesses.types';
 
 // Fix leaflet icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -181,16 +189,16 @@ const reverseGeocode = async (lat: number, lng: number) => {
 };
 
 /* ─── CSV Export ─── */
-const exportCSV = (businesses: any[], language: string) => {
+const exportCSV = (businesses: ReadonlyArray<AdminBusinessCsvRow>, language: string) => {
   // Phase 18f — legacy `category_id` removed from CSV. Activity classification
   // now lives in `business_taxonomy_categories` and is admin-managed inline.
   const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
-  const rows = businesses.map((b: any) => [
+  const rows = businesses.map((b) => [
     b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
     b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
-    `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at).toLocaleDateString(),
+    `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at ?? '').toLocaleDateString(),
   ]);
-  const csv = [headers, ...rows].map(r => r.map((c: any) => `"${c}"`).join(',')).join('\n');
+  const csv = [headers, ...rows].map(r => r.map((c) => `"${c}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
