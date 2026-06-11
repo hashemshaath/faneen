@@ -40,6 +40,7 @@ import {
   listBrandProductRequests, adminApproveBrandProductRequest, adminRejectBrandProductRequest,
   brandProductStatusLabel, brandProductRequestStatusLabel,
   adminSearchBusinessesForBrand, adminListBusinessServices, adminCreateProviderBrandLink,
+  adminLinkBrandToAllServices,
   type BrandProduct, type BrandProductRequest,
 } from '@/modules/brands';
 
@@ -199,15 +200,36 @@ const AdminBrandDetail: React.FC = () => {
     enabled: !!linkBusinessId,
   });
   const createLink = useMutation({
-    mutationFn: () => adminCreateProviderBrandLink({
-      brandId: id,
-      businessId: linkBusinessId,
-      businessServiceId: linkServiceId,
-      relationshipType: linkRelationship as never,
-      authorizationStatus: 'verified',
-    }),
-    onSuccess: () => {
-      toast.success(pickBi(isRTL, 'تم ربط المزود', 'Provider linked'));
+    // `linkServiceId === '__all__'` (or empty when the provider has no
+    // services yet) means "link to every service" — falls back to the bulk
+    // helper which auto-creates a placeholder service when the business has
+    // none, so the brand can still be attached.
+    mutationFn: async () => {
+      if (linkServiceId && linkServiceId !== '__all__') {
+        await adminCreateProviderBrandLink({
+          brandId: id,
+          businessId: linkBusinessId,
+          businessServiceId: linkServiceId,
+          relationshipType: linkRelationship as never,
+          authorizationStatus: 'verified',
+        });
+        return { mode: 'single' as const, inserted: 1 };
+      }
+      const res = await adminLinkBrandToAllServices({
+        brandId: id,
+        businessId: linkBusinessId,
+        relationshipType: linkRelationship as never,
+        authorizationStatus: 'verified',
+      });
+      return { mode: 'all' as const, ...res };
+    },
+    onSuccess: (res) => {
+      const msg = res.mode === 'all'
+        ? pickBi(isRTL,
+            `تم الربط بـ ${res.servicesTotal} خدمة (مضافة: ${res.inserted})`,
+            `Linked to ${res.servicesTotal} service(s) — ${res.inserted} new`)
+        : pickBi(isRTL, 'تم ربط المزود', 'Provider linked');
+      toast.success(msg);
       setLinkSearch(''); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('');
       qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
     },
