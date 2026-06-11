@@ -956,7 +956,7 @@ const AdminBusinesses = () => {
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
       const wantsMain = !!branchForm.is_main;
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         business_id: editingBiz.id,
         name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
         is_active: branchForm.is_active,
