@@ -193,16 +193,8 @@ const BrandCard = ({
           {name}
         </p>
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-1">
-        {isVerified ? (
-          <Badge
-            variant="outline"
-            className="gap-1 border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0 text-[10px] font-medium text-emerald-700 dark:text-emerald-400"
-          >
-            <ShieldCheck className="h-3 w-3" />
-            {isRTL ? "موثقة" : "Verified"}
-          </Badge>
-        ) : (
+      {!isVerified && (
+        <div className="flex flex-wrap items-center justify-center gap-1">
           <Badge
             variant="outline"
             className="gap-1 border-amber-500/30 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-700 dark:text-amber-400"
@@ -210,8 +202,8 @@ const BrandCard = ({
             <Clock className="h-3 w-3" />
             {isRTL ? "تحت المراجعة" : "Under review"}
           </Badge>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
