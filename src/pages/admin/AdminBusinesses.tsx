@@ -1596,7 +1596,7 @@ const AdminBusinesses = () => {
                       <span className="text-xs font-medium truncate">{createForm.resolved_owner_label}</span>
                     </div>
                     <Button type="button" variant="ghost" size="sm" className="h-7 text-[11px] rounded-lg"
-                      onClick={() => setCreateForm((f: any) => ({ ...f, resolved_user_id: '', resolved_owner_label: '', owner_query: '' }))}>
+                      onClick={() => setCreateForm((f) => ({ ...f, resolved_user_id: '', resolved_owner_label: '', owner_query: '' }))}>
                       <X className="w-3 h-3 me-1" /> {pickBi(isRTL, 'تغيير', 'Change')}
                     </Button>
                   </div>
