@@ -248,9 +248,7 @@ const Queue: React.FC<QueueProps> = ({ title, tone, items, isRTL, onSelect }) =>
                 {isRTL ? 'فتح' : 'Open'}
                 <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
-            ) : (
-              <Link to="#" className="text-primary hover:underline shrink-0">{isRTL ? 'فتح' : 'Open'}</Link>
-            )}
+            ) : null}
           </li>
         ))}
       </ul>
