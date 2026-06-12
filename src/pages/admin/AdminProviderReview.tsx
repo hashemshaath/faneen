@@ -7,7 +7,12 @@ import {
   ArrowUpDown, Building2, ExternalLink, Clock, RefreshCw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { listAdminBusinesses, countBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
+import {
+  listAdminBusinesses,
+  countBusinesses,
+  getBusinessSensitiveFields,
+  type ListAdminBusinessesFilter,
+} from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -59,7 +64,10 @@ export default function AdminProviderReview() {
         // Phase 18f — `sectors`/`sub_services` removed from select; activity
         // classification now comes from `business_taxonomy_categories` and is
         // rendered by ProviderReviewDetailPanel via useBusinessTaxonomyDisplay.
-        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date,is_active,is_demo',
+        // Sensitive cols (approval_notes, national_id, cr_document_url,
+        // cr_owner_name) are owner+admin-only via column-level GRANT —
+        // fetched per-selected-row via getBusinessSensitiveFields below.
+        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,onboarding_completion,submitted_at,reviewed_at,published_at,created_at,unified_number,vat_number,cr_document_uploaded_at,cr_legal_entity,cr_issue_date,cr_expiry_date,is_active,is_demo',
         orderBy: [
           { column: 'submitted_at', ascending: false, nullsFirst: false },
           { column: 'created_at', ascending: false },
