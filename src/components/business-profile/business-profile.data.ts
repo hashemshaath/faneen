@@ -89,7 +89,12 @@ const PUBLIC_BUSINESS_SELECT =
   // rendered client-side behind the contact-reveal flow when authenticated
   // viewers fetch the full row separately.
   // identity + routing
-  'id, user_id, username, ' +
+  // NOTE: `user_id` is intentionally NOT selected here — it is no longer
+  // exposed by the `businesses_public` view (PII isolation). Owner ID is
+  // resolved separately via the `get_public_business_data` SECURITY DEFINER
+  // RPC and merged back into the row below so existing consumers
+  // (`business.user_id`) keep working.
+  'id, username, ' +
   // names + descriptions (SEO, header, JSON-LD)
   'name_ar, name_en, description_ar, description_en, ' +
   'short_description_ar, short_description_en, ' +
@@ -151,6 +156,25 @@ export const useBusinessByUsername = (username: string) => {
         // eslint-disable-next-line no-console
         console.error('[business-profile] fetch failed', { username: normalized, reason });
         throw error;
+      }
+      // Enrich with owner user_id via the sanctioned SECURITY DEFINER RPC.
+      // `businesses_public` no longer exposes `user_id` (PII isolation), but
+      // downstream consumers (ownership checks, contact mutation) still rely
+      // on `business.user_id`. The RPC returns null when the caller is not
+      // permitted to see the owner — in that case we leave the field
+      // undefined and ownership-gated UI stays hidden.
+      if (data && data.id) {
+        try {
+          const { data: ownerRow } = await supabase
+            .rpc('get_public_business_data', { _business_id: data.id })
+            .maybeSingle();
+          if (ownerRow && typeof ownerRow === 'object' && 'user_id' in ownerRow) {
+            (data as BusinessWithJoins).user_id =
+              (ownerRow as { user_id: string | null }).user_id ?? (data as BusinessWithJoins).user_id;
+          }
+        } catch {
+          // Non-fatal: owner-gated UI will simply stay hidden.
+        }
       }
       return data;
     },
