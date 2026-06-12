@@ -13,12 +13,12 @@ const rg = (args: string): string => {
 describe("GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1", () => {
   it("unified module exists with all required services", () => {
     expect(existsSync("src/modules/google/index.ts")).toBe(true);
-    expect(existsSync("src/modules/google/mapsService.ts")).toBe(true);
-    expect(existsSync("src/modules/google/placesService.ts")).toBe(true);
-    expect(existsSync("src/modules/google/geocodingService.ts")).toBe(true);
-    expect(existsSync("src/modules/google/addressValidationService.ts")).toBe(true);
-    expect(existsSync("src/modules/google/routesService.ts")).toBe(true);
-    expect(existsSync("src/modules/google/healthService.ts")).toBe(true);
+    expect(existsSync("src/modules/google/services/mapsService.ts")).toBe(true);
+    expect(existsSync("src/modules/google/services/placesService.ts")).toBe(true);
+    expect(existsSync("src/modules/google/services/geocodingService.ts")).toBe(true);
+    expect(existsSync("src/modules/google/services/addressValidationService.ts")).toBe(true);
+    expect(existsSync("src/modules/google/services/routesService.ts")).toBe(true);
+    expect(existsSync("src/modules/google/services/healthService.ts")).toBe(true);
   });
 
   it("all required edge functions exist", () => {
@@ -42,7 +42,7 @@ describe("GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1", () => {
     const out = rg("-n 'VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY' src/ -g '!**/*.md' -g '!src/tests/**'");
     const offenders = out
       .split("\n").filter((l) => l.trim())
-      .filter((l) => !l.startsWith("src/modules/google/mapsService.ts"));
+      .filter((l) => !l.startsWith("src/modules/google/services/mapsService.ts"));
     expect(offenders).toEqual([]);
   });
 
