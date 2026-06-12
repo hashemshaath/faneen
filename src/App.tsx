@@ -17,6 +17,7 @@ import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
 import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { ThemeApplier } from "@/components/ThemeApplier";
+import { IdentityTokensApplier } from "@/components/IdentityTokensApplier";
 import { BrandFaviconApplier } from "@/components/BrandFaviconApplier";
 import { lazyRetry } from "@/lib/lazyRetry";
 const Index = lazyRetry(() => import("./pages/Index"));
@@ -130,6 +131,7 @@ const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"));
 const AdminIdentity = lazyRetry(() => import("./pages/admin/AdminIdentity"));
+const AdminIdentityCenter = lazyRetry(() => import("./pages/admin/AdminIdentityCenter"));
 const AdminSystemSettings = lazyRetry(() => import("./pages/admin/AdminSystemSettings"));
 const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
 const AdminOperations = lazyRetry(() => import("./pages/admin/AdminOperations"));
@@ -530,6 +532,8 @@ const AppRoutes = () => (
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/users/:id" element={<ProtectedRoute requireSuperAdmin><AdminUserDetail /></ProtectedRoute>} />
           <Route path="/admin/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentity /></ProtectedRoute>} />
+          {/* ADMIN-REDESIGN PHASE 2 — Identity Center (unified visual tokens). */}
+          <Route path="/admin/system/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentityCenter /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 17 — System Settings hub.
               Gated by requireAdmin; the System tab's content enforces super-admin internally. */}
           <Route path="/admin/system-settings" element={<ProtectedRoute requireAdmin><AdminSystemSettingsHub /></ProtectedRoute>} />
@@ -589,6 +593,7 @@ const App = () => (
           <AuthProvider>
             <TooltipProvider>
               <ThemeApplier />
+              <IdentityTokensApplier />
               <BrandFaviconApplier />
               <Toaster />
               <Sonner />

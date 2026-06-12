@@ -260,6 +260,43 @@
     --shadow-1: 0 1px 2px rgba(19,23,34,.06), 0 1px 1px rgba(19,23,34,.04);
     --shadow-2: 0 4px 12px rgba(19,23,34,.06), 0 2px 4px rgba(19,23,34,.04);
     --shadow-3: 0 12px 32px rgba(19,23,34,.10), 0 4px 8px rgba(19,23,34,.04);
+
+    /* ── Identity Center tokens (Phase 2) ──────────────────────────────
+       Centrally editable from /admin/system/identity. Defaults here are
+       the SSR baseline; runtime overrides flow through
+       <IdentityTokensApplier /> which reads `admin_identity_tokens`. */
+
+    /* Controls (buttons, segmented, toggles) */
+    --ctrl-h-sm: 32px;
+    --ctrl-h-md: 40px;
+    --ctrl-h-lg: 48px;
+    --ctrl-h-xl: 56px;
+    --ctrl-radius: 12px;
+    --btn-focus-ring-w: 2px;
+    --btn-focus-ring-color: 159 76% 34%;
+
+    /* Forms (inputs, textareas, selects) */
+    --field-h: 48px;
+    --field-radius: 12px;
+    --field-bg: 0 0% 100%;
+    --field-border: 220 23% 91%;
+    --field-focus-ring: 159 76% 34%;
+
+    /* Tables (admin lists) */
+    --table-row-h-compact: 36px;
+    --table-row-h-comfortable: 52px;
+    --table-border: 220 23% 91%;
+    --table-header-bg: 220 17% 96%;
+
+    /* Alerts / toasts */
+    --alert-radius: 12px;
+    --alert-padding: 14px 16px;
+
+    /* Layout */
+    --sidebar-w-expanded: 260px;
+    --sidebar-w-collapsed: 64px;
+    --header-h: 56px;
+    --container-max: 1440px;
   }
 
   .dark {
