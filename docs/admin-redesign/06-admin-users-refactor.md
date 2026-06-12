@@ -112,12 +112,14 @@ Each PR is independently mergeable and revertable. **No PR rewrites business log
 - **Parent net change**: `AdminUsers.tsx` 2,664 → 2,549 LOC (−115). Dropped 6 newly orphaned lucide icons (`Filter`, `Zap`, `LayoutList`, `Rows3`, `Command`, `ArrowUpDown`).
 - **Behavioural delta**: none.
 
-### PR-5 — `CreateUserPanel` (≈130 LOC moved)
+### PR-5 — `CreateUserPanel` ✅ shipped
 
-- **Extract**: `1869–1946` → `src/pages/admin/users/CreateUserPanel.tsx`
-- **Props**: `initialAccountType` (consumed once on mount), `onSubmit(values)`, `onClose`, `isPending`, `isAdmin`, `isRTL`.
-- **Pattern**: form state moves **into** the child; parent passes `initialAccountType` so `openCreatePanel` can still preset the value via the URL effect.
-- **Mutation**: stays in the parent (`createUserMutation`), invoked through `onSubmit`.
+- **Extracted**: inline "Create new user" panel → `src/pages/admin/users/CreateUserPanel.tsx` (111 LOC).
+- **Pattern**: **controlled** (parent retains state). `createForm` + `setCreateForm` are passed down so the `?create=…` URL preset, the CR-scan `onParsed` merge logic, and the `createUserMutation.onSuccess` reset path all keep working unchanged.
+- **Mutation**: stays in parent (`createUserMutation`), invoked via `onSubmit`.
+- **Shared type**: new `CreateUserForm` in `_shared.tsx` — `useState<CreateUserForm>` in parent + child prop type.
+- **Parent net change**: `AdminUsers.tsx` 2,549 → 2,484 LOC (−65). Dropped now-orphaned `CrQuickScanInline` import (`BilingualNameField`, `PhoneField`, `Label`, `Separator`, `UserPlus` still used elsewhere in the file).
+- **Behavioural delta**: none.
 
 ### PR-6 — `UserEditPanel` shell + inner tabs (≈620 LOC moved across 3 files)
 
