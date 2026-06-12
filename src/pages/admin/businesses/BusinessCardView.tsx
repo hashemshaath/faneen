@@ -28,6 +28,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
 import type { BusinessTableRow, TranslationCompleteness } from './BusinessTableView';
 import { TIERS } from './_shared';
 
@@ -145,10 +146,7 @@ const BusinessCardViewImpl: React.FC<BusinessCardViewProps> = ({
                         {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                       </h3>
                       {!biz.is_active && (
-                        <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0">
-                          <Ban className="w-2.5 h-2.5" />
-                          {pickBi(isRTL, 'معطل', 'Disabled')}
-                        </Badge>
+                        <AdminStatusBadge tone="destructive" label={pickBi(isRTL, 'معطل', 'Disabled')} size="sm" />
                       )}
                       {hasContract && (
                         <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0">
