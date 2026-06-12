@@ -36,12 +36,12 @@ Nine admin list surfaces are the migration target. Migrate one at a time; each P
 
 | #  | Page                              | Route                              | Status      |
 | -- | --------------------------------- | ---------------------------------- | ----------- |
-| 1  | Businesses                        | `/admin/businesses`                | ⏳ pending  |
-| 2  | Users                             | `/admin/users`                     | ⏳ pending  |
+| 1  | Businesses                        | `/admin/businesses`                | ✅ already compliant (`DashboardLayout` + `AdminPageHeader`); full template adoption deferred — 3,069 LOC, high blast radius |
+| 2  | Users                             | `/admin/users`                     | ⏭ deferred — 2,790 LOC; needs dedicated multi-PR refactor |
 | 3  | Memberships                       | `/admin/memberships`               | ✅ partial — tabbed hub via `TabbedShell`; overview KPIs unified to `<AdminKpiCard>`. Template N/A. |
 | 4  | Identity Center                   | `/admin/identity`                  | ✅ shipped  |
 | 5  | Contracts                         | `/admin/contracts`                 | ✅ shipped (reference impl) |
-| 6  | Projects                          | `/admin/projects`                  | ⏳ pending  |
+| 6  | Projects                          | `/admin/projects`                  | ⛔ N/A — no admin Projects page exists |
 | 7  | Catalog Governance                | `/admin/catalog-governance`        | ✅ shipped (also fixed: `Navbar`/`Footer` → `DashboardLayout`) |
 | 8  | Provider Growth                   | `/admin/provider-growth`           | ✅ shipped (also fixed: was wrapped in public `Navbar`/`Footer` instead of `DashboardLayout`) |
 | 9  | Email Center                      | `/admin/email-center`              | ✅ shipped (`AdminPageHeader` + `<Bi>`) |
