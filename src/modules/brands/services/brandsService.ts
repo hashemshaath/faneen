@@ -779,7 +779,7 @@ export async function adminLinkBrandToAllServices(args: {
           error_hint: err.hint ?? null,
         },
       });
-      throw new Error(humanizeBrandLinkError(err as never, 'service'));
+      throw new Error(humanizeBrandLinkError(err, 'service'));
     }
     services = [created!];
   }
