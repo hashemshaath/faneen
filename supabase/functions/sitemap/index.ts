@@ -84,6 +84,8 @@ Deno.serve(async (req) => {
         { loc: "/offers", priority: "0.8", changefreq: "daily" },
         { loc: "/projects", priority: "0.8", changefreq: "daily" },
         { loc: "/blog", priority: "0.8", changefreq: "daily" },
+        { loc: "/guides", priority: "0.7", changefreq: "weekly" },
+        { loc: "/guides/heavy-equipment-rental-saudi-arabia", priority: "0.75", changefreq: "monthly" },
         { loc: "/profile-systems", priority: "0.7", changefreq: "weekly" },
         { loc: "/brands", priority: "0.85", changefreq: "daily" },
         { loc: "/rentals", priority: "0.85", changefreq: "daily" },
