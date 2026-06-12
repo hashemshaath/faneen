@@ -787,7 +787,15 @@ const ProfileSystemDetail = () => {
                       </div>
                       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                         {images.slice(0, 3).map((img, i: number) => (
-                          <div key={img.id} className="relative group rounded-lg sm:rounded-xl overflow-hidden media-4-3 cursor-pointer" onClick={() => setLightboxIdx(i)}>
+                          <div
+                            key={img.id}
+                            className="relative group rounded-lg sm:rounded-xl overflow-hidden media-4-3 cursor-pointer"
+                            onClick={() => setLightboxIdx(i)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxIdx(i); } }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={language === 'ar' ? 'عرض الصورة' : 'View image'}
+                          >
                             <img src={img.image_url} alt={language === 'ar' ? (img.caption_ar || name) : (img.caption_en || img.caption_ar || name)} className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
                               <Maximize2 className="ic-sm sm:w-5 sm:h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
