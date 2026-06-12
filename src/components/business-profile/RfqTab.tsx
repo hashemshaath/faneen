@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { insertQuoteRequest } from "@/modules/quotes/services/insertQuoteRequest";
 import { useBi } from "@/components/common/Bilingual";
 
 interface RfqTabProps {
@@ -104,7 +104,7 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
       const budgetMin = form.budget_min ? Number(form.budget_min) : null;
       const hasBudget = budgetMin !== null || budgetMax !== null;
 
-      const { error } = await supabase.from("quote_requests").insert({
+      await insertQuoteRequest({
         user_id: user?.id ?? null,
         target_entity_id: businessId,
         customer_name: name,
@@ -128,7 +128,6 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
           deadline: form.deadline || null,
         },
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       setSubmitted(true);
