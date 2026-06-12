@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Loader2, RotateCcw, Save, Sparkles } from 'lucide-react';
 
 /* ────────────────────────────────────────────────────────────────────── */
@@ -195,14 +196,17 @@ const AdminIdentityCenter: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden />
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
       {/* Header */}
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
@@ -326,7 +330,8 @@ const AdminIdentityCenter: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
