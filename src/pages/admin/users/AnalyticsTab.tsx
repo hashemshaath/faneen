@@ -6,9 +6,9 @@ import {
 } from 'recharts';
 import { pickBi } from '@/components/common/Bilingual';
 import {
-  KpiCard,
   type AdminUsersStats, type AccountTypePiePoint, type TierBarPoint,
 } from './_shared';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 /**
  * PR-3 of the AdminUsers refactor. Pure display tab — no fetching, no
@@ -27,10 +27,10 @@ export const AnalyticsTab = React.memo(({
 }: AnalyticsTabProps) => (
   <>
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <KpiCard icon={ShieldAlert} label={pickBi(isRTL, 'مشرف أعلى', 'Super Admins')} value={stats.superAdmins} gradient="from-secondary/10 to-secondary/5" iconBg="bg-secondary/15 text-secondary" />
-      <KpiCard icon={Crown} label={pickBi(isRTL, 'المشرفين', 'Admins')} value={stats.admins} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
-      <KpiCard icon={ShieldCheck} label={pickBi(isRTL, 'مشرفي محتوى', 'Moderators')} value={stats.moderators} gradient="from-warning/10 to-warning/5" iconBg="bg-warning/15 text-warning" />
-      <KpiCard icon={Ban} label={pickBi(isRTL, 'معطّلون', 'Disabled')} value={stats.bannedCount} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
+      <AdminKpiCard icon={ShieldAlert} tone="secondary"   label={pickBi(isRTL, 'مشرف أعلى', 'Super Admins')} value={stats.superAdmins} />
+      <AdminKpiCard icon={Crown}       tone="destructive" label={pickBi(isRTL, 'المشرفين', 'Admins')}       value={stats.admins} />
+      <AdminKpiCard icon={ShieldCheck} tone="warning"     label={pickBi(isRTL, 'مشرفي محتوى', 'Moderators')} value={stats.moderators} />
+      <AdminKpiCard icon={Ban}         tone="destructive" label={pickBi(isRTL, 'معطّلون', 'Disabled')}      value={stats.bannedCount} />
     </div>
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="rounded-2xl border border-border/30 bg-card p-5">
