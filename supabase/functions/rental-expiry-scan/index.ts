@@ -8,6 +8,10 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { requireCronOrAdmin } from '../_shared/cronAuth.ts';
+import {
+  dispatchEdgeNotifications,
+  type EdgeNotificationPayload,
+} from '../_shared/notifications.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -80,7 +84,7 @@ Deno.serve(async (req) => {
           ? `Rental ${o.ref_id} expired`
           : `Rental ${o.ref_id} expiring soon`;
 
-      const notifications = recipients.map((uid) => ({
+      const notifications: EdgeNotificationPayload[] = recipients.map((uid) => ({
         user_id: uid,
         notification_type:
           o.status === 'expired' ? 'rental_expired' : 'rental_expiring_soon',
@@ -93,12 +97,10 @@ Deno.serve(async (req) => {
         reference_id: o.ref_id,
       }));
 
-      if (notifications.length > 0) {
-        const { error: nErr } = await supabase.from('notifications').insert(notifications);
-        if (nErr) {
-          console.error('[rental-expiry-scan] notif insert', nErr.message);
-          continue;
-        }
+      const { error: nErr } = await dispatchEdgeNotifications(supabase, notifications);
+      if (nErr) {
+        console.error('[rental-expiry-scan] notif insert', nErr.message);
+        continue;
       }
 
       await supabase.from('rental_order_events').insert({
