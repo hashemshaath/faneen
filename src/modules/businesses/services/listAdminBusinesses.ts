@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { BUSINESS_SAFE_COLUMNS_SELECT } from './businessSensitive';
 
 /**
  * Canonical wrapper for admin-side `supabase.from('businesses').select(<select>)`
@@ -31,7 +32,11 @@ export interface ListAdminBusinessesOptions {
 export async function listAdminBusinesses<T = unknown>(
   options: ListAdminBusinessesOptions = {},
 ): Promise<{ data: T[] | null; error: unknown }> {
-  const { select = '*', filters = [], orderBy, limit } = options;
+  // Default select excludes sensitive cols (cr_scan_*, cr_document_url,
+  // national_id, approval_notes, cr_owner_name) — those are owner+admin
+  // only via column-level GRANT and must be fetched via
+  // `getBusinessSensitiveFields` or `getBusinessFullById`.
+  const { select = BUSINESS_SAFE_COLUMNS_SELECT, filters = [], orderBy, limit } = options;
   type AnyBuilder = {
     eq: (c: string, v: unknown) => AnyBuilder;
     in: (c: string, v: unknown[]) => AnyBuilder;
