@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Mail } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { Bi, useBi } from '@/components/common/Bilingual';
 import { EmailOverviewCards } from '@/components/admin/email-center/EmailOverviewCards';
 import { EmailTemplateLibrary } from '@/components/admin/email-center/EmailTemplateLibrary';
 import { EmailTemplatePreview } from '@/components/admin/email-center/EmailTemplatePreview';
@@ -18,33 +19,31 @@ import type { EmailTemplateMeta } from '@/lib/email-center/email-template-catalo
 
 const AdminEmailCenter: React.FC = () => {
   useNoIndex();
-  const { isRTL } = useLanguage();
+  const bi = useBi();
   const [previewing, setPreviewing] = useState<EmailTemplateMeta | null>(null);
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 max-w-7xl mx-auto">
-        <header className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-primary/10 grid place-items-center text-primary">
-            <Mail className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">{isRTL ? 'مركز عمليات البريد' : 'Email Operations Center'}</h1>
-            <p className="text-xs text-muted-foreground">{isRTL ? 'مراقبة، معاينة، وإدارة جميع رسائل قِطاعات' : 'Monitor, preview and manage all Qitaat emails'}</p>
-          </div>
-        </header>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5 max-w-7xl">
+        <AdminPageHeader
+          tone="primary"
+          icon={Mail}
+          eyebrow={bi('لوحة الإدارة', 'Admin Console')}
+          title={bi('مركز عمليات البريد', 'Email Operations Center')}
+          subtitle={bi('مراقبة، معاينة، وإدارة جميع رسائل قِطاعات', 'Monitor, preview and manage all Qitaat emails')}
+        />
 
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto justify-start gap-1">
-            <TabsTrigger value="overview">{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
-            <TabsTrigger value="alerts">{isRTL ? 'التنبيهات' : 'Alerts'}</TabsTrigger>
-            <TabsTrigger value="library">{isRTL ? 'مكتبة القوالب' : 'Templates'}</TabsTrigger>
-            <TabsTrigger value="logs">{isRTL ? 'سجل التسليم' : 'Logs'}</TabsTrigger>
+            <TabsTrigger value="overview"><Bi ar="نظرة عامة" en="Overview" /></TabsTrigger>
+            <TabsTrigger value="alerts"><Bi ar="التنبيهات" en="Alerts" /></TabsTrigger>
+            <TabsTrigger value="library"><Bi ar="مكتبة القوالب" en="Templates" /></TabsTrigger>
+            <TabsTrigger value="logs"><Bi ar="سجل التسليم" en="Logs" /></TabsTrigger>
             <TabsTrigger value="dlq">DLQ</TabsTrigger>
-            <TabsTrigger value="suppression">{isRTL ? 'المنع' : 'Suppression'}</TabsTrigger>
-            <TabsTrigger value="queue">{isRTL ? 'الطابور' : 'Queue'}</TabsTrigger>
-            <TabsTrigger value="config">{isRTL ? 'الإعدادات' : 'Config'}</TabsTrigger>
-            <TabsTrigger value="reports">{isRTL ? 'التقارير' : 'Reports'}</TabsTrigger>
+            <TabsTrigger value="suppression"><Bi ar="المنع" en="Suppression" /></TabsTrigger>
+            <TabsTrigger value="queue"><Bi ar="الطابور" en="Queue" /></TabsTrigger>
+            <TabsTrigger value="config"><Bi ar="الإعدادات" en="Config" /></TabsTrigger>
+            <TabsTrigger value="reports"><Bi ar="التقارير" en="Reports" /></TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview"><EmailOverviewCards /></TabsContent>
