@@ -19,6 +19,7 @@ import {
   Activity, RefreshCw, AlertCircle, ArrowUpRight, Sparkles, Users, Clock, Target, Info,
   Download, TrendingUp,
 } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { QUOTE_STATUS_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus } from '@/lib/quoteRequests';
 import {
   buildDailyQuoteOperationsSeries, rowsToCsv, downloadCsv, DAILY_OPS_CSV_HEADERS,
@@ -393,17 +394,13 @@ const AdminQuoteOperations: React.FC = () => {
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
         <div className="space-y-5 max-w-7xl">
-          {/* Header */}
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" /> لوحة تشغيل عروض الأسعار
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                تابع سرعة معالجة الطلبات، جودة المطابقة، وتفاعل المزودين من مكان واحد.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
+          <AdminPageHeader
+            icon={Activity}
+            tone="primary"
+            title="لوحة تشغيل عروض الأسعار"
+            subtitle="تابع سرعة معالجة الطلبات، جودة المطابقة، وتفاعل المزودين من مكان واحد."
+            actions={(
+              <>
               <Select value={range} onValueChange={(v) => setRange(v as Range)}>
                 <SelectTrigger className="h-9 w-[140px] text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -434,8 +431,9 @@ const AdminQuoteOperations: React.FC = () => {
               <Button size="sm" variant="outline" className="h-9 text-xs" onClick={handleExportDaily} disabled={loading || dailySeries.length === 0}>
                 <Download className="h-3.5 w-3.5" /> تصدير CSV
               </Button>
-            </div>
-          </div>
+              </>
+            )}
+          />
 
           {errored ? (
             <Card><CardContent className="py-10 text-center space-y-2">
