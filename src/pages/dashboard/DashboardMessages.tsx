@@ -1307,14 +1307,14 @@ const DashboardMessages = () => {
                           <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
                             {chatSearchIndex + 1}/{filteredMessages.length}
                           </span>
-                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" aria-label="Previous match" onClick={() => {
                             const prev = (chatSearchIndex - 1 + filteredMessages.length) % filteredMessages.length;
                             setChatSearchIndex(prev);
                             document.getElementById(`msg-${filteredMessages[prev]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                           }}>
                             <ChevronUp className="w-3 h-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" aria-label="Next match" onClick={() => {
                             const next = (chatSearchIndex + 1) % filteredMessages.length;
                             setChatSearchIndex(next);
                             document.getElementById(`msg-${filteredMessages[next]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });

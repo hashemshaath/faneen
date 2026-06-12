@@ -210,7 +210,7 @@ const AdminHomeFaq: React.FC = () => {
                       <Button size="sm" variant="outline" onClick={() => (draft ? cancelEdit(it.id) : startEdit(it))}>
                         {draft ? bi('إغلاق', 'Close') : bi('تعديل', 'Edit')}
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => {
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" aria-label={bi('حذف', 'Delete')} onClick={() => {
                         if (confirm(bi('حذف هذا السؤال؟','Delete this question?'))) deleteMut.mutate(it.id);
                       }}><Trash2 className="w-4 h-4" /></Button>
                     </div>
