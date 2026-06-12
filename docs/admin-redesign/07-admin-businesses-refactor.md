@@ -82,7 +82,7 @@ and still ship.
 | **PR-6** ✅ shipped | Extracted the inline create panel (~330 LOC JSX + ~42 LOC owner-search `useEffect`) into `businesses/CreateBusinessPanel.tsx`. Child owns local UI state (owner-search dropdown, results, loading) while parent keeps `createForm` + `createBizMutation`. Removed dead `resolveOwner` callback and unused imports (`getProfileByEmail`, `getProfileByRefId`, `searchProfilesByOr`, `BilingualNameField`, `getProfileDisplayName`, 4 lucide icons). Net: 2,727 → 2,321 LOC. | ~410 moved | Med  |
 | **PR-7** | Extract `EditBusinessPanel` (tabs: Profile, Owner, Membership, Services, Branches).         | ~750      | High |
 | **PR-4 (early-win)** ✅ shipped | **Dead-code removal**: local `StatCard` was unreferenced (KPI tiles already use `<AdminKpiCard>`). Removed component + `TrendingUp` import. Net: 2,972 → 2,948 LOC. Defers the bulk `BusinessTable` extraction to PR-4-main. |
-| **PR-8** | Governance pass — wrap shell in `<AdminListPageTemplate>`, bespoke badges → `<AdminStatusBadge>`. | ~200 | Low |
+| **PR-8** ✅ shipped | Governance pass: wrapped shell in `<AdminListPageTemplate>` with title/subtitle/eyebrow/actions/kpiSlot/filtersSlot/bulkBarSlot/paginationSlot. Replaced bespoke status badges in `BusinessTableView` and `BusinessCardView` with `<AdminStatusBadge>` (verified→info, disabled→destructive, active→success). Net: 2,321 → 1,473 LOC. | ~850 moved | Low |
 
 Each PR keeps **all** state + mutations in the parent (`AdminBusinesses`)
 and passes them as props to the extracted child. This mirrors the
