@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ADMIN_NAV_GROUPS, ADMIN_NAV_ITEMS } from '@/modules/admin-shell/navigation/adminNavigation';
 
 export interface BreadcrumbEntry {
   label: string;
@@ -77,6 +78,9 @@ export function useBreadcrumbs(): BreadcrumbEntry[] {
     const crumbs: BreadcrumbEntry[] = [];
     let acc = '';
     let currentModule: string | undefined;
+    // ADMIN REDESIGN PHASE 3 — for admin routes, prefer the registry's bilingual
+    // labels so every page gets a proper crumb without a hand-maintained map.
+    const isAdminRoute = segments[0] === 'admin';
     for (const seg of segments) {
       acc += `/${seg}`;
       if (SEGMENT_TO_MODULE[seg]) currentModule = SEGMENT_TO_MODULE[seg];
@@ -84,6 +88,26 @@ export function useBreadcrumbs(): BreadcrumbEntry[] {
       if (/^[0-9a-f-]{20,}$/i.test(seg) || /^[A-Z]{2,8}-[0-9A-Z]{3,16}$/i.test(seg)) {
         crumbs.push({ label: seg, path: acc, module: currentModule });
         continue;
+      }
+      if (isAdminRoute) {
+        const navItem = ADMIN_NAV_ITEMS.find((it) => it.route === acc);
+        if (navItem) {
+          crumbs.push({
+            label: isRTL ? navItem.labelAr : navItem.labelEn,
+            path: acc,
+            module: currentModule,
+          });
+          continue;
+        }
+        const navGroup = ADMIN_NAV_GROUPS.find((g) => g.items.some((it) => it.route.startsWith(acc + '/') || it.route === acc));
+        if (navGroup && seg !== 'admin') {
+          crumbs.push({
+            label: isRTL ? navGroup.labelAr : navGroup.labelEn,
+            path: acc,
+            module: currentModule,
+          });
+          continue;
+        }
       }
       const label = LABELS[seg];
       crumbs.push({
