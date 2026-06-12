@@ -5,7 +5,7 @@ import {
   Upload, FileText, ScanLine, CheckCircle2, Loader2, X, ExternalLink,
   RefreshCw, Save, AlertCircle, Download, Lightbulb,
 } from 'lucide-react';
-import { updateBusinessById } from '@/modules/businesses';
+import { updateBusinessById, updateBusinessSensitiveFields } from '@/modules/businesses';
 import { uploadCrDocument, createCrDocumentSignedUrl } from '@/modules/files';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -483,16 +483,17 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
       }
 
       const update: Record<string, unknown> = {
-        national_id: form.cr_number || null,
+        // national_id, cr_owner_name, cr_document_url, cr_scan_raw,
+        // cr_scan_data are owner+admin-only sensitive cols — written via
+        // `updateBusinessSensitiveFields` RPC below (column-level UPDATE
+        // is revoked from authenticated for those columns).
         unified_number: form.unified_number || null,
         vat_number: form.vat_number || null,
-        cr_owner_name: form.cr_owner_name || null,
         cr_legal_entity: form.cr_legal_entity || null,
         cr_issue_date: form.cr_issue_date || null,
         cr_expiry_date: form.cr_expiry_date || null,
       };
       if (file) {
-        update.cr_document_url = documentUrl;
         update.cr_document_path = documentPath;
         update.cr_document_mime = mime;
         update.cr_document_size = size;
@@ -500,17 +501,28 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
         update.cr_document_uploaded_by = user?.id ?? null;
       }
       if (scan) {
-        update.cr_scan_raw = scan.raw;
-        update.cr_scan_data = {
-          url: scan.url ?? null,
-          extras: scan.extras,
-          parsed_at: new Date().toISOString(),
-        };
         update.cr_scan_at = new Date().toISOString();
       }
 
       const { error } = await updateBusinessById({ id: businessId, values: update });
       if (error) throw error;
+
+      // Sensitive-fields write (owner+admin only via SECURITY DEFINER RPC).
+      const sensitivePatch: Parameters<typeof updateBusinessSensitiveFields>[1] = {
+        national_id: form.cr_number || null,
+        cr_owner_name: form.cr_owner_name || null,
+      };
+      if (file) sensitivePatch.cr_document_url = documentUrl;
+      if (scan) {
+        sensitivePatch.cr_scan_raw = scan.raw;
+        sensitivePatch.cr_scan_data = {
+          url: scan.url ?? null,
+          extras: scan.extras,
+          parsed_at: new Date().toISOString(),
+        };
+      }
+      const { error: sensErr } = await updateBusinessSensitiveFields(businessId, sensitivePatch);
+      if (sensErr) throw sensErr;
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم الحفظ' : 'Saved');
