@@ -35,11 +35,23 @@ describe('MEMBERSHIP-SYSTEM-ACCESS-GOVERNANCE-2-UI', () => {
     expect(hub).toContain('مصفوفة الخدمات');
   });
 
-  it('exposes a super-admin only business override panel with optional reason', () => {
+  it('exposes a super-admin only business override panel with required reason', () => {
     const src = read('src/components/admin/system-access/SuperAdminBusinessOverridePanel.tsx');
     expect(src).toContain('superAdminSetBusinessModuleOverride');
-    // Reason is OPTIONAL — submit is enabled without it.
-    expect(src).toMatch(/Reason \(optional\)|السبب \(اختياري\)/);
+    // MEMBERSHIP GOVERNANCE REASON VALIDATION PASS — reason is REQUIRED
+    // (audit-log mandatory). Label, canSubmit guard, and explicit
+    // pre-submit check must all be present.
+    expect(src).toMatch(/Reason \(required\)/);
+    expect(src).toMatch(/السبب \(مطلوب\)/);
+    // canSubmit gates the submit button on a non-empty trimmed reason.
+    expect(src).toMatch(/reason\.trim\(\)\.length\s*>\s*0/);
+    // Explicit pre-submit guard rejects empty/whitespace reasons.
+    expect(src).toMatch(/reason\.trim\(\)\.length\s*===\s*0/);
+    expect(src).toMatch(/Reason is required for the audit log/);
+    expect(src).toMatch(/السبب مطلوب لسجل التدقيق/);
+    // The RPC must receive the trimmed reason — never `reason.trim() || null`.
+    expect(src).toMatch(/reason:\s*reason\.trim\(\)/);
+    expect(src).not.toMatch(/reason\.trim\(\)\s*\|\|\s*null/);
     // Core modules cannot be disabled via this panel.
     expect(src).toMatch(/is_core[\s\S]*Core module cannot be disabled/);
     // Super admin gate is enforced in the UI.
