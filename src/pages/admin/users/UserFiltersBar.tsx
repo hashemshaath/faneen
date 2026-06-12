@@ -46,7 +46,7 @@ export type UserFiltersBarProps = {
 
   // Selection / counts
   allOnPageSelected: boolean;
-  toggleSelectPage: (v: boolean) => void;
+  toggleSelectPage: () => void;
   resultsCount: number;
   page: number;
   totalPages: number;
@@ -165,7 +165,7 @@ export const UserFiltersBar = React.memo(({
       </div>
       {/* Sort + select-all + counter */}
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20 flex-wrap">
-        <Checkbox checked={allOnPageSelected} onCheckedChange={(v) => toggleSelectPage(v === true)} />
+        <Checkbox checked={allOnPageSelected} onCheckedChange={() => toggleSelectPage()} />
         <span className="text-[11px] text-muted-foreground">
           {isRTL ? `${resultsCount} نتيجة • صفحة ${page}/${totalPages}` : `${resultsCount} results • Page ${page}/${totalPages}`}
         </span>
