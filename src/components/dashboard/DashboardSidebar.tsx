@@ -54,6 +54,28 @@ import {
 } from 'lucide-react';
 import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 
+// ══════════════════════════════════════════
+//  ADMIN-REDESIGN PHASE 3 — Registry-driven admin sidebar
+// ══════════════════════════════════════════
+//
+// The admin sidebar is derived from the central navigation registry
+// (`@/modules/admin-shell`). It exposes 7 canonical groups: Overview,
+// Operations, Users & Entities, Content & Directory, System & Governance,
+// Analytics and Finance.
+//
+// Hidden / deep-link-only admin routes (`hiddenInSidebar: true` in the
+// registry — reachable from the command palette and direct URLs only):
+//   - /admin/users, /admin/users/:id   → superseded by '/admin/identity'
+//                                         (Accounts & Approvals hub)
+//   - /admin/businesses                → owned by Accounts & Approvals
+//   - /admin/quote-requests(/:id)      → opened from Quote Operations
+//   - /admin/entity-access-requests    → intentionally hidden; merged
+//                                         into Accounts & Approvals at
+//                                         '/admin/identity'
+//   - /admin/showcase                  → opened from Partner Showcase
+//   - /admin/integrations/google       → sub-page of Integrations
+//   - /admin/diagnostics               → ops deep link
+
 interface MenuItem {
   label: { ar: string; en: string };
   url: string;
