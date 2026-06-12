@@ -36,6 +36,10 @@ export interface UseAdminDashboardLayoutResult {
   toggleHidden: (id: string) => void;
   show: (id: string) => void;
   hide: (id: string) => void;
+  /** Move a widget one slot earlier in the render order. No-op at top. */
+  moveUp: (id: string) => void;
+  /** Move a widget one slot later in the render order. No-op at bottom. */
+  moveDown: (id: string) => void;
   reset: () => void;
   editMode: boolean;
   setEditMode: (next: boolean) => void;
@@ -172,6 +176,23 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     commit({ order: [...ADMIN_DASHBOARD_DEFAULT_ORDER], hidden: [] });
   }, [commit]);
 
+  const moveBy = useCallback((id: string, delta: -1 | 1) => {
+    setState((prev) => {
+      const order = sanitizeOrder(prev.order);
+      const i = order.indexOf(id);
+      if (i === -1) return prev;
+      const j = i + delta;
+      if (j < 0 || j >= order.length) return prev;
+      const next = order.slice();
+      [next[i], next[j]] = [next[j], next[i]];
+      const out: StoredLayout = { order: next, hidden: prev.hidden };
+      writeStored(out);
+      return out;
+    });
+  }, []);
+  const moveUp = useCallback((id: string) => moveBy(id, -1), [moveBy]);
+  const moveDown = useCallback((id: string) => moveBy(id, 1), [moveBy]);
+
   const fullOrder = useMemo(() => sanitizeOrder(state.order), [state.order]);
   const visibleOrder = useMemo(() => {
     const hiddenSet = new Set(state.hidden);
@@ -193,6 +214,8 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     toggleHidden,
     show,
     hide,
+    moveUp,
+    moveDown,
     reset,
     editMode,
     setEditMode,
