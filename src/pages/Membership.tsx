@@ -3,7 +3,7 @@ import { useBi } from '@/components/common/Bilingual';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listOwnerBusinesses, listManagedStaffMembershipForUser } from '@/modules/businesses';
+import { listOwnerBusinesses, listManagedStaffMembershipForUser, getBusinessSensitiveFields } from '@/modules/businesses';
 import {
   listActiveMembershipPlans,
   getCurrentMembershipSubscription,
