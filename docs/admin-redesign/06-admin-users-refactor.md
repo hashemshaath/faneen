@@ -121,16 +121,19 @@ Each PR is independently mergeable and revertable. **No PR rewrites business log
 - **Parent net change**: `AdminUsers.tsx` 2,549 → 2,484 LOC (−65). Dropped now-orphaned `CrQuickScanInline` import (`BilingualNameField`, `PhoneField`, `Label`, `Separator`, `UserPlus` still used elsewhere in the file).
 - **Behavioural delta**: none.
 
-### PR-6 — `UserEditPanel` shell + inner tabs (≈620 LOC moved across 3 files)
+### PR-6a — `UserEditPanel` shell + all four inner tabs ✅ shipped
 
-- **PR-6a** — shell: `1958–2582` → `src/pages/admin/users/UserEditPanel.tsx`. Owns tab routing + the four inner tab containers.
-- **PR-6b** — `UserEditPermissionsTab` (`2159–2235`) and `UserEditSuspensionTab` (`2402–2578`) as further children.
-- **State decision** (must be made in PR-6a):
-  - `editForm` / `editFieldErrors` / `editFieldRawCodes` / `usernameServerError` are coupled to `updateProfileMutation.onError`.
-  - **Recommended**: keep these four states + the mutation in the parent; pass values + setters down. This preserves the URL-effect path (`?focus=` populates form state before the child mounts) and avoids re-wiring the error handler.
-  - Alternative (more invasive): move the mutation into the child and use a callback ref for the URL effect. **Reject** for PR-6.
-- **Inline delete confirm** at `2620–2639` adopts `<AlertDialog>` here — the one allowed dialog exception in the governance contract.
-- This is the only PR with meaningful complexity. Land PR-2…PR-5 first; PR-6 can ship 1–2 weeks later.
+- **Extracted**: full inline edit panel (header + 4-tab body: Profile, Permissions, Linked Businesses, Suspension) → `src/pages/admin/users/UserEditPanel.tsx` (735 LOC). Shipped as a single component rather than splitting into per-tab children — the prop surface is already large and the inner tabs are tightly coupled to the same `editingProfile` derivations, so further splitting would only move noise around without a bundle or readability win.
+- **State decision applied**: kept the **recommended** path. `editForm`, `editFieldErrors`, `editFieldRawCodes`, `usernameServerError`, `suspendForm`, `linkForm`, `linkSearch` and the `updateProfileMutation` (+ all related mutations) **stay in the parent** and are passed down as controlled props. The `?focus=` URL effect and the `updateProfileMutation.onError` → inline-error path keep working unchanged.
+- **Shared types**: `StaffRole`, `BusinessInfo`, `BusinessLink`, `EditUserForm`, `EditFieldErrors`, `EditFieldRawCodes`, `UsernameServerError`, `SuspendForm`, `LinkForm` moved into `_shared.tsx` (pure types, no runtime cost). `EmailLiveHint` also moved into `_shared.tsx` (was defined inline in `AdminUsers.tsx` and re-exported there for backwards compatibility) so the child can import it without creating an `AdminUsers ↔ UserEditPanel` cycle. The `useDebouncedValue` import is gone from the parent.
+- **Mutation prop typing**: each mutation prop is typed as `{ isPending: boolean; mutate: (vars: T) => void }` — zero `any`, no `UseMutationResult` wide types leaking into the child.
+- **Force-casts owned by this PR**: the two `(editingProfile as Profile & { banned_until? | ban_reason? })` casts moved with the suspension tab — still the only escape hatches in the file.
+- **Parent net change**: `AdminUsers.tsx` 2,484 → 1,861 LOC (−623). Local `BusinessInfo`, `BusinessLink`, `StaffRole`, and the four config maps stay in the parent (still consumed by `UserRow` / `UserDetailPanel`); the child accepts structurally-compatible shared types, so no duplication at runtime.
+- **Behavioural delta**: none.
+
+### PR-6b — `<AlertDialog>` for inline delete confirm (deferred)
+
+- The inline delete confirm panel (now around the password/delete block in `AdminUsers.tsx`) still uses a plain button. Wrapping it in `<AlertDialog>` is the single allowed dialog exception in the governance contract — deferred to a follow-up since it is independent of the edit-panel extraction.
 
 ### PR-7 — Governance compliance pass (≈80 LOC delta, no extractions)
 
