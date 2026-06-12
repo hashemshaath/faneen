@@ -206,7 +206,7 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
       { id: 'integrations-google', labelAr: 'تكامل Google', labelEn: 'Google Integration', route: '/admin/integrations/google', icon: Plug, hiddenInSidebar: true },
       { id: 'audit-log', labelAr: 'سجل التدقيق', labelEn: 'Audit Log', route: '/admin/audit-log', icon: ClipboardList },
       { id: 'diagnostics', labelAr: 'التشخيص', labelEn: 'Diagnostics', route: '/admin/diagnostics', icon: AlertTriangle, hiddenInSidebar: true },
-      { id: 'cron-runs', labelAr: 'مهام الكرون', labelEn: 'Cron Runs', route: '/admin/cron-runs', icon: RefreshCw },
+      { id: 'cron-runs', labelAr: 'تشغيل المهام', labelEn: 'Cron Runs', route: '/admin/cron-runs', icon: RefreshCw },
       { id: 'ai-center', labelAr: 'مركز الذكاء', labelEn: 'AI Center', route: '/admin/ai-center', icon: Bot },
       { id: 'api-settings', labelAr: 'إعدادات الـ API', labelEn: 'API Settings', route: '/admin/api-settings', icon: KeyRound },
       { id: 'api-docs', labelAr: 'وثائق الـ API', labelEn: 'API Docs', route: '/admin/api-docs', icon: BookOpen },
