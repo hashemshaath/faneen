@@ -68,6 +68,7 @@ export {
   getBusinessSensitiveFields,
   updateBusinessSensitiveFields,
   BUSINESS_SENSITIVE_COLUMNS,
+  BUSINESS_SAFE_COLUMNS_SELECT,
   getOwnerBusinessFull,
   getBusinessFullById,
 } from './services/businessSensitive';
