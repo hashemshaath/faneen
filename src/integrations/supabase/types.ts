@@ -21267,6 +21267,17 @@ export type Database = {
         Returns: Json
       }
       get_branch_visit_count: { Args: { _branch_id: string }; Returns: number }
+      get_business_sensitive_fields: {
+        Args: { p_business_id: string }
+        Returns: {
+          approval_notes: string
+          cr_document_url: string
+          cr_owner_name: string
+          cr_scan_data: Json
+          cr_scan_raw: string
+          national_id: string
+        }[]
+      }
       get_business_staff_with_profiles: {
         Args: { _business_id: string }
         Returns: {
@@ -22878,6 +22889,19 @@ export type Database = {
         Returns: Json
       }
       unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }
+      update_business_sensitive_fields: {
+        Args: {
+          p_approval_notes?: string
+          p_business_id: string
+          p_clear_scan_data?: boolean
+          p_cr_document_url?: string
+          p_cr_owner_name?: string
+          p_cr_scan_data?: Json
+          p_cr_scan_raw?: string
+          p_national_id?: string
+        }
+        Returns: undefined
+      }
       update_client_site: {
         Args: { _patch: Json; _site_id: string }
         Returns: Json
