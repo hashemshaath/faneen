@@ -6,9 +6,10 @@ import {
 } from 'recharts';
 import { pickBi } from '@/components/common/Bilingual';
 import {
-  KpiCard, formatRelative,
+  formatRelative,
   type AdminUsersStats, type SignupSeriesPoint, type RecentAdminActivityItem,
 } from './_shared';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 /**
  * PR-2 of the AdminUsers refactor. Pure display tab — no fetching, no
@@ -27,22 +28,20 @@ export const OverviewTab = React.memo(({
 }: OverviewTabProps) => (
   <>
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <KpiCard icon={Users} label={pickBi(isRTL, 'إجمالي المستخدمين', 'Total Users')} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-      <KpiCard icon={Briefcase} label={pickBi(isRTL, 'مزودي الخدمات', 'Providers')} value={stats.providers} gradient="from-success/10 to-success/5" iconBg="bg-success/15 text-success" />
-      <KpiCard
+      <AdminKpiCard icon={Users} tone="primary" label={pickBi(isRTL, 'إجمالي المستخدمين', 'Total Users')} value={stats.totalUsers} />
+      <AdminKpiCard icon={Briefcase} tone="success" label={pickBi(isRTL, 'مزودي الخدمات', 'Providers')} value={stats.providers} />
+      <AdminKpiCard
         icon={UserCheck}
+        tone="info"
         label={pickBi(isRTL, 'مكتمل التسجيل', 'Onboarded')}
         value={stats.onboarded}
-        gradient="from-info/10 to-info/5"
-        iconBg="bg-info/15 text-info"
         trend={stats.totalUsers > 0 ? `${Math.round((stats.onboarded / stats.totalUsers) * 100)}%` : undefined}
       />
-      <KpiCard
+      <AdminKpiCard
         icon={TrendingUp}
+        tone="warning"
         label={isRTL ? `جديد هذا الأسبوع • ${stats.last24h} اليوم` : `New 7d • ${stats.last24h} today`}
         value={stats.recentUsers}
-        gradient="from-warning/10 to-warning/5"
-        iconBg="bg-warning/15 text-warning"
         trend={`${stats.wow >= 0 ? '' : '-'}${Math.abs(stats.wow)}%`}
       />
     </div>
