@@ -108,7 +108,7 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
     setPercent(0);
     setCounter(null);
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getCurrentUser();
       const userId = auth.user?.id;
       if (!userId) throw new Error(isRTL ? 'يلزم تسجيل الدخول' : 'Sign-in required');
       const next: GalleryImage[] = [...images];

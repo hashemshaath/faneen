@@ -42,7 +42,7 @@ export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploa
     setStage('large');
     setPercent(0);
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getCurrentUser();
       const userId = auth.user?.id;
       if (!userId) throw new Error(isRTL ? 'يلزم تسجيل الدخول' : 'Sign-in required');
 
