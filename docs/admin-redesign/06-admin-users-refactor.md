@@ -137,12 +137,14 @@ Each PR is independently mergeable and revertable. **No PR rewrites business log
 - `<AlertDialogCancel>` and `<AlertDialogAction>` replace the plain `Button`s; the action calls `e.preventDefault()` before firing the mutation so the dialog only closes on the mutation's own `closePanel()` in `onSuccess`. Destructive styling (`bg-destructive text-destructive-foreground`) is preserved.
 - This is the **single allowed dialog exception** in the governance contract — every other interaction in `AdminUsers` stays inline. Memory rule "STRICTLY NO POPUPS/DIALOGS" is upheld for non-destructive flows.
 
-### PR-7 — Governance compliance pass (≈80 LOC delta, no extractions)
+### PR-7 — Governance compliance pass ✅ shipped
 
-- Swap local `KpiCard` (225–248) for `<AdminKpiCard>`.
-- Replace the custom hero header (~1546) with `<AdminPageHeader>` inside `<DashboardLayout>` (already in place via `MaybeDashboardLayout`).
-- Wrap the page body in `<AdminListPageTemplate>` with the existing tabs nav as the `filtersSlot`.
-- Tick row #2 of the migration tracker from ⏭ deferred → ✅ shipped.
+- Local `KpiCard` removed from `_shared.tsx`. All four call sites (hero 6-tile strip, `OverviewTab` 4-tile strip, `AnalyticsTab` 4-tile strip) now use `<AdminKpiCard>` with semantic `tone` (`primary` / `accent` / `success` / `info` / `warning` / `destructive` / `secondary`) instead of freeform `gradient` + `iconBg` strings. `TrendingDown` import dropped from `_shared.tsx` along with it.
+- Custom glassmorphism hero header (60+ LOC of inline gradients, blurred orbs, and a hand-rolled KPI grid) replaced by `<AdminListPageTemplate>` with `<AdminPageHeader>` inside. `MaybeDashboardLayout` still wraps the template.
+- `<Tabs>` now wraps `<AdminListPageTemplate>` so the existing 3-tab nav (`overview` / `users` / `analytics`) sits in `filtersSlot` and the three `<TabsContent>` blocks become the template's `children`. Radix tabs context flows through unchanged.
+- Hero actions (`Refresh`, `Export CSV`, `New User`) move to the template's `actions` slot. The 6-tile KPI strip becomes the `kpiSlot`.
+- **Parent net change**: `AdminUsers.tsx` 1,861 → 1,858 LOC (−3 surface, but ≈70 LOC of bespoke layout markup deleted and replaced with semantic slot usage; remaining LOC is the props-heavy `<UserEditPanel/>` mounting block).
+- **Behavioural delta**: none — same actions, same KPIs, same tabs. Visual delta: KPI tiles are now the canonical `rounded-3xl` height and the hero uses the standard card surface instead of the bespoke `from-accent/5 via-card to-primary/5` gradient + blur orbs.
 
 ---
 

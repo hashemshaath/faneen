@@ -1,5 +1,4 @@
 import React from 'react';
-import { TrendingDown, TrendingUp } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
@@ -28,37 +27,8 @@ export const formatRelative = (dateStr: string | null | undefined, isRTL: boolea
   return formatDate(dateStr, pickBi(isRTL, 'ar', 'en'));
 };
 
-export type KpiCardProps = {
-  icon: React.ElementType;
-  label: string;
-  value: number | string;
-  gradient: string;
-  iconBg: string;
-  trend?: string;
-};
-
-export const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend }: KpiCardProps) => (
-  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md hover-lift group`}>
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center transition-transform group-hover:scale-110`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-2xl font-bold font-heading leading-none tech-content">{value}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
-      </div>
-      {trend && (
-        <span className={`text-[10px] font-bold tech-content shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${
-          trend.startsWith('-') ? 'text-destructive bg-destructive/10' : 'text-success bg-success/10'
-        }`}>
-          {trend.startsWith('-') ? <TrendingDown className="w-2.5 h-2.5" /> : <TrendingUp className="w-2.5 h-2.5" />}
-          {trend.replace('-', '')}
-        </span>
-      )}
-    </div>
-  </div>
-));
-KpiCard.displayName = 'KpiCard';
+/* `KpiCard` (local PR-2 primitive) removed in PR-7 — every tab now uses the
+ * canonical `<AdminKpiCard>` from `@/components/admin/AdminKpiCard`. */
 
 export type AdminUsersStats = {
   totalUsers: number;
