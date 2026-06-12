@@ -38,7 +38,7 @@ Nine admin list surfaces are the migration target. Migrate one at a time; each P
 | -- | --------------------------------- | ---------------------------------- | ----------- |
 | 1  | Businesses                        | `/admin/businesses`                | ⏳ pending  |
 | 2  | Users                             | `/admin/users`                     | ⏳ pending  |
-| 3  | Memberships                       | `/admin/memberships`               | ⏳ pending  |
+| 3  | Memberships                       | `/admin/memberships`               | ✅ partial — tabbed hub via `TabbedShell`; overview KPIs unified to `<AdminKpiCard>`. Template N/A. |
 | 4  | Identity Center                   | `/admin/identity`                  | ✅ shipped  |
 | 5  | Contracts                         | `/admin/contracts`                 | ✅ shipped (reference impl) |
 | 6  | Projects                          | `/admin/projects`                  | ⏳ pending  |

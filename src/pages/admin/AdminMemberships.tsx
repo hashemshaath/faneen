@@ -44,6 +44,7 @@ import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tie
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
 import { AdminUpgradeRequestsPanel } from '@/components/membership/AdminUpgradeRequestsPanel';
 import { AdminPromoCodesPanel } from '@/components/membership/AdminPromoCodesPanel';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
@@ -930,50 +931,31 @@ const AdminMemberships = () => {
           {activeTab === 'overview' && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[
-                  { icon: Users, label: pickBi(isRTL, 'إجمالي الاشتراكات', 'Total Subscriptions'), value: stats.total, accent: 'border-e-primary', delta: null, empty: stats.total === 0 },
-                  { icon: UserCheck, label: pickBi(isRTL, 'نشط حالياً', 'Currently Active'), value: stats.active, accent: 'border-e-success', delta: stats.active > 0 ? 'live' : null, empty: stats.active === 0 },
-                  { icon: DollarSign, label: pickBi(isRTL, 'الإيراد الشهري', 'Monthly Revenue'), value: Math.round(stats.revenue).toLocaleString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US')), suffix: 'SAR', accent: 'border-e-info', delta: null, empty: stats.revenue === 0 },
-                  { icon: AlertTriangle, label: pickBi(isRTL, 'ينتهي قريباً', 'Expiring Soon'), value: stats.expiringSoon, accent: stats.expiringSoon > 0 ? 'border-e-warning' : 'border-e-border', delta: null, empty: stats.expiringSoon === 0 },
-                ].map((s, i) => (
-                  <Card
-                    key={i}
-                    className={cn(
-                      'border border-border/60 shadow-sm rounded-2xl border-e-4 transition-all hover:shadow-md',
-                      s.accent,
-                      s.empty && 'bg-muted/20'
-                    )}
-                  >
-                    <CardContent className="p-5 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                        <s.icon className={cn('w-3.5 h-3.5 shrink-0', s.empty ? 'text-muted-foreground/50' : 'text-muted-foreground')} />
-                      </div>
-                      <div className="flex items-end justify-between gap-2">
-                        <div className="flex items-baseline gap-1 min-w-0">
-                          <span className={cn(
-                            'text-2xl sm:text-3xl font-bold tech-content tabular-nums leading-none',
-                            s.empty ? 'text-muted-foreground/60' : 'text-foreground'
-                          )}>{s.value}</span>
-                          {s.suffix && (
-                            <span className="text-[10px] font-bold text-muted-foreground">{s.suffix}</span>
-                          )}
-                        </div>
-                        {s.delta === 'live' && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-md">
-                            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                            {pickBi(isRTL, 'مباشر', 'LIVE')}
-                          </span>
-                        )}
-                        {s.empty && !s.delta && (
-                          <span className="text-[9px] text-muted-foreground/60">
-                            {pickBi(isRTL, 'لا بيانات', 'No data')}
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                <AdminKpiCard
+                  icon={Users}
+                  tone="primary"
+                  label={pickBi(isRTL, 'إجمالي الاشتراكات', 'Total Subscriptions')}
+                  value={stats.total}
+                />
+                <AdminKpiCard
+                  icon={UserCheck}
+                  tone="success"
+                  label={pickBi(isRTL, 'نشط حالياً', 'Currently Active')}
+                  value={stats.active}
+                  trend={stats.active > 0 ? pickBi(isRTL, 'مباشر', 'LIVE') : undefined}
+                />
+                <AdminKpiCard
+                  icon={DollarSign}
+                  tone="info"
+                  label={pickBi(isRTL, 'الإيراد الشهري', 'Monthly Revenue')}
+                  value={`${Math.round(stats.revenue).toLocaleString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US'))} SAR`}
+                />
+                <AdminKpiCard
+                  icon={AlertTriangle}
+                  tone={stats.expiringSoon > 0 ? 'warning' : 'muted'}
+                  label={pickBi(isRTL, 'ينتهي قريباً', 'Expiring Soon')}
+                  value={stats.expiringSoon}
+                />
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
