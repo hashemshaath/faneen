@@ -44,6 +44,7 @@ import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tie
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
 import { AdminUpgradeRequestsPanel } from '@/components/membership/AdminUpgradeRequestsPanel';
 import { AdminPromoCodesPanel } from '@/components/membership/AdminPromoCodesPanel';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
