@@ -121,6 +121,7 @@ const Projects = lazyRetry(() => import("./pages/Projects"));
 const ProjectDetail = lazyRetry(() => import("./pages/ProjectDetail"));
 const Blog = lazyRetry(() => import("./pages/Blog"));
 const Guides = lazyRetry(() => import("./pages/Guides"));
+const HeavyEquipmentRentalSaudiArabia = lazyRetry(() => import("./pages/guides/HeavyEquipmentRentalSaudiArabia"));
 const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
 const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
 const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"));
