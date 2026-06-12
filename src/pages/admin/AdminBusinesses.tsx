@@ -671,6 +671,11 @@ const AdminBusinesses = () => {
       };
       const { error } = await updateBusinessById({ id, values: payload });
       if (error) throw error;
+      // Sensitive cols (national_id) must go through the owner+admin-only RPC.
+      const { error: sensErr } = await updateBusinessSensitiveFields(id, {
+        national_id: editForm.national_id || null,
+      });
+      if (sensErr) throw sensErr;
       // R4E-3: detect sensitive toggles and apply them through guarded wrappers.
       const activeChanged = typeof editForm.is_active === 'boolean'
         && editForm.is_active !== editingBiz.is_active;
