@@ -212,20 +212,29 @@ const Membership = () => {
       // 1. Owner: pick the most recently created business they own
       const owned = await listOwnerBusinesses<{ id: string; ref_id: string | null; membership_tier: string; name_ar: string | null; name_en: string | null; approval_status: string | null; onboarding_completion: number | null; approval_notes: string | null }>({
         userId: user.id,
-        select: 'id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes',
+        // approval_notes is owner+admin only (column-level REVOKE). Fetch separately via getBusinessSensitiveFields when needed.
+        select: 'id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion',
         orderBy: { column: 'created_at', ascending: false },
         limit: 1,
       });
-      if (owned.data && owned.data.length > 0) return owned.data[0];
+      if (owned.data && owned.data.length > 0) {
+        const biz = owned.data[0];
+        const { data: sens } = await getBusinessSensitiveFields(biz.id);
+        return { ...biz, approval_notes: sens?.approval_notes ?? null };
+      }
 
       // 2. Staff fallback: business they manage (owner/manager role)
       const staff = await listManagedStaffMembershipForUser({
         userId: user.id,
-        select: 'business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes)',
+        // approval_notes intentionally omitted — managers cannot read it.
+        select: 'business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion)',
         limit: 1,
       });
       const row = staff.data?.[0] as { businesses?: { id: string; ref_id: string | null; membership_tier: string; name_ar: string | null; name_en: string | null; approval_status: string | null; onboarding_completion: number | null } } | undefined;
-      if (row?.businesses) return row.businesses;
+      if (row?.businesses) {
+        // Staff/manager path — approval_notes is owner+admin only; leave null.
+        return { ...row.businesses, approval_notes: null as string | null };
+      }
 
       // 3. Self-heal: business/company accounts must always have an entity.
       // Deduped via in-flight Promise + sessionStorage flag (one round-trip
