@@ -363,7 +363,7 @@ const DashboardCredentials: React.FC = () => {
                         ? t(isRTL, 'تعديل شهادة', 'Edit certification')
                         : t(isRTL, 'شهادة جديدة', 'New certification')}
                     </h3>
-                    <Button variant="ghost" size="icon" onClick={() => { setShowCertForm(false); setEditingCertId(null); }}>
+                    <Button variant="ghost" size="icon" onClick={() => { setShowCertForm(false); setEditingCertId(null); }} aria-label="Action">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -480,7 +480,7 @@ const DashboardCredentials: React.FC = () => {
                         ? t(isRTL, 'تعديل جائزة', 'Edit award')
                         : t(isRTL, 'جائزة جديدة', 'New award')}
                     </h3>
-                    <Button variant="ghost" size="icon" onClick={() => { setShowAwardForm(false); setEditingAwardId(null); }}>
+                    <Button variant="ghost" size="icon" onClick={() => { setShowAwardForm(false); setEditingAwardId(null); }} aria-label="Action">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -696,18 +696,18 @@ const CertCard: React.FC<CertCardProps> = ({ cert, isRTL, canUp, canDown, onMove
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <Button size="icon" variant="ghost" className="h-7 w-7" disabled={!canUp} onClick={onMoveUp}>
+          <Button size="icon" variant="ghost" className="h-7 w-7" disabled={!canUp} onClick={onMoveUp} aria-label="Move up">
             <ChevronUp className="h-3.5 w-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" className="h-7 w-7" disabled={!canDown} onClick={onMoveDown}>
+          <Button size="icon" variant="ghost" className="h-7 w-7" disabled={!canDown} onClick={onMoveDown} aria-label="Expand">
             <ChevronDown className="h-3.5 w-3.5" />
           </Button>
         </div>
         <div className="flex flex-col gap-1">
-          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit}>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit} aria-label="Edit">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete}>
+          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete} aria-label="Delete">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -759,10 +759,10 @@ const AwardCardItem: React.FC<AwardCardItemProps> = ({ award, isRTL, onEdit, onD
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit}>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit} aria-label="Edit">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete}>
+          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete} aria-label="Delete">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>

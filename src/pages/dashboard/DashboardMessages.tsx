@@ -426,7 +426,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
           <Info className="w-4 h-4 text-primary" />
           {pickBi(isRTL, 'تفاصيل المحادثة', 'Chat Details')}
         </h3>
-        <Button variant="ghost" size="icon" className="w-7 h-7 rounded-lg" onClick={onClose}><X className="w-3.5 h-3.5" /></Button>
+        <Button variant="ghost" size="icon" className="w-7 h-7 rounded-lg" onClick={onClose} aria-label="Action"><X className="w-3.5 h-3.5" /></Button>
       </div>
 
       <ScrollArea className="flex-1">
@@ -1065,7 +1065,7 @@ const DashboardMessages = () => {
                     <p className="text-[10px] font-semibold text-accent">{pickBi(isRTL, 'اختر محادثة للتحويل', 'Select conversation to forward')}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{forwardMsg.content?.substring(0, 40)}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0" onClick={() => setForwardMsg(null)}>
+                  <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0" onClick={() => setForwardMsg(null)} aria-label="Message">
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
@@ -1182,7 +1182,7 @@ const DashboardMessages = () => {
                 <>
                   {/* ─── Chat Header ─── */}
                   <div className="h-14 flex items-center gap-3 px-4 border-b border-border/30 bg-card/80 backdrop-blur-sm shrink-0">
-                    <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9 rounded-xl" onClick={() => setSelectedConversation(null)}>
+                    <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9 rounded-xl" onClick={() => setSelectedConversation(null)} aria-label="Action">
                       <BackIcon className="w-4 h-4" />
                     </Button>
                     <div className="relative">
@@ -1232,7 +1232,7 @@ const DashboardMessages = () => {
                     <div className="flex items-center gap-1 shrink-0">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl" onClick={() => { setShowChatSearch(!showChatSearch); setChatSearchTerm(''); }}>
+                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl" onClick={() => { setShowChatSearch(!showChatSearch); setChatSearchTerm(''); }} aria-label="Search">
                             <Search className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
@@ -1240,7 +1240,7 @@ const DashboardMessages = () => {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-xl ${showInfoPanel ? 'bg-muted' : ''}`} onClick={() => setShowInfoPanel(!showInfoPanel)}>
+                          <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-xl ${showInfoPanel ? 'bg-muted' : ''}`} onClick={() => setShowInfoPanel(!showInfoPanel)} aria-label="Info">
                             <Info className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
@@ -1248,7 +1248,7 @@ const DashboardMessages = () => {
                       </Tooltip>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl" aria-label="More options"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align={pickBi(isRTL, 'start', 'end')} className="rounded-xl min-w-[180px]">
                           <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg text-xs gap-2">
@@ -1307,14 +1307,14 @@ const DashboardMessages = () => {
                           <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
                             {chatSearchIndex + 1}/{filteredMessages.length}
                           </span>
-                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" aria-label="Previous match" onClick={() => {
                             const prev = (chatSearchIndex - 1 + filteredMessages.length) % filteredMessages.length;
                             setChatSearchIndex(prev);
                             document.getElementById(`msg-${filteredMessages[prev]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                           }}>
                             <ChevronUp className="w-3 h-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" aria-label="Next match" onClick={() => {
                             const next = (chatSearchIndex + 1) % filteredMessages.length;
                             setChatSearchIndex(next);
                             document.getElementById(`msg-${filteredMessages[next]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1326,7 +1326,7 @@ const DashboardMessages = () => {
                       {chatSearchTerm && filteredMessages.length === 0 && (
                         <span className="text-[10px] text-muted-foreground shrink-0">{pickBi(isRTL, 'لا نتائج', 'No results')}</span>
                       )}
-                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); setChatSearchIndex(0); }}>
+                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); setChatSearchIndex(0); }} aria-label="Action">
                         <X className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -1388,7 +1388,7 @@ const DashboardMessages = () => {
                           <p className="text-[10px] text-accent font-semibold">{pickBi(isRTL, 'رد على رسالة', 'Replying to')}</p>
                           <p className="text-xs text-muted-foreground truncate">{replyTo.content?.substring(0, 60)}</p>
                         </div>
-                        <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0 rounded-lg" onClick={() => setReplyTo(null)}>
+                        <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0 rounded-lg" onClick={() => setReplyTo(null)} aria-label="Action">
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
@@ -1410,7 +1410,7 @@ const DashboardMessages = () => {
                           <p className="text-xs font-medium truncate">{attachedFile.name}</p>
                           <p className="text-[10px] text-muted-foreground">{formatFileSize(attachedFile.size)}</p>
                         </div>
-                        <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={removeAttachment}>
+                        <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={removeAttachment} aria-label="Action">
                           <X className="w-3.5 h-3.5" />
                         </Button>
                       </div>
@@ -1430,7 +1430,7 @@ const DashboardMessages = () => {
                       <div className="flex items-center gap-0.5">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" onClick={() => fileInputRef.current?.click()} disabled={isUploading} aria-label="Attach file">
                               <Paperclip className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
@@ -1438,7 +1438,7 @@ const DashboardMessages = () => {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground ${showEmoji ? 'bg-muted text-foreground' : ''}`} onClick={() => { setShowEmoji(!showEmoji); setShowTemplates(false); }}>
+                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground ${showEmoji ? 'bg-muted text-foreground' : ''}`} onClick={() => { setShowEmoji(!showEmoji); setShowTemplates(false); }} aria-label="Action">
                               <Smile className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
@@ -1446,7 +1446,7 @@ const DashboardMessages = () => {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-accent ${showTemplates ? 'bg-muted text-accent' : ''}`} onClick={() => { setShowTemplates(!showTemplates); setShowEmoji(false); }}>
+                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-accent ${showTemplates ? 'bg-muted text-accent' : ''}`} onClick={() => { setShowTemplates(!showTemplates); setShowEmoji(false); }} aria-label="Timer">
                               <Sparkles className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
@@ -1454,7 +1454,7 @@ const DashboardMessages = () => {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground ${showScheduler ? 'bg-muted text-accent' : ''}`} onClick={() => { setShowScheduler(!showScheduler); setShowEmoji(false); setShowTemplates(false); }}>
+                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground ${showScheduler ? 'bg-muted text-accent' : ''}`} onClick={() => { setShowScheduler(!showScheduler); setShowEmoji(false); setShowTemplates(false); }} aria-label="Timer">
                               <Timer className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>

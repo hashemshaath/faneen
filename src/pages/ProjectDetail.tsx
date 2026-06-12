@@ -329,10 +329,10 @@ const ProjectDetail = () => {
 
             {/* Action buttons */}
             <div className="hidden sm:flex items-center gap-2 shrink-0">
-              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full">
+              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full" aria-label="Bookmark">
                 <Bookmark className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full" onClick={() => { navigator.share?.({ title, url: window.location.href }).catch(() => {}); trackShare(); }}>
+              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full" onClick={() => { navigator.share?.({ title, url: window.location.href }).catch(() => {}); trackShare(); }} aria-label="Share">
                 <Share2 className="w-5 h-5" />
               </Button>
             </div>

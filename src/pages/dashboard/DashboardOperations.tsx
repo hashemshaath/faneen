@@ -91,7 +91,7 @@ const TimelineItem = React.memo(({ op, isRTL, language, isExpanded, onToggle }: 
                   {title}
                   {isNew && <span className="inline-flex w-1.5 h-1.5 rounded-full bg-accent shrink-0 animate-pulse" />}
                 </p>
-                <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onToggle}>
+                <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onToggle} aria-label="Move up">
                   {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                 </Button>
               </div>

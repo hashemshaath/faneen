@@ -251,15 +251,15 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAttachmentSigned(att)} title={isRTL ? 'فتح' : 'Open'}><ExternalLink className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadAttachmentSigned(att)} title={isRTL ? 'تنزيل' : 'Download'}><Download className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAttachmentSigned(att)} title={isRTL ? 'فتح' : 'Open'} aria-label="Open in new tab"><ExternalLink className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadAttachmentSigned(att)} title={isRTL ? 'تنزيل' : 'Download'} aria-label="Download"><Download className="w-3.5 h-3.5" /></Button>
             <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-destructive hover:text-destructive"
                 onClick={() => setConfirmDeleteId(att.id)}
                 title={isRTL ? 'حذف' : 'Delete'}
-              ><Trash2 className="w-3.5 h-3.5" /></Button>
+               aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>
         </div>
         {isConfirming && (
@@ -313,7 +313,7 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
             </span>
           )}
           {pendingFile && !uploading && (
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={resetForm} title={isRTL ? 'إلغاء' : 'Clear'}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={resetForm} title={isRTL ? 'إلغاء' : 'Clear'} aria-label="Action">
               <X className="w-3.5 h-3.5" />
             </Button>
           )}

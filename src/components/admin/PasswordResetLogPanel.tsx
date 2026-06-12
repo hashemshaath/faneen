@@ -239,10 +239,10 @@ export const PasswordResetLogPanel: React.FC = () => {
               : `${filtered.length} records — page ${page + 1} of ${totalPages}`}
           </p>
           <div className="flex gap-1">
-            <Button size="icon" variant="ghost" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+            <Button size="icon" variant="ghost" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(p => p - 1)} aria-label="Next">
               {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+            <Button size="icon" variant="ghost" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)} aria-label="Previous">
               {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </Button>
           </div>

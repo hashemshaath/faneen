@@ -1093,7 +1093,7 @@ const AdminContactMessages = () => {
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                              <Button size="icon" variant="ghost" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="More options"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
                               <DropdownMenuLabel className="text-xs">{pickBi(isRTL, 'إجراءات', 'Actions')}</DropdownMenuLabel>
@@ -1255,16 +1255,16 @@ const FocusedMessage: React.FC<FocusedProps> = ({
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyDeepLink(focused.id)} title={pickBi(isRTL, 'نسخ الرابط', 'Copy link')}>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyDeepLink(focused.id)} title={pickBi(isRTL, 'نسخ الرابط', 'Copy link')} aria-label="Link">
               <Link2 className="w-4 h-4" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={printMessage} title={pickBi(isRTL, 'طباعة', 'Print')}>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={printMessage} title={pickBi(isRTL, 'طباعة', 'Print')} aria-label="Print">
               <Printer className="w-4 h-4" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { starred: !focused.starred } })}>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { starred: !focused.starred } })} aria-label="Star">
               <Star className={`w-4 h-4 ${focused.starred ? 'fill-warning text-warning' : ''}`} />
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={closeMessage}>×</Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={closeMessage} aria-label="User">×</Button>
           </div>
         </div>
 
@@ -1278,7 +1278,7 @@ const FocusedMessage: React.FC<FocusedProps> = ({
             {isSuperAdmin ? (
               <>
                 <a href={`mailto:${focused.email}`} className="text-accent hover:underline tech-content truncate">{focused.email}</a>
-                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => { navigator.clipboard.writeText(focused.email); toast.success(pickBi(isRTL, 'تم النسخ', 'Copied')); }}>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => { navigator.clipboard.writeText(focused.email); toast.success(pickBi(isRTL, 'تم النسخ', 'Copied')); }} aria-label="Copy">
                   <Copy className="w-3 h-3" />
                 </Button>
               </>

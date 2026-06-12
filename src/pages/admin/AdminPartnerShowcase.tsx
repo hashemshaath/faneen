@@ -564,6 +564,7 @@ const AdminPartnerShowcase: React.FC = () => {
                       <Button
                         size="icon"
                         variant="ghost"
+                        aria-label={bi('حذف', 'Delete')}
                         onClick={() => {
                           if (confirm(bi('حذف هذا الشريك؟', 'Delete this partner?'))) {
                             deleteItem.mutate(it.id);

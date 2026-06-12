@@ -495,10 +495,10 @@ const DashboardSettings = () => {
                         <code className="flex-1 min-w-0 text-[10px] tech-content truncate bg-background/60 px-1.5 py-1 rounded border border-border/40" dir="ltr">
                           {publicProfileUrl.replace(/^https?:\/\//, '')}
                         </code>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={copyPublicUrl}>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={copyPublicUrl} aria-label="Confirm">
                           {copiedUrl ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" asChild>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" asChild aria-label="Open in new tab">
                           <a href={publicProfileUrl} target="_blank" rel="noreferrer"><ExternalLink className="w-3 h-3" /></a>
                         </Button>
                       </div>

@@ -224,7 +224,7 @@ export const BnplProvidersManager = ({ businessId }: Props) => {
                       onCheckedChange={(checked) => toggleMutation.mutate({ providerId: provider.id, enable: checked })}
                     />
                     {isActive && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleExpand(provider.id)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleExpand(provider.id)} aria-label="Move up">
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </Button>
                     )}

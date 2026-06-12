@@ -1619,7 +1619,7 @@ const AdminBusinesses = () => {
                   </p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => { setCreatingBiz(false); setCreateForm(emptyCreateForm()); }} className="rounded-xl">
+              <Button variant="ghost" size="icon" onClick={() => { setCreatingBiz(false); setCreateForm(emptyCreateForm()); }} className="rounded-xl" aria-label="User">
                 <X className="w-4 h-4" />
               </Button>
             </div>
@@ -1968,7 +1968,7 @@ const AdminBusinesses = () => {
                   {autoTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
                   {pickBi(isRTL, 'ترجمة تلقائية للناقص', 'Auto-translate missing')}
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
@@ -2616,7 +2616,7 @@ const AdminBusinesses = () => {
                 {pickBi(isRTL, 'إدارة الخدمات', 'Manage Services')}
                 <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
               </h3>
-              <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">

@@ -554,7 +554,7 @@ const AdminApiSettings = () => {
                       <a href={cfg.docsUrl} target="_blank" rel="noopener noreferrer">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" aria-label="Open in new tab">
                               <ExternalLink className="w-3.5 h-3.5" />
                             </Button>
                           </TooltipTrigger>

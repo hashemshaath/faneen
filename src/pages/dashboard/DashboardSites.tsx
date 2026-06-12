@@ -785,7 +785,7 @@ export default function DashboardSites() {
                     {editing ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                     {editing ? (pickBi(isRTL, 'تعديل الموقع', 'Edit Site')) : (pickBi(isRTL, 'إضافة موقع جديد', 'New Site'))}
                   </CardTitle>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm} aria-label="Alert"><X className="w-4 h-4" /></Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
@@ -1295,17 +1295,17 @@ export default function DashboardSites() {
                           <Button variant="ghost" size="icon"
                             className={`h-7 w-7 ${expandedBarcode === s.id ? 'text-primary bg-primary/10' : ''}`}
                             onClick={() => setExpandedBarcode(v => v === s.id ? null : s.id)}
-                            title={pickBi(isRTL, 'الباركود والطباعة', 'Barcode & print')}>
+                            title={pickBi(isRTL, 'الباركود والطباعة', 'Barcode & print')} aria-label="Open in new tab">
                             <QrCode className="w-3.5 h-3.5" />
                           </Button>
                           {!isArchived && (
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10"
-                              onClick={() => goToNewContract(s.id)} title={pickBi(isRTL, 'إنشاء عقد لهذا الموقع', 'New contract for this site')}>
+                              onClick={() => goToNewContract(s.id)} title={pickBi(isRTL, 'إنشاء عقد لهذا الموقع', 'New contract for this site')} aria-label="Open in new tab">
                               <FilePlus2 className="w-3.5 h-3.5" />
                             </Button>
                           )}
                         {s.map_url && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" asChild aria-label="Open in new tab">
                             <a href={s.map_url} target="_blank" rel="noopener noreferrer" title={pickBi(isRTL, 'فتح الخريطة', 'Open map')}>
                               <ExternalLink className="w-3.5 h-3.5" />
                             </a>
@@ -1313,11 +1313,11 @@ export default function DashboardSites() {
                         )}
                         {!isArchived && (
                           <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)} title={pickBi(isRTL, 'تعديل', 'Edit')}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)} title={pickBi(isRTL, 'تعديل', 'Edit')} aria-label="Edit">
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => setDeleteConfirm(s.id)} title={pickBi(isRTL, 'أرشفة', 'Archive')}>
+                              onClick={() => setDeleteConfirm(s.id)} title={pickBi(isRTL, 'أرشفة', 'Archive')} aria-label="Delete">
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </>
