@@ -446,7 +446,12 @@ const RenderGroups: React.FC<{
   isAdmin?: boolean;
   workspace?: { active_role: string | null; permissions: string[] } | null;
   isRouteHidden?: (path: string) => boolean;
-}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null, isRouteHidden }) => {
+  pinControl?: {
+    isPinned: (url: string) => boolean;
+    canPin: (url: string) => boolean;
+    toggle: (url: string) => void;
+  };
+}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null, isRouteHidden, pinControl }) => {
   const { state: groupOpenState, setOpen: setGroupOpen } = useSidebarGroupCollapse();
   // ORG-RBAC-STRUCTURE-1 — Phase D
   // Centralized visibility: admin override always wins; owner short-circuits;
@@ -525,6 +530,7 @@ const RenderGroups: React.FC<{
                 isRTL={isRTL}
                 closeMobile={closeMobile}
                 bestActiveUrl={bestActiveUrl}
+                pinControl={pinControl}
               />
             </SidebarGroupContent>
           )}
