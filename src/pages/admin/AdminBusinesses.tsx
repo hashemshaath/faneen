@@ -2604,102 +2604,18 @@ const AdminBusinesses = () => {
           </div>
         ) : viewMode === 'table' ? (
           /* ─── Table View ─── */
-          <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
-            <div className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-8">
-                      <button onClick={togglePageAll} className="text-muted-foreground hover:text-foreground">
-                        {allPagedSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'النشاط', 'Business')}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'المعرف', 'Username')}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'العضوية', 'Tier')}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'التقييم', 'Rating')}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'الترجمة', 'Trans.')}</TableHead>
-                    <TableHead className="text-[11px] font-semibold">{pickBi(isRTL, 'الحالة', 'Status')}</TableHead>
-                    <TableHead className="text-[11px] font-semibold text-center">{pickBi(isRTL, 'إجراءات', 'Actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paged.map((biz, idx) => {
-                    const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
-                    const tc = translationCompleteness(biz);
-                    return (
-                      <TableRow key={biz.id} className={`hover:bg-muted/30 ${!biz.is_active ? 'opacity-50' : ''}`}
-                        style={{ animationDelay: `${idx * 0.02}s` }}>
-                        <TableCell className="py-2.5">
-                          <button onClick={() => toggleSelect(biz.id)} className="text-muted-foreground hover:text-foreground">
-                            {selected.has(biz.id) ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
-                          </button>
-                        </TableCell>
-                        <TableCell className="py-2.5">
-                          <div className="flex items-center gap-2.5">
-                            <Avatar className="w-8 h-8 border border-border/50">
-                              <AvatarImage src={(biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.thumbnail || (biz as { logo_image_variants?: AdminBusinessImageVariants | null }).logo_image_variants?.card || biz.logo_url || undefined} />
-                              <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{biz.name_ar?.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-xs font-semibold truncate max-w-[180px]" dir="auto">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
-                              <div className="flex items-center gap-1">
-                                <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
-                                {biz.is_demo && (
-                                  <Badge variant="outline" className="text-[9px] h-4 px-1 gap-0.5 border-amber-500/40 text-amber-600 dark:text-amber-400" title={pickBi(isRTL, 'بيانات تجريبية', 'Demo data')}>
-                                    <FlaskConical className="w-2.5 h-2.5" />{pickBi(isRTL, 'تجريبي', 'Demo')}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground tech-content">@{biz.username}</TableCell>
-                        <TableCell>
-                          <Badge className={`text-[9px] h-5 ${tierInfo.color} border-0`}>
-                            {tierInfo.icon} {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className="flex items-center gap-0.5 text-[11px]">
-                            <Star className="w-3 h-3 text-accent fill-accent" /> {biz.rating_avg}
-                            <span className="text-muted-foreground">({biz.rating_count})</span>
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={`text-[9px] h-5 gap-1 ${tc.full ? 'border-success/30 text-success' : 'border-warning/30 text-warning'}`}
-                            title={tc.full ? (pickBi(isRTL, 'مكتملة', 'Complete')) : (pickBi(isRTL, 'ناقصة', 'Incomplete'))}>
-                            <Languages className="w-2.5 h-2.5" />
-                            {tc.ar ? 'AR' : '·'} / {tc.en ? 'EN' : '·'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {biz.is_verified && <Badge className="text-[8px] h-4 bg-info/10 text-info border-0">{pickBi(isRTL, 'موثق', 'Verified')}</Badge>}
-                            {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{pickBi(isRTL, 'معطل', 'Disabled')}</Badge>}
-                            {biz.is_active && !biz.is_verified && <Badge className="text-[8px] h-4 bg-success/10 text-success border-0">{pickBi(isRTL, 'نشط', 'Active')}</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-1">
-                            <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => openEdit(biz)}>
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => openServices(biz.id)}>
-                              <Package className="w-3 h-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" asChild>
-                              <Link to={`/${biz.username}`}><Eye className="w-3 h-3" /></Link>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <BusinessTableView
+            rows={paged as unknown as BusinessTableRow[]}
+            language={language}
+            isRTL={isRTL}
+            selected={selected}
+            allPagedSelected={allPagedSelected}
+            toggleSelect={toggleSelect}
+            togglePageAll={togglePageAll}
+            translationCompleteness={(b) => translationCompleteness(b)}
+            onEdit={(b) => openEdit(b as unknown as Record<string, unknown>)}
+            onOpenServices={openServices}
+          />
         ) : (
           /* ─── Cards View ─── */
           <div className="space-y-3">
