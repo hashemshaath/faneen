@@ -49,7 +49,11 @@ import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/
 import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
-import { KpiCard, formatDate, formatRelative } from './users/_shared';
+import {
+  KpiCard, formatDate, formatRelative,
+  type SortKey, type SortDir, type Density,
+  type FilterScope, type FilterBusinessLink,
+} from './users/_shared';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
