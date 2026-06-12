@@ -28,6 +28,26 @@ export interface AdminBrandLinkSummary {
   service_count: number;
 }
 
+/**
+ * Canonical brands wrapper for counting brand links per business_service id.
+ * Centralised here so callers (e.g. catalog governance queries) never touch
+ * `business_service_brands` directly — enforced by brands-isolation-audit.
+ */
+export async function loadBrandCountsByServiceIds(
+  serviceIds: string[],
+): Promise<{ counts: Map<string, number>; error: unknown }> {
+  if (!serviceIds.length) return { counts: new Map<string, number>(), error: null };
+  const { data, error } = await sb
+    .from('business_service_brands')
+    .select('business_service_id')
+    .in('business_service_id', serviceIds);
+  const counts = new Map<string, number>();
+  for (const row of (data ?? []) as Array<{ business_service_id: string }>) {
+    counts.set(row.business_service_id, (counts.get(row.business_service_id) ?? 0) + 1);
+  }
+  return { counts, error };
+}
+
 // ------------------------- PUBLIC / PROVIDER READ ------------------------
 
 export async function listApprovedBrands(filters?: {
