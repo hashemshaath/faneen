@@ -7,7 +7,7 @@ Lovable Cloud manages two-way GitHub sync. Migrations under `supabase/migrations
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| All applied migrations committed to repo | ✅ | 421 files; no untracked migrations on remote |
+| All applied migrations committed to repo | ✅ | 421 files at audit time; current count is 566 — see `docs/supabase-project-state-audit.md` |
 | Generated types committed and current | ✅ | 18,586-line `types.ts` includes latest RFQ + brand columns |
 | Edge functions present in repo for all deployed slots | ✅ | 58 deployed dirs match `src/__tests__/supabaseFunctionsInventory.test.ts` inventory |
 | Branch mismatch (multi-branch dev) | n/a | single-branch Lovable Cloud workflow |

@@ -137,10 +137,13 @@ const AdminOperationsConsole = lazyRetry(() => import("./pages/admin/AdminOperat
 const AdminReferenceInspector = lazyRetry(() => import("./pages/admin/AdminReferenceInspector"));
 const AdminBulkReferenceTriage = lazyRetry(() => import("./pages/admin/AdminBulkReferenceTriage"));
 const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
-// Legacy taxonomy CRUD pages (AdminCategories / AdminTags / AdminTaxonomyHub)
-// were retired in favor of /admin/taxonomy. Routes now render a replacement
-// notice. TODO(legacy-sunset): remove the underlying files once /admin/taxonomy
-// adoption is verified at 100%.
+// Historical taxonomy CRUD pages (AdminCategories / AdminTags /
+// AdminTaxonomyHub) were retired in favor of /admin/taxonomy. The
+// deprecation routes still render a replacement notice for any bookmarked
+// URLs. TODO(legacy-sunset): see TODO-C1-01 in `docs/pilot-launch-backlog.md`
+// — remove the underlying files once /admin/taxonomy adoption is verified
+// at 100%. Identifier kept as `AdminLegacyTaxonomyReplaced` because tests
+// and the do-not-remove list reference it by name.
 const AdminLegacyTaxonomyReplaced = lazyRetry(() => import("./pages/admin/AdminLegacyTaxonomyReplaced"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
 const AdminOwnershipTransferRequests = lazyRetry(() => import("./pages/admin/AdminOwnershipTransferRequests"));
@@ -261,8 +264,10 @@ const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
 const AdminProviderReviewHub = lazyRetry(() => import("./pages/admin/AdminProviderReviewHub"));
 const AdminContractsHub = lazyRetry(() => import("./pages/admin/AdminContractsHub"));
 const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershipsHub"));
-// AdminTaxonomyHub retired — legacy /admin/categories and /admin/tags now render
-// AdminLegacyTaxonomyReplaced. TODO(legacy-sunset): delete the file once verified.
+// AdminTaxonomyHub retired — the deprecation routes /admin/categories and
+// /admin/tags now render AdminLegacyTaxonomyReplaced as a
+// backward-compatibility notice. TODO(legacy-sunset): see TODO-C1-02 in
+// `docs/pilot-launch-backlog.md` — delete the file once verified.
 const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
 // Taxonomy & Reference Data Center — Phase 2.
 const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
