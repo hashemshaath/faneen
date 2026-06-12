@@ -163,4 +163,14 @@ describe('HARDENING-1C: Edge function audit', () => {
     expect(src.length).toBeGreaterThan(0);
     expect(/signature|hmac|verify/i.test(src)).toBe(true);
   });
+
+  it('rental-expiry-scan routes notifications through the shared dispatcher', () => {
+    const src = readIndex('rental-expiry-scan') ?? '';
+    expect(src.length).toBeGreaterThan(0);
+    // No direct write to `notifications`.
+    expect(src).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.insert/);
+    // Uses the approved shared helper.
+    expect(src).toMatch(/dispatchEdgeNotifications/);
+    expect(src).toMatch(/_shared\/notifications\.ts/);
+  });
 });
