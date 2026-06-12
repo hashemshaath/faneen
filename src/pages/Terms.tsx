@@ -10,7 +10,7 @@ const Terms = () => {
   const bi = useBi();
   usePageMeta({
     title: bi('الشروط والأحكام | قِطاعات', 'Terms & Conditions | Qitaat'),
-    description: bi('الشروط والأحكام الكاملة لمنصة قِطاعات: قواعد إنشاء الحساب، مسؤولية المحتوى المنشور، دور المنصة كوسيط بين العملاء ومزودي خدمات الألمنيوم والحديد والزجاج، أحكام العقود الإلكترونية، الدفع، الإلغاء، وحدود المسؤولية القانونية. آخر تحديث 2026.', 'Complete Qitaat platform terms & conditions: account rules, responsibility for published content, the platform role as an intermediary between clients and aluminum, iron and glass providers, electronic contract clauses, payment, cancellation, and limits of legal liability. Updated 2026.'),
+    description: bi('شروط وأحكام منصة قِطاعات: قواعد الحساب، دور المنصة كوسيط، العقود الإلكترونية، الدفع، الإلغاء، وحدود المسؤولية القانونية.', 'Qitaat terms & conditions: account rules, intermediary role, electronic contracts, payment, cancellation, and liability limits.'),
     canonical: 'https://qitaat.com/terms',
   });
 
@@ -43,7 +43,7 @@ const Terms = () => {
     };
     const article = {
       '@context': 'https://schema.org',
-      '@type': 'TermsOfService',
+      '@type': 'WebPage',
       name: bi('الشروط والأحكام — قِطاعات', 'Terms & Conditions — Qitaat'),
       url: 'https://qitaat.com/terms',
       inLanguage: bi('ar', 'en'),

@@ -42,7 +42,7 @@ const Privacy = () => {
     };
     const article = {
       '@context': 'https://schema.org',
-      '@type': 'PrivacyPolicy',
+      '@type': 'WebPage',
       name: bi('سياسة الخصوصية — قِطاعات', 'Privacy Policy — Qitaat'),
       url: 'https://qitaat.com/privacy',
       inLanguage: bi('ar', 'en'),
