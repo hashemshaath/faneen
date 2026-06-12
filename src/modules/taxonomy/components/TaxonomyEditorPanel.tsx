@@ -194,7 +194,7 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
             <div className="font-heading font-bold">{category ? (isRTL ? 'تعديل تصنيف' : 'Edit category') : (isRTL ? 'تصنيف جديد' : 'New category')}</div>
             {category && <div className="text-[10px] text-muted-foreground tech-content">{category.id}</div>}
           </div>
-          <Button size="icon" variant="ghost" onClick={onClose}><X className="w-4 h-4" /></Button>
+          <Button size="icon" variant="ghost" onClick={onClose} aria-label="Action"><X className="w-4 h-4" /></Button>
         </div>
 
         <div className="p-5 space-y-5">

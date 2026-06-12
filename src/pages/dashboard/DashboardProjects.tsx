@@ -113,13 +113,13 @@ const SortableProjectCard = React.memo(({
             </div>
           </div>
           <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggleFeatured(p)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggleFeatured(p)} aria-label="Star">
               {p.is_featured ? <StarOff className="w-3.5 h-3.5 text-accent" /> : <Star className="w-3.5 h-3.5" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onGallery(p.id)}><Images className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onGallery(p.id)} aria-label="Edit"><Images className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)} aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)} aria-label="Copy"><Copy className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)} aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>
         </div>
       </div>
@@ -592,7 +592,7 @@ const DashboardProjects = () => {
                     {editId ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                     {editId ? (pickBi(isRTL, 'تعديل المشروع', 'Edit Project')) : (pickBi(isRTL, 'إضافة مشروع جديد', 'New Project'))}
                   </CardTitle>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm} aria-label="Action"><X className="w-4 h-4" /></Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
@@ -747,7 +747,7 @@ const DashboardProjects = () => {
                   <Images className="w-4 h-4 text-primary" />
                   {pickBi(isRTL, 'معرض الصور', 'Image Gallery')}
                 </CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setGalleryProjectId(null)}><X className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setGalleryProjectId(null)} aria-label="Action"><X className="w-4 h-4" /></Button>
               </div>
               {galleryProject && <p className="text-xs text-muted-foreground">{language === 'ar' ? galleryProject.title_ar : (galleryProject.title_en || galleryProject.title_ar)}</p>}
             </CardHeader>
@@ -889,7 +889,7 @@ const DashboardProjects = () => {
       {/* Image Preview Lightbox */}
       {previewUrl && (
         <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200" onClick={() => setPreviewUrl(null)}>
-          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)}>
+          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)} aria-label="Action">
             <X className="w-6 h-6" />
           </Button>
           <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />

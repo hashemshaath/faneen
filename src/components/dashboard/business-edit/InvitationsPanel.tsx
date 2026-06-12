@@ -449,7 +449,7 @@ export const InvitationsPanel: React.FC<Props> = ({
                   variant="ghost" size="icon" className="h-7 w-7"
                   title={isRTL ? 'نسخ رابط الدعوة' : 'Copy invite link'}
                   onClick={() => copyLink(inv.token)}
-                >
+                 aria-label="Copy">
                   <Copy className="w-3.5 h-3.5" />
                 </Button>
                 <ReferenceLinkCopy refId={inv.ref_id} isRTL={isRTL} />
@@ -460,7 +460,7 @@ export const InvitationsPanel: React.FC<Props> = ({
                       title={isRTL ? 'إعادة إرسال' : 'Resend'}
                       disabled={busyId === inv.id}
                       onClick={() => resendInvitation(inv)}
-                    >
+                     aria-label="Refresh">
                       <RotateCw className="w-3.5 h-3.5" />
                     </Button>
                     <Button
@@ -468,7 +468,7 @@ export const InvitationsPanel: React.FC<Props> = ({
                       title={isRTL ? 'إلغاء' : 'Revoke'}
                       disabled={busyId === inv.id}
                       onClick={() => revokeInvitation(inv.id)}
-                    >
+                     aria-label="Delete">
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </>

@@ -182,7 +182,7 @@ export const MyInvitationsStatus: React.FC<Props> = ({ hideWhenEmpty = true, cla
                         variant="ghost" size="icon" className="h-8 w-8"
                         title={isRTL ? 'نسخ الرابط' : 'Copy link'}
                         onClick={() => copyLink(inv.token)}
-                      >
+                       aria-label="Copy">
                         <Copy className="w-3.5 h-3.5" />
                       </Button>
                     )}

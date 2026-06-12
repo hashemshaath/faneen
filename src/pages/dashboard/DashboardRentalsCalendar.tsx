@@ -393,13 +393,13 @@ const MonthView: React.FC<MonthViewProps> = ({ cursor, setCursor, orders, allOrd
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-1.5">
-          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addMonths(cursor, isRTL ? 1 : -1))}>
+          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addMonths(cursor, isRTL ? 1 : -1))} aria-label="Next">
             {isRTL ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
           </Button>
           <Button size="sm" variant="ghost" className="h-9 rounded-lg" onClick={() => setCursor(startOfMonth(new Date()))}>
             <Bi ar="اليوم" en="Today" />
           </Button>
-          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addMonths(cursor, isRTL ? -1 : 1))}>
+          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addMonths(cursor, isRTL ? -1 : 1))} aria-label="Previous">
             {isRTL ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
           </Button>
         </div>
@@ -512,13 +512,13 @@ const WeekView: React.FC<WeekViewProps> = ({ cursor, setCursor, orders, itemById
     <Card className="p-3 md:p-4 rounded-xl">
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-1.5">
-          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addDays(cursor, isRTL ? 7 : -7))}>
+          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addDays(cursor, isRTL ? 7 : -7))} aria-label="Next">
             {isRTL ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
           </Button>
           <Button size="sm" variant="ghost" className="h-9 rounded-lg" onClick={() => setCursor(new Date())}>
             <Bi ar="هذا الأسبوع" en="This week" />
           </Button>
-          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addDays(cursor, isRTL ? -7 : 7))}>
+          <Button size="icon" variant="outline" className="size-9 rounded-lg" onClick={() => setCursor(addDays(cursor, isRTL ? -7 : 7))} aria-label="Previous">
             {isRTL ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
           </Button>
         </div>
@@ -703,7 +703,7 @@ const SidePanel: React.FC<{
           <div className="text-xs text-muted-foreground tech-content">{order.ref_id}</div>
           <div className="font-semibold truncate">{item ? bi(item.name_ar, item.name_en ?? item.name_ar) : '—'}</div>
         </div>
-        <Button size="icon" variant="ghost" className="size-8 -mt-1" onClick={onClose}><X className="size-4" /></Button>
+        <Button size="icon" variant="ghost" className="size-8 -mt-1" onClick={onClose} aria-label="Action"><X className="size-4" /></Button>
       </div>
 
       <Badge variant="secondary" className={sc.chip}>

@@ -344,7 +344,7 @@ const UserDetailPanel = React.memo(({
                 {b.is_primary_manager && <Badge variant="outline" className="text-[9px] border-accent/40 text-accent px-1 py-0">{pickBi(isRTL, 'رئيسي', 'Primary')}</Badge>}
                 {b.is_verified && <Check className="w-3 h-3 text-success" />}
                 {b.business_username && (
-                  <Button asChild size="icon" variant="ghost" className="h-6 w-6 rounded-md">
+                  <Button asChild size="icon" variant="ghost" className="h-6 w-6 rounded-md" aria-label="Link">
                     <Link to={`/${b.business_username}`} target="_blank" rel="noreferrer"><Link2 className="w-3 h-3" /></Link>
                   </Button>
                 )}
@@ -640,32 +640,32 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
         <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap shrink-0">
           <TooltipProvider delayDuration={200}>
             <Tooltip><TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={onToggleExpand}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={onToggleExpand} aria-label="Move up">
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'التفاصيل', 'Details')}</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)} aria-label="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
             </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'تعديل', 'Edit')}</TooltipContent></Tooltip>
             {canManageUser && isSuperAdmin && (
               <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onPassword(profile)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onPassword(profile)} aria-label="Key">
                   <KeyRound className="w-4 h-4" />
                 </Button>
               </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'كلمة المرور', 'Password')}</TooltipContent></Tooltip>
             )}
             {canManageUser && (
               <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-success' : 'text-warning'}`} onClick={() => onToggleBan(profile)}>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-success' : 'text-warning'}`} onClick={() => onToggleBan(profile)} aria-label="Action">
                   {isBanned ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
                 </Button>
               </TooltipTrigger><TooltipContent>{isBanned ? (pickBi(isRTL, 'تفعيل', 'Enable')) : (pickBi(isRTL, 'تعطيل', 'Disable'))}</TooltipContent></Tooltip>
             )}
             {canManageUser && (
               <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => onDelete(profile)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => onDelete(profile)} aria-label="Action">
                   <UserX className="w-4 h-4" />
                 </Button>
               </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'حذف', 'Delete')}</TooltipContent></Tooltip>
@@ -690,7 +690,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
               </div>
             ) : (
               <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => setAddingRole(true)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => setAddingRole(true)} aria-label="Add user">
                   <UserPlus className="w-4 h-4" />
                 </Button>
               </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'إضافة صلاحية', 'Add Role')}</TooltipContent></Tooltip>
@@ -1873,7 +1873,7 @@ const AdminUsers = () => {
                       <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><UserPlus className="w-4 h-4 text-accent" /></div>
                       {pickBi(isRTL, 'إنشاء مستخدم جديد', 'Create New User')}
                     </h3>
-                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
                   </div>
                   <div className="mb-4">
                     <CrQuickScanInline
@@ -1997,7 +1997,7 @@ const AdminUsers = () => {
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl shrink-0">
+                      <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl shrink-0" aria-label="Edit">
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
@@ -2316,7 +2316,7 @@ const AdminUsers = () => {
                                     variant="ghost" size="icon"
                                     onClick={() => removeStaffMutation.mutate(link.staffId!)}
                                     title={pickBi(isRTL, 'إزالة الصلاحية', 'Remove access')}
-                                    className="h-8 w-8 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10 shrink-0">
+                                    className="h-8 w-8 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10 shrink-0" aria-label="Action">
                                     <X className="w-3.5 h-3.5" />
                                   </Button>
                                 )}
@@ -2589,7 +2589,7 @@ const AdminUsers = () => {
                       {pickBi(isRTL, 'تغيير كلمة المرور', 'Change Password')}
                       <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
                     </h3>
-                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl" aria-label="Hide"><X className="w-4 h-4" /></Button>
                   </div>
                   <div className="max-w-md space-y-3">
                     <div className="space-y-1.5">
@@ -2624,7 +2624,7 @@ const AdminUsers = () => {
                       <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center"><AlertTriangle className="w-4 h-4 text-destructive" /></div>
                       {pickBi(isRTL, 'تأكيد حذف الحساب', 'Confirm Deletion')}
                     </h3>
-                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 max-w-lg">
                     {isRTL ? `هل أنت متأكد من حذف "${activePanel.userName}"؟ سيتم حذف جميع البيانات نهائياً.` : `Delete "${activePanel.userName}"? All data will be removed permanently.`}

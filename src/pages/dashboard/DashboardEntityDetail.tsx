@@ -674,7 +674,7 @@ const DashboardEntityDetail: React.FC = () => {
                               <Button onClick={() => handleToggleActive(s)} variant="ghost" size="sm">
                                 {s.is_active ? pickBi(isRTL, 'إيقاف', 'Pause') : pickBi(isRTL, 'تفعيل', 'Enable')}
                               </Button>
-                              <Button onClick={() => handleRemove(s.id)} variant="ghost" size="icon" className="text-destructive">
+                              <Button onClick={() => handleRemove(s.id)} variant="ghost" size="icon" className="text-destructive" aria-label="Delete">
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </>

@@ -116,7 +116,7 @@ export const EmailTemplatePreview: React.FC<Props> = ({ template, onClose }) => 
           <CardTitle className="text-base">{isRTL ? template.displayNameAr : template.displayNameEn}</CardTitle>
           <p className="text-xs text-muted-foreground tech-content mt-1">{template.name}</p>
         </div>
-        <Button size="icon" variant="ghost" onClick={onClose}><X className="size-4" /></Button>
+        <Button size="icon" variant="ghost" onClick={onClose} aria-label="Action"><X className="size-4" /></Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 text-xs">

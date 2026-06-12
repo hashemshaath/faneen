@@ -213,11 +213,11 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
                     <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">{k.role}</Badge>
                     <span className="text-[10px] text-muted-foreground tech-content">{k.used_count}/{k.max_uses}</span>
                     <Badge className={`text-[9px] px-1.5 py-0 h-4 ${statusBadge(k.status)}`}>{k.status}</Badge>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { navigator.clipboard?.writeText(k.code); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }}>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { navigator.clipboard?.writeText(k.code); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }} aria-label="Copy">
                       <Copy className="w-3 h-3" />
                     </Button>
                     {k.status === 'active' && (
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => revokeInvite.mutate(k.id)} disabled={revokeInvite.isPending}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => revokeInvite.mutate(k.id)} disabled={revokeInvite.isPending} aria-label="Delete">
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     )}
@@ -282,7 +282,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
                       {k.revoked_at ? (isRTL ? 'ملغي' : 'Revoked') : (isRTL ? 'نشط' : 'Active')}
                     </Badge>
                     {!k.revoked_at && (
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => revokeAccess.mutate(k.id)} disabled={revokeAccess.isPending}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => revokeAccess.mutate(k.id)} disabled={revokeAccess.isPending} aria-label="Delete">
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     )}

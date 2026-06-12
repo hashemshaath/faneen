@@ -303,7 +303,7 @@ export const RepresentativesSection: React.FC<Props> = ({
                         title={row.is_active ? (isRTL ? 'إيقاف الوصول' : 'Disable access') : (isRTL ? 'تفعيل الوصول' : 'Enable access')}
                         disabled={busyRowId === row.id || isOnlyOwner}
                         onClick={() => updateRow(row.id, { is_active: !row.is_active })}
-                      >
+                       aria-label="Power">
                         <Power className="w-3.5 h-3.5" />
                       </Button>
                       <Button
@@ -313,7 +313,7 @@ export const RepresentativesSection: React.FC<Props> = ({
                         title={isRTL ? 'إزالة المفوّض' : 'Remove representative'}
                         disabled={busyRowId === row.id || row.role === 'owner'}
                         onClick={() => removeRow(row)}
-                      >
+                       aria-label="Delete">
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                       <Button
@@ -322,7 +322,7 @@ export const RepresentativesSection: React.FC<Props> = ({
                         className="h-8 w-8"
                         title={isRTL ? 'الصلاحيات التفصيلية' : 'Detailed permissions'}
                         onClick={() => setExpandedRow((cur) => (cur === row.id ? null : row.id))}
-                      >
+                       aria-label="Move up">
                         {expandedRow === row.id ? <ChevronUp className="w-3.5 h-3.5" /> : <Settings2 className="w-3.5 h-3.5" />}
                       </Button>
                     </div>

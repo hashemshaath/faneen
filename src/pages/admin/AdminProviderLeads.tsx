@@ -84,7 +84,7 @@ const AdminProviderLeads: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && load()}
               className="h-10 rounded-xl w-64"
             />
-            <Button variant="outline" size="icon" onClick={load} disabled={loading} className="rounded-xl">
+            <Button variant="outline" size="icon" onClick={load} disabled={loading} className="rounded-xl" aria-label="Refresh">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>

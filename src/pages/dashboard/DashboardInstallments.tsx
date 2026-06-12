@@ -422,7 +422,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
                 <Receipt className="w-2.5 h-2.5" />
                 {paidCount}/{payments.length}
               </span>
-              <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => setExpanded(!expanded)}>
+              <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => setExpanded(!expanded)} aria-label="Move up">
                 {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               </Button>
             </div>
@@ -1274,7 +1274,7 @@ const DashboardInstallments = () => {
                                   }}
                                   className="scale-75"
                                 />
-                                <Button variant="ghost" size="icon" className="w-7 h-7 opacity-60 hover:opacity-100" onClick={() => { setEditingProvider(p); setShowNewProvider(false); }}>
+                                <Button variant="ghost" size="icon" className="w-7 h-7 opacity-60 hover:opacity-100" onClick={() => { setEditingProvider(p); setShowNewProvider(false); }} aria-label="Edit">
                                   <Edit2 className="w-3 h-3" />
                                 </Button>
                                 <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive opacity-60 hover:opacity-100" onClick={() => {

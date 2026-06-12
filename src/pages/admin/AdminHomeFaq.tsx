@@ -189,8 +189,8 @@ const AdminHomeFaq: React.FC = () => {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex flex-col gap-1">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, -1)}><ArrowUp className="w-3 h-3" /></Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, 1)}><ArrowDown className="w-3 h-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, -1)} aria-label="Move up"><ArrowUp className="w-3 h-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, 1)} aria-label="Move down"><ArrowDown className="w-3 h-3" /></Button>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -204,7 +204,7 @@ const AdminHomeFaq: React.FC = () => {
                     </div>
                     <div className="flex gap-1">
                       <Button size="icon" variant="ghost" className="h-8 w-8" title={it.is_enabled ? bi('إخفاء','Hide') : bi('إظهار','Show')}
-                        onClick={() => updateMut.mutate({ id: it.id, patch: { is_enabled: !it.is_enabled } })}>
+                        onClick={() => updateMut.mutate({ id: it.id, patch: { is_enabled: !it.is_enabled } })} aria-label="Hide">
                         {it.is_enabled ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => (draft ? cancelEdit(it.id) : startEdit(it))}>

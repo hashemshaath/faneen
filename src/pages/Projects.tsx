@@ -246,7 +246,7 @@ const Projects = () => {
               size="icon"
               className={`h-10 sm:h-11 w-10 sm:w-11 shrink-0 relative ${showFilters ? 'border-accent text-accent' : ''}`}
               onClick={() => setShowFilters(!showFilters)}
-            >
+             aria-label="Filter">
               <SlidersHorizontal className="w-4 h-4" />
               {activeFilterCount > 0 && (
                 <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-accent text-accent-foreground text-[9px] font-bold flex items-center justify-center">

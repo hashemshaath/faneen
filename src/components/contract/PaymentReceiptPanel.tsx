@@ -166,7 +166,7 @@ export const PaymentReceiptPanel: React.FC<Props> = ({
               {pending.name} · <span className="tech-content">{formatFileSize(pending.size)}</span>
             </span>
             {!uploading && (
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={reset}><X className="w-3 h-3" /></Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={reset} aria-label="Refresh"><X className="w-3 h-3" /></Button>
             )}
           </div>
           <Textarea
@@ -221,14 +221,14 @@ export const PaymentReceiptPanel: React.FC<Props> = ({
                     )}
                   </div>
                   <div className="flex items-center gap-0.5 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAttachmentSigned(att)} title={isRTL ? 'فتح' : 'Open'}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAttachmentSigned(att)} title={isRTL ? 'فتح' : 'Open'} aria-label="Open in new tab">
                       <ExternalLink className="w-3 h-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadAttachmentSigned(att)} title={isRTL ? 'تنزيل' : 'Download'}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadAttachmentSigned(att)} title={isRTL ? 'تنزيل' : 'Download'} aria-label="Download">
                       <Download className="w-3 h-3" />
                     </Button>
                     {!locked && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setConfirmId(att.id)} title={isRTL ? 'حذف' : 'Delete'}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setConfirmId(att.id)} title={isRTL ? 'حذف' : 'Delete'} aria-label="Delete">
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     )}

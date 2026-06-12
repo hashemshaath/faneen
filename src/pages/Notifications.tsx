@@ -342,7 +342,7 @@ const Notifications = () => {
                               variant="ghost" size="icon" className="w-7 h-7"
                               onClick={e => { e.stopPropagation(); markRead.mutate(n.id); }}
                               title={isRTL ? 'تعيين كمقروء' : 'Mark as read'}
-                            >
+                             aria-label="Confirm">
                               <Check className="w-3.5 h-3.5" />
                             </Button>
                           )}
@@ -351,7 +351,7 @@ const Notifications = () => {
                               variant="ghost" size="icon" className="w-7 h-7"
                               onClick={e => { e.stopPropagation(); navigate(n.action_url); }}
                               title={isRTL ? 'عرض' : 'View'}
-                            >
+                             aria-label="View">
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
                           )}
@@ -359,7 +359,7 @@ const Notifications = () => {
                             variant="ghost" size="icon" className="w-7 h-7 text-destructive"
                             onClick={e => { e.stopPropagation(); deleteNotification.mutate(n.id); }}
                             title={isRTL ? 'حذف' : 'Delete'}
-                          >
+                           aria-label="Delete">
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>

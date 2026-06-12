@@ -211,7 +211,7 @@ const DashboardWarranties = () => {
                   {editId ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                   {editId ? (isRTL ? 'تعديل الضمان' : 'Edit Warranty') : (isRTL ? 'إضافة ضمان جديد' : 'Add New Warranty')}
                 </CardTitle>
-                <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={closeForm} aria-label="Action"><X className="w-4 h-4" /></Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -392,10 +392,10 @@ const DashboardWarranties = () => {
                         </div>
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(w)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(w)} aria-label="Edit">
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteConfirm(w.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteConfirm(w.id)} aria-label="Delete">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

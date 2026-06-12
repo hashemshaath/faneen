@@ -480,7 +480,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-accent hover:bg-accent/10" onClick={() => onUpgrade(sub)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-accent hover:bg-accent/10" onClick={() => onUpgrade(sub)} aria-label="Action">
                       <ArrowUpCircle className="w-3.5 h-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -488,7 +488,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => onCancel(sub.id)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => onCancel(sub.id)} aria-label="Refresh">
                       <Ban className="w-3.5 h-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -499,7 +499,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
             {(sub.status === 'expired' || sub.status === 'cancelled') && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-success hover:bg-success/10" onClick={() => onRenew(sub)}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-success hover:bg-success/10" onClick={() => onRenew(sub)} aria-label="Refresh">
                     <RefreshCw className="w-3.5 h-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -1111,7 +1111,7 @@ const AdminMemberships = () => {
                           : (pickBi(isRTL, 'تعديل الخطة', 'Edit Plan'))}
                         <Badge className={cn('text-[9px]', tierColors[editingPlan.tier]?.badge)}>{editingPlan.tier}</Badge>
                       </h3>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingPlan(null)}><X className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingPlan(null)} aria-label="Action"><X className="w-4 h-4" /></Button>
                     </div>
 
                     {/* Basic Info */}
@@ -1187,7 +1187,7 @@ const AdminMemberships = () => {
                         <ArrowUpCircle className="w-4 h-4 text-accent" />
                         {pickBi(isRTL, 'ترقية الاشتراك', 'Upgrade Subscription')}
                       </h3>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setUpgradeSub(null)}><X className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setUpgradeSub(null)} aria-label="Action"><X className="w-4 h-4" /></Button>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 mb-4">
                       <Avatar className="w-8 h-8">

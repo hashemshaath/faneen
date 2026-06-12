@@ -103,16 +103,16 @@ const NotificationItem = React.memo(({ notification, isRTL, language, onRead, on
 
             <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
               {!notification.is_read && (
-                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={e => { e.stopPropagation(); onRead(notification.id); }} title={isRTL ? 'مقروء' : 'Read'}>
+                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={e => { e.stopPropagation(); onRead(notification.id); }} title={isRTL ? 'مقروء' : 'Read'} aria-label="Confirm">
                   <Check className="w-3 h-3" />
                 </Button>
               )}
               {notification.action_url && (
-                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={e => { e.stopPropagation(); onNavigate(notification); }} title={isRTL ? 'عرض' : 'View'}>
+                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={e => { e.stopPropagation(); onNavigate(notification); }} title={isRTL ? 'عرض' : 'View'} aria-label="View">
                   <Eye className="w-3 h-3" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="w-6 h-6 text-destructive" onClick={e => { e.stopPropagation(); onDelete(notification.id); }} title={isRTL ? 'حذف' : 'Delete'}>
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-destructive" onClick={e => { e.stopPropagation(); onDelete(notification.id); }} title={isRTL ? 'حذف' : 'Delete'} aria-label="Delete">
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>

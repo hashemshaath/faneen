@@ -614,7 +614,7 @@ const DashboardBlog = () => {
                       </div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={closeForm} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={closeForm} className="rounded-xl" aria-label="Search"><X className="w-4 h-4" /></Button>
                 </div>
 
                 <div className="p-5 space-y-4">
@@ -1021,7 +1021,7 @@ const DashboardBlog = () => {
                                       type="button" size="icon" variant="ghost"
                                       onClick={() => setField('faq', form.faq.filter((_, i) => i !== idx))}
                                       className="h-9 w-9 shrink-0 text-destructive hover:bg-destructive/10"
-                                    >
+                                     aria-label="Action">
                                       <X className="w-3.5 h-3.5" />
                                     </Button>
                                   </div>

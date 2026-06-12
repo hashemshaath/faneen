@@ -187,13 +187,13 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
           </div>
         </div>
         <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggle(p)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggle(p)} aria-label="Power">
             {p.is_active ? <PowerOff className="w-3.5 h-3.5 text-warning" /> : <Power className="w-3.5 h-3.5 text-primary" />}
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)} aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)} aria-label="Copy"><Copy className="w-3.5 h-3.5" /></Button>
           {onCopyLink && <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onCopyLink(p.id)} title={rtl ? 'نسخ رابط عام' : 'Copy public link'}><Link2 className="w-3.5 h-3.5" /></Button>}
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)} aria-label="Delete" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
     </div>
@@ -584,7 +584,7 @@ const DashboardPromotions = () => {
                   <Sparkles className="w-4 h-4 text-primary" />
                   {rtl ? 'قوالب عروض جاهزة لقطاع الصناعات' : 'Industrial promotion templates'}
                 </CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setShowCatalog(false)}><X className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setShowCatalog(false)} aria-label="Action"><X className="w-4 h-4" /></Button>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">{rtl ? 'اختر قطاعك ثم أضف العرض مباشرة أو افتحه في النموذج للتعديل قبل الحفظ.' : 'Pick your sector then add directly or open in the form to tweak before saving.'}</p>
             </CardHeader>
@@ -692,7 +692,7 @@ const DashboardPromotions = () => {
                     {editingId ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                     {editingId ? (rtl ? 'تعديل العرض' : 'Edit Promotion') : (rtl ? 'إضافة عرض جديد' : 'New Promotion')}
                   </CardTitle>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={closeForm} aria-label="Action"><X className="w-4 h-4" /></Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
@@ -957,7 +957,7 @@ const DashboardPromotions = () => {
       {/* Image Preview Lightbox */}
       {previewUrl && (
         <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200" onClick={() => setPreviewUrl(null)}>
-          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)}>
+          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)} aria-label="Action">
             <X className="w-6 h-6" />
           </Button>
           <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />

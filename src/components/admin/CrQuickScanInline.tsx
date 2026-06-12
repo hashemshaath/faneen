@@ -119,7 +119,7 @@ export const CrQuickScanInline: React.FC<Props> = ({ onParsed }) => {
             {busy ? (isRTL ? 'جارٍ القراءة…' : 'Scanning…') : (isRTL ? 'رفع ملف' : 'Upload file')}
           </Button>
           {(done || err) && (
-            <Button type="button" size="icon" variant="ghost" className="rounded-lg h-8 w-8" onClick={reset}>
+            <Button type="button" size="icon" variant="ghost" className="rounded-lg h-8 w-8" onClick={reset} aria-label="Alert">
               <X className="w-3.5 h-3.5" />
             </Button>
           )}

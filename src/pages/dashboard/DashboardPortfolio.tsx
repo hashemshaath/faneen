@@ -132,14 +132,14 @@ const SortableCard = React.memo(({
             </div>
           </div>
           <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggleFeatured(item)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggleFeatured(item)} aria-label="Star">
               {item.is_featured ? <StarOff className="w-3.5 h-3.5 text-accent" /> : <Star className="w-3.5 h-3.5" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(item)}><Pencil className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(item)}><Copy className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onShare(item)} title={rtl ? 'مشاركة' : 'Share'}><Share2 className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onOpenPublic(item)} title={rtl ? 'عرض عام' : 'Public'}><ExternalLink className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(item)} aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(item)} aria-label="Copy"><Copy className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onShare(item)} title={rtl ? 'مشاركة' : 'Share'} aria-label="Share"><Share2 className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onOpenPublic(item)} title={rtl ? 'عرض عام' : 'Public'} aria-label="Open in new tab"><ExternalLink className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(item.id)} aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>
           <div className="flex items-center gap-2 shrink-0 text-[10px] text-muted-foreground tech-content">
             <span className="inline-flex items-center gap-0.5"><Eye className="w-3 h-3" />{item.view_count ?? 0}</span>
@@ -569,7 +569,7 @@ const DashboardPortfolio = () => {
                     {editingItem ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                     {editingItem ? (pickBi(isRTL, 'تعديل العمل', 'Edit Work')) : (pickBi(isRTL, 'إضافة عمل جديد', 'New Work'))}
                   </CardTitle>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm} aria-label="Action"><X className="w-4 h-4" /></Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
@@ -814,7 +814,7 @@ const DashboardPortfolio = () => {
       {/* Image Preview Lightbox */}
       {previewUrl && (
         <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200" onClick={() => setPreviewUrl(null)}>
-          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)}>
+          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)} aria-label="Action">
             <X className="w-6 h-6" />
           </Button>
           <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />

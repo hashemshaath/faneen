@@ -154,7 +154,7 @@ const AdminUserDetail: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <Button asChild variant="ghost" size="icon" className="rounded-xl">
+            <Button asChild variant="ghost" size="icon" className="rounded-xl" aria-label="Link">
               <Link to="/admin/users" aria-label={isRTL ? 'رجوع' : 'Back'}>
                 <ArrowLeft className="w-4 h-4" />
               </Link>

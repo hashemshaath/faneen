@@ -172,12 +172,12 @@ const SortableProfileRow = React.memo(({
 
       {/* Actions */}
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(profile)}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(profile)} aria-label="Edit">
           <Pencil className="w-3.5 h-3.5" />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align={pickBi(isRTL, 'start', 'end')} className="w-44">
             <DropdownMenuItem onClick={() => onEdit(profile)} className="gap-2 text-xs"><Pencil className="w-3.5 h-3.5" />{pickBi(isRTL, 'تعديل', 'Edit')}</DropdownMenuItem>
@@ -471,7 +471,7 @@ const DashboardProfileSystems = () => {
                       <TrendingUp className="w-3 h-3" /> {formCompletion}%
                     </Badge>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closeForm} aria-label="File"><X className="w-4 h-4" /></Button>
                 </div>
                 <Progress value={formCompletion} className="h-1 mt-2" />
               </CardHeader>
@@ -608,8 +608,8 @@ const DashboardProfileSystems = () => {
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-1.5">
-                <Tooltip><TooltipTrigger asChild><Button variant={viewMode === 'list' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{pickBi(isRTL, 'قائمة', 'List')}</TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{pickBi(isRTL, 'شبكي', 'Grid')}</TooltipContent></Tooltip>
+                <Tooltip aria-label="List view"><TooltipTrigger asChild><Button variant={viewMode === 'list' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{pickBi(isRTL, 'قائمة', 'List')}</TooltipContent></Tooltip>
+                <Tooltip aria-label="Grid view"><TooltipTrigger asChild><Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="icon" className="h-9 w-9" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{pickBi(isRTL, 'شبكي', 'Grid')}</TooltipContent></Tooltip>
               </div>
             </CardContent>
           </Card>
