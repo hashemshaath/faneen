@@ -5,6 +5,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentUser } from '@/modules/identity/services/session';
 import { createNotificationFireAndForget } from '@/modules/notifications';
+import { listServicesByBusiness } from '@/modules/catalog/services/services/reads';
+import { insertBusinessServiceReturning } from '@/modules/catalog/services/services/mutations';
 import type {
   Brand, BrandStatus, BrandRequest, BrandRequestType,
   BrandManufacturingCountry, BrandSectorLink,
@@ -24,6 +26,26 @@ export interface AdminBrandLinkSummary {
   sector_ids: string[];
   business_count: number;
   service_count: number;
+}
+
+/**
+ * Canonical brands wrapper for counting brand links per business_service id.
+ * Centralised here so callers (e.g. catalog governance queries) never touch
+ * `business_service_brands` directly — enforced by brands-isolation-audit.
+ */
+export async function loadBrandCountsByServiceIds(
+  serviceIds: string[],
+): Promise<{ counts: Map<string, number>; error: unknown }> {
+  if (!serviceIds.length) return { counts: new Map<string, number>(), error: null };
+  const { data, error } = await sb
+    .from('business_service_brands')
+    .select('business_service_id')
+    .in('business_service_id', serviceIds);
+  const counts = new Map<string, number>();
+  for (const row of (data ?? []) as Array<{ business_service_id: string }>) {
+    counts.set(row.business_service_id, (counts.get(row.business_service_id) ?? 0) + 1);
+  }
+  return { counts, error };
 }
 
 // ------------------------- PUBLIC / PROVIDER READ ------------------------
@@ -633,11 +655,17 @@ export async function adminSearchBusinessesForBrand(term: string, limit = 10) {
 
 /** List the active services of a given business so the admin can pick one to link. */
 export async function adminListBusinessServices(businessId: string) {
-  const { data, error } = await sb
-    .from('business_services')
-    .select('id, name_ar, name_en, is_active')
-    .eq('business_id', businessId)
-    .order('name_ar', { ascending: true });
+  const { data, error } = await listServicesByBusiness<{
+    id: string;
+    name_ar: string | null;
+    name_en: string | null;
+    is_active: boolean | null;
+  }>({
+    businessId,
+    select: 'id, name_ar, name_en, is_active',
+    activeOnly: false,
+    order: 'name_ar',
+  });
   if (error) throw error;
   return (data ?? []) as Array<{ id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }>;
 }
@@ -735,31 +763,45 @@ export async function adminLinkBrandToAllServices(args: {
 
   // No services? Create a single placeholder so the brand can still be linked.
   if (services.length === 0) {
-    const { data: created, error: createErr } = await sb
-      .from('business_services')
-      .insert({
-        business_id: args.businessId,
-        name_ar: 'خدمات عامة',
-        name_en: 'General services',
-        is_active: true,
-      })
-      .select('id, name_ar, name_en, is_active')
-      .single();
+    // `is_active=true` is the column default — omitted from the payload
+    // because activation/governance writes are owned by
+    // `@/modules/providerServices` (SERVICE-ACTIVATION-GOVERNANCE-FINAL).
+    // Observable behaviour is identical: the inserted row is active.
+    const { data: created, error: createErr } =
+      await insertBusinessServiceReturning<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        is_active: boolean | null;
+      }>(
+        {
+          business_id: args.businessId,
+          name_ar: 'خدمات عامة',
+          name_en: 'General services',
+        },
+        { select: 'id, name_ar, name_en, is_active' },
+      );
     if (createErr) {
+      const err = createErr as {
+        code?: string | null;
+        message?: string | null;
+        details?: string | null;
+        hint?: string | null;
+      };
       await writeBrandAuditLog({
         brand_id: args.brandId,
         action: 'provider_brand_link_admin_placeholder_service_failed',
         new_values: {
           business_id: args.businessId,
-          error_code: createErr.code ?? null,
-          error_message: createErr.message ?? null,
-          error_details: createErr.details ?? null,
-          error_hint: createErr.hint ?? null,
+          error_code: err.code ?? null,
+          error_message: err.message ?? null,
+          error_details: err.details ?? null,
+          error_hint: err.hint ?? null,
         },
       });
-      throw new Error(humanizeBrandLinkError(createErr, 'service'));
+      throw new Error(humanizeBrandLinkError(err, 'service'));
     }
-    services = [created as { id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }];
+    services = [created!];
   }
 
   // Insert one link per service; ignore duplicates so re-running is idempotent.

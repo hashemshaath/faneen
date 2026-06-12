@@ -3,6 +3,7 @@
  * All Supabase access happens here. Pages must NOT import the client.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { loadBrandCountsByServiceIds } from '@/modules/brands/services/brandsService';
 import {
   computeServiceReadinessScore,
   type ServiceReadinessResult,
@@ -62,16 +63,7 @@ export async function loadCatalogServices(opts: { limit?: number } = {}) {
 }
 
 export async function loadServiceBrandCounts(serviceIds: string[]) {
-  if (!serviceIds.length) return { counts: new Map<string, number>(), error: null };
-  const { data, error } = await supabase
-    .from('business_service_brands')
-    .select('business_service_id')
-    .in('business_service_id', serviceIds);
-  const counts = new Map<string, number>();
-  for (const row of (data ?? []) as Array<{ business_service_id: string }>) {
-    counts.set(row.business_service_id, (counts.get(row.business_service_id) ?? 0) + 1);
-  }
-  return { counts, error };
+  return loadBrandCountsByServiceIds(serviceIds);
 }
 
 /** Pure: count name duplicates across the loaded set. */

@@ -61,3 +61,23 @@ export async function countServicesByBusiness({
   const { count, error } = await q;
   return { count, error };
 }
+
+/**
+ * Legacy "is_active only" lite read used by review/filter widgets that
+ * predate the SERVICE-ACTIVATION-GOVERNANCE-3 triple gate. Semantics are
+ * preserved 1:1 (`is_active=true` only, no provider/admin gate, no order).
+ *
+ * Routed through this wrapper so UI components never touch the
+ * `business_services` table directly (catalog-isolation-audit).
+ */
+export async function listActiveBusinessServicesLite<T = unknown>(
+  businessId: string,
+  select: string = 'id, name_ar, name_en',
+): Promise<{ data: T[] | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('business_services')
+    .select(select)
+    .eq('business_id', businessId)
+    .eq('is_active', true);
+  return { data: data as unknown as T[] | null, error };
+}
