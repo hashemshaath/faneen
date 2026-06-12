@@ -97,7 +97,8 @@ async function scanProfiles(limit = 500): Promise<ConsistencyIssue[]> {
   const issues: ConsistencyIssue[] = [];
   rows.forEach((r) => {
     if (!r.ref_id) issues.push({ table: 'profiles', recordId: r.user_id, refId: null, kind: 'missing_ref_id' });
-    // Only check the bilingual pair when both columns exist (skip legacy single-name rows).
+    // Only check the bilingual pair when both columns exist (skip historical
+    // single-name rows kept for backward-compatibility reads).
     if (r.full_name_ar !== null || r.full_name_en !== null) {
       issues.push(...checkBilingual('profiles', r.user_id, r.ref_id, r.full_name_ar, r.full_name_en, 'full_name'));
     }

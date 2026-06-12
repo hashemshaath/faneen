@@ -7,7 +7,7 @@
  * `--gradient-gold`, `--gradient-brand`, `--shadow-gold` are owned by
  * `index.css` + `ThemeApplier` (brand identity v1.0) and must never be
  * overwritten from here — otherwise inline styles would defeat the brand
- * theme and reintroduce the legacy gold palette.
+ * theme and reintroduce the historical gold palette.
  */
 export const accentPresets = [
   // Default brand-aligned accent (industrial green primary).
@@ -24,10 +24,14 @@ export const accentPresets = [
 const VALID_KEYS = new Set(accentPresets.map((p) => p.key));
 const DEFAULT_KEY = 'emerald';
 const STORAGE_KEY = 'qitaat-accent';
+// Storage key kept verbatim — renaming would re-fire the one-time cleanup
+// for every existing user. See `docs/post-release-status-2026-06.md`
+// do-not-remove list.
 const CLEANUP_FLAG = 'qitaat_legacy_accent_cleanup_v1_done';
 
-/** One-time cleanup: rewrite legacy/forbidden accent keys (`amber`, `yellow`,
- *  unknown values…) to the safe default. `gold` is kept (re-mapped to green). */
+/** One-time cleanup: rewrite forbidden accent keys (`amber`, `yellow`,
+ *  unknown values…) to the safe default. `gold` is kept as a
+ *  backward-compatibility alias and re-mapped to brand green. */
 const cleanupLegacyAccent = (): void => {
   try {
     if (localStorage.getItem(CLEANUP_FLAG) === '1') return;
@@ -35,7 +39,7 @@ const cleanupLegacyAccent = (): void => {
     if (cur && !VALID_KEYS.has(cur)) {
       localStorage.setItem(STORAGE_KEY, DEFAULT_KEY);
     }
-    // Forbidden legacy values that used to render amber/yellow UI.
+    // Forbidden historical values that used to render amber/yellow UI.
     if (cur === 'amber' || cur === 'yellow') {
       localStorage.setItem(STORAGE_KEY, DEFAULT_KEY);
     }

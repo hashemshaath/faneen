@@ -6,7 +6,8 @@ import { ShieldCheck, ShieldAlert, ShieldQuestion, Clock, FileEdit } from 'lucid
 /**
  * REGISTRATION-UX-FULL-COMPLETE-1 Part 2
  * Display-only badge that maps the existing `businesses.approval_status`
- * (and the legacy `is_verified` boolean) to one of five MVP states:
+ * (and the historical `is_verified` boolean kept for backward-compatibility)
+ * to one of five MVP states:
  *   draft | pending_verification | verified | rejected | needs_more_info.
  *
  * Does NOT change any data, does NOT request KYB documents — it is purely
