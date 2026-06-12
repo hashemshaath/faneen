@@ -53,10 +53,6 @@ import {
   type SortKey, type SortDir, type Density,
   type FilterScope, type FilterBusinessLink,
   type CreateUserForm,
-  type StaffRole as SharedStaffRole,
-  type BusinessInfo as SharedBusinessInfo,
-  type BusinessLink as SharedBusinessLink,
-  type EditUserForm,
 } from './users/_shared';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
