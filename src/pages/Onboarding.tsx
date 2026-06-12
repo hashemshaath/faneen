@@ -38,6 +38,7 @@ import {
 import { createEntityAccessRequest } from '@/modules/entities/services/access';
 import {
   getOwnerBusiness, updateBusinessById, getBusinessIdByRefOrLegacyRef,
+  updateBusinessSensitiveFields,
 } from '@/modules/businesses';
 import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
 import {
@@ -483,10 +484,19 @@ const Onboarding = () => {
         const values: Record<string, unknown> = {};
         if (logoUrl) values.logo_url = logoUrl;
         if (crDocPath) {
-          values.cr_document_url = crDocPath;
           values.cr_document_uploaded_at = new Date().toISOString();
         }
-        await updateBusinessById({ id: createdBusinessId, values });
+        if (Object.keys(values).length > 0) {
+          await updateBusinessById({ id: createdBusinessId, values });
+        }
+        if (crDocPath) {
+          // cr_document_url is owner+admin-only (column-level GRANT) —
+          // route through the SECURITY DEFINER RPC.
+          const { error: sensErr } = await updateBusinessSensitiveFields(createdBusinessId, {
+            cr_document_url: crDocPath,
+          });
+          if (sensErr) throw sensErr;
+        }
       }
       if (!opts.skip) toast.success(bi('تم حفظ المستندات', 'Documents saved'));
       setStep('summary');
