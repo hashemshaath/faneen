@@ -95,12 +95,13 @@ Each PR is independently mergeable and revertable. **No PR rewrites business log
 - **Parent net change**: `AdminUsers.tsx` 2,790 → 2,697 LOC (−93). One orphan icon import (`TrendingDown`) removed.
 - **Behavioural delta**: none. Tab content, gradients, RTL chart orientation, relative-time labels all identical.
 
-### PR-3 — `AnalyticsTab` (≈100 LOC moved + bundle win)
+### PR-3 — `AnalyticsTab` ✅ shipped
 
-- **Extract**: `2719–2757` → `src/pages/admin/users/AnalyticsTab.tsx`
-- **Props**: `stats`, `accountTypePie`, `tierBar`, `isRTL`
-- **Pure display**, no mutations.
-- **Bundle win**: relocate the 4 Recharts imports (`AreaChart`, `PieChart`, `BarChart`, related) from the main file to this child.
+- **Extracted**: analytics `TabsContent` block → `src/pages/admin/users/AnalyticsTab.tsx` (67 LOC).
+- **Props**: `isRTL`, `stats`, `accountTypePie`, `tierBar`. Pure display, no mutations.
+- **Bundle win**: the entire `recharts` import block is gone from `AdminUsers.tsx`. Pie/Bar/Cell/Legend live only in `AnalyticsTab`; Area/AreaChart/XAxis/YAxis/CartesianGrid/ResponsiveContainer/Tooltip live only in `OverviewTab`. Recharts is now lazy-loadable per tab in any future code-split.
+- **Parent net change**: `AdminUsers.tsx` 2,697 → 2,664 LOC (−33). Shared types `AccountTypePiePoint` and `TierBarPoint` added to `_shared.tsx`.
+- **Behavioural delta**: none.
 
 ### PR-4 — `UserFiltersBar` (≈130 LOC moved)
 
