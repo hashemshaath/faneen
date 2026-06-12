@@ -62,6 +62,13 @@ export async function loadCatalogServices(opts: { limit?: number } = {}) {
   return { rows: (data ?? []) as unknown as CatalogServiceRow[], error };
 }
 
+/**
+ * PSG-1 canonical entry-point for fetching brand link counts per service.
+ * Delegates to the brands module helper which owns all direct access to
+ * the `business_service_brands` relation table (enforced by
+ * `brands-isolation-audit`). Callers in catalog governance must use this
+ * wrapper — never query `business_service_brands` directly.
+ */
 export async function loadServiceBrandCounts(serviceIds: string[]) {
   return loadBrandCountsByServiceIds(serviceIds);
 }
