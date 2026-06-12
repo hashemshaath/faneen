@@ -52,6 +52,7 @@ import {
   Truck,
   Package,
 } from 'lucide-react';
+import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 
 interface MenuItem {
   label: { ar: string; en: string };
@@ -233,143 +234,27 @@ const userGroups: MenuGroup[] = [
 //   - /admin/contact-{inbox-settings,audit-log,sla-dashboard,notification-log}
 //                                      → redirected into /admin/contact-messages tabs
 // ══════════════════════════════════════════
-const adminBaseGroups: MenuGroup[] = [
-  {
-    // 1) Overview
-    groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
-    icon: LayoutDashboard,
-    description: { ar: 'لوحات المراقبة والعمليات والمراجع', en: 'Dashboards, operations, and references' },
-    items: [
-      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
-      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
-      { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
-      { label: { ar: 'مركز العمليات', en: 'Operations Center' }, url: '/admin/operations', icon: Activity },
-      { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon, badge: { ar: 'دعم', en: 'Support', tone: 'support' } },
-      { label: { ar: 'إثراء البيانات', en: 'Data Enrichment' }, url: '/admin/data-enrichment', icon: Sparkles, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'حوكمة الإثراء', en: 'Enrichment Governance' }, url: '/admin/data-enrichment-governance', icon: Sparkles, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-    ],
-  },
-  {
-    // 2) Identities & Entities — unified hub for users, admin team,
-    //    disabled accounts, businesses, providers, access requests,
-    //    access management, and locations. Previously split across
-    //    "Users & Access" + "Businesses & Providers" which duplicated
-    //    the Account Center destination and fragmented the journey
-    //    between a user and the businesses they manage.
-    groupLabel: { ar: 'المستخدمون والمنشآت', en: 'Users & Businesses' },
-    icon: Users,
-    items: [
-      // People
-      { label: { ar: 'مركز الحسابات والموافقات', en: 'Accounts & Approvals' }, url: '/admin/identity', icon: Users, end: true },
-      // NOTE: `/admin/approvals` is merged into Accounts & Approvals
-      // (tabbed inbox at `/admin/identity?tab=approvals`). Standalone
-      // route redirects to the inbox tab automatically.
-      // NOTE: `/admin/businesses` and `/admin/entity-access-requests` are
-      // intentionally hidden from the sidebar. Both are fully merged into
-      // the Approvals Center above (unified filterable list). They remain
-      // reachable as deep-link CRUD targets from row actions and search.
-      { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
-      { label: { ar: 'إظهار الأنظمة', en: 'System Access' }, url: '/admin/system-access', icon: Layers },
-      // Provider operations
-      { label: { ar: 'مركز مراجعة المزودين', en: 'Provider Review Center' }, url: '/admin/provider-review', icon: ShieldCheck },
-      // Geographic context
-      { label: { ar: 'مركز المواقع', en: 'Locations Center' }, url: '/admin/locations', icon: MapPin },
-    ],
-  },
-  {
-    // 4) Requests & Contracts
-    groupLabel: { ar: 'الطلبات والعقود', en: 'Requests & Contracts' },
-    icon: FileText,
-    items: [
-      { label: { ar: 'طلبات العملاء', en: 'Customer Requests' }, url: '/admin/lead-requests', icon: Inbox },
-      { label: { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' }, url: '/admin/quote-operations', icon: Activity },
-      { label: { ar: 'مركز إدارة العقود', en: 'Contracts Center' }, url: '/admin/contracts', icon: FileText, end: true },
-      { label: { ar: '— إنشاء عقد بالنيابة', en: '— Create on Behalf' }, url: '/admin/contracts?tab=create', icon: FilePlus2 },
-      { label: { ar: '— القوالب', en: '— Templates' }, url: '/admin/contracts?tab=templates', icon: Files },
-      { label: { ar: '— سجل التصدير', en: '— Export Audit' }, url: '/admin/contracts?tab=exports', icon: FileBarChart },
-      { label: { ar: '— التحليلات', en: '— Analytics' }, url: '/admin/contracts?tab=analytics', icon: BarChart3 },
-      { label: { ar: 'مركز التقارير', en: 'Reports Center' }, url: '/admin/reports', icon: BarChart3 },
-      { label: { ar: 'سجل التدقيق الموحّد', en: 'Unified Audit Log' }, url: '/admin/audit-log', icon: ShieldAlert },
-    ],
-  },
-  {
-    // 5) Memberships & Payments
-    groupLabel: { ar: 'العضويات والمدفوعات', en: 'Memberships & Payments' },
-    icon: Crown,
-    items: [
-      { label: { ar: 'مركز العضويات', en: 'Memberships Center' }, url: '/admin/memberships', icon: Crown },
-    ],
-  },
-  {
-    // 5b) Rentals & Assets
-    groupLabel: { ar: 'التأجير والأصول', en: 'Rentals & Assets' },
-    icon: Truck,
-    description: { ar: 'إدارة عروض التأجير وأسطول المعدات', en: 'Manage rental offerings and equipment fleet' },
-    items: [
-      { label: { ar: 'مركز التأجير', en: 'Rentals Center' }, url: '/admin/rentals', icon: Truck, end: true },
-      { label: { ar: 'إدارة الأصول والمعدات', en: 'Assets & Equipment' }, url: '/admin/assets', icon: Package, end: true },
-      { label: { ar: '— سجل التجاوزات', en: '— Override Audit' }, url: '/admin/assets/overrides', icon: ShieldAlert },
-    ],
-  },
-  {
-    // 6) Communications
-    groupLabel: { ar: 'التواصل', en: 'Communications' },
-    icon: Mail,
-    items: [
-      { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
-      { label: { ar: 'مركز البريد', en: 'Email Center' }, url: '/admin/email-center', icon: Mail },
-      { label: { ar: 'كل المحادثات', en: 'Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
-    ],
-  },
-  {
-    // 7) Content & SEO
-    groupLabel: { ar: 'المحتوى والـ SEO', en: 'Content & SEO' },
-    icon: Database,
-    items: [
-      { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
-      { label: { ar: 'مركز التصنيفات', en: 'Taxonomy Center' }, url: '/admin/taxonomy', icon: Database },
-      { label: { ar: 'العلامات التجارية', en: 'Brands' }, url: '/admin/brands', icon: Award },
-      { label: { ar: 'القطاعات', en: 'Sectors' }, url: '/dashboard/profile-systems', icon: Layers },
-      { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/admin/private-sectors', icon: Layers },
-      { label: { ar: 'مركز SEO', en: 'SEO Center' }, url: '/admin/sitemap-status', icon: SearchIcon },
-      { label: { ar: 'شركاء الصفحة الرئيسية', en: 'Partner Showcase' }, url: '/admin/partner-showcase', icon: Award },
-      { label: { ar: 'أسئلة الصفحة الرئيسية', en: 'Homepage FAQ' }, url: '/admin/home-faq', icon: PenSquare },
-      { label: { ar: 'قطاعات الصفحة الرئيسية', en: 'Home Sectors' }, url: '/admin/home-sectors', icon: Layers },
-    ],
-  },
-  {
-    // 8) Operations & Insights
-    groupLabel: { ar: 'التشغيل والتحليلات', en: 'Operations & Insights' },
-    icon: Activity,
-    items: [
-      { label: { ar: 'سجل الأكواد', en: 'Barcode Registry' }, url: '/admin/barcode-registry', icon: QrCode },
-      { label: { ar: 'مراقبة المواقع', en: 'Site Monitoring' }, url: '/admin/client-sites', icon: MapPin },
-      { label: { ar: 'تحليلات السوق', en: 'Market Analytics' }, url: '/admin/market-analytics', icon: TrendingUp },
-      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
-      { label: { ar: 'تجارب A/B', en: 'A/B Experiments' }, url: '/admin/ab-experiments', icon: Beaker },
-    ],
-  },
-  {
-    // 9) Settings & Integrations
-    groupLabel: { ar: 'الإعدادات والتكاملات', en: 'Settings & Integrations' },
-    icon: Cog,
-    items: [
-      { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
-      { label: { ar: 'صحة التكاملات', en: 'Integrations Health' }, url: '/admin/integrations', icon: Plug, superAdminOnly: true },
-    ],
-  },
-  {
-    // 10) Account (personal)
-    groupLabel: { ar: 'الحساب', en: 'Account' },
-    icon: User,
-    items: [
-      { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
-      { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
-    ],
-  },
-];
+// ADMIN-REDESIGN PHASE 3 — Sidebar admin groups are derived from the
+// central registry in `@/modules/admin-shell` so the sidebar, the
+// Cmd+K palette, breadcrumbs, and tests share a single source of
+// truth. Items flagged `hiddenInSidebar` remain reachable via direct
+// URL and the command palette but are not rendered here.
+const adminBaseGroups: MenuGroup[] = ADMIN_NAV_GROUPS.map((g) => ({
+  groupLabel: { ar: g.labelAr, en: g.labelEn },
+  icon: g.icon,
+  description: g.descriptionAr && g.descriptionEn
+    ? { ar: g.descriptionAr, en: g.descriptionEn }
+    : undefined,
+  items: g.items
+    .filter((it) => !it.hiddenInSidebar)
+    .map((it) => ({
+      label: { ar: it.labelAr, en: it.labelEn },
+      url: it.route,
+      icon: it.icon,
+      superAdminOnly: it.permission === 'super_admin',
+      badge: it.badge,
+    })),
+})).filter((g) => g.items.length > 0);
 
 // ══════════════════════════════════════════
 //  Render helpers
