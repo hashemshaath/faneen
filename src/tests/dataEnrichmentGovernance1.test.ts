@@ -101,7 +101,8 @@ describe("DATA-ENRICHMENT-GOVERNANCE-1", () => {
     const app = read("src/App.tsx");
     expect(app).toMatch(/AdminDataEnrichmentGovernance/);
     expect(app).toMatch(/\/admin\/data-enrichment-governance/);
-    const sb = read("src/components/dashboard/DashboardSidebar.tsx");
+    const sb = read("src/components/dashboard/DashboardSidebar.tsx")
+      + '\n' + read("src/modules/admin-shell/navigation/adminNavigation.ts");
     expect(sb).toMatch(/\/admin\/data-enrichment-governance/);
   });
 

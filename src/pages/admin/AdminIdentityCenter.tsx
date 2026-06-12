@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Loader2, RotateCcw, Save, Sparkles } from 'lucide-react';
-import { AdminPageHeader } from '@/modules/admin-shell';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 /* ────────────────────────────────────────────────────────────────────── */
 /* Token catalog — UI metadata for the editor.                            */
@@ -209,34 +209,26 @@ const AdminIdentityCenter: React.FC = () => {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
       <AdminPageHeader
-        titleAr="الهوية البصرية الموحّدة"
-        titleEn="Unified Visual Identity"
-        descriptionAr="مصدر الحقيقة الوحيد لتوكنات الواجهة. أي تعديل هنا ينتشر فورًا إلى لوحة الأدمن، الداشبورد، وكل الصفحات العامة دون إعادة تحميل."
-        descriptionEn="Single source of truth for UI tokens. Any change here propagates instantly to admin, dashboard, and public surfaces — no reload needed."
-        breadcrumbs={[
-          { labelAr: 'لوحة الإدارة', labelEn: 'Admin', to: '/admin/operations' },
-          { labelAr: 'النظام والحوكمة', labelEn: 'System & Governance' },
-          { labelAr: 'مركز الهوية', labelEn: 'Identity Center' },
-        ]}
-        badge={
-          <span className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-            <Sparkles className="h-3 w-3" aria-hidden />
-            {isRTL ? 'مركز الهوية' : 'Identity Center'}
-          </span>
-        }
-        secondaryActions={
-          <Button type="button" variant="outline" size="sm" onClick={handleReset} disabled={!dirty || saving}>
-            <RotateCcw className="h-4 w-4 me-2" aria-hidden />
-            {isRTL ? 'تراجع' : 'Reset'}
-          </Button>
-        }
-        primaryAction={
-          <Button type="button" variant="primary" size="sm" onClick={handleSave} disabled={!dirty || saving}>
-            {saving
-              ? <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden />
-              : <Save className="h-4 w-4 me-2" aria-hidden />}
-            {isRTL ? 'حفظ ونشر' : 'Save & publish'}
-          </Button>
+        icon={Sparkles}
+        tone="primary"
+        eyebrow={isRTL ? 'مركز الهوية' : 'Identity Center'}
+        title={isRTL ? 'الهوية البصرية الموحّدة' : 'Unified Visual Identity'}
+        subtitle={isRTL
+          ? 'مصدر الحقيقة الوحيد لتوكنات الواجهة. أي تعديل هنا ينتشر فورًا إلى لوحة الأدمن، الداشبورد، وكل الصفحات العامة دون إعادة تحميل.'
+          : 'Single source of truth for UI tokens. Any change here propagates instantly to admin, dashboard, and public surfaces — no reload needed.'}
+        actions={
+          <>
+            <Button type="button" variant="outline" size="sm" onClick={handleReset} disabled={!dirty || saving}>
+              <RotateCcw className="h-4 w-4 me-2" aria-hidden />
+              {isRTL ? 'تراجع' : 'Reset'}
+            </Button>
+            <Button type="button" variant="primary" size="sm" onClick={handleSave} disabled={!dirty || saving}>
+              {saving
+                ? <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden />
+                : <Save className="h-4 w-4 me-2" aria-hidden />}
+              {isRTL ? 'حفظ ونشر' : 'Save & publish'}
+            </Button>
+          </>
         }
       />
 

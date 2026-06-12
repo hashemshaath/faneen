@@ -10,6 +10,9 @@ const APP = readFileSync(resolve(__dirname, '../App.tsx'), 'utf8');
 const SIDEBAR = readFileSync(
   resolve(__dirname, '../components/dashboard/DashboardSidebar.tsx'),
   'utf8',
+) + '\n' + readFileSync(
+  resolve(__dirname, '../modules/admin-shell/navigation/adminNavigation.ts'),
+  'utf8',
 );
 const ACT = readFileSync(
   resolve(__dirname, '../modules/admin/services/operations/listAdminOperationalActivity.ts'),

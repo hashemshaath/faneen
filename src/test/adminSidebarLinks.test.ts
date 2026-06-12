@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 
 /**
  * Integrity check: every /admin/* link surfaced by DashboardSidebar must have
@@ -13,20 +14,18 @@ import { resolve } from 'node:path';
  */
 
 const repoRoot = resolve(__dirname, '..', '..');
-const sidebarSrc = readFileSync(
-  resolve(repoRoot, 'src/components/dashboard/DashboardSidebar.tsx'),
-  'utf8',
-);
 const appSrc = readFileSync(resolve(repoRoot, 'src/App.tsx'), 'utf8');
 
-function extractSidebarAdminLinks(src: string): string[] {
+function collectAdminLinks(): string[] {
+  // ADMIN-REDESIGN PHASE 3 — admin sidebar is derived from the central
+  // navigation registry, so we read links from the registry instead of
+  // grepping the sidebar source. Hidden items are still real routes
+  // (reachable via direct URL / command palette) and must be checked.
   const links = new Set<string>();
-  const re = /url:\s*['"`](\/admin[^'"`]*)['"`]/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(src)) !== null) {
-    // Strip query strings — we only care that the base path resolves.
-    const path = m[1].split('?')[0];
-    links.add(path);
+  for (const g of ADMIN_NAV_GROUPS) {
+    for (const it of g.items) {
+      links.add(it.route.split('?')[0]);
+    }
   }
   return [...links].sort();
 }
@@ -50,7 +49,7 @@ function matchesRegisteredRoute(link: string, routes: string[]): boolean {
 }
 
 describe('admin sidebar link integrity', () => {
-  const sidebarLinks = extractSidebarAdminLinks(sidebarSrc);
+  const sidebarLinks = collectAdminLinks();
   const registeredRoutes = extractRoutePaths(appSrc);
 
   it('extracts a sane number of sidebar admin links', () => {

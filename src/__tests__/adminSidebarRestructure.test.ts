@@ -1,113 +1,122 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 
 /**
- * ADMIN-SIDEBAR-UX-RESTRUCTURE-2 guards.
+ * ADMIN-REDESIGN PHASE 3 guards (replaces ADMIN-SIDEBAR-UX-RESTRUCTURE-2).
  *
- * Enforces the consolidated admin sidebar structure:
- *  - exactly 9 groups (8 admin + Account) after merging
- *    "Users & Access" + "Businesses & Providers" into
- *    "Users & Businesses"
- *  - no duplicate hrefs across the admin menu
- *  - approved AR/EN group labels present
- *  - no duplicate "مراجعة المزودين" / "إدارة الوصول"
- *  - /admin/entity-access-requests linked exactly once
- *  - every sidebar href maps to a route in App.tsx
- *  - every /admin/* href has requireAdmin or requireSuperAdmin protection
- *  - no href="#"  and no /dashboard/membership link
+ * The admin sidebar is now derived from a central navigation registry
+ * (`@/modules/admin-shell`). These tests enforce the Phase 3 structure
+ * by inspecting the registry directly plus a small set of source-text
+ * assertions on the sidebar/App files.
+ *
+ *  - exactly 7 canonical admin groups
+ *  - bilingual labels on every group and item
+ *  - no duplicate routes anywhere in the registry
+ *  - every registered route resolves to a <Route> in App.tsx
+ *  - every /admin/* route has requireAdmin / requireSuperAdmin protection
+ *  - /admin/system/identity is registered exactly once (Identity Center)
+ *  - no href="#" anywhere in the sidebar
+ *  - no /dashboard/membership link anywhere in the sidebar
  */
 
 const root = resolve(__dirname, '..', '..');
 const SIDEBAR = readFileSync(resolve(root, 'src/components/dashboard/DashboardSidebar.tsx'), 'utf8');
 const APP = readFileSync(resolve(root, 'src/App.tsx'), 'utf8');
 
-// Extract the adminBaseGroups block only — avoids matching provider/user menus.
-const ADMIN_BLOCK = (() => {
-  const start = SIDEBAR.indexOf('const adminBaseGroups');
-  const end = SIDEBAR.indexOf('// Render helpers', start);
-  return SIDEBAR.slice(start, end > 0 ? end : SIDEBAR.length);
-})();
+const APPROVED_GROUP_IDS = [
+  'overview',
+  'operations',
+  'users-entities',
+  'content-directory',
+  'system-governance',
+  'analytics',
+  'finance',
+] as const;
 
-const APPROVED_GROUPS: Array<{ ar: string; en: string }> = [
-  { ar: 'نظرة عامة', en: 'Overview' },
-  { ar: 'المستخدمون والمنشآت', en: 'Users & Businesses' },
-  { ar: 'الطلبات والعقود', en: 'Requests & Contracts' },
-  { ar: 'العضويات والمدفوعات', en: 'Memberships & Payments' },
-  { ar: 'التواصل', en: 'Communications' },
-  { ar: 'المحتوى والـ SEO', en: 'Content & SEO' },
-  { ar: 'التشغيل والتحليلات', en: 'Operations & Insights' },
-  { ar: 'الإعدادات والتكاملات', en: 'Settings & Integrations' },
-  { ar: 'الحساب', en: 'Account' },
-];
+describe('admin nav registry — canonical 7 groups', () => {
+  it('exposes exactly 7 admin groups in the documented order', () => {
+    const ids = ADMIN_NAV_GROUPS.map((g) => g.id);
+    expect(ids).toEqual(APPROVED_GROUP_IDS);
+  });
 
-const extractHrefs = (block: string): string[] => {
-  const re = /url:\s*'([^']+)'/g;
-  const out: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(block))) out.push(m[1]);
-  return out;
-};
-
-describe('admin sidebar — approved group labels', () => {
-  for (const g of APPROVED_GROUPS) {
-    it(`includes group "${g.en}" / "${g.ar}"`, () => {
-      expect(ADMIN_BLOCK).toContain(`'${g.ar}'`);
-      expect(ADMIN_BLOCK).toContain(`'${g.en}'`);
+  for (const id of APPROVED_GROUP_IDS) {
+    it(`group "${id}" has bilingual labels`, () => {
+      const g = ADMIN_NAV_GROUPS.find((x) => x.id === id);
+      expect(g).toBeDefined();
+      expect(g!.labelAr.length).toBeGreaterThan(0);
+      expect(g!.labelEn.length).toBeGreaterThan(0);
     });
   }
 });
 
-describe('admin sidebar — no duplicate hrefs', () => {
-  it('every href appears at most once in admin menu', () => {
-    const hrefs = extractHrefs(ADMIN_BLOCK);
+describe('admin nav registry — items', () => {
+  const items = ADMIN_NAV_GROUPS.flatMap((g) => g.items);
+
+  it('every item has bilingual labels and a non-empty route', () => {
+    for (const it of items) {
+      expect(it.labelAr.length, `${it.id} labelAr`).toBeGreaterThan(0);
+      expect(it.labelEn.length, `${it.id} labelEn`).toBeGreaterThan(0);
+      expect(it.route.startsWith('/'), `${it.id} route`).toBe(true);
+    }
+  });
+
+  it('routes are unique across the entire registry', () => {
     const seen = new Map<string, number>();
-    for (const h of hrefs) seen.set(h, (seen.get(h) ?? 0) + 1);
-    const dups = [...seen.entries()].filter(([, n]) => n > 1).map(([h]) => h);
-    expect(dups, `duplicate hrefs: ${dups.join(', ')}`).toEqual([]);
+    for (const it of items) seen.set(it.route, (seen.get(it.route) ?? 0) + 1);
+    const dups = [...seen.entries()].filter(([, n]) => n > 1).map(([r]) => r);
+    expect(dups, `duplicate routes: ${dups.join(', ')}`).toEqual([]);
   });
-});
 
-describe('admin sidebar — specific dedupe rules', () => {
-  it('"مراجعة المزودين" appears at most once', () => {
-    const n = (ADMIN_BLOCK.match(/مراجعة المزودين/g) ?? []).length;
-    expect(n).toBe(1);
-  });
-  it('"إدارة الوصول" appears at most once', () => {
-    const n = (ADMIN_BLOCK.match(/إدارة الوصول/g) ?? []).length;
-    expect(n).toBe(1);
-  });
-  it('/admin/entity-access-requests is linked exactly once', () => {
-    const n = (ADMIN_BLOCK.match(/\/admin\/entity-access-requests/g) ?? []).length;
+  it('Identity Center route appears exactly once', () => {
+    const n = items.filter((it) => it.route === '/admin/system/identity').length;
     expect(n).toBe(1);
   });
 });
 
-describe('admin sidebar — routing integrity', () => {
-  const hrefs = extractHrefs(ADMIN_BLOCK).map((h) => h.split('?')[0]);
+describe('admin nav registry — routing integrity', () => {
+  const items = ADMIN_NAV_GROUPS.flatMap((g) => g.items);
 
-  it('every sidebar href resolves to a route registered in App.tsx', () => {
-    const missing = hrefs.filter((h) => !APP.includes(`path="${h}"`));
+  it('every registry route resolves to a registered admin route', () => {
+    const missing = items
+      .map((it) => it.route)
+      .filter((r) => !APP.includes(`path="${r}"`));
     expect(missing, `missing routes: ${missing.join(', ')}`).toEqual([]);
   });
 
-  it('every /admin/* href is requireAdmin or requireSuperAdmin protected', () => {
-    const adminHrefs = hrefs.filter((h) => h.startsWith('/admin/'));
-    const unprotected = adminHrefs.filter((h) => {
+  it('every /admin/* route is requireAdmin or requireSuperAdmin protected', () => {
+    // The bare `/admin` landing is mounted as a wrapper that itself
+    // enforces admin protection on render — skip the prefix-less route.
+    const unprotected = items.filter((it) => {
+      if (!it.route.startsWith('/admin/')) return false;
+      const esc = it.route.replace(/[/\-:]/g, (c) => '\\' + c);
       const re = new RegExp(
-        `path="${h.replace(/[/-]/g, (c) => '\\' + c)}"[^>]*requireAdmin|` +
-        `path="${h.replace(/[/-]/g, (c) => '\\' + c)}"[^>]*requireSuperAdmin`,
+        `path="${esc}"[^>]*requireAdmin|path="${esc}"[^>]*requireSuperAdmin`,
       );
       return !re.test(APP);
     });
-    expect(unprotected, `unprotected: ${unprotected.join(', ')}`).toEqual([]);
+    expect(
+      unprotected.map((it) => it.route),
+      `unprotected: ${unprotected.map((it) => it.route).join(', ')}`,
+    ).toEqual([]);
   });
+});
 
-  it('no href="#" in admin sidebar', () => {
-    expect(ADMIN_BLOCK).not.toMatch(/url:\s*'#'/);
+describe('admin sidebar — legacy guard rails', () => {
+  it('no href="#" anywhere in the sidebar file', () => {
+    expect(SIDEBAR).not.toMatch(/url:\s*'#'/);
+    expect(SIDEBAR).not.toMatch(/href=["']#["']/);
   });
 
   it('no /dashboard/membership link anywhere in sidebar', () => {
     expect(SIDEBAR).not.toMatch(/\/dashboard\/membership(?![-/])/);
   });
 });
+
+// Legacy placeholders kept for grep compatibility — registry-driven assertions
+// above supersede the original ADMIN_BLOCK string scans.
+const _LEGACY_GROUP_LABELS_REFERENCED = [
+  'مراجعة المزودين',
+  'إدارة الوصول',
+];
