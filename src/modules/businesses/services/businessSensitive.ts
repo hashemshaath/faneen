@@ -94,3 +94,31 @@ export const BUSINESS_SENSITIVE_COLUMNS = [
   'approval_notes',
   'cr_owner_name',
 ] as const;
+
+/**
+ * SECURITY DEFINER RPC returning the most recently created business
+ * owned by `userId` as a JSON object (full row, incl. sensitive cols).
+ * Authorized only when caller is `userId` or an admin.
+ */
+export async function getOwnerBusinessFull<T = Record<string, unknown>>(
+  userId: string,
+): Promise<{ data: T | null; error: Error | null }> {
+  const { data, error } = await supabase.rpc('get_owner_business_full', { p_user_id: userId });
+  if (error) return { data: null, error: new Error(error.message) };
+  return { data: (data as T | null) ?? null, error: null };
+}
+
+/**
+ * SECURITY DEFINER RPC returning a single business by id as a JSON object
+ * (full row, incl. sensitive cols). Authorized only when caller is the
+ * business owner or an admin.
+ */
+export async function getBusinessFullById<T = Record<string, unknown>>(
+  businessId: string,
+): Promise<{ data: T | null; error: Error | null }> {
+  const { data, error } = await supabase.rpc('get_business_full_by_id', {
+    p_business_id: businessId,
+  });
+  if (error) return { data: null, error: new Error(error.message) };
+  return { data: (data as T | null) ?? null, error: null };
+}
