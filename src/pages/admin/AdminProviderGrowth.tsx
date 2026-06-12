@@ -5,13 +5,13 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Loader2 } from 'lucide-react';
+import { Loader2, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HelpLauncher } from '@/components/help/HelpLauncher';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
+import { useBi } from '@/components/common/Bilingual';
 import {
   loadProviderGrowthBusinesses,
   loadProviderGrowthPipeline,
@@ -32,9 +32,8 @@ import { emitProviderGrowthEvent } from '@/modules/providers/growthEvents';
 const PAGE_KEY = 'admin.provider-growth';
 
 const AdminProviderGrowth: React.FC = () => {
-  const { isRTL } = useLanguage();
+  const bi = useBi();
   useNoIndex();
-  const t = (ar: string, en: string) => (isRTL ? ar : en);
 
   const businessesQ = useQuery({
     queryKey: ['admin', 'provider-growth', 'businesses'],
@@ -75,32 +74,30 @@ const AdminProviderGrowth: React.FC = () => {
   const loading = businessesQ.isLoading || pipelineQ.isLoading;
 
   return (
-    <div className="min-h-dvh bg-background flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
-        <header className="flex items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">{t('نمو المزودين', 'Provider growth')}</h1>
-            <p className="text-sm text-muted-foreground">
-              {t(
-                'لوحة نمو المزودين: مسار المراجعة، توزيع الجودة والجاهزية، وأولويات النشر.',
-                'Provider growth dashboard: pipeline, readiness & quality distributions, publish priorities.',
-              )}
-            </p>
-          </div>
+    <DashboardLayout>
+      <AdminListPageTemplate
+        tone="success"
+        icon={TrendingUp}
+        eyebrow={bi('لوحة الإدارة', 'Admin Console')}
+        title={bi('نمو المزودين', 'Provider growth')}
+        subtitle={bi(
+          'لوحة نمو المزودين: مسار المراجعة، توزيع الجودة والجاهزية، وأولويات النشر.',
+          'Provider growth dashboard: pipeline, readiness & quality distributions, publish priorities.',
+        )}
+        actions={
           <div className="flex items-center gap-2">
             <HelpLauncher pageKey="admin.provider-growth" />
-            <Button asChild variant="outline" className="rounded-xl">
-              <Link to="/admin/provider-growth/queue">{t('فتح قائمة العمليات', 'Open ops queue')}</Link>
+            <Button asChild variant="outline" size="sm" className="h-10 rounded-xl">
+              <Link to="/admin/provider-growth/queue">{bi('فتح قائمة العمليات', 'Open ops queue')}</Link>
             </Button>
           </div>
-        </header>
-
+        }
+        kpiSlot={!loading ? <KpiSummary kpis={kpis} /> : undefined}
+      >
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <div className="space-y-6">
-            <KpiSummary kpis={kpis} />
             <div className="grid lg:grid-cols-2 gap-4">
               <PipelineFunnelWidget byStage={byStage} />
               <TopPriorityWidget rows={rows} onSelect={openInsight} />
@@ -117,9 +114,8 @@ const AdminProviderGrowth: React.FC = () => {
             />
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+      </AdminListPageTemplate>
+    </DashboardLayout>
   );
 };
 
