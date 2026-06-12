@@ -17,6 +17,7 @@ import {
   listServicesByBusiness,
 } from '@/modules/catalog';
 import { listBusinessesByIds, getBusinessIdByUsername } from '@/modules/businesses';
+import { getBusinessStaffById } from '@/modules/businesses/services/getBusinessStaffById';
 import { listProfilesByUserIds } from '@/modules/users';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -160,11 +161,10 @@ const BranchDetail: React.FC = () => {
     queryKey: ['branch-sales-manager', branch?.sales_manager_staff_id],
     enabled: Boolean(branch?.sales_manager_staff_id),
     queryFn: async () => {
-      const { data: staff } = await supabase
-        .from('business_staff')
-        .select('id, user_id, role')
-        .eq('id', branch!.sales_manager_staff_id!)
-        .maybeSingle();
+      const { data: staff } = await getBusinessStaffById<{ id: string; user_id: string; role: string }>({
+        staffId: branch!.sales_manager_staff_id!,
+        select: 'id, user_id, role',
+      });
       if (!staff) return null;
       const uid = (staff as { user_id: string }).user_id;
       const { data: profiles } = await listProfilesByUserIds<{
