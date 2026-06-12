@@ -193,7 +193,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)} aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)} aria-label="Copy"><Copy className="w-3.5 h-3.5" /></Button>
           {onCopyLink && <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onCopyLink(p.id)} title={rtl ? 'نسخ رابط عام' : 'Copy public link'}><Link2 className="w-3.5 h-3.5" /></Button>}
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)} aria-label="Delete" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)} aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
     </div>
