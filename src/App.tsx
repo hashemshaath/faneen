@@ -307,6 +307,7 @@ const AppRoutes = () => (
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/guides" element={<Guides />} />
+          <Route path="/guides/heavy-equipment-rental-saudi-arabia" element={<HeavyEquipmentRentalSaudiArabia />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/profile-systems" element={<ProfileSystems />} />
           <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
