@@ -408,7 +408,10 @@ const AdminBusinesses = () => {
     queryKey: ['admin-businesses'],
     queryFn: async () => {
       const { data, error } = await listAdminBusinesses<Database['public']['Tables']['businesses']['Row']>({
-        select: '*',
+        // Sensitive cols (national_id, approval_notes, cr_*) excluded —
+        // column-level GRANTs block them for the authenticated role.
+        // Loaded on demand via getBusinessSensitiveFields when editing.
+        select: BUSINESS_SAFE_COLUMNS_SELECT,
         orderBy: { column: 'created_at', ascending: false },
       });
       if (error) throw error;
