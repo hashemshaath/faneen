@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ADMIN_NAV_GROUPS as REGISTRY_GROUPS } from '@/modules/admin-shell/navigation/adminNavigation';
 
 /**
  * NAV-IA-REDESIGN-1: Dashboard/Admin sidebar IA cleanup guards.
@@ -102,16 +103,14 @@ describe('NAV-IA-REDESIGN-1 — grouping & operations placement', () => {
   });
 
   it('admin Overview group contains Operations Center + Bulk Reference Triage', () => {
-    // ADMIN-IA-CONSOLIDATION: the standalone Operations Console sidebar
-    // entry was merged into the unified Operations Center hub. The console
-    // page is still reachable at /admin/operations/console (redirect to
-    // /admin/operations?tab=console). Bulk Reference Triage remains a
-    // top-level Overview shortcut.
-    const s = adminBlock.indexOf("en: 'Overview'");
-    const e = adminBlock.indexOf('groupLabel', s + 1);
-    const block = adminBlock.slice(s, e);
-    expect(block).toMatch(/url:\s*'\/admin\/operations'/);
-    expect(block).toContain('/admin/ref/triage');
+    // ADMIN-REDESIGN PHASE 3 — admin sidebar is now derived from the
+    // central registry (`@/modules/admin-shell`). Inspect the registry
+    // directly so the assertion survives the indirection.
+    const overview = REGISTRY_GROUPS.find((g) => g.id === 'overview');
+    expect(overview).toBeDefined();
+    const routes = overview!.items.map((i) => i.route);
+    expect(routes).toContain('/admin/operations');
+    expect(routes).toContain('/admin/ref/triage');
   });
 
   it('admin sidebar has no /admin/ref/:refId static link (entry is via triage/resolver)', () => {

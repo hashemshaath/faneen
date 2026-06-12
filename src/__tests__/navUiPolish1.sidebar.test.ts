@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ADMIN_NAV_GROUPS, findAdminNavItem } from '@/modules/admin-shell/navigation/adminNavigation';
 
 /**
  * NAV-UI-POLISH-1 guards.
@@ -57,7 +58,10 @@ describe('NAV-UI-POLISH-1 — descriptions on major groups', () => {
     expect(SIDEBAR).toMatch(/Subscriptions, credits, and installments/);
   });
   it('Admin Overview group has bilingual description', () => {
-    expect(SIDEBAR).toMatch(/Dashboards, operations, and references/);
+    // ADMIN-REDESIGN PHASE 3 — descriptions now live in the registry.
+    const g = ADMIN_NAV_GROUPS.find((x) => x.id === 'overview');
+    expect(g?.descriptionAr).toBeTruthy();
+    expect(g?.descriptionEn).toBeTruthy();
   });
 });
 
@@ -69,7 +73,9 @@ describe('NAV-UI-POLISH-1 — static badges', () => {
     expect(SIDEBAR).toMatch(/'Work Orders'[\s\S]*tone:\s*'new'/);
   });
   it('Bulk Reference Triage carries a "support" badge', () => {
-    expect(SIDEBAR).toMatch(/Bulk Reference Triage[\s\S]*tone:\s*'support'/);
+    // ADMIN-REDESIGN PHASE 3 — badge now defined in the registry.
+    const item = findAdminNavItem('/admin/ref/triage');
+    expect(item?.badge?.tone).toBe('support');
   });
 });
 

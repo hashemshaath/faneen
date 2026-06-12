@@ -25,6 +25,7 @@ import { QUICK_ACTIONS, filterQuickActions, type QuickActionAudience } from '@/m
 import { readRecentContext } from '@/modules/workspace/shell/recentContextStore';
 import { resolveRefRoute, parseRef } from '@/modules/workspace/shell/refRouteMap';
 import { useCommandPalette } from '@/hooks/useCommandPalette';
+import { ADMIN_NAV_GROUPS, filterByPermission } from '@/modules/admin-shell';
 
 const ROUTE_LABELS: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -60,6 +61,17 @@ export const CommandPalette: React.FC = () => {
   const matrix = usePermissionMatrix();
   const { open, setOpen } = useCommandPalette();
 
+  // ADMIN-REDESIGN PHASE 3 — surface admin navigation registry inside
+  // the existing global palette. No new shortcut is bound; this just
+  // adds a dedicated group so admins can jump to any admin destination
+  // from Cmd/Ctrl+K with bilingual keywords.
+  const adminNavGroups = useMemo(
+    () => (isAdmin
+      ? filterByPermission(ADMIN_NAV_GROUPS, { isSuperAdmin })
+      : []),
+    [isAdmin, isSuperAdmin],
+  );
+
   const audience: QuickActionAudience = (isAdmin || isSuperAdmin) ? 'admin' : isProvider ? 'provider' : 'user';
 
   const actions = useMemo(
@@ -90,6 +102,23 @@ export const CommandPalette: React.FC = () => {
       />
       <CommandList>
         <CommandEmpty>{isRTL ? 'لا نتائج' : 'No results'}</CommandEmpty>
+
+        {adminNavGroups.map((g) => (
+          <CommandGroup key={`admin-${g.id}`} heading={isRTL ? g.labelAr : g.labelEn}>
+            {g.items.map((it) => (
+              <CommandItem
+                key={`admin-nav-${it.id}`}
+                value={`${it.id} ${it.labelEn} ${it.labelAr} ${it.route} ${(it.keywords ?? []).join(' ')}`}
+                onSelect={() => go(it.route)}
+              >
+                <span className="truncate">{isRTL ? it.labelAr : it.labelEn}</span>
+                <span className="ms-auto text-[10px] font-mono text-muted-foreground tech-content">
+                  {it.route}
+                </span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
 
         {actions.length > 0 && (
           <CommandGroup heading={isRTL ? 'إجراءات سريعة' : 'Quick Actions'}>
