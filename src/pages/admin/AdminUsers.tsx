@@ -53,10 +53,12 @@ import {
   KpiCard, formatDate, formatRelative,
   type SortKey, type SortDir, type Density,
   type FilterScope, type FilterBusinessLink,
+  type CreateUserForm,
 } from './users/_shared';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
+import { CreateUserPanel } from './users/CreateUserPanel';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 /**
