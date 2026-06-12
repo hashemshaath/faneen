@@ -16,7 +16,7 @@ export interface TierMeta {
   icon: string;
 }
 
-export const TIERS: readonly TierMeta[] = [
+export const TIERS: TierMeta[] = [
   { value: 'free',       label_ar: 'مجاني',  label_en: 'Free',       color: 'bg-muted text-muted-foreground',          icon: '🆓' },
   { value: 'basic',      label_ar: 'أساسي',  label_en: 'Basic',      color: 'bg-info/10 text-info',                    icon: '⭐' },
   { value: 'premium',    label_ar: 'مميز',   label_en: 'Premium',    color: 'bg-accent/20 text-accent-foreground',     icon: '👑' },
