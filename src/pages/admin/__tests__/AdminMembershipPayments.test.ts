@@ -92,6 +92,9 @@ describe('Admin sidebar nav entry (R4F-8F)', () => {
   const NAV = fs.readFileSync(
     path.resolve(__dirname, '../../../components/dashboard/DashboardSidebar.tsx'),
     'utf8',
+  ) + '\n' + fs.readFileSync(
+    path.resolve(__dirname, '../../../modules/admin-shell/navigation/adminNavigation.ts'),
+    'utf8',
   );
   it('exposes consolidated Memberships Center entry (membership-payments now a tab)', () => {
     // R4F-8F + ADMIN-IA-CONSOLIDATION: the standalone "Membership Payments"

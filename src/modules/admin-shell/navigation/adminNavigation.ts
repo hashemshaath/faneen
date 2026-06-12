@@ -245,7 +245,7 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
     descriptionAr: 'العضويات والمدفوعات والاشتراكات',
     descriptionEn: 'Memberships, payments and subscriptions',
     items: [
-      { id: 'memberships', labelAr: 'العضويات', labelEn: 'Memberships', route: '/admin/memberships', icon: Crown },
+      { id: 'memberships', labelAr: 'مركز العضويات', labelEn: 'Memberships Center', route: '/admin/memberships', icon: Crown },
       { id: 'membership-payments', labelAr: 'مدفوعات العضويات', labelEn: 'Membership Payments', route: '/admin/membership-payments', icon: CreditCard },
       { id: 'provider-subscriptions', labelAr: 'اشتراكات المزودين', labelEn: 'Provider Subscriptions', route: '/admin/provider-subscriptions', icon: Crown },
       { id: 'pdf-exports', labelAr: 'تصدير PDF', labelEn: 'PDF Exports', route: '/admin/pdf-exports', icon: Receipt },
