@@ -1259,8 +1259,17 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Edit Open ─── */
-  const openEdit = (biz: Record<string, unknown>) => {
+  const openEdit = async (biz: Record<string, unknown>) => {
     setServicesPanel(null);
+    // Fetch sensitive cols (national_id) via owner+admin-only RPC since
+    // the bulk list no longer carries them.
+    const bizId = (biz.id as string | undefined) ?? '';
+    let nationalIdValue = '';
+    if (bizId) {
+      const { getBusinessSensitiveFields } = await import('@/modules/businesses');
+      const { data: sens } = await getBusinessSensitiveFields(bizId);
+      nationalIdValue = sens?.national_id ?? '';
+    }
     const bizImg = biz as AdminBusinessImageColumns;
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
@@ -1278,7 +1287,7 @@ const AdminBusinesses = () => {
       seo_description_ar: biz.seo_description_ar || '', seo_description_en: biz.seo_description_en || '',
       seo_keywords: Array.isArray(biz.seo_keywords) ? biz.seo_keywords.join(', ') : '',
       og_image: biz.og_image || '',
-      national_id: biz.national_id || '', additional_number: biz.additional_number || '',
+      national_id: nationalIdValue, additional_number: biz.additional_number || '',
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
       region_en: biz.region_en || '', district_en: biz.district_en || '',
