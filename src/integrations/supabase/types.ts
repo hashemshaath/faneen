@@ -21267,6 +21267,10 @@ export type Database = {
         Returns: Json
       }
       get_branch_visit_count: { Args: { _branch_id: string }; Returns: number }
+      get_business_full_by_id: {
+        Args: { p_business_id: string }
+        Returns: Json
+      }
       get_business_sensitive_fields: {
         Args: { p_business_id: string }
         Returns: {
@@ -21544,6 +21548,7 @@ export type Database = {
           token: string
         }[]
       }
+      get_owner_business_full: { Args: { p_user_id: string }; Returns: Json }
       get_placeholder_dashboard_stats: { Args: never; Returns: Json }
       get_placeholder_owner_report: { Args: never; Returns: Json }
       get_portfolio_analytics: {
