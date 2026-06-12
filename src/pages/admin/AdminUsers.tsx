@@ -53,11 +53,13 @@ import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
 import {
-  KpiCard, formatDate, formatRelative, EmailLiveHint,
+  formatDate, formatRelative, EmailLiveHint,
   type SortKey, type SortDir, type Density,
   type FilterScope, type FilterBusinessLink,
   type CreateUserForm,
 } from './users/_shared';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
+import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
