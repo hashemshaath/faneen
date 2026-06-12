@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ImagePlus, Loader2, X, Filter, Tag } from 'lucide-react';
@@ -18,7 +19,10 @@ import {
   LONG_CACHE_CONTROL,
   cdnUrl,
 } from '@/lib/qitaatImagesStorage';
-import { removePublicImages } from '@/modules/files/services/public';
+import {
+  removePublicImages,
+  uploadPublicImage,
+} from '@/modules/files/services/public';
 
 export type GalleryPhase = 'before' | 'during' | 'after';
 export type GalleryCategory = 'aluminum' | 'glass' | 'wood' | 'steel' | 'general';
@@ -141,13 +145,17 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
           await Promise.all(RENDITION_KEYS.map(async (key) => {
             const f = renditions[key];
             const path = `${userId}/sites/${siteId}/${imageId}-${key}.webp`;
-            const { error: upErr } = await supabase.storage
-              .from(QITAAT_IMAGES_BUCKET)
-              .upload(path, f, {
+            const { error: upErr } = await uploadPublicImage({
+              bucket: QITAAT_IMAGES_BUCKET,
+              path,
+              file: f,
+              skipCompression: true,
+              options: {
                 contentType: 'image/webp',
                 cacheControl: LONG_CACHE_CONTROL,
                 upsert: true,
-              });
+              },
+            });
             if (upErr) throw upErr;
             uploaded[key] = { url: cdnUrl(path), path };
           }));
