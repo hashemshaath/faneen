@@ -29,6 +29,10 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
@@ -1744,24 +1748,42 @@ const AdminUsers = () => {
               )}
 
               {activePanel?.type === 'delete' && (
-                <div className="rounded-2xl border border-destructive/30 bg-gradient-to-r from-destructive/5 to-transparent p-5 animate-in slide-in-from-top-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading font-bold text-lg flex items-center gap-2 text-destructive">
-                      <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center"><AlertTriangle className="w-4 h-4 text-destructive" /></div>
-                      {pickBi(isRTL, 'تأكيد حذف الحساب', 'Confirm Deletion')}
-                    </h3>
-                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4 max-w-lg">
-                    {isRTL ? `هل أنت متأكد من حذف "${activePanel.userName}"؟ سيتم حذف جميع البيانات نهائياً.` : `Delete "${activePanel.userName}"? All data will be removed permanently.`}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button variant="destructive" onClick={() => deleteUserMutation.mutate(activePanel.userId)} disabled={deleteUserMutation.isPending} className="rounded-xl gap-2">
-                      {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{pickBi(isRTL, 'حذف نهائي', 'Delete')}
-                    </Button>
-                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-                  </div>
-                </div>
+                <AlertDialog
+                  open
+                  onOpenChange={(o) => { if (!o && !deleteUserMutation.isPending) closePanel(); }}
+                >
+                  <AlertDialogContent className="rounded-2xl border-destructive/30">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="font-heading flex items-center gap-2 text-destructive">
+                        <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center">
+                          <AlertTriangle className="w-4 h-4 text-destructive" />
+                        </div>
+                        {pickBi(isRTL, 'تأكيد حذف الحساب', 'Confirm Deletion')}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {isRTL
+                          ? `هل أنت متأكد من حذف "${activePanel.userName}"؟ سيتم حذف جميع البيانات نهائياً.`
+                          : `Delete "${activePanel.userName}"? All data will be removed permanently.`}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={deleteUserMutation.isPending} className="rounded-xl">
+                        {pickBi(isRTL, 'إلغاء', 'Cancel')}
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={(e) => {
+                          e.preventDefault();
+                          deleteUserMutation.mutate(activePanel.userId);
+                        }}
+                        disabled={deleteUserMutation.isPending}
+                        className="rounded-xl gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {pickBi(isRTL, 'حذف نهائي', 'Delete')}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
 
               {/* List */}
