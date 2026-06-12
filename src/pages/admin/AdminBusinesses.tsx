@@ -79,8 +79,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import {
   Building2, Search, CheckCircle, XCircle, Star, Loader2, Eye, Ban,
   Edit, Trash2, Plus, X, Globe, Phone, Mail, MapPin, Settings,
@@ -123,69 +121,12 @@ import type {
   AdminJson,
 } from './adminBusinesses.types';
 
-// Fix leaflet icons
-delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
 const tiers = [
   { value: 'free', label_ar: 'مجاني', label_en: 'Free', color: 'bg-muted text-muted-foreground', icon: '🆓' },
   { value: 'basic', label_ar: 'أساسي', label_en: 'Basic', color: 'bg-info/10 text-info', icon: '⭐' },
   { value: 'premium', label_ar: 'مميز', label_en: 'Premium', color: 'bg-accent/20 text-accent-foreground', icon: '👑' },
   { value: 'enterprise', label_ar: 'مؤسسات', label_en: 'Enterprise', color: 'bg-secondary/10 text-secondary', icon: '🏢' },
 ];
-
-/* ─── Location Map Picker ─── */
-const LocationPicker = ({ lat, lng, onPick, isRTL }: { lat: number; lng: number; onPick: (lat: number, lng: number) => void; isRTL: boolean }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
-
-  // Capture initial lat/lng once; keep onPick latest via ref so map init
-  // stays mount-once without exhaustive-deps suppression.
-  const initialLatRef = useRef(lat);
-  const initialLngRef = useRef(lng);
-  const onPickRef = useRef(onPick);
-  useEffect(() => { onPickRef.current = onPick; }, [onPick]);
-
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    const lat0 = initialLatRef.current;
-    const lng0 = initialLngRef.current;
-    const map = L.map(containerRef.current, { center: [lat0 || 24.7136, lng0 || 46.6753], zoom: lat0 ? 15 : 6, scrollWheelZoom: true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap',
-    }).addTo(map);
-
-    if (lat0 && lng0) {
-      markerRef.current = L.marker([lat0, lng0], { draggable: true }).addTo(map);
-      markerRef.current.on('dragend', () => {
-        const pos = markerRef.current!.getLatLng();
-        onPickRef.current(pos.lat, pos.lng);
-      });
-    }
-
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      if (markerRef.current) markerRef.current.setLatLng(e.latlng);
-      else {
-        markerRef.current = L.marker(e.latlng, { draggable: true }).addTo(map);
-        markerRef.current.on('dragend', () => {
-          const pos = markerRef.current!.getLatLng();
-          onPickRef.current(pos.lat, pos.lng);
-        });
-      }
-      onPickRef.current(e.latlng.lat, e.latlng.lng);
-    });
-
-    mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
-  }, []);
-
-  return <div ref={containerRef} className="w-full h-[250px] rounded-lg border border-border/50" />;
-};
 
 /* ─── Reverse Geocode ─── */
 const reverseGeocode = async (lat: number, lng: number) => {
