@@ -2,15 +2,21 @@
 
 _Read-only audit. No schema changes._
 
+> **Snapshot refresh — POST-RELEASE CLEANUP AUDIT (2026-06):** counts below were
+> re-measured after Phase B closeout and the post-release cleanup audit. The
+> table reflects the current repo state; the prior numbers (`421` migrations,
+> `58` edge functions) referenced elsewhere in `/docs` are historical
+> snapshots from earlier phases and should be read as such.
+
 | Item | Value |
 |------|-------|
 | Project ref | `hckpxwhjycmdflaneihd` (Lovable Cloud, single live env) |
 | Linked GitHub repo | yes (Lovable-managed two-way sync) |
 | `supabase/config.toml` | present, only `project_id` + per-function `verify_jwt` overrides — no project-level edits |
-| Local migration count | **421** files under `supabase/migrations/` |
+| Local migration count | **566** files under `supabase/migrations/` (was 421 at STABILITY-HARDENING-1) |
 | Earliest migration | `20260409170333_f84aa15a-bc86-4eb4-82ca-b525040bc9ca.sql` |
 | Latest migration | `20260601133047_e987a1b7-b619-4749-b96d-692818a4ec32.sql` |
-| Edge functions | **59** directories under `supabase/functions/` (1 = `_shared`, 58 deployed) — classified in `src/__tests__/supabaseFunctionsInventory.test.ts` |
+| Edge functions | **80** directories under `supabase/functions/` (1 = `_shared`, **79** deployed) — classified in `src/__tests__/supabaseFunctionsInventory.test.ts` |
 | Generated types | `src/integrations/supabase/types.ts` — **18,586 lines**, includes RFQ brand picker columns, observability, help, brand_*, contracts, procurement, work_orders, memberships |
 | Storage buckets | 11 — enumerated in `docs/database-inventory.md` |
 | Linter findings | 622 (all triaged in `docs/supabase-linter-triage.md`; no ERROR-level RLS-disabled findings) |

@@ -1,7 +1,9 @@
 # Supabase Migration Chain Audit — SUPABASE-GITHUB-DATABASE-DEEP-REPAIR-1
 
 ## Method
-- Enumerated all 421 migrations under `supabase/migrations/`.
+- Enumerated all 421 migrations under `supabase/migrations/` _(snapshot at
+  the time of this audit; current count is 566 — see
+  `docs/supabase-project-state-audit.md`)_.
 - Checked timestamps for duplicates and ordering.
 - Scanned for unsafe drops, RLS disabling, legacy naming.
 

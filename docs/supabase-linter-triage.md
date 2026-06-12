@@ -1,7 +1,8 @@
 # Supabase Linter Triage
 
 Snapshot history:
-- STABILITY-HARDENING-1: 421 issues.
+- STABILITY-HARDENING-1: 421 issues. _(Historical snapshot — current
+  migration count is 566; see `docs/supabase-project-state-audit.md`.)_
 - SUPABASE-LINTER-HARDENING-1: **418 issues** (−3 ERROR fixes; see below).
 - SUPABASE-LINTER-HARDENING-2: **416 issues** (−2 `public.*` search_path pinned).
 - SUPABASE-LINTER-HARDENING-4: **415 issues** (−1 0008 sealed-table policy added).
