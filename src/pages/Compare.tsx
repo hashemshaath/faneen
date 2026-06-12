@@ -202,7 +202,7 @@ const Compare = () => {
   }, [selectedBusinesses, isRTL]);
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* Cover */}

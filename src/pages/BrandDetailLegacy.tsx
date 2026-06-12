@@ -79,7 +79,7 @@ const BrandDetail: React.FC = () => {
   }, [brand, isRTL]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-dvh flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6">
         <Link to="/brands" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">

@@ -10,14 +10,14 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
   const { language, setLanguage, isRTL } = useLanguage();
 
   return (
-    <div className="min-h-screen flex bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh flex bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Industrial showcase panel (SVG, no raster images) */}
       <div className="hidden md:flex md:w-[50%] lg:w-[55%] relative">
         <AuthShowcase />
       </div>
 
       {/* Form side */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-dvh">
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 sm:px-10 py-6">
           <div className="flex items-center gap-2.5 md:hidden">

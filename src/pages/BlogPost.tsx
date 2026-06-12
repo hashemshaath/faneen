@@ -586,7 +586,7 @@ const BlogPost = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
         <div className="container-app pt-24 space-y-6 max-w-3xl">
           <Skeleton className="h-10 w-3/4 rounded-xl" />
@@ -600,7 +600,7 @@ const BlogPost = () => {
   // ── Not found ──
   if (!post) {
     return (
-      <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
         <div className="pt-24 flex flex-col items-center justify-center min-h-[60vh] px-4">
           <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
@@ -612,7 +612,7 @@ const BlogPost = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* ═══ Reading Progress Bar ═══ */}

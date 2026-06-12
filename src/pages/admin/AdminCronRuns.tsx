@@ -277,7 +277,7 @@ const AdminCronRuns = () => {
 
   return (
     <DashboardLayout>
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-dvh bg-gradient-to-b from-muted/40 to-background">
       {/* Hero header */}
       <div className="relative overflow-hidden border-b border-border/60 bg-gradient-to-br from-primary/95 via-primary to-primary-hover">
         <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,_white_1px,_transparent_1px)] [background-size:24px_24px]" />

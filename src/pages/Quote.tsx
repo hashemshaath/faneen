@@ -521,7 +521,7 @@ const Quote: React.FC = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <Navbar />
         <main className="container-app py-16 sm:py-24">
           <Card className="max-w-2xl mx-auto p-8 sm:p-12 text-center">
@@ -578,7 +578,7 @@ const Quote: React.FC = () => {
   const ChevronBack = bi(ChevronRight, ChevronLeft);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <main>
         {/* Hero */}

@@ -552,7 +552,7 @@ const ProfileSystemDetail = () => {
 
   // ─── Loading ───
   if (isLoading) return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <div className="container-app py-24 space-y-6">
         <Skeleton className="h-10 w-2/3 rounded-xl" />
@@ -565,7 +565,7 @@ const ProfileSystemDetail = () => {
 
   // ─── Not Found ───
   if (!profile) return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4 sm:mb-6">
@@ -593,7 +593,7 @@ const ProfileSystemDetail = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* ═══ Hero Section ═══ */}

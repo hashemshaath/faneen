@@ -13,7 +13,7 @@ export const AppDirectionShell = ({ children, className }: AppDirectionShellProp
     <div
       dir={dir}
       data-language={language}
-      className={cn("app-shell min-h-screen bg-background text-foreground", className)}
+      className={cn("app-shell min-h-dvh bg-background text-foreground", className)}
     >
       <a
         href="#main-content"

@@ -225,7 +225,7 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
       <Navbar />
       <main>
         {/* 1. Hero — above the fold, eager */}

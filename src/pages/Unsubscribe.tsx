@@ -43,7 +43,7 @@ const Unsubscribe = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4" dir="rtl">
+    <div className="flex min-h-dvh items-center justify-center bg-background p-4" dir="rtl">
       <Card className="w-full max-w-md">
         <CardContent className="flex flex-col items-center gap-4 pt-8 pb-8 text-center">
           {status === "loading" && <><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /><p className="text-muted-foreground">جارٍ التحقق...</p></>}

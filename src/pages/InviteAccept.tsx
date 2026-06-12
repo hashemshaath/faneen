@@ -286,7 +286,7 @@ function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean 
   return (
     <main
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="min-h-screen bg-gradient-to-b from-background to-muted/40 flex flex-col items-center justify-center px-4 py-10"
+      className="min-h-dvh bg-gradient-to-b from-background to-muted/40 flex flex-col items-center justify-center px-4 py-10"
     >
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">

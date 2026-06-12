@@ -158,7 +158,7 @@ const SectorBrief: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-dvh bg-background" dir="rtl">
       <Navbar />
 
       <header className="bg-primary pt-28 pb-10">

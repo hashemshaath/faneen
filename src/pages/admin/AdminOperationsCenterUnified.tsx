@@ -59,7 +59,7 @@ const AdminOperationsCenterUnified: React.FC = () => {
   }, [snap]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         <header className="flex items-start justify-between gap-4 mb-6">

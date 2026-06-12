@@ -110,7 +110,7 @@ const SectorsHub: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-dvh bg-background" dir="rtl">
       <Navbar />
 
       {/* Hero */}

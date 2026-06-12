@@ -335,7 +335,7 @@ const AdminPdfVisualQa: React.FC = () => {
 
   return (
     <DashboardLayout>
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <header className="space-y-1">
           <h1 className="text-2xl font-heading font-semibold">

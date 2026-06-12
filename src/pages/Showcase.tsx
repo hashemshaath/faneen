@@ -155,7 +155,7 @@ const Showcase = () => {
   return (
     <>
       <Navbar />
-      <main id="main-content" className="min-h-screen bg-background">
+      <main id="main-content" className="min-h-dvh bg-background">
         {/* Hero */}
         <section className="border-b border-border/60 bg-gradient-to-b from-muted/30 to-background">
           <div className="container mx-auto px-4 py-10 md:py-14 text-center">

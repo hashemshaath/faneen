@@ -69,7 +69,7 @@ export class ErrorBoundary extends Component<Props, State> {
         recent: isAr ? 'آخر الأحداث' : 'Recent events',
       };
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6 relative overflow-hidden" dir={isAr ? 'rtl' : 'ltr'} lang={isAr ? 'ar' : 'en'}>
+        <div className="min-h-dvh bg-background flex items-center justify-center p-4 sm:p-6 relative overflow-hidden" dir={isAr ? 'rtl' : 'ltr'} lang={isAr ? 'ar' : 'en'}>
           {/* Decorative blurs */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 end-0 w-[500px] h-[500px] bg-destructive/[0.05] rounded-full blur-[140px]" />

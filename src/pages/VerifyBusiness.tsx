@@ -266,7 +266,7 @@ const VerifyBusiness = () => {
   }, [copyTo, displayName, data?.username, verifyUrl, t]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-10" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-10" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="w-full max-w-xl">
         <div className="text-center mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t.title}</h1>

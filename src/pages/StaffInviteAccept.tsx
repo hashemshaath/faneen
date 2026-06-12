@@ -115,7 +115,7 @@ const StaffInviteAccept: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-lg shadow-[var(--elev-2)]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">

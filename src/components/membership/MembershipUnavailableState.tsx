@@ -17,7 +17,7 @@ export const MembershipUnavailableState = () => {
   useNoIndex();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       <Navbar />
       <main className="flex-1 container px-4 py-16 sm:py-24">
         <div className="max-w-xl mx-auto text-center">

@@ -66,7 +66,7 @@ const Privacy = () => {
   }, [isRTL]));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <div className="bg-primary pt-24 pb-10">
         <div className="container px-4">

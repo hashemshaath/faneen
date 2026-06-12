@@ -145,7 +145,7 @@ const CompareProfiles = () => {
   const getName = (p: any) => language === 'ar' ? p.name_ar : (p.name_en || p.name_ar);
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* Cover */}

@@ -137,7 +137,7 @@ export default function QuotationViewer() {
   return (
     <main
       dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen bg-muted/40 py-6 px-3 sm:px-6"
+      className="min-h-dvh bg-muted/40 py-6 px-3 sm:px-6"
       data-testid="wo-quotation-viewer"
     >
       <div className="max-w-3xl mx-auto space-y-3">

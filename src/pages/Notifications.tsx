@@ -130,7 +130,7 @@ const Notifications = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <Card className="p-8 text-center">
           <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
           <p className="text-muted-foreground">{isRTL ? 'يرجى تسجيل الدخول لعرض الإشعارات' : 'Please login to view notifications'}</p>
@@ -141,7 +141,7 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* Cover */}

@@ -130,7 +130,7 @@ const Contracts = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="min-h-dvh bg-background flex items-center justify-center px-4">
         <div className="text-center space-y-4">
           <FileText className="w-14 h-14 sm:w-16 sm:h-16 mx-auto text-muted-foreground/30" />
           <p className="text-muted-foreground font-body text-sm sm:text-base">{t('auth.login')}</p>
@@ -176,7 +176,7 @@ const Contracts = () => {
   const activeCount = allContracts.filter(c => c.status === 'active').length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
 
       {/* Cover */}

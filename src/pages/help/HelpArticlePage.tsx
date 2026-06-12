@@ -146,7 +146,7 @@ const HelpArticlePage: React.FC = () => {
 
   if (!article) {
     return (
-      <div className="min-h-screen flex flex-col bg-background"><Navbar />
+      <div className="min-h-dvh flex flex-col bg-background"><Navbar />
         <main className="flex-1 container py-24 text-center text-muted-foreground">{isRTL ? 'جارٍ التحميل…' : 'Loading…'}</main>
         <Footer />
       </div>
@@ -214,7 +214,7 @@ const HelpArticlePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-dvh flex flex-col bg-background">
       {/* Reading progress bar */}
       <div className="fixed top-0 inset-x-0 h-1 z-[60] bg-transparent print:hidden">
         <div className="h-full bg-primary transition-[width] duration-150" style={{ width: `${progress}%` }} aria-hidden />

@@ -199,7 +199,7 @@ const DashboardLayoutShell: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="animate-pulse">
           <BrandLogo variant="mark" tone="auto" size="loader" alt="قِطاعات" />
         </div>
@@ -256,7 +256,7 @@ const DashboardLayoutShell: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-dvh flex w-full">
         <DashboardSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {isAdminContext && (

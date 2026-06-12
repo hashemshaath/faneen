@@ -118,7 +118,7 @@ const HeavyEquipmentRentalSaudiArabia: React.FC = () => {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-8 sm:py-12 max-w-3xl" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Breadcrumb */}

@@ -391,7 +391,7 @@ const BusinessProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <div className="pt-14">
           <Skeleton className="h-44 w-full sm:h-60" />
           <div className="container-app mt-8 space-y-4">
@@ -405,7 +405,7 @@ const BusinessProfile = () => {
 
   if (!business || error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4">
         <div className="space-y-4 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-accent/10 dark:bg-accent/20">
             <Shield className="h-10 w-10 text-accent" />
@@ -438,7 +438,7 @@ const BusinessProfile = () => {
   const defaultTab = tabs[0]?.value ?? "overview";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <BusinessProfileTopBar
         businessName={businessName}
         onContact={() => handleContactClick("topbar")}

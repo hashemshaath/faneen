@@ -71,7 +71,7 @@ export const PublicUserProfile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <div className="max-w-3xl mx-auto px-4 py-10 space-y-4">
           <Skeleton className="h-32 w-full rounded-2xl" />
           <Skeleton className="h-24 w-full rounded-2xl" />
@@ -82,7 +82,7 @@ export const PublicUserProfile: React.FC = () => {
 
   if (isError || !data) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-dvh bg-background flex flex-col">
         <div className="flex-1 flex items-center justify-center px-4">
           <Card className="max-w-lg w-full overflow-hidden">
             <div
@@ -144,7 +144,7 @@ export const PublicUserProfile: React.FC = () => {
   const initials = (displayName || data.username).slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       <main className="flex-1">
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-5">
           {/* Header */}

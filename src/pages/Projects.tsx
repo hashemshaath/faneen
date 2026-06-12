@@ -185,7 +185,7 @@ const Projects = () => {
   const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setMinCost(''); setMaxCost(''); setSortBy('newest'); setCurrentPage(1); };
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       <div className="bg-primary pt-20 sm:pt-24 pb-6 sm:pb-10">

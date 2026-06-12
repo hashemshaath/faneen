@@ -86,7 +86,7 @@ const SectorSeoLanding: React.FC = () => {
   const related = SECTORS_SEO_LIST.filter((s) => s.slug !== sector.slug);
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-dvh bg-background" dir="rtl">
       <Navbar />
 
       {/* Hero */}

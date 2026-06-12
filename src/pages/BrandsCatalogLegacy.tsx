@@ -58,7 +58,7 @@ const BrandsCatalog: React.FC = () => {
   const filtered = useMemo(() => brands, [brands]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-dvh flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 space-y-6">
         <header className="space-y-2">

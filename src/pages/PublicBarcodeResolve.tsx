@@ -61,7 +61,7 @@ const PublicBarcodeResolve: React.FC = () => {
   const unavailable = !isLoading && (!data || data.status !== 'available');
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <header className="border-b border-border/40 bg-background/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2 hover-lift">

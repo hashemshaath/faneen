@@ -95,7 +95,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Show loading spinner while auth state is being resolved
   if (!fullyLoaded || modulesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="animate-pulse">
           <BrandLogo variant="mark" tone="auto" size="loader" alt="قِطاعات" />
         </div>

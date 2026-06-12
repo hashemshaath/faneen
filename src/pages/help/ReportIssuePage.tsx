@@ -41,7 +41,7 @@ const ReportIssuePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-dvh flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 container py-24 max-w-2xl">
         <h1 className="text-3xl font-heading font-black mb-2">{isRTL ? 'الإبلاغ عن مشكلة' : 'Report an issue'}</h1>

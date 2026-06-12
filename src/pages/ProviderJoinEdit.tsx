@@ -236,7 +236,7 @@ const ProviderJoinEdit: React.FC = () => {
   // ============================================================
   if (!lead || !form) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-dvh bg-background flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <Card className="max-w-md w-full rounded-2xl shadow-elegant">
@@ -301,7 +301,7 @@ const ProviderJoinEdit: React.FC = () => {
   // EDIT VIEW
   // ============================================================
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       <Navbar />
       <main className="flex-1">
         {/* Header */}
