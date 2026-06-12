@@ -36,4 +36,7 @@
   <sitemap>
     <loc>https://qitaat.com/functions/v1/sitemap?type=help</loc>
   </sitemap>
+  <sitemap>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=rentals</loc>
+  </sitemap>
 </sitemapindex>
