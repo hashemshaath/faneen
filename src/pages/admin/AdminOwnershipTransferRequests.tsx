@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { createPrivateSignedUrl } from '@/modules/files/services/private';
 
 type Status = 'pending' | 'approved' | 'rejected' | 'cancelled';
 type Filter = Status | 'all';
@@ -222,9 +223,11 @@ const AdminOwnershipTransferRequests: React.FC = () => {
 
   const previewProof = useCallback(async (path: string) => {
     if (previewUrls[path]) { window.open(previewUrls[path], '_blank', 'noopener,noreferrer'); return; }
-    const { data, error } = await supabase.storage
-      .from('ownership-claim-proofs')
-      .createSignedUrl(path, 60 * 10);
+    const { data, error } = await createPrivateSignedUrl({
+      bucket: 'ownership-claim-proofs',
+      path,
+      expiresIn: 60 * 10,
+    });
     if (error || !data) { toast.error(error?.message ?? 'Failed to preview'); return; }
     setPreviewUrls((u) => ({ ...u, [path]: data.signedUrl }));
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');

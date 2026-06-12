@@ -4,6 +4,8 @@ export { getPublicImageUrl } from './getPublicImageUrl';
 export type { GetPublicImageUrlParams } from './getPublicImageUrl';
 export { removePublicImage } from './removePublicImage';
 export type { RemovePublicImageParams } from './removePublicImage';
+export { removePublicImages } from './removePublicImages';
+export type { RemovePublicImagesParams } from './removePublicImages';
 export { extractPublicStoragePath } from './extractPublicStoragePath';
 export type { ExtractPublicStoragePathParams } from './extractPublicStoragePath';
 export { listPublicImages } from './listPublicImages';

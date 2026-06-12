@@ -8,6 +8,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  uploadPrivateDocument,
+  removePrivateDocument,
+} from '@/modules/files/services/private';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -144,9 +148,12 @@ const ClaimBusiness: React.FC = () => {
         const toUpload = f.type.startsWith('image/') ? await compressImage(f) : f;
         const finalExt = toUpload.type === 'image/webp' ? 'webp' : ext;
         const path = `${user.id}/${businessId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${finalExt}`;
-        const { error: upErr } = await supabase.storage
-          .from('ownership-claim-proofs')
-          .upload(path, toUpload, { upsert: false, contentType: toUpload.type || f.type });
+        const { error: upErr } = await uploadPrivateDocument({
+          bucket: 'ownership-claim-proofs',
+          path,
+          file: toUpload,
+          options: { upsert: false, contentType: toUpload.type || f.type },
+        });
         if (upErr) throw upErr;
         next.push({ path, name: f.name, size: toUpload.size, mime: toUpload.type || f.type });
       }
@@ -161,7 +168,7 @@ const ClaimBusiness: React.FC = () => {
   }, [files, user, businessId, isRTL]);
 
   const removeFile = useCallback(async (path: string) => {
-    await supabase.storage.from('ownership-claim-proofs').remove([path]);
+    await removePrivateDocument({ bucket: 'ownership-claim-proofs', paths: [path] });
     setFiles((curr) => curr.filter((f) => f.path !== path));
   }, []);
 

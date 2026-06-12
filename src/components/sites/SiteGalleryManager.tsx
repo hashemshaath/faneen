@@ -1,5 +1,4 @@
 import { useState, useRef, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ImagePlus, Loader2, X, Filter, Tag } from 'lucide-react';
@@ -19,6 +18,7 @@ import {
   LONG_CACHE_CONTROL,
   cdnUrl,
 } from '@/lib/qitaatImagesStorage';
+import { removePublicImages } from '@/modules/files/services/public';
 
 export type GalleryPhase = 'before' | 'during' | 'after';
 export type GalleryCategory = 'aluminum' | 'glass' | 'wood' | 'steel' | 'general';
@@ -200,7 +200,7 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
         ].filter((p): p is string => Boolean(p)),
       ));
       if (uniq.length) {
-        await supabase.storage.from(QITAAT_IMAGES_BUCKET).remove(uniq);
+        await removePublicImages({ bucket: QITAAT_IMAGES_BUCKET, paths: uniq });
       }
       await persist(images.filter((i) => i.url !== img.url));
     } catch (e: unknown) {
