@@ -75,7 +75,7 @@ and still ship.
 | ------ | -------------------------------------------------------------------------------------------- | --------- | ---- |
 | **PR-1** _(this doc)_ | Inventory + extraction plan. No code.                                            | 0         | None |
 | **PR-2** ✅ shipped | **Dead-code removal**: local `LocationPicker` was never rendered. Deleted it along with `import L from 'leaflet'`, `leaflet/dist/leaflet.css`, and the leaflet icon-default mutation. Net: −59 LOC (3,069 → 3,010) and leaflet fully removed from this route's bundle (CWV win — see `mem://tech/performance/cwv-public-routes`). | ~60 removed | Low |
-| **PR-3** | Extract shared types + helpers → `src/pages/admin/businesses/_shared.tsx`.                  | ~120      | Low  |
+| **PR-3** ✅ shipped | Extracted `TIERS` constant, `reverseGeocode` helper, and `exportBusinessesCsv` into `src/pages/admin/businesses/_shared.tsx` with proper typed signatures (`TierMeta`, `ReverseGeocodeAddress`). Parent re-imports under the original local names to keep call sites untouched. Net: 3,010 → 2,972 LOC. | ~40 moved | Low |
 | **PR-4** | Extract `BusinessTable` (row + expanded body) → `businesses/BusinessTable.tsx`.             | ~450      | Med  |
 | **PR-5** | Extract `BusinessFiltersBar` → `businesses/BusinessFiltersBar.tsx`; adopt `<AdminFiltersBar>`. | ~180   | Low  |
 | **PR-6** | Extract `CreateBusinessPanel` → `businesses/CreateBusinessPanel.tsx` (inline; no dialog).   | ~400      | Med  |
