@@ -42,9 +42,9 @@ Nine admin list surfaces are the migration target. Migrate one at a time; each P
 | 4  | Identity Center                   | `/admin/identity`                  | ✅ shipped  |
 | 5  | Contracts                         | `/admin/contracts`                 | ✅ shipped (reference impl) |
 | 6  | Projects                          | `/admin/projects`                  | ⏳ pending  |
-| 7  | Catalog Governance                | `/admin/catalog`                   | ⏳ pending  |
+| 7  | Catalog Governance                | `/admin/catalog-governance`        | ✅ shipped (also fixed: `Navbar`/`Footer` → `DashboardLayout`) |
 | 8  | Provider Growth                   | `/admin/provider-growth`           | ✅ shipped (also fixed: was wrapped in public `Navbar`/`Footer` instead of `DashboardLayout`) |
-| 9  | Email Center                      | `/admin/email-center`              | ⏳ pending  |
+| 9  | Email Center                      | `/admin/email-center`              | ✅ shipped (`AdminPageHeader` + `<Bi>`) |
 
 ## 4. Definition of done (per page)
 

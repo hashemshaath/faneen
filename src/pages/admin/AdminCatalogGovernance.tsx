@@ -5,13 +5,14 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Loader2 } from 'lucide-react';
+import { Loader2, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HelpLauncher } from '@/components/help/HelpLauncher';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
+import { useBi } from '@/components/common/Bilingual';
 import {
   loadCatalogServices,
   loadServiceBrandCounts,
@@ -32,6 +33,7 @@ const PAGE_KEY = 'admin.catalog-governance';
 
 const AdminCatalogGovernance: React.FC = () => {
   const { isRTL } = useLanguage();
+  const bi = useBi();
   useNoIndex();
   const t = (ar: string, en: string) => (isRTL ? ar : en);
 
@@ -72,42 +74,40 @@ const AdminCatalogGovernance: React.FC = () => {
   const loading = servicesQ.isLoading || brandsQ.isLoading;
 
   return (
-    <div className="min-h-dvh bg-background flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex items-center justify-between mb-6 gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">{t('حوكمة الكتالوج', 'Catalog Governance')}</h1>
-            <p className="text-sm text-muted-foreground">
-              {t('لوحة لإدارة جودة وجاهزية المنتجات والخدمات.', 'Manage quality and readiness for products and services.')}
-            </p>
-          </div>
+    <DashboardLayout>
+      <AdminListPageTemplate
+        tone="info"
+        icon={BookOpen}
+        eyebrow={bi('لوحة الإدارة', 'Admin Console')}
+        title={bi('حوكمة الكتالوج', 'Catalog Governance')}
+        subtitle={bi(
+          'لوحة لإدارة جودة وجاهزية المنتجات والخدمات.',
+          'Manage quality and readiness for products and services.',
+        )}
+        actions={
           <div className="flex items-center gap-2">
             <HelpLauncher pageKey={PAGE_KEY} />
-            <Button asChild variant="outline">
-              <Link to="/admin/catalog-governance/queue">{t('قائمة العمليات', 'Operations queue')}</Link>
+            <Button asChild variant="outline" size="sm" className="h-10 rounded-xl">
+              <Link to="/admin/catalog-governance/queue">{bi('قائمة العمليات', 'Operations queue')}</Link>
             </Button>
           </div>
-        </div>
-
+        }
+        kpiSlot={!loading ? <KpiSummary kpis={kpis} t={t} /> : undefined}
+      >
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-6">
-            <KpiSummary kpis={kpis} t={t} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatusBreakdownWidget kpis={kpis} t={t} />
-              <ProductsByStatusWidget t={t} />
-              <MissingDataWidget kpis={kpis} t={t} />
-              <TopReadyWidget insights={insights} t={t} onOpen={handleOpen} />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <StatusBreakdownWidget kpis={kpis} t={t} />
+            <ProductsByStatusWidget t={t} />
+            <MissingDataWidget kpis={kpis} t={t} />
+            <TopReadyWidget insights={insights} t={t} onOpen={handleOpen} />
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+      </AdminListPageTemplate>
+    </DashboardLayout>
   );
 };
 
