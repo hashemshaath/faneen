@@ -84,3 +84,9 @@ export type RecentAdminActivityItem = {
 
 export type AccountTypePiePoint = { name: string; value: number; color: string };
 export type TierBarPoint = { name: string; count: number };
+
+export type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
+export type SortDir = 'asc' | 'desc';
+export type Density = 'comfortable' | 'compact';
+export type FilterScope = 'all' | 'staff' | 'disabled';
+export type FilterBusinessLink = 'all' | 'multi' | 'none' | 'single';
