@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import {
   RentalCategories, RentalItems, RentalOrders,
   RENTAL_UNITS, ITEM_STATUS_LABELS,
@@ -1037,7 +1038,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
       toast.error(bi('الرجاء كتابة اسم المعدة','Equipment name is required'));
       return;
     }
-    const user = (await supabase.auth.getUser()).data.user;
+    const user = (await getCurrentUser()).data.user;
     if (!user) { toast.error(bi('يلزم تسجيل الدخول','Sign-in required')); return; }
     setReqSubmitting(true);
     const { error } = await supabase.from('rental_catalog_addition_requests').insert({

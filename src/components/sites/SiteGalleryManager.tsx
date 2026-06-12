@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ImagePlus, Loader2, X, Filter, Tag } from 'lucide-react';

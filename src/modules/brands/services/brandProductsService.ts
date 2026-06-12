@@ -3,6 +3,7 @@
  * Pages must import from `@/modules/brands` only.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import type {
   BrandProduct, BrandProductStatus,
   BrandProductRequest, BrandProductRequestStatus,
@@ -124,7 +125,7 @@ export interface SubmitBrandProductRequestPayload {
 }
 
 export async function submitBrandProductRequest(payload: SubmitBrandProductRequestPayload) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getCurrentUser();
   if (!auth?.user?.id) throw new Error('not authenticated');
   const { data, error } = await sb.from('brand_product_requests').insert({
     ...payload,

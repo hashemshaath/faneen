@@ -13,6 +13,7 @@ import { Upload, Trash2, ImagePlus, AlertCircle, Loader2, CheckCircle2 } from 'l
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import {
   generateImageSizes,
   validateImage,
