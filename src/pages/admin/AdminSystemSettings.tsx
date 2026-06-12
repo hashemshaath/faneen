@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { SitemapSubmissionsCard } from '@/components/admin/SitemapSubmissionsCard';
 import { SeoFilesPreviewCard } from '@/components/admin/SeoFilesPreviewCard';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 /* ═══════════ Types ═══════════ */
