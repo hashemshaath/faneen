@@ -63,6 +63,17 @@ export type { UpdateBusinessesByIdsOptions } from './services/updateBusinessesBy
 export { insertBusiness } from './services/insertBusiness';
 export type { InsertBusinessOptions } from './services/insertBusiness';
 
+// SECURITY-HARDENING — owner+admin-only sensitive fields (CR/ID/notes/owner_name)
+export {
+  getBusinessSensitiveFields,
+  updateBusinessSensitiveFields,
+  BUSINESS_SENSITIVE_COLUMNS,
+} from './services/businessSensitive';
+export type {
+  BusinessSensitiveFields,
+  UpdateBusinessSensitiveFieldsInput,
+} from './services/businessSensitive';
+
 // R4E-3 — Guarded sensitive mutation wrappers
 export {
   setBusinessActive,
