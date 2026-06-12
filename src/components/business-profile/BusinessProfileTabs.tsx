@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
 import { cn } from "@/lib/utils";
@@ -916,13 +917,13 @@ export const BranchesTab = ({
                   <label className="mb-1.5 block text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
                     {language === "ar" ? "معاينة الرسالة قبل الإرسال" : "Preview message before sending"}
                   </label>
-                  <textarea
+                  <Textarea
                     value={waDraft}
                     onChange={(e) => setWaDraft(e.target.value)}
                     dir="auto"
                     rows={4}
                     maxLength={1000}
-                    className="w-full rounded-xl border border-emerald-500/30 bg-background p-2.5 text-xs leading-relaxed focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+                    className="min-h-0 w-full rounded-xl border-emerald-500/30 bg-background p-2.5 text-xs leading-relaxed focus-visible:ring-emerald-500/40"
                   />
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="text-[10px] text-muted-foreground tech-content">
