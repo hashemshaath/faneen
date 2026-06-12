@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Bi, useBi } from "@/components/common/Bilingual";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { supabase } from "@/integrations/supabase/client";
+import { probeIntegrationHealth } from "@/modules/integrations/services/probeIntegrationHealth";
 
 type Status = "ok" | "fail" | "deferred" | "unknown";
 type Category = "maps" | "comms" | "payments" | "ai" | "analytics";
@@ -148,20 +148,8 @@ interface ProbeResult {
 }
 
 async function invokeProbe(fn: string): Promise<ProbeResult> {
-  try {
-    const { data, error } = await supabase.functions.invoke(fn, { body: {} });
-    if (error) return { service: fn, ok: false, errorCode: error.message };
-    const result = (data ?? { service: fn, ok: false, errorCode: "no_response" }) as ProbeResult;
-    // google-health returns deferred + apis without top-level ok; compute it.
-    if (result.apis && result.ok === undefined) {
-      const probes = Object.values(result.apis).filter(Boolean) as GoogleApiProbe[];
-      result.ok = probes.length > 0 && probes.every((p) => p.ok);
-    }
-    if (!result.checkedAt) result.checkedAt = new Date().toISOString();
-    return result;
-  } catch (e) {
-    return { service: fn, ok: false, errorCode: e instanceof Error ? e.message : "exception" };
-  }
+  // EF-6: route through canonical wrapper (no direct functions.invoke in pages).
+  return (await probeIntegrationHealth(fn)) as ProbeResult;
 }
 
 function clientDetect(id: string): ProbeResult {
