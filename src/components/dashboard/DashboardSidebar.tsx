@@ -570,6 +570,18 @@ export const DashboardSidebar: React.FC = () => {
 
   const audience: 'provider' | 'admin' | 'user' = isAdmin ? 'admin' : isProvider ? 'provider' : 'user';
 
+  // ADMIN-REDESIGN PHASE 3F — admin-scoped pinned favorites. Disabled
+  // (no-op control) for non-admin audiences so the pin button never
+  // renders for providers/users.
+  const adminFavs = useAdminFavorites({ isSuperAdmin });
+  const adminPinControl = isAdmin
+    ? {
+        isPinned: adminFavs.isFavorite,
+        canPin: adminFavs.canPin,
+        toggle: adminFavs.toggle,
+      }
+    : undefined;
+
   return (
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
       <SidebarContent>
@@ -636,6 +648,16 @@ export const DashboardSidebar: React.FC = () => {
           isRouteHidden={isRouteHidden}
         />
 
+        {/* ADMIN-REDESIGN PHASE 3F — admin-only pinned section */}
+        {isAdmin && (
+          <AdminSidebarFavorites
+            collapsed={collapsed}
+            isRTL={isRTL}
+            isSuperAdmin={isSuperAdmin}
+            closeMobile={closeMobile}
+          />
+        )}
+
         {/* ─── Role-based menu ─── */}
         <RenderGroups
           groups={baseGroups}
@@ -647,6 +669,7 @@ export const DashboardSidebar: React.FC = () => {
           workspace={{ active_role: workspace.active_role, permissions: workspace.permissions }}
           pathname={pathname}
           isRouteHidden={isRouteHidden}
+          pinControl={adminPinControl}
         />
       </SidebarContent>
 
