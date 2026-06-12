@@ -876,7 +876,7 @@ const AdminBusinesses = () => {
       }
       const { data, error } = await insertBusiness({
         payload,
-        select: '*',
+        select: BUSINESS_SAFE_COLUMNS_SELECT,
         terminal: 'single',
       });
       if (error) throw error;
