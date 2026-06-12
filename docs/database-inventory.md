@@ -2,6 +2,13 @@
 
 _Snapshot taken against the live `public` schema at audit time._
 
+> **2026-06 update (PHASE C4 / C5A):** the counts in the table below are
+> the original PLATFORM-DEEP-AUDIT-REPAIR-1 baseline. The refreshed live
+> counters and the full deprecation candidate review now live in
+> [`db-deprecation-candidates.md`](./db-deprecation-candidates.md).
+> Treat this file as a historical snapshot — consult the C5A pack for
+> current decisions and the do-not-touch list.
+
 ## Top-level counts
 
 | Object | Count |
