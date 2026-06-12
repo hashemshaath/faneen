@@ -516,6 +516,8 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   return (
     <div className="space-y-5" ref={ref} data-admin-dashboard-edit={layout.editMode ? 'true' : 'false'}>
       {layout.visibleOrder.map((id, idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === layout.visibleOrder.length - 1;
         // Group adjacent charts into the lg:grid-cols-3 row (legacy layout parity).
         if (CHART_IDS.has(id)) {
           const prevId = layout.visibleOrder[idx - 1];
@@ -530,13 +532,17 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           void groupIds;
           return (
             <div key={`charts-${idx}`} className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {run.map((rid) => (
+              {run.map((rid, rIdx) => (
                 <AdminWidgetShell
                   key={rid}
                   widgetId={rid}
                   editMode={layout.editMode}
                   isHidden={layout.isHidden(rid)}
                   onToggle={() => layout.toggleHidden(rid)}
+                  onMoveUp={() => layout.moveUp(rid)}
+                  onMoveDown={() => layout.moveDown(rid)}
+                  canMoveUp={!(idx === 0 && rIdx === 0)}
+                  canMoveDown={!(idx + run.length >= layout.visibleOrder.length && rIdx === run.length - 1)}
                   isRTL={isRTL}
                 >
                   {renderWidget(rid)}
@@ -556,13 +562,17 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           }
           return (
             <div key={`activity-${idx}`} className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {run.map((rid) => (
+              {run.map((rid, rIdx) => (
                 <AdminWidgetShell
                   key={rid}
                   widgetId={rid}
                   editMode={layout.editMode}
                   isHidden={layout.isHidden(rid)}
                   onToggle={() => layout.toggleHidden(rid)}
+                  onMoveUp={() => layout.moveUp(rid)}
+                  onMoveDown={() => layout.moveDown(rid)}
+                  canMoveUp={!(idx === 0 && rIdx === 0)}
+                  canMoveDown={!(idx + run.length >= layout.visibleOrder.length && rIdx === run.length - 1)}
                   isRTL={isRTL}
                 >
                   {renderWidget(rid)}
@@ -578,6 +588,10 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
             editMode={layout.editMode}
             isHidden={layout.isHidden(id)}
             onToggle={() => layout.toggleHidden(id)}
+            onMoveUp={() => layout.moveUp(id)}
+            onMoveDown={() => layout.moveDown(id)}
+            canMoveUp={!isFirst}
+            canMoveDown={!isLast}
             isRTL={isRTL}
           >
             {renderWidget(id)}
