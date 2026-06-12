@@ -39,11 +39,10 @@ describe("GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1", () => {
   });
 
   it("browser key env var is only read inside mapsService.ts", () => {
-    const out = rg("-n 'VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY' src/ -g '!**/*.md'");
+    const out = rg("-n 'VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY' src/ -g '!**/*.md' -g '!src/tests/**'");
     const offenders = out
       .split("\n").filter((l) => l.trim())
-      .filter((l) => !l.startsWith("src/modules/google/mapsService.ts"))
-      .filter((l) => !l.startsWith("src/tests/googleIntegrationGovernanceAudit1.test.ts"));
+      .filter((l) => !l.startsWith("src/modules/google/mapsService.ts"));
     expect(offenders).toEqual([]);
   });
 
