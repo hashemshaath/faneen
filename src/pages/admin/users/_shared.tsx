@@ -81,3 +81,6 @@ export type RecentAdminActivityItem = {
   action: string;
   created_at: string;
 };
+
+export type AccountTypePiePoint = { name: string; value: number; color: string };
+export type TierBarPoint = { name: string; count: number };
