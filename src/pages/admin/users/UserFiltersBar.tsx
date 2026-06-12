@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowUpDown, Briefcase, Building2, Ban, ChevronDown, ChevronUp, Check,
+  ArrowUpDown, Briefcase, Building2, Ban, ChevronDown, ChevronUp,
   Command, Crown, Filter, LayoutList, Link2, Rows3, Search, Shield,
   Sparkles, Users, X, Zap,
 } from 'lucide-react';
@@ -210,7 +210,3 @@ export const UserFiltersBar = React.memo(({
   </>
 ));
 UserFiltersBar.displayName = 'UserFiltersBar';
-
-// Re-export to keep `Check` icon side-effect-free under tree-shaking even
-// though we no longer render it here (was unused by the moved filters block).
-export { Check as _ChipsBadgeCheck };
