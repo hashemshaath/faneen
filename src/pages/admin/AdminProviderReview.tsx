@@ -144,13 +144,45 @@ export default function AdminProviderReview() {
     [filtered, selectedId],
   );
 
+  // Sensitive fields (approval_notes, national_id, cr_document_url,
+  // cr_owner_name) live behind a SECURITY DEFINER RPC. Fetch them only
+  // for the currently selected row.
+  const { data: selectedSensitive } = useQuery({
+    queryKey: ['admin-provider-review', 'sensitive', selectedId],
+    enabled: !!selectedId,
+    queryFn: async () => {
+      if (!selectedId) return null;
+      const { data } = await getBusinessSensitiveFields(selectedId);
+      return data;
+    },
+    staleTime: 30_000,
+  });
+
+  const selectedFull = useMemo(() => {
+    if (!selected) return null;
+    return {
+      ...selected,
+      approval_notes: selectedSensitive?.approval_notes ?? null,
+      national_id: selectedSensitive?.national_id ?? selected.national_id ?? null,
+      cr_document_url: selectedSensitive?.cr_document_url ?? null,
+      cr_owner_name: selectedSensitive?.cr_owner_name ?? null,
+    } as ProviderRow;
+  }, [selected, selectedSensitive]);
+
   // Auto-select first row when filter/sort changes and nothing is selected.
   useEffect(() => {
     if (!selectedId && filtered.length > 0) {
       setSelectedId(filtered[0].id);
-      setNotes(filtered[0].approval_notes ?? '');
+      setNotes('');
     }
   }, [filtered, selectedId]);
+
+  // Sync notes input once sensitive data arrives for the selected row.
+  useEffect(() => {
+    if (selectedId && selectedSensitive) {
+      setNotes(selectedSensitive.approval_notes ?? '');
+    }
+  }, [selectedId, selectedSensitive]);
 
   const approvalMutation = useMutation({
     mutationFn: async (vars: { id: string; status: ApprovalStatus; notes?: string }) => {
