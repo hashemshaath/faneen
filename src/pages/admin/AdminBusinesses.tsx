@@ -126,6 +126,7 @@ import {
   exportBusinessesCsv as exportCSV,
 } from './businesses/_shared';
 import { BusinessTableView, type BusinessTableRow } from './businesses/BusinessTableView';
+import { BusinessCardView, type BusinessCardRow } from './businesses/BusinessCardView';
 
 const AdminBusinesses = () => {
   useNoIndex();
