@@ -1,5 +1,4 @@
 import React from 'react';
-import { TrendingDown, TrendingUp } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
