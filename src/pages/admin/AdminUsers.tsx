@@ -36,9 +36,9 @@ import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Mail, Phone, Calendar, Crown,
   Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
-  Check, TrendingUp, UserCheck, Filter, Hash, Sparkles, Building2, Briefcase, Link2,
+  Check, TrendingUp, UserCheck, Hash, Sparkles, Building2, Briefcase, Link2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
-  Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, Command, Inbox,
+  Star, MoreHorizontal, RefreshCw, Copy, Clock, Inbox,
   Timer, ShieldOff, Plus,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
