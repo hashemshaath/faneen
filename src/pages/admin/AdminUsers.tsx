@@ -41,10 +41,6 @@ import {
   Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, Command, Inbox,
   Timer, ShieldOff, Plus,
 } from 'lucide-react';
-import {
-  AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip,
-  PieChart, Pie, Cell, BarChart, Bar, CartesianGrid, Legend,
-} from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
