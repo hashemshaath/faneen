@@ -469,6 +469,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_identity_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          scope: string
+          tokens: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          scope?: string
+          tokens?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          scope?: string
+          tokens?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       admin_operational_notes: {
         Row: {
           created_at: string
