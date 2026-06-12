@@ -184,7 +184,10 @@ describe('P-21 public/SEO businesses read migration', () => {
     expect(src).not.toContain('cities(*)');
     expect(src).not.toContain('countries(*)');
     for (const col of [
-      'id, user_id, username',
+      // PII-MASKING — `user_id` is no longer exposed by `businesses_public`.
+      // It is resolved separately via the `get_public_business_data` RPC
+      // and merged into the row. The public select only carries `id` + `username`.
+      'id, username',
       'name_ar, name_en, description_ar, description_en',
       'short_description_ar, short_description_en',
       'cover_url, logo_url, is_verified, membership_tier, approval_status',
