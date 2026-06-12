@@ -16,6 +16,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useIdentityTokens, type IdentityTokenMap } from '@/hooks/useIdentityTokens';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -172,7 +173,7 @@ const AdminIdentityCenter: React.FC = () => {
       const payload = {
         scope: 'global',
         tokens: draft as unknown as Record<string, string>,
-        updated_by: (await supabase.auth.getUser()).data.user?.id ?? null,
+        updated_by: (await getCurrentUser()).data.user?.id ?? null,
       };
       const query = id
         ? supabase.from('admin_identity_tokens').update(payload).eq('id', id)
