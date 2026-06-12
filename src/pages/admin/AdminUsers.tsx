@@ -41,10 +41,6 @@ import {
   Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, Command, Inbox,
   Timer, ShieldOff, Plus,
 } from 'lucide-react';
-import {
-  AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip,
-  PieChart, Pie, Cell, BarChart, Bar, CartesianGrid, Legend,
-} from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
@@ -55,6 +51,7 @@ import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
 import { KpiCard, formatDate, formatRelative } from './users/_shared';
 import { OverviewTab } from './users/OverviewTab';
+import { AnalyticsTab } from './users/AnalyticsTab';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 /**
@@ -2625,42 +2622,12 @@ const AdminUsers = () => {
 
           {/* ANALYTICS */}
           <TabsContent value="analytics" className="space-y-5 mt-5">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <KpiCard icon={ShieldAlert} label={pickBi(isRTL, 'مشرف أعلى', 'Super Admins')} value={stats.superAdmins} gradient="from-secondary/10 to-secondary/5" iconBg="bg-secondary/15 text-secondary" />
-              <KpiCard icon={Crown} label={pickBi(isRTL, 'المشرفين', 'Admins')} value={stats.admins} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
-              <KpiCard icon={ShieldCheck} label={pickBi(isRTL, 'مشرفي محتوى', 'Moderators')} value={stats.moderators} gradient="from-warning/10 to-warning/5" iconBg="bg-warning/15 text-warning" />
-              <KpiCard icon={Ban} label={pickBi(isRTL, 'معطّلون', 'Disabled')} value={stats.bannedCount} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm mb-3">{pickBi(isRTL, 'توزيع أنواع الحسابات', 'Account Type Distribution')}</h3>
-                <div className="h-64">
-                  <ResponsiveContainer>
-                    <PieChart>
-                      <Pie data={accountTypePie} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={3}>
-                        {accountTypePie.map((e, i) => <Cell key={i} fill={e.color} />)}
-                      </Pie>
-                      <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm mb-3">{pickBi(isRTL, 'توزيع العضويات', 'Membership Tiers')}</h3>
-                <div className="h-64">
-                  <ResponsiveContainer>
-                    <BarChart data={tierBar}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} reversed={isRTL} />
-                      <YAxis tick={{ fontSize: 11 }} orientation={pickBi(isRTL, 'right', 'left')} />
-                      <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-                      <Bar dataKey="count" fill="hsl(var(--accent))" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+            <AnalyticsTab
+              isRTL={isRTL}
+              stats={stats}
+              accountTypePie={accountTypePie}
+              tierBar={tierBar}
+            />
           </TabsContent>
         </Tabs>
       </div>
