@@ -125,6 +125,7 @@ import {
   reverseGeocode,
   exportBusinessesCsv as exportCSV,
 } from './businesses/_shared';
+import { BusinessTableView, type BusinessTableRow } from './businesses/BusinessTableView';
 
 const AdminBusinesses = () => {
   useNoIndex();
