@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 
 const STORAGE_KEY = 'qitaat_fav_businesses_v1';
 const EVENT = 'qitaat:fav-businesses-changed';
@@ -66,7 +67,7 @@ export const useBusinessFavorites = () => {
       }
     };
 
-    supabase.auth.getUser().then(({ data }) => {
+    getCurrentUser().then(({ data }) => {
       const uid = data.user?.id ?? null;
       if (cancelled) return;
       setUserId(uid);

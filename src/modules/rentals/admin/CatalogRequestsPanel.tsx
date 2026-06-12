@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,7 +67,7 @@ export const CatalogRequestsPanel: React.FC = () => {
       .select('id')
       .single();
     if (error) { toast.error(error.message); return; }
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getCurrentUser();
     await supabase.from('rental_catalog_addition_requests').update({
       status: 'approved',
       reviewed_by: user?.id ?? null,
@@ -79,7 +80,7 @@ export const CatalogRequestsPanel: React.FC = () => {
   };
 
   const reject = async (r: RequestRow) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getCurrentUser();
     const { error } = await supabase.from('rental_catalog_addition_requests').update({
       status: 'rejected',
       reviewed_by: user?.id ?? null,

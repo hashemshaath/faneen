@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import { toast } from 'sonner';
 import { Search, Pencil, Save, X, Power, Trash2, UserPlus, Loader2, ImageOff, AlertTriangle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -152,7 +153,7 @@ export const CatalogManager: React.FC = () => {
   const assignToProvider = async (r: CatalogRow) => {
     if (!assignBiz) { toast.error(bi('اختر المزود', 'Select a provider')); return; }
     if (!r.category_id) { toast.error(bi('تصنيف الصنف غير محدد', 'Category missing')); return; }
-    const { data: u } = await supabase.auth.getUser();
+    const { data: u } = await getCurrentUser();
     if (!u.user?.id) { toast.error(bi('يجب تسجيل الدخول', 'Login required')); return; }
     const payload = {
       provider_business_id: assignBiz,

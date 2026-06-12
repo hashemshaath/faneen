@@ -13,6 +13,7 @@ import { Upload, Trash2, ImagePlus, AlertCircle, Loader2, CheckCircle2 } from 'l
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import {
   generateImageSizes,
   validateImage,
@@ -164,7 +165,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         return;
       }
 
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getCurrentUser();
       const userId = auth.user?.id;
       if (!userId) {
         setTopError(bi('يجب تسجيل الدخول لرفع الصور.', 'You must be signed in to upload images.'));
@@ -205,7 +206,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const removeUploaded = async (img: UploadedImageRow) => {
-    const { data: auth } = await supabase.auth.getUser();
+    const { data: auth } = await getCurrentUser();
     const userId = auth.user?.id;
     if (!userId) return;
     // Delete DB row first (RLS scoped to owner), then storage.
