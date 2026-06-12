@@ -8,9 +8,13 @@
  * 1-year browser/edge cache via `cacheControl` on upload and fetch through
  * the public URL so visitors get the nearest edge.
  */
-import { supabase } from '@/integrations/supabase/client';
 import type { ResponsiveImageSet } from '@/lib/imageCompression';
 import { BUSINESS_ASSETS_BUCKET } from '@/modules/files/constants/buckets';
+import {
+  uploadPublicImage,
+  getPublicImageUrl,
+  removePublicImages,
+} from '@/modules/files/services/public';
 
 /**
  * Public images for the qitaat directory are stored inside the shared
@@ -60,9 +64,7 @@ export function buildImagePath(
 
 /** Public CDN URL for an object in the bucket. */
 export function cdnUrl(path: string): string {
-  const { data } = supabase.storage
-    .from(QITAAT_IMAGES_BUCKET)
-    .getPublicUrl(path);
+  const { data } = getPublicImageUrl({ bucket: QITAAT_IMAGES_BUCKET, path });
   return data.publicUrl;
 }
 
@@ -86,13 +88,17 @@ export async function uploadResponsiveSet({
   const results = await Promise.all(
     entries.map(async ([size, file]) => {
       const path = buildImagePath(userId, providerId, imageId, size);
-      const { error } = await supabase.storage
-        .from(QITAAT_IMAGES_BUCKET)
-        .upload(path, file, {
+      const { error } = await uploadPublicImage({
+        bucket: QITAAT_IMAGES_BUCKET,
+        path,
+        file,
+        skipCompression: true,
+        options: {
           contentType: 'image/webp',
           cacheControl: LONG_CACHE_CONTROL,
           upsert: true,
-        });
+        },
+      });
       if (error) throw error;
       done += 1;
       onProgress?.(Math.round((done / total) * 100));
@@ -119,5 +125,5 @@ export async function removeResponsiveSet(
   const paths: string[] = (['thumbnail', 'medium', 'large'] as ImageSizeKey[]).map(
     (s) => buildImagePath(userId, providerId, imageId, s),
   );
-  await supabase.storage.from(QITAAT_IMAGES_BUCKET).remove(paths);
+  await removePublicImages({ bucket: QITAAT_IMAGES_BUCKET, paths });
 }

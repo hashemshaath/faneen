@@ -16,6 +16,13 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { storage: { from: mocks.fromMock } },
 }));
 
+// Compression uses canvas/Image which jsdom does not execute — mock as
+// passthrough so production code paths that pipe through compressImage
+// (uploadPublicImage → uploadBrandAsset) complete in tests.
+vi.mock('@/lib/image-compress', () => ({
+  compressImage: async (f: File) => f,
+}));
+
 import { uploadPrivateDocument } from '../uploadPrivateDocument';
 import { createPrivateSignedUrl } from '../createPrivateSignedUrl';
 import { removePrivateDocument } from '../removePrivateDocument';

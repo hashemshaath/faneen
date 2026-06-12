@@ -7,6 +7,13 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { storage: { from: (b: string) => fromMock(b) } },
 }));
 
+// Compression uses canvas/Image which jsdom does not execute — mock as
+// passthrough so the production code path (which compresses image/* files)
+// completes synchronously in tests.
+vi.mock('@/lib/image-compress', () => ({
+  compressImage: async (f: File) => f,
+}));
+
 import { uploadQuoteRequestFile } from '../uploadQuoteRequestFile';
 
 const makeFile = (name = 'doc.pdf', type = 'application/pdf') =>
