@@ -22,6 +22,8 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarBrand } from '@/components/dashboard/navigation/SidebarBrand';
 import { SidebarQuickCreate } from '@/components/dashboard/navigation/SidebarQuickCreate';
 import { SidebarFavorites } from '@/components/dashboard/navigation/SidebarFavorites';
+import { AdminSidebarFavorites } from '@/components/dashboard/navigation/AdminSidebarFavorites';
+import { useAdminFavorites } from '@/hooks/useAdminFavorites';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut,
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
@@ -51,6 +53,8 @@ import {
   FileBarChart,
   Truck,
   Package,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 
@@ -355,12 +359,19 @@ const RenderMenu: React.FC<{
   isRTL: boolean;
   closeMobile: () => void;
   bestActiveUrl: string | null;
-}> = ({ items, collapsed, isRTL, closeMobile, bestActiveUrl }) => (
+  pinControl?: {
+    isPinned: (url: string) => boolean;
+    canPin: (url: string) => boolean;
+    toggle: (url: string) => void;
+  };
+}> = ({ items, collapsed, isRTL, closeMobile, bestActiveUrl, pinControl }) => (
   <SidebarMenu>
     {items.map((item) => {
       const label = isRTL ? item.label.ar : item.label.en;
       const isActive = item.url === bestActiveUrl;
       const badgeLabel = item.badge ? (isRTL ? item.badge.ar : item.badge.en) : null;
+      const pinnable = !collapsed && pinControl?.canPin(item.url);
+      const pinned = pinnable ? pinControl!.isPinned(item.url) : false;
       return (
         <SidebarMenuItem key={item.url + item.label.en}>
           <SidebarMenuButton
@@ -392,6 +403,31 @@ const RenderMenu: React.FC<{
               } />
               {!collapsed && <span className="ms-2 truncate text-[13px]">{label}</span>}
               {!collapsed && badgeLabel ? <BadgePill tone={item.badge?.tone}>{badgeLabel}</BadgePill> : null}
+              {pinnable ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    pinControl!.toggle(item.url);
+                  }}
+                  aria-label={
+                    pinned
+                      ? (isRTL ? 'إلغاء التثبيت' : 'Unpin from favorites')
+                      : (isRTL ? 'تثبيت في المفضّلة' : 'Pin to favorites')
+                  }
+                  aria-pressed={pinned}
+                  data-testid={`admin-pin-${item.url}`}
+                  className={
+                    'ms-1 inline-flex h-6 w-6 items-center justify-center rounded-md transition-opacity ' +
+                    (pinned
+                      ? 'opacity-90 text-primary hover:bg-sidebar-accent/70'
+                      : 'opacity-0 group-hover/qit-nav:opacity-70 text-sidebar-foreground/60 hover:text-foreground hover:bg-sidebar-accent/70')
+                  }
+                >
+                  {pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                </button>
+              ) : null}
             </NavLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -410,7 +446,12 @@ const RenderGroups: React.FC<{
   isAdmin?: boolean;
   workspace?: { active_role: string | null; permissions: string[] } | null;
   isRouteHidden?: (path: string) => boolean;
-}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null, isRouteHidden }) => {
+  pinControl?: {
+    isPinned: (url: string) => boolean;
+    canPin: (url: string) => boolean;
+    toggle: (url: string) => void;
+  };
+}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null, isRouteHidden, pinControl }) => {
   const { state: groupOpenState, setOpen: setGroupOpen } = useSidebarGroupCollapse();
   // ORG-RBAC-STRUCTURE-1 — Phase D
   // Centralized visibility: admin override always wins; owner short-circuits;
@@ -489,6 +530,7 @@ const RenderGroups: React.FC<{
                 isRTL={isRTL}
                 closeMobile={closeMobile}
                 bestActiveUrl={bestActiveUrl}
+                pinControl={pinControl}
               />
             </SidebarGroupContent>
           )}
@@ -527,6 +569,18 @@ export const DashboardSidebar: React.FC = () => {
   }, [baseGroups]);
 
   const audience: 'provider' | 'admin' | 'user' = isAdmin ? 'admin' : isProvider ? 'provider' : 'user';
+
+  // ADMIN-REDESIGN PHASE 3F — admin-scoped pinned favorites. Disabled
+  // (no-op control) for non-admin audiences so the pin button never
+  // renders for providers/users.
+  const adminFavs = useAdminFavorites({ isSuperAdmin });
+  const adminPinControl = isAdmin
+    ? {
+        isPinned: adminFavs.isFavorite,
+        canPin: adminFavs.canPin,
+        toggle: adminFavs.toggle,
+      }
+    : undefined;
 
   return (
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
@@ -594,6 +648,16 @@ export const DashboardSidebar: React.FC = () => {
           isRouteHidden={isRouteHidden}
         />
 
+        {/* ADMIN-REDESIGN PHASE 3F — admin-only pinned section */}
+        {isAdmin && (
+          <AdminSidebarFavorites
+            collapsed={collapsed}
+            isRTL={isRTL}
+            isSuperAdmin={isSuperAdmin}
+            closeMobile={closeMobile}
+          />
+        )}
+
         {/* ─── Role-based menu ─── */}
         <RenderGroups
           groups={baseGroups}
@@ -605,6 +669,7 @@ export const DashboardSidebar: React.FC = () => {
           workspace={{ active_role: workspace.active_role, permissions: workspace.permissions }}
           pathname={pathname}
           isRouteHidden={isRouteHidden}
+          pinControl={adminPinControl}
         />
       </SidebarContent>
 
