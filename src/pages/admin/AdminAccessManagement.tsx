@@ -21,6 +21,7 @@ import {
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { listAllUserRoles, grantRole, revokeRoleByUserAndRole, adminResetPassword, listPasswordResetLogs } from '@/modules/identity';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface AccessProfileRow {
   id: string;
@@ -183,18 +184,12 @@ const AdminAccessManagement = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
-              <ShieldCheck className="w-5 h-5 text-accent" />
-            </div>
-            {isRTL ? 'إدارة الوصول والحسابات' : 'Access & Account Management'}
-          </h1>
-          <p className="text-muted-foreground font-body mt-1 text-sm">
-            {isRTL ? 'عرض حالة الحسابات وإدارة إعادة تعيين كلمات المرور بأمان' : 'View account statuses and manage password resets securely'}
-          </p>
-        </div>
+        <AdminPageHeader
+          icon={ShieldCheck}
+          tone="accent"
+          title={isRTL ? 'إدارة الوصول والحسابات' : 'Access & Account Management'}
+          subtitle={isRTL ? 'عرض حالة الحسابات وإدارة إعادة تعيين كلمات المرور بأمان' : 'View account statuses and manage password resets securely'}
+        />
 
         {/* Tabs */}
         <div className="flex rounded-2xl bg-muted/40 p-1 gap-1 flex-wrap">

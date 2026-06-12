@@ -17,6 +17,7 @@ import {
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
   Check, X as XIcon, Pencil, Building2, Zap,
 } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   listAllSystemModules,
@@ -359,28 +360,20 @@ const AdminSystemAccess: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
-                <Layers className="w-5 h-5 text-accent" />
-              </div>
-              {pickBi(isRTL, 'التحكم بإظهار الأنظمة', 'System Access Control')}
-            </h1>
-            <p className="text-muted-foreground font-body mt-1 text-sm max-w-2xl">
-              {pickBi(isRTL, 'تحكم بإظهار وإخفاء أنظمة وأقسام المنصة على ثلاثة مستويات: عام (للجميع)، حسب نوع الحساب، أو لمستخدم محدد.', 'Control visibility of platform systems at three levels: global default, per account type, or per individual user.')}
-            </p>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <StatChip icon={Layers}     label={pickBi(isRTL, 'إجمالي', 'Total')}      value={stats.total} tone="bg-muted text-foreground" />
-            <StatChip icon={Eye}        label={pickBi(isRTL, 'ظاهرة', 'Visible')}    value={stats.visible} tone="bg-success/15 text-success" />
-            <StatChip icon={EyeOff}     label={pickBi(isRTL, 'مخفية', 'Hidden')}     value={stats.hidden} tone="bg-destructive/15 text-destructive" />
-            <StatChip icon={Sparkles}   label={pickBi(isRTL, 'مخصصة', 'Overridden')} value={stats.overridden} tone="bg-accent/15 text-accent" />
-          </div>
-        </div>
+        <AdminPageHeader
+          icon={Layers}
+          tone="accent"
+          title={pickBi(isRTL, 'التحكم بإظهار الأنظمة', 'System Access Control')}
+          subtitle={pickBi(isRTL, 'تحكم بإظهار وإخفاء أنظمة وأقسام المنصة على ثلاثة مستويات: عام (للجميع)، حسب نوع الحساب، أو لمستخدم محدد.', 'Control visibility of platform systems at three levels: global default, per account type, or per individual user.')}
+          actions={(
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <StatChip icon={Layers}   label={pickBi(isRTL, 'إجمالي', 'Total')}      value={stats.total} tone="bg-muted text-foreground" />
+              <StatChip icon={Eye}      label={pickBi(isRTL, 'ظاهرة', 'Visible')}    value={stats.visible} tone="bg-success/15 text-success" />
+              <StatChip icon={EyeOff}   label={pickBi(isRTL, 'مخفية', 'Hidden')}     value={stats.hidden} tone="bg-destructive/15 text-destructive" />
+              <StatChip icon={Sparkles} label={pickBi(isRTL, 'مخصصة', 'Overridden')} value={stats.overridden} tone="bg-accent/15 text-accent" />
+            </div>
+          )}
+        />
 
         {lastSyncAt && (
           <div
