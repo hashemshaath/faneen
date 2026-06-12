@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Star, Filter, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { listActiveBusinessServicesLite } from '@/modules/catalog/services/services/reads';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -53,11 +54,10 @@ export const BranchReviews: React.FC<BranchReviewsProps> = ({ branchId, business
   const { data: services = [] } = useQuery({
     queryKey: ['branch-reviews-services', businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('business_services')
-        .select('id, name_ar, name_en')
-        .eq('business_id', businessId)
-        .eq('is_active', true);
+      const { data } = await listActiveBusinessServicesLite<ServiceLite>(
+        businessId,
+        'id, name_ar, name_en',
+      );
       return (data ?? []) as ServiceLite[];
     },
   });

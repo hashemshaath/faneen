@@ -5,6 +5,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentUser } from '@/modules/identity/services/session';
 import { createNotificationFireAndForget } from '@/modules/notifications';
+import {
+  listServicesByBusiness,
+  insertBusinessServiceReturning,
+} from '@/modules/catalog/services/services';
 import type {
   Brand, BrandStatus, BrandRequest, BrandRequestType,
   BrandManufacturingCountry, BrandSectorLink,
@@ -633,11 +637,17 @@ export async function adminSearchBusinessesForBrand(term: string, limit = 10) {
 
 /** List the active services of a given business so the admin can pick one to link. */
 export async function adminListBusinessServices(businessId: string) {
-  const { data, error } = await sb
-    .from('business_services')
-    .select('id, name_ar, name_en, is_active')
-    .eq('business_id', businessId)
-    .order('name_ar', { ascending: true });
+  const { data, error } = await listServicesByBusiness<{
+    id: string;
+    name_ar: string | null;
+    name_en: string | null;
+    is_active: boolean | null;
+  }>({
+    businessId,
+    select: 'id, name_ar, name_en, is_active',
+    activeOnly: false,
+    order: 'name_ar',
+  });
   if (error) throw error;
   return (data ?? []) as Array<{ id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }>;
 }
