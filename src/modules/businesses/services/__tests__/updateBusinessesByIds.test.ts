@@ -104,11 +104,17 @@ describe('migration regression: AdminBusinesses', () => {
   // R4E-3: edit form no longer bags is_active / is_verified into the generic
   // profile payload — they are applied separately through guarded wrappers.
   it('edit form does NOT pass is_active or is_verified through generic payload', () => {
-    // The profile payload object literal must not include these keys.
-    const payloadMatch = src.match(/const\s+payload\s*:\s*any\s*=\s*\{[\s\S]*?\};/);
-    expect(payloadMatch).toBeTruthy();
-    expect(payloadMatch?.[0]).not.toMatch(/\bis_active:\s*editForm/);
-    expect(payloadMatch?.[0]).not.toMatch(/\bis_verified:\s*editForm/);
+    // The edit-form profile payload (the one fed into updateBusinessById)
+    // must not include sensitive flag keys. R4E-3 retyped the payload as
+    // `Record<string, unknown>` (no `any`) — we anchor the regex on the
+    // updateBusinessById call site and inspect the preceding payload
+    // literal to remain robust against future retyping.
+    const editPayloadMatch = src.match(
+      /const\s+payload\s*:\s*Record<string,\s*unknown>\s*=\s*\{[\s\S]*?\};\s*\n\s*const\s*\{\s*error\s*\}\s*=\s*await\s+updateBusinessById\(\{\s*id,\s*values:\s*payload\s*\}\)/,
+    );
+    expect(editPayloadMatch, 'edit-form payload + updateBusinessById call must be present').toBeTruthy();
+    expect(editPayloadMatch?.[0]).not.toMatch(/\bis_active\s*:\s*editForm/);
+    expect(editPayloadMatch?.[0]).not.toMatch(/\bis_verified\s*:\s*editForm/);
     expect(src).toMatch(/setBusinessActive\(id,\s*editForm\.is_active\)/);
     expect(src).toMatch(/setBusinessVerified\(id,\s*editForm\.is_verified\)/);
   });
