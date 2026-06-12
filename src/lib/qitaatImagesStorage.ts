@@ -3,7 +3,8 @@
  *
  * Path layout: `{userId}/{providerId}/{imageId}-{size}.webp`
  *
- * URLs are served via Supabase Storage's public CDN (`/storage/v1/object/public/...`)
+ * URLs are served via Supabase Storage's public CDN endpoint (resolved
+ * through `getPublicImageUrl` in the files module — never parsed here),
  * which sits behind a global CDN with long-lived caching. We request a
  * 1-year browser/edge cache via `cacheControl` on upload and fetch through
  * the public URL so visitors get the nearest edge.
