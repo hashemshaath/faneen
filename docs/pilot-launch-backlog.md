@@ -100,3 +100,15 @@ several act as regression hints next to the code they describe.
 
 None of the above are release blockers; all are tracked here so the inline
 `TODO(...)` markers can be re-found via grep and matched to a backlog entry.
+
+## Database deprecation backlog — PHASE C5A (2026-06)
+
+Companion to `docs/db-deprecation-candidates.md`. Tracks the follow-up work
+that gates Phase C5B onwards. No item below is a release blocker.
+
+| ID | Owner | Title | Blocker? | Status |
+|---|---|---|---|---|
+| DB-C5-01 | Product | Decide future of `get_placeholder_dashboard_stats()` and `get_placeholder_owner_report()` — replace, rename, or accept as production source. | No | Open |
+| DB-C5-02 | Backend | Read-only `pg_trigger` scan for `sync_primary_address_to_legacy()`; document consumer surface and whether the `legacy` suffix is still load-bearing. | No | Open |
+| DB-C5-03 | Backend / DevEx | Build a reusable DB deprecation dashboard / query pack (inventory + dependency probes + log search). | No | Open |
+| DB-C5-04 | Backend / Product | Publish the backup → rename → observe → drop policy (approvers, evidence, rollback drill cadence). | No | Open |
