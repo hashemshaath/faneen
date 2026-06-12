@@ -773,7 +773,7 @@ const AdminUsers = () => {
   // Add-business-link form
   const [linkForm, setLinkForm] = useState<{ businessId: string; role: StaffRole }>({ businessId: '', role: 'viewer' });
   const [linkSearch, setLinkSearch] = useState('');
-  const [createForm, setCreateForm] = useState({
+  const [createForm, setCreateForm] = useState<CreateUserForm>({
     email: '', password: '',
     full_name: '', full_name_ar: '', full_name_en: '', username: '',
     phone: '', phone_country_code: '+966', phone_national: '',
