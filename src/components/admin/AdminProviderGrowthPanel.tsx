@@ -6,7 +6,6 @@
  * provider list already fetched by the parent; never auto-publishes.
  */
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
