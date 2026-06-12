@@ -24,6 +24,7 @@ const REQUIRES_HEADER = [
   'AdminProviderReview.tsx',
   'AdminQuoteOperations.tsx',
   'AdminSystemAccess.tsx',
+  'AdminSystemSettings.tsx',
 ] as const;
 
 const PENDING_FOLLOW_UP = [
@@ -32,7 +33,6 @@ const PENDING_FOLLOW_UP = [
   'AdminMembershipPayments.tsx',
   'AdminMemberships.tsx',
   'AdminOperations.tsx',
-  'AdminSystemSettings.tsx',
   'AdminUsers.tsx',
 ] as const;
 

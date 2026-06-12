@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { SitemapSubmissionsCard } from '@/components/admin/SitemapSubmissionsCard';
 import { SeoFilesPreviewCard } from '@/components/admin/SeoFilesPreviewCard';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 /* ═══════════ Types ═══════════ */
@@ -434,47 +435,43 @@ const AdminSystemSettings = () => {
       <TooltipProvider delayDuration={200}>
         <div className="space-y-5">
           {/* ── Header ── */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="font-heading font-bold text-2xl flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shadow-sm">
-                  <Settings className="w-5 h-5 text-primary" />
-                </div>
-                {isRTL ? 'إعدادات النظام' : 'System Settings'}
+          <AdminPageHeader
+            icon={Settings}
+            title={isRTL ? 'إعدادات النظام' : 'System Settings'}
+            subtitle={isRTL
+              ? 'إدارة إعدادات المنصة العامة والهوية والخيارات التشغيلية.'
+              : 'Manage platform-wide settings, identity, and operational options.'}
+            actions={(
+              <>
                 <Badge className="bg-primary/10 text-primary border-0 text-[10px] px-2 py-0.5">Super Admin</Badge>
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1.5 max-w-lg">
-                {isRTL ? 'تحكم كامل في إعدادات المنصة والأمان والإشعارات ومحركات البحث' : 'Full control over platform, security, notifications & SEO settings'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={importSettings} className="gap-2 rounded-xl h-9">
-                    <Upload className="w-4 h-4" /><span className="hidden sm:inline">{isRTL ? 'استيراد' : 'Import'}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{isRTL ? 'استيراد من ملف JSON' : 'Import from JSON'}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={exportSettings} className="gap-2 rounded-xl h-9">
-                    <Download className="w-4 h-4" /><span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{isRTL ? 'تصدير JSON' : 'Export JSON'}</TooltipContent>
-              </Tooltip>
-              <Button
-                onClick={() => saveMutation.mutate()}
-                disabled={dirty.size === 0 || saveMutation.isPending}
-                className="gap-2 rounded-xl h-9 shadow-sm"
-              >
-                {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {isRTL ? `حفظ` : `Save`}
-                {dirty.size > 0 && <Badge className="bg-background/20 text-current border-0 text-[10px] px-1.5 py-0 h-[16px]">{dirty.size}</Badge>}
-              </Button>
-            </div>
-          </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={importSettings} className="gap-2 rounded-xl h-9">
+                      <Upload className="w-4 h-4" /><span className="hidden sm:inline">{isRTL ? 'استيراد' : 'Import'}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isRTL ? 'استيراد من ملف JSON' : 'Import from JSON'}</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={exportSettings} className="gap-2 rounded-xl h-9">
+                      <Download className="w-4 h-4" /><span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isRTL ? 'تصدير JSON' : 'Export JSON'}</TooltipContent>
+                </Tooltip>
+                <Button
+                  onClick={() => saveMutation.mutate()}
+                  disabled={dirty.size === 0 || saveMutation.isPending}
+                  className="gap-2 rounded-xl h-9 shadow-sm"
+                >
+                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isRTL ? `حفظ` : `Save`}
+                  {dirty.size > 0 && <Badge className="bg-background/20 text-current border-0 text-[10px] px-1.5 py-0 h-[16px]">{dirty.size}</Badge>}
+                </Button>
+              </>
+            )}
+          />
 
           {/* ── Phase-2 Honesty Banner ── */}
           <Card className="border-warning/40 bg-warning/[0.04]">
