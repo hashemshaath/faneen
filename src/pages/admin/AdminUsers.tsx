@@ -49,16 +49,20 @@ import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
 import {
-  KpiCard, formatDate, formatRelative,
+  KpiCard, formatDate, formatRelative, EmailLiveHint,
   type SortKey, type SortDir, type Density,
   type FilterScope, type FilterBusinessLink,
   type CreateUserForm,
+  type StaffRole as SharedStaffRole,
+  type BusinessInfo as SharedBusinessInfo,
+  type BusinessLink as SharedBusinessLink,
+  type EditUserForm,
 } from './users/_shared';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
 import { CreateUserPanel } from './users/CreateUserPanel';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { UserEditPanel } from './users/UserEditPanel';
 
 /**
  * Parse a raw save-mutation error into a structured `{ field, reason, rawCode, friendly }`.
