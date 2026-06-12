@@ -291,12 +291,36 @@
     /* Alerts / toasts */
     --alert-radius: 12px;
     --alert-padding: 14px 16px;
+    --alert-success-bg: 159 76% 34%;
+    --alert-warning-bg: 33 92% 36%;
+    --alert-error-bg: 0 67% 46%;
+    --alert-info-bg: 215 58% 43%;
+    --alert-bg-opacity: 0.08;
+
+    /* Button states (additive — base bg/fg come from --primary etc.) */
+    --btn-disabled-opacity: 0.5;
+    --btn-hover-lift: -1px;
+    --btn-active-scale: 0.98;
+    --btn-ghost-hover-bg: 220 17% 94%;
+
+    /* Form states */
+    --field-bg-readonly: 220 17% 96%;
+    --field-bg-error: 0 67% 96%;
+    --field-border-error: 0 67% 46%;
+    --field-placeholder: 220 9% 55%;
+
+    /* Card surfaces */
+    --card-padding-sm: 12px;
+    --card-padding-md: 20px;
+    --card-padding-lg: 28px;
 
     /* Layout */
     --sidebar-w-expanded: 260px;
     --sidebar-w-collapsed: 64px;
     --header-h: 56px;
     --container-max: 1440px;
+    --drawer-w: 480px;
+    --drawer-w-lg: 640px;
   }
 
   .dark {
