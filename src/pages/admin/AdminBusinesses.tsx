@@ -120,49 +120,11 @@ import type {
   PortfolioItemInsert,
   AdminJson,
 } from './adminBusinesses.types';
-
-const tiers = [
-  { value: 'free', label_ar: 'مجاني', label_en: 'Free', color: 'bg-muted text-muted-foreground', icon: '🆓' },
-  { value: 'basic', label_ar: 'أساسي', label_en: 'Basic', color: 'bg-info/10 text-info', icon: '⭐' },
-  { value: 'premium', label_ar: 'مميز', label_en: 'Premium', color: 'bg-accent/20 text-accent-foreground', icon: '👑' },
-  { value: 'enterprise', label_ar: 'مؤسسات', label_en: 'Enterprise', color: 'bg-secondary/10 text-secondary', icon: '🏢' },
-];
-
-/* ─── Reverse Geocode ─── */
-const reverseGeocode = async (lat: number, lng: number) => {
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar&addressdetails=1`);
-    const data = await res.json();
-    const a = data.address || {};
-    return {
-      region: a.state || a.county || '',
-      district: a.suburb || a.neighbourhood || a.quarter || '',
-      street_name: a.road || a.pedestrian || '',
-      building_number: a.house_number || '',
-      address: data.display_name || '',
-    };
-  } catch { return null; }
-};
-
-/* ─── CSV Export ─── */
-const exportCSV = (businesses: ReadonlyArray<AdminBusinessCsvRow>, language: string) => {
-  // Phase 18f — legacy `category_id` removed from CSV. Activity classification
-  // now lives in `business_taxonomy_categories` and is admin-managed inline.
-  const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
-  const rows = businesses.map((b) => [
-    b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
-    b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
-    `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at ?? '').toLocaleDateString(),
-  ]);
-  const csv = [headers, ...rows].map(r => r.map((c) => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `businesses_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
+import {
+  TIERS as tiers,
+  reverseGeocode,
+  exportBusinessesCsv as exportCSV,
+} from './businesses/_shared';
 
 /* ─── Stat Card Component ─── */
 const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg }: {
