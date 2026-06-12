@@ -1671,18 +1671,46 @@ const AdminUsers = () => {
                   isSubmitting={createUserMutation.isPending}
                 />
               )}
-              {activePanel?.type === 'edit' && (() => {
-                const editingProfile = activePanel.profile;
-                const editingRoles = roleMap.get(editingProfile.user_id) || [];
-                const editingLinks = businessLinksMap.get(editingProfile.user_id) || [];
-                const editingAcc = accountTypeConfig[editingProfile.account_type] || accountTypeConfig.individual;
-                const EditAccIcon = editingAcc.icon;
-                const editingTier = tierConfig[editingProfile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
-                const ownedByEntityCount = editingLinks.filter(l => l.isOwnerByEntity).length;
-                const staffCount = editingLinks.filter(l => !l.isOwnerByEntity && l.staffId).length;
-                const availableRolesToAdd = (['super_admin', 'admin', 'moderator', 'user'] as const)
-                  .filter(r => !editingRoles.some(er => er.role === r));
-                return (
+              {activePanel?.type === 'edit' && (
+                <UserEditPanel
+                  panelRef={panelRef}
+                  isRTL={isRTL}
+                  language={language}
+                  isSuperAdmin={isSuperAdmin}
+                  currentUserId={user?.id}
+                  editingProfile={activePanel.profile}
+                  editingRoles={roleMap.get(activePanel.profile.user_id) || []}
+                  editingLinks={businessLinksMap.get(activePanel.profile.user_id) || []}
+                  businesses={businesses}
+                  accountTypeConfig={accountTypeConfig}
+                  tierConfig={tierConfig}
+                  roleConfig={roleConfig}
+                  staffRoleConfig={staffRoleConfig}
+                  editForm={editForm}
+                  setEditForm={setEditForm}
+                  editFieldErrors={editFieldErrors}
+                  editFieldRawCodes={editFieldRawCodes}
+                  clearEditFieldError={clearEditFieldError}
+                  usernameServerError={usernameServerError}
+                  suspendForm={suspendForm}
+                  setSuspendForm={setSuspendForm}
+                  linkForm={linkForm}
+                  setLinkForm={setLinkForm}
+                  linkSearch={linkSearch}
+                  setLinkSearch={setLinkSearch}
+                  closePanel={closePanel}
+                  handleSaveProfile={handleSaveProfile}
+                  updateProfileMutation={updateProfileMutation}
+                  removeRoleMutation={removeRoleMutation}
+                  addRoleMutation={addRoleMutation}
+                  updateStaffRoleMutation={updateStaffRoleMutation}
+                  removeStaffMutation={removeStaffMutation}
+                  linkBusinessMutation={linkBusinessMutation}
+                  suspendMutation={suspendMutation}
+                  toggleBanMutation={toggleBanMutation}
+                />
+              )}
+              {false && (
                 <div ref={panelRef} className="rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 via-card to-transparent shadow-lg animate-in slide-in-from-top-2 scroll-mt-24 overflow-hidden">
                   {/* Premium header */}
                   <div className="relative p-5 border-b border-border/40 bg-gradient-to-l from-accent/10 via-transparent to-transparent">
