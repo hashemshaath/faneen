@@ -58,6 +58,7 @@ export default function ProviderDashboardView({
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
+      const { BUSINESS_SAFE_COLUMNS_SELECT } = await import('@/modules/businesses');
       const { data } = await getOwnerBusiness<{
         id: string;
         logo_url: string | null;
@@ -69,7 +70,9 @@ export default function ProviderDashboardView({
         [key: string]: unknown;
       }>({
         userId: user.id,
-        select: '*',
+        // Avoid `*` because sensitive cols (CR/ID/notes) are blocked at
+        // column-level for the authenticated role.
+        select: BUSINESS_SAFE_COLUMNS_SELECT,
         limit: 1,
       });
       return data;
