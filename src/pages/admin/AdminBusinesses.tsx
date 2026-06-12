@@ -85,7 +85,7 @@ import {
   Shield, Crown, BarChart3, Package, DollarSign, ExternalLink,
   GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
   FileText, Users, Locate, Navigation, Download, LayoutGrid, List,
-  TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
+  ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
   Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
   CheckSquare, Square, AlertTriangle,
   FlaskConical, User, ShieldCheck,
