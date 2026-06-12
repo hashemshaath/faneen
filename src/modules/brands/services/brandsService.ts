@@ -5,10 +5,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentUser } from '@/modules/identity/services/session';
 import { createNotificationFireAndForget } from '@/modules/notifications';
-import {
-  listServicesByBusiness,
-  insertBusinessServiceReturning,
-} from '@/modules/catalog/services/services';
+import { listServicesByBusiness } from '@/modules/catalog/services/services/reads';
+import { insertBusinessServiceReturning } from '@/modules/catalog/services/services/mutations';
 import type {
   Brand, BrandStatus, BrandRequest, BrandRequestType,
   BrandManufacturingCountry, BrandSectorLink,
