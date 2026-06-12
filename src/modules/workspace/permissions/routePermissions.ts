@@ -70,6 +70,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   '/dashboard/private-sectors':              { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/reviews':                      { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/badge':                        { permissions: ['entity.manage'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'manage' },
+  '/dashboard/sites':                        { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
   // Sales & requests
   '/dashboard/leads':                        { permissions: ['leads.view'],                             scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
