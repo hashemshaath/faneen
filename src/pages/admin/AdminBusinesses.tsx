@@ -78,15 +78,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Building2, Search, CheckCircle, XCircle, Star, Loader2, Eye, Ban,
+  Building2, XCircle, Star, Loader2, Eye, Ban,
   Edit, Trash2, Plus, X, Globe, Phone, Mail, MapPin, Settings,
   Shield, Crown, BarChart3, Package, DollarSign, ExternalLink,
   GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
   FileText, Users, Locate, Navigation, Download, LayoutGrid, List,
   ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
   Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
-  CheckSquare, Square, AlertTriangle,
-  FlaskConical, User, ShieldCheck,
+  CheckSquare, Square,
+  FlaskConical, ShieldCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
