@@ -19124,7 +19124,6 @@ export type Database = {
           short_description_en: string | null
           street_name: string | null
           updated_at: string | null
-          user_id: string | null
           username: string | null
           website: string | null
         }
@@ -19164,7 +19163,6 @@ export type Database = {
           short_description_en?: string | null
           street_name?: string | null
           updated_at?: string | null
-          user_id?: string | null
           username?: string | null
           website?: string | null
         }
@@ -19204,7 +19202,6 @@ export type Database = {
           short_description_en?: string | null
           street_name?: string | null
           updated_at?: string | null
-          user_id?: string | null
           username?: string | null
           website?: string | null
         }
