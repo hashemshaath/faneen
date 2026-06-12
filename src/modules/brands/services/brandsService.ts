@@ -743,31 +743,45 @@ export async function adminLinkBrandToAllServices(args: {
 
   // No services? Create a single placeholder so the brand can still be linked.
   if (services.length === 0) {
-    const { data: created, error: createErr } = await sb
-      .from('business_services')
-      .insert({
-        business_id: args.businessId,
-        name_ar: 'خدمات عامة',
-        name_en: 'General services',
-        is_active: true,
-      })
-      .select('id, name_ar, name_en, is_active')
-      .single();
+    // `is_active=true` is the column default — omitted from the payload
+    // because activation/governance writes are owned by
+    // `@/modules/providerServices` (SERVICE-ACTIVATION-GOVERNANCE-FINAL).
+    // Observable behaviour is identical: the inserted row is active.
+    const { data: created, error: createErr } =
+      await insertBusinessServiceReturning<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        is_active: boolean | null;
+      }>(
+        {
+          business_id: args.businessId,
+          name_ar: 'خدمات عامة',
+          name_en: 'General services',
+        },
+        { select: 'id, name_ar, name_en, is_active' },
+      );
     if (createErr) {
+      const err = createErr as {
+        code?: string | null;
+        message?: string | null;
+        details?: string | null;
+        hint?: string | null;
+      };
       await writeBrandAuditLog({
         brand_id: args.brandId,
         action: 'provider_brand_link_admin_placeholder_service_failed',
         new_values: {
           business_id: args.businessId,
-          error_code: createErr.code ?? null,
-          error_message: createErr.message ?? null,
-          error_details: createErr.details ?? null,
-          error_hint: createErr.hint ?? null,
+          error_code: err.code ?? null,
+          error_message: err.message ?? null,
+          error_details: err.details ?? null,
+          error_hint: err.hint ?? null,
         },
       });
-      throw new Error(humanizeBrandLinkError(createErr, 'service'));
+      throw new Error(humanizeBrandLinkError(err as never, 'service'));
     }
-    services = [created as { id: string; name_ar: string | null; name_en: string | null; is_active: boolean | null }];
+    services = [created!];
   }
 
   // Insert one link per service; ignore duplicates so re-running is idempotent.
