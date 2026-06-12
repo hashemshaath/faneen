@@ -22,6 +22,7 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
 import type {
   AdminBusinessImageVariants,
 } from '../adminBusinesses.types';
