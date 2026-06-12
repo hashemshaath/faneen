@@ -23,7 +23,7 @@ export const PasswordResetSuccessView: React.FC = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4">
       <div className="text-center space-y-6 animate-fade-in max-w-md">
         <div className="relative mx-auto w-20 h-20">
           <div className="absolute inset-0 rounded-full bg-success/10 animate-ping" style={{ animationDuration: '2s' }} />

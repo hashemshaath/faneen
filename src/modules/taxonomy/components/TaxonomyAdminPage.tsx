@@ -343,7 +343,7 @@ export const TaxonomyAdminPage: React.FC = () => {
   const loading = typesQ.isLoading || catsQ.isLoading;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 py-6 space-y-5">
         {/* Calm header */}
         <header className="flex flex-wrap items-end justify-between gap-4">

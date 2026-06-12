@@ -128,7 +128,7 @@ const DashboardBusinessDraft: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <main className="container px-4 py-8 sm:py-12 max-w-3xl">
         <header className="mb-6 flex items-start justify-between gap-3">

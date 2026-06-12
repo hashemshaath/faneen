@@ -328,7 +328,7 @@ const ProviderJoin: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-dvh bg-background flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="max-w-xl w-full rounded-2xl shadow-elegant">
@@ -381,7 +381,7 @@ const ProviderJoin: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       <Navbar />
       <main className="flex-1">
         {/* Hero with cover image */}

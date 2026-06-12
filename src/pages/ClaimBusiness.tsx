@@ -211,7 +211,7 @@ const ClaimBusiness: React.FC = () => {
 
   // Centered shell used by every state so the page always shows Navbar + Footer.
   const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-dvh flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 pt-20 sm:pt-24 pb-12">{children}</main>
       <Footer />

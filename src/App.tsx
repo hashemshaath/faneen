@@ -276,7 +276,7 @@ const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystem
 const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
 
 const PageLoader = () => (
-  <div className="flex min-h-screen items-center justify-center bg-background">
+  <div className="flex min-h-dvh items-center justify-center bg-background">
     <div className="animate-pulse">
       <BrandLogo variant="mark" tone="auto" size="loader" priority alt="قِطاعات" />
     </div>

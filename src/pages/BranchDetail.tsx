@@ -394,7 +394,7 @@ const BranchDetail: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -402,7 +402,7 @@ const BranchDetail: React.FC = () => {
 
   if (!branch) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8">
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-4 p-8">
         <Building2 className="w-16 h-16 text-muted-foreground/30" />
         <h1 className="text-xl font-semibold">{t(isRTL, 'الفرع غير موجود', 'Branch not found')}</h1>
         <Button onClick={() => navigate(-1)} variant="outline" className="gap-2">
@@ -443,7 +443,7 @@ const BranchDetail: React.FC = () => {
   ].filter(Boolean) as Array<{ id: string; label: string }>;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* Hero — matches BusinessProfile visual language (cover band + overlapping card) */}
       <header className="relative">
         <div className="relative h-28 overflow-hidden bg-primary sm:h-52 md:h-64">

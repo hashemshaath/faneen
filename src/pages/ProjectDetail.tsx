@@ -215,7 +215,7 @@ const ProjectDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
         <div className="container py-24 space-y-6 px-4 max-w-6xl">
           <Skeleton className="h-10 w-3/4 rounded-xl" />
@@ -238,7 +238,7 @@ const ProjectDetail = () => {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
         <div className="container mx-auto px-4 py-32 text-center">
           <FolderOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
@@ -262,7 +262,7 @@ const ProjectDetail = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* Header with logo */}

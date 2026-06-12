@@ -683,7 +683,7 @@ const Membership = () => {
   }, [mySubscription]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* MEMBERSHIP-PAGE-GOVERNANCE-REDESIGN-1: Route guard. When the admin
           has disabled the `memberships` module, show a safe unavailable
           state. Admins always bypass so they can preview the page. */}

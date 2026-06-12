@@ -80,7 +80,7 @@ const HelpCategoryPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-dvh flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 container py-24">
         <nav className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5" aria-label="Breadcrumb">

@@ -67,7 +67,7 @@ const Terms = () => {
   }, [isRTL]));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <div className="bg-primary pt-24 pb-10"><div className="container px-4"><h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-foreground">{bi('الشروط والأحكام', 'Terms & Conditions')}</h1></div></div>
       <div className="container py-10 px-4 max-w-3xl prose prose-sm dark:prose-invert">

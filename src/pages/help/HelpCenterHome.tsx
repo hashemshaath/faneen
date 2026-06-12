@@ -247,7 +247,7 @@ const HelpCenterHome: React.FC = () => {
   }, [filteredCats, audienceFilteredArticles, language]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-dvh flex flex-col bg-background">
       <Navbar />
       <main className="flex-1">
         <section className="bg-primary text-primary-foreground pt-28 pb-16">

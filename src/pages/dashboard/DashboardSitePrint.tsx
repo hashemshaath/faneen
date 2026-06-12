@@ -70,7 +70,7 @@ export default function DashboardSitePrint() {
 
   if (siteLoading || codeLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground gap-2">
+      <div className="min-h-dvh flex items-center justify-center text-muted-foreground gap-2">
         <Loader2 className="w-4 h-4 animate-spin" />
         {t('جارٍ التحميل...', 'Loading...')}
       </div>
@@ -79,7 +79,7 @@ export default function DashboardSitePrint() {
 
   if (!site || !code) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6">
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-3 p-6">
         <p className="text-sm text-muted-foreground">{t('الموقع أو الباركود غير متاح.', 'Site or barcode not available.')}</p>
         <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/sites')}>
           <ArrowLeft className="w-4 h-4 me-1" />{t('عودة للمواقع', 'Back to Sites')}
@@ -89,7 +89,7 @@ export default function DashboardSitePrint() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-dvh bg-muted/30" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Toolbar (hidden during print) */}
       <div className="print:hidden sticky top-0 z-10 bg-background/90 backdrop-blur border-b border-border/40">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-3">

@@ -86,7 +86,7 @@ const Forbidden = () => {
   usePageMeta({ title: isRTL ? 'غير مصرح' : 'Access Denied', noindex: true });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-dvh flex items-center justify-center bg-background px-4">
       <div className="text-center max-w-xl w-full space-y-6">
         {/* Icon */}
         <div className="mx-auto w-20 h-20 rounded-2xl bg-destructive/10 dark:bg-destructive/15 flex items-center justify-center">

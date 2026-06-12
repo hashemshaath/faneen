@@ -389,7 +389,7 @@ const SectorLanding: React.FC = () => {
     .filter((s): s is { slug: SectorSlug; title: string; description: string; keywords: string; tagline: string; name: string } => Boolean(s));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
 
       {/* Hero */}
@@ -773,7 +773,7 @@ export const SectorsIndex: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
       <header className="bg-primary pt-24 pb-10">
         <div className="container px-4">

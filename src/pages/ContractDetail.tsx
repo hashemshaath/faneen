@@ -1548,7 +1548,7 @@ const ContractDetail = () => {
   /* ─── Loading ─── */
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <Navbar />
         <div className="container py-24 sm:py-28 space-y-4 sm:space-y-6 px-4 sm:px-6 max-w-5xl mx-auto">
           <Skeleton className="h-5 w-48 rounded-lg" />
@@ -1564,7 +1564,7 @@ const ContractDetail = () => {
 
   if (!contract) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-dvh bg-background flex items-center justify-center">
         <Navbar />
         <div className="text-center space-y-4 px-4">
           <FileText className="w-14 h-14 mx-auto text-muted-foreground/30" />
@@ -1642,7 +1642,7 @@ const ContractDetail = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Navbar />
 
       {/* ─── Hero ─── */}

@@ -386,7 +386,7 @@ const SectorCity: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-dvh flex flex-col bg-background">
       <Navbar />
       <main className="flex-1">
         <section className="container py-8 md:py-12">

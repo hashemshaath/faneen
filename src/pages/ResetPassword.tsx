@@ -121,7 +121,7 @@ const ResetPassword = () => {
   // Checking state
   if (linkStatus === 'checking') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background p-4">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
@@ -130,7 +130,7 @@ const ResetPassword = () => {
   // Expired link
   if (linkStatus === 'expired') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md bg-card rounded-2xl border border-border p-8 shadow-sm space-y-6 text-center">
           <div className="w-16 h-16 mx-auto rounded-full bg-warning dark:bg-warning/20 flex items-center justify-center">
             <Clock className="w-8 h-8 text-warning dark:text-warning" />
@@ -171,7 +171,7 @@ const ResetPassword = () => {
   // Invalid link
   if (linkStatus === 'invalid' || !isRecovery) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md bg-card rounded-2xl border border-border p-8 shadow-sm space-y-6 text-center">
           <div className="w-16 h-16 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">
             <XCircle className="w-8 h-8 text-destructive" />
@@ -210,7 +210,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mx-auto mb-4 inline-flex">

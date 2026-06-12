@@ -302,7 +302,7 @@ const SearchV3 = () => {
 
   // ── Render ──────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <SearchHeaderV3
         query={query}
         onQueryChange={handleQueryChange}
