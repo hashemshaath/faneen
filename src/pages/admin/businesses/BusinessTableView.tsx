@@ -192,19 +192,13 @@ const BusinessTableViewImpl: React.FC<BusinessTableViewProps> = ({
                   <TableCell>
                     <div className="flex items-center gap-1">
                       {biz.is_verified && (
-                        <Badge className="text-[8px] h-4 bg-info/10 text-info border-0">
-                          {pickBi(isRTL, 'موثق', 'Verified')}
-                        </Badge>
+                        <AdminStatusBadge tone="info" label={pickBi(isRTL, 'موثق', 'Verified')} />
                       )}
                       {!biz.is_active && (
-                        <Badge variant="destructive" className="text-[8px] h-4">
-                          {pickBi(isRTL, 'معطل', 'Disabled')}
-                        </Badge>
+                        <AdminStatusBadge tone="destructive" label={pickBi(isRTL, 'معطل', 'Disabled')} />
                       )}
                       {biz.is_active && !biz.is_verified && (
-                        <Badge className="text-[8px] h-4 bg-success/10 text-success border-0">
-                          {pickBi(isRTL, 'نشط', 'Active')}
-                        </Badge>
+                        <AdminStatusBadge tone="success" label={pickBi(isRTL, 'نشط', 'Active')} />
                       )}
                     </div>
                   </TableCell>
