@@ -28,6 +28,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
 import type { BusinessTableRow, TranslationCompleteness } from './BusinessTableView';
 import { TIERS } from './_shared';
 
