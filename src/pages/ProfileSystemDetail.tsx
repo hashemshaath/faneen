@@ -129,7 +129,15 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
 
   const img = images[index];
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image lightbox"
+      tabIndex={-1}
+    >
       <button onClick={onClose} className="absolute top-3 end-3 sm:top-4 sm:end-4 text-white/70 hover:text-white z-50 p-2 bg-white/10 rounded-full backdrop-blur-sm">
         <X className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
@@ -779,7 +787,15 @@ const ProfileSystemDetail = () => {
                       </div>
                       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                         {images.slice(0, 3).map((img, i: number) => (
-                          <div key={img.id} className="relative group rounded-lg sm:rounded-xl overflow-hidden media-4-3 cursor-pointer" onClick={() => setLightboxIdx(i)}>
+                          <div
+                            key={img.id}
+                            className="relative group rounded-lg sm:rounded-xl overflow-hidden media-4-3 cursor-pointer"
+                            onClick={() => setLightboxIdx(i)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxIdx(i); } }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={language === 'ar' ? 'عرض الصورة' : 'View image'}
+                          >
                             <img src={img.image_url} alt={language === 'ar' ? (img.caption_ar || name) : (img.caption_en || img.caption_ar || name)} className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
                               <Maximize2 className="ic-sm sm:w-5 sm:h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />

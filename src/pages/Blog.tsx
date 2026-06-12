@@ -509,7 +509,16 @@ const Blog = () => {
         </div>
       </div>
 
-      {showSortMenu && <div className="fixed inset-0 z-20" onClick={() => setShowSortMenu(false)} />}
+      {showSortMenu && (
+        <div
+          className="fixed inset-0 z-20"
+          onClick={() => setShowSortMenu(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowSortMenu(false); }}
+          role="button"
+          tabIndex={-1}
+          aria-label={isRTL ? 'إغلاق القائمة' : 'Close menu'}
+        />
+      )}
 
       {/* ═══ Content ═══ */}
       <div className="container-app py-5 sm:py-10">

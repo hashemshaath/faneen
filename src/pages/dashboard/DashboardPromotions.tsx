@@ -162,7 +162,14 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
         <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing text-muted-foreground/25 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
           <GripVertical className="w-4 h-4" />
         </button>
-        <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => p.image_url && onPreview(p.image_url)}>
+        <div
+          className="w-12 h-12 rounded-xl overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30"
+          onClick={() => p.image_url && onPreview(p.image_url)}
+          onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && p.image_url) { e.preventDefault(); onPreview(p.image_url); } }}
+          role="button"
+          tabIndex={0}
+          aria-label={rtl ? 'معاينة الصورة' : 'Preview image'}
+        >
           {p.image_url ? (
              <img src={p.image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
           ) : (
@@ -956,8 +963,16 @@ const DashboardPromotions = () => {
 
       {/* Image Preview Lightbox */}
       {previewUrl && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200" onClick={() => setPreviewUrl(null)}>
-          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)} aria-label="Action">
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200"
+          onClick={() => setPreviewUrl(null)}
+          onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setPreviewUrl(null); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={rtl ? 'معاينة الصورة' : 'Image preview'}
+          tabIndex={-1}
+        >
+          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)} aria-label="Close">
             <X className="w-6 h-6" />
           </Button>
           <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />

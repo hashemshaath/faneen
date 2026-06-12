@@ -112,7 +112,14 @@ const SortableCard = React.memo(({
           <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
             <GripVertical className="w-4 h-4" />
           </button>
-          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => onPreview(item.media_url)}>
+          <div
+            className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30"
+            onClick={() => onPreview(item.media_url)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPreview(item.media_url); } }}
+            role="button"
+            tabIndex={0}
+            aria-label="Preview media"
+          >
             <img src={item.media_url} alt={name} className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="flex-1 min-w-0">
@@ -813,8 +820,16 @@ const DashboardPortfolio = () => {
 
       {/* Image Preview Lightbox */}
       {previewUrl && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200" onClick={() => setPreviewUrl(null)}>
-          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)} aria-label="Action">
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200"
+          onClick={() => setPreviewUrl(null)}
+          onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setPreviewUrl(null); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview"
+          tabIndex={-1}
+        >
+          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)} aria-label="Close">
             <X className="w-6 h-6" />
           </Button>
           <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />
