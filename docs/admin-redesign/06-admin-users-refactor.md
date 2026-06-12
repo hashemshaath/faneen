@@ -87,12 +87,13 @@ A monolithic rewrite would land hundreds of changed lines, defeat code-review, a
 
 Each PR is independently mergeable and revertable. **No PR rewrites business logic**; they only relocate JSX + props.
 
-### PR-2 — `OverviewTab` (≈90 LOC moved)
+### PR-2 — `OverviewTab` ✅ shipped
 
-- **Extract**: `1614–1673` → `src/pages/admin/users/OverviewTab.tsx`
-- **Props**: `stats`, `signupSeries`, `recentAdminActivity`, `isRTL`
-- **Read-only**, no mutations, pure display. Lowest-risk warm-up.
-- **Side benefit**: lets PR-3 move Recharts imports off the main bundle.
+- **Extracted**: overview `TabsContent` block → `src/pages/admin/users/OverviewTab.tsx` (88 LOC).
+- **Also extracted**: `KpiCard`, `formatDate`, `formatRelative` + shared types → `src/pages/admin/users/_shared.tsx` (83 LOC). Kept centralised so PR-3 (Analytics) can reuse `KpiCard` without re-importing from a sibling page module.
+- **Props**: `isRTL`, `stats`, `signupSeries`, `recentAdminActivity` — pure display, no mutations, no query/mutation gating moved.
+- **Parent net change**: `AdminUsers.tsx` 2,790 → 2,697 LOC (−93). One orphan icon import (`TrendingDown`) removed.
+- **Behavioural delta**: none. Tab content, gradients, RTL chart orientation, relative-time labels all identical.
 
 ### PR-3 — `AnalyticsTab` (≈100 LOC moved + bundle win)
 

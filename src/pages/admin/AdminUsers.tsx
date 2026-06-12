@@ -38,7 +38,7 @@ import {
   Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
   Check, TrendingUp, UserCheck, Filter, Hash, Sparkles, Building2, Briefcase, Link2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
-  Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, TrendingDown, Command, Inbox,
+  Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, Command, Inbox,
   Timer, ShieldOff, Plus,
 } from 'lucide-react';
 import {
@@ -53,6 +53,8 @@ import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/
 import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
+import { KpiCard, formatDate, formatRelative } from './users/_shared';
+import { OverviewTab } from './users/OverviewTab';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 /**
@@ -192,24 +194,6 @@ type ActivePanel =
 type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
 type Density = 'comfortable' | 'compact';
 
-const formatDate = (dateStr: string | null | undefined, lang: string): string => {
-  if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';
-  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
-};
-
-const formatRelative = (dateStr: string | null | undefined, isRTL: boolean): string => {
-  if (!dateStr) return pickBi(isRTL, 'غير محدد', 'N/A');
-  const d = new Date(dateStr); if (isNaN(d.getTime())) return pickBi(isRTL, 'غير محدد', 'N/A');
-  const diff = (Date.now() - d.getTime()) / 1000;
-  if (diff < 60) return pickBi(isRTL, 'الآن', 'now');
-  if (diff < 3600) return isRTL ? `منذ ${Math.floor(diff/60)} د` : `${Math.floor(diff/60)}m ago`;
-  if (diff < 86400) return isRTL ? `منذ ${Math.floor(diff/3600)} س` : `${Math.floor(diff/3600)}h ago`;
-  if (diff < 86400*30) return isRTL ? `منذ ${Math.floor(diff/86400)} يوم` : `${Math.floor(diff/86400)}d ago`;
-  return formatDate(dateStr, pickBi(isRTL, 'ar', 'en'));
-};
-
 const getPasswordValidationMessage = (password: string, isRTL: boolean): string | null => {
   if (!password) return null;
   if (password.length < 8) return pickBi(isRTL, 'كلمة المرور يجب أن تكون 8 حروف على الأقل', 'Password must be at least 8 characters');
@@ -220,32 +204,6 @@ const getPasswordValidationMessage = (password: string, isRTL: boolean): string 
     return pickBi(isRTL, 'تجنب الكلمات الشائعة', 'Avoid common words');
   return null;
 };
-
-/* ─── KPI card ─── */
-const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend }: {
-  icon: React.ElementType; label: string; value: number | string; gradient: string; iconBg: string; trend?: string;
-}) => (
-  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md hover-lift group`}>
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center transition-transform group-hover:scale-110`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-2xl font-bold font-heading leading-none tech-content">{value}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
-      </div>
-      {trend && (
-        <span className={`text-[10px] font-bold tech-content shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${
-          trend.startsWith('-') ? 'text-destructive bg-destructive/10' : 'text-success bg-success/10'
-        }`}>
-          {trend.startsWith('-') ? <TrendingDown className="w-2.5 h-2.5" /> : <TrendingUp className="w-2.5 h-2.5" />}
-          {trend.replace('-', '')}
-        </span>
-      )}
-    </div>
-  </div>
-));
-KpiCard.displayName = 'KpiCard';
 
 /* ─── Per-user expanded detail card ─── */
 const UserDetailPanel = React.memo(({
@@ -1613,63 +1571,12 @@ const AdminUsers = () => {
 
           {/* OVERVIEW */}
           <TabsContent value="overview" className="space-y-5 mt-5">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <KpiCard icon={Users} label={pickBi(isRTL, 'إجمالي المستخدمين', 'Total Users')} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-              <KpiCard icon={Briefcase} label={pickBi(isRTL, 'مزودي الخدمات', 'Providers')} value={stats.providers} gradient="from-success/10 to-success/5" iconBg="bg-success/15 text-success" />
-              <KpiCard
-                icon={UserCheck}
-                label={pickBi(isRTL, 'مكتمل التسجيل', 'Onboarded')}
-                value={stats.onboarded}
-                gradient="from-info/10 to-info/5"
-                iconBg="bg-info/15 text-info"
-                trend={stats.totalUsers > 0 ? `${Math.round((stats.onboarded / stats.totalUsers) * 100)}%` : undefined}
-              />
-              <KpiCard
-                icon={TrendingUp}
-                label={isRTL ? `جديد هذا الأسبوع • ${stats.last24h} اليوم` : `New 7d • ${stats.last24h} today`}
-                value={stats.recentUsers}
-                gradient="from-warning/10 to-warning/5"
-                iconBg="bg-warning/15 text-warning"
-                trend={`${stats.wow >= 0 ? '' : '-'}${Math.abs(stats.wow)}%`}
-              />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><TrendingUp className="w-4 h-4 text-accent" />{pickBi(isRTL, 'تسجيلات آخر 30 يوم', 'Signups (30 days)')}</h3>
-                <div className="h-56">
-                  <ResponsiveContainer>
-                    <AreaChart data={signupSeries}>
-                      <defs>
-                        <linearGradient id="colTotal" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.4} /><stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} /></linearGradient>
-                        <linearGradient id="colProv" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(160 84% 39%)" stopOpacity={0.4} /><stop offset="95%" stopColor="hsl(160 84% 39%)" stopOpacity={0} /></linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" tick={{ fontSize: 10 }} reversed={isRTL} />
-                      <YAxis tick={{ fontSize: 10 }} orientation={pickBi(isRTL, 'right', 'left')} />
-                      <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-                      <Area type="monotone" dataKey="total" stroke="hsl(var(--accent))" fill="url(#colTotal)" name={pickBi(isRTL, 'الكل', 'Total')} />
-                      <Area type="monotone" dataKey="providers" stroke="hsl(160 84% 39%)" fill="url(#colProv)" name={pickBi(isRTL, 'مزودين', 'Providers')} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-border/30 bg-card p-5">
-                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><Activity className="w-4 h-4 text-accent" />{pickBi(isRTL, 'آخر النشاط الإداري', 'Recent Admin Activity')}</h3>
-                <div className="space-y-2 max-h-56 overflow-y-auto no-scrollbar">
-                  {recentAdminActivity.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-6">{pickBi(isRTL, 'لا يوجد نشاط', 'No activity')}</p>
-                  ) : recentAdminActivity.slice(0, 12).map(a => (
-                    <div key={a.id} className="flex items-start gap-2 rounded-xl bg-muted/30 px-2.5 py-1.5">
-                      <div className="w-2 h-2 rounded-full bg-accent mt-1.5 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">{a.action}</p>
-                        <p className="text-[10px] text-muted-foreground">{formatRelative(a.created_at, isRTL)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <OverviewTab
+              isRTL={isRTL}
+              stats={stats}
+              signupSeries={signupSeries}
+              recentAdminActivity={recentAdminActivity}
+            />
           </TabsContent>
 
           {/* USERS — single list view (Staff/Disabled merged as scope chips) */}
