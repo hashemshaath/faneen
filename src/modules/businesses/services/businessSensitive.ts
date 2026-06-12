@@ -96,6 +96,16 @@ export const BUSINESS_SENSITIVE_COLUMNS = [
 ] as const;
 
 /**
+ * PostgREST-safe select string covering every column on
+ * `public.businesses` EXCEPT the 6 sensitive ones. Use this in place of
+ * `select: '*'` to avoid permission errors on the authenticated role.
+ * Sensitive fields must be fetched via `getBusinessSensitiveFields`,
+ * `getBusinessFullById`, or `getOwnerBusinessFull`.
+ */
+export const BUSINESS_SAFE_COLUMNS_SELECT =
+  'id,user_id,username,name_ar,name_en,description_ar,description_en,logo_url,cover_url,phone,email,website,country_id,city_id,address,latitude,longitude,membership_tier,is_verified,is_active,rating_avg,rating_count,created_at,updated_at,business_number,ref_id,additional_number,region,district,street_name,building_number,short_description_ar,short_description_en,unified_number,contact_person,mobile,customer_service_phone,approval_status,submitted_at,reviewed_at,reviewed_by,username_status,onboarding_completion,is_demo,vat_number,region_en,district_en,street_name_en,address_en,account_manager_name,account_manager_phone,account_manager_email,account_manager_position,last_active_at,cr_document_path,cr_document_mime,cr_document_size,cr_document_uploaded_at,cr_document_uploaded_by,cr_scan_at,cr_legal_entity,cr_issue_date,cr_expiry_date,legacy_ref_id,country_code,default_currency,default_locale,timezone,entity_type,capabilities,phone_country_code,phone_national,short_address,floor_number,unit_number,unit_type,placeholder_owner,seo_title_ar,seo_title_en,seo_description_ar,seo_description_en,seo_keywords,og_image,logo_image_asset_id,cover_image_asset_id,logo_image_variants,cover_image_variants';
+
+/**
  * SECURITY DEFINER RPC returning the most recently created business
  * owned by `userId` as a JSON object (full row, incl. sensitive cols).
  * Authorized only when caller is `userId` or an admin.
