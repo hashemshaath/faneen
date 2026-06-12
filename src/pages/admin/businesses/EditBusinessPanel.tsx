@@ -72,7 +72,16 @@ export interface EditBusinessPanelProps {
   toE164: (v: { countryCode: string; national: string }) => string;
 }
 
-export const EditBusinessPanel: React.FC<EditBusinessPanelProps> = (props) => {
+export const EditBusinessPanel: React.FC<EditBusinessPanelProps> = ({
+  isRTL, language, editingBiz, editForm, setField, setEditingBiz,
+  editCityName, contractBusinessIds, translationCompleteness,
+  autoFillTranslations, autoTranslating, businesses, allServices, services,
+  branches, branchForm, setBranchForm, editingBranchId, setEditingBranchId,
+  emptyBranch, tiers, updateBizMutation, portfolioData,
+  addPortfolioMutation, deletePortfolioMutation, saveBranchMutation,
+  deleteBranchMutation, toggleBranchMutation, translateBranchName,
+  branchTranslating, openServices, parsePhoneValue, toE164,
+}) => {
   return (
           <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
