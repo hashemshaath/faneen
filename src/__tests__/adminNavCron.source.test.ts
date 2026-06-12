@@ -13,7 +13,8 @@ import { resolve } from 'path';
  */
 
 const root = resolve(__dirname, '../..');
-const SIDEBAR = readFileSync(resolve(root, 'src/components/dashboard/DashboardSidebar.tsx'), 'utf8');
+const SIDEBAR = readFileSync(resolve(root, 'src/components/dashboard/DashboardSidebar.tsx'), 'utf8')
+  + '\n' + readFileSync(resolve(root, 'src/modules/admin-shell/navigation/adminNavigation.ts'), 'utf8');
 const APP = readFileSync(resolve(root, 'src/App.tsx'), 'utf8');
 const PAGE = readFileSync(resolve(root, 'src/pages/admin/AdminCronRuns.tsx'), 'utf8');
 
