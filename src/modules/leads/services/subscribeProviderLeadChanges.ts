@@ -27,16 +27,15 @@ export function subscribeProviderLeadChanges({
   const channel = supabase
     .channel(`provider-leads-${businessIds.join('-').slice(0, 24)}`)
     .on(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      'postgres_changes' as any,
+      'postgres_changes',
       {
         event: '*',
         schema: 'public',
         table: 'lead_requests',
         filter: `business_id=in.(${businessIds.join(',')})`,
       },
-      (payload: { eventType: ProviderLeadChangeEventType }) => {
-        onChange({ eventType: payload.eventType });
+      (payload) => {
+        onChange({ eventType: payload.eventType as ProviderLeadChangeEventType });
       },
     )
     .subscribe();
