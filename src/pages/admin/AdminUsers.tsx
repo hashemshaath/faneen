@@ -53,6 +53,8 @@ import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/
 import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
+import { KpiCard, formatDate, formatRelative } from './users/_shared';
+import { OverviewTab } from './users/OverviewTab';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 /**
