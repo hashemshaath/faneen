@@ -54,7 +54,11 @@ describe('WORKSPACE-CONTEXT-4D — quotes / leads', () => {
     // Active entity must be a member of the pre-existing managed list
     // (no widening, no escalation).
     expect(src).toMatch(/allIds\.includes\(active_entity_id\)/);
-    expect(src).toContain("queryKey: ['provider-leads', ids.join(','), filter, active_entity_id]");
+    // D4: status filter is now applied client-side (kept out of the query
+    // key so live counts/sparkline can be computed from a single window).
+    // The active entity id must remain in the key so a workspace switch
+    // forces a refetch.
+    expect(src).toMatch(/queryKey:\s*\[\s*['"]provider-leads['"]\s*,\s*ids\.join\(\s*['"],['"]\s*\)\s*,\s*active_entity_id\s*\]/);
   });
 
   it('DashboardLeads preserves managed-business + lead service wrappers', () => {
