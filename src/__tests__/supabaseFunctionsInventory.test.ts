@@ -118,6 +118,37 @@ const INVENTORY: Record<string, Classification> = {
 
   // --- locations / addresses ---
   'national-address-lookup': 'frontend',
+
+  // --- google integration (frontend wrappers under src/modules/google/services/**) ---
+  'google-health': 'frontend',
+  'google-places': 'frontend',
+  'google-geocoding': 'frontend',
+  'google-routes': 'frontend',
+  'google-address-validation': 'frontend',
+
+  // --- integration health probes (admin-only diagnostic endpoints) ---
+  'firecrawl-health': 'admin',
+  'lovable-ai-health': 'admin',
+  'moyasar-health': 'admin',
+  'resend-health': 'admin',
+  'resend-status': 'admin',
+
+  // --- admin data enrichment (admin-only manual flows) ---
+  'admin-enrichment-apply': 'admin',
+  'admin-enrichment-cache-clear': 'admin',
+  'admin-enrichment-enhance': 'admin',
+  'admin-enrichment-fetch': 'admin',
+  'admin-enrichment-search': 'admin',
+
+  // --- data enrichment pipeline (admin-only governance flows) ---
+  'data-enrichment-approve': 'admin',
+  'data-enrichment-ingest': 'admin',
+  'data-enrichment-quality': 'admin',
+  'data-enrichment-resolve': 'admin',
+  'data-enrichment-run': 'admin',
+
+  // --- rentals (scheduled expiry scan) ---
+  'rental-expiry-scan': 'cron',
 };
 
 const CRITICAL = [
