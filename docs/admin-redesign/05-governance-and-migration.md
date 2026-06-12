@@ -37,7 +37,7 @@ Nine admin list surfaces are the migration target. Migrate one at a time; each P
 | #  | Page                              | Route                              | Status      |
 | -- | --------------------------------- | ---------------------------------- | ----------- |
 | 1  | Businesses                        | `/admin/businesses`                | ✅ already compliant (`DashboardLayout` + `AdminPageHeader`); full template adoption deferred — 3,069 LOC, high blast radius |
-| 2  | Users                             | `/admin/users`                     | ⏭ deferred — 2,790 LOC; needs dedicated multi-PR refactor |
+| 2  | Users                             | `/admin/users`                     | 📋 PR-1 plan landed — see `06-admin-users-refactor.md` (6 PRs, lowest-risk first) |
 | 3  | Memberships                       | `/admin/memberships`               | ✅ partial — tabbed hub via `TabbedShell`; overview KPIs unified to `<AdminKpiCard>`. Template N/A. |
 | 4  | Identity Center                   | `/admin/identity`                  | ✅ shipped  |
 | 5  | Contracts                         | `/admin/contracts`                 | ✅ shipped (reference impl) |
