@@ -639,7 +639,9 @@ const AdminBusinesses = () => {
         short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
         phone: editForm.phone || null, email: editForm.email || null, website: editForm.website || null,
-        address: editForm.address || null, national_id: editForm.national_id || null,
+        address: editForm.address || null,
+        // national_id is owner+admin-only via column-level GRANT —
+        // written via updateBusinessSensitiveFields RPC below.
         additional_number: editForm.additional_number || null, region: editForm.region || null,
         district: editForm.district || null, street_name: editForm.street_name || null,
         building_number: editForm.building_number || null, latitude: editForm.latitude || null,
