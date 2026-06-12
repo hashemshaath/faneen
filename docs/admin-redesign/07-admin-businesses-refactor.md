@@ -80,7 +80,8 @@ and still ship.
 | **PR-5** | Extract `BusinessFiltersBar` → `businesses/BusinessFiltersBar.tsx`; adopt `<AdminFiltersBar>`. | ~180   | Low  |
 | **PR-6** | Extract `CreateBusinessPanel` → `businesses/CreateBusinessPanel.tsx` (inline; no dialog).   | ~400      | Med  |
 | **PR-7** | Extract `EditBusinessPanel` (tabs: Profile, Owner, Membership, Services, Branches).         | ~750      | High |
-| **PR-8** | Governance pass — swap `StatCard` → `<AdminKpiCard>`, wrap shell in `<AdminListPageTemplate>`, bespoke badges → `<AdminStatusBadge>`. | ~250 | Low |
+| **PR-4 (early-win)** ✅ shipped | **Dead-code removal**: local `StatCard` was unreferenced (KPI tiles already use `<AdminKpiCard>`). Removed component + `TrendingUp` import. Net: 2,972 → 2,948 LOC. Defers the bulk `BusinessTable` extraction to PR-4-main. |
+| **PR-8** | Governance pass — wrap shell in `<AdminListPageTemplate>`, bespoke badges → `<AdminStatusBadge>`. | ~200 | Low |
 
 Each PR keeps **all** state + mutations in the parent (`AdminBusinesses`)
 and passes them as props to the extracted child. This mirrors the
