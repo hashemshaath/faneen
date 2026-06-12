@@ -13,6 +13,9 @@ const APP_SRC = fs.readFileSync(
 const SIDEBAR_SRC = fs.readFileSync(
   path.resolve(__dirname, '../../../components/dashboard/DashboardSidebar.tsx'),
   'utf8',
+) + '\n' + readFileSync(
+  path.resolve(__dirname, '../../../modules/admin-shell/navigation/adminNavigation.ts'),
+  'utf8',
 );
 
 describe('AdminBarcodeRegistry route + admin protection', () => {

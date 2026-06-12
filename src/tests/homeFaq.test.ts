@@ -71,7 +71,8 @@ describe('home FAQ — admin route + sidebar registration', () => {
     expect(app).toMatch(/AdminHomeFaq/);
   });
   it('Sidebar links to /admin/home-faq', () => {
-    const sb = readFileSync(resolve(__dirname, '..', 'components/dashboard/DashboardSidebar.tsx'), 'utf8');
+    const sb = readFileSync(resolve(__dirname, '..', 'components/dashboard/DashboardSidebar.tsx'), 'utf8')
+      + '\n' + readFileSync(resolve(__dirname, '..', 'modules/admin-shell/navigation/adminNavigation.ts'), 'utf8');
     expect(sb).toMatch(/\/admin\/home-faq/);
   });
 });
