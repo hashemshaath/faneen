@@ -4,7 +4,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { getOwnerBusiness, updateBusinessById } from '@/modules/businesses';
+import {
+  getOwnerBusiness,
+  updateBusinessById,
+  getBusinessSensitiveFields,
+  updateBusinessSensitiveFields,
+} from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -54,11 +59,15 @@ const DashboardBusinessDraft: React.FC = () => {
       if (!user) return null;
       const { data } = await getOwnerBusiness<DraftRow>({
         userId: user.id,
-        select: 'id, ref_id, approval_status, name_ar, name_en, short_description_ar, description_ar, phone, mobile, email, address, region, national_id, unified_number',
+        // national_id excluded — fetched separately via owner+admin-only RPC.
+        select: 'id, ref_id, approval_status, name_ar, name_en, short_description_ar, description_ar, phone, mobile, email, address, region, unified_number',
         orderBy: { column: 'created_at', ascending: false },
         limit: 1,
       });
-      return (data as DraftRow | null) ?? null;
+      const base = (data as DraftRow | null) ?? null;
+      if (!base) return null;
+      const { data: sens } = await getBusinessSensitiveFields(base.id);
+      return { ...base, national_id: sens?.national_id ?? null };
     },
     staleTime: 15_000,
   });
@@ -96,12 +105,18 @@ const DashboardBusinessDraft: React.FC = () => {
     setSaving(true);
     try {
       const payload = FIELDS.reduce<Record<string, string | null>>((acc, k) => {
+        if (k === 'national_id') return acc; // routed through sensitive-fields RPC
         const v = ((form[k] ?? '') as string).trim();
         acc[k] = v.length > 0 ? v : null;
         return acc;
       }, {});
       const { error } = await updateBusinessById({ id: business.id, values: payload });
       if (error) throw error;
+      const natRaw = ((form.national_id ?? '') as string).trim();
+      const { error: sensErr } = await updateBusinessSensitiveFields(business.id, {
+        national_id: natRaw.length > 0 ? natRaw : null,
+      });
+      if (sensErr) throw sensErr;
       toast.success(isRTL ? 'تم حفظ بيانات المنشأة' : 'Business details saved');
       await refetch();
     } catch (err: unknown) {

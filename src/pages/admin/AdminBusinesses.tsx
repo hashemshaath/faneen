@@ -18,6 +18,8 @@ import {
   bulkSetBusinessesActive,
   bulkSetBusinessesVerified,
   insertBusiness,
+  updateBusinessSensitiveFields,
+  BUSINESS_SAFE_COLUMNS_SELECT,
 } from '@/modules/businesses';
 import { getProfileByEmail } from '@/modules/users/services/getProfileByEmail';
 import { getProfileByRefId, searchProfilesByOr } from '@/modules/users';
@@ -408,7 +410,10 @@ const AdminBusinesses = () => {
     queryKey: ['admin-businesses'],
     queryFn: async () => {
       const { data, error } = await listAdminBusinesses<Database['public']['Tables']['businesses']['Row']>({
-        select: '*',
+        // Sensitive cols (national_id, approval_notes, cr_*) excluded —
+        // column-level GRANTs block them for the authenticated role.
+        // Loaded on demand via getBusinessSensitiveFields when editing.
+        select: BUSINESS_SAFE_COLUMNS_SELECT,
         orderBy: { column: 'created_at', ascending: false },
       });
       if (error) throw error;
@@ -634,7 +639,9 @@ const AdminBusinesses = () => {
         short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
         phone: editForm.phone || null, email: editForm.email || null, website: editForm.website || null,
-        address: editForm.address || null, national_id: editForm.national_id || null,
+        address: editForm.address || null,
+        // national_id is owner+admin-only via column-level GRANT —
+        // written via updateBusinessSensitiveFields RPC below.
         additional_number: editForm.additional_number || null, region: editForm.region || null,
         district: editForm.district || null, street_name: editForm.street_name || null,
         building_number: editForm.building_number || null, latitude: editForm.latitude || null,
@@ -664,6 +671,11 @@ const AdminBusinesses = () => {
       };
       const { error } = await updateBusinessById({ id, values: payload });
       if (error) throw error;
+      // Sensitive cols (national_id) must go through the owner+admin-only RPC.
+      const { error: sensErr } = await updateBusinessSensitiveFields(id, {
+        national_id: editForm.national_id || null,
+      });
+      if (sensErr) throw sensErr;
       // R4E-3: detect sensitive toggles and apply them through guarded wrappers.
       const activeChanged = typeof editForm.is_active === 'boolean'
         && editForm.is_active !== editingBiz.is_active;
@@ -864,7 +876,7 @@ const AdminBusinesses = () => {
       }
       const { data, error } = await insertBusiness({
         payload,
-        select: '*',
+        select: BUSINESS_SAFE_COLUMNS_SELECT,
         terminal: 'single',
       });
       if (error) throw error;
@@ -1247,8 +1259,17 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Edit Open ─── */
-  const openEdit = (biz: Record<string, unknown>) => {
+  const openEdit = async (biz: Record<string, unknown>) => {
     setServicesPanel(null);
+    // Fetch sensitive cols (national_id) via owner+admin-only RPC since
+    // the bulk list no longer carries them.
+    const bizId = (biz.id as string | undefined) ?? '';
+    let nationalIdValue = '';
+    if (bizId) {
+      const { getBusinessSensitiveFields } = await import('@/modules/businesses');
+      const { data: sens } = await getBusinessSensitiveFields(bizId);
+      nationalIdValue = sens?.national_id ?? '';
+    }
     const bizImg = biz as AdminBusinessImageColumns;
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
@@ -1266,7 +1287,7 @@ const AdminBusinesses = () => {
       seo_description_ar: biz.seo_description_ar || '', seo_description_en: biz.seo_description_en || '',
       seo_keywords: Array.isArray(biz.seo_keywords) ? biz.seo_keywords.join(', ') : '',
       og_image: biz.og_image || '',
-      national_id: biz.national_id || '', additional_number: biz.additional_number || '',
+      national_id: nationalIdValue, additional_number: biz.additional_number || '',
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
       region_en: biz.region_en || '', district_en: biz.district_en || '',

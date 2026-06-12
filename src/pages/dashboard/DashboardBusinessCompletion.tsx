@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, getBusinessSensitiveFields } from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -237,11 +237,19 @@ const DashboardBusinessCompletion: React.FC = () => {
         userId: user.id,
       // Phase 18f — `sectors`/`sub_services` no longer selected; taxonomy
       // presence is fetched separately via `useBusinessTaxonomyPresence`.
-      select: 'id, ref_id, username, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, national_id, unified_number, updated_at',
+      // approval_notes / national_id are owner+admin-only — fetched via RPC below.
+      select: 'id, ref_id, username, approval_status, onboarding_completion, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, unified_number, updated_at',
         orderBy: { column: 'created_at', ascending: false },
         limit: 1,
       });
-      return (data as BusinessRow | null) ?? null;
+      const base = (data as BusinessRow | null) ?? null;
+      if (!base) return null;
+      const { data: sens } = await getBusinessSensitiveFields(base.id);
+      return {
+        ...base,
+        approval_notes: sens?.approval_notes ?? null,
+        national_id: sens?.national_id ?? null,
+      } as BusinessRow;
     },
     staleTime: 30_000,
   });

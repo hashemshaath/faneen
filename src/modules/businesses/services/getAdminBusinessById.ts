@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { BUSINESS_SAFE_COLUMNS_SELECT } from './businessSensitive';
 
 /**
  * Canonical wrapper for admin single-row business reads by id.
@@ -18,7 +19,11 @@ export interface GetAdminBusinessByIdOptions {
 export async function getAdminBusinessById<T = unknown>(
   options: GetAdminBusinessByIdOptions,
 ): Promise<{ data: T | null; error: unknown }> {
-  const { id, select = '*', terminal = 'maybeSingle' } = options;
+  // Default select excludes sensitive cols (cr_scan_*, cr_document_url,
+  // national_id, approval_notes, cr_owner_name) — those are owner+admin
+  // only via column-level GRANT and must be fetched via
+  // `getBusinessSensitiveFields` or `getBusinessFullById`.
+  const { id, select = BUSINESS_SAFE_COLUMNS_SELECT, terminal = 'maybeSingle' } = options;
   const base = supabase.from('businesses').select(select).eq('id', id);
   const { data, error } =
     terminal === 'single' ? await base.single() : await base.maybeSingle();

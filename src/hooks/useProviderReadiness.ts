@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, getBusinessSensitiveFields } from '@/modules/businesses';
 import { supabase } from '@/integrations/supabase/client';
 
 type ReadinessBusiness = {
@@ -42,7 +42,8 @@ export function useProviderReadiness(userId: string | undefined) {
       const { data } = await getOwnerBusiness<ReadinessBusiness>({
         userId: userId!,
         select:
-          'id, name_ar, username, logo_url, description_ar, short_description_ar, city_id, phone, mobile, email, address, approval_status, approval_notes, onboarding_completion, username_status, is_active',
+          // approval_notes excluded — fetched separately via owner-only RPC.
+          'id, name_ar, username, logo_url, description_ar, short_description_ar, city_id, phone, mobile, email, address, approval_status, onboarding_completion, username_status, is_active',
         orderBy: { column: 'created_at', ascending: true },
         limit: 1,
       });
@@ -57,7 +58,14 @@ export function useProviderReadiness(userId: string | undefined) {
         .eq('business_id', data.id)
         .eq('role', 'primary_activity')
         .limit(1);
-      return { ...data, hasPrimaryActivity: (txRows?.length ?? 0) > 0 };
+      // approval_notes lives behind owner+admin RPC — fetch best-effort
+      // (will silently return null for non-authorized roles).
+      const { data: sens } = await getBusinessSensitiveFields(data.id);
+      return {
+        ...data,
+        approval_notes: sens?.approval_notes ?? null,
+        hasPrimaryActivity: (txRows?.length ?? 0) > 0,
+      };
     },
   });
 

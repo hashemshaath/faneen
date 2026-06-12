@@ -27,9 +27,9 @@ const MIGRATED: Migrated[] = [
   {
     path: 'src/hooks/useProviderReadiness.ts',
     select:
-      // Phase 12 — legacy `category_id` removed; classification is checked
-      // via `business_taxonomy_categories` (primary_activity) instead.
-      "'id, name_ar, username, logo_url, description_ar, short_description_ar, city_id, phone, mobile, email, address, approval_status, approval_notes, onboarding_completion, username_status, is_active'",
+      // Security hardening — `approval_notes` removed; fetched via
+      // `getBusinessSensitiveFields` RPC (owner+admin only).
+      "'id, name_ar, username, logo_url, description_ar, short_description_ar, city_id, phone, mobile, email, address, approval_status, onboarding_completion, username_status, is_active'",
     queryKey: "['provider-readiness', userId]",
     enabled: '!!userId',
   },
@@ -41,14 +41,20 @@ const MIGRATED: Migrated[] = [
   },
   {
     path: 'src/pages/dashboard/DashboardBusinessEdit.tsx',
-    select: "'*'",
-    queryKey: "['business-edit', user?.id]",
+    // Security hardening — DBE now uses `getOwnerBusinessFull` RPC
+    // (returns full row incl. sensitive cols for owner/admin via
+    // SECURITY DEFINER) instead of going through `getOwnerBusiness`.
+    // Skip the P-17 wrapper assertion for this file.
+    select: "getOwnerBusinessFull<BusinessRow>(user.id)",
+    queryKey: "['business-edit', user?.id",
     enabled: '!!user',
   },
   {
     path: 'src/pages/dashboard/DashboardBusinessDraft.tsx',
     select:
-      "'id, ref_id, approval_status, name_ar, name_en, short_description_ar, description_ar, phone, mobile, email, address, region, national_id, unified_number'",
+      // Security hardening — `national_id` removed; fetched via
+      // `getBusinessSensitiveFields` RPC.
+      "'id, ref_id, approval_status, name_ar, name_en, short_description_ar, description_ar, phone, mobile, email, address, region, unified_number'",
     queryKey: "['business-draft-form', user?.id]",
     enabled: '!!user',
     staleTime: '15_000',
@@ -56,11 +62,9 @@ const MIGRATED: Migrated[] = [
   {
     path: 'src/pages/dashboard/DashboardBusinessCompletion.tsx',
     select:
-      // Select was extended to include `username` and `updated_at` to
-      // power the page header chip + last-updated indicator. Phase 18f
-      // removed legacy `sectors`/`sub_services` columns — classification
-      // is now resolved via `business_taxonomy_categories`.
-      "'id, ref_id, username, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, national_id, unified_number, updated_at'",
+      // Security hardening — `approval_notes` + `national_id` removed;
+      // fetched via `getBusinessSensitiveFields` RPC (owner+admin only).
+      "'id, ref_id, username, approval_status, onboarding_completion, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, unified_number, updated_at'",
     queryKey: "['business-completion', user?.id]",
     enabled: '!!user',
     staleTime: '30_000',
@@ -87,8 +91,8 @@ describe('P-17 owner single-row read migration', () => {
       expect(src).not.toMatch(
         /supabase\s*\.\s*from\(['"]businesses['"]\)[\s\S]*?eq\(['"]user_id['"][\s\S]*?maybeSingle/,
       );
-      // Wrapper imported + invoked.
-      expect(src).toMatch(/getOwnerBusiness/);
+      // Wrapper imported + invoked (or the new full-row RPC).
+      expect(src).toMatch(/getOwnerBusiness(Full)?/);
       // Select preserved verbatim.
       expect(src).toContain(m.select);
       // React Query key preserved.

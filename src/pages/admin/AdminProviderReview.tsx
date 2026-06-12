@@ -7,7 +7,12 @@ import {
   ArrowUpDown, Building2, ExternalLink, Clock, RefreshCw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { listAdminBusinesses, countBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
+import {
+  listAdminBusinesses,
+  countBusinesses,
+  getBusinessSensitiveFields,
+  type ListAdminBusinessesFilter,
+} from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -59,7 +64,10 @@ export default function AdminProviderReview() {
         // Phase 18f — `sectors`/`sub_services` removed from select; activity
         // classification now comes from `business_taxonomy_categories` and is
         // rendered by ProviderReviewDetailPanel via useBusinessTaxonomyDisplay.
-        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date,is_active,is_demo',
+        // Sensitive cols (approval_notes, national_id, cr_document_url,
+        // cr_owner_name) are owner+admin-only via column-level GRANT —
+        // fetched per-selected-row via getBusinessSensitiveFields below.
+        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,onboarding_completion,submitted_at,reviewed_at,published_at,created_at,unified_number,vat_number,cr_document_uploaded_at,cr_legal_entity,cr_issue_date,cr_expiry_date,is_active,is_demo',
         orderBy: [
           { column: 'submitted_at', ascending: false, nullsFirst: false },
           { column: 'created_at', ascending: false },
@@ -136,13 +144,45 @@ export default function AdminProviderReview() {
     [filtered, selectedId],
   );
 
+  // Sensitive fields (approval_notes, national_id, cr_document_url,
+  // cr_owner_name) live behind a SECURITY DEFINER RPC. Fetch them only
+  // for the currently selected row.
+  const { data: selectedSensitive } = useQuery({
+    queryKey: ['admin-provider-review', 'sensitive', selectedId],
+    enabled: !!selectedId,
+    queryFn: async () => {
+      if (!selectedId) return null;
+      const { data } = await getBusinessSensitiveFields(selectedId);
+      return data;
+    },
+    staleTime: 30_000,
+  });
+
+  const selectedFull = useMemo(() => {
+    if (!selected) return null;
+    return {
+      ...selected,
+      approval_notes: selectedSensitive?.approval_notes ?? null,
+      national_id: selectedSensitive?.national_id ?? selected.national_id ?? null,
+      cr_document_url: selectedSensitive?.cr_document_url ?? null,
+      cr_owner_name: selectedSensitive?.cr_owner_name ?? null,
+    } as ProviderRow;
+  }, [selected, selectedSensitive]);
+
   // Auto-select first row when filter/sort changes and nothing is selected.
   useEffect(() => {
     if (!selectedId && filtered.length > 0) {
       setSelectedId(filtered[0].id);
-      setNotes(filtered[0].approval_notes ?? '');
+      setNotes('');
     }
   }, [filtered, selectedId]);
+
+  // Sync notes input once sensitive data arrives for the selected row.
+  useEffect(() => {
+    if (selectedId && selectedSensitive) {
+      setNotes(selectedSensitive.approval_notes ?? '');
+    }
+  }, [selectedId, selectedSensitive]);
 
   const approvalMutation = useMutation({
     mutationFn: async (vars: { id: string; status: ApprovalStatus; notes?: string }) => {
@@ -445,7 +485,7 @@ export default function AdminProviderReview() {
                   row={r}
                   active={selectedId === r.id}
                   language={language === 'ar' ? 'ar' : 'en'}
-                  onSelect={(row) => { setSelectedId(row.id); setNotes(row.approval_notes ?? ''); }}
+                  onSelect={(row) => { setSelectedId(row.id); setNotes(''); /* hydrated by sensitive-fields query */ }}
                 />
               ))}
             </CardContent>
@@ -454,7 +494,7 @@ export default function AdminProviderReview() {
           {/* Detail */}
           <Card className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto">
             <ProviderReviewDetailPanel
-              selected={selected}
+              selected={selectedFull}
               notes={notes}
               setNotes={setNotes}
               language={language === 'ar' ? 'ar' : 'en'}

@@ -13,7 +13,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
-import { getOwnerBusiness, updateBusinessById, listBusinessesByIds } from '@/modules/businesses';
+import {
+  updateBusinessById,
+  getOwnerBusinessFull,
+  getBusinessFullById,
+  updateBusinessSensitiveFields,
+} from '@/modules/businesses';
 import {
   NationalAddressForm,
   upsertPrimaryAddress,
@@ -114,18 +119,11 @@ const DashboardBusinessEdit: React.FC = () => {
     queryFn: async (): Promise<BusinessRow | null> => {
       if (!user) return null;
       if (activeOwnerEntityId) {
-        const { data, error } = await listBusinessesByIds<BusinessRow>({
-          ids: [activeOwnerEntityId], select: '*',
-        });
+        const { data, error } = await getBusinessFullById<BusinessRow>(activeOwnerEntityId);
         if (error) throw error;
-        return ((data ?? [])[0] as BusinessRow | undefined) ?? null;
+        return (data as BusinessRow | null) ?? null;
       }
-      const { data, error } = await getOwnerBusiness<BusinessRow>({
-        userId: user.id,
-        select: '*',
-        orderBy: { column: 'created_at', ascending: false },
-        limit: 1,
-      });
+      const { data, error } = await getOwnerBusinessFull<BusinessRow>(user.id);
       if (error) throw error;
       return (data as BusinessRow | null) ?? null;
     },
@@ -275,10 +273,10 @@ const DashboardBusinessEdit: React.FC = () => {
         floor_number: form.floor_number || null,
         unit_number: form.unit_number || null,
         unit_type: form.unit_type || null,
-        national_id: form.national_id || null, unified_number: form.unified_number || null,
+        // national_id + cr_owner_name routed through sensitive-fields RPC below.
+        unified_number: form.unified_number || null,
         vat_number: form.vat_number || null,
         cr_legal_entity: form.cr_legal_entity || null,
-        cr_owner_name: form.cr_owner_name || null,
         cr_issue_date: form.cr_issue_date || null,
         cr_expiry_date: form.cr_expiry_date || null,
         account_manager_name: form.account_manager_name || null,
@@ -288,6 +286,14 @@ const DashboardBusinessEdit: React.FC = () => {
       };
       const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
+      // Sensitive fields are owner/admin only and go through the dedicated
+      // SECURITY DEFINER RPC. Column-level GRANTs block direct .update() of
+      // these columns for the authenticated role.
+      const { error: sensError } = await updateBusinessSensitiveFields(form.id, {
+        national_id: form.national_id || null,
+        cr_owner_name: form.cr_owner_name || null,
+      });
+      if (sensError) throw sensError;
       // Phase 18g — legacy `businesses.sub_services` sync removed.
       // Sectors/services are taxonomy-only now and managed via
       // BusinessTaxonomySection (writes to `business_taxonomy_categories`)
