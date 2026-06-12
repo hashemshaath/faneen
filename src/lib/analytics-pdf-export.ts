@@ -113,7 +113,6 @@ export async function exportAnalyticsPdf(input: AnalyticsExportInput): Promise<v
     rows: { name: string; value: number }[],
   ) => {
     if (!rows.length) return;
-    // @ts-expect-error autotable augments doc
     const last = doc.lastAutoTable?.finalY ?? 60;
     autoTable(doc, {
       startY: last + 6,
@@ -135,7 +134,6 @@ export async function exportAnalyticsPdf(input: AnalyticsExportInput): Promise<v
 
   // ── Revenue series (last N) ─────────────────────────────────────────
   if (input.revenueSeries.length) {
-    // @ts-expect-error autotable augments doc
     const last = doc.lastAutoTable?.finalY ?? 80;
     autoTable(doc, {
       startY: last + 6,
