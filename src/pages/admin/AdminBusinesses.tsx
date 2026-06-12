@@ -126,30 +126,6 @@ import {
   exportBusinessesCsv as exportCSV,
 } from './businesses/_shared';
 
-/* ─── Stat Card Component ─── */
-const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg }: {
-  label: string; value: number; icon: React.ElementType; trend?: string; gradient: string; iconBg: string;
-}) => (
-  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center transition-transform group-hover:scale-110 shrink-0`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-2xl font-heading font-bold leading-none">{value}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
-      </div>
-      {trend && (
-        <div className="flex items-center gap-0.5 text-[10px] text-success bg-success/10 px-1.5 py-0.5 rounded-full font-medium">
-          <TrendingUp className="w-3 h-3" />
-          {trend}
-        </div>
-      )}
-    </div>
-  </div>
-));
-StatCard.displayName = 'StatCard';
-
 const AdminBusinesses = () => {
   useNoIndex();
   const { isRTL, language } = useLanguage();
