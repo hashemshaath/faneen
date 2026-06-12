@@ -131,9 +131,11 @@ Each PR is independently mergeable and revertable. **No PR rewrites business log
 - **Parent net change**: `AdminUsers.tsx` 2,484 → 1,861 LOC (−623). Local `BusinessInfo`, `BusinessLink`, `StaffRole`, and the four config maps stay in the parent (still consumed by `UserRow` / `UserDetailPanel`); the child accepts structurally-compatible shared types, so no duplication at runtime.
 - **Behavioural delta**: none.
 
-### PR-6b — `<AlertDialog>` for inline delete confirm (deferred)
+### PR-6b — `<AlertDialog>` for inline delete confirm ✅ shipped
 
-- The inline delete confirm panel (now around the password/delete block in `AdminUsers.tsx`) still uses a plain button. Wrapping it in `<AlertDialog>` is the single allowed dialog exception in the governance contract — deferred to a follow-up since it is independent of the edit-panel extraction.
+- The inline delete-confirm panel (`activePanel?.type === 'delete'`) is now wrapped in shadcn's `<AlertDialog>` with `open` driven by `activePanel.type` and `onOpenChange` routing back through `closePanel` (guarded against close while `deleteUserMutation.isPending`).
+- `<AlertDialogCancel>` and `<AlertDialogAction>` replace the plain `Button`s; the action calls `e.preventDefault()` before firing the mutation so the dialog only closes on the mutation's own `closePanel()` in `onSuccess`. Destructive styling (`bg-destructive text-destructive-foreground`) is preserved.
+- This is the **single allowed dialog exception** in the governance contract — every other interaction in `AdminUsers` stays inline. Memory rule "STRICTLY NO POPUPS/DIALOGS" is upheld for non-destructive flows.
 
 ### PR-7 — Governance compliance pass (≈80 LOC delta, no extractions)
 
