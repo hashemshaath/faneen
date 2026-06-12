@@ -25,7 +25,7 @@ import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGe
 import { getManagedBusinessesForUser } from '@/modules/leads/services/getManagedBusinessesForUser';
 import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
-import { supabase } from '@/integrations/supabase/client';
+import { subscribeProviderLeadChanges } from '@/modules/leads/services/subscribeProviderLeadChanges';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -229,16 +229,16 @@ const DashboardLeads: React.FC = () => {
   // toast when a brand-new lead arrives so the provider notices immediately.
   useEffect(() => {
     if (ids.length === 0) return;
-    const ch = supabase
-      .channel(`provider-leads-${ids.join('-').slice(0, 24)}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_requests', filter: `business_id=in.(${ids.join(',')})` }, (payload) => {
+    const unsubscribe = subscribeProviderLeadChanges({
+      businessIds: ids,
+      onChange: (payload) => {
         if (payload.eventType === 'INSERT') {
           toast.success(isRTL ? 'وصل طلب جديد' : 'New service request received', { duration: 4000 });
         }
         qc.invalidateQueries({ queryKey: ['provider-leads'] });
-      })
-      .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+      },
+    });
+    return unsubscribe;
   }, [ids, qc, isRTL]);
 
   // Deep-link: ?ref=LR-... or ?id=<uuid> auto-opens the matching lead.
