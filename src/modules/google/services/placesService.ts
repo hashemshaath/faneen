@@ -1,7 +1,7 @@
 // GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1
 // Thin client wrapper — Places API (New) calls via `google-places` edge fn.
 import { supabase } from "@/integrations/supabase/client";
-import type { LatLng } from "./types";
+import type { LatLng } from "../types";
 
 export interface PlacesSearchTextArgs {
   textQuery: string;

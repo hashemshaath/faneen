@@ -1,6 +1,6 @@
 // GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1
 import { supabase } from "@/integrations/supabase/client";
-import type { LatLng } from "./types";
+import type { LatLng } from "../types";
 
 export type TravelMode = "DRIVE" | "WALK" | "BICYCLE" | "TWO_WHEELER";
 
