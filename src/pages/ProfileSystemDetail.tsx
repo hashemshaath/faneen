@@ -129,7 +129,15 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
 
   const img = images[index];
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image lightbox"
+      tabIndex={-1}
+    >
       <button onClick={onClose} className="absolute top-3 end-3 sm:top-4 sm:end-4 text-white/70 hover:text-white z-50 p-2 bg-white/10 rounded-full backdrop-blur-sm">
         <X className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>

@@ -384,7 +384,15 @@ export const PortfolioTab = ({ businessId }: { businessId: string }) => {
       </div>
 
       {activeItem && selectedIndex !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-3 sm:p-4" onClick={() => setSelectedIndex(null)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-3 sm:p-4"
+          onClick={() => setSelectedIndex(null)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setSelectedIndex(null); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Media viewer"
+          tabIndex={-1}
+        >
           <button className="absolute end-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-2xl font-bold text-white/70 backdrop-blur-sm hover:text-white">
             ✕
           </button>
