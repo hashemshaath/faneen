@@ -359,12 +359,19 @@ const RenderMenu: React.FC<{
   isRTL: boolean;
   closeMobile: () => void;
   bestActiveUrl: string | null;
-}> = ({ items, collapsed, isRTL, closeMobile, bestActiveUrl }) => (
+  pinControl?: {
+    isPinned: (url: string) => boolean;
+    canPin: (url: string) => boolean;
+    toggle: (url: string) => void;
+  };
+}> = ({ items, collapsed, isRTL, closeMobile, bestActiveUrl, pinControl }) => (
   <SidebarMenu>
     {items.map((item) => {
       const label = isRTL ? item.label.ar : item.label.en;
       const isActive = item.url === bestActiveUrl;
       const badgeLabel = item.badge ? (isRTL ? item.badge.ar : item.badge.en) : null;
+      const pinnable = !collapsed && pinControl?.canPin(item.url);
+      const pinned = pinnable ? pinControl!.isPinned(item.url) : false;
       return (
         <SidebarMenuItem key={item.url + item.label.en}>
           <SidebarMenuButton
@@ -396,6 +403,31 @@ const RenderMenu: React.FC<{
               } />
               {!collapsed && <span className="ms-2 truncate text-[13px]">{label}</span>}
               {!collapsed && badgeLabel ? <BadgePill tone={item.badge?.tone}>{badgeLabel}</BadgePill> : null}
+              {pinnable ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    pinControl!.toggle(item.url);
+                  }}
+                  aria-label={
+                    pinned
+                      ? (isRTL ? 'إلغاء التثبيت' : 'Unpin from favorites')
+                      : (isRTL ? 'تثبيت في المفضّلة' : 'Pin to favorites')
+                  }
+                  aria-pressed={pinned}
+                  data-testid={`admin-pin-${item.url}`}
+                  className={
+                    'ms-1 inline-flex h-6 w-6 items-center justify-center rounded-md transition-opacity ' +
+                    (pinned
+                      ? 'opacity-90 text-primary hover:bg-sidebar-accent/70'
+                      : 'opacity-0 group-hover/qit-nav:opacity-70 text-sidebar-foreground/60 hover:text-foreground hover:bg-sidebar-accent/70')
+                  }
+                >
+                  {pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                </button>
+              ) : null}
             </NavLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
