@@ -22,6 +22,8 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarBrand } from '@/components/dashboard/navigation/SidebarBrand';
 import { SidebarQuickCreate } from '@/components/dashboard/navigation/SidebarQuickCreate';
 import { SidebarFavorites } from '@/components/dashboard/navigation/SidebarFavorites';
+import { AdminSidebarFavorites } from '@/components/dashboard/navigation/AdminSidebarFavorites';
+import { useAdminFavorites } from '@/hooks/useAdminFavorites';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut,
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
@@ -51,6 +53,8 @@ import {
   FileBarChart,
   Truck,
   Package,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 
