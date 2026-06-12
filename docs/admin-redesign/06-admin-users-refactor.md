@@ -103,12 +103,14 @@ Each PR is independently mergeable and revertable. **No PR rewrites business log
 - **Parent net change**: `AdminUsers.tsx` 2,697 → 2,664 LOC (−33). Shared types `AccountTypePiePoint` and `TierBarPoint` added to `_shared.tsx`.
 - **Behavioural delta**: none.
 
-### PR-4 — `UserFiltersBar` (≈130 LOC moved)
+### PR-4 — `UserFiltersBar` ✅ shipped
 
-- **Extract**: `1677–1809` → `src/pages/admin/users/UserFiltersBar.tsx`
-- **Props**: 9 controlled values + 11 stable callbacks (`onScopeChange`, `onRoleChange`, `onTypeChange`, `onTierChange`, `onBizLinkChange`, `onSearchChange`, `onSort`, `onDensityChange`, `onToggleSelectPage`, `onClearFilters`, plus `isRTL`).
-- **Required parent change**: wrap the new setters in `useCallback` so the memoized child does not re-render on every keystroke.
-- **Density localStorage effect** stays in the parent (it's already wired).
+- **Extracted**: chips row + filters card (search + 4 selects + density toggle + sort buttons + select-all) → `src/pages/admin/users/UserFiltersBar.tsx` (212 LOC).
+- **Props**: 14 controlled values + 12 callbacks. State stays in `AdminUsers`; the component is a pure controlled view wrapped in `React.memo`. `Checkbox` `onCheckedChange` is bridged to the parent's no-arg `toggleSelectPage`.
+- **Shared types**: `SortKey`, `SortDir`, `Density`, `FilterScope`, `FilterBusinessLink` moved into `_shared.tsx` (re-used by parent).
+- **Density `localStorage` effect** still lives in the parent — unchanged.
+- **Parent net change**: `AdminUsers.tsx` 2,664 → 2,549 LOC (−115). Dropped 6 newly orphaned lucide icons (`Filter`, `Zap`, `LayoutList`, `Rows3`, `Command`, `ArrowUpDown`).
+- **Behavioural delta**: none.
 
 ### PR-5 — `CreateUserPanel` (≈130 LOC moved)
 
