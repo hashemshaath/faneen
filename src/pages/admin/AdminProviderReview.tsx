@@ -485,7 +485,7 @@ export default function AdminProviderReview() {
                   row={r}
                   active={selectedId === r.id}
                   language={language === 'ar' ? 'ar' : 'en'}
-                  onSelect={(row) => { setSelectedId(row.id); setNotes(row.approval_notes ?? ''); }}
+                  onSelect={(row) => { setSelectedId(row.id); setNotes(''); /* hydrated by sensitive-fields query */ }}
                 />
               ))}
             </CardContent>
@@ -494,7 +494,7 @@ export default function AdminProviderReview() {
           {/* Detail */}
           <Card className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto">
             <ProviderReviewDetailPanel
-              selected={selected}
+              selected={selectedFull}
               notes={notes}
               setNotes={setNotes}
               language={language === 'ar' ? 'ar' : 'en'}
