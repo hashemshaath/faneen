@@ -188,8 +188,6 @@ type ActivePanel =
   | { type: 'delete'; userId: string; userName: string }
   | { type: 'create' };
 
-type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
-type Density = 'comfortable' | 'compact';
 
 const getPasswordValidationMessage = (password: string, isRTL: boolean): string | null => {
   if (!password) return null;
