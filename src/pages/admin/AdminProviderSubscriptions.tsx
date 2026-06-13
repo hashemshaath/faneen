@@ -270,93 +270,47 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
   });
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="font-semibold text-sm">{sub.business?.name_ar ?? '—'}</h3>
-        <div className="flex items-center gap-2 flex-wrap mt-1">
-          {sub.business?.ref_id && (
-            <span className="text-[10px] tech-content px-1.5 py-0.5 rounded border border-border bg-muted/40">{sub.business.ref_id}</span>
-          )}
-          <span className="text-[10px] text-muted-foreground">عضوية المنصة:</span>
-          <TierChip tier={sub.business?.membership_tier ?? 'free'} isRTL={true} />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">الخطة</Label>
-        <Select value={planId} onValueChange={setPlanId}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {plans.map((p) => <SelectItem key={p.id} value={p.id}>{p.name_ar} · {p.lead_credits_per_month} فرصة/شهر</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Label className="text-xs">الحالة</Label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {(['active','paused','expired','cancelled'] as const).map((s) => (
-              <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button size="sm" className="w-full h-9 text-xs" onClick={() => planStatusM.mutate()} disabled={planStatusM.isPending || (planId === sub.plan_id && status === sub.status)}>
-          حفظ التغييرات
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs flex items-center gap-1"><Wallet className="h-3 w-3" /> إضافة رصيد يدوي</Label>
-        <Input type="number" min={1} value={grantAmount} onChange={(e) => setGrantAmount(e.target.value)} placeholder="عدد الفرص" className="h-9 text-xs tech-content" />
-        <Textarea rows={2} value={grantNote} onChange={(e) => setGrantNote(e.target.value)} placeholder="ملاحظة (اختياري)" className="text-xs" />
-        <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => grantM.mutate()} disabled={grantM.isPending || !grantAmount}>
-          إضافة
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs">تعديل الرصيد إلى قيمة محددة</Label>
-        <Input type="number" min={0} value={adjustTo} onChange={(e) => setAdjustTo(e.target.value)} className="h-9 text-xs tech-content" />
-        <Textarea rows={2} value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} placeholder="سبب التعديل (اختياري)" className="text-xs" />
-        <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => adjustM.mutate()} disabled={adjustM.isPending}>
-          تطبيق التعديل
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs flex items-center gap-1"><Undo2 className="h-3 w-3" /> استرجاع رصيد</Label>
-        <Input type="number" min={1} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} placeholder="عدد الفرص المسترجعة" className="h-9 text-xs tech-content" />
-        <Input value={refundLeadId} onChange={(e) => setRefundLeadId(e.target.value)} placeholder="معرف الفرصة (اختياري)" className="h-9 text-xs tech-content" />
-        <Textarea rows={2} value={refundNote} onChange={(e) => setRefundNote(e.target.value)} placeholder="السبب (مطلوب)" className="text-xs" />
-        <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => refundM.mutate()} disabled={refundM.isPending || !refundAmount || !refundNote.trim()}>
-          استرجاع
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs">آخر 10 حركات رصيد</Label>
-        {recentTxQ.isLoading ? <Skeleton className="h-20 w-full" /> : (recentTxQ.data ?? []).length === 0 ? (
-          <p className="text-[11px] text-muted-foreground py-2">لا توجد حركات.</p>
-        ) : (
-          <div className="space-y-1.5 max-h-72 overflow-y-auto">
-            {(recentTxQ.data ?? []).map((t) => (
-              <div key={t.id} className="text-[11px] border border-border rounded-md p-2 flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded-full border border-border bg-muted/40">{TYPE_LABEL_ADMIN[t.type] ?? t.type}</span>
-                    <span className="text-muted-foreground truncate">{REASON_LABEL[t.reason] ?? t.reason}</span>
-                  </div>
-                  <div className="text-muted-foreground tech-content mt-0.5">{new Date(t.created_at).toLocaleString('en-US')}</div>
-                </div>
-                <div className="text-end shrink-0">
-                  <div className={`tech-content font-medium ${t.amount > 0 ? 'text-success' : t.amount < 0 ? 'text-destructive' : ''}`}>{t.amount > 0 ? `+${t.amount}` : t.amount}</div>
-                  <div className="text-muted-foreground tech-content">رصيد: {t.balance_after}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <ProviderManageSubscriptionPanel
+      subject={{
+        businessName: sub.business?.name_ar ?? null,
+        businessRefId: sub.business?.ref_id ?? null,
+        membershipTier: sub.business?.membership_tier ?? null,
+        currentPlanId: sub.plan_id,
+        currentStatus: sub.status,
+      }}
+      plans={plans}
+      statusLabel={STATUS_LABEL}
+      reasonLabel={REASON_LABEL}
+      typeLabel={TYPE_LABEL_ADMIN}
+      planId={planId}
+      status={status}
+      onPlanIdChange={setPlanId}
+      onStatusChange={setStatus}
+      onSavePlanStatus={() => planStatusM.mutate()}
+      isSavePlanStatusPending={planStatusM.isPending}
+      grantAmount={grantAmount}
+      grantNote={grantNote}
+      onGrantAmountChange={setGrantAmount}
+      onGrantNoteChange={setGrantNote}
+      onGrant={() => grantM.mutate()}
+      isGrantPending={grantM.isPending}
+      adjustTo={adjustTo}
+      adjustNote={adjustNote}
+      onAdjustToChange={setAdjustTo}
+      onAdjustNoteChange={setAdjustNote}
+      onAdjust={() => adjustM.mutate()}
+      isAdjustPending={adjustM.isPending}
+      refundAmount={refundAmount}
+      refundLeadId={refundLeadId}
+      refundNote={refundNote}
+      onRefundAmountChange={setRefundAmount}
+      onRefundLeadIdChange={setRefundLeadId}
+      onRefundNoteChange={setRefundNote}
+      onRefund={() => refundM.mutate()}
+      isRefundPending={refundM.isPending}
+      recentTx={recentTxQ.data ?? []}
+      isRecentTxLoading={recentTxQ.isLoading}
+    />
   );
 };
 
