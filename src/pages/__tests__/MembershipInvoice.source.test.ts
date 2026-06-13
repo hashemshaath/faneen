@@ -13,7 +13,13 @@ const HISTORY = readFileSync(
   resolve('src/components/membership/MembershipPaymentHistory.tsx'),
   'utf8',
 );
-const ADMIN = readFileSync(resolve('src/pages/admin/AdminMembershipPayments.tsx'), 'utf8');
+const ADMIN = [
+  readFileSync(resolve('src/pages/admin/AdminMembershipPayments.tsx'), 'utf8'),
+  readFileSync(resolve('src/components/admin/memberships/payments/MembershipPaymentIntentsSection.tsx'), 'utf8'),
+  readFileSync(resolve('src/components/admin/memberships/payments/MembershipWebhookEventsSection.tsx'), 'utf8'),
+  readFileSync(resolve('src/components/admin/memberships/payments/PaymentManualForm.tsx'), 'utf8'),
+  readFileSync(resolve('src/components/admin/memberships/payments/PaymentRefundForm.tsx'), 'utf8'),
+].join('\n');
 
 describe('MembershipInvoice — service boundary', () => {
   it('uses the canonical service wrapper only', () => {
