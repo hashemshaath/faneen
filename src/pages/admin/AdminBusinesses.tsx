@@ -134,6 +134,10 @@ import type {
   PortfolioItemInsert,
   AdminJson,
 } from './adminBusinesses.types';
+import { BusinessBranchesSection } from '@/components/admin/businesses/branches/BusinessBranchesSection';
+import type {
+  BranchRow as AdminBranchRow,
+} from '@/components/admin/businesses/branches/types';
 import {
   TIERS as tiers,
   reverseGeocode,
