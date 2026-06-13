@@ -61,8 +61,11 @@ describe('Phase 7E — admin memberships tabs extraction', () => {
   });
 
   it('sections never import Supabase, modules, service helpers or notifications', () => {
+    // NOTE: importing the generated type aliases from
+    // '@/integrations/supabase/types' is allowed (types only, no runtime),
+    // but the Supabase client itself must never be reached from a section.
     const forbidden = [
-      '@/integrations/supabase',
+      '@/integrations/supabase/client',
       '@/modules/memberships',
       '@/modules/credits',
       '@/modules/notifications',
