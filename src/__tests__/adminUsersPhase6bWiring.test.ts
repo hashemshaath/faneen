@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const adminUsersPath = join(process.cwd(), 'src/pages/admin/AdminUsers.tsx');
+const userListRowPath = join(process.cwd(), 'src/pages/admin/users/UserListRow.tsx');
 const presentationalDir = join(process.cwd(), 'src/components/admin/users');
 const PRESENTATIONAL_FILES = [
   'AdminUsersPageShell.tsx',
@@ -25,7 +26,9 @@ describe('Phase 6B — AdminUsers wiring of shell / row actions / drawer', () =>
   });
 
   it('AdminUsers.tsx renders the unified UserRowActions inside the list row', () => {
-    const src = readAdmin();
+    // Post-Phase 6C: the row was extracted into UserListRow.tsx; the
+    // unified dropdown still lives inside that row component.
+    const src = readFileSync(userListRowPath, 'utf8');
     expect(src).toMatch(/<UserRowActions\b/);
     expect(src).toMatch(/from '@\/components\/admin\/users\/UserRowActions'/);
     // The old per-icon Pencil/KeyRound/Ban/UserX buttons in the row are
@@ -46,7 +49,8 @@ describe('Phase 6B — AdminUsers wiring of shell / row actions / drawer', () =>
   });
 
   it('AdminUsers.tsx uses UserStatusBadge for the suspended/disabled row state', () => {
-    const src = readAdmin();
+    // Post-Phase 6C: the badge moved into UserListRow.tsx along with the row.
+    const src = readFileSync(userListRowPath, 'utf8');
     expect(src).toMatch(/<UserStatusBadge\b/);
     expect(src).toMatch(/variant="suspended"/);
   });
