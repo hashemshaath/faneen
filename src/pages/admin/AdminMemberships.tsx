@@ -178,7 +178,7 @@ const AdminMemberships = () => {
         _limit: 500,
       });
       if (error) throw error;
-      return (data ?? []) as UsageReportRow[];
+      return (data ?? []) as MembershipUsageRow[];
     },
     enabled: activeTab === 'usage' && isAdmin,
     staleTime: 60 * 1000,
