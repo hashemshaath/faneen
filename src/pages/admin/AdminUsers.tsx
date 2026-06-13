@@ -33,6 +33,7 @@ import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import { parsePhoneValue } from '@/components/forms/PhoneField';
+import type { Tables } from '@/integrations/supabase/types';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
 import {
   EmailLiveHint,
