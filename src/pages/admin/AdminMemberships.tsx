@@ -467,346 +467,58 @@ const AdminMemberships = () => {
 
           {/* ═══════ OVERVIEW ═══════ */}
           {activeTab === 'overview' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <AdminKpiCard
-                  icon={Users}
-                  tone="primary"
-                  label={pickBi(isRTL, 'إجمالي الاشتراكات', 'Total Subscriptions')}
-                  value={stats.total}
-                />
-                <AdminKpiCard
-                  icon={UserCheck}
-                  tone="success"
-                  label={pickBi(isRTL, 'نشط حالياً', 'Currently Active')}
-                  value={stats.active}
-                  trend={stats.active > 0 ? pickBi(isRTL, 'مباشر', 'LIVE') : undefined}
-                />
-                <AdminKpiCard
-                  icon={DollarSign}
-                  tone="info"
-                  label={pickBi(isRTL, 'الإيراد الشهري', 'Monthly Revenue')}
-                  value={`${Math.round(stats.revenue).toLocaleString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US'))} SAR`}
-                />
-                <AdminKpiCard
-                  icon={AlertTriangle}
-                  tone={stats.expiringSoon > 0 ? 'warning' : 'muted'}
-                  label={pickBi(isRTL, 'ينتهي قريباً', 'Expiring Soon')}
-                  value={stats.expiringSoon}
-                />
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Card className="border border-border/60 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
-                    <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-primary" />
-                      {pickBi(isRTL, 'توزيع العضويات', 'Tier Distribution')}
-                    </h3>
-                    <span className="px-2 py-0.5 bg-muted/40 text-muted-foreground rounded-md text-[9px] font-bold uppercase tracking-wide">
-                      {pickBi(isRTL, 'تحديث تلقائي', 'Auto')}
-                    </span>
-                  </div>
-                  <CardContent className="p-5">
-                    <div className="space-y-4">
-                      {stats.tierDist.map(({ tier, count }) => {
-                        const colors = tierColors[tier];
-                        const Icon = tierIcons[tier];
-                        const pct = stats.active > 0 ? Math.round((count / stats.active) * 100) : 0;
-                        const isEmpty = count === 0;
-                        return (
-                          <div key={tier} className="flex items-center gap-3">
-                            <div className={cn(
-                              'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border',
-                              isEmpty ? 'bg-muted/30 text-muted-foreground/50 border-dashed border-border' : cn(colors.badge, 'border-transparent')
-                            )}>
-                              <Icon className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1 min-w-0 space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <span className={cn('text-xs font-bold capitalize', isEmpty && 'text-muted-foreground/70')}>{tier}</span>
-                                <span className={cn(
-                                  'text-[10px] font-bold tech-content tabular-nums',
-                                  isEmpty ? 'text-muted-foreground/60' : 'text-primary'
-                                )}>
-                                  <span>{count}</span>
-                                  <span className="text-muted-foreground mx-1">·</span>
-                                  <span>{pct}%</span>
-                                </span>
-                              </div>
-                              <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
-                                <div className={cn(
-                                  'h-full rounded-full transition-all duration-500',
-                                  tier === 'free' ? 'bg-muted-foreground/40' : tier === 'basic' ? 'bg-info' : tier === 'premium' ? 'bg-accent' : 'bg-secondary'
-                                )} style={{ width: `${pct}%` }} />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-border/60 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
-                    <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-primary" />
-                      {pickBi(isRTL, 'ملخص الحالة', 'Status Summary')}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={exportCSV}
-                      className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide"
-                    >
-                      {pickBi(isRTL, 'تصدير التقرير', 'Export')}
-                    </button>
-                  </div>
-                  <CardContent className="p-5 space-y-4">
-                    {[
-                      { label: pickBi(isRTL, 'شهري نشط', 'Monthly Active'), value: stats.monthly, denom: stats.active, color: 'bg-info' },
-                      { label: pickBi(isRTL, 'سنوي نشط', 'Yearly Active'), value: stats.yearly, denom: stats.active, color: 'bg-accent' },
-                      { label: pickBi(isRTL, 'ينتهي خلال أسبوع', 'Expiring (7d)'), value: stats.expiringSoon, denom: stats.active, color: 'bg-warning' },
-                      { label: pickBi(isRTL, 'ملغي', 'Cancelled'), value: stats.cancelled, denom: stats.total, color: 'bg-destructive' },
-                      { label: pickBi(isRTL, 'منتهي', 'Expired'), value: stats.expired, denom: stats.total, color: 'bg-muted-foreground/50' },
-                    ].map((row, i) => {
-                      const pct = row.denom > 0 ? Math.round((row.value / row.denom) * 100) : 0;
-                      const isEmpty = row.value === 0;
-                      return (
-                        <div key={i} className="space-y-1.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className={cn('font-medium', isEmpty ? 'text-muted-foreground/70' : 'text-foreground')}>{row.label}</span>
-                            <span className={cn(
-                              'font-bold tech-content tabular-nums',
-                              isEmpty ? 'text-muted-foreground/50' : 'text-foreground'
-                            )}>{row.value}</span>
-                          </div>
-                          <div className={cn('h-1.5 rounded-full overflow-hidden', isEmpty ? 'bg-muted/30 border border-dashed border-border/60' : 'bg-muted/40')}>
-                            <div className={cn('h-full rounded-full transition-all duration-500', row.color)} style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+            <MembershipOverviewSection stats={stats} isRTL={isRTL} onExport={exportCSV} />
           )}
 
           {/* ═══════ PLANS ═══════ */}
           {activeTab === 'plans' && (
-            <div className="space-y-4">
-              {/* Create Plan toolbar — appears only when not editing */}
-              {!editingPlan && (
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <p className="text-[11px] text-muted-foreground">
-                    {pickBi(isRTL, 'الخطط تُعرض على /membership تلقائياً عند تفعيلها.', 'Active plans are auto-listed on /membership.')}
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <Label className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'إنشاء بمستوى:', 'Create as:')}</Label>
-                    <Select onValueChange={(v) => openCreate(v as typeof TIERS[number])}>
-                      <SelectTrigger className="h-8 w-[140px] text-xs gap-1.5">
-                        <Plus className="w-3 h-3" />
-                        <SelectValue placeholder={pickBi(isRTL, 'اختر المستوى', 'Pick tier')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIERS.map(t => (
-                          <SelectItem key={t} value={t} className="capitalize text-xs">{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-              {/* Inline Edit Form */}
-              {editingPlan && (
-                <Card className="border-accent/30 bg-accent/5 shadow-lg">
-                  <CardContent className="p-4 sm:p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                        {editingPlan._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
-                        {editingPlan._new
-                          ? (pickBi(isRTL, 'إنشاء خطة جديدة', 'Create Plan'))
-                          : (pickBi(isRTL, 'تعديل الخطة', 'Edit Plan'))}
-                        <Badge className={cn('text-[9px]', tierColors[editingPlan.tier]?.badge)}>{editingPlan.tier}</Badge>
-                      </h3>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingPlan(null)} aria-label="Action"><X className="w-4 h-4" /></Button>
-                    </div>
-
-                    {/* Basic Info */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الاسم (عربي)', 'Name (AR)')}</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (EN)')}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} className="h-9 text-xs mt-1" /></div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div><Label className="text-[10px]">{pickBi(isRTL, 'السعر الشهري', 'Monthly Price')}</Label><Input type="number" value={form.price_monthly} onChange={e => setForm(f => ({ ...f, price_monthly: parseFloat(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{pickBi(isRTL, 'السعر السنوي', 'Yearly Price')}</Label><Input type="number" value={form.price_yearly} onChange={e => setForm(f => ({ ...f, price_yearly: parseFloat(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الترتيب', 'Sort Order')}</Label><Input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} className="h-9 text-xs mt-1" /></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الوصف (عربي)', 'Description (AR)')}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} className="text-xs mt-1" /></div>
-                      <div><Label className="text-[10px]">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (EN)')}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} className="text-xs mt-1" /></div>
-                    </div>
-
-                    {/* Features text */}
-                    <div>
-                      <Label className="text-[10px]">{pickBi(isRTL, 'المميزات النصية (سطر لكل ميزة)', 'Text Features (one per line)')}</Label>
-                      <Textarea value={featuresText} onChange={e => setFeaturesText(e.target.value)} rows={4} className="text-xs mt-1" />
-                    </div>
-
-                    {/* ── Structured Limits Editor ── */}
-                    <div className="border border-border/30 rounded-xl p-4 bg-background/50">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Settings2 className="w-4 h-4 text-accent" />
-                        <h4 className="font-heading font-bold text-sm">{pickBi(isRTL, 'حدود ومزايا الباقة', 'Plan Limits & Benefits')}</h4>
-                        <Badge variant="outline" className="text-[8px] ms-auto">
-                          {LIMIT_FIELDS.filter(f => f.type === 'boolean' && editLimits[f.key] === true).length}/{LIMIT_FIELDS.filter(f => f.type === 'boolean').length} {pickBi(isRTL, 'مفعّل', 'enabled')}
-                        </Badge>
-                      </div>
-                      <LimitsEditor limits={editLimits} onChange={setEditLimits} isRTL={isRTL} language={language} />
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-2">
-                        <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
-                        <Label className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</Label>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setEditingPlan(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-                        <Button size="sm" className="text-xs h-8 gap-1.5" onClick={() => updatePlanMutation.mutate()} disabled={updatePlanMutation.isPending}>
-                          {updatePlanMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                          {pickBi(isRTL, 'حفظ التعديلات', 'Save Changes')}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {loadingPlans ? (
-                <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                  {plans.map((plan) => (
-                    <PlanCard key={plan.id} plan={plan} isRTL={isRTL} language={language} subsCount={stats.planSubCounts[plan.id] || 0} onEdit={openEdit} />
-                  ))}
-                </div>
-              )}
-            </div>
+            <MembershipPlansSection
+              plans={plans}
+              loadingPlans={loadingPlans}
+              isRTL={isRTL}
+              language={language}
+              planSubCounts={stats.planSubCounts}
+              editingPlan={editingPlan}
+              form={form}
+              setForm={setForm}
+              featuresText={featuresText}
+              setFeaturesText={setFeaturesText}
+              editLimits={editLimits}
+              setEditLimits={setEditLimits}
+              onOpenCreate={openCreate}
+              onOpenEdit={openEdit}
+              onCloseEdit={() => setEditingPlan(null)}
+              onSubmit={() => updatePlanMutation.mutate()}
+              isSaving={updatePlanMutation.isPending}
+            />
           )}
 
           {/* ═══════ SUBSCRIPTIONS ═══════ */}
           {activeTab === 'subscriptions' && (
-            <div className="space-y-4">
-              {upgradeSub && (
-                <Card className="border-accent/30 bg-accent/5 shadow-lg animate-in slide-in-from-top-2 duration-300">
-                  <CardContent className="p-4 sm:p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                        <ArrowUpCircle className="w-4 h-4 text-accent" />
-                        {pickBi(isRTL, 'ترقية الاشتراك', 'Upgrade Subscription')}
-                      </h3>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setUpgradeSub(null)} aria-label="Action"><X className="w-4 h-4" /></Button>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 mb-4">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={upgradeSub.profile?.avatar_url} />
-                        <AvatarFallback className="text-[10px]">{upgradeSub.profile?.full_name?.charAt(0) || '?'}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-xs font-medium">{upgradeSub.profile?.full_name || '—'}</p>
-                        <p className="text-[9px] text-muted-foreground">
-                          {pickBi(isRTL, 'الخطة الحالية:', 'Current:')} {upgradeSub.plan?.name_ar || upgradeSub.plan?.name_en}
-                          {upgradeSub.business && ` • ${isRTL ? upgradeSub.business.name_ar : (upgradeSub.business.name_en || upgradeSub.business.name_ar)}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <Label className="text-[10px]">{pickBi(isRTL, 'الخطة الجديدة', 'New Plan')}</Label>
-                        <Select value={upgradeTargetPlan} onValueChange={setUpgradeTargetPlan}>
-                          <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder={pickBi(isRTL, 'اختر الخطة...', 'Select plan...')} /></SelectTrigger>
-                          <SelectContent>
-                            {plans.filter((p) => p.is_active && p.id !== upgradeSub.plan_id).map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                <div className="flex items-center gap-2">
-                                  {React.createElement(tierIcons[p.tier] || Zap, { className: 'w-3 h-3' })}
-                                  {isRTL ? p.name_ar : p.name_en} <span className="text-muted-foreground">({p.tier})</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-[10px]">{pickBi(isRTL, 'دورة الفوترة', 'Billing Cycle')}</Label>
-                        <Select value={upgradeCycle} onValueChange={setUpgradeCycle}>
-                          <SelectTrigger className="h-9 text-xs mt-1"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="monthly">{pickBi(isRTL, 'شهري', 'Monthly')}</SelectItem>
-                            <SelectItem value="yearly">{pickBi(isRTL, 'سنوي', 'Yearly')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setUpgradeSub(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-                      <Button size="sm" className="text-xs h-8 gap-1.5" onClick={() => upgradeMutation.mutate()} disabled={!upgradeTargetPlan || upgradeMutation.isPending}>
-                        {upgradeMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowUpCircle className="w-3 h-3" />}
-                        {pickBi(isRTL, 'تأكيد الترقية', 'Confirm Upgrade')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Filters */}
-              <div className="flex gap-2 flex-wrap">
-                <div className="relative flex-1 min-w-[180px]">
-                  <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input placeholder={pickBi(isRTL, 'بحث بالمعرف، الاسم، البريد...', 'Search by ref, name, email...')}
-                    value={searchQuery} onChange={e => handleSearchChange(e.target.value)} className="h-9 text-xs ps-8" />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-9 w-[120px] text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{pickBi(isRTL, 'جميع الحالات', 'All Status')}</SelectItem>
-                    {Object.entries(statusConfig).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{isRTL ? v.label_ar : v.label_en}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={tierFilter} onValueChange={setTierFilter}>
-                  <SelectTrigger className="h-9 w-[120px] text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{pickBi(isRTL, 'جميع الباقات', 'All Tiers')}</SelectItem>
-                    {TIERS.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Badge variant="outline" className="h-9 px-3 text-xs flex items-center gap-1.5 shrink-0">
-                  <Hash className="w-3 h-3" />{filteredSubs.length}
-                </Badge>
-              </div>
-
-              {loadingSubs ? (
-                <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-              ) : filteredSubs.length === 0 ? (
-                <Card className="border-border/30"><CardContent className="p-10 text-center text-muted-foreground text-sm">
-                  <Users className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  {pickBi(isRTL, 'لا توجد اشتراكات مطابقة', 'No matching subscriptions')}
-                </CardContent></Card>
-              ) : (
-                <div className="space-y-2">
-                  {filteredSubs.map((sub) => (
-                    <SubRow key={sub.id} sub={sub} isRTL={isRTL} language={language} plans={plans}
-                      onCancel={(_id) => cancelSubMutation.mutate(sub)}
-                      onRenew={handleRenew}
-                      onUpgrade={(s) => { setUpgradeSub(s); setUpgradeTargetPlan(''); }} />
-                  ))}
-                </div>
-              )}
-            </div>
+            <MembershipSubscriptionsSection
+              filteredSubs={filteredSubs as AdminMembershipEnrichedSubscription[]}
+              loadingSubs={loadingSubs}
+              plans={plans}
+              isRTL={isRTL}
+              language={language}
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              tierFilter={tierFilter}
+              onTierFilterChange={setTierFilter}
+              upgradeSub={upgradeSub}
+              onCloseUpgrade={() => setUpgradeSub(null)}
+              upgradeTargetPlan={upgradeTargetPlan}
+              onUpgradeTargetPlanChange={setUpgradeTargetPlan}
+              upgradeCycle={upgradeCycle}
+              onUpgradeCycleChange={setUpgradeCycle}
+              isUpgrading={upgradeMutation.isPending}
+              onUpgradeConfirm={() => upgradeMutation.mutate()}
+              onCancelSub={(sub) => cancelSubMutation.mutate(sub)}
+              onRenewSub={handleRenew}
+              onOpenUpgrade={(sub) => { setUpgradeSub(sub); setUpgradeTargetPlan(''); }}
+            />
           )}
 
           {/* ═══════ UPGRADE REQUESTS ═══════ */}
@@ -819,163 +531,25 @@ const AdminMemberships = () => {
 
           {/* ═══════ BUSINESSES ═══════ */}
           {activeTab === 'businesses' && (
-            <div className="space-y-4">
-              <div className="flex gap-2 flex-wrap">
-                <div className="relative flex-1 min-w-[180px]">
-                  <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input placeholder={pickBi(isRTL, 'بحث عن جهة...', 'Search businesses...')} value={searchQuery}
-                    onChange={e => handleSearchChange(e.target.value)} className="h-9 text-xs ps-8" />
-                </div>
-                <Badge variant="outline" className="h-9 px-3 text-xs flex items-center gap-1.5 shrink-0">
-                  <Building2 className="w-3 h-3" />{filteredBiz.length}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2">
-                {TIERS.map(tier => {
-                  const Icon = tierIcons[tier];
-                  const colors = tierColors[tier];
-                  const count = allBusinesses.filter((b) => b.membership_tier === tier).length;
-                  return (
-                    <Card key={tier} className={cn('border', colors.border, colors.bg)}>
-                      <CardContent className="p-3 text-center">
-                        <div className={cn('w-8 h-8 rounded-lg mx-auto mb-1 flex items-center justify-center', colors.badge)}>
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                        <p className={cn('text-lg font-bold', colors.text)}>{count}</p>
-                        <p className="text-[9px] text-muted-foreground capitalize">{tier}</p>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {loadingBiz ? (
-                <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-              ) : (
-                <div className="space-y-1.5">
-                  {filteredBiz.map((biz) => {
-                    const colors = tierColors[biz.membership_tier] || tierColors.free;
-                    const Icon = tierIcons[biz.membership_tier] || Zap;
-                    return (
-                      <Card key={biz.id} className={cn('border-border/30 transition-all hover:shadow-sm')}>
-                        <CardContent className="p-3 flex items-center gap-3">
-                          <Avatar className="w-9 h-9 shrink-0 rounded-xl">
-                            <AvatarImage src={biz.logo_url} />
-                            <AvatarFallback className="bg-muted text-muted-foreground rounded-xl text-xs">{biz.name_ar?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                              {biz.is_verified && <Shield className="w-3 h-3 text-success shrink-0" />}
-                              {!biz.is_active && <Badge variant="outline" className="text-[7px] h-3 px-1 text-destructive">{pickBi(isRTL, 'معطل', 'Inactive')}</Badge>}
-                            </div>
-                            <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
-                              <span className="tech-content">@{biz.username}</span>
-                              <span>⭐ {biz.rating_avg?.toFixed(1)} ({biz.rating_count})</span>
-                            </div>
-                          </div>
-                          <Badge className={cn('text-[8px] px-2 py-0.5 h-auto uppercase font-bold gap-1', colors.badge)}>
-                            <Icon className="w-2.5 h-2.5" />
-                            {biz.membership_tier}
-                          </Badge>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <MembershipBusinessLinksSection
+              allBusinesses={allBusinesses}
+              filteredBiz={filteredBiz}
+              loadingBiz={loadingBiz}
+              isRTL={isRTL}
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+            />
           )}
 
           {/* ═══════ USAGE (M3A read-only) ═══════ */}
           {activeTab === 'usage' && (
-            <div className="space-y-3">
-              <Card className="border-info/30 bg-info/5">
-                <CardContent className="p-3 text-[11px] text-foreground/80 flex items-start gap-2">
-                  <AlertTriangle className="w-3.5 h-3.5 text-info shrink-0 mt-0.5" />
-                  <span>
-                    {pickBi(isRTL, 'هذه مؤشرات استخدام فقط. لا يتم فرض الحدود تلقائيًا بعد.', 'Usage indicators only. Limits are not enforced automatically yet.')}
-                  </span>
-                </CardContent>
-              </Card>
-
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={usageOnlyFlagged}
-                    onCheckedChange={setUsageOnlyFlagged}
-                  />
-                  <Label className="text-xs">
-                    {pickBi(isRTL, 'إظهار المتجاوزين/القريبين من الحد فقط', 'Show only over-limit / near-cap')}
-                  </Label>
-                </div>
-                <Badge variant="outline" className="h-7 px-2 text-[10px] gap-1">
-                  <Activity className="w-3 h-3" />
-                  {usageReport.length}
-                </Badge>
-              </div>
-
-              {loadingUsage ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : usageReport.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="p-8 text-center text-xs text-muted-foreground">
-                    {pickBi(isRTL, 'لا توجد جهات قريبة من الحد أو متجاوزة.', 'No businesses near or over their limits.')}
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="overflow-x-auto rounded-xl border border-border">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-muted/30 text-muted-foreground">
-                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'الجهة', 'Business')}</th>
-                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'الباقة', 'Tier')}</th>
-                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'المؤشر', 'Metric')}</th>
-                        <th className="text-center p-2 font-semibold">{pickBi(isRTL, 'الاستخدام', 'Used / Limit')}</th>
-                        <th className="text-start p-2 font-semibold">{pickBi(isRTL, 'الفترة', 'Period')}</th>
-                        <th className="text-center p-2 font-semibold">{pickBi(isRTL, 'الحالة', 'Status')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {usageReport.map((r, i) => {
-                        const limText = r.limit_value === 0
-                          ? (pickBi(isRTL, 'غير محدود', '∞'))
-                          : String(r.limit_value);
-                        return (
-                          <tr key={`${r.business_id}-${r.metric}-${i}`} className="border-t border-border/30 hover:bg-muted/10">
-                            <td className="p-2 truncate max-w-[180px]">
-                              {isRTL ? r.business_name_ar : (r.business_name_en || r.business_name_ar)}
-                            </td>
-                            <td className="p-2 capitalize">{r.tier || '—'}</td>
-                            <td className="p-2 capitalize">{r.metric}</td>
-                            <td className="p-2 text-center tech-content font-bold">
-                              {r.used} / {limText}
-                            </td>
-                            <td className="p-2 text-[10px] text-muted-foreground">{r.period}</td>
-                            <td className="p-2 text-center">
-                              {r.over_limit ? (
-                                <Badge className="text-[9px] bg-destructive/15 text-destructive">
-                                  {pickBi(isRTL, 'تجاوز الحد', 'Over limit')}
-                                </Badge>
-                              ) : r.near_cap ? (
-                                <Badge className="text-[9px] bg-warning/15 text-warning">
-                                  {pickBi(isRTL, 'اقترب من الحد', 'Near cap')}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-[9px]">OK</Badge>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <MembershipUsageReportSection
+              usageReport={usageReport}
+              loadingUsage={loadingUsage}
+              usageOnlyFlagged={usageOnlyFlagged}
+              onToggleUsageFlagged={setUsageOnlyFlagged}
+              isRTL={isRTL}
+            />
           )}
         </div>
       </TooltipProvider>
