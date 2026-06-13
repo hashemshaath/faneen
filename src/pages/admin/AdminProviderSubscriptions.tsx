@@ -4,10 +4,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, RefreshCw } from 'lucide-react';
 import {
   listProviderPlans,
   listProviderSubscriptions,
@@ -18,11 +15,14 @@ import {
   adminAdjustProviderCredits,
 } from '@/modules/credits';
 import {
-  TierChip,
   MembershipFinancePageShell,
   MembershipDetailsDrawer,
   buildProviderSubscriptionDrawerProps,
 } from '@/components/admin/memberships/shared';
+import {
+  ProviderSubscriptionsTableSection,
+  ProviderManageSubscriptionPanel,
+} from '@/components/admin/memberships/providers';
 
 interface AdminTxRow {
   id: string;
@@ -36,11 +36,9 @@ interface AdminTxRow {
 }
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Wallet, RefreshCw, Search, ChevronRight, Undo2, Info, Eye } from 'lucide-react';
+import { Wallet, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/analytics';
-import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
-import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 const REASON_LABEL: Record<string, string> = {
   monthly_grant: 'منح شهري',
@@ -151,78 +149,14 @@ const AdminProviderSubscriptions: React.FC = () => {
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="lg:col-span-2"><CardContent className="p-3">
-            {subsQ.isLoading ? (
-              <Skeleton className="h-64 w-full" />
-            ) : filtered.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-10">لا توجد عضويات.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="text-muted-foreground">
-                    <tr>
-                      <th className="text-start py-2 px-2">المنشأة</th>
-                      <th className="text-start py-2 px-2">المرجع</th>
-                      <th className="text-start py-2 px-2">خطة المزود</th>
-                      <th className="text-start py-2 px-2">حالة خطة المزود</th>
-                      <th className="text-start py-2 px-2">عضوية المنصة</th>
-                      <th className="text-start py-2 px-2">الرصيد</th>
-                      <th className="text-start py-2 px-2">آخر تحديث</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((s) => (
-                      <tr key={s.id} className={`border-t border-border cursor-pointer hover:bg-muted/40 ${editId === s.id ? 'bg-primary/5' : ''}`} onClick={() => setEditId(s.id)}>
-                        <td className="py-2 px-2 font-medium truncate max-w-[200px]">
-                          <div>{s.business?.name_ar ?? '—'}</div>
-                          {s.business?.ref_id && (
-                            <div className="tech-content text-[10px] text-muted-foreground">{s.business.ref_id}</div>
-                          )}
-                        </td>
-                        <td className="py-2 px-2">
-                          {s.ref_id ? (
-                            <span onClick={(e) => e.stopPropagation()}>
-                              <span className="inline-flex items-center gap-1">
-                                <ReferenceBadge refId={s.ref_id} />
-                                <ReferenceLinkCopy refId={s.ref_id} isRTL={true} />
-                              </span>
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-2">{s.plan?.name_ar ?? '—'}</td>
-                        <td className="py-2 px-2"><span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/50">{STATUS_LABEL[s.status] ?? s.status}</span></td>
-                        <td className="py-2 px-2">
-                          {(() => {
-                            const tier = s.business?.membership_tier ?? 'free';
-                            return <TierChip tier={tier} isRTL={true} />;
-                          })()}
-                        </td>
-                        <td className="py-2 px-2 tech-content font-medium">{s.lead_credits_balance}</td>
-                        <td className="py-2 px-2 tech-content text-muted-foreground">{new Date(s.updated_at).toLocaleDateString('ar-SA-u-nu-latn')}</td>
-                        <td className="py-2 px-2 text-end">
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setViewId(s.id); }}
-                              className="p-1 rounded hover:bg-muted/60 text-muted-foreground"
-                              title="عرض التفاصيل"
-                              aria-label="عرض التفاصيل"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent></Card>
+          <ProviderSubscriptionsTableSection
+            rows={filtered}
+            editId={editId}
+            isLoading={subsQ.isLoading}
+            statusLabel={STATUS_LABEL}
+            onEdit={setEditId}
+            onView={setViewId}
+          />
 
           <Card><CardContent className="p-4">
             {!editing ? (
@@ -336,93 +270,47 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
   });
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="font-semibold text-sm">{sub.business?.name_ar ?? '—'}</h3>
-        <div className="flex items-center gap-2 flex-wrap mt-1">
-          {sub.business?.ref_id && (
-            <span className="text-[10px] tech-content px-1.5 py-0.5 rounded border border-border bg-muted/40">{sub.business.ref_id}</span>
-          )}
-          <span className="text-[10px] text-muted-foreground">عضوية المنصة:</span>
-          <TierChip tier={sub.business?.membership_tier ?? 'free'} isRTL={true} />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">الخطة</Label>
-        <Select value={planId} onValueChange={setPlanId}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {plans.map((p) => <SelectItem key={p.id} value={p.id}>{p.name_ar} · {p.lead_credits_per_month} فرصة/شهر</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Label className="text-xs">الحالة</Label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {(['active','paused','expired','cancelled'] as const).map((s) => (
-              <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button size="sm" className="w-full h-9 text-xs" onClick={() => planStatusM.mutate()} disabled={planStatusM.isPending || (planId === sub.plan_id && status === sub.status)}>
-          حفظ التغييرات
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs flex items-center gap-1"><Wallet className="h-3 w-3" /> إضافة رصيد يدوي</Label>
-        <Input type="number" min={1} value={grantAmount} onChange={(e) => setGrantAmount(e.target.value)} placeholder="عدد الفرص" className="h-9 text-xs tech-content" />
-        <Textarea rows={2} value={grantNote} onChange={(e) => setGrantNote(e.target.value)} placeholder="ملاحظة (اختياري)" className="text-xs" />
-        <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => grantM.mutate()} disabled={grantM.isPending || !grantAmount}>
-          إضافة
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs">تعديل الرصيد إلى قيمة محددة</Label>
-        <Input type="number" min={0} value={adjustTo} onChange={(e) => setAdjustTo(e.target.value)} className="h-9 text-xs tech-content" />
-        <Textarea rows={2} value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} placeholder="سبب التعديل (اختياري)" className="text-xs" />
-        <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => adjustM.mutate()} disabled={adjustM.isPending}>
-          تطبيق التعديل
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs flex items-center gap-1"><Undo2 className="h-3 w-3" /> استرجاع رصيد</Label>
-        <Input type="number" min={1} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} placeholder="عدد الفرص المسترجعة" className="h-9 text-xs tech-content" />
-        <Input value={refundLeadId} onChange={(e) => setRefundLeadId(e.target.value)} placeholder="معرف الفرصة (اختياري)" className="h-9 text-xs tech-content" />
-        <Textarea rows={2} value={refundNote} onChange={(e) => setRefundNote(e.target.value)} placeholder="السبب (مطلوب)" className="text-xs" />
-        <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => refundM.mutate()} disabled={refundM.isPending || !refundAmount || !refundNote.trim()}>
-          استرجاع
-        </Button>
-      </div>
-
-      <div className="border-t pt-4 space-y-2">
-        <Label className="text-xs">آخر 10 حركات رصيد</Label>
-        {recentTxQ.isLoading ? <Skeleton className="h-20 w-full" /> : (recentTxQ.data ?? []).length === 0 ? (
-          <p className="text-[11px] text-muted-foreground py-2">لا توجد حركات.</p>
-        ) : (
-          <div className="space-y-1.5 max-h-72 overflow-y-auto">
-            {(recentTxQ.data ?? []).map((t) => (
-              <div key={t.id} className="text-[11px] border border-border rounded-md p-2 flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded-full border border-border bg-muted/40">{TYPE_LABEL_ADMIN[t.type] ?? t.type}</span>
-                    <span className="text-muted-foreground truncate">{REASON_LABEL[t.reason] ?? t.reason}</span>
-                  </div>
-                  <div className="text-muted-foreground tech-content mt-0.5">{new Date(t.created_at).toLocaleString('en-US')}</div>
-                </div>
-                <div className="text-end shrink-0">
-                  <div className={`tech-content font-medium ${t.amount > 0 ? 'text-success' : t.amount < 0 ? 'text-destructive' : ''}`}>{t.amount > 0 ? `+${t.amount}` : t.amount}</div>
-                  <div className="text-muted-foreground tech-content">رصيد: {t.balance_after}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <ProviderManageSubscriptionPanel
+      subject={{
+        businessName: sub.business?.name_ar ?? null,
+        businessRefId: sub.business?.ref_id ?? null,
+        membershipTier: sub.business?.membership_tier ?? null,
+        currentPlanId: sub.plan_id,
+        currentStatus: sub.status,
+      }}
+      plans={plans}
+      statusLabel={STATUS_LABEL}
+      reasonLabel={REASON_LABEL}
+      typeLabel={TYPE_LABEL_ADMIN}
+      planId={planId}
+      status={status}
+      onPlanIdChange={setPlanId}
+      onStatusChange={setStatus}
+      onSavePlanStatus={() => planStatusM.mutate()}
+      isSavePlanStatusPending={planStatusM.isPending}
+      grantAmount={grantAmount}
+      grantNote={grantNote}
+      onGrantAmountChange={setGrantAmount}
+      onGrantNoteChange={setGrantNote}
+      onGrant={() => grantM.mutate()}
+      isGrantPending={grantM.isPending}
+      adjustTo={adjustTo}
+      adjustNote={adjustNote}
+      onAdjustToChange={setAdjustTo}
+      onAdjustNoteChange={setAdjustNote}
+      onAdjust={() => adjustM.mutate()}
+      isAdjustPending={adjustM.isPending}
+      refundAmount={refundAmount}
+      refundLeadId={refundLeadId}
+      refundNote={refundNote}
+      onRefundAmountChange={setRefundAmount}
+      onRefundLeadIdChange={setRefundLeadId}
+      onRefundNoteChange={setRefundNote}
+      onRefund={() => refundM.mutate()}
+      isRefundPending={refundM.isPending}
+      recentTx={recentTxQ.data ?? []}
+      isRecentTxLoading={recentTxQ.isLoading}
+    />
   );
 };
 
