@@ -61,6 +61,10 @@ import {
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
 import { AdminUsersStatsStrip, buildAdminUserStats } from '@/components/admin/users/AdminUsersStatsStrip';
+import { AdminUsersPageShell } from '@/components/admin/users/AdminUsersPageShell';
+import { UserRowActions } from '@/components/admin/users/UserRowActions';
+import { UserDetailsDrawer } from '@/components/admin/users/UserDetailsDrawer';
+import { UserStatusBadge } from '@/components/admin/users/UserStatusBadge';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
