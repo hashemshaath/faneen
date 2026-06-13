@@ -6,6 +6,13 @@ const EDGE = 'supabase/functions/admin-create-business-with-owner/index.ts';
 const WRAPPER = 'src/modules/businesses/services/adminCreateBusinessWithOwner.ts';
 const PAGE = 'src/pages/admin/AdminBusinesses.tsx';
 const CREATE_PANEL = 'src/pages/admin/businesses/CreateBusinessPanel.tsx';
+// Phase 5F+ split the create panel further into focused section
+// components under `src/components/admin/businesses/create/`. The
+// owner-mode tabs + manager fields now live in the owner section.
+const CREATE_PANEL_IMPL =
+  'src/components/admin/businesses/create/BusinessCreatePanel.tsx';
+const CREATE_OWNER_SECTION =
+  'src/components/admin/businesses/create/BusinessCreateOwnerSection.tsx';
 
 describe('ADMIN-BUSINESS-CREATE-OWNER edge function source invariants', () => {
   it('edge function file exists', () => {
@@ -110,7 +117,11 @@ describe('ADMIN-BUSINESS-CREATE-OWNER UI integration (AdminBusinesses.tsx)', () 
   const src =
     readFileSync(resolve(PAGE), 'utf8') +
     '\n/*PANEL*/\n' +
-    readFileSync(resolve(CREATE_PANEL), 'utf8');
+    readFileSync(resolve(CREATE_PANEL), 'utf8') +
+    '\n/*PANEL_IMPL*/\n' +
+    readFileSync(resolve(CREATE_PANEL_IMPL), 'utf8') +
+    '\n/*OWNER_SECTION*/\n' +
+    readFileSync(resolve(CREATE_OWNER_SECTION), 'utf8');
 
   it('imports the service wrapper', () => {
     expect(src).toContain('adminCreateBusinessWithOwner');
