@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useSearchParams } from 'react-router-dom';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
@@ -8,8 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { adminCreateUser, type AdminCreateUserPayload } from '@/modules/admin';
-import { listUserEntityLinks, type UserEntityLink } from '@/modules/admin';
-import { listContractsForUserParticipant } from '@/modules/contracts';
 import {
   listAdminBusinesses,
   listAllBusinessStaffForAdmin,
@@ -17,59 +14,45 @@ import {
   removeBusinessStaff,
   insertBusinessStaff,
 } from '@/modules/businesses';
-import { countMessagesBySender } from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import {
-  Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Mail, Phone, Calendar, Crown,
-  Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
-  Check, TrendingUp, UserCheck, Hash, Sparkles, Building2, Briefcase, Link2,
-  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
-  Star, MoreHorizontal, RefreshCw, Copy, Clock, Inbox,
-  Timer, ShieldOff, Plus,
+  Users, UserPlus, Loader2, Send, Lock, Eye, EyeOff, X, AlertTriangle,
+  Download, Sparkles, BarChart3, RefreshCw,
 } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
-import { maskEmail, maskPhone } from '@/lib/masking';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
-import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
-import { BilingualNameField } from '@/components/forms/BilingualNameField';
+import { parsePhoneValue } from '@/components/forms/PhoneField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
 import {
-  formatDate, formatRelative, EmailLiveHint,
+  EmailLiveHint,
   type SortKey, type SortDir, type Density,
   type FilterScope, type FilterBusinessLink,
   type CreateUserForm,
 } from './users/_shared';
-import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
 import { AdminUsersStatsStrip, buildAdminUserStats } from '@/components/admin/users/AdminUsersStatsStrip';
 import { AdminUsersPageShell } from '@/components/admin/users/AdminUsersPageShell';
-import { UserRowActions } from '@/components/admin/users/UserRowActions';
 import { UserDetailsDrawer } from '@/components/admin/users/UserDetailsDrawer';
-import { UserStatusBadge } from '@/components/admin/users/UserStatusBadge';
+import { buildUserDetailsDrawerProps } from '@/components/admin/users/buildUserDetailsDrawerProps';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
 import { CreateUserPanel } from './users/CreateUserPanel';
 import { UserEditPanel } from './users/UserEditPanel';
+import { UsersListSection } from './users/UsersListSection';
+import { tierConfig, type Profile, type UserRole } from './users/userConfigs';
+import type { StaffRole, BusinessLink } from './users/_shared';
 
 /**
  * Parse a raw save-mutation error into a structured `{ field, reason, rawCode, friendly }`.
