@@ -455,12 +455,13 @@ interface UserRowProps {
   onRemoveRole: (id: string) => void;
   onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
   onRemoveStaff: (link: BusinessLink) => void;
+  onView: (p: Profile) => void;
 }
 
 const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canManageUser, isSuperAdmin,
   isRTL, language, selected, expanded, density, onToggleSelect, onToggleExpand,
   onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole,
-  onChangeStaffRole, onRemoveStaff }: UserRowProps) => {
+  onChangeStaffRole, onRemoveStaff, onView }: UserRowProps) => {
   const [addingRole, setAddingRole] = useState(false);
   const [pickedRole, setPickedRole] = useState('user');
   const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
