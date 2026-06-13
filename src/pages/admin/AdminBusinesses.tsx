@@ -1473,251 +1473,51 @@ const AdminBusinesses = () => {
 
                 {/* ── Branches Tab ── */}
                 <TabsContent value="branches" className="space-y-4 mt-3">
-                  <div className="space-y-2">
-                    {branches.map((br) => (
-                      <div key={br.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!br.is_active ? 'opacity-50' : ''}`}>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-medium truncate">{language === 'ar' ? br.name_ar : (br.name_en || br.name_ar)}</p>
-                            {(() => {
-                              const t = ((br as unknown as { branch_type?: string }).branch_type) ?? (br.is_main ? 'main' : 'branch');
-                              const map: Record<string, { ar: string; en: string; cls: string }> = {
-                                main:           { ar: 'المركز الرئيسي', en: 'Headquarters',     cls: 'bg-primary/10 text-primary' },
-                                branch:         { ar: 'فرع',           en: 'Branch',           cls: 'bg-blue-500/10 text-blue-700 dark:text-blue-300' },
-                                warehouse:      { ar: 'مستودع',        en: 'Warehouse',        cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-                                admin_office:   { ar: 'مكتب إداري',    en: 'Admin office',     cls: 'bg-violet-500/10 text-violet-700 dark:text-violet-300' },
-                                regional_office:{ ar: 'إدارة إقليمية', en: 'Regional office',  cls: 'bg-teal-500/10 text-teal-700 dark:text-teal-300' },
-                                head_office:    { ar: 'الإدارة العامة', en: 'Head office',     cls: 'bg-rose-500/10 text-rose-700 dark:text-rose-300' },
-                              };
-                              const m = map[t] ?? map.branch;
-                              return <Badge className={`text-[8px] h-4 border-0 ${m.cls}`}>{pickBi(isRTL, m.ar, m.en)}</Badge>;
-                            })()}
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
-                            {br.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.phone}</span>}
-                            {br.mobile && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.mobile}</span>}
-                            {br.unified_number && <span>{br.unified_number}</span>}
-                            {(br.address || br.district) && (
-                              <span className="flex items-center gap-0.5 truncate max-w-[280px]">
-                                <MapPin className="w-2.5 h-2.5 shrink-0" />
-                                <span className="truncate">{br.address || [br.district, br.street_name].filter(Boolean).join(' · ')}</span>
-                              </span>
-                            )}
-                            {br.contact_person && <span className="flex items-center gap-0.5"><Users className="w-2.5 h-2.5" />{br.contact_person}</span>}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Switch checked={br.is_active} onCheckedChange={v => toggleBranchMutation.mutate({ id: br.id, is_active: v })} />
-                          <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => {
-                            setEditingBranchId(br.id);
-                            setBranchForm({
-                              name_ar: br.name_ar, name_en: br.name_en || '', is_main: br.is_main, is_active: br.is_active,
-                              branch_type: ((br as unknown as { branch_type?: string }).branch_type as 'main' | 'branch' | 'warehouse' | 'admin_office' | 'regional_office' | 'head_office') ?? (br.is_main ? 'main' : 'branch'),
-                              contact_person: br.contact_person || '', phone: br.phone || '', mobile: br.mobile || '',
-                              unified_number: br.unified_number || '', customer_service_phone: br.customer_service_phone || '',
-                              email: br.email || '', website: br.website || '', country_id: br.country_id || '',
-                              city_id: br.city_id || '', region: br.region || '', district: br.district || '',
-                              street_name: br.street_name || '', building_number: br.building_number || '',
-                              national_id: br.national_id || '', additional_number: br.additional_number || '',
-                              address: br.address || '', latitude: br.latitude || '', longitude: br.longitude || '',
-                            });
-                          }}>
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
-                            onClick={() => { if (confirm(pickBi(isRTL, 'حذف هذا الفرع؟', 'Delete this branch?'))) deleteBranchMutation.mutate(br.id); }}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    {branches.length === 0 && !branchForm && (
-                      <p className="text-center text-sm text-muted-foreground py-6">{pickBi(isRTL, 'لا توجد فروع مسجلة', 'No branches registered')}</p>
-                    )}
-                  </div>
-
-                  {branchForm ? (
-                    <div className="space-y-3 p-4 rounded-xl border border-primary/30 bg-primary/[0.03]">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-primary flex items-center gap-1.5">
-                          {editingBranchId ? <Edit className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-                          {editingBranchId ? (pickBi(isRTL, 'تعديل الفرع', 'Edit Branch')) : (pickBi(isRTL, 'إضافة فرع جديد', 'Add New Branch'))}
-                        </p>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setBranchForm(null); setEditingBranchId(null); }}>
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (عربي)', 'Branch Name (AR)')} *</Label>
-                          <Button
-                            type="button" size="sm" variant="ghost"
-                            className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
-                            disabled={branchTranslating !== null}
-                            onClick={() => translateBranchName('ar')}
-                            title={pickBi(isRTL, 'ترجمة من العربي إلى الإنجليزي', 'Translate Arabic → English')}
-                          >
-                            {branchTranslating === 'ar' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
-                            <span>→ EN</span>
-                          </Button>
-                        </div>
-                        <Input value={branchForm.name_ar} onChange={e => setBranchForm((f) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">{pickBi(isRTL, 'اسم الفرع (إنجليزي)', 'Branch Name (EN)')}</Label>
-                          <Button
-                            type="button" size="sm" variant="ghost"
-                            className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
-                            disabled={branchTranslating !== null}
-                            onClick={() => translateBranchName('en')}
-                            title={pickBi(isRTL, 'ترجمة من الإنجليزي إلى العربي', 'Translate English → Arabic')}
-                          >
-                            {branchTranslating === 'en' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
-                            <span>→ AR</span>
-                          </Button>
-                        </div>
-                        <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'نوع الموقع', 'Location type')} *</Label>
-                        <Select
-                          value={branchForm.branch_type || 'branch'}
-                          onValueChange={(v) => {
-                            const nextIsMain = v === 'main';
-                            if (nextIsMain) {
-                              const currentMain = branches.find((b: AdminBusinessBranchLite) => b.is_main && b.id !== editingBranchId);
-                              if (currentMain && !confirm(isRTL
-                                ? `سيتم إلغاء "${currentMain.name_ar}" كمركز رئيسي وتعيين هذا الموقع بدلاً منه. متابعة؟`
-                                : `"${currentMain.name_ar}" will be unset as headquarters and this location will replace it. Continue?`)) {
-                                return;
-                              }
-                            }
-                            setBranchForm((f) => ({ ...f, branch_type: v as AdminBusinessBranchType, is_main: nextIsMain }));
-                          }}
-                        >
-                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="main">{pickBi(isRTL, 'المركز الرئيسي', 'Headquarters (main)')}</SelectItem>
-                            <SelectItem value="branch">{pickBi(isRTL, 'فرع', 'Branch')}</SelectItem>
-                            <SelectItem value="warehouse">{pickBi(isRTL, 'مستودع', 'Warehouse')}</SelectItem>
-                            <SelectItem value="admin_office">{pickBi(isRTL, 'مكتب إداري', 'Admin office')}</SelectItem>
-                            <SelectItem value="regional_office">{pickBi(isRTL, 'إدارة إقليمية', 'Regional office')}</SelectItem>
-                            <SelectItem value="head_office">{pickBi(isRTL, 'الإدارة العامة', 'Head office')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          {pickBi(isRTL, 'المركز الرئيسي يُستخدم كعنوان المنشأة الافتراضي. مسموح بمركز رئيسي واحد فقط.', 'Headquarters is used as the default business address. Only one headquarters is allowed.')}
-                        </p>
-                      </div>
-                      <Separator />
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{pickBi(isRTL, 'بيانات التواصل', 'Contact Info')}</p>
-                      <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'اسم مسؤول التواصل', 'Contact Person')}</Label>
-                        <Input value={branchForm.contact_person} onChange={e => setBranchForm((f) => ({ ...f, contact_person: e.target.value }))} className="mt-1" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <PhoneField value={parsePhoneValue(branchForm.phone)} onChange={(v) => setBranchForm((f) => ({ ...f, phone: toE164(v) }))} label={pickBi(isRTL, 'الهاتف', 'Phone')} optional />
-                        <PhoneField value={parsePhoneValue(branchForm.mobile)} onChange={(v) => setBranchForm((f) => ({ ...f, mobile: toE164(v) }))} label={pickBi(isRTL, 'الجوال', 'Mobile')} optional />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">{pickBi(isRTL, 'الرقم الموحد', 'Unified Number')}</Label>
-                          <Input value={branchForm.unified_number} onChange={e => setBranchForm((f) => ({ ...f, unified_number: e.target.value }))} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
-                        </div>
-                        <PhoneField value={parsePhoneValue(branchForm.customer_service_phone)} onChange={(v) => setBranchForm((f) => ({ ...f, customer_service_phone: toE164(v) }))} label={pickBi(isRTL, 'خدمة العملاء', 'Customer Service')} optional />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">{pickBi(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
-                          <Input value={branchForm.email} onChange={e => setBranchForm((f) => ({ ...f, email: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
-                        <div>
-                          <Label className="text-xs">{pickBi(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
-                          <Input value={branchForm.website} onChange={e => setBranchForm((f) => ({ ...f, website: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
-                      </div>
-                      <Separator />
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{pickBi(isRTL, 'العنوان', 'Address')}</p>
-                      <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'الدولة', 'Country')}</Label>
-                        <Select value={branchForm.country_id} onValueChange={v => setBranchForm((f) => ({ ...f, country_id: v, city_id: '' }))}>
-                          <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={pickBi(isRTL, 'اختر', 'Select')} /></SelectTrigger>
-                          <SelectContent>
-                            {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* Unified address microservice — Region → City → District (typeable) + SPL + street/building/national-id. */}
-                      <NationalAddressForm
-                        isRTL={isRTL}
-                        value={{
-                          short_address: branchForm.short_address ?? null,
-                          region: branchForm.region ?? null,
-                          region_en: branchForm.region_en ?? null,
-                          city_id: branchForm.city_id ?? null,
-                          district: branchForm.district ?? null,
-                          district_en: branchForm.district_en ?? null,
-                          street_name: branchForm.street_name ?? null,
-                          street_name_en: branchForm.street_name_en ?? null,
-                          building_number: branchForm.building_number ?? null,
-                          additional_number: branchForm.additional_number ?? null,
-                          post_code: branchForm.post_code ?? null,
-                          address: branchForm.address ?? null,
-                          address_en: branchForm.address_en ?? null,
-                          address_manual: branchForm.address_manual ?? false,
-                        } as NationalAddressValue}
-                        onChange={(next) => setBranchForm((f) => ({
-                          ...f,
-                          short_address: next.short_address ?? '',
-                          region: next.region ?? '',
-                          region_en: next.region_en ?? '',
-                          city_id: next.city_id ?? '',
-                          district: next.district ?? '',
-                          district_en: next.district_en ?? '',
-                          street_name: next.street_name ?? '',
-                          street_name_en: next.street_name_en ?? '',
-                          building_number: next.building_number ?? '',
-                          additional_number: next.additional_number ?? '',
-                          post_code: next.post_code ?? '',
-                          address: next.address ?? '',
-                          address_en: next.address_en ?? '',
-                          address_manual: next.address_manual ?? false,
-                          national_id: f.national_id,
-                        }))}
-                      />
-                      <div>
-                        <Label className="text-xs">{pickBi(isRTL, 'الرقم الوطني', 'National ID')}</Label>
-                        <Input value={branchForm.national_id} onChange={e => setBranchForm((f) => ({ ...f, national_id: e.target.value }))} dir="ltr" className="mt-1 max-w-xs" />
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <Switch checked={branchForm.is_active} onCheckedChange={v => setBranchForm((f) => ({ ...f, is_active: v }))} />
-                          <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
-                        </div>
-                      </div>
-                      <Button onClick={() => saveBranchMutation.mutate()} disabled={!branchForm.name_ar || saveBranchMutation.isPending}
-                        className="w-full gap-1.5">
-                        <Save className="w-3.5 h-3.5" />
-                        {saveBranchMutation.isPending ? '...' : (pickBi(isRTL, 'حفظ الفرع', 'Save Branch'))}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button variant="outline" className="w-full gap-1.5" onClick={() => {
-                      // First location defaults to "main" (headquarters); subsequent
-                      // ones default to "branch" and admins can switch to warehouse
-                      // or admin_office.
-                      const isFirst = branches.length === 0;
+                  <BusinessBranchesSection
+                    isRTL={isRTL}
+                    language={language as 'ar' | 'en'}
+                    branches={branches as unknown as AdminBranchRow[]}
+                    branchForm={branchForm}
+                    setBranchForm={setBranchForm}
+                    editingBranchId={editingBranchId}
+                    setEditingBranchId={setEditingBranchId}
+                    branchTranslating={branchTranslating}
+                    onTranslate={translateBranchName}
+                    countries={countries}
+                    onToggleActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
+                    onEdit={(br) => {
+                      setEditingBranchId(br.id);
                       setBranchForm({
-                        ...emptyBranch(),
-                        is_main: isFirst,
-                        branch_type: isFirst ? 'main' : 'branch',
+                        name_ar: br.name_ar,
+                        name_en: br.name_en || '',
+                        is_main: !!br.is_main,
+                        is_active: br.is_active,
+                        branch_type: (br.branch_type as AdminBusinessBranchType) ?? (br.is_main ? 'main' : 'branch'),
+                        contact_person: br.contact_person || '',
+                        phone: br.phone || '',
+                        mobile: br.mobile || '',
+                        unified_number: br.unified_number || '',
+                        customer_service_phone: (br as unknown as { customer_service_phone?: string | null }).customer_service_phone || '',
+                        email: (br as unknown as { email?: string | null }).email || '',
+                        website: (br as unknown as { website?: string | null }).website || '',
+                        country_id: (br as unknown as { country_id?: string | null }).country_id || '',
+                        city_id: (br as unknown as { city_id?: string | null }).city_id || '',
+                        region: (br as unknown as { region?: string | null }).region || '',
+                        district: br.district || '',
+                        street_name: br.street_name || '',
+                        building_number: (br as unknown as { building_number?: string | null }).building_number || '',
+                        national_id: (br as unknown as { national_id?: string | null }).national_id || '',
+                        additional_number: (br as unknown as { additional_number?: string | null }).additional_number || '',
+                        address: br.address || '',
+                        latitude: (br as unknown as { latitude?: number | string | null }).latitude || '',
+                        longitude: (br as unknown as { longitude?: number | string | null }).longitude || '',
                       });
-                      setEditingBranchId(null);
-                    }}>
-                      <Plus className="w-3.5 h-3.5" /> {pickBi(isRTL, 'إضافة موقع جديد (فرع / مستودع / مكتب)', 'Add new location (branch / warehouse / office)')}
-                    </Button>
-                  )}
+                    }}
+                    onDelete={(id) => deleteBranchMutation.mutate(id)}
+                    onSave={() => saveBranchMutation.mutate()}
+                    saving={saveBranchMutation.isPending}
+                    emptyBranch={emptyBranch}
+                  />
                 </TabsContent>
 
                 {/* ── Controls Tab ── */}
