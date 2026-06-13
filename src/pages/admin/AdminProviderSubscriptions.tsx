@@ -17,6 +17,7 @@ import {
   listProviderCreditTransactionsForBusiness,
   adminAdjustProviderCredits,
 } from '@/modules/credits';
+import { TierChip } from '@/components/admin/memberships/shared';
 
 interface AdminTxRow {
   id: string;
@@ -60,13 +61,6 @@ interface Sub {
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'نشطة', paused: 'موقوفة', expired: 'منتهية', cancelled: 'ملغاة',
-};
-
-const PLATFORM_TIER_LABEL: Record<string, string> = {
-  free: 'مجانية',
-  basic: 'أساسية',
-  pro: 'احترافية',
-  enterprise: 'مؤسسية',
 };
 
 const AdminProviderSubscriptions: React.FC = () => {
@@ -184,13 +178,7 @@ const AdminProviderSubscriptions: React.FC = () => {
                         <td className="py-2 px-2">
                           {(() => {
                             const tier = s.business?.membership_tier ?? 'free';
-                            const label = PLATFORM_TIER_LABEL[tier] ?? tier;
-                            const isFree = tier === 'free';
-                            return (
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isFree ? 'border-muted-foreground/30 bg-muted/30 text-muted-foreground' : 'border-success/40 bg-success/10 text-success'}`}>
-                                {label}
-                              </span>
-                            );
+                            return <TierChip tier={tier} isRTL={true} />;
                           })()}
                         </td>
                         <td className="py-2 px-2 tech-content font-medium">{s.lead_credits_balance}</td>
@@ -315,9 +303,7 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
             <span className="text-[10px] tech-content px-1.5 py-0.5 rounded border border-border bg-muted/40">{sub.business.ref_id}</span>
           )}
           <span className="text-[10px] text-muted-foreground">عضوية المنصة:</span>
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${(sub.business?.membership_tier ?? 'free') === 'free' ? 'border-muted-foreground/30 bg-muted/30 text-muted-foreground' : 'border-success/40 bg-success/10 text-success'}`}>
-            {PLATFORM_TIER_LABEL[sub.business?.membership_tier ?? 'free'] ?? (sub.business?.membership_tier ?? 'free')}
-          </span>
+          <TierChip tier={sub.business?.membership_tier ?? 'free'} isRTL={true} />
         </div>
       </div>
 
