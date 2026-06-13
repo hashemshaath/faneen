@@ -1,8 +1,7 @@
 import { pickBi } from '@/components/common/Bilingual';
-import React, { useState, useMemo, useCallback, useTransition } from 'react';
+import { useState, useMemo, useCallback, useTransition } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -20,110 +19,39 @@ import {
   updateMembershipPlanById,
 } from '@/modules/memberships';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
-  Crown, Pencil, Loader2, Users, CreditCard, X, Check, Save,
-  Zap, Building2, AlertTriangle, Clock, Ban,
-  RefreshCw, BarChart3, Search, UserCheck, CalendarDays, DollarSign, Shield, ArrowUpCircle,
-  Download, Hash, Activity, Layers, Settings2, Eye, Sparkles, Plus, Lock,
+  CreditCard, Users, Building2, BarChart3, ArrowUpCircle, Activity,
+  Download, Lock,
 } from 'lucide-react';
-import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
-import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
+import { TIERS } from '@/lib/membership-tiers';
+import { parseLimits, limitsToJson } from '@/lib/membership-limits';
 import { AdminUpgradeRequestsPanel } from '@/components/membership/AdminUpgradeRequestsPanel';
 import { AdminPromoCodesPanel } from '@/components/membership/AdminPromoCodesPanel';
-import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
+import {
+  MembershipOverviewSection,
+  MembershipPlansSection,
+  MembershipSubscriptionsSection,
+  MembershipBusinessLinksSection,
+  MembershipUsageReportSection,
+} from '@/components/admin/memberships/sections';
+import type {
+  AdminMembershipEditingPlan,
+  AdminMembershipEnrichedSubscription,
+  MembershipUsageRow,
+} from '@/components/admin/memberships/sections';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
 
 /* ─── Admin Memberships local types (no `any`) ─── */
 type AdminMembershipPlanRow = Database['public']['Tables']['membership_plans']['Row'];
-type AdminMembershipSubscriptionRow = Database['public']['Tables']['membership_subscriptions']['Row'];
 
 type AdminMembershipLimitsInput = Record<string, unknown> | undefined;
-
-interface AdminMembershipSubscriptionWithPlan extends AdminMembershipSubscriptionRow {
-  plan: { name_ar: string | null; name_en: string | null; tier: string | null } | null;
-}
-
-type AdminMembershipProfileLite = {
-  user_id: string;
-  full_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  membership_tier: string | null;
-};
-
-type AdminMembershipBusinessLite = {
-  id: string;
-  name_ar: string | null;
-  name_en: string | null;
-  membership_tier: string | null;
-  logo_url: string | null;
-  is_verified: boolean | null;
-  is_active: boolean | null;
-};
-
-interface AdminMembershipEnrichedSubscription extends AdminMembershipSubscriptionWithPlan {
-  profile: AdminMembershipProfileLite | null;
-  business: AdminMembershipBusinessLite | null;
-}
-
-/**
- * Editing state shape used by the inline plan form.
- * - On edit: a full plan row is loaded.
- * - On create: only `tier` + `_new: true` are set, the form fields drive the rest.
- */
-type AdminMembershipEditingPlan = Partial<AdminMembershipPlanRow> & {
-  tier: AdminMembershipPlanRow['tier'];
-  _new?: boolean;
-};
-
-interface AdminMembershipPlanCardProps {
-  plan: AdminMembershipPlanRow;
-  isRTL: boolean;
-  language: string;
-  subsCount: number;
-  onEdit: (p: AdminMembershipPlanRow) => void;
-}
-
-interface AdminMembershipSubRowProps {
-  sub: AdminMembershipEnrichedSubscription;
-  isRTL: boolean;
-  language: string;
-  plans: AdminMembershipPlanRow[];
-  onCancel: (id: string) => void;
-  onRenew: (sub: AdminMembershipEnrichedSubscription) => void;
-  onUpgrade: (sub: AdminMembershipEnrichedSubscription) => void;
-}
-
-/* ─── Admin Usage Report ─── */
-type UsageReportRow = {
-  business_id: string;
-  business_name_ar: string | null;
-  business_name_en: string | null;
-  owner_user_id: string;
-  tier: string | null;
-  metric: string;
-  used: number;
-  limit_value: number;
-  period: string;
-  near_cap: boolean;
-  over_limit: boolean;
-};
 
 /* ─── Plan Card ─── */
 /* ─── Integrated Command Hub: Plan Card ─── */
