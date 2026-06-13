@@ -197,7 +197,7 @@ const AdminProviderSubscriptions: React.FC = () => {
             )}
           </CardContent></Card>
         </div>
-      </div>
+      </MembershipFinancePageShell>
     </DashboardLayout>
   );
 };
