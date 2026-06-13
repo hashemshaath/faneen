@@ -1,5 +1,5 @@
 import { Switch } from '@/components/ui/switch';
-import { pickBi } from '@/i18n/bi';
+import { pickBi } from '@/components/common/Bilingual';
 import type { AdminEditBusinessFormState } from '@/pages/admin/adminBusinesses.types';
 import type { TierMeta } from '@/pages/admin/businesses/_shared';
 import { BusinessAdminActionCard } from './BusinessAdminActionCard';
