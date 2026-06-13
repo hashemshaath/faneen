@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, Plus, ExternalLink, CheckCircle2, Clock, Ban } from 'lucide-react';
+import { FileText, Plus, ExternalLink, CheckCircle2, Clock, Ban, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -12,11 +12,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { type ContractStatus } from '@/lib/contract-statuses';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Bi, useBi } from '@/components/common/Bilingual';
+import { cn } from '@/lib/utils';
 import {
   ContractAdminPageShell,
   ContractFiltersBar,
   ContractStatsStrip,
   ContractStatusBadge,
+  ContractDetailsDrawer,
+  buildContractDetailsDrawerProps,
   type ContractStatsItem,
 } from '@/components/admin/contracts/shared';
 
@@ -44,6 +47,7 @@ export default function AdminContracts() {
   useNoIndex();
   const [status, setStatus] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
+  const [viewingContractId, setViewingContractId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-contracts', status],
@@ -87,6 +91,11 @@ export default function AdminContracts() {
     { key: 'cancelled', label: bi('ملغاة/متنازع', 'Cancelled / Disputed'), value: stats.cancelled, icon: Ban, tone: 'destructive' },
   ];
 
+  const viewingContract = useMemo(
+    () => (data ?? []).find((c) => c.id === viewingContractId) ?? null,
+    [data, viewingContractId],
+  );
+
   return (
     <DashboardLayout>
       <ContractAdminPageShell
@@ -122,7 +131,14 @@ export default function AdminContracts() {
           />
         }
       >
-        {isLoading ? (
+        <div
+          className={cn(
+            'grid gap-4',
+            viewingContract ? 'lg:grid-cols-[minmax(0,1fr)_360px]' : 'grid-cols-1',
+          )}
+        >
+          <div className="min-w-0">
+            {isLoading ? (
           <div className="space-y-2">
             {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
           </div>
@@ -134,9 +150,10 @@ export default function AdminContracts() {
           <ul className="space-y-2">
             {filtered.map((c) => {
               const title = (isRTL ? c.title_ar : (c.title_en || c.title_ar)) || c.contract_number;
+              const isSelected = c.id === viewingContractId;
               return (
                 <li key={c.id}>
-                  <Card className="hover-lift">
+                  <Card className={cn('hover-lift', isSelected && 'ring-1 ring-primary/40')}>
                     <CardContent className="p-3 sm:p-4 flex items-center gap-3 flex-wrap">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -149,6 +166,17 @@ export default function AdminContracts() {
                           {new Date(c.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                         </p>
                       </div>
+                      <Button
+                        type="button"
+                        variant={isSelected ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => setViewingContractId(isSelected ? null : c.id)}
+                        aria-pressed={isSelected}
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <Bi ar="التفاصيل" en="Details" />
+                      </Button>
                       <Button asChild variant="ghost" size="sm" className="gap-1">
                         <Link to={`/contracts/${c.id}`}>
                           <Bi ar="عرض" en="Open" /><ExternalLink className="w-3.5 h-3.5" />
@@ -161,6 +189,19 @@ export default function AdminContracts() {
             })}
           </ul>
         )}
+          </div>
+          {viewingContract ? (
+            <div className="lg:sticky lg:top-4 self-start">
+              <ContractDetailsDrawer
+                {...buildContractDetailsDrawerProps({
+                  contract: viewingContract,
+                  isRTL,
+                  onClose: () => setViewingContractId(null),
+                })}
+              />
+            </div>
+          ) : null}
+        </div>
       </ContractAdminPageShell>
     </DashboardLayout>
   );

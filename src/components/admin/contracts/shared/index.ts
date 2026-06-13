@@ -3,3 +3,10 @@ export { ContractLifecycleBadge, type ContractLifecycleBadgeProps, type Contract
 export { ContractStatsStrip, type ContractStatsStripProps, type ContractStatsItem, type ContractStatsTone } from './ContractStatsStrip';
 export { ContractAdminPageShell, type ContractAdminPageShellProps } from './ContractAdminPageShell';
 export { ContractFiltersBar, type ContractFiltersBarProps } from './ContractFiltersBar';
+export { ContractTimelineCard, type ContractTimelineCardProps } from './ContractTimelineCard';
+export { ContractDetailsDrawer, type ContractDetailsDrawerProps } from './ContractDetailsDrawer';
+export {
+  buildContractDetailsDrawerProps,
+  type ContractRowForDrawer,
+  type BuildContractDetailsDrawerPropsInput,
+} from './buildContractDetailsDrawerProps';
