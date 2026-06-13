@@ -51,7 +51,10 @@ import { UserFiltersBar } from './users/UserFiltersBar';
 import { CreateUserPanel } from './users/CreateUserPanel';
 import { UserEditPanel } from './users/UserEditPanel';
 import { UsersListSection } from './users/UsersListSection';
-import { tierConfig, type Profile, type UserRole } from './users/userConfigs';
+import {
+  tierConfig, accountTypeConfig, roleConfig, staffRoleConfig,
+  type Profile, type UserRole,
+} from './users/userConfigs';
 import type { StaffRole, BusinessLink, BusinessInfo } from './users/_shared';
 
 /**
