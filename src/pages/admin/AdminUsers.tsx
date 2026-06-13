@@ -615,32 +615,15 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'التفاصيل', 'Details')}</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)} aria-label="Edit">
-                <Pencil className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'تعديل', 'Edit')}</TooltipContent></Tooltip>
-            {canManageUser && isSuperAdmin && (
-              <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onPassword(profile)} aria-label="Key">
-                  <KeyRound className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'كلمة المرور', 'Password')}</TooltipContent></Tooltip>
-            )}
-            {canManageUser && (
-              <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-success' : 'text-warning'}`} onClick={() => onToggleBan(profile)} aria-label="Action">
-                  {isBanned ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
-                </Button>
-              </TooltipTrigger><TooltipContent>{isBanned ? (pickBi(isRTL, 'تفعيل', 'Enable')) : (pickBi(isRTL, 'تعطيل', 'Disable'))}</TooltipContent></Tooltip>
-            )}
-            {canManageUser && (
-              <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => onDelete(profile)} aria-label="Action">
-                  <UserX className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'حذف', 'Delete')}</TooltipContent></Tooltip>
-            )}
+            <UserRowActions
+              isRTL={isRTL}
+              isBanned={isBanned}
+              onView={() => onView(profile)}
+              onEdit={() => onEdit(profile)}
+              onPassword={canManageUser && isSuperAdmin ? () => onPassword(profile) : undefined}
+              onToggleActive={canManageUser ? () => onToggleBan(profile) : undefined}
+              onDelete={canManageUser ? () => onDelete(profile) : undefined}
+            />
             {isSuperAdmin && (addingRole ? (
               <div className="flex items-center gap-1">
                 <Select value={pickedRole} onValueChange={setPickedRole}>
