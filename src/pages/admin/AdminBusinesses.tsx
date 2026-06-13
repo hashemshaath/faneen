@@ -1231,8 +1231,7 @@ const AdminBusinesses = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto">
+    <AdminBusinessesPageShell>
         <AdminPageHeader
           tone="accent"
           icon={Building2}
@@ -1248,70 +1247,23 @@ const AdminBusinesses = () => {
               : `${stats.total} registered businesses • Full control of profiles, services, branches & memberships`
           )}
           actions={
-            <>
-              <div className="flex bg-muted/40 border border-border/40 rounded-xl overflow-hidden p-0.5">
-                <button
-                  type="button"
-                  aria-label={pickBi(isRTL, 'عرض بطاقات', 'Card view')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setViewMode('cards')}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={pickBi(isRTL, 'عرض جدول', 'Table view')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{pickBi(isRTL, 'تحديث', 'Refresh')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => exportCSV(filtered, language)}
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{pickBi(isRTL, 'تصدير CSV', 'Export CSV')}</span>
-              </Button>
-              <SavedViewsMenu
-                views={savedViews.views}
-                currentFilters={currentViewFilters}
-                onApply={applySavedView}
-                onSave={savedViews.save}
-                onRemove={savedViews.remove}
-              />
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-              >
-                <Link to="/admin/provider-review">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{pickBi(isRTL, 'مراجعة المزودين', 'Provider Review')}</span>
-                </Link>
-              </Button>
-              <Button
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                {pickBi(isRTL, 'منشأة جديدة', 'New Business')}
-              </Button>
-            </>
+            <BusinessHeaderActions
+              isRTL={isRTL}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onRefresh={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
+              onExportCsv={() => exportCSV(filtered, language)}
+              onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
+              savedViewsSlot={
+                <SavedViewsMenu
+                  views={savedViews.views}
+                  currentFilters={currentViewFilters}
+                  onApply={applySavedView}
+                  onSave={savedViews.save}
+                  onRemove={savedViews.remove}
+                />
+              }
+            />
           }
           kpiSlot={panelOpen ? undefined : (
             <BusinessStatsStrip
