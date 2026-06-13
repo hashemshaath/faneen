@@ -11,7 +11,8 @@ import {
   BusinessCardView,
   type BusinessCardRow,
 } from '@/pages/admin/businesses/BusinessCardView';
-import type { AllServicesById } from '@/pages/admin/businesses/BusinessCardView';
+
+type AllServicesLite = ReadonlyArray<{ business_id: string }>;
 
 /**
  * BusinessTableSection — single switcher for the AdminBusinesses list
@@ -37,7 +38,7 @@ interface BusinessTableSectionProps {
   // helpers
   translationCompleteness: (b: BusinessTableRow) => { ar: boolean; en: boolean; full: boolean };
   contractBusinessIds: ReadonlyArray<string>;
-  allServices: AllServicesById;
+  allServices: AllServicesLite;
 
   // table/card row callbacks
   onEdit: (b: Record<string, unknown>) => void;
