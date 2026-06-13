@@ -516,7 +516,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 {profile.full_name || (pickBi(isRTL, 'بدون اسم', 'No name'))}
               </button>
               {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{pickBi(isRTL, 'أنت', 'You')}</Badge>}
-              {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{pickBi(isRTL, 'معطّل', 'Disabled')}</Badge>}
+              {isBanned && <UserStatusBadge variant="suspended" isRTL={isRTL} />}
               {!compact && (
                 <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
                   <Clock className="w-2.5 h-2.5" />{formatRelative(profile.updated_at, isRTL)}
