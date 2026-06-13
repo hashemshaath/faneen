@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const EDGE = 'supabase/functions/admin-create-business-with-owner/index.ts';
 const WRAPPER = 'src/modules/businesses/services/adminCreateBusinessWithOwner.ts';
 const PAGE = 'src/pages/admin/AdminBusinesses.tsx';
+const CREATE_PANEL = 'src/pages/admin/businesses/CreateBusinessPanel.tsx';
 
 describe('ADMIN-BUSINESS-CREATE-OWNER edge function source invariants', () => {
   it('edge function file exists', () => {
@@ -103,7 +104,13 @@ describe('ADMIN-BUSINESS-CREATE-OWNER service wrapper', () => {
 });
 
 describe('ADMIN-BUSINESS-CREATE-OWNER UI integration (AdminBusinesses.tsx)', () => {
-  const src = readFileSync(resolve(PAGE), 'utf8');
+  // PR-6 of the AdminBusinesses refactor extracted the create panel into its
+  // own component. The owner-mode tabs and field copy now live there; the
+  // parent page imports the panel and still owns the mutation + edge wiring.
+  const src =
+    readFileSync(resolve(PAGE), 'utf8') +
+    '\n/*PANEL*/\n' +
+    readFileSync(resolve(CREATE_PANEL), 'utf8');
 
   it('imports the service wrapper', () => {
     expect(src).toContain('adminCreateBusinessWithOwner');
