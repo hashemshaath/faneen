@@ -1417,7 +1417,7 @@ const AdminBusinesses = () => {
 
                 {/* ── Owner Tab (ORG-RBAC-9F) ── */}
                 <TabsContent value="owner" className="space-y-4 mt-3">
-                  <BusinessOwnerPanel
+                  <BusinessOwnerSectionShell
                     businessId={editingBiz.id}
                     businessRef={editingBiz.ref_id ?? null}
                     ownerUserId={editingBiz.user_id}
@@ -1522,44 +1522,18 @@ const AdminBusinesses = () => {
 
                 {/* ── Controls Tab ── */}
                 <TabsContent value="controls" className="space-y-4 mt-3">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 border border-border/30">
-                      <div>
-                        <p className="text-sm font-medium">{pickBi(isRTL, 'حالة التفعيل', 'Active Status')}</p>
-                        <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'تفعيل أو تعطيل ظهور العمل', 'Enable or disable business visibility')}</p>
-                      </div>
-                      <Switch checked={editForm.is_active} onCheckedChange={v => setField('is_active', v)} />
-                    </div>
-                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 border border-border/30">
-                      <div>
-                        <p className="text-sm font-medium">{pickBi(isRTL, 'التوثيق', 'Verification')}</p>
-                        <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'علامة التوثيق الرسمية', 'Official verification badge')}</p>
-                      </div>
-                      <Switch checked={editForm.is_verified} onCheckedChange={v => setField('is_verified', v)} />
-                    </div>
-                    <div className="p-3.5 rounded-xl bg-muted/30 border border-border/30">
-                      <p className="text-sm font-medium mb-2">{pickBi(isRTL, 'مستوى العضوية', 'Membership Tier')}</p>
-                      {(() => {
-                        const cur = tiers.find(t => t.value === editForm.membership_tier) || tiers[0];
-                        return (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background/60 border border-border/40">
-                            <span>{cur.icon}</span>
-                            <span className="text-sm font-medium">
-                              {language === 'ar' ? cur.label_ar : cur.label_en}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                      <p className="text-[10px] text-muted-foreground mt-2">
-                        {pickBi(isRTL, 'تغيير العضوية يتم من خيار العضوية في صف المنشأة.', 'Use the row tier picker to change membership.')}
-                      </p>
-                    </div>
-                  </div>
+                  <BusinessControlsSection
+                    editForm={editForm}
+                    setField={setField}
+                    isRTL={isRTL}
+                    language={language as 'ar' | 'en'}
+                    tiers={tiers}
+                  />
                 </TabsContent>
 
                 {/* ── Ops Tab (BUSINESS-CORE-2): internal notes + activity timeline ── */}
                 <TabsContent value="ops" className="space-y-4 mt-3">
-                  <BusinessOperationsPanel businessId={editingBiz.id} />
+                  <BusinessOperationsSection businessId={editingBiz.id} />
                 </TabsContent>
               </Tabs>
 
