@@ -1759,14 +1759,13 @@ const AdminBusinesses = () => {
                 </TabsContent>
               </Tabs>
 
-              <Separator className="my-4" />
-              <div className="flex gap-2">
-                <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5 rounded-xl">
-                  <Save className="w-3.5 h-3.5" />
-                  {updateBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (pickBi(isRTL, 'حفظ التعديلات', 'Save Changes'))}
-                </Button>
-                <Button variant="outline" onClick={() => setEditingBiz(null)} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-              </div>
+              <BusinessEditActionsFooter
+                isRTL={isRTL}
+                canSave={!!editForm.name_ar}
+                saving={updateBizMutation.isPending}
+                onSave={() => updateBizMutation.mutate()}
+                onCancel={() => setEditingBiz(null)}
+              />
           </div>
         )}
 
