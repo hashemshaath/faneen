@@ -1,21 +1,24 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, Plus, Filter, ExternalLink, Search, CheckCircle2, Clock, Ban } from 'lucide-react';
+import { FileText, Plus, ExternalLink, CheckCircle2, Clock, Ban } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getContractStatusMeta, type ContractStatus } from '@/lib/contract-statuses';
+import { type ContractStatus } from '@/lib/contract-statuses';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
-import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { Bi, useBi } from '@/components/common/Bilingual';
+import {
+  ContractAdminPageShell,
+  ContractFiltersBar,
+  ContractStatsStrip,
+  ContractStatusBadge,
+  type ContractStatsItem,
+} from '@/components/admin/contracts/shared';
 
 interface AdminContractRow {
   id: string;
@@ -33,12 +36,13 @@ interface AdminContractRow {
 }
 
 const STATUS_FILTERS = ['all', 'draft', 'pending_approval', 'active', 'completed', 'cancelled', 'disputed'] as const;
+type StatusFilter = typeof STATUS_FILTERS[number];
 
 export default function AdminContracts() {
   const { isRTL } = useLanguage();
   const bi = useBi();
   useNoIndex();
-  const [status, setStatus] = useState<typeof STATUS_FILTERS[number]>('all');
+  const [status, setStatus] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
 
   const { data, isLoading, isError } = useQuery({
@@ -76,18 +80,25 @@ export default function AdminContracts() {
     };
   }, [data]);
 
+  const statsItems: ContractStatsItem[] = [
+    { key: 'total', label: bi('إجمالي العقود', 'Total'), value: stats.total, icon: FileText, tone: 'info' },
+    { key: 'active', label: bi('نشطة', 'Active'), value: stats.active, icon: CheckCircle2, tone: 'success' },
+    { key: 'pending', label: bi('بانتظار/مسودة', 'Pending / Draft'), value: stats.pending, icon: Clock, tone: 'warning' },
+    { key: 'cancelled', label: bi('ملغاة/متنازع', 'Cancelled / Disputed'), value: stats.cancelled, icon: Ban, tone: 'destructive' },
+  ];
+
   return (
     <DashboardLayout>
-      <AdminListPageTemplate
+      <ContractAdminPageShell
         tone="accent"
         icon={FileText}
         eyebrow={bi('لوحة الإدارة', 'Admin Console')}
         title={bi('إدارة العقود', 'Contracts Administration')}
-        subtitle={bi(
+        description={bi(
           'عرض كل العقود وإنشاء عقود بالنيابة بين طرفين، مع متابعة الحالة والقيمة الإجمالية.',
           'Browse every contract and create on-behalf contracts between parties, with status and totals.',
         )}
-        actions={
+        actionsSlot={
           <Button asChild size="sm" className="h-10 gap-1.5 rounded-xl">
             <Link to="/admin/contracts/create">
               <Plus className="w-4 h-4" />
@@ -95,40 +106,20 @@ export default function AdminContracts() {
             </Link>
           </Button>
         }
-        kpiSlot={
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <AdminKpiCard label={bi('إجمالي العقود', 'Total')} value={stats.total} icon={FileText} tone="primary" />
-            <AdminKpiCard label={bi('نشطة', 'Active')} value={stats.active} icon={CheckCircle2} tone="success" />
-            <AdminKpiCard label={bi('بانتظار/مسودة', 'Pending / Draft')} value={stats.pending} icon={Clock} tone="warning" />
-            <AdminKpiCard label={bi('ملغاة/متنازع', 'Cancelled / Disputed')} value={stats.cancelled} icon={Ban} tone="destructive" />
-          </div>
-        }
+        statsSlot={<ContractStatsStrip items={statsItems} />}
         filtersSlot={
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground" />
-              <Input
-                dir="auto"
-                className="ps-9 h-10 rounded-xl"
-                placeholder={bi('بحث برقم العقد أو العنوان', 'Search by number or title')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <Select value={status} onValueChange={(v) => setStatus(v as typeof STATUS_FILTERS[number])}>
-                <SelectTrigger className="w-[180px] h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUS_FILTERS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s === 'all' ? bi('كل الحالات', 'All') : (getContractStatusMeta(s)[isRTL ? 'ar' : 'en'] ?? s)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <ContractFiltersBar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder={bi('بحث برقم العقد أو العنوان', 'Search by number or title')}
+            status={status}
+            statusOptions={STATUS_FILTERS}
+            onStatusChange={(v) => setStatus(v as StatusFilter)}
+            allLabel={bi('كل الحالات', 'All')}
+            isRTL={isRTL}
+            onReset={() => { setSearch(''); setStatus('all'); }}
+            resetLabel={bi('مسح', 'Clear')}
+          />
         }
       >
         {isLoading ? (
@@ -142,7 +133,6 @@ export default function AdminContracts() {
         ) : (
           <ul className="space-y-2">
             {filtered.map((c) => {
-              const meta = getContractStatusMeta(c.status);
               const title = (isRTL ? c.title_ar : (c.title_en || c.title_ar)) || c.contract_number;
               return (
                 <li key={c.id}>
@@ -152,7 +142,7 @@ export default function AdminContracts() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <Link to={`/contracts/${c.id}`} className="font-medium text-sm hover:underline truncate">{title}</Link>
                           <Badge variant="secondary" className="tech-content text-[10px]" dir="ltr">{c.contract_number}</Badge>
-                          <Badge variant="outline" className="text-[10px]">{meta[isRTL ? 'ar' : 'en']}</Badge>
+                          <ContractStatusBadge status={c.status} isRTL={isRTL} />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 tech-content" dir="ltr">
                           {(c.total_amount ?? 0).toLocaleString()} {c.currency_code} •{' '}
@@ -171,7 +161,7 @@ export default function AdminContracts() {
             })}
           </ul>
         )}
-      </AdminListPageTemplate>
+      </ContractAdminPageShell>
     </DashboardLayout>
   );
 }
