@@ -350,8 +350,8 @@ const AdminMembershipPayments = () => {
         getHealth={intentHealth}
         getHealthLabel={(h) => healthLabel(h, isRTL)}
         getHealthTone={(h) => HEALTH_TONE[h]}
-        isPaid={(r) => PAID_STATUSES.has(r.status)}
-        isRefunded={(r) => REFUNDED_STATUSES.has(r.status)}
+        isPaidFn={(r) => PAID_STATUSES.has(r.status)}
+        isRefundedFn={(r) => REFUNDED_STATUSES.has(r.status)}
         showReconcile={(r) =>
           !PAID_STATUSES.has(r.status) && !REFUNDED_STATUSES.has(r.status) && r.status !== 'cancelled'
         }
