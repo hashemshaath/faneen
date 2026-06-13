@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   MoreHorizontal, Eye, Pencil, ShieldCheck, Activity, Ban, UserCheck,
+  KeyRound, UserX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +20,10 @@ export interface UserRowActionHandlers {
   onToggleActive?: () => void;
   onManageRoles?: () => void;
   onViewActivity?: () => void;
+  /** Open the existing "change password" inline panel. */
+  onPassword?: () => void;
+  /** Open the existing delete-account confirmation. */
+  onDelete?: () => void;
 }
 
 export interface UserRowActionsProps extends UserRowActionHandlers {
@@ -48,6 +53,8 @@ export const UserRowActions = React.memo(function UserRowActions({
   onToggleActive,
   onManageRoles,
   onViewActivity,
+  onPassword,
+  onDelete,
 }: UserRowActionsProps) {
   return (
     <DropdownMenu>
@@ -76,6 +83,12 @@ export const UserRowActions = React.memo(function UserRowActions({
           <DropdownMenuItem onSelect={onEdit} className="gap-2 text-xs">
             <Pencil className="w-3.5 h-3.5" />
             {pickBi(isRTL, 'تعديل', 'Edit')}
+          </DropdownMenuItem>
+        )}
+        {onPassword && (
+          <DropdownMenuItem onSelect={onPassword} className="gap-2 text-xs">
+            <KeyRound className="w-3.5 h-3.5" />
+            {pickBi(isRTL, 'كلمة المرور', 'Password')}
           </DropdownMenuItem>
         )}
         {onToggleActive && (
@@ -107,6 +120,18 @@ export const UserRowActions = React.memo(function UserRowActions({
             <Activity className="w-3.5 h-3.5" />
             {pickBi(isRTL, 'سجل النشاط', 'Activity log')}
           </DropdownMenuItem>
+        )}
+        {onDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={onDelete}
+              className="gap-2 text-xs text-destructive focus:text-destructive"
+            >
+              <UserX className="w-3.5 h-3.5" />
+              {pickBi(isRTL, 'حذف الحساب', 'Delete account')}
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

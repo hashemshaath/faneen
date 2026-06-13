@@ -61,6 +61,10 @@ import {
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
 import { AdminUsersStatsStrip, buildAdminUserStats } from '@/components/admin/users/AdminUsersStatsStrip';
+import { AdminUsersPageShell } from '@/components/admin/users/AdminUsersPageShell';
+import { UserRowActions } from '@/components/admin/users/UserRowActions';
+import { UserDetailsDrawer } from '@/components/admin/users/UserDetailsDrawer';
+import { UserStatusBadge } from '@/components/admin/users/UserStatusBadge';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
@@ -451,12 +455,13 @@ interface UserRowProps {
   onRemoveRole: (id: string) => void;
   onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
   onRemoveStaff: (link: BusinessLink) => void;
+  onView: (p: Profile) => void;
 }
 
 const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canManageUser, isSuperAdmin,
   isRTL, language, selected, expanded, density, onToggleSelect, onToggleExpand,
   onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole,
-  onChangeStaffRole, onRemoveStaff }: UserRowProps) => {
+  onChangeStaffRole, onRemoveStaff, onView }: UserRowProps) => {
   const [addingRole, setAddingRole] = useState(false);
   const [pickedRole, setPickedRole] = useState('user');
   const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
@@ -511,7 +516,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 {profile.full_name || (pickBi(isRTL, 'بدون اسم', 'No name'))}
               </button>
               {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{pickBi(isRTL, 'أنت', 'You')}</Badge>}
-              {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{pickBi(isRTL, 'معطّل', 'Disabled')}</Badge>}
+              {isBanned && <UserStatusBadge variant="suspended" isRTL={isRTL} />}
               {!compact && (
                 <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
                   <Clock className="w-2.5 h-2.5" />{formatRelative(profile.updated_at, isRTL)}
@@ -610,32 +615,15 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'التفاصيل', 'Details')}</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)} aria-label="Edit">
-                <Pencil className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'تعديل', 'Edit')}</TooltipContent></Tooltip>
-            {canManageUser && isSuperAdmin && (
-              <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onPassword(profile)} aria-label="Key">
-                  <KeyRound className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'كلمة المرور', 'Password')}</TooltipContent></Tooltip>
-            )}
-            {canManageUser && (
-              <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-success' : 'text-warning'}`} onClick={() => onToggleBan(profile)} aria-label="Action">
-                  {isBanned ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
-                </Button>
-              </TooltipTrigger><TooltipContent>{isBanned ? (pickBi(isRTL, 'تفعيل', 'Enable')) : (pickBi(isRTL, 'تعطيل', 'Disable'))}</TooltipContent></Tooltip>
-            )}
-            {canManageUser && (
-              <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => onDelete(profile)} aria-label="Action">
-                  <UserX className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'حذف', 'Delete')}</TooltipContent></Tooltip>
-            )}
+            <UserRowActions
+              isRTL={isRTL}
+              isBanned={isBanned}
+              onView={() => onView(profile)}
+              onEdit={() => onEdit(profile)}
+              onPassword={canManageUser && isSuperAdmin ? () => onPassword(profile) : undefined}
+              onToggleActive={canManageUser ? () => onToggleBan(profile) : undefined}
+              onDelete={canManageUser ? () => onDelete(profile) : undefined}
+            />
             {isSuperAdmin && (addingRole ? (
               <div className="flex items-center gap-1">
                 <Select value={pickedRole} onValueChange={setPickedRole}>
@@ -710,6 +698,11 @@ const AdminUsers = () => {
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  // Phase 6B — read-only quick-view drawer state. Independent from
+  // `activePanel` so opening the drawer never closes the edit/create
+  // panels and never alters mutation state.
+  const [viewingUser, setViewingUser] = useState<Profile | null>(null);
+  const closeViewingUser = useCallback(() => setViewingUser(null), []);
 
   // Open create panel and ensure it is visible: switch to a tab that renders panels,
   // then scroll the panel into view.
@@ -1558,7 +1551,10 @@ const AdminUsers = () => {
 
           {/* USERS — single list view (Staff/Disabled merged as scope chips) */}
           <TabsContent value="users" className="space-y-4 mt-5">
-              <UserFiltersBar
+              <AdminUsersPageShell
+                header={null}
+                filtersSlot={
+                  <UserFiltersBar
                 isRTL={isRTL}
                 filterScope={filterScope} setFilterScope={setFilterScope}
                 filterAccountType={filterAccountType} setFilterAccountType={setFilterAccountType}
@@ -1572,8 +1568,46 @@ const AdminUsers = () => {
                 resultsCount={sorted.length} page={page} totalPages={totalPages}
                 density={density} setDensity={setDensity}
                 sortKey={sortKey} sortDir={sortDir} cycleSort={cycleSort}
-              />
-
+                  />
+                }
+                drawerSlot={
+                  viewingUser ? (
+                    <UserDetailsDrawer
+                      open
+                      isRTL={isRTL}
+                      user={{
+                        id: viewingUser.id,
+                        user_id: viewingUser.user_id,
+                        ref_id: viewingUser.ref_id ?? null,
+                        full_name: viewingUser.full_name ?? null,
+                        full_name_ar: viewingUser.full_name_ar ?? null,
+                        full_name_en: viewingUser.full_name_en ?? null,
+                        username: viewingUser.username ?? null,
+                        email: viewingUser.email ?? null,
+                        phone: viewingUser.phone ?? null,
+                        account_type: viewingUser.account_type ?? null,
+                        membership_tier: viewingUser.membership_tier ?? null,
+                        is_banned: viewingUser.is_banned ?? null,
+                        is_onboarded: viewingUser.is_onboarded ?? null,
+                        phone_verified: viewingUser.phone_verified ?? null,
+                        created_at: viewingUser.created_at,
+                      }}
+                      roles={(roleMap.get(viewingUser.user_id) || []).map(r => r.role)}
+                      linkedEntities={(businessLinksMap.get(viewingUser.user_id) || []).map(l => ({
+                        id: l.business.id,
+                        name_ar: l.business.name_ar,
+                        name_en: l.business.name_en,
+                        ref_id: l.business.ref_id,
+                        username: l.business.username,
+                        role: l.role,
+                      }))}
+                      officialEmail={viewingUser.email && !isSyntheticPhoneEmail(viewingUser.email) ? viewingUser.email : null}
+                      onClose={closeViewingUser}
+                    />
+                  ) : null
+                }
+                tableSlot={
+                  <div className="space-y-4">
               {/* Bulk action bar */}
               {selected.size > 0 && (
                 <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex items-center gap-3 flex-wrap animate-in slide-in-from-top-1">
@@ -1786,6 +1820,7 @@ const AdminUsers = () => {
                           selected={selected.has(profile.id)} expanded={expanded.has(profile.id)} density={density}
                           onToggleSelect={() => toggleSelect(profile.id)} onToggleExpand={() => toggleExpand(profile.id)}
                           onEdit={openEdit}
+                          onView={(p) => setViewingUser(p)}
                           onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
                           onToggleBan={(p) => toggleBanMutation.mutate({ profileId: p.id, isBanned: !p.is_banned })}
                           onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
@@ -1833,6 +1868,9 @@ const AdminUsers = () => {
                   )}
                 </>
               )}
+                  </div>
+                }
+              />
             </TabsContent>
 
 
