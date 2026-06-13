@@ -146,7 +146,8 @@ import {
 } from './businesses/_shared';
 import { BusinessTableView, type BusinessTableRow } from './businesses/BusinessTableView';
 import { BusinessCardView, type BusinessCardRow } from './businesses/BusinessCardView';
-import { CreateBusinessPanel } from './businesses/CreateBusinessPanel';
+import { BusinessCreatePanel } from '@/components/admin/businesses/create/BusinessCreatePanel';
+import { emptyCreateBusinessForm } from '@/components/admin/businesses/create/createFormDefaults';
 
 const AdminBusinesses = () => {
   useNoIndex();
@@ -211,46 +212,11 @@ const AdminBusinesses = () => {
   const [editForm, setEditForm] = useState<AdminEditBusinessFormState>({});
   const [viewingBiz, setViewingBiz] = useState<BusinessDrawerRow | null>(null);
   // ── Create new business (admin) ──
+  // Factory + panel were extracted in Phase 5F to
+  // `src/components/admin/businesses/create/`. Form state, mutations
+  // and validation continue to live in this page.
   const [creatingBiz, setCreatingBiz] = useState(false);
-  const emptyCreateForm = () => ({
-    // Owner mode: pick existing user, create a new account, or send invite
-    // Default: placeholder — entity is parked under the shared placeholder
-    // account (com@qitaat.com) and can be claimed by a real owner later.
-    owner_mode: 'placeholder' as 'placeholder' | 'existing' | 'new' | 'invite',
-    owner_email: '',
-    owner_password: '',
-    owner_full_name: '',
-    owner_phone: '',
-    owner_position: '',
-    owner_query: '',                  // email OR USR-XXXXX
-    resolved_user_id: '' as string,
-    resolved_owner_label: '' as string,
-    resolving_owner: false,
-    owner_error: '' as string,
-    name_ar: '',
-    name_en: '',
-    username: '',
-    username_ok: false,
-    phone_cc: '+966',
-    phone_national: '',
-    email: '',
-    city_id: '',
-    region_id: '' as SaRegionId | '',
-    // Registry / official identifiers
-    national_id: '',          // CR (commercial registration) number
-    unified_number: '',       // 700-/national unified number
-    vat_number: '',           // VAT/tax number
-    // Detailed national address
-    district: '',
-    district_en: '',
-    street_name: '',
-    street_name_en: '',
-    building_number: '',
-    additional_number: '',
-    address: '',
-    address_en: '',
-  });
-  const [createForm, setCreateForm] = useState<AdminCreateBusinessFormState>(emptyCreateForm());
+  const [createForm, setCreateForm] = useState<AdminCreateBusinessFormState>(emptyCreateBusinessForm());
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
