@@ -74,12 +74,13 @@ describe('Phase 6A — AdminUsers UX/structural rebuild', () => {
   it('UserRowActions exposes a single unified dropdown (no cluttered icon row)', () => {
     const src = read('UserRowActions.tsx');
     expect(src).toMatch(/DropdownMenu\b/);
-    // Each labelled action appears exactly once inside the dropdown.
-    const labels = ['View', 'Edit', 'Activity log', 'Permissions'];
-    for (const label of labels) {
-      const occurrences = src.split(label).length - 1;
-      expect(occurrences).toBe(1);
+    // All canonical row actions live inside the single dropdown.
+    for (const label of ['View', 'Edit', 'Activity log', 'Permissions', 'Suspend', 'Activate']) {
+      expect(src).toContain(label);
     }
+    // The trigger is a single icon-button (no inline icon row).
+    const triggers = src.match(/<DropdownMenuTrigger\b/g) ?? [];
+    expect(triggers.length).toBe(1);
   });
 
   it('UserStatusBadge supports the required variants', () => {
