@@ -26,7 +26,15 @@ const APP        = readFileSync(resolve(root, 'src/App.tsx'), 'utf8');
 const USERS      =
   readFileSync(resolve(root, 'src/pages/admin/AdminUsers.tsx'), 'utf8') +
   '\n/*FILTERS_BAR*/\n' +
-  readFileSync(resolve(root, 'src/pages/admin/users/UserFiltersBar.tsx'), 'utf8');
+  readFileSync(resolve(root, 'src/pages/admin/users/UserFiltersBar.tsx'), 'utf8') +
+  // The list-row and detail-panel sub-components were extracted from
+  // AdminUsers in a later refactor; the synthetic-email / officialEmail
+  // guards now live there. Concatenate so source-level guards still find
+  // them.
+  '\n/*USER_LIST_ROW*/\n' +
+  readFileSync(resolve(root, 'src/pages/admin/users/UserListRow.tsx'), 'utf8') +
+  '\n/*USER_DETAIL_PANEL*/\n' +
+  readFileSync(resolve(root, 'src/pages/admin/users/UserDetailPanel.tsx'), 'utf8');
 const DETAIL     = readFileSync(resolve(root, 'src/pages/admin/AdminUserDetail.tsx'), 'utf8');
 const SVC_PATH   = resolve(root, 'src/modules/admin/services/users/listUserEntityLinks.ts');
 const SVC        = existsSync(SVC_PATH) ? readFileSync(SVC_PATH, 'utf8') : '';
