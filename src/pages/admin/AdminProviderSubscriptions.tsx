@@ -17,7 +17,7 @@ import {
   listProviderCreditTransactionsForBusiness,
   adminAdjustProviderCredits,
 } from '@/modules/credits';
-import { TierChip } from '@/components/admin/memberships/shared';
+import { TierChip, MembershipFinancePageShell } from '@/components/admin/memberships/shared';
 
 interface AdminTxRow {
   id: string;
@@ -103,17 +103,13 @@ const AdminProviderSubscriptions: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5 max-w-7xl">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-primary" /> اشتراكات رصيد فرص التواصل (للمزودين)
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              إدارة خطط المزودين وأرصدة فرص التواصل. هذه الخطط مستقلة عن «عضوية المنصة» الظاهرة في حساب المنشأة.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+      <MembershipFinancePageShell
+        className="max-w-7xl space-y-5"
+        title="اشتراكات رصيد فرص التواصل (للمزودين)"
+        description="إدارة خطط المزودين وأرصدة فرص التواصل. هذه الخطط مستقلة عن «عضوية المنصة» الظاهرة في حساب المنشأة."
+        icon={<Wallet className="h-5 w-5 text-primary" />}
+        actionsSlot={
+          <>
             <div className="relative">
               <Search className="h-3.5 w-3.5 absolute start-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث باسم المنشأة" className="h-9 ps-7 w-[200px] text-xs" />
@@ -121,16 +117,17 @@ const AdminProviderSubscriptions: React.FC = () => {
             <Button size="sm" variant="outline" className="h-9 text-xs" onClick={() => subsQ.refetch()} disabled={subsQ.isFetching}>
               <RefreshCw className={`h-3.5 w-3.5 ${subsQ.isFetching ? 'animate-spin' : ''}`} /> تحديث
             </Button>
+          </>
+        }
+        banner={
+          <div className="rounded-lg border border-info/30 bg-info/5 p-3 flex items-start gap-2 text-xs">
+            <Info className="h-4 w-4 text-info shrink-0 mt-0.5" />
+            <p className="text-muted-foreground leading-relaxed">
+              <span className="font-medium text-foreground">تنبيه:</span> «خطة المزود» هنا تخص رصيد فرص التواصل فقط (basic/pro …) ولا تعني أن المنشأة لديها عضوية احترافية على المنصة. عمود «عضوية المنصة» أدناه يعرض المستوى الفعلي للعضوية لمقارنته مع خطة المزود.
+            </p>
           </div>
-        </div>
-
-        <div className="rounded-lg border border-info/30 bg-info/5 p-3 flex items-start gap-2 text-xs">
-          <Info className="h-4 w-4 text-info shrink-0 mt-0.5" />
-          <p className="text-muted-foreground leading-relaxed">
-            <span className="font-medium text-foreground">تنبيه:</span> «خطة المزود» هنا تخص رصيد فرص التواصل فقط (basic/pro …) ولا تعني أن المنشأة لديها عضوية احترافية على المنصة. عمود «عضوية المنصة» أدناه يعرض المستوى الفعلي للعضوية لمقارنته مع خطة المزود.
-          </p>
-        </div>
-
+        }
+      >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card className="lg:col-span-2"><CardContent className="p-3">
             {subsQ.isLoading ? (
