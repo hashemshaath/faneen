@@ -1309,39 +1309,11 @@ const AdminBusinesses = () => {
             </>
           }
           kpiSlot={panelOpen ? undefined : (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-              <AdminKpiCard
-                label={pickBi(isRTL, 'إجمالي المنشآت', 'Total Businesses')}
-                value={stats.total}
-                icon={Building2}
-                tone="primary"
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'نشطة', 'Active')}
-                value={stats.active}
-                icon={Activity}
-                tone="success"
-                trend={stats.total ? `${Math.round((stats.active / stats.total) * 100)}%` : undefined}
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'موثّقة', 'Verified')}
-                value={stats.verified}
-                icon={Shield}
-                tone="info"
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'بعقود فعّالة', 'With Contracts')}
-                value={stats.contracts}
-                icon={FileText}
-                tone="accent"
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'مميّز / مؤسسات', 'Premium / Enterprise')}
-                value={stats.premium}
-                icon={Crown}
-                tone="secondary"
-              />
-            </div>
+            <BusinessStatsStrip
+              businesses={businesses}
+              contractBusinessIds={contractBusinessIds}
+              isRTL={isRTL}
+            />
           )}
         />
 
