@@ -15,13 +15,25 @@ import { resolve } from 'node:path';
 const PAGE = resolve('src/pages/admin/AdminIdentity.tsx');
 const BIZ = resolve('src/pages/admin/AdminBusinesses.tsx');
 const BIZ_CREATE_PANEL = resolve('src/pages/admin/businesses/CreateBusinessPanel.tsx');
+const BIZ_CREATE_PANEL_IMPL = resolve(
+  'src/components/admin/businesses/create/BusinessCreatePanel.tsx',
+);
+const BIZ_CREATE_OWNER_SECTION = resolve(
+  'src/components/admin/businesses/create/BusinessCreateOwnerSection.tsx',
+);
 
 const src = readFileSync(PAGE, 'utf8');
 // PR-6 of the AdminBusinesses refactor extracted the create panel; owner-mode
 // tabs + manager fields now live in CreateBusinessPanel. Concatenate so the
 // behavior-preserved guards still find them.
 const bizSrc =
-  readFileSync(BIZ, 'utf8') + '\n/*PANEL*/\n' + readFileSync(BIZ_CREATE_PANEL, 'utf8');
+  readFileSync(BIZ, 'utf8') +
+  '\n/*PANEL*/\n' +
+  readFileSync(BIZ_CREATE_PANEL, 'utf8') +
+  '\n/*PANEL_IMPL*/\n' +
+  readFileSync(BIZ_CREATE_PANEL_IMPL, 'utf8') +
+  '\n/*OWNER_SECTION*/\n' +
+  readFileSync(BIZ_CREATE_OWNER_SECTION, 'utf8');
 
 describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
   it('renders the bilingual title', () => {
