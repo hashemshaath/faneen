@@ -72,8 +72,13 @@ describe('AdminBusinesses Phase 5A modular extraction', () => {
       const src = read(p);
       expect(src, `${p} should not import supabase`).not.toMatch(/from ['"]@\/integrations\/supabase\/client['"]/);
       // No sensitive-column reads inside the presentational primitives.
+      // Strip block/line comments first so docstrings explaining what NOT to
+      // touch don't trip the guard.
+      const code = src
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
       for (const col of SENSITIVE_COLS) {
-        expect(src.includes(col), `${p} should not reference sensitive column ${col}`).toBe(false);
+        expect(code.includes(col), `${p} should not reference sensitive column ${col}`).toBe(false);
       }
     }
   });
