@@ -1428,224 +1428,43 @@ const AdminBusinesses = () => {
 
                 {/* ── Content Tab ── */}
                 <TabsContent value="content" className="space-y-4 mt-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'نبذة قصيرة (عربي)', 'Short Description (AR)')}</Label>
-                      <FieldAiActions compact value={editForm.short_description_ar} lang="ar" isRTL={isRTL} fieldType="excerpt"
-                        onTranslated={(v) => setField('short_description_en', v)} onImproved={(v) => setField('short_description_ar', v)} />
-                    </div>
-                    <Textarea value={editForm.short_description_ar} onChange={e => setField('short_description_ar', e.target.value)} rows={2}
-                      placeholder={pickBi(isRTL, 'وصف مختصر للنشاط (150 حرف)', 'Short business description (150 chars)')} />
-                    <span className="text-[10px] text-muted-foreground">{editForm.short_description_ar?.length || 0}/150</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'نبذة قصيرة (إنجليزي)', 'Short Description (EN)')}</Label>
-                      <FieldAiActions compact value={editForm.short_description_en} lang="en" isRTL={isRTL} fieldType="excerpt"
-                        onTranslated={(v) => setField('short_description_ar', v)} onImproved={(v) => setField('short_description_en', v)} />
-                    </div>
-                    <Textarea value={editForm.short_description_en} onChange={e => setField('short_description_en', e.target.value)} rows={2} dir="ltr" />
-                    <span className="text-[10px] text-muted-foreground">{editForm.short_description_en?.length || 0}/150</span>
-                  </div>
-                  <Separator />
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'الوصف التفصيلي (عربي)', 'Full Description (AR)')}</Label>
-                      <FieldAiActions compact value={editForm.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
-                        onTranslated={(v) => setField('description_en', v)} onImproved={(v) => setField('description_ar', v)} />
-                    </div>
-                    <Textarea value={editForm.description_ar} onChange={e => setField('description_ar', e.target.value)} rows={5} />
-                    <span className="text-[10px] text-muted-foreground">{editForm.description_ar?.length || 0} {pickBi(isRTL, 'حرف', 'chars')}</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{pickBi(isRTL, 'الوصف التفصيلي (إنجليزي)', 'Full Description (EN)')}</Label>
-                      <FieldAiActions compact value={editForm.description_en} lang="en" isRTL={isRTL} fieldType="description"
-                        onTranslated={(v) => setField('description_ar', v)} onImproved={(v) => setField('description_en', v)} />
-                    </div>
-                    <Textarea value={editForm.description_en} onChange={e => setField('description_en', e.target.value)} rows={5} dir="ltr" />
-                    <span className="text-[10px] text-muted-foreground">{editForm.description_en?.length || 0} {pickBi(isRTL, 'حرف', 'chars')}</span>
-                  </div>
+                  <BusinessContentSection editForm={editForm} setField={setField} isRTL={isRTL} />
                 </TabsContent>
 
                 {/* ── Media Tab ── */}
                 <TabsContent value="media" className="space-y-4 mt-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'الشعار', 'Logo')}</Label>
-                      <ImageUpload bucket="business-assets" value={editForm.logo_url}
-                        onChange={(url) => setField('logo_url', url)}
-                        onRemove={() => {
-                          setField('logo_url', '');
-                          setField('logo_image_asset_id', null);
-                          setField('logo_image_variants', null);
-                        }}
-                        pipeline="business"
-                        businessKind="logo"
-                        onUploadedMeta={(meta) => {
-                          setField('logo_image_asset_id', meta.imageAssetId ?? null);
-                          setField('logo_image_variants', meta.variants ?? null);
-                        }}
-                        aspectRatio="square" placeholder={pickBi(isRTL, 'رفع الشعار', 'Upload logo')} />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'صورة الغلاف', 'Cover Image')}</Label>
-                      <ImageUpload bucket="business-assets" value={editForm.cover_url}
-                        onChange={(url) => setField('cover_url', url)}
-                        onRemove={() => {
-                          setField('cover_url', '');
-                          setField('cover_image_asset_id', null);
-                          setField('cover_image_variants', null);
-                        }}
-                        pipeline="business"
-                        businessKind="cover"
-                        onUploadedMeta={(meta) => {
-                          setField('cover_image_asset_id', meta.imageAssetId ?? null);
-                          setField('cover_image_variants', meta.variants ?? null);
-                        }}
-                        placeholder={pickBi(isRTL, 'رفع صورة الغلاف', 'Upload cover')} />
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
-                      <Image className="w-3 h-3" /> {pickBi(isRTL, 'معرض صور الأعمال', 'Work Gallery')}
-                      <Badge variant="secondary" className="text-[9px] ms-1">{portfolioData.length}</Badge>
-                    </Label>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {portfolioData.map((item) => (
-                        <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
-                          <img src={item.media_url} alt={pickBi(isRTL, 'صورة من معرض الأعمال', 'Portfolio image')} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
-                          <button type="button"
-                            onClick={() => { if (confirm(pickBi(isRTL, 'حذف هذه الصورة؟', 'Delete this image?'))) deletePortfolioMutation.mutate(item.id); }}
-                            className="absolute top-1 end-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                      <div className="aspect-square">
-                        <ImageUpload bucket="portfolio-images" folder="admin" aspectRatio="square"
-                          onChange={(url) => addPortfolioMutation.mutate(url)} placeholder={pickBi(isRTL, 'إضافة صورة', 'Add image')} />
-                      </div>
-                    </div>
-                  </div>
+                  <BusinessMediaSection
+                    editForm={editForm}
+                    setField={setField}
+                    isRTL={isRTL}
+                    portfolioData={portfolioData}
+                    onAddPortfolio={(url) => addPortfolioMutation.mutate(url)}
+                    onDeletePortfolio={(id) => deletePortfolioMutation.mutate(id)}
+                  />
                 </TabsContent>
 
                 {/* ── SEO Tab ── */}
                 <TabsContent value="seo" className="space-y-4 mt-3">
-                  <SEOPreviewCard
-                    kind="company"
-                    customTitleAr={editForm.seo_title_ar}
-                    customTitleEn={editForm.seo_title_en}
-                    customDescriptionAr={editForm.seo_description_ar}
-                    customDescriptionEn={editForm.seo_description_en}
-                    nameAr={editForm.name_ar}
-                    nameEn={editForm.name_en}
-                    activityAr={null}
-                    activityEn={null}
-                    cityAr={editCityName?.name_ar ?? null}
-                    cityEn={editCityName?.name_en ?? null}
-                    rawDescriptionAr={editForm.description_ar}
-                    rawDescriptionEn={editForm.description_en}
-                    url={editingBiz.username ? `https://qitaat.com/${editingBiz.username}` : null}
-                    ogImageUrl={editForm.og_image || editForm.cover_url || editForm.logo_url || null}
-                    focusKeyword={String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
+                  <BusinessSeoSection
+                    editForm={editForm}
+                    setField={setField}
+                    isRTL={isRTL}
+                    editingBiz={editingBiz}
+                    cityName={editCityName}
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'عنوان SEO (عربي)', 'SEO Title (AR)')}</Label>
-                        <FieldAiActions value={editForm.seo_title_ar || editForm.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_title" compact
-                          onTranslated={(t) => setField('seo_title_ar', t)} onImproved={(t) => setField('seo_title_ar', t)} />
-                      </div>
-                      <Input value={editForm.seo_title_ar} onChange={e => setField('seo_title_ar', e.target.value)} dir="auto" className="mt-1" />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'عنوان SEO (إنجليزي)', 'SEO Title (EN)')}</Label>
-                        <FieldAiActions value={editForm.seo_title_en || editForm.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_title" compact
-                          onTranslated={(t) => setField('seo_title_en', t)} onImproved={(t) => setField('seo_title_en', t)} />
-                      </div>
-                      <Input value={editForm.seo_title_en} onChange={e => setField('seo_title_en', e.target.value)} dir="ltr" className="mt-1" />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'وصف SEO (عربي)', 'SEO Description (AR)')}</Label>
-                        <FieldAiActions value={editForm.seo_description_ar || editForm.description_ar || editForm.short_description_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_description" compact
-                          onTranslated={(t) => setField('seo_description_ar', t)} onImproved={(t) => setField('seo_description_ar', t)} />
-                      </div>
-                      <Textarea value={editForm.seo_description_ar} onChange={e => setField('seo_description_ar', e.target.value)} rows={2} dir="auto" className="mt-1" />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-semibold">{pickBi(isRTL, 'وصف SEO (إنجليزي)', 'SEO Description (EN)')}</Label>
-                        <FieldAiActions value={editForm.seo_description_en || editForm.description_en || editForm.short_description_en || ''} lang="en" isRTL={isRTL} fieldType="meta_description" compact
-                          onTranslated={(t) => setField('seo_description_en', t)} onImproved={(t) => setField('seo_description_en', t)} />
-                      </div>
-                      <Textarea value={editForm.seo_description_en} onChange={e => setField('seo_description_en', e.target.value)} rows={2} dir="ltr" className="mt-1" />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold">{pickBi(isRTL, 'كلمات SEO', 'SEO keywords')}</Label>
-                    <Input value={editForm.seo_keywords} onChange={e => setField('seo_keywords', e.target.value)} dir="auto" className="mt-1" placeholder={pickBi(isRTL, 'ألمنيوم, زجاج, تركيب', 'aluminum, glass, installation')} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold mb-2 block">{pickBi(isRTL, 'صورة OG', 'OG image')}</Label>
-                    <ImageUpload bucket="business-assets" value={editForm.og_image}
-                      onChange={(url) => setField('og_image', url)} onRemove={() => setField('og_image', '')}
-                      placeholder={pickBi(isRTL, 'رفع صورة المشاركة', 'Upload share image')} />
-                  </div>
                 </TabsContent>
 
                 {/* ── Contact Tab ── */}
                 <TabsContent value="contact" className="space-y-4 mt-3">
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" /> {pickBi(isRTL, 'اسم مسؤول التواصل', 'Contact Person')}</Label>
-                    <Input value={editForm.contact_person} onChange={e => setField('contact_person', e.target.value)} className="mt-1" />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <PhoneField value={parsePhoneValue(editForm.phone)} onChange={(v) => setField('phone', toE164(v))} label={pickBi(isRTL, 'رقم الهاتف', 'Phone')} optional />
-                    <PhoneField value={parsePhoneValue(editForm.mobile)} onChange={(v) => setField('mobile', toE164(v))} label={pickBi(isRTL, 'رقم الجوال', 'Mobile')} optional />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {pickBi(isRTL, 'الرقم الموحد', 'Unified Number')}</Label>
-                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="920xxxxxxx" />
-                    </div>
-                    <PhoneField value={parsePhoneValue(editForm.customer_service_phone)} onChange={(v) => setField('customer_service_phone', toE164(v))} label={pickBi(isRTL, 'خدمة العملاء', 'Customer Service')} optional />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {pickBi(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
-                    <Input type="email" value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1 tech-content" />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {pickBi(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
-                    <Input type="url" value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="https://" />
-                  </div>
-                  {editingBiz && (
-                    <div className="mt-4">
-                      <Separator className="mb-3" />
-                      <div className="flex items-center justify-between mb-2">
-                        <Label className="text-xs font-semibold flex items-center gap-1">
-                          <Package className="w-3 h-3" /> {pickBi(isRTL, 'الخدمات المسجلة', 'Registered Services')}
-                        </Label>
-                        <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1" onClick={() => { setEditingBiz(null); openServices(editingBiz.id); }}>
-                          <Settings className="w-3 h-3" /> {pickBi(isRTL, 'إدارة', 'Manage')}
-                        </Button>
-                      </div>
-                      {allServices.filter((s) => s.business_id === editingBiz.id).length === 0 ? (
-                        <p className="text-[10px] text-muted-foreground">{pickBi(isRTL, 'لا توجد خدمات مسجلة', 'No registered services')}</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-1.5">
-                          {allServices.filter((s) => s.business_id === editingBiz.id).map((s) => (
-                            <Badge key={s.id} variant="outline" className="text-[9px]">
-                              {language === 'ar' ? s.name_ar : (s.name_en || s.name_ar)}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <BusinessContactSection
+                    editForm={editForm}
+                    setField={setField}
+                    isRTL={isRTL}
+                    language={language}
+                    editingBiz={editingBiz}
+                    registeredServices={allServices}
+                    onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
+                  />
                 </TabsContent>
 
                 {/* ── Branches Tab ── */}
