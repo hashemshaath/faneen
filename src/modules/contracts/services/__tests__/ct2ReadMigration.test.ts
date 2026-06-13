@@ -83,7 +83,10 @@ describe('CT-2b migration: contracts/contract_templates read callsites use servi
   });
 
   it('AdminUsers.tsx uses listContractsForUserParticipant count head', () => {
-    const s = read('pages/admin/AdminUsers.tsx');
+    // The per-user contract-count probe was extracted from AdminUsers into
+    // the detail-panel sub-component during the AdminUsers refactor; the
+    // service-wrapper call signature is unchanged.
+    const s = read('pages/admin/users/UserDetailPanel.tsx');
     expect(s).toMatch(/listContractsForUserParticipant\(\{\s*userId,\s*select:\s*'id',\s*count:\s*\{\s*mode:\s*'exact',\s*head:\s*true\s*\}\s*\}\)/);
     expect(s).not.toMatch(NO_DIRECT_CONTRACTS_SELECT);
   });
