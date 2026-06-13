@@ -113,6 +113,12 @@ import { BusinessPaginationFooter } from '@/components/admin/businesses/Business
 import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/BusinessVerifyConfirmDialog';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { BusinessTaxonomySection } from '@/modules/taxonomy';
+import { BusinessBasicInfoSection } from '@/components/admin/businesses/edit/BusinessBasicInfoSection';
+import { BusinessContentSection } from '@/components/admin/businesses/edit/BusinessContentSection';
+import { BusinessMediaSection } from '@/components/admin/businesses/edit/BusinessMediaSection';
+import { BusinessSeoSection } from '@/components/admin/businesses/edit/BusinessSeoSection';
+import { BusinessContactSection } from '@/components/admin/businesses/edit/BusinessContactSection';
+import { BusinessEditActionsFooter } from '@/components/admin/businesses/edit/BusinessEditActionsFooter';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
