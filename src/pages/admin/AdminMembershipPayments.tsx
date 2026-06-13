@@ -29,6 +29,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  PaymentStatusBadge,
+  WebhookEventStatusBadge,
+} from '@/components/admin/memberships/shared';
 
 interface IntentRow {
   id: string;
@@ -79,21 +83,6 @@ function eventStatusLabel(row: WebhookEventRow): string {
   if (row.processed_at) return 'processed';
   return 'pending';
 }
-
-const EVENT_STATUS_TONE: Record<string, string> = {
-  processed: 'bg-success/10 text-success border-success/30',
-  error: 'bg-destructive/10 text-destructive border-destructive/30',
-  pending: 'bg-muted text-muted-foreground border-border',
-};
-
-const STATUS_TONE: Record<string, string> = {
-  succeeded: 'bg-success/10 text-success border-success/30',
-  created: 'bg-info/10 text-info border-info/30',
-  requires_action: 'bg-warning/10 text-warning border-warning/30',
-  failed: 'bg-destructive/10 text-destructive border-destructive/30',
-  cancelled: 'bg-muted text-muted-foreground border-border',
-  refunded: 'bg-muted text-muted-foreground border-border',
-};
 
 const PAID_STATUSES = new Set(['succeeded', 'refunded']);
 const REFUNDED_STATUSES = new Set(['refunded']);
@@ -424,7 +413,7 @@ const AdminMembershipPayments = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={STATUS_TONE[r.status] || ''}>{r.status}</Badge>
+                        <PaymentStatusBadge status={r.status} />
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={HEALTH_TONE[health]}>
@@ -703,9 +692,7 @@ const AdminMembershipPayments = () => {
                       <TableCell className="tech-content text-xs">{e.event_type}</TableCell>
                       <TableCell className="tech-content text-[10px] font-mono">{e.event_id}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={EVENT_STATUS_TONE[status] || ''}>
-                          {statusText}
-                        </Badge>
+                        <WebhookEventStatusBadge status={status} label={statusText} />
                       </TableCell>
                       <TableCell className="text-xs">
                         {summary.lines.length > 0 ? (
