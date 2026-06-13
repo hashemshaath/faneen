@@ -1,12 +1,10 @@
 import { pickBi } from '@/components/common/Bilingual';
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, CreditCard, Check, History, FileText, RefreshCw, AlertTriangle } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
-import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import {
   listMembershipPaymentIntents,
   listMembershipPaymentWebhookEvents,
@@ -21,18 +19,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  PaymentStatusBadge,
-  WebhookEventStatusBadge,
-} from '@/components/admin/memberships/shared';
+  MembershipPaymentIntentsSection,
+  MembershipWebhookEventsSection,
+  PaymentManualForm,
+  PaymentRefundForm,
+  type IntentHealth,
+  type WebhookEventFilter,
+  type WebhookEventRowView,
+  type WebhookEventSummary,
+} from '@/components/admin/memberships/payments';
 
 interface IntentRow {
   id: string;
@@ -63,7 +59,7 @@ interface WebhookEventRow {
   payload: unknown;
 }
 
-function extractSafePayloadSummary(payload: unknown): { paymentIntentId?: string; lines: string[] } {
+function extractSafePayloadSummary(payload: unknown): WebhookEventSummary {
   if (!payload || typeof payload !== 'object') return { lines: [] };
   const p = payload as Record<string, unknown>;
   const safeKeys = ['status', 'amount', 'currency', 'invoice_id', 'customer_id', 'subscription_id', 'object', 'type'];
@@ -78,7 +74,7 @@ function extractSafePayloadSummary(payload: unknown): { paymentIntentId?: string
   return { paymentIntentId, lines };
 }
 
-function eventStatusLabel(row: WebhookEventRow): string {
+function eventStatusLabel(row: WebhookEventRowView): 'pending' | 'processed' | 'error' {
   if (row.processing_error) return 'error';
   if (row.processed_at) return 'processed';
   return 'pending';
@@ -89,15 +85,6 @@ const REFUNDED_STATUSES = new Set(['refunded']);
 
 // R4F-9F: pending intents older than this are flagged as "Needs follow-up".
 const STALE_PENDING_MS = 30 * 60 * 1000; // 30 minutes
-
-type IntentHealth =
-  | 'succeeded'
-  | 'failed'
-  | 'refunded'
-  | 'requires_action'
-  | 'waiting_webhook'
-  | 'reconcile_needed'
-  | 'cancelled';
 
 function intentHealth(row: { status: string; created_at: string; confirmed_at: string | null }): IntentHealth {
   if (row.status === 'succeeded') return 'succeeded';
@@ -159,7 +146,7 @@ const AdminMembershipPayments = () => {
   // R4F-9F: per-intent reconcile in-flight tracking.
   const [reconcilingId, setReconcilingId] = useState<string | null>(null);
   // R4F-9F: webhook events processing filter.
-  const [eventFilter, setEventFilter] = useState<'all' | 'pending' | 'processed' | 'error'>('all');
+  const [eventFilter, setEventFilter] = useState<WebhookEventFilter>('all');
 
   const SELECT_COLS =
     'id, ref_id, subscription_id, user_id, business_id, provider, status, amount, currency, provider_intent_id, invoice_id, confirmed_at, created_at, updated_at';
@@ -351,386 +338,85 @@ const AdminMembershipPayments = () => {
   return (
     <DashboardLayout>
     <div className="container px-4 py-6 max-w-6xl space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <CreditCard className="w-5 h-5" />
-            {pickBi(isRTL, 'مدفوعات العضويات', 'Membership Payments')}
-          </CardTitle>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48 h-10">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{pickBi(isRTL, 'كل الحالات', 'All statuses')}</SelectItem>
-              <SelectItem value="created">created</SelectItem>
-              <SelectItem value="requires_action">requires_action</SelectItem>
-              <SelectItem value="succeeded">succeeded</SelectItem>
-              <SelectItem value="failed">failed</SelectItem>
-              <SelectItem value="cancelled">cancelled</SelectItem>
-              <SelectItem value="refunded">refunded</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{pickBi(isRTL, 'التاريخ', 'Created')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'مرجع الدفع', 'Payment Ref')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'الحالة', 'Status')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'الصحة', 'Health')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'المزود', 'Provider')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'المبلغ', 'Amount')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'معرف مزود الدفع', 'Provider ID')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'الفاتورة', 'Invoice')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'تأكيد', 'Confirmed')}</TableHead>
-                  <TableHead className="text-end"> </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((r) => {
-                  const isPaid = PAID_STATUSES.has(r.status);
-                  const isRefunded = REFUNDED_STATUSES.has(r.status);
-                  const isHighlighted = highlightedIntentId === r.id;
-                  const health = intentHealth(r);
-                  const showReconcile = !isPaid && !isRefunded && r.status !== 'cancelled';
-                  const reconcileBusy = reconcilingId === r.id;
-                  return (
-                    <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
-                      <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
-                      <TableCell>
-                        {r.ref_id ? (
-                          <span className="inline-flex items-center gap-1">
-                            <ReferenceBadge refId={r.ref_id} />
-                            <ReferenceLinkCopy refId={r.ref_id} isRTL={isRTL} />
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <PaymentStatusBadge status={r.status} />
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={HEALTH_TONE[health]}>
-                          {health === 'reconcile_needed' && <AlertTriangle className="w-3 h-3 me-1 inline" />}
-                          {healthLabel(health, isRTL)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="tech-content text-xs">{r.provider || '—'}</TableCell>
-                      <TableCell className="tech-content text-xs">
-                        {r.amount != null ? `${r.amount} ${r.currency || ''}` : '—'}
-                      </TableCell>
-                      <TableCell className="tech-content text-[10px] font-mono">{r.provider_intent_id || '—'}</TableCell>
-                      <TableCell className="tech-content text-[10px] font-mono">{r.invoice_id || '—'}</TableCell>
-                      <TableCell className="tech-content text-xs">
-                        {r.confirmed_at ? new Date(r.confirmed_at).toLocaleString() : '—'}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        {isRefunded ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <Badge variant="outline" className="gap-1">
-                              {pickBi(isRTL, 'مسترد', 'Refunded')}
-                            </Badge>
-                            <Button size="sm" variant="ghost" asChild>
-                              <Link to={`/membership/payments/${encodeURIComponent(r.id)}/invoice`}>
-                                <FileText className="w-3 h-3 me-1" />
-                                {pickBi(isRTL, 'عرض الإشعار الدائن', 'View credit note')}
-                              </Link>
-                            </Button>
-                          </div>
-                        ) : isPaid ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <Badge variant="outline" className="gap-1">
-                              <Check className="w-3 h-3" />
-                              {pickBi(isRTL, 'مدفوع', 'Paid')}
-                            </Badge>
-                            <Button size="sm" variant="ghost" asChild>
-                              <Link to={`/membership/payments/${encodeURIComponent(r.id)}/invoice`}>
-                                <FileText className="w-3 h-3 me-1" />
-                                {pickBi(isRTL, 'عرض الفاتورة', 'View invoice')}
-                              </Link>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={!user}
-                              onClick={() => {
-                                setActiveRefundIntent(r);
-                                setRefundReference('');
-                                setRefundedAt('');
-                                setRefundNotes('');
-                              }}
-                            >
-                              {pickBi(isRTL, 'تسجيل استرداد', 'Mark refunded')}
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            {showReconcile && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                disabled={reconcileBusy || !user}
-                                onClick={() => handleReconcile(r)}
-                                title={pickBi(isRTL, 'مزامنة الحالة', 'Reconcile status')}
-                              >
-                                {reconcileBusy ? (
-                                  <Loader2 className="w-3 h-3 animate-spin me-1" />
-                                ) : (
-                                  <RefreshCw className="w-3 h-3 me-1" />
-                                )}
-                                {pickBi(isRTL, 'مزامنة الحالة', 'Reconcile status')}
-                              </Button>
-                            )}
-                            <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!user}
-                            onClick={() => {
-                              setActiveIntent(r);
-                              setExternalPaymentId(r.provider_intent_id || '');
-                              setInvoiceId(r.invoice_id || '');
-                              setPaidAt('');
-                              setNotes('');
-                            }}
-                          >
-                            {pickBi(isRTL, 'تأكيد الدفع', 'Mark paid')}
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground text-sm">
-                      {pickBi(isRTL, 'لا توجد مدفوعات', 'No payment intents')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <MembershipPaymentIntentsSection
+        isRTL={isRTL}
+        isLoading={isLoading}
+        rows={filtered}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        highlightedIntentId={highlightedIntentId}
+        reconcilingId={reconcilingId}
+        canAct={!!user}
+        getHealth={intentHealth}
+        getHealthLabel={(h) => healthLabel(h, isRTL)}
+        getHealthTone={(h) => HEALTH_TONE[h]}
+        isPaidFn={(r) => PAID_STATUSES.has(r.status)}
+        isRefundedFn={(r) => REFUNDED_STATUSES.has(r.status)}
+        showReconcile={(r) =>
+          !PAID_STATUSES.has(r.status) && !REFUNDED_STATUSES.has(r.status) && r.status !== 'cancelled'
+        }
+        onReconcile={(r) => handleReconcile(r as IntentRow)}
+        onMarkPaidClick={(r) => {
+          setActiveIntent(r as IntentRow);
+          setExternalPaymentId(r.provider_intent_id || '');
+          setInvoiceId(r.invoice_id || '');
+          setPaidAt('');
+          setNotes('');
+        }}
+        onMarkRefundedClick={(r) => {
+          setActiveRefundIntent(r as IntentRow);
+          setRefundReference('');
+          setRefundedAt('');
+          setRefundNotes('');
+        }}
+        titleIcon={<CreditCard className="w-5 h-5" />}
+      />
 
       {activeIntent && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {pickBi(isRTL, 'تأكيد دفع نية الدفع', 'Confirm payment intent')}
-              <span className="ms-2 text-xs font-mono text-muted-foreground">{activeIntent.id.slice(0, 8)}…</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ext-pay-id">{pickBi(isRTL, 'معرف الدفع الخارجي', 'External payment ID')}</Label>
-                <Input
-                  id="ext-pay-id"
-                  dir="auto"
-                  value={externalPaymentId}
-                  onChange={(e) => setExternalPaymentId(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-id">{pickBi(isRTL, 'رقم الفاتورة', 'Invoice ID')}</Label>
-                <Input
-                  id="invoice-id"
-                  dir="auto"
-                  value={invoiceId}
-                  onChange={(e) => setInvoiceId(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="paid-at">{pickBi(isRTL, 'تاريخ الدفع', 'Paid at')}</Label>
-                <Input
-                  id="paid-at"
-                  type="datetime-local"
-                  value={paidAt}
-                  onChange={(e) => setPaidAt(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="notes">{pickBi(isRTL, 'ملاحظات', 'Notes')}</Label>
-                <Textarea
-                  id="notes"
-                  dir="auto"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-2">
-              <Button variant="ghost" onClick={resetForm} disabled={submitting}>
-                {pickBi(isRTL, 'إلغاء', 'Cancel')}
-              </Button>
-              <Button onClick={handleSubmit} disabled={submitting || !user}>
-                {submitting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                {pickBi(isRTL, 'تأكيد الدفع', 'Confirm paid')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <PaymentManualForm
+          isRTL={isRTL}
+          intentId={activeIntent.id}
+          externalPaymentId={externalPaymentId}
+          invoiceId={invoiceId}
+          paidAt={paidAt}
+          notes={notes}
+          submitting={submitting}
+          canSubmit={!!user}
+          onExternalPaymentIdChange={setExternalPaymentId}
+          onInvoiceIdChange={setInvoiceId}
+          onPaidAtChange={setPaidAt}
+          onNotesChange={setNotes}
+          onCancel={resetForm}
+          onSubmit={handleSubmit}
+        />
       )}
 
       {activeRefundIntent && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {pickBi(isRTL, 'تسجيل استرداد يدوي', 'Mark refunded manually')}
-              <span className="ms-2 text-xs font-mono text-muted-foreground">{activeRefundIntent.id.slice(0, 8)}…</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-xs text-muted-foreground">
-              {pickBi(isRTL, 'يسجل هذا الإجراء استرداداً يدوياً أو إشعار دائن للدفعة. لا يتم استدعاء بوابة الدفع.', 'This records a manual refund or credit-note for the payment. No payment gateway is contacted.')}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="refund-ref">{pickBi(isRTL, 'مرجع الاسترداد', 'Refund reference')}</Label>
-                <Input
-                  id="refund-ref"
-                  dir="auto"
-                  value={refundReference}
-                  onChange={(e) => setRefundReference(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="refunded-at">{pickBi(isRTL, 'تاريخ الاسترداد', 'Refunded at')}</Label>
-                <Input
-                  id="refunded-at"
-                  type="datetime-local"
-                  value={refundedAt}
-                  onChange={(e) => setRefundedAt(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="refund-notes">{pickBi(isRTL, 'ملاحظات', 'Notes')}</Label>
-                <Textarea
-                  id="refund-notes"
-                  dir="auto"
-                  value={refundNotes}
-                  onChange={(e) => setRefundNotes(e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-2">
-              <Button variant="ghost" onClick={resetRefundForm} disabled={refundSubmitting}>
-                {pickBi(isRTL, 'إلغاء', 'Cancel')}
-              </Button>
-              <Button onClick={handleRefundSubmit} disabled={refundSubmitting || !user}>
-                {refundSubmitting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                {pickBi(isRTL, 'تسجيل الاسترداد', 'Mark refunded')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <PaymentRefundForm
+          isRTL={isRTL}
+          intentId={activeRefundIntent.id}
+          refundReference={refundReference}
+          refundedAt={refundedAt}
+          refundNotes={refundNotes}
+          submitting={refundSubmitting}
+          canSubmit={!!user}
+          onRefundReferenceChange={setRefundReference}
+          onRefundedAtChange={setRefundedAt}
+          onRefundNotesChange={setRefundNotes}
+          onCancel={resetRefundForm}
+          onSubmit={handleRefundSubmit}
+        />
       )}
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <History className="w-5 h-5" />
-            {pickBi(isRTL, 'أحداث الدفع الأخيرة', 'Recent payment events')}
-          </CardTitle>
-          <Select value={eventFilter} onValueChange={(v) => setEventFilter(v as typeof eventFilter)}>
-            <SelectTrigger className="w-48 h-10">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{pickBi(isRTL, 'كل الأحداث', 'All events')}</SelectItem>
-              <SelectItem value="pending">{pickBi(isRTL, 'بانتظار المزامنة', 'Pending')}</SelectItem>
-              <SelectItem value="processed">{pickBi(isRTL, 'تمت المعالجة', 'Processed')}</SelectItem>
-              <SelectItem value="error">{pickBi(isRTL, 'فشل', 'Failed/error')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardHeader>
-        <CardContent>
-          {eventsLoading ? (
-            <div className="py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{pickBi(isRTL, 'التاريخ', 'Received')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'المزود', 'Provider')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'نوع الحدث', 'Event type')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'معرف الحدث', 'Event ID')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'الحالة', 'Status')}</TableHead>
-                  <TableHead>{pickBi(isRTL, 'الملخص', 'Summary')}</TableHead>
-                  <TableHead className="text-end"> </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEvents.map((e) => {
-                  const summary = extractSafePayloadSummary(e.payload);
-                  const status = eventStatusLabel(e);
-                  const statusText =
-                    status === 'pending'
-                      ? (pickBi(isRTL, 'بانتظار المزامنة', 'Pending reconcile'))
-                      : status === 'processed'
-                      ? (pickBi(isRTL, 'تمت المعالجة', 'Processed'))
-                      : (pickBi(isRTL, 'خطأ', 'Error'));
-                  return (
-                    <TableRow key={e.id}>
-                      <TableCell className="tech-content text-xs">{new Date(e.received_at).toLocaleString()}</TableCell>
-                      <TableCell className="tech-content text-xs">{e.provider}</TableCell>
-                      <TableCell className="tech-content text-xs">{e.event_type}</TableCell>
-                      <TableCell className="tech-content text-[10px] font-mono">{e.event_id}</TableCell>
-                      <TableCell>
-                        <WebhookEventStatusBadge status={status} label={statusText} />
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {summary.lines.length > 0 ? (
-                          <ul className="space-y-0.5">
-                            {summary.lines.map((line, i) => (
-                              <li key={i} className="text-muted-foreground">{line}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        {summary.paymentIntentId ? (
-                          <Button size="sm" variant="ghost" asChild>
-                            <Link
-                              to={`/admin/membership-payments?intent=${encodeURIComponent(summary.paymentIntentId)}`}
-                            >
-                              {pickBi(isRTL, 'فتح نية الدفع', 'Open payment intent')}
-                            </Link>
-                          </Button>
-                        ) : null}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {filteredEvents.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">
-                      {pickBi(isRTL, 'لا توجد أحداث دفع بعد.', 'No payment events yet.')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <MembershipWebhookEventsSection
+        isRTL={isRTL}
+        isLoading={eventsLoading}
+        rows={filteredEvents}
+        filter={eventFilter}
+        onFilterChange={setEventFilter}
+        getEventStatusLabel={eventStatusLabel}
+        getSummary={extractSafePayloadSummary}
+      />
     </div>
     </DashboardLayout>
   );

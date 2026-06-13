@@ -18,7 +18,13 @@ import { resolve } from 'node:path';
 const read = (p: string) => readFileSync(resolve(p), 'utf8');
 
 describe('Step H supplement — AdminMembershipPayments PAY copy link', () => {
-  const SRC = read('src/pages/admin/AdminMembershipPayments.tsx');
+  const SRC = [
+    read('src/pages/admin/AdminMembershipPayments.tsx'),
+    read('src/components/admin/memberships/payments/MembershipPaymentIntentsSection.tsx'),
+    read('src/components/admin/memberships/payments/MembershipWebhookEventsSection.tsx'),
+    read('src/components/admin/memberships/payments/PaymentManualForm.tsx'),
+    read('src/components/admin/memberships/payments/PaymentRefundForm.tsx'),
+  ].join('\n');
 
   it('imports both ReferenceBadge and ReferenceLinkCopy', () => {
     expect(SRC).toContain("from '@/components/reference/ReferenceBadge'");

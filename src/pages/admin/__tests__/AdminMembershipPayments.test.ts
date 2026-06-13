@@ -2,10 +2,20 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const SRC = fs.readFileSync(
-  path.resolve(__dirname, '../AdminMembershipPayments.tsx'),
-  'utf8',
+const PAY_DIR = path.resolve(
+  __dirname,
+  '../../../components/admin/memberships/payments',
 );
+// Phase 7F: presentational sections/forms were extracted out of the page.
+// We assert against the page + the extracted components together so that
+// existing UI/source contracts continue to hold post-extraction.
+const SRC = [
+  fs.readFileSync(path.resolve(__dirname, '../AdminMembershipPayments.tsx'), 'utf8'),
+  fs.readFileSync(path.join(PAY_DIR, 'MembershipPaymentIntentsSection.tsx'), 'utf8'),
+  fs.readFileSync(path.join(PAY_DIR, 'MembershipWebhookEventsSection.tsx'), 'utf8'),
+  fs.readFileSync(path.join(PAY_DIR, 'PaymentManualForm.tsx'), 'utf8'),
+  fs.readFileSync(path.join(PAY_DIR, 'PaymentRefundForm.tsx'), 'utf8'),
+].join('\n');
 
 describe('AdminMembershipPayments source contract', () => {
   it('imports listMembershipPaymentIntents from canonical module', () => {
