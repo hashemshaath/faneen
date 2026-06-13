@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useSearchParams } from 'react-router-dom';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
@@ -8,8 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { adminCreateUser, type AdminCreateUserPayload } from '@/modules/admin';
-import { listUserEntityLinks, type UserEntityLink } from '@/modules/admin';
-import { listContractsForUserParticipant } from '@/modules/contracts';
 import {
   listAdminBusinesses,
   listAllBusinessStaffForAdmin,
@@ -17,59 +14,49 @@ import {
   removeBusinessStaff,
   insertBusinessStaff,
 } from '@/modules/businesses';
-import { countMessagesBySender } from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import {
-  Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Mail, Phone, Calendar, Crown,
-  Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
-  Check, TrendingUp, UserCheck, Hash, Sparkles, Building2, Briefcase, Link2,
-  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
-  Star, MoreHorizontal, RefreshCw, Copy, Clock, Inbox,
-  Timer, ShieldOff, Plus,
+  Users, UserPlus, Loader2, Send, Lock, Eye, EyeOff, X, AlertTriangle,
+  Download, Sparkles, BarChart3, RefreshCw,
 } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
-import { maskEmail, maskPhone } from '@/lib/masking';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
-import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
-import { BilingualNameField } from '@/components/forms/BilingualNameField';
+import { parsePhoneValue } from '@/components/forms/PhoneField';
+import type { Tables } from '@/integrations/supabase/types';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
 import {
-  formatDate, formatRelative, EmailLiveHint,
+  EmailLiveHint,
   type SortKey, type SortDir, type Density,
   type FilterScope, type FilterBusinessLink,
   type CreateUserForm,
 } from './users/_shared';
-import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
 import { AdminUsersStatsStrip, buildAdminUserStats } from '@/components/admin/users/AdminUsersStatsStrip';
 import { AdminUsersPageShell } from '@/components/admin/users/AdminUsersPageShell';
-import { UserRowActions } from '@/components/admin/users/UserRowActions';
 import { UserDetailsDrawer } from '@/components/admin/users/UserDetailsDrawer';
-import { UserStatusBadge } from '@/components/admin/users/UserStatusBadge';
+import { buildUserDetailsDrawerProps } from '@/components/admin/users/buildUserDetailsDrawerProps';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
 import { CreateUserPanel } from './users/CreateUserPanel';
 import { UserEditPanel } from './users/UserEditPanel';
+import { UsersListSection } from './users/UsersListSection';
+import {
+  tierConfig, accountTypeConfig, roleConfig, staffRoleConfig,
+  type Profile, type UserRole,
+} from './users/userConfigs';
+import type { StaffRole, BusinessLink, BusinessInfo } from './users/_shared';
 
 /**
  * Parse a raw save-mutation error into a structured `{ field, reason, rawCode, friendly }`.
@@ -152,52 +139,6 @@ function friendlyFor(field: 'username' | 'email' | 'phone', code: string, isRTL:
 import type { NormalizedRpcError } from '@/services/rpc';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
-type Profile = Tables<'profiles'>;
-type UserRole = Tables<'user_roles'>;
-
-interface BusinessInfo {
-  id: string; user_id: string; name_ar: string; name_en: string | null;
-  ref_id: string; username: string; is_active: boolean; is_verified: boolean;
-  membership_tier: string; business_number: number;
-}
-
-type StaffRole = 'owner' | 'manager' | 'editor' | 'viewer';
-
-interface BusinessLink {
-  business: BusinessInfo;
-  role: StaffRole;
-  staffId: string | null; // null = ownership inferred from businesses.user_id with no staff row
-  isOwnerByEntity: boolean; // owns the business record itself
-  isActive: boolean;
-}
-
-const staffRoleConfig: Record<StaffRole, { ar: string; en: string; color: string }> = {
-  owner:   { ar: 'مالك',     en: 'Owner',   color: 'bg-success/15 text-success border-success/40 dark:text-success' },
-  manager: { ar: 'مدير',     en: 'Manager', color: 'bg-info/15 text-info border-info/40 dark:text-info' },
-  editor:  { ar: 'محرر',     en: 'Editor',  color: 'bg-warning/15 text-warning border-warning/40 dark:text-warning' },
-  viewer:  { ar: 'مشاهد',    en: 'Viewer',  color: 'bg-muted text-muted-foreground border-border' },
-};
-
-const roleConfig = {
-  super_admin: { icon: ShieldAlert, badge: 'bg-secondary text-white dark:bg-secondary dark:text-white border-secondary', iconBg: 'bg-secondary/15 text-secondary dark:text-secondary', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
-  admin: { icon: Crown, badge: 'bg-destructive text-white dark:bg-destructive dark:text-white border-destructive', iconBg: 'bg-destructive/15 text-destructive dark:text-destructive', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
-  moderator: { icon: ShieldCheck, badge: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning border-warning dark:border-warning', iconBg: 'bg-warning/15 text-warning dark:text-warning', labelAr: 'مشرف محتوى', labelEn: 'Moderator', rank: 2 },
-  user: { icon: Users, badge: 'bg-info text-info dark:bg-info/30 dark:text-info border-info dark:border-info', iconBg: 'bg-info/15 text-info dark:text-info', labelAr: 'مستخدم', labelEn: 'User', rank: 3 },
-} as const;
-
-const tierConfig = {
-  free: { labelAr: 'مجاني', labelEn: 'Free', color: 'bg-muted text-muted-foreground border-border' },
-  basic: { labelAr: 'أساسي', labelEn: 'Basic', color: 'bg-info text-info dark:bg-info/20 dark:text-info border-info dark:border-info' },
-  premium: { labelAr: 'مميز', labelEn: 'Premium', color: 'bg-accent/10 text-accent border-accent/30' },
-  enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-secondary text-secondary dark:bg-secondary/20 dark:text-secondary border-secondary dark:border-secondary' },
-} as const;
-
-const accountTypeConfig: Record<string, { labelAr: string; labelEn: string; icon: React.ElementType; color: string }> = {
-  individual: { labelAr: 'فرد', labelEn: 'Individual', icon: Users, color: 'text-info bg-info/10 border-info dark:border-info' },
-  business: { labelAr: 'مزود خدمة', labelEn: 'Provider', icon: Briefcase, color: 'text-success bg-success/10 border-success dark:border-success' },
-  company: { labelAr: 'شركة', labelEn: 'Company', icon: Building2, color: 'text-secondary bg-secondary/10 border-secondary dark:border-secondary' },
-};
-
 type ActivePanel =
   | null
   | { type: 'edit'; profile: Profile }
@@ -216,457 +157,6 @@ const getPasswordValidationMessage = (password: string, isRTL: boolean): string 
     return pickBi(isRTL, 'تجنب الكلمات الشائعة', 'Avoid common words');
   return null;
 };
-
-/* ─── Per-user expanded detail card ─── */
-const UserDetailPanel = React.memo(({
-  userId, profile, isRTL, businessLinks, isSuperAdmin, onChangeStaffRole, onRemoveStaff,
-}: {
-  userId: string;
-  profile: Profile;
-  isRTL: boolean;
-  businessLinks: BusinessLink[];
-  isSuperAdmin: boolean;
-  onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
-  onRemoveStaff: (link: BusinessLink) => void;
-}) => {
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin-user-detail', userId],
-    queryFn: async () => {
-      const [contractsCount, contractsList, messages, reviews, lastActivity, entityLinksRes, leadsRes] = await Promise.all([
-        listContractsForUserParticipant({ userId, select: 'id', count: { mode: 'exact', head: true } }),
-        listContractsForUserParticipant<{ id: string; contract_ref: string | null; status: string | null; total_amount: number | null; currency: string | null; created_at: string }>({
-          userId,
-          select: 'id, contract_ref, status, total_amount, currency, created_at',
-        }),
-        countMessagesBySender({ userId }),
-        supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('admin_activity_log').select('action, created_at, details').or(`user_id.eq.${userId},entity_id.eq.${userId}`).order('created_at', { ascending: false }).limit(5),
-        listUserEntityLinks(userId),
-        supabase.from('lead_requests').select('id, status, subject, created_at, name').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
-      ]);
-      return {
-        contracts: contractsCount.count ?? 0,
-        contractsList: (contractsList.data ?? []),
-        messages: messages.count ?? 0,
-        reviews: reviews.count ?? 0,
-        recentActivity: lastActivity.data ?? [],
-        entityLinks: (entityLinksRes.data ?? []) as UserEntityLink[],
-        leadRequests: (leadsRes.data ?? []) as Array<{ id: string; status: string | null; subject: string | null; created_at: string; name: string | null }>,
-      };
-    },
-    staleTime: 60_000,
-  });
-  if (isLoading) return <div className="px-4 pb-4"><Skeleton className="h-20 rounded-xl" /></div>;
-  if (!data) return null;
-  const stats = [
-    { label: pickBi(isRTL, 'العقود', 'Contracts'), val: data.contracts, icon: FileText, color: 'text-info bg-info/10' },
-    { label: pickBi(isRTL, 'الرسائل', 'Messages'), val: data.messages, icon: MessageSquare, color: 'text-success bg-success/10' },
-    { label: pickBi(isRTL, 'التقييمات', 'Reviews'), val: data.reviews, icon: Star, color: 'text-warning bg-warning/10' },
-    { label: pickBi(isRTL, 'الطلبات', 'Requests'), val: data.leadRequests.length, icon: Inbox, color: 'text-accent bg-accent/10' },
-  ];
-  const officialEmail = profile.email && !isSyntheticPhoneEmail(profile.email) ? profile.email : null;
-  return (
-    <div className="border-t border-border/30 bg-muted/20 px-4 py-3 rounded-b-2xl space-y-3 animate-in slide-in-from-top-1 duration-200">
-      {/* Account info */}
-      <div>
-        <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
-          <Users className="w-3 h-3" />
-          {pickBi(isRTL, 'بيانات الحساب', 'Account info')}
-        </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
-          <div className="rounded-lg bg-card border border-border/30 p-2">
-            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Mail className="w-3 h-3" />{pickBi(isRTL, 'البريد الرسمي', 'Official email')}</p>
-            <p className="font-medium break-all tech-content">{officialEmail || '—'}</p>
-          </div>
-          <div className="rounded-lg bg-card border border-border/30 p-2">
-            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Phone className="w-3 h-3" />{pickBi(isRTL, 'الهاتف', 'Phone')}</p>
-            <p className="font-medium tech-content">{profile.phone || '—'}</p>
-          </div>
-          <div className="rounded-lg bg-card border border-border/30 p-2">
-            <p className="text-muted-foreground mb-0.5 flex items-center gap-1"><Calendar className="w-3 h-3" />{pickBi(isRTL, 'تاريخ التسجيل', 'Joined')}</p>
-            <p className="font-medium tech-content">{new Date(profile.created_at).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en'))}</p>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {stats.map(s => (
-          <div key={s.label} className="rounded-xl bg-card border border-border/30 p-2.5 flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-lg ${s.color} flex items-center justify-center`}><s.icon className="w-4 h-4" /></div>
-            <div><p className="text-base font-bold leading-none tech-content">{s.val}</p><p className="text-[10px] text-muted-foreground">{s.label}</p></div>
-          </div>
-        ))}
-      </div>
-      {data.entityLinks.length > 0 && (
-        <div>
-          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
-            <Building2 className="w-3 h-3" />
-            {isRTL ? `المنشآت المرتبطة (${data.entityLinks.length})` : `Linked entities (${data.entityLinks.length})`}
-          </p>
-          <div className="space-y-1 max-h-48 overflow-auto">
-            {data.entityLinks.map((b) => (
-              <div key={b.business_id} className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
-                <Building2 className="w-3 h-3 text-success shrink-0" />
-                <span className="truncate flex-1 font-medium">
-                  {isRTL ? (b.business_name_ar || b.business_name_en || '—') : (b.business_name_en || b.business_name_ar || '—')}
-                </span>
-                <span className="font-mono tech-content text-success shrink-0">{b.business_ref_id ?? '—'}</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0">{b.role}</Badge>
-                {b.is_primary_manager && <Badge variant="outline" className="text-[9px] border-accent/40 text-accent px-1 py-0">{pickBi(isRTL, 'رئيسي', 'Primary')}</Badge>}
-                {b.is_verified && <Check className="w-3 h-3 text-success" />}
-                {b.business_username && (
-                  <Button asChild size="icon" variant="ghost" className="h-6 w-6 rounded-md" aria-label="Link">
-                    <Link to={`/${b.business_username}`} target="_blank" rel="noreferrer"><Link2 className="w-3 h-3" /></Link>
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {businessLinks.length > 0 && (
-        <div>
-          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
-            <Building2 className="w-3 h-3" />
-            {isRTL ? `الصلاحيات على المنشآت (${businessLinks.length})` : `Business permissions (${businessLinks.length})`}
-          </p>
-          <div className="space-y-1.5">
-            {businessLinks.map(link => {
-              const cfg = staffRoleConfig[link.role];
-              const lockedOwner = link.isOwnerByEntity; // can't downgrade actual owner
-              return (
-                <div key={link.business.id + (link.staffId ?? 'owner')}
-                  className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
-                  <Building2 className="w-3 h-3 text-success shrink-0" />
-                  <span className="truncate flex-1 font-medium">
-                    {isRTL ? link.business.name_ar : (link.business.name_en || link.business.name_ar)}
-                  </span>
-                  <span className="font-mono tech-content text-success shrink-0">{link.business.ref_id}</span>
-                  {!link.isActive && (
-                    <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed px-1 py-0">
-                      {pickBi(isRTL, 'غير نشط', 'inactive')}
-                    </Badge>
-                  )}
-                  {isSuperAdmin && !lockedOwner && link.staffId ? (
-                    <Select value={link.role} onValueChange={(v) => onChangeStaffRole(link, v as StaffRole)}>
-                      <SelectTrigger className="h-7 w-24 text-[10px] rounded-lg"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="manager">{pickBi(isRTL, 'مدير', 'Manager')}</SelectItem>
-                        <SelectItem value="editor">{pickBi(isRTL, 'محرر', 'Editor')}</SelectItem>
-                        <SelectItem value="viewer">{pickBi(isRTL, 'مشاهد', 'Viewer')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge className={`${cfg.color} text-[10px] border px-1.5 py-0`}>
-                      {isRTL ? cfg.ar : cfg.en}{lockedOwner && <Lock className="w-2.5 h-2.5 ms-0.5 inline" />}
-                    </Badge>
-                  )}
-                  {isSuperAdmin && !lockedOwner && link.staffId && (
-                    <button
-                      onClick={() => onRemoveStaff(link)}
-                      title={pickBi(isRTL, 'إزالة الصلاحية', 'Remove access')}
-                      className="p-1 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-      {data.contractsList.length > 0 && (
-        <div>
-          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
-            <FileText className="w-3 h-3" />
-            {isRTL ? `العقود (${data.contractsList.length})` : `Contracts (${data.contractsList.length})`}
-          </p>
-          <div className="space-y-1 max-h-40 overflow-auto">
-            {data.contractsList.slice(0, 20).map((c) => (
-              <div key={c.id} className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
-                <FileText className="w-3 h-3 text-info shrink-0" />
-                <span className="font-mono tech-content flex-1 truncate">{c.contract_ref || c.id.slice(0, 8)}</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0">{c.status ?? '—'}</Badge>
-                {c.total_amount != null && (
-                  <span className="tech-content text-muted-foreground shrink-0">{c.total_amount} {c.currency ?? 'SAR'}</span>
-                )}
-                <span className="text-muted-foreground shrink-0 tech-content">{new Date(c.created_at).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en'))}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {data.leadRequests.length > 0 && (
-        <div>
-          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
-            <Inbox className="w-3 h-3" />
-            {isRTL ? `طلبات الخدمة (${data.leadRequests.length})` : `Service requests (${data.leadRequests.length})`}
-          </p>
-          <div className="space-y-1 max-h-40 overflow-auto">
-            {data.leadRequests.map((l) => (
-              <div key={l.id} className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
-                <Inbox className="w-3 h-3 text-warning shrink-0" />
-                <span className="truncate flex-1 font-medium">{l.name || l.subject || (pickBi(isRTL, 'طلب', 'Request'))}</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0">{l.status ?? '—'}</Badge>
-                <span className="text-muted-foreground shrink-0 tech-content">{new Date(l.created_at).toLocaleDateString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en'))}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {data.recentActivity.length > 0 && (
-        <div>
-          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="w-3 h-3" />{pickBi(isRTL, 'آخر نشاط إداري', 'Recent Admin Activity')}</p>
-          <div className="space-y-1">
-            {data.recentActivity.map((a, i) => (
-              <div key={i} className="flex items-center gap-2 text-[11px] rounded-lg bg-background/50 px-2 py-1.5">
-                <span className="font-mono text-muted-foreground truncate flex-1">{a.action}</span>
-                <span className="text-muted-foreground shrink-0">{formatRelative(a.created_at, isRTL)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-UserDetailPanel.displayName = 'UserDetailPanel';
-
-/* ─── User Row ─── */
-interface UserRowProps {
-  profile: Profile;
-  roles: UserRole[];
-  businessLinks: BusinessLink[];
-  isCurrentUser: boolean;
-  canManageUser: boolean;
-  isSuperAdmin: boolean;
-  isRTL: boolean;
-  language: string;
-  selected: boolean;
-  expanded: boolean;
-  density: Density;
-  onToggleSelect: () => void;
-  onToggleExpand: () => void;
-  onEdit: (p: Profile) => void;
-  onPassword: (p: Profile) => void;
-  onToggleBan: (p: Profile) => void;
-  onDelete: (p: Profile) => void;
-  onAddRole: (userId: string, role: string) => void;
-  onRemoveRole: (id: string) => void;
-  onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
-  onRemoveStaff: (link: BusinessLink) => void;
-  onView: (p: Profile) => void;
-}
-
-const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canManageUser, isSuperAdmin,
-  isRTL, language, selected, expanded, density, onToggleSelect, onToggleExpand,
-  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole,
-  onChangeStaffRole, onRemoveStaff, onView }: UserRowProps) => {
-  const [addingRole, setAddingRole] = useState(false);
-  const [pickedRole, setPickedRole] = useState('user');
-  const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
-  const accType = accountTypeConfig[profile.account_type] || accountTypeConfig.individual;
-  const AccIcon = accType.icon;
-  const isBanned = profile.is_banned;
-  const highest = roles.length > 0 ? roles.reduce((b, r) => (roleConfig[r.role as keyof typeof roleConfig]?.rank ?? 99) < (roleConfig[b.role as keyof typeof roleConfig]?.rank ?? 99) ? r : b) : null;
-  const highestCfg = highest ? roleConfig[highest.role as keyof typeof roleConfig] : null;
-  const compact = density === 'compact';
-  // Super-admin only sees raw PII; other admins see masked values they can't copy.
-  const canSeePII = isSuperAdmin;
-  // Never render synthetic phone-login emails (e.g. 9665...@phone.qitaat.local)
-  // as if they were official user emails — they are internal auth identifiers only.
-  const officialEmail = profile.email && !isSyntheticPhoneEmail(profile.email) ? profile.email : null;
-  const displayedEmail = officialEmail ? (canSeePII ? officialEmail : maskEmail(officialEmail)) : null;
-  const displayedPhone = profile.phone ? (canSeePII ? profile.phone : maskPhone(profile.phone)) : null;
-
-  const handleCopy = useCallback((value: string, label: string) => {
-    if (!isSuperAdmin && (label.includes('بريد') || label.toLowerCase().includes('email') || label.includes('هاتف') || label.toLowerCase().includes('phone'))) {
-      toast.error(pickBi(isRTL, 'هذه البيانات الحساسة متاحة فقط لمدير النظام (Super Admin).', 'This sensitive data is only available to Super Admins.'));
-      return;
-    }
-    navigator.clipboard?.writeText(value).then(
-      () => toast.success(isRTL ? `تم نسخ ${label}` : `${label} copied`),
-      () => toast.error(pickBi(isRTL, 'فشل النسخ', 'Copy failed')),
-    );
-  }, [isRTL, isSuperAdmin]);
-
-  return (
-    <div id={`user-row-${profile.id}`} className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
-      ${selected ? 'ring-2 ring-accent border-accent/50' : isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
-      ${isBanned ? 'opacity-70 border-destructive/40' : ''}`}>
-      <div className={`${compact ? 'p-2.5 sm:p-3 gap-2' : 'p-3 sm:p-4 gap-3'} flex flex-col sm:flex-row sm:items-start`}>
-        <Checkbox checked={selected} onCheckedChange={onToggleSelect} className="mt-1 shrink-0" disabled={!canManageUser} />
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="relative shrink-0">
-            <Avatar className={`${compact ? 'w-9 h-9' : 'w-11 h-11'} ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
-              <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
-                {(profile.full_name || '?').charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            {highestCfg && (
-              <div className={`absolute -bottom-1 -end-1 w-5 h-5 rounded-full ${highestCfg.iconBg} flex items-center justify-center ring-2 ring-card`}>
-                <highestCfg.icon className="w-2.5 h-2.5" />
-              </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <button onClick={onToggleExpand} className="font-heading font-bold text-sm hover:text-accent transition-colors text-start truncate">
-                {profile.full_name || (pickBi(isRTL, 'بدون اسم', 'No name'))}
-              </button>
-              {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{pickBi(isRTL, 'أنت', 'You')}</Badge>}
-              {isBanned && <UserStatusBadge variant="suspended" isRTL={isRTL} />}
-              {!compact && (
-                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
-                  <Clock className="w-2.5 h-2.5" />{formatRelative(profile.updated_at, isRTL)}
-                </span>
-              )}
-            </div>
-            {!compact && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {displayedEmail && officialEmail && (
-                <button onClick={() => handleCopy(officialEmail, pickBi(isRTL, 'البريد', 'Email'))}
-                  className={`flex items-center gap-1 text-[11px] truncate max-w-[200px] transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
-                  title={canSeePII ? (pickBi(isRTL, 'نسخ البريد', 'Copy email')) : (pickBi(isRTL, 'متاح فقط لمدير النظام', 'Super Admin only'))}>
-                  <Mail className="w-3 h-3 shrink-0" />
-                  <span className="truncate">{displayedEmail}</span>
-                  {canSeePII
-                    ? <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
-                    : <Lock className="w-2.5 h-2.5 shrink-0 opacity-60" />}
-                </button>
-              )}
-              {displayedPhone && (
-                <button onClick={() => handleCopy(profile.phone!, pickBi(isRTL, 'الهاتف', 'Phone'))}
-                  className={`flex items-center gap-1 text-[11px] tech-content transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
-                  title={canSeePII ? (pickBi(isRTL, 'نسخ الهاتف', 'Copy phone')) : (pickBi(isRTL, 'متاح فقط لمدير النظام', 'Super Admin only'))}>
-                  <Phone className="w-3 h-3 shrink-0" />{displayedPhone}
-                  {canSeePII
-                    ? <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
-                    : <Lock className="w-2.5 h-2.5 shrink-0 opacity-60" />}
-                </button>
-              )}
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Calendar className="w-3 h-3 shrink-0" />{formatDate(profile.created_at, language)}</span>
-            </div>
-            )}
-            <div className={`flex flex-wrap items-center gap-1.5 ${compact ? 'mt-1' : 'mt-2'}`}>
-              <Badge className={`${tier.color} text-[10px] border px-1.5 py-0`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
-              <Badge className={`${accType.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
-                <AccIcon className="w-2.5 h-2.5" />{isRTL ? accType.labelAr : accType.labelEn}
-              </Badge>
-              {profile.ref_id && (
-                <button onClick={() => handleCopy(profile.ref_id, pickBi(isRTL, 'المعرّف', 'Ref ID'))}
-                  title={pickBi(isRTL, 'نسخ المعرّف', 'Copy Ref ID')}
-                  className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0 rounded-md border border-border/40 font-mono tech-content text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors">
-                  <Hash className="w-2.5 h-2.5" />{profile.ref_id}
-                </button>
-              )}
-              {roles.map(r => {
-                const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
-                const RIcon = cfg.icon;
-                return (
-                  <div key={r.id} className="flex items-center">
-                    <Badge className={`${cfg.badge} gap-0.5 text-[10px] border px-1.5 py-0`}><RIcon className="w-2.5 h-2.5" />{isRTL ? cfg.labelAr : cfg.labelEn}</Badge>
-                    {!isCurrentUser && isSuperAdmin && (
-                      <button onClick={() => onRemoveRole(r.id)} className="ms-0.5 p-0.5 rounded hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors">
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-              {roles.length === 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed"><Shield className="w-2.5 h-2.5 me-0.5" />{pickBi(isRTL, 'عضو عادي', 'Member')}</Badge>
-              )}
-            </div>
-            {businessLinks.length > 0 && (
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                {businessLinks.length >= 4 && (
-                  <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 border-warning/50 bg-warning/10 text-warning dark:text-warning">
-                    <AlertTriangle className="w-2.5 h-2.5" />
-                    {isRTL ? `مرتبط بـ ${businessLinks.length} منشآت` : `${businessLinks.length} businesses`}
-                  </Badge>
-                )}
-                {businessLinks.map(link => {
-                  const biz = link.business;
-                  const cfg = staffRoleConfig[link.role];
-                  return (
-                    <Badge key={biz.id + (link.staffId ?? 'o')} variant="outline"
-                      className={`text-[10px] gap-1 px-1.5 py-0.5 bg-success/5 border-success/30 ${!link.isActive ? 'opacity-60' : ''}`}
-                      title={`${isRTL ? cfg.ar : cfg.en} • ${biz.ref_id}`}>
-                      <Building2 className="w-2.5 h-2.5 text-success" />
-                      <span className="truncate max-w-[120px]">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                      <span className="font-mono text-success tech-content">{biz.ref_id}</span>
-                      <span className={`text-[9px] px-1 rounded ${cfg.color} border-0`}>
-                        {isRTL ? cfg.ar : cfg.en}
-                      </span>
-                      {biz.is_verified && <Check className="w-2.5 h-2.5 text-success" />}
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap shrink-0">
-          <TooltipProvider delayDuration={200}>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={onToggleExpand} aria-label="Move up">
-                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </Button>
-            </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'التفاصيل', 'Details')}</TooltipContent></Tooltip>
-            <UserRowActions
-              isRTL={isRTL}
-              isBanned={isBanned}
-              onView={() => onView(profile)}
-              onEdit={() => onEdit(profile)}
-              onPassword={canManageUser && isSuperAdmin ? () => onPassword(profile) : undefined}
-              onToggleActive={canManageUser ? () => onToggleBan(profile) : undefined}
-              onDelete={canManageUser ? () => onDelete(profile) : undefined}
-            />
-            {isSuperAdmin && (addingRole ? (
-              <div className="flex items-center gap-1">
-                <Select value={pickedRole} onValueChange={setPickedRole}>
-                  <SelectTrigger className="h-8 w-28 text-xs rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="super_admin">{pickBi(isRTL, 'مشرف أعلى', 'Super Admin')}</SelectItem>
-                    <SelectItem value="admin">{pickBi(isRTL, 'مشرف', 'Admin')}</SelectItem>
-                    <SelectItem value="moderator">{pickBi(isRTL, 'مشرف محتوى', 'Moderator')}</SelectItem>
-                    <SelectItem value="user">{pickBi(isRTL, 'مستخدم', 'User')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button size="sm" className="h-8 w-8 p-0 rounded-xl" onClick={() => { onAddRole(profile.user_id, pickedRole); setAddingRole(false); }}>
-                  <Check className="w-3 h-3" />
-                </Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl" onClick={() => setAddingRole(false)}>
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-            ) : (
-              <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => setAddingRole(true)} aria-label="Add user">
-                  <UserPlus className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger><TooltipContent>{pickBi(isRTL, 'إضافة صلاحية', 'Add Role')}</TooltipContent></Tooltip>
-            ))}
-          </TooltipProvider>
-        </div>
-      </div>
-      {expanded && (
-        <UserDetailPanel
-          userId={profile.user_id}
-          profile={profile}
-          isRTL={isRTL}
-          businessLinks={businessLinks}
-          isSuperAdmin={isSuperAdmin}
-          onChangeStaffRole={onChangeStaffRole}
-          onRemoveStaff={onRemoveStaff}
-        />
-      )}
-    </div>
-  );
-});
-UserRow.displayName = 'UserRow';
 
 /* ─── Main Component ─── */
 const PAGE_SIZE = 20;
@@ -1575,300 +1065,180 @@ const AdminUsers = () => {
                     <UserDetailsDrawer
                       open
                       isRTL={isRTL}
-                      user={{
-                        id: viewingUser.id,
-                        user_id: viewingUser.user_id,
-                        ref_id: viewingUser.ref_id ?? null,
-                        full_name: viewingUser.full_name ?? null,
-                        full_name_ar: viewingUser.full_name_ar ?? null,
-                        full_name_en: viewingUser.full_name_en ?? null,
-                        username: viewingUser.username ?? null,
-                        email: viewingUser.email ?? null,
-                        phone: viewingUser.phone ?? null,
-                        account_type: viewingUser.account_type ?? null,
-                        membership_tier: viewingUser.membership_tier ?? null,
-                        is_banned: viewingUser.is_banned ?? null,
-                        is_onboarded: viewingUser.is_onboarded ?? null,
-                        phone_verified: viewingUser.phone_verified ?? null,
-                        created_at: viewingUser.created_at,
-                      }}
-                      roles={(roleMap.get(viewingUser.user_id) || []).map(r => r.role)}
-                      linkedEntities={(businessLinksMap.get(viewingUser.user_id) || []).map(l => ({
-                        id: l.business.id,
-                        name_ar: l.business.name_ar,
-                        name_en: l.business.name_en,
-                        ref_id: l.business.ref_id,
-                        username: l.business.username,
-                        role: l.role,
-                      }))}
-                      officialEmail={viewingUser.email && !isSyntheticPhoneEmail(viewingUser.email) ? viewingUser.email : null}
                       onClose={closeViewingUser}
+                      {...buildUserDetailsDrawerProps({
+                        profile: viewingUser,
+                        roles: roleMap.get(viewingUser.user_id) || [],
+                        businessLinks: businessLinksMap.get(viewingUser.user_id) || [],
+                      })}
                     />
                   ) : null
                 }
                 tableSlot={
-                  <div className="space-y-4">
-              {/* Bulk action bar */}
-              {selected.size > 0 && (
-                <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex items-center gap-3 flex-wrap animate-in slide-in-from-top-1">
-                  <Badge className="bg-accent text-accent-foreground gap-1"><Check className="w-3 h-3" />{selected.size}</Badge>
-                  <span className="text-xs text-foreground">{pickBi(isRTL, 'محدد', 'selected')}</span>
-                  <div className="ms-auto flex items-center gap-2 flex-wrap">
-                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8" onClick={() => {
-                      const selectedProfiles = sorted.filter(p => selected.has(p.id));
-                      const rows = selectedProfiles.map(p => {
-                        const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
-                        const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
-                        const emailCell = p.email && !isSyntheticPhoneEmail(p.email) ? p.email : '';
-                        return [p.ref_id, p.full_name || '', emailCell, p.phone || '', p.account_type, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
-                          .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
-                      });
-                      const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,Tier,Roles,Banned,Created', ...rows].join('\n');
-                      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a'); a.href = url; a.download = `users_selected_${new Date().toISOString().split('T')[0]}.csv`; a.click();
-                      URL.revokeObjectURL(url);
-                      toast.success(isRTL ? `تم تصدير ${selectedProfiles.length}` : `Exported ${selectedProfiles.length}`);
-                    }}>
-                      <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'تصدير المحدد', 'Export')}
-                    </Button>
-                    {isSuperAdmin && (<>
-                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-warning border-warning"
-                      onClick={() => {
-                        const safeIds = sorted.filter(p => {
-                          if (!selected.has(p.id)) return false;
-                          if (p.user_id === user.id) return false;
-                          const r = roleMap.get(p.user_id) || [];
-                          return !r.some(x => x.role === 'super_admin' || x.role === 'admin');
-                        }).map(p => p.id);
-                        const skipped = selected.size - safeIds.length;
-                        if (safeIds.length === 0) {
-                          toast.error(pickBi(isRTL, 'لا يمكن تعطيل حسابك أو حسابات المشرفين', 'Cannot disable your own account or admin accounts'));
-                          return;
-                        }
-                        if (skipped > 0) toast.warning(isRTL ? `تم تجاهل ${skipped} حساب محمي` : `Skipped ${skipped} protected account(s)`);
-                        bulkBanMutation.mutate({ ids: safeIds, isBanned: true });
-                      }}
-                      disabled={bulkBanMutation.isPending}>
-                      <Ban className="w-3.5 h-3.5" />{pickBi(isRTL, 'تعطيل', 'Disable')}
-                    </Button>
-                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-success border-success"
-                      onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: false })}
-                      disabled={bulkBanMutation.isPending}>
-                      <UserCheck className="w-3.5 h-3.5" />{pickBi(isRTL, 'تفعيل', 'Enable')}
-                    </Button>
-                    </>)}
-                    <Button variant="ghost" size="sm" className="rounded-xl h-8" onClick={() => setSelected(new Set())}>
-                      <X className="w-3.5 h-3.5" />{pickBi(isRTL, 'إلغاء', 'Clear')}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Inline panels */}
-              {activePanel?.type === 'create' && (
-                <CreateUserPanel
-                  isRTL={isRTL}
-                  panelRef={panelRef}
-                  form={createForm}
-                  setForm={setCreateForm}
-                  onClose={closePanel}
-                  onSubmit={(f) => createUserMutation.mutate(f)}
-                  isSubmitting={createUserMutation.isPending}
-                />
-              )}
-              {activePanel?.type === 'edit' && (
-                <UserEditPanel
-                  panelRef={panelRef}
-                  isRTL={isRTL}
-                  language={language}
-                  isSuperAdmin={isSuperAdmin}
-                  currentUserId={user?.id}
-                  editingProfile={activePanel.profile}
-                  editingRoles={roleMap.get(activePanel.profile.user_id) || []}
-                  editingLinks={businessLinksMap.get(activePanel.profile.user_id) || []}
-                  businesses={businesses}
-                  accountTypeConfig={accountTypeConfig}
-                  tierConfig={tierConfig}
-                  roleConfig={roleConfig}
-                  staffRoleConfig={staffRoleConfig}
-                  editForm={editForm}
-                  setEditForm={setEditForm}
-                  editFieldErrors={editFieldErrors}
-                  editFieldRawCodes={editFieldRawCodes}
-                  clearEditFieldError={clearEditFieldError}
-                  usernameServerError={usernameServerError}
-                  suspendForm={suspendForm}
-                  setSuspendForm={setSuspendForm}
-                  linkForm={linkForm}
-                  setLinkForm={setLinkForm}
-                  linkSearch={linkSearch}
-                  setLinkSearch={setLinkSearch}
-                  closePanel={closePanel}
-                  handleSaveProfile={handleSaveProfile}
-                  updateProfileMutation={updateProfileMutation}
-                  removeRoleMutation={removeRoleMutation}
-                  addRoleMutation={addRoleMutation}
-                  updateStaffRoleMutation={updateStaffRoleMutation}
-                  removeStaffMutation={removeStaffMutation}
-                  linkBusinessMutation={linkBusinessMutation}
-                  suspendMutation={suspendMutation}
-                  toggleBanMutation={toggleBanMutation}
-                />
-              )}
-
-              {activePanel?.type === 'password' && (
-                <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading font-bold text-lg flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><Lock className="w-4 h-4 text-accent" /></div>
-                      {pickBi(isRTL, 'تغيير كلمة المرور', 'Change Password')}
-                      <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
-                    </h3>
-                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl" aria-label="Hide"><X className="w-4 h-4" /></Button>
-                  </div>
-                  <div className="max-w-md space-y-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">{pickBi(isRTL, 'كلمة المرور الجديدة', 'New Password')}</Label>
-                      <div className="relative">
-                        <Input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                          placeholder={pickBi(isRTL, '8+ مع أرقام ورموز', '8+ with numbers and symbols')} minLength={8} className="pe-10 h-10 rounded-xl" />
-                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
-                          {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                      {passwordValidationMessage && <p className="text-xs text-destructive">{passwordValidationMessage}</p>}
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Button onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
-                        disabled={changePasswordMutation.isPending || !!passwordValidationMessage || !newPassword} className="rounded-xl gap-2">
-                        {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{pickBi(isRTL, 'تغيير', 'Change')}
-                      </Button>
-                      <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5 rounded-xl">
-                        <Send className="w-4 h-4" />{pickBi(isRTL, 'إرسال رابط', 'Send Link')}
-                      </Button>
-                      <Button variant="ghost" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activePanel?.type === 'delete' && (
-                <AlertDialog
-                  open
-                  onOpenChange={(o) => { if (!o && !deleteUserMutation.isPending) closePanel(); }}
-                >
-                  <AlertDialogContent className="rounded-2xl border-destructive/30">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="font-heading flex items-center gap-2 text-destructive">
-                        <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center">
-                          <AlertTriangle className="w-4 h-4 text-destructive" />
-                        </div>
-                        {pickBi(isRTL, 'تأكيد حذف الحساب', 'Confirm Deletion')}
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {isRTL
-                          ? `هل أنت متأكد من حذف "${activePanel.userName}"؟ سيتم حذف جميع البيانات نهائياً.`
-                          : `Delete "${activePanel.userName}"? All data will be removed permanently.`}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel disabled={deleteUserMutation.isPending} className="rounded-xl">
-                        {pickBi(isRTL, 'إلغاء', 'Cancel')}
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={(e) => {
-                          e.preventDefault();
-                          deleteUserMutation.mutate(activePanel.userId);
-                        }}
-                        disabled={deleteUserMutation.isPending}
-                        className="rounded-xl gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {pickBi(isRTL, 'حذف نهائي', 'Delete')}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-
-              {/* List */}
-              {(loadingProfiles || loadingRoles) ? (
-                <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div>
-              ) : paginated.length === 0 ? (
-                <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-                    <Users className="w-8 h-8 text-accent/30" />
-                  </div>
-                  <p className="font-heading font-bold text-sm mb-1">{pickBi(isRTL, 'لا توجد نتائج', 'No results')}</p>
-                  <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'جرّب تغيير الفلاتر', 'Try changing filters')}</p>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-3">
-                    {paginated.map(profile => {
-                      const roles = roleMap.get(profile.user_id) || [];
-                      const isCurrentUser = profile.user_id === user.id;
-                      const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
-                      const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
-                      const canManageUser = !isCurrentUser && (isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin));
-                      return (
-                        <UserRow key={profile.id} profile={profile} roles={roles}
-                          businessLinks={businessLinksMap.get(profile.user_id) || []}
-                          isCurrentUser={isCurrentUser} canManageUser={canManageUser} isSuperAdmin={isSuperAdmin}
-                          isRTL={isRTL} language={language}
-                          selected={selected.has(profile.id)} expanded={expanded.has(profile.id)} density={density}
-                          onToggleSelect={() => toggleSelect(profile.id)} onToggleExpand={() => toggleExpand(profile.id)}
-                          onEdit={openEdit}
-                          onView={(p) => setViewingUser(p)}
-                          onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
-                          onToggleBan={(p) => toggleBanMutation.mutate({ profileId: p.id, isBanned: !p.is_banned })}
-                          onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
-                          onAddRole={(uid, role) => addRoleMutation.mutate({ userId: uid, role })}
-                          onRemoveRole={(rid) => removeRoleMutation.mutate(rid)}
-                          onChangeStaffRole={(link, role) => {
-                            if (!link.staffId) return;
-                            updateStaffRoleMutation.mutate({ staffId: link.staffId, role });
-                          }}
-                          onRemoveStaff={(link) => {
-                            if (!link.staffId || link.isOwnerByEntity) return;
-                            removeStaffMutation.mutate(link.staffId);
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="rounded-xl gap-1" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
-                        {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                        {pickBi(isRTL, 'السابق', 'Prev')}
-                      </Button>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
-                          let n = i + 1;
-                          if (totalPages > 7) {
-                            if (page > 4) n = page - 3 + i;
-                            if (n > totalPages - 6) n = totalPages - 6 + i;
-                          }
-                          return (
-                            <button key={n} onClick={() => setPage(n)}
-                              className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors tech-content
-                                ${n === page ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`}>
-                              {n}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <Button variant="outline" size="sm" className="rounded-xl gap-1" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
-                        {pickBi(isRTL, 'التالي', 'Next')}
-                        {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-                  </div>
+                  <UsersListSection
+                    isRTL={isRTL}
+                    language={language}
+                    currentUserId={user.id}
+                    isSuperAdmin={isSuperAdmin}
+                    paginated={paginated}
+                    sorted={sorted}
+                    roleMap={roleMap}
+                    businessLinksMap={businessLinksMap}
+                    loading={loadingProfiles || loadingRoles}
+                    selected={selected}
+                    expanded={expanded}
+                    density={density}
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    onToggleSelect={toggleSelect}
+                    onToggleExpand={toggleExpand}
+                    onEdit={openEdit}
+                    onView={(p) => setViewingUser(p)}
+                    onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
+                    onToggleBan={(p) => toggleBanMutation.mutate({ profileId: p.id, isBanned: !p.is_banned })}
+                    onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
+                    onAddRole={(uid, role) => addRoleMutation.mutate({ userId: uid, role })}
+                    onRemoveRole={(rid) => removeRoleMutation.mutate(rid)}
+                    onChangeStaffRole={(link, role) => {
+                      if (!link.staffId) return;
+                      updateStaffRoleMutation.mutate({ staffId: link.staffId, role });
+                    }}
+                    onRemoveStaff={(link) => {
+                      if (!link.staffId || link.isOwnerByEntity) return;
+                      removeStaffMutation.mutate(link.staffId);
+                    }}
+                    onClearSelection={() => setSelected(new Set())}
+                    onBulkBan={(ids, isBanned) => bulkBanMutation.mutate({ ids, isBanned })}
+                    bulkBanPending={bulkBanMutation.isPending}
+                    panelsSlot={
+                      <>
+                        {activePanel?.type === 'create' && (
+                          <CreateUserPanel
+                            isRTL={isRTL}
+                            panelRef={panelRef}
+                            form={createForm}
+                            setForm={setCreateForm}
+                            onClose={closePanel}
+                            onSubmit={(f) => createUserMutation.mutate(f)}
+                            isSubmitting={createUserMutation.isPending}
+                          />
+                        )}
+                        {activePanel?.type === 'edit' && (
+                          <UserEditPanel
+                            panelRef={panelRef}
+                            isRTL={isRTL}
+                            language={language}
+                            isSuperAdmin={isSuperAdmin}
+                            currentUserId={user?.id}
+                            editingProfile={activePanel.profile}
+                            editingRoles={roleMap.get(activePanel.profile.user_id) || []}
+                            editingLinks={businessLinksMap.get(activePanel.profile.user_id) || []}
+                            businesses={businesses}
+                            accountTypeConfig={accountTypeConfig}
+                            tierConfig={tierConfig}
+                            roleConfig={roleConfig}
+                            staffRoleConfig={staffRoleConfig}
+                            editForm={editForm}
+                            setEditForm={setEditForm}
+                            editFieldErrors={editFieldErrors}
+                            editFieldRawCodes={editFieldRawCodes}
+                            clearEditFieldError={clearEditFieldError}
+                            usernameServerError={usernameServerError}
+                            suspendForm={suspendForm}
+                            setSuspendForm={setSuspendForm}
+                            linkForm={linkForm}
+                            setLinkForm={setLinkForm}
+                            linkSearch={linkSearch}
+                            setLinkSearch={setLinkSearch}
+                            closePanel={closePanel}
+                            handleSaveProfile={handleSaveProfile}
+                            updateProfileMutation={updateProfileMutation}
+                            removeRoleMutation={removeRoleMutation}
+                            addRoleMutation={addRoleMutation}
+                            updateStaffRoleMutation={updateStaffRoleMutation}
+                            removeStaffMutation={removeStaffMutation}
+                            linkBusinessMutation={linkBusinessMutation}
+                            suspendMutation={suspendMutation}
+                            toggleBanMutation={toggleBanMutation}
+                          />
+                        )}
+                        {activePanel?.type === 'password' && (
+                          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><Lock className="w-4 h-4 text-accent" /></div>
+                                {pickBi(isRTL, 'تغيير كلمة المرور', 'Change Password')}
+                                <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
+                              </h3>
+                              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl" aria-label="Hide"><X className="w-4 h-4" /></Button>
+                            </div>
+                            <div className="max-w-md space-y-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs">{pickBi(isRTL, 'كلمة المرور الجديدة', 'New Password')}</Label>
+                                <div className="relative">
+                                  <Input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                                    placeholder={pickBi(isRTL, '8+ مع أرقام ورموز', '8+ with numbers and symbols')} minLength={8} className="pe-10 h-10 rounded-xl" />
+                                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
+                                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                </div>
+                                {passwordValidationMessage && <p className="text-xs text-destructive">{passwordValidationMessage}</p>}
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Button onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
+                                  disabled={changePasswordMutation.isPending || !!passwordValidationMessage || !newPassword} className="rounded-xl gap-2">
+                                  {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{pickBi(isRTL, 'تغيير', 'Change')}
+                                </Button>
+                                <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5 rounded-xl">
+                                  <Send className="w-4 h-4" />{pickBi(isRTL, 'إرسال رابط', 'Send Link')}
+                                </Button>
+                                <Button variant="ghost" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {activePanel?.type === 'delete' && (
+                          <AlertDialog
+                            open
+                            onOpenChange={(o) => { if (!o && !deleteUserMutation.isPending) closePanel(); }}
+                          >
+                            <AlertDialogContent className="rounded-2xl border-destructive/30">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="font-heading flex items-center gap-2 text-destructive">
+                                  <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center">
+                                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                                  </div>
+                                  {pickBi(isRTL, 'تأكيد حذف الحساب', 'Confirm Deletion')}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {isRTL
+                                    ? `هل أنت متأكد من حذف "${activePanel.userName}"؟ سيتم حذف جميع البيانات نهائياً.`
+                                    : `Delete "${activePanel.userName}"? All data will be removed permanently.`}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel disabled={deleteUserMutation.isPending} className="rounded-xl">
+                                  {pickBi(isRTL, 'إلغاء', 'Cancel')}
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    deleteUserMutation.mutate(activePanel.userId);
+                                  }}
+                                  disabled={deleteUserMutation.isPending}
+                                  className="rounded-xl gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                                  {pickBi(isRTL, 'حذف نهائي', 'Delete')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </>
+                    }
+                  />
                 }
               />
             </TabsContent>
