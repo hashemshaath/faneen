@@ -505,7 +505,7 @@ const AdminMembershipRejections: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </MembershipFinancePageShell>
     </DashboardLayout>
   );
 };
