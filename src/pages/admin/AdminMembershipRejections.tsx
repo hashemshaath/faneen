@@ -49,6 +49,18 @@ interface Row {
 /** Reason labels are now sourced from the shared admin memberships primitives. */
 const REASON_LABEL = REJECTION_REASON_LABELS;
 
+/**
+ * Reason codes shown in the filter dropdown for this page.
+ * Preserved from the prior local map to avoid surfacing unrelated reason codes.
+ */
+const REASON_FILTER_CODES: ReadonlyArray<string> = [
+  'ref_id_mismatch',
+  'business_user_mismatch',
+  'business_not_found',
+  'missing_ref_id',
+  'unknown',
+];
+
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 10_000;
 const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -334,9 +346,12 @@ const AdminMembershipRejections: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{isRTL ? 'كل الأسباب' : 'All reasons'}</SelectItem>
-                {Object.entries(REASON_LABEL).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{isRTL ? v.ar : v.en}</SelectItem>
-                ))}
+                {REASON_FILTER_CODES.map((k) => {
+                  const v = getRejectionReasonMeta(k);
+                  return (
+                    <SelectItem key={k} value={k}>{isRTL ? v.ar : v.en}</SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {/* date from */}
