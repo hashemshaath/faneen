@@ -26,6 +26,11 @@ import { Download, X, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
+import {
+  RejectionReasonBadge,
+  REJECTION_REASON_LABELS,
+  getRejectionReasonMeta,
+} from '@/components/admin/memberships/shared';
 
 interface Row {
   id: string;
@@ -41,13 +46,20 @@ interface Row {
   created_at: string;
 }
 
-const REASON_LABEL: Record<string, { ar: string; en: string; tone: 'destructive' | 'warning' | 'secondary' }> = {
-  ref_id_mismatch:        { ar: 'عدم تطابق المعرّف',     en: 'ref_id mismatch',         tone: 'destructive' },
-  business_user_mismatch: { ar: 'المنشأة لمستخدم آخر',   en: 'business/user mismatch',  tone: 'destructive' },
-  business_not_found:     { ar: 'لا توجد منشأة',          en: 'business not found',      tone: 'warning' },
-  missing_ref_id:         { ar: 'معرّف مرجعي مفقود',     en: 'missing ref_id',          tone: 'warning' },
-  unknown:                { ar: 'غير محدد',               en: 'Unknown',                 tone: 'secondary' },
-};
+/** Reason labels are now sourced from the shared admin memberships primitives. */
+const REASON_LABEL = REJECTION_REASON_LABELS;
+
+/**
+ * Reason codes shown in the filter dropdown for this page.
+ * Preserved from the prior local map to avoid surfacing unrelated reason codes.
+ */
+const REASON_FILTER_CODES: ReadonlyArray<string> = [
+  'ref_id_mismatch',
+  'business_user_mismatch',
+  'business_not_found',
+  'missing_ref_id',
+  'unknown',
+];
 
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 10_000;
@@ -334,9 +346,12 @@ const AdminMembershipRejections: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{isRTL ? 'كل الأسباب' : 'All reasons'}</SelectItem>
-                {Object.entries(REASON_LABEL).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{isRTL ? v.ar : v.en}</SelectItem>
-                ))}
+                {REASON_FILTER_CODES.map((k) => {
+                  const v = getRejectionReasonMeta(k);
+                  return (
+                    <SelectItem key={k} value={k}>{isRTL ? v.ar : v.en}</SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {/* date from */}
@@ -367,7 +382,7 @@ const AdminMembershipRejections: React.FC = () => {
         {rows.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {Object.entries(stats).map(([code, n]) => {
-              const meta = REASON_LABEL[code] ?? REASON_LABEL.unknown;
+              const meta = getRejectionReasonMeta(code);
               return (
                 <Badge key={code} variant="outline" className="gap-1">
                   <span>{isRTL ? meta.ar : meta.en}</span>
@@ -420,19 +435,17 @@ const AdminMembershipRejections: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {rows.map((r) => {
-                    const meta = REASON_LABEL[r.reason_code] ?? REASON_LABEL.unknown;
                     return (
                       <TableRow key={r.id}>
                         <TableCell className="tech-content whitespace-nowrap text-xs text-muted-foreground">
                           {format(new Date(r.created_at), 'yyyy-MM-dd HH:mm', { locale })}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={meta.tone === 'destructive' ? 'destructive' : meta.tone === 'warning' ? 'secondary' : 'outline'}
+                          <RejectionReasonBadge
+                            code={r.reason_code}
+                            isRTL={isRTL}
                             title={r.error_message ?? ''}
-                          >
-                            {isRTL ? meta.ar : meta.en}
-                          </Badge>
+                          />
                           {r.error_message && (
                             <div className="mt-1 line-clamp-2 max-w-xs text-xs text-muted-foreground">
                               {r.error_message}

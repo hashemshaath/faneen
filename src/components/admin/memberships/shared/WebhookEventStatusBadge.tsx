@@ -1,0 +1,49 @@
+/**
+ * Presentational badge for payment webhook event statuses.
+ * Pure UI — no API, no permissions, no Supabase.
+ */
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+export type WebhookEventStatusValue =
+  | 'processed'
+  | 'pending'
+  | 'error'
+  | 'failed'
+  | 'ignored'
+  | (string & {});
+
+type Tone = 'success' | 'warning' | 'destructive' | 'muted';
+
+const TONE_CLASSES: Record<Tone, string> = {
+  success: 'bg-success/10 text-success border-success/30',
+  warning: 'bg-warning/10 text-warning border-warning/30',
+  destructive: 'bg-destructive/10 text-destructive border-destructive/30',
+  muted: 'bg-muted text-muted-foreground border-border',
+};
+
+const STATUS_TONE: Record<string, Tone> = {
+  processed: 'success',
+  pending: 'warning',
+  error: 'destructive',
+  failed: 'destructive',
+  ignored: 'muted',
+};
+
+export interface WebhookEventStatusBadgeProps {
+  status: WebhookEventStatusValue;
+  label?: string;
+  className?: string;
+}
+
+export const WebhookEventStatusBadge: React.FC<WebhookEventStatusBadgeProps> = ({ status, label, className }) => {
+  const tone = STATUS_TONE[status] ?? 'muted';
+  return (
+    <Badge variant="outline" className={cn(TONE_CLASSES[tone], className)}>
+      {label ?? status}
+    </Badge>
+  );
+};
+
+export default WebhookEventStatusBadge;
