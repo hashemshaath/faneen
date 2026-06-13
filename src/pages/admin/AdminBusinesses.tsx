@@ -193,6 +193,7 @@ const AdminBusinesses = () => {
   const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
   const [editForm, setEditForm] = useState<AdminEditBusinessFormState>({});
+  const [viewingBiz, setViewingBiz] = useState<BusinessDrawerRow | null>(null);
   // ── Create new business (admin) ──
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
