@@ -12,7 +12,13 @@ import { resolve } from 'node:path';
 
 const read = (p: string) => readFileSync(resolve(p), 'utf8');
 
-const ADMIN_PAYMENTS = read('src/pages/admin/AdminMembershipPayments.tsx');
+const ADMIN_PAYMENTS = [
+  read('src/pages/admin/AdminMembershipPayments.tsx'),
+  read('src/components/admin/memberships/payments/MembershipPaymentIntentsSection.tsx'),
+  read('src/components/admin/memberships/payments/MembershipWebhookEventsSection.tsx'),
+  read('src/components/admin/memberships/payments/PaymentManualForm.tsx'),
+  read('src/components/admin/memberships/payments/PaymentRefundForm.tsx'),
+].join('\n');
 const HISTORY = read('src/components/membership/MembershipPaymentHistory.tsx');
 const STATUS = read('src/components/membership/MembershipPaymentStatus.tsx');
 const INVOICE = read('src/pages/MembershipInvoice.tsx');
