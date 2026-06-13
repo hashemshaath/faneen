@@ -26,6 +26,11 @@ import { Download, X, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
+import {
+  RejectionReasonBadge,
+  REJECTION_REASON_LABELS,
+  getRejectionReasonMeta,
+} from '@/components/admin/memberships/shared';
 
 interface Row {
   id: string;
@@ -41,13 +46,8 @@ interface Row {
   created_at: string;
 }
 
-const REASON_LABEL: Record<string, { ar: string; en: string; tone: 'destructive' | 'warning' | 'secondary' }> = {
-  ref_id_mismatch:        { ar: 'عدم تطابق المعرّف',     en: 'ref_id mismatch',         tone: 'destructive' },
-  business_user_mismatch: { ar: 'المنشأة لمستخدم آخر',   en: 'business/user mismatch',  tone: 'destructive' },
-  business_not_found:     { ar: 'لا توجد منشأة',          en: 'business not found',      tone: 'warning' },
-  missing_ref_id:         { ar: 'معرّف مرجعي مفقود',     en: 'missing ref_id',          tone: 'warning' },
-  unknown:                { ar: 'غير محدد',               en: 'Unknown',                 tone: 'secondary' },
-};
+/** Reason labels are now sourced from the shared admin memberships primitives. */
+const REASON_LABEL = REJECTION_REASON_LABELS;
 
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 10_000;
