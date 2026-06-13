@@ -2113,42 +2113,12 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Business List ─── */}
-        {!panelOpen && (isLoading ? (
-          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-accent/30" />
-            </div>
-            <p className="font-heading font-bold text-sm mb-1">{pickBi(isRTL, 'لا توجد نتائج', 'No results found')}</p>
-            <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'جرّب تعديل معايير البحث', 'Try adjusting your search criteria')}</p>
-            {(search || filterStatus !== 'all' || selectedTiers.length > 0) && (
-              <Button variant="outline" size="sm" className="mt-4 gap-1.5 rounded-xl"
-                onClick={() => { setSearch(''); setFilterStatus('all'); clearTiers(); }}>
-                <X className="w-3.5 h-3.5" /> {pickBi(isRTL, 'مسح الفلاتر', 'Clear Filters')}
-              </Button>
-            )}
-          </div>
-        ) : viewMode === 'table' ? (
-          /* ─── Table View ─── */
-          <BusinessTableView
-            rows={paged as unknown as BusinessTableRow[]}
-            language={language}
-            isRTL={isRTL}
-            selected={selected}
-            allPagedSelected={allPagedSelected}
-            toggleSelect={toggleSelect}
-            togglePageAll={togglePageAll}
-            translationCompleteness={(b) => translationCompleteness(b)}
-            onEdit={(b) => openEdit(b as unknown as Record<string, unknown>)}
-            onOpenServices={openServices}
-            onView={(b) => setViewingBiz(b as unknown as BusinessDrawerRow)}
-            contractBusinessIds={contractBusinessIds}
-          />
-        ) : (
-          /* ─── Cards View ─── */
-          <BusinessCardView
-            rows={paged as unknown as BusinessCardRow[]}
+        {!panelOpen && (
+          <BusinessTableSection
+            isLoading={isLoading}
+            filteredLength={filtered.length}
+            paged={paged as unknown as ReadonlyArray<Record<string, unknown>>}
+            viewMode={viewMode}
             language={language}
             isRTL={isRTL}
             selected={selected}
@@ -2160,93 +2130,41 @@ const AdminBusinesses = () => {
             allServices={allServices}
             onEdit={(b) => openEdit(b as unknown as Record<string, unknown>)}
             onOpenServices={openServices}
+            onView={(b) => setViewingBiz(b as unknown as BusinessDrawerRow)}
             onTierChange={(id, tier) => tierMutation.mutate({ id, tier: tier as MembershipTier })}
             onApprovalChange={(id, status) => approvalStatusMutation.mutate({ id, status })}
             onVerifyToggle={(id, name, currentVerified) => setVerifyConfirm({ id, name, value: !currentVerified })}
             onActiveToggle={(id, currentActive) => toggleMutation.mutate({ id, field: 'is_active', value: !currentActive })}
+            hasActiveFilters={!!(search || filterStatus !== 'all' || selectedTiers.length > 0)}
+            onClearFilters={() => { setSearch(''); setFilterStatus('all'); clearTiers(); }}
             safePage={safePage}
             pageSize={PAGE_SIZE}
-            filteredLength={filtered.length}
           />
-        ))}
+        )}
 
         {!panelOpen && !isLoading && filtered.length > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/30">
-            <p className="text-[11px] text-muted-foreground tech-content">
-              {isRTL
-                ? `الصفحة ${safePage}/${totalPages} · عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length} (إجمالي ${businesses.length})`
-                : `Page ${safePage}/${totalPages} · ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length} (total ${businesses.length})`}
-            </p>
-            <div className="flex items-center gap-2">
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage <= 1}
-                    onClick={() => setPage(safePage - 1)}>
-                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                  </Button>
-                  <span className="text-[11px] text-muted-foreground tech-content min-w-[3rem] text-center">{safePage}/{totalPages}</span>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage >= totalPages}
-                    onClick={() => setPage(safePage + 1)}>
-                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </Button>
-                </div>
-              )}
-              <Badge variant="outline" className="text-[10px] h-5 gap-1">
-                <Activity className="w-3 h-3" />
-                {isRTL ? `${stats.active} نشط` : `${stats.active} active`}
-              </Badge>
-              <Badge variant="outline" className="text-[10px] h-5 gap-1">
-                <Shield className="w-3 h-3" />
-                {isRTL ? `${stats.verified} موثق` : `${stats.verified} verified`}
-              </Badge>
-            </div>
-          </div>
+          <BusinessPaginationFooter
+            isRTL={isRTL}
+            safePage={safePage}
+            totalPages={totalPages}
+            pageSize={PAGE_SIZE}
+            filteredLength={filtered.length}
+            totalBusinesses={businesses.length}
+            activeCount={stats.active}
+            verifiedCount={stats.verified}
+            onPageChange={setPage}
+          />
         )}
-        {/* ─── Verify Confirmation Dialog ─── */}
-        <AlertDialog open={!!verifyConfirm} onOpenChange={(open) => { if (!open) setVerifyConfirm(null); }}>
-          <AlertDialogContent className="rounded-2xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-info" />
-                {pickBi(isRTL, 'تأكيد التوثيق', 'Confirm Verification')}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {verifyConfirm?.value
-                  ? (isRTL
-                    ? `هل أنت متأكد من توثيق حساب «${verifyConfirm?.name ?? ''}»؟ سيتم منحه علامة التوثيق الرسمية.`
-                    : `Are you sure you want to verify «${verifyConfirm?.name ?? ''}»? This will grant the official verification badge.`)
-                  : (isRTL
-                    ? `هل أنت متأكد من إلغاء توثيق حساب «${verifyConfirm?.name ?? ''}»؟ ستُحذف علامة التوثيق الرسمية.`
-                    : `Are you sure you want to unverify «${verifyConfirm?.name ?? ''}»? The official verification badge will be removed.`)
-                }
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="gap-2">
-              <AlertDialogCancel asChild>
-                <Button variant="outline" className="rounded-xl">
-                  {pickBi(isRTL, 'إلغاء', 'Cancel')}
-                </Button>
-              </AlertDialogCancel>
-              <AlertDialogAction asChild>
-                <Button
-                  variant={verifyConfirm?.value ? 'default' : 'destructive'}
-                  className="rounded-xl"
-                  onClick={() => {
-                    if (verifyConfirm) {
-                      toggleMutation.mutate({ id: verifyConfirm.id, field: 'is_verified', value: verifyConfirm.value });
-                      setVerifyConfirm(null);
-                    }
-                  }}
-                >
-                  {verifyConfirm?.value
-                    ? (pickBi(isRTL, 'نعم، توثيق', 'Yes, Verify'))
-                    : (pickBi(isRTL, 'نعم، إلغاء التوثيق', 'Yes, Unverify'))
-                  }
-                </Button>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+
+        <BusinessVerifyConfirmDialog
+          isRTL={isRTL}
+          payload={verifyConfirm}
+          onCancel={() => setVerifyConfirm(null)}
+          onConfirm={(p) => {
+            toggleMutation.mutate({ id: p.id, field: 'is_verified', value: p.value });
+            setVerifyConfirm(null);
+          }}
+        />
         {/* ─── Read-only Details Drawer ─── */}
         <BusinessDetailsDrawer
           business={viewingBiz}
