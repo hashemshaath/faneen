@@ -30,6 +30,8 @@ import {
   RejectionReasonBadge,
   REJECTION_REASON_LABELS,
   getRejectionReasonMeta,
+  MembershipFinancePageShell,
+  MembershipFiltersBar,
 } from '@/components/admin/memberships/shared';
 
 interface Row {
@@ -280,21 +282,16 @@ const AdminMembershipRejections: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <ShieldAlert className="h-6 w-6 text-destructive" />
-              {isRTL ? 'سجل تدقيق رفض ترقية العضوية' : 'Membership upgrade rejections'}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {isRTL
-                ? 'كل محاولات الترقية المرفوضة بسبب عدم تطابق المعرّف أو الملكية أو مشاكل أخرى.'
-                : 'All upgrade attempts blocked by ref_id, ownership or validation checks.'}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+      <MembershipFinancePageShell
+        title={isRTL ? 'سجل تدقيق رفض ترقية العضوية' : 'Membership upgrade rejections'}
+        description={
+          isRTL
+            ? 'كل محاولات الترقية المرفوضة بسبب عدم تطابق المعرّف أو الملكية أو مشاكل أخرى.'
+            : 'All upgrade attempts blocked by ref_id, ownership or validation checks.'
+        }
+        icon={<ShieldAlert className="h-6 w-6 text-destructive" />}
+        actionsSlot={
+          <>
             <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="gap-2">
               <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
               {isRTL ? 'تحديث' : 'Refresh'}
@@ -303,81 +300,66 @@ const AdminMembershipRejections: React.FC = () => {
               <Download className={`h-4 w-4 ${exporting ? 'animate-pulse' : ''}`} />
               {isRTL ? 'تصدير CSV' : 'Export CSV'}
             </Button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* ref_id */}
-            <div className="relative">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={refIdInput}
-                onChange={(e) => setRefIdInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
-                placeholder={isRTL ? 'ref_id (مثال BIZ-1000123)' : 'ref_id (e.g. BIZ-1000123)'}
-                className="ps-9 tech-content"
-                dir="auto"
-              />
-            </div>
-            {/* business_id (UUID) */}
-            <Input
-              value={businessIdInput}
-              onChange={(e) => setBusinessIdInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
-              placeholder={isRTL ? 'business_id (UUID)' : 'business_id (UUID)'}
-              className="tech-content"
-              dir="ltr"
-            />
-            {/* user_id (UUID) */}
-            <Input
-              value={userIdInput}
-              onChange={(e) => setUserIdInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
-              placeholder={isRTL ? 'user_id (UUID)' : 'user_id (UUID)'}
-              className="tech-content"
-              dir="ltr"
-            />
-            {/* reason */}
-            <Select value={reason} onValueChange={setReason}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'كل الأسباب' : 'All reasons'}</SelectItem>
-                {REASON_FILTER_CODES.map((k) => {
-                  const v = getRejectionReasonMeta(k);
-                  return (
-                    <SelectItem key={k} value={k}>{isRTL ? v.ar : v.en}</SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            {/* date from */}
-            <div className="flex items-center gap-2">
-              <label className="w-12 text-xs text-muted-foreground">{isRTL ? 'من' : 'From'}</label>
-              <Input type="date" value={dateFromInput} onChange={(e) => setDateFromInput(e.target.value)} className="tech-content" />
-            </div>
-            {/* date to */}
-            <div className="flex items-center gap-2">
-              <label className="w-12 text-xs text-muted-foreground">{isRTL ? 'إلى' : 'To'}</label>
-              <Input type="date" value={dateToInput} onChange={(e) => setDateToInput(e.target.value)} className="tech-content" />
-            </div>
-            {/* actions */}
-            <div className="flex flex-wrap items-center gap-2 md:col-span-2 lg:col-span-3">
-              <Button onClick={applyAll}>{isRTL ? 'تطبيق الفلاتر' : 'Apply filters'}</Button>
-              <Button variant="ghost" onClick={clearAll} className="gap-1">
-                <X className="h-4 w-4" />
-                {isRTL ? 'مسح' : 'Clear'}
-              </Button>
-              <span className="ms-auto text-sm text-muted-foreground tech-content">
+          </>
+        }
+        filtersSlot={
+          <MembershipFiltersBar
+            reasonValue={reason}
+            onReasonChange={setReason}
+            reasonAllLabel={isRTL ? 'كل الأسباب' : 'All reasons'}
+            reasonOptions={REASON_FILTER_CODES.map((k) => {
+              const v = getRejectionReasonMeta(k);
+              return { value: k, label: isRTL ? v.ar : v.en };
+            })}
+            dateFrom={dateFromInput}
+            onDateFromChange={setDateFromInput}
+            dateTo={dateToInput}
+            onDateToChange={setDateToInput}
+            dateFromLabel={isRTL ? 'من' : 'From'}
+            dateToLabel={isRTL ? 'إلى' : 'To'}
+            onApply={applyAll}
+            applyLabel={isRTL ? 'تطبيق الفلاتر' : 'Apply filters'}
+            onReset={clearAll}
+            resetLabel={isRTL ? 'مسح' : 'Clear'}
+            actionsExtras={
+              <span className="text-sm text-muted-foreground tech-content">
                 {isRTL ? `الإجمالي: ${total}` : `Total: ${total}`}
               </span>
-            </div>
-          </CardContent>
-        </Card>
-
+            }
+            extras={
+              <>
+                <div className="relative">
+                  <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={refIdInput}
+                    onChange={(e) => setRefIdInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
+                    placeholder={isRTL ? 'ref_id (مثال BIZ-1000123)' : 'ref_id (e.g. BIZ-1000123)'}
+                    className="ps-9 tech-content"
+                    dir="auto"
+                  />
+                </div>
+                <Input
+                  value={businessIdInput}
+                  onChange={(e) => setBusinessIdInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
+                  placeholder={isRTL ? 'business_id (UUID)' : 'business_id (UUID)'}
+                  className="tech-content"
+                  dir="ltr"
+                />
+                <Input
+                  value={userIdInput}
+                  onChange={(e) => setUserIdInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
+                  placeholder={isRTL ? 'user_id (UUID)' : 'user_id (UUID)'}
+                  className="tech-content"
+                  dir="ltr"
+                />
+              </>
+            }
+          />
+        }
+      >
         {/* Quick stat chips for current page */}
         {rows.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -523,7 +505,7 @@ const AdminMembershipRejections: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </MembershipFinancePageShell>
     </DashboardLayout>
   );
 };
