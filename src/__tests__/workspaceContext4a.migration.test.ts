@@ -48,9 +48,13 @@ describe('WORKSPACE-CONTEXT-4A — DashboardProfile + DashboardBusinessEdit', ()
   it('both pages preserve canonical business read wrappers', () => {
     for (const t of TARGETS) {
       const src = read(t);
-      // Fallback path retains getOwnerBusiness; owner-active path uses listBusinessesByIds.
-      expect(src, t).toContain('getOwnerBusiness');
-      expect(src, t).toContain('listBusinessesByIds');
+      // Fallback path retains an owner-scoped read; owner-active path uses an
+      // id-scoped read. After sensitive-fields hardening DashboardBusinessEdit
+      // uses the *Full variants that go through SECURITY DEFINER RPCs so
+      // owner-only columns (cr_*, national_id, approval_notes) are returned
+      // safely. DashboardProfile keeps the legacy safe-column wrappers.
+      expect(src, t).toMatch(/getOwnerBusiness(Full)?\b/);
+      expect(src, t).toMatch(/(listBusinessesByIds|getBusinessFullById)\b/);
       // No raw business table reads were introduced.
       expect(src, t).not.toMatch(/supabase\.from\(['"]businesses['"]\)/);
     }

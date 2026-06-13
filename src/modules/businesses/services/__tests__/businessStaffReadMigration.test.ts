@@ -9,8 +9,10 @@ describe('BS-2: business_staff read migration', () => {
   it('Membership.tsx uses listManagedStaffMembershipForUser (no direct business_staff read)', () => {
     const src = read('src/pages/Membership.tsx');
     expect(src).toContain('listManagedStaffMembershipForUser');
+    // Sensitive-fields hardening: managers cannot read approval_notes
+    // (column-level REVOKE). It is intentionally omitted from the joined select.
     expect(src).toContain(
-      "select: 'business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes)'",
+      "select: 'business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion)'",
     );
     expect(src).toContain('limit: 1');
     expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]business_staff['"]\)/);
