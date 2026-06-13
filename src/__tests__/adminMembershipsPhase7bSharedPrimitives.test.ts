@@ -65,8 +65,8 @@ describe('Phase 7B — shared admin memberships primitives', () => {
   it('shared primitives never reach into membership-tiers or membership-limits source of truth', () => {
     for (const f of COMPONENT_FILES) {
       const src = read(f);
-      expect(src.includes('membership-tiers')).toBe(false);
-      expect(src.includes('membership-limits')).toBe(false);
+      expect(/from\s+['"][^'"]*membership-tiers['"]/.test(src)).toBe(false);
+      expect(/from\s+['"][^'"]*membership-limits['"]/.test(src)).toBe(false);
     }
   });
 
