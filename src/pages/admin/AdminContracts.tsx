@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { type ContractStatus } from '@/lib/contract-statuses';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Bi, useBi } from '@/components/common/Bilingual';
+import { cn } from '@/lib/utils';
 import {
   ContractAdminPageShell,
   ContractFiltersBar,
