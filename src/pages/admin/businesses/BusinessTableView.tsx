@@ -22,7 +22,8 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
-import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
+import { BusinessStatusBadge } from '@/components/admin/businesses/BusinessStatusBadge';
+import { BusinessRowActions } from '@/components/admin/businesses/BusinessRowActions';
 import type {
   AdminBusinessImageVariants,
 } from '../adminBusinesses.types';
@@ -49,6 +50,7 @@ export interface BusinessTableRow {
   rating_count: number;
   is_verified: boolean;
   is_active: boolean;
+  approval_status?: string | null;
   is_demo?: boolean | null;
   logo_url?: string | null;
   logo_image_variants?: AdminBusinessImageVariants | null;
@@ -77,6 +79,8 @@ interface BusinessTableViewProps {
   translationCompleteness: (b: BusinessTableRow) => TranslationCompleteness;
   onEdit: (b: BusinessTableRow) => void;
   onOpenServices: (id: string) => void;
+  onView?: (b: BusinessTableRow) => void;
+  contractBusinessIds?: ReadonlyArray<string>;
 }
 
 const BusinessTableViewImpl: React.FC<BusinessTableViewProps> = ({
@@ -90,6 +94,8 @@ const BusinessTableViewImpl: React.FC<BusinessTableViewProps> = ({
   translationCompleteness,
   onEdit,
   onOpenServices,
+  onView,
+  contractBusinessIds,
 }) => {
   return (
     <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
@@ -191,30 +197,20 @@ const BusinessTableViewImpl: React.FC<BusinessTableViewProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      {biz.is_verified && (
-                        <AdminStatusBadge tone="info" label={pickBi(isRTL, 'موثق', 'Verified')} />
-                      )}
-                      {!biz.is_active && (
-                        <AdminStatusBadge tone="destructive" label={pickBi(isRTL, 'معطل', 'Disabled')} />
-                      )}
-                      {biz.is_active && !biz.is_verified && (
-                        <AdminStatusBadge tone="success" label={pickBi(isRTL, 'نشط', 'Active')} />
-                      )}
+                      <BusinessStatusBadge business={biz} isRTL={isRTL} />
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1">
-                      <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => onEdit(biz)}>
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => onOpenServices(biz.id)}>
-                        <Package className="w-3 h-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" asChild>
-                        <Link to={`/${biz.username}`}>
-                          <Eye className="w-3 h-3" />
-                        </Link>
-                      </Button>
+                      <BusinessRowActions
+                        businessId={biz.id}
+                        username={biz.username}
+                        isRTL={isRTL}
+                        onView={() => (onView ? onView(biz) : undefined)}
+                        onEdit={() => onEdit(biz)}
+                        onOpenServices={() => onOpenServices(biz.id)}
+                        hasContracts={contractBusinessIds?.includes(biz.id)}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

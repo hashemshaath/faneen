@@ -101,6 +101,11 @@ import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
+import { BusinessStatsStrip } from '@/components/admin/businesses/BusinessStatsStrip';
+import {
+  BusinessDetailsDrawer,
+  type BusinessDrawerRow,
+} from '@/components/admin/businesses/BusinessDetailsDrawer';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import {
@@ -188,6 +193,7 @@ const AdminBusinesses = () => {
   const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
   const [editForm, setEditForm] = useState<AdminEditBusinessFormState>({});
+  const [viewingBiz, setViewingBiz] = useState<BusinessDrawerRow | null>(null);
   // ── Create new business (admin) ──
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
@@ -1303,39 +1309,11 @@ const AdminBusinesses = () => {
             </>
           }
           kpiSlot={panelOpen ? undefined : (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-              <AdminKpiCard
-                label={pickBi(isRTL, 'إجمالي المنشآت', 'Total Businesses')}
-                value={stats.total}
-                icon={Building2}
-                tone="primary"
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'نشطة', 'Active')}
-                value={stats.active}
-                icon={Activity}
-                tone="success"
-                trend={stats.total ? `${Math.round((stats.active / stats.total) * 100)}%` : undefined}
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'موثّقة', 'Verified')}
-                value={stats.verified}
-                icon={Shield}
-                tone="info"
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'بعقود فعّالة', 'With Contracts')}
-                value={stats.contracts}
-                icon={FileText}
-                tone="accent"
-              />
-              <AdminKpiCard
-                label={pickBi(isRTL, 'مميّز / مؤسسات', 'Premium / Enterprise')}
-                value={stats.premium}
-                icon={Crown}
-                tone="secondary"
-              />
-            </div>
+            <BusinessStatsStrip
+              businesses={businesses}
+              contractBusinessIds={contractBusinessIds}
+              isRTL={isRTL}
+            />
           )}
         />
 
@@ -2211,6 +2189,8 @@ const AdminBusinesses = () => {
             translationCompleteness={(b) => translationCompleteness(b)}
             onEdit={(b) => openEdit(b as unknown as Record<string, unknown>)}
             onOpenServices={openServices}
+            onView={(b) => setViewingBiz(b as unknown as BusinessDrawerRow)}
+            contractBusinessIds={contractBusinessIds}
           />
         ) : (
           /* ─── Cards View ─── */
@@ -2314,6 +2294,18 @@ const AdminBusinesses = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {/* ─── Read-only Details Drawer ─── */}
+        <BusinessDetailsDrawer
+          business={viewingBiz}
+          isRTL={isRTL}
+          hasContracts={!!viewingBiz && contractBusinessIds.includes(viewingBiz.id)}
+          onClose={() => setViewingBiz(null)}
+          onEdit={(b) => {
+            setViewingBiz(null);
+            openEdit(b as unknown as Record<string, unknown>);
+          }}
+          onOpenServices={(id) => { setViewingBiz(null); openServices(id); }}
+        />
       </div>
     </DashboardLayout>
   );
