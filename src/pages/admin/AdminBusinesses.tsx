@@ -685,7 +685,7 @@ const AdminBusinesses = () => {
           : 'Business created',
       );
       setCreatingBiz(false);
-      setCreateForm(emptyCreateForm());
+      setCreateForm(emptyCreateBusinessForm());
       if (row) openEdit(row);
     },
     onError: (err: unknown) => {
@@ -919,7 +919,7 @@ const AdminBusinesses = () => {
       if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         setEditingBiz(null); setServicesPanel(null);
-        setCreateForm(emptyCreateForm()); setCreatingBiz(true);
+        setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true);
         scrollToTop();
       }
       if (e.key === 'r' || e.key === 'R') {
@@ -1230,7 +1230,7 @@ const AdminBusinesses = () => {
               onViewModeChange={setViewMode}
               onRefresh={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
               onExportCsv={() => exportCSV(filtered, language)}
-              onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
+              onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true); scrollToTop(); }}
               savedViewsSlot={
                 <SavedViewsMenu
                   views={savedViews.views}
@@ -1307,12 +1307,12 @@ const AdminBusinesses = () => {
 
         {/* ─── Inline Create Panel ─── */}
         {creatingBiz && (
-          <CreateBusinessPanel
+          <BusinessCreatePanel
             isRTL={isRTL}
             language={language}
             form={createForm}
             setForm={setCreateForm}
-            onClose={() => { setCreatingBiz(false); setCreateForm(emptyCreateForm()); }}
+            onClose={() => { setCreatingBiz(false); setCreateForm(emptyCreateBusinessForm()); }}
             onSubmit={() => createBizMutation.mutate()}
             isSubmitting={createBizMutation.isPending}
           />
