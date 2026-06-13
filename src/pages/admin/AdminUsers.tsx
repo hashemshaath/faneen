@@ -60,6 +60,7 @@ import {
 } from './users/_shared';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
+import { AdminUsersStatsStrip, buildAdminUserStats } from '@/components/admin/users/AdminUsersStatsStrip';
 import { OverviewTab } from './users/OverviewTab';
 import { AnalyticsTab } from './users/AnalyticsTab';
 import { UserFiltersBar } from './users/UserFiltersBar';
@@ -1531,14 +1532,10 @@ const AdminUsers = () => {
             </>
           }
           kpiSlot={
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-              <AdminKpiCard icon={Users}       tone="primary"     label={pickBi(isRTL, 'الإجمالي', 'Total')}      value={stats.totalUsers} />
-              <AdminKpiCard icon={Briefcase}   tone="success"     label={pickBi(isRTL, 'مزودين', 'Providers')}    value={stats.providers} />
-              <AdminKpiCard icon={UserCheck}   tone="info"        label={pickBi(isRTL, 'مكتمل', 'Onboarded')}     value={stats.onboarded} />
-              <AdminKpiCard icon={Crown}       tone="accent"      label={pickBi(isRTL, 'فريق', 'Staff')}          value={stats.superAdmins + stats.admins + stats.moderators} />
-              <AdminKpiCard icon={Ban}         tone="destructive" label={pickBi(isRTL, 'معطّل', 'Disabled')}     value={stats.bannedCount} />
-              <AdminKpiCard icon={TrendingUp}  tone="warning"     label={pickBi(isRTL, '7 أيام', '7d')}           value={stats.recentUsers} />
-            </div>
+            <AdminUsersStatsStrip
+              isRTL={isRTL}
+              stats={buildAdminUserStats({ profiles, roles: userRoles })}
+            />
           }
           filtersSlot={
             <TabsList className="grid w-full grid-cols-3 h-auto p-1 rounded-2xl bg-muted/40">
