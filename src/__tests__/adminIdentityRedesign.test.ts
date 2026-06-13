@@ -14,9 +14,14 @@ import { resolve } from 'node:path';
 
 const PAGE = resolve('src/pages/admin/AdminIdentity.tsx');
 const BIZ = resolve('src/pages/admin/AdminBusinesses.tsx');
+const BIZ_CREATE_PANEL = resolve('src/pages/admin/businesses/CreateBusinessPanel.tsx');
 
 const src = readFileSync(PAGE, 'utf8');
-const bizSrc = readFileSync(BIZ, 'utf8');
+// PR-6 of the AdminBusinesses refactor extracted the create panel; owner-mode
+// tabs + manager fields now live in CreateBusinessPanel. Concatenate so the
+// behavior-preserved guards still find them.
+const bizSrc =
+  readFileSync(BIZ, 'utf8') + '\n/*PANEL*/\n' + readFileSync(BIZ_CREATE_PANEL, 'utf8');
 
 describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
   it('renders the bilingual title', () => {
