@@ -698,6 +698,11 @@ const AdminUsers = () => {
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  // Phase 6B — read-only quick-view drawer state. Independent from
+  // `activePanel` so opening the drawer never closes the edit/create
+  // panels and never alters mutation state.
+  const [viewingUser, setViewingUser] = useState<Profile | null>(null);
+  const closeViewingUser = useCallback(() => setViewingUser(null), []);
 
   // Open create panel and ensure it is visible: switch to a tab that renders panels,
   // then scroll the panel into view.
