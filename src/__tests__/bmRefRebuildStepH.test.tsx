@@ -225,7 +225,12 @@ describe('D. AdminProviderSubscriptions surfaces PVS ref_id', () => {
   const READS = read(
     'src/modules/memberships/services/providerSubscriptions/reads.ts',
   );
-  const ADMIN = read('src/pages/admin/AdminProviderSubscriptions.tsx');
+  const ADMIN =
+    read('src/pages/admin/AdminProviderSubscriptions.tsx') +
+    '\n' +
+    read(
+      'src/components/admin/memberships/providers/ProviderSubscriptionsTableSection.tsx',
+    );
 
   it('listProviderSubscriptions default select includes ref_id', () => {
     // Locate the listProviderSubscriptions function block specifically.
