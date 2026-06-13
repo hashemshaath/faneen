@@ -1276,61 +1276,57 @@ const AdminBusinesses = () => {
 
         {!panelOpen && <UnifiedApprovalsCenterBanner />}
 
-        {/* ─── Filters ─── */}
-        {!panelOpen && <BusinessFiltersToolbar
-          searchInputRef={searchRef}
-          searchInput={searchInput}
-          search={search}
-          onSearchInput={(v) => startTransition(() => setSearchInput(v))}
-          onClearSearch={() => { setSearchInput(''); updateParam({ q: null }); }}
-          filterStatus={filterStatus}
-          setFilterStatus={setFilterStatus}
-          selectedTiers={selectedTiers}
-          onToggleTier={toggleTier}
-          onClearTiers={clearTiers}
-          filterTranslation={filterTranslation}
-          onTranslationChange={(v) => updateParam({ translation: v === 'all' ? null : v, page: null })}
-          filterOrigin={filterOrigin}
-          setFilterOrigin={setFilterOrigin}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          tiers={tiers}
-          language={language === 'ar' ? 'ar' : 'en'}
-          isRTL={isRTL}
-          resultsCount={filtered.length}
-          onClearAll={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}
-          tierDistribution={tierDistribution}
-          totalCount={stats.total}
-        />}
-
-        {!panelOpen && <BusinessBulkActionBar
-          count={selected.size}
-          language={language === 'ar' ? 'ar' : 'en'}
-          isRTL={isRTL}
-          tiers={tiers}
-          onSetActive={(active) => bulkMutation.mutate({ ids: [...selected], patch: { is_active: active } })}
-          onSetVerified={(verified) => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: verified } })}
-          onChangeTier={async (v) => {
-            // R4E-2C-4-PHASE-3: bulk tier change goes per-business through
-            // membership-owned RPC. No batch RPC yet; use Promise.allSettled.
-            const ids = [...selected];
-            const results = await Promise.allSettled(
-              ids.map((id) =>
-                setBusinessMembershipTier(id, v as MembershipTier, 'AdminBusinesses bulk tier change'),
-              ),
-            );
-            const ok = results.filter((r) => r.status === 'fulfilled').length;
-            const fail = results.length - ok;
-            queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-            if (fail === 0) {
-              toast.success(isRTL ? `تم تحديث ${ok}` : `Updated ${ok}`);
-            } else {
-              toast.error(isRTL ? `نجح ${ok}، فشل ${fail}` : `Succeeded ${ok}, failed ${fail}`);
-            }
-            clearSelected();
-          }}
-          onClear={clearSelected}
-        />}
+        {/* ─── Filters + Bulk Actions ─── */}
+        {!panelOpen && (
+          <BusinessFiltersBar
+            searchInputRef={searchRef}
+            searchInput={searchInput}
+            search={search}
+            onSearchInput={(v) => startTransition(() => setSearchInput(v))}
+            onClearSearch={() => { setSearchInput(''); updateParam({ q: null }); }}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            selectedTiers={selectedTiers}
+            onToggleTier={toggleTier}
+            onClearTiers={clearTiers}
+            filterTranslation={filterTranslation}
+            onTranslationChange={(v) => updateParam({ translation: v === 'all' ? null : v, page: null })}
+            filterOrigin={filterOrigin}
+            setFilterOrigin={setFilterOrigin}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            tiers={tiers}
+            language={language === 'ar' ? 'ar' : 'en'}
+            isRTL={isRTL}
+            resultsCount={filtered.length}
+            onClearAll={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}
+            tierDistribution={tierDistribution}
+            totalCount={stats.total}
+            selectedCount={selected.size}
+            onBulkSetActive={(active) => bulkMutation.mutate({ ids: [...selected], patch: { is_active: active } })}
+            onBulkSetVerified={(verified) => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: verified } })}
+            onBulkChangeTier={async (v) => {
+              // R4E-2C-4-PHASE-3: bulk tier change goes per-business through
+              // membership-owned RPC. No batch RPC yet; use Promise.allSettled.
+              const ids = [...selected];
+              const results = await Promise.allSettled(
+                ids.map((id) =>
+                  setBusinessMembershipTier(id, v as MembershipTier, 'AdminBusinesses bulk tier change'),
+                ),
+              );
+              const ok = results.filter((r) => r.status === 'fulfilled').length;
+              const fail = results.length - ok;
+              queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+              if (fail === 0) {
+                toast.success(isRTL ? `تم تحديث ${ok}` : `Updated ${ok}`);
+              } else {
+                toast.error(isRTL ? `نجح ${ok}، فشل ${fail}` : `Succeeded ${ok}, failed ${fail}`);
+              }
+              clearSelected();
+            }}
+            onBulkClear={clearSelected}
+          />
+        )}
 
         {/* ─── Inline Create Panel ─── */}
         {creatingBiz && (
