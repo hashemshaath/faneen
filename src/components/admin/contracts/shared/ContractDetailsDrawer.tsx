@@ -1,10 +1,10 @@
 /**
  * Read-only inline side panel ("drawer") for a single admin contract.
  *
- * Pure UI — no Supabase, no queries, no mutations, no edit, no
- * approve/reject, no PDF generation. Renders alongside the contracts
- * list (NOT a modal dialog) in accordance with the project's strict
- * "no popups/dialogs" UX rule.
+ * Pure UI — no Supabase, no queries, no mutations, no editing, no
+ * lifecycle actions, no document generation. Renders alongside the
+ * contracts list (NOT a modal dialog) in accordance with the project's
+ * strict "no popups/dialogs" UX rule.
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
