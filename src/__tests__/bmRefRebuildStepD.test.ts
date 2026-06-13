@@ -17,7 +17,14 @@ const HISTORY = read('src/components/membership/MembershipPaymentHistory.tsx');
 const STATUS = read('src/components/membership/MembershipPaymentStatus.tsx');
 const INVOICE = read('src/pages/MembershipInvoice.tsx');
 const USER_DETAIL = read('src/pages/admin/AdminUserDetail.tsx');
-const ADMIN_BIZ = read('src/pages/admin/AdminBusinesses.tsx');
+// Phase 5F+ split the AdminBusinesses inline editor into focused section
+// components. The legacy ref-id line + legacy_ref_id projection now live
+// in BusinessBasicInfoSection. Concatenate so source-level guards still
+// find them.
+const ADMIN_BIZ =
+  read('src/pages/admin/AdminBusinesses.tsx') +
+  '\n/*BASIC_INFO_SECTION*/\n' +
+  read('src/components/admin/businesses/edit/BusinessBasicInfoSection.tsx');
 const LEGACY_HINT = read('src/components/reference/LegacyReferenceHint.tsx');
 const APP = read('src/App.tsx');
 
