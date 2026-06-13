@@ -71,8 +71,8 @@ export const BusinessCreatePanel = React.memo(function BusinessCreatePanel({
 
       <div className="space-y-4">
         <BusinessCreateOwnerSection {...sectionProps} />
-        <BusinessCreateContactSection {...sectionProps} />
         <BusinessCreateBasicSection {...sectionProps} />
+        <BusinessCreateContactSection {...sectionProps} />
         <BusinessCreateRegistrySection {...sectionProps} />
         <BusinessCreateLocationNotice isRTL={isRTL} />
         <BusinessCreateActionsFooter
