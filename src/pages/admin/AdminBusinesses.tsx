@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
@@ -106,6 +105,12 @@ import {
   BusinessDetailsDrawer,
   type BusinessDrawerRow,
 } from '@/components/admin/businesses/BusinessDetailsDrawer';
+import { AdminBusinessesPageShell } from '@/components/admin/businesses/AdminBusinessesPageShell';
+import { BusinessHeaderActions } from '@/components/admin/businesses/BusinessHeaderActions';
+import { BusinessFiltersBar } from '@/components/admin/businesses/BusinessFiltersBar';
+import { BusinessTableSection } from '@/components/admin/businesses/BusinessTableSection';
+import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
+import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/BusinessVerifyConfirmDialog';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import {
