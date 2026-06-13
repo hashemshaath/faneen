@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
@@ -106,6 +105,12 @@ import {
   BusinessDetailsDrawer,
   type BusinessDrawerRow,
 } from '@/components/admin/businesses/BusinessDetailsDrawer';
+import { AdminBusinessesPageShell } from '@/components/admin/businesses/AdminBusinessesPageShell';
+import { BusinessHeaderActions } from '@/components/admin/businesses/BusinessHeaderActions';
+import { BusinessFiltersBar } from '@/components/admin/businesses/BusinessFiltersBar';
+import { BusinessTableSection } from '@/components/admin/businesses/BusinessTableSection';
+import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
+import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/BusinessVerifyConfirmDialog';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import {
@@ -1226,8 +1231,7 @@ const AdminBusinesses = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto">
+    <AdminBusinessesPageShell>
         <AdminPageHeader
           tone="accent"
           icon={Building2}
@@ -1243,70 +1247,23 @@ const AdminBusinesses = () => {
               : `${stats.total} registered businesses • Full control of profiles, services, branches & memberships`
           )}
           actions={
-            <>
-              <div className="flex bg-muted/40 border border-border/40 rounded-xl overflow-hidden p-0.5">
-                <button
-                  type="button"
-                  aria-label={pickBi(isRTL, 'عرض بطاقات', 'Card view')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setViewMode('cards')}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={pickBi(isRTL, 'عرض جدول', 'Table view')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{pickBi(isRTL, 'تحديث', 'Refresh')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => exportCSV(filtered, language)}
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{pickBi(isRTL, 'تصدير CSV', 'Export CSV')}</span>
-              </Button>
-              <SavedViewsMenu
-                views={savedViews.views}
-                currentFilters={currentViewFilters}
-                onApply={applySavedView}
-                onSave={savedViews.save}
-                onRemove={savedViews.remove}
-              />
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-              >
-                <Link to="/admin/provider-review">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{pickBi(isRTL, 'مراجعة المزودين', 'Provider Review')}</span>
-                </Link>
-              </Button>
-              <Button
-                size="sm"
-                className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                {pickBi(isRTL, 'منشأة جديدة', 'New Business')}
-              </Button>
-            </>
+            <BusinessHeaderActions
+              isRTL={isRTL}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onRefresh={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
+              onExportCsv={() => exportCSV(filtered, language)}
+              onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
+              savedViewsSlot={
+                <SavedViewsMenu
+                  views={savedViews.views}
+                  currentFilters={currentViewFilters}
+                  onApply={applySavedView}
+                  onSave={savedViews.save}
+                  onRemove={savedViews.remove}
+                />
+              }
+            />
           }
           kpiSlot={panelOpen ? undefined : (
             <BusinessStatsStrip
@@ -1319,61 +1276,57 @@ const AdminBusinesses = () => {
 
         {!panelOpen && <UnifiedApprovalsCenterBanner />}
 
-        {/* ─── Filters ─── */}
-        {!panelOpen && <BusinessFiltersToolbar
-          searchInputRef={searchRef}
-          searchInput={searchInput}
-          search={search}
-          onSearchInput={(v) => startTransition(() => setSearchInput(v))}
-          onClearSearch={() => { setSearchInput(''); updateParam({ q: null }); }}
-          filterStatus={filterStatus}
-          setFilterStatus={setFilterStatus}
-          selectedTiers={selectedTiers}
-          onToggleTier={toggleTier}
-          onClearTiers={clearTiers}
-          filterTranslation={filterTranslation}
-          onTranslationChange={(v) => updateParam({ translation: v === 'all' ? null : v, page: null })}
-          filterOrigin={filterOrigin}
-          setFilterOrigin={setFilterOrigin}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          tiers={tiers}
-          language={language === 'ar' ? 'ar' : 'en'}
-          isRTL={isRTL}
-          resultsCount={filtered.length}
-          onClearAll={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}
-          tierDistribution={tierDistribution}
-          totalCount={stats.total}
-        />}
-
-        {!panelOpen && <BusinessBulkActionBar
-          count={selected.size}
-          language={language === 'ar' ? 'ar' : 'en'}
-          isRTL={isRTL}
-          tiers={tiers}
-          onSetActive={(active) => bulkMutation.mutate({ ids: [...selected], patch: { is_active: active } })}
-          onSetVerified={(verified) => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: verified } })}
-          onChangeTier={async (v) => {
-            // R4E-2C-4-PHASE-3: bulk tier change goes per-business through
-            // membership-owned RPC. No batch RPC yet; use Promise.allSettled.
-            const ids = [...selected];
-            const results = await Promise.allSettled(
-              ids.map((id) =>
-                setBusinessMembershipTier(id, v as MembershipTier, 'AdminBusinesses bulk tier change'),
-              ),
-            );
-            const ok = results.filter((r) => r.status === 'fulfilled').length;
-            const fail = results.length - ok;
-            queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-            if (fail === 0) {
-              toast.success(isRTL ? `تم تحديث ${ok}` : `Updated ${ok}`);
-            } else {
-              toast.error(isRTL ? `نجح ${ok}، فشل ${fail}` : `Succeeded ${ok}, failed ${fail}`);
-            }
-            clearSelected();
-          }}
-          onClear={clearSelected}
-        />}
+        {/* ─── Filters + Bulk Actions ─── */}
+        {!panelOpen && (
+          <BusinessFiltersBar
+            searchInputRef={searchRef}
+            searchInput={searchInput}
+            search={search}
+            onSearchInput={(v) => startTransition(() => setSearchInput(v))}
+            onClearSearch={() => { setSearchInput(''); updateParam({ q: null }); }}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            selectedTiers={selectedTiers}
+            onToggleTier={toggleTier}
+            onClearTiers={clearTiers}
+            filterTranslation={filterTranslation}
+            onTranslationChange={(v) => updateParam({ translation: v === 'all' ? null : v, page: null })}
+            filterOrigin={filterOrigin}
+            setFilterOrigin={setFilterOrigin}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            tiers={tiers}
+            language={language === 'ar' ? 'ar' : 'en'}
+            isRTL={isRTL}
+            resultsCount={filtered.length}
+            onClearAll={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}
+            tierDistribution={tierDistribution}
+            totalCount={stats.total}
+            selectedCount={selected.size}
+            onBulkSetActive={(active) => bulkMutation.mutate({ ids: [...selected], patch: { is_active: active } })}
+            onBulkSetVerified={(verified) => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: verified } })}
+            onBulkChangeTier={async (v) => {
+              // R4E-2C-4-PHASE-3: bulk tier change goes per-business through
+              // membership-owned RPC. No batch RPC yet; use Promise.allSettled.
+              const ids = [...selected];
+              const results = await Promise.allSettled(
+                ids.map((id) =>
+                  setBusinessMembershipTier(id, v as MembershipTier, 'AdminBusinesses bulk tier change'),
+                ),
+              );
+              const ok = results.filter((r) => r.status === 'fulfilled').length;
+              const fail = results.length - ok;
+              queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+              if (fail === 0) {
+                toast.success(isRTL ? `تم تحديث ${ok}` : `Updated ${ok}`);
+              } else {
+                toast.error(isRTL ? `نجح ${ok}، فشل ${fail}` : `Succeeded ${ok}, failed ${fail}`);
+              }
+              clearSelected();
+            }}
+            onBulkClear={clearSelected}
+          />
+        )}
 
         {/* ─── Inline Create Panel ─── */}
         {creatingBiz && (
@@ -2160,42 +2113,12 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Business List ─── */}
-        {!panelOpen && (isLoading ? (
-          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-accent/30" />
-            </div>
-            <p className="font-heading font-bold text-sm mb-1">{pickBi(isRTL, 'لا توجد نتائج', 'No results found')}</p>
-            <p className="text-xs text-muted-foreground">{pickBi(isRTL, 'جرّب تعديل معايير البحث', 'Try adjusting your search criteria')}</p>
-            {(search || filterStatus !== 'all' || selectedTiers.length > 0) && (
-              <Button variant="outline" size="sm" className="mt-4 gap-1.5 rounded-xl"
-                onClick={() => { setSearch(''); setFilterStatus('all'); clearTiers(); }}>
-                <X className="w-3.5 h-3.5" /> {pickBi(isRTL, 'مسح الفلاتر', 'Clear Filters')}
-              </Button>
-            )}
-          </div>
-        ) : viewMode === 'table' ? (
-          /* ─── Table View ─── */
-          <BusinessTableView
-            rows={paged as unknown as BusinessTableRow[]}
-            language={language}
-            isRTL={isRTL}
-            selected={selected}
-            allPagedSelected={allPagedSelected}
-            toggleSelect={toggleSelect}
-            togglePageAll={togglePageAll}
-            translationCompleteness={(b) => translationCompleteness(b)}
-            onEdit={(b) => openEdit(b as unknown as Record<string, unknown>)}
-            onOpenServices={openServices}
-            onView={(b) => setViewingBiz(b as unknown as BusinessDrawerRow)}
-            contractBusinessIds={contractBusinessIds}
-          />
-        ) : (
-          /* ─── Cards View ─── */
-          <BusinessCardView
-            rows={paged as unknown as BusinessCardRow[]}
+        {!panelOpen && (
+          <BusinessTableSection
+            isLoading={isLoading}
+            filteredLength={filtered.length}
+            paged={paged as unknown as ReadonlyArray<Record<string, unknown>>}
+            viewMode={viewMode}
             language={language}
             isRTL={isRTL}
             selected={selected}
@@ -2207,93 +2130,41 @@ const AdminBusinesses = () => {
             allServices={allServices}
             onEdit={(b) => openEdit(b as unknown as Record<string, unknown>)}
             onOpenServices={openServices}
+            onView={(b) => setViewingBiz(b as unknown as BusinessDrawerRow)}
             onTierChange={(id, tier) => tierMutation.mutate({ id, tier: tier as MembershipTier })}
             onApprovalChange={(id, status) => approvalStatusMutation.mutate({ id, status })}
             onVerifyToggle={(id, name, currentVerified) => setVerifyConfirm({ id, name, value: !currentVerified })}
             onActiveToggle={(id, currentActive) => toggleMutation.mutate({ id, field: 'is_active', value: !currentActive })}
+            hasActiveFilters={!!(search || filterStatus !== 'all' || selectedTiers.length > 0)}
+            onClearFilters={() => { setSearch(''); setFilterStatus('all'); clearTiers(); }}
             safePage={safePage}
             pageSize={PAGE_SIZE}
-            filteredLength={filtered.length}
           />
-        ))}
+        )}
 
         {!panelOpen && !isLoading && filtered.length > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/30">
-            <p className="text-[11px] text-muted-foreground tech-content">
-              {isRTL
-                ? `الصفحة ${safePage}/${totalPages} · عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length} (إجمالي ${businesses.length})`
-                : `Page ${safePage}/${totalPages} · ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length} (total ${businesses.length})`}
-            </p>
-            <div className="flex items-center gap-2">
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage <= 1}
-                    onClick={() => setPage(safePage - 1)}>
-                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                  </Button>
-                  <span className="text-[11px] text-muted-foreground tech-content min-w-[3rem] text-center">{safePage}/{totalPages}</span>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage >= totalPages}
-                    onClick={() => setPage(safePage + 1)}>
-                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </Button>
-                </div>
-              )}
-              <Badge variant="outline" className="text-[10px] h-5 gap-1">
-                <Activity className="w-3 h-3" />
-                {isRTL ? `${stats.active} نشط` : `${stats.active} active`}
-              </Badge>
-              <Badge variant="outline" className="text-[10px] h-5 gap-1">
-                <Shield className="w-3 h-3" />
-                {isRTL ? `${stats.verified} موثق` : `${stats.verified} verified`}
-              </Badge>
-            </div>
-          </div>
+          <BusinessPaginationFooter
+            isRTL={isRTL}
+            safePage={safePage}
+            totalPages={totalPages}
+            pageSize={PAGE_SIZE}
+            filteredLength={filtered.length}
+            totalBusinesses={businesses.length}
+            activeCount={stats.active}
+            verifiedCount={stats.verified}
+            onPageChange={setPage}
+          />
         )}
-        {/* ─── Verify Confirmation Dialog ─── */}
-        <AlertDialog open={!!verifyConfirm} onOpenChange={(open) => { if (!open) setVerifyConfirm(null); }}>
-          <AlertDialogContent className="rounded-2xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-info" />
-                {pickBi(isRTL, 'تأكيد التوثيق', 'Confirm Verification')}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {verifyConfirm?.value
-                  ? (isRTL
-                    ? `هل أنت متأكد من توثيق حساب «${verifyConfirm?.name ?? ''}»؟ سيتم منحه علامة التوثيق الرسمية.`
-                    : `Are you sure you want to verify «${verifyConfirm?.name ?? ''}»? This will grant the official verification badge.`)
-                  : (isRTL
-                    ? `هل أنت متأكد من إلغاء توثيق حساب «${verifyConfirm?.name ?? ''}»؟ ستُحذف علامة التوثيق الرسمية.`
-                    : `Are you sure you want to unverify «${verifyConfirm?.name ?? ''}»? The official verification badge will be removed.`)
-                }
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="gap-2">
-              <AlertDialogCancel asChild>
-                <Button variant="outline" className="rounded-xl">
-                  {pickBi(isRTL, 'إلغاء', 'Cancel')}
-                </Button>
-              </AlertDialogCancel>
-              <AlertDialogAction asChild>
-                <Button
-                  variant={verifyConfirm?.value ? 'default' : 'destructive'}
-                  className="rounded-xl"
-                  onClick={() => {
-                    if (verifyConfirm) {
-                      toggleMutation.mutate({ id: verifyConfirm.id, field: 'is_verified', value: verifyConfirm.value });
-                      setVerifyConfirm(null);
-                    }
-                  }}
-                >
-                  {verifyConfirm?.value
-                    ? (pickBi(isRTL, 'نعم، توثيق', 'Yes, Verify'))
-                    : (pickBi(isRTL, 'نعم، إلغاء التوثيق', 'Yes, Unverify'))
-                  }
-                </Button>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+
+        <BusinessVerifyConfirmDialog
+          isRTL={isRTL}
+          payload={verifyConfirm}
+          onCancel={() => setVerifyConfirm(null)}
+          onConfirm={(p) => {
+            toggleMutation.mutate({ id: p.id, field: 'is_verified', value: p.value });
+            setVerifyConfirm(null);
+          }}
+        />
         {/* ─── Read-only Details Drawer ─── */}
         <BusinessDetailsDrawer
           business={viewingBiz}
@@ -2306,8 +2177,7 @@ const AdminBusinesses = () => {
           }}
           onOpenServices={(id) => { setViewingBiz(null); openServices(id); }}
         />
-      </div>
-    </DashboardLayout>
+    </AdminBusinessesPageShell>
   );
 };
 
