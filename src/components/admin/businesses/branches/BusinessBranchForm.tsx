@@ -330,7 +330,7 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
       />
 
       <div>
-        <Label className="text-xs">{pickBi(isRTL, 'الرقم الوطني للعنوان', 'Address ID')}</Label>
+        <Label className="text-xs">{pickBi(isRTL, 'الرقم الوطني', 'National ID')}</Label>
         <Input
           value={branchForm.national_id}
           onChange={(e) =>
