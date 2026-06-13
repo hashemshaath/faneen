@@ -50,8 +50,8 @@ export interface MembershipPaymentIntentsSectionProps {
   getHealth: (row: IntentRowView) => IntentHealth;
   getHealthLabel: (h: IntentHealth) => string;
   getHealthTone: (h: IntentHealth) => string;
-  isPaid: (row: IntentRowView) => boolean;
-  isRefunded: (row: IntentRowView) => boolean;
+  isPaidFn: (row: IntentRowView) => boolean;
+  isRefundedFn: (row: IntentRowView) => boolean;
   showReconcile: (row: IntentRowView) => boolean;
   onReconcile: (row: IntentRowView) => void;
   onMarkPaidClick: (row: IntentRowView) => void;
@@ -71,8 +71,8 @@ export const MembershipPaymentIntentsSection: React.FC<MembershipPaymentIntentsS
   getHealth,
   getHealthLabel,
   getHealthTone,
-  isPaid,
-  isRefunded,
+  isPaidFn,
+  isRefundedFn,
   showReconcile,
   onReconcile,
   onMarkPaidClick,
@@ -122,8 +122,8 @@ export const MembershipPaymentIntentsSection: React.FC<MembershipPaymentIntentsS
             </TableHeader>
             <TableBody>
               {rows.map((r) => {
-                const paid = isPaid(r);
-                const refunded = isRefunded(r);
+                const isPaid = isPaidFn(r);
+                const isRefunded = isRefundedFn(r);
                 const isHighlighted = highlightedIntentId === r.id;
                 const health = getHealth(r);
                 const reconcileBusy = reconcilingId === r.id;
@@ -159,7 +159,7 @@ export const MembershipPaymentIntentsSection: React.FC<MembershipPaymentIntentsS
                       {r.confirmed_at ? new Date(r.confirmed_at).toLocaleString() : '—'}
                     </TableCell>
                     <TableCell className="text-end">
-                      {refunded ? (
+                      {isRefunded ? (
                         <div className="flex items-center justify-end gap-2">
                           <Badge variant="outline" className="gap-1">
                             {pickBi(isRTL, 'مسترد', 'Refunded')}
@@ -171,7 +171,7 @@ export const MembershipPaymentIntentsSection: React.FC<MembershipPaymentIntentsS
                             </Link>
                           </Button>
                         </div>
-                      ) : paid ? (
+                      ) : isPaid ? (
                         <div className="flex items-center justify-end gap-2">
                           <Badge variant="outline" className="gap-1">
                             <Check className="w-3 h-3" />
