@@ -46,7 +46,7 @@ export const AdminWidgetShell: React.FC<AdminWidgetShellProps> = ({
         <div
           className={cn(
             'absolute top-2 z-20 flex items-center gap-1.5 rounded-full border bg-background/95 px-2 py-1 shadow-sm backdrop-blur',
-            isRTL ? 'right-2' : 'left-2',
+            'start-2',
           )}
         >
           {def.hideable && (
