@@ -1060,6 +1060,186 @@ const AdminUsers = () => {
                 sortKey={sortKey} sortDir={sortDir} cycleSort={cycleSort}
                   />
                 }
+                drawerSlot={
+                  viewingUser ? (
+                    <UserDetailsDrawer
+                      open
+                      isRTL={isRTL}
+                      onClose={closeViewingUser}
+                      {...buildUserDetailsDrawerProps({
+                        profile: viewingUser,
+                        roles: roleMap.get(viewingUser.user_id) || [],
+                        businessLinks: businessLinksMap.get(viewingUser.user_id) || [],
+                      })}
+                    />
+                  ) : null
+                }
+                tableSlot={
+                  <UsersListSection
+                    isRTL={isRTL}
+                    language={language}
+                    currentUserId={user.id}
+                    isSuperAdmin={isSuperAdmin}
+                    paginated={paginated}
+                    sorted={sorted}
+                    roleMap={roleMap}
+                    businessLinksMap={businessLinksMap}
+                    loading={loadingProfiles || loadingRoles}
+                    selected={selected}
+                    expanded={expanded}
+                    density={density}
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    onToggleSelect={toggleSelect}
+                    onToggleExpand={toggleExpand}
+                    onEdit={openEdit}
+                    onView={(p) => setViewingUser(p)}
+                    onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
+                    onToggleBan={(p) => toggleBanMutation.mutate({ profileId: p.id, isBanned: !p.is_banned })}
+                    onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
+                    onAddRole={(uid, role) => addRoleMutation.mutate({ userId: uid, role })}
+                    onRemoveRole={(rid) => removeRoleMutation.mutate(rid)}
+                    onChangeStaffRole={(link, role) => {
+                      if (!link.staffId) return;
+                      updateStaffRoleMutation.mutate({ staffId: link.staffId, role });
+                    }}
+                    onRemoveStaff={(link) => {
+                      if (!link.staffId || link.isOwnerByEntity) return;
+                      removeStaffMutation.mutate(link.staffId);
+                    }}
+                    onClearSelection={() => setSelected(new Set())}
+                    onBulkBan={(ids, isBanned) => bulkBanMutation.mutate({ ids, isBanned })}
+                    bulkBanPending={bulkBanMutation.isPending}
+                    panelsSlot={
+                      <>
+                        {activePanel?.type === 'create' && (
+                          <CreateUserPanel
+                            isRTL={isRTL}
+                            panelRef={panelRef}
+                            form={createForm}
+                            setForm={setCreateForm}
+                            onClose={closePanel}
+                            onSubmit={(f) => createUserMutation.mutate(f)}
+                            isSubmitting={createUserMutation.isPending}
+                          />
+                        )}
+                        {activePanel?.type === 'edit' && (
+                          <UserEditPanel
+                            panelRef={panelRef}
+                            isRTL={isRTL}
+                            language={language}
+                            isSuperAdmin={isSuperAdmin}
+                            currentUserId={user?.id}
+                            editingProfile={activePanel.profile}
+                            editingRoles={roleMap.get(activePanel.profile.user_id) || []}
+                            editingLinks={businessLinksMap.get(activePanel.profile.user_id) || []}
+                            businesses={businesses}
+                            accountTypeConfig={accountTypeConfig}
+                            tierConfig={tierConfig}
+                            roleConfig={roleConfig}
+                            staffRoleConfig={staffRoleConfig}
+                            editForm={editForm}
+                            setEditForm={setEditForm}
+                            editFieldErrors={editFieldErrors}
+                            editFieldRawCodes={editFieldRawCodes}
+                            clearEditFieldError={clearEditFieldError}
+                            usernameServerError={usernameServerError}
+                            suspendForm={suspendForm}
+                            setSuspendForm={setSuspendForm}
+                            linkForm={linkForm}
+                            setLinkForm={setLinkForm}
+                            linkSearch={linkSearch}
+                            setLinkSearch={setLinkSearch}
+                            closePanel={closePanel}
+                            handleSaveProfile={handleSaveProfile}
+                            updateProfileMutation={updateProfileMutation}
+                            removeRoleMutation={removeRoleMutation}
+                            addRoleMutation={addRoleMutation}
+                            updateStaffRoleMutation={updateStaffRoleMutation}
+                            removeStaffMutation={removeStaffMutation}
+                            linkBusinessMutation={linkBusinessMutation}
+                            suspendMutation={suspendMutation}
+                            toggleBanMutation={toggleBanMutation}
+                          />
+                        )}
+                        {activePanel?.type === 'password' && (
+                          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><Lock className="w-4 h-4 text-accent" /></div>
+                                {pickBi(isRTL, 'تغيير كلمة المرور', 'Change Password')}
+                                <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
+                              </h3>
+                              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl" aria-label="Hide"><X className="w-4 h-4" /></Button>
+                            </div>
+                            <div className="max-w-md space-y-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs">{pickBi(isRTL, 'كلمة المرور الجديدة', 'New Password')}</Label>
+                                <div className="relative">
+                                  <Input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                                    placeholder={pickBi(isRTL, '8+ مع أرقام ورموز', '8+ with numbers and symbols')} minLength={8} className="pe-10 h-10 rounded-xl" />
+                                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
+                                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                </div>
+                                {passwordValidationMessage && <p className="text-xs text-destructive">{passwordValidationMessage}</p>}
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Button onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
+                                  disabled={changePasswordMutation.isPending || !!passwordValidationMessage || !newPassword} className="rounded-xl gap-2">
+                                  {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{pickBi(isRTL, 'تغيير', 'Change')}
+                                </Button>
+                                <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5 rounded-xl">
+                                  <Send className="w-4 h-4" />{pickBi(isRTL, 'إرسال رابط', 'Send Link')}
+                                </Button>
+                                <Button variant="ghost" onClick={closePanel} className="rounded-xl">{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {activePanel?.type === 'delete' && (
+                          <AlertDialog
+                            open
+                            onOpenChange={(o) => { if (!o && !deleteUserMutation.isPending) closePanel(); }}
+                          >
+                            <AlertDialogContent className="rounded-2xl border-destructive/30">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="font-heading flex items-center gap-2 text-destructive">
+                                  <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center">
+                                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                                  </div>
+                                  {pickBi(isRTL, 'تأكيد حذف الحساب', 'Confirm Deletion')}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {isRTL
+                                    ? `هل أنت متأكد من حذف "${activePanel.userName}"؟ سيتم حذف جميع البيانات نهائياً.`
+                                    : `Delete "${activePanel.userName}"? All data will be removed permanently.`}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel disabled={deleteUserMutation.isPending} className="rounded-xl">
+                                  {pickBi(isRTL, 'إلغاء', 'Cancel')}
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    deleteUserMutation.mutate(activePanel.userId);
+                                  }}
+                                  disabled={deleteUserMutation.isPending}
+                                  className="rounded-xl gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                                  {pickBi(isRTL, 'حذف نهائي', 'Delete')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </>
+                    }
+                  />
+                }
               />
             </TabsContent>
 
