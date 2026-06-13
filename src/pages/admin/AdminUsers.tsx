@@ -1779,6 +1779,7 @@ const AdminUsers = () => {
                           selected={selected.has(profile.id)} expanded={expanded.has(profile.id)} density={density}
                           onToggleSelect={() => toggleSelect(profile.id)} onToggleExpand={() => toggleExpand(profile.id)}
                           onEdit={openEdit}
+                          onView={(p) => setViewingUser(p)}
                           onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
                           onToggleBan={(p) => toggleBanMutation.mutate({ profileId: p.id, isBanned: !p.is_banned })}
                           onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
