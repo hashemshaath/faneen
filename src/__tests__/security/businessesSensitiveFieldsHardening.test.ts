@@ -35,11 +35,15 @@ const SENSITIVE = [
 
 function latestSqlContaining(needle: string): string {
   const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
-  for (const f of [...files].reverse()) {
+  // Concatenate every migration that touches the needle so assertions
+  // remain stable across follow-up migrations (e.g. EXECUTE grant
+  // tightening) that reference the same symbol.
+  const parts: string[] = [];
+  for (const f of files) {
     const txt = readFileSync(join(MIGRATIONS_DIR, f), 'utf8');
-    if (txt.includes(needle)) return txt;
+    if (txt.includes(needle)) parts.push(txt);
   }
-  return '';
+  return parts.join('\n');
 }
 
 describe('businesses sensitive fields — migration', () => {
