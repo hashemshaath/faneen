@@ -2263,8 +2263,7 @@ const AdminBusinesses = () => {
           }}
           onOpenServices={(id) => { setViewingBiz(null); openServices(id); }}
         />
-      </div>
-    </DashboardLayout>
+    </AdminBusinessesPageShell>
   );
 };
 
