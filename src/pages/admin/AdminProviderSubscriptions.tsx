@@ -4,10 +4,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, RefreshCw } from 'lucide-react';
 import {
   listProviderPlans,
   listProviderSubscriptions,
@@ -18,7 +15,6 @@ import {
   adminAdjustProviderCredits,
 } from '@/modules/credits';
 import {
-  TierChip,
   MembershipFinancePageShell,
   MembershipDetailsDrawer,
   buildProviderSubscriptionDrawerProps,
@@ -40,7 +36,7 @@ interface AdminTxRow {
 }
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Wallet, RefreshCw, Search, Info } from 'lucide-react';
+import { Wallet, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/analytics';
 
