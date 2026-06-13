@@ -26,6 +26,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 import { getAdminBusinessById } from '../getAdminBusinessById';
+import { BUSINESS_SAFE_COLUMNS_SELECT } from '../businessSensitive';
 
 beforeEach(() => {
   fromMock.mockClear();
@@ -33,10 +34,13 @@ beforeEach(() => {
 });
 
 describe('getAdminBusinessById', () => {
-  it("queries from('businesses').select('*').eq('id', id).maybeSingle() by default", async () => {
+  it("queries from('businesses') with BUSINESS_SAFE_COLUMNS_SELECT by default (sensitive cols excluded)", async () => {
     await getAdminBusinessById({ id: 'b1' });
     expect(fromMock).toHaveBeenCalledWith('businesses');
-    expect(builder.select).toHaveBeenCalledWith('*');
+    expect(builder.select).toHaveBeenCalledWith(BUSINESS_SAFE_COLUMNS_SELECT);
+    for (const col of ['cr_scan_raw', 'cr_scan_data', 'cr_document_url', 'national_id', 'approval_notes', 'cr_owner_name']) {
+      expect(BUSINESS_SAFE_COLUMNS_SELECT).not.toContain(col);
+    }
     expect(builder.eq).toHaveBeenCalledWith('id', 'b1');
     expect(builder.maybeSingle).toHaveBeenCalled();
     expect(builder.single).not.toHaveBeenCalled();
