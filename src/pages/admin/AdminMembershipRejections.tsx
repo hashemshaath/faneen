@@ -367,7 +367,7 @@ const AdminMembershipRejections: React.FC = () => {
         {rows.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {Object.entries(stats).map(([code, n]) => {
-              const meta = REASON_LABEL[code] ?? REASON_LABEL.unknown;
+              const meta = getRejectionReasonMeta(code);
               return (
                 <Badge key={code} variant="outline" className="gap-1">
                   <span>{isRTL ? meta.ar : meta.en}</span>
@@ -420,19 +420,17 @@ const AdminMembershipRejections: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {rows.map((r) => {
-                    const meta = REASON_LABEL[r.reason_code] ?? REASON_LABEL.unknown;
                     return (
                       <TableRow key={r.id}>
                         <TableCell className="tech-content whitespace-nowrap text-xs text-muted-foreground">
                           {format(new Date(r.created_at), 'yyyy-MM-dd HH:mm', { locale })}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={meta.tone === 'destructive' ? 'destructive' : meta.tone === 'warning' ? 'secondary' : 'outline'}
+                          <RejectionReasonBadge
+                            code={r.reason_code}
+                            isRTL={isRTL}
                             title={r.error_message ?? ''}
-                          >
-                            {isRTL ? meta.ar : meta.en}
-                          </Badge>
+                          />
                           {r.error_message && (
                             <div className="mt-1 line-clamp-2 max-w-xs text-xs text-muted-foreground">
                               {r.error_message}
