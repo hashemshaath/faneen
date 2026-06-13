@@ -21,7 +21,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { ShieldAlert, Search, ExternalLink, User2, Building2, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Search, ExternalLink, User2, Building2, RefreshCw, Info } from 'lucide-react';
 import { Download, X, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -32,6 +32,8 @@ import {
   getRejectionReasonMeta,
   MembershipFinancePageShell,
   MembershipFiltersBar,
+  MembershipDetailsDrawer,
+  buildRejectionDrawerProps,
 } from '@/components/admin/memberships/shared';
 
 interface Row {
@@ -163,6 +165,7 @@ const AdminMembershipRejections: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [sortBy, setSortBy] = useState<SortColumn>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [viewId, setViewId] = useState<string | null>(null);
 
   const toggleSort = (col: SortColumn) => {
     if (sortBy === col) {
@@ -471,12 +474,25 @@ const AdminMembershipRejections: React.FC = () => {
                           </Link>
                         </TableCell>
                         <TableCell className="text-end">
-                          <Button asChild variant="ghost" size="sm" className="gap-1">
-                            <Link to={`/admin/memberships?user=${r.user_id}`}>
-                              {isRTL ? 'الطلب' : 'Request'}
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </Link>
-                          </Button>
+                          <div className="inline-flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1"
+                              onClick={() => setViewId(r.id)}
+                              title={isRTL ? 'عرض التفاصيل' : 'View details'}
+                              aria-label={isRTL ? 'عرض التفاصيل' : 'View details'}
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button asChild variant="ghost" size="sm" className="gap-1">
+                              <Link to={`/admin/memberships?user=${r.user_id}`}>
+                                {isRTL ? 'الطلب' : 'Request'}
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -506,6 +522,32 @@ const AdminMembershipRejections: React.FC = () => {
           </div>
         )}
       </MembershipFinancePageShell>
+      {(() => {
+        const r = rows.find((x) => x.id === viewId);
+        if (!r) return null;
+        const drawerProps = buildRejectionDrawerProps({
+          reasonCode: r.reason_code,
+          errorMessage: r.error_message,
+          requestedTier: r.requested_tier,
+          billingCycle: r.billing_cycle,
+          attemptedBusinessRefId: r.attempted_business_ref_id,
+          actualBusinessRefId: r.actual_business_ref_id,
+          userRefId: userRefs[r.user_id] ?? null,
+          userId: r.user_id,
+          createdAt: r.created_at,
+          isRTL,
+        });
+        return (
+          <MembershipDetailsDrawer
+            open={!!viewId}
+            onOpenChange={(o) => { if (!o) setViewId(null); }}
+            isRTL={isRTL}
+            subject={drawerProps.subject}
+            lastRejection={drawerProps.lastRejection}
+            lifecycle={drawerProps.lifecycle}
+          />
+        );
+      })()}
     </DashboardLayout>
   );
 };

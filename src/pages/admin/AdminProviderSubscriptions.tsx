@@ -17,7 +17,12 @@ import {
   listProviderCreditTransactionsForBusiness,
   adminAdjustProviderCredits,
 } from '@/modules/credits';
-import { TierChip, MembershipFinancePageShell } from '@/components/admin/memberships/shared';
+import {
+  TierChip,
+  MembershipFinancePageShell,
+  MembershipDetailsDrawer,
+  buildProviderSubscriptionDrawerProps,
+} from '@/components/admin/memberships/shared';
 
 interface AdminTxRow {
   id: string;
@@ -31,7 +36,7 @@ interface AdminTxRow {
 }
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Wallet, RefreshCw, Search, ChevronRight, Undo2, Info } from 'lucide-react';
+import { Wallet, RefreshCw, Search, ChevronRight, Undo2, Info, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/analytics';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
@@ -69,6 +74,7 @@ const AdminProviderSubscriptions: React.FC = () => {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [editId, setEditId] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
 
   const plansQ = useQuery({
     queryKey: ['admin-plans'],
@@ -100,6 +106,22 @@ const AdminProviderSubscriptions: React.FC = () => {
   }, [subsQ.data, search]);
 
   const editing = useMemo(() => filtered.find((x) => x.id === editId) ?? null, [filtered, editId]);
+  const viewing = useMemo(() => filtered.find((x) => x.id === viewId) ?? null, [filtered, viewId]);
+  const drawerProps = useMemo(() => {
+    if (!viewing) return null;
+    return buildProviderSubscriptionDrawerProps({
+      businessName: viewing.business?.name_ar ?? null,
+      businessRefId: viewing.business?.ref_id ?? null,
+      membershipTier: viewing.business?.membership_tier ?? null,
+      planName: viewing.plan?.name_ar ?? null,
+      status: viewing.status,
+      leadCreditsBalance: viewing.lead_credits_balance,
+      currentPeriodStart: viewing.current_period_start,
+      currentPeriodEnd: viewing.current_period_end,
+      updatedAt: viewing.updated_at,
+      isRTL: true,
+    });
+  }, [viewing]);
 
   return (
     <DashboardLayout>
@@ -180,7 +202,20 @@ const AdminProviderSubscriptions: React.FC = () => {
                         </td>
                         <td className="py-2 px-2 tech-content font-medium">{s.lead_credits_balance}</td>
                         <td className="py-2 px-2 tech-content text-muted-foreground">{new Date(s.updated_at).toLocaleDateString('ar-SA-u-nu-latn')}</td>
-                        <td className="py-2 px-2 text-end"><ChevronRight className="h-4 w-4 text-muted-foreground" /></td>
+                        <td className="py-2 px-2 text-end">
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setViewId(s.id); }}
+                              className="p-1 rounded hover:bg-muted/60 text-muted-foreground"
+                              title="عرض التفاصيل"
+                              aria-label="عرض التفاصيل"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -198,6 +233,15 @@ const AdminProviderSubscriptions: React.FC = () => {
           </CardContent></Card>
         </div>
       </MembershipFinancePageShell>
+      {drawerProps && (
+        <MembershipDetailsDrawer
+          open={!!viewId}
+          onOpenChange={(o) => { if (!o) setViewId(null); }}
+          isRTL={true}
+          subject={drawerProps.subject}
+          lifecycle={drawerProps.lifecycle}
+        />
+      )}
     </DashboardLayout>
   );
 };
