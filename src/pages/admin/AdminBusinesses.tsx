@@ -2294,6 +2294,18 @@ const AdminBusinesses = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {/* ─── Read-only Details Drawer ─── */}
+        <BusinessDetailsDrawer
+          business={viewingBiz}
+          isRTL={isRTL}
+          hasContracts={!!viewingBiz && contractBusinessIds.includes(viewingBiz.id)}
+          onClose={() => setViewingBiz(null)}
+          onEdit={(b) => {
+            setViewingBiz(null);
+            openEdit(b as unknown as Record<string, unknown>);
+          }}
+          onOpenServices={(id) => { setViewingBiz(null); openServices(id); }}
+        />
       </div>
     </DashboardLayout>
   );
