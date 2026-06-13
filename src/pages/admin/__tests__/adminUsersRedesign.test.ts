@@ -20,7 +20,13 @@ import { resolve } from 'node:path';
 const root = resolve(__dirname, '..', '..', '..', '..');
 
 const APP        = readFileSync(resolve(root, 'src/App.tsx'), 'utf8');
-const USERS      = readFileSync(resolve(root, 'src/pages/admin/AdminUsers.tsx'), 'utf8');
+// The page was split: filter bar (incl. search placeholder) lives in
+// src/pages/admin/users/UserFiltersBar.tsx after the AdminUsers refactor.
+// Concatenate so source-level copy guards still find it.
+const USERS      =
+  readFileSync(resolve(root, 'src/pages/admin/AdminUsers.tsx'), 'utf8') +
+  '\n/*FILTERS_BAR*/\n' +
+  readFileSync(resolve(root, 'src/pages/admin/users/UserFiltersBar.tsx'), 'utf8');
 const DETAIL     = readFileSync(resolve(root, 'src/pages/admin/AdminUserDetail.tsx'), 'utf8');
 const SVC_PATH   = resolve(root, 'src/modules/admin/services/users/listUserEntityLinks.ts');
 const SVC        = existsSync(SVC_PATH) ? readFileSync(SVC_PATH, 'utf8') : '';
