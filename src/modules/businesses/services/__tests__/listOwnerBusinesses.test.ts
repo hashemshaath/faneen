@@ -132,9 +132,12 @@ describe('P-18 owner-list migration', () => {
     const src = read('src/pages/Membership.tsx');
     expect(src).toContain('listOwnerBusinesses');
     expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]*?eq\(['"]user_id['"]/);
+    // Sensitive-fields hardening: approval_notes removed from inline select;
+    // it is fetched separately via getBusinessSensitiveFields (owner+admin only).
     expect(src).toContain(
-      "'id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes'",
+      "'id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion'",
     );
+    expect(src).toContain('getBusinessSensitiveFields');
     expect(src).toContain("['my-business-membership', user?.id, profile?.account_type]");
     expect(src).toContain('owned.data[0]');
     // BS-2: staff fallback migrated to canonical service.
