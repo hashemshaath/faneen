@@ -21,20 +21,32 @@ const PROVIDER = join(SRC, "pages/dashboard/DashboardBusinessEdit.tsx");
 const PANEL = join(SRC, "components/business/BusinessOperationsPanel.tsx");
 const NOTES = join(SRC, "components/business/BusinessInternalNotesCard.tsx");
 const TIMELINE = join(SRC, "components/business/BusinessActivityTimelineCard.tsx");
+const OPS_SECTION = join(
+  SRC,
+  "components/admin/businesses/sections/BusinessOperationsSection.tsx",
+);
 
 describe("BUSINESS-CORE-2: admin UI integration", () => {
   const admin = readFileSync(ADMIN, "utf8");
+  const opsSection = readFileSync(OPS_SECTION, "utf8");
 
-  it("imports BusinessOperationsPanel", () => {
+  it("imports BusinessOperationsSection (Phase 5E wrapper around BusinessOperationsPanel)", () => {
     expect(admin).toMatch(
+      /import\s*\{\s*BusinessOperationsSection\s*\}\s*from\s*["']@\/components\/admin\/businesses\/sections\/BusinessOperationsSection["']/,
+    );
+    // The Phase 5E section is a thin shell that still mounts the
+    // BusinessOperationsPanel — verify the wrapper preserves that contract.
+    expect(opsSection).toMatch(
       /import\s*\{\s*BusinessOperationsPanel\s*\}\s*from\s*["']@\/components\/business\/BusinessOperationsPanel["']/,
     );
+    expect(opsSection).toMatch(/<BusinessOperationsPanel\s+businessId=\{businessId\}/);
   });
 
   it("adds an 'ops' tab and renders the panel only when a business is open", () => {
     expect(admin).toMatch(/TabsTrigger\s+value="ops"/);
     expect(admin).toMatch(/TabsContent\s+value="ops"/);
-    expect(admin).toMatch(/<BusinessOperationsPanel\s+businessId=\{editingBiz\.id\}/);
+    // Post-Phase 5E: the panel is rendered indirectly via BusinessOperationsSection.
+    expect(admin).toMatch(/<BusinessOperationsSection\s+businessId=\{editingBiz\.id\}/);
   });
 
   it("never queries notes/timeline inside the list rows", () => {
