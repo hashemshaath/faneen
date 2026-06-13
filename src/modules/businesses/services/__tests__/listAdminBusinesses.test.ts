@@ -33,6 +33,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 import { listAdminBusinesses } from '../listAdminBusinesses';
+import { BUSINESS_SAFE_COLUMNS_SELECT } from '../businessSensitive';
 
 beforeEach(() => {
   fromMock.mockClear();
@@ -40,10 +41,14 @@ beforeEach(() => {
 });
 
 describe('listAdminBusinesses', () => {
-  it("queries from('businesses').select('*') by default", async () => {
+  it("queries from('businesses') with BUSINESS_SAFE_COLUMNS_SELECT by default (sensitive cols excluded)", async () => {
     await listAdminBusinesses();
     expect(fromMock).toHaveBeenCalledWith('businesses');
-    expect(builder.select).toHaveBeenCalledWith('*');
+    expect(builder.select).toHaveBeenCalledWith(BUSINESS_SAFE_COLUMNS_SELECT);
+    // Sensitive fields must NOT appear in the default safe select.
+    for (const col of ['cr_scan_raw', 'cr_scan_data', 'cr_document_url', 'national_id', 'approval_notes', 'cr_owner_name']) {
+      expect(BUSINESS_SAFE_COLUMNS_SELECT).not.toContain(col);
+    }
     expect(builder.order).not.toHaveBeenCalled();
     expect(builder.limit).not.toHaveBeenCalled();
   });
