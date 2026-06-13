@@ -2189,6 +2189,8 @@ const AdminBusinesses = () => {
             translationCompleteness={(b) => translationCompleteness(b)}
             onEdit={(b) => openEdit(b as unknown as Record<string, unknown>)}
             onOpenServices={openServices}
+            onView={(b) => setViewingBiz(b as unknown as BusinessDrawerRow)}
+            contractBusinessIds={contractBusinessIds}
           />
         ) : (
           /* ─── Cards View ─── */
