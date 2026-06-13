@@ -61,6 +61,8 @@ export interface MembershipFiltersBarProps {
 
   /** Slot for page-specific extras (custom inputs, ref_id, business_id …). */
   extras?: React.ReactNode;
+  /** Slot rendered next to Apply / Reset buttons (e.g. total counter). */
+  actionsExtras?: React.ReactNode;
 
   className?: string;
   gridClassName?: string;
@@ -101,6 +103,7 @@ export const MembershipFiltersBar: React.FC<MembershipFiltersBarProps> = ({
   resetLabel,
 
   extras,
+  actionsExtras,
   className,
   gridClassName,
 }) => {
@@ -213,7 +216,7 @@ export const MembershipFiltersBar: React.FC<MembershipFiltersBarProps> = ({
           </>
         )}
 
-        {hasButtons && (
+        {(hasButtons || actionsExtras) && (
           <div className="flex items-center gap-2 md:col-span-2 lg:col-span-3">
             {onApply && (
               <Button onClick={onApply} className="gap-2">
@@ -226,6 +229,7 @@ export const MembershipFiltersBar: React.FC<MembershipFiltersBarProps> = ({
                 {resetLabel}
               </Button>
             )}
+            {actionsExtras && <div className="ms-auto">{actionsExtras}</div>}
           </div>
         )}
       </CardContent>
