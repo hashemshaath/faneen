@@ -1551,7 +1551,10 @@ const AdminUsers = () => {
 
           {/* USERS — single list view (Staff/Disabled merged as scope chips) */}
           <TabsContent value="users" className="space-y-4 mt-5">
-              <UserFiltersBar
+              <AdminUsersPageShell
+                header={null}
+                filtersSlot={
+                  <UserFiltersBar
                 isRTL={isRTL}
                 filterScope={filterScope} setFilterScope={setFilterScope}
                 filterAccountType={filterAccountType} setFilterAccountType={setFilterAccountType}
@@ -1565,8 +1568,46 @@ const AdminUsers = () => {
                 resultsCount={sorted.length} page={page} totalPages={totalPages}
                 density={density} setDensity={setDensity}
                 sortKey={sortKey} sortDir={sortDir} cycleSort={cycleSort}
-              />
-
+                  />
+                }
+                drawerSlot={
+                  viewingUser ? (
+                    <UserDetailsDrawer
+                      open
+                      isRTL={isRTL}
+                      user={{
+                        id: viewingUser.id,
+                        user_id: viewingUser.user_id,
+                        ref_id: viewingUser.ref_id ?? null,
+                        full_name: viewingUser.full_name ?? null,
+                        full_name_ar: viewingUser.full_name_ar ?? null,
+                        full_name_en: viewingUser.full_name_en ?? null,
+                        username: viewingUser.username ?? null,
+                        email: viewingUser.email ?? null,
+                        phone: viewingUser.phone ?? null,
+                        account_type: viewingUser.account_type ?? null,
+                        membership_tier: viewingUser.membership_tier ?? null,
+                        is_banned: viewingUser.is_banned ?? null,
+                        is_onboarded: viewingUser.is_onboarded ?? null,
+                        phone_verified: viewingUser.phone_verified ?? null,
+                        created_at: viewingUser.created_at,
+                      }}
+                      roles={(roleMap.get(viewingUser.user_id) || []).map(r => r.role)}
+                      linkedEntities={(businessLinksMap.get(viewingUser.user_id) || []).map(l => ({
+                        id: l.business.id,
+                        name_ar: l.business.name_ar,
+                        name_en: l.business.name_en,
+                        ref_id: l.business.ref_id,
+                        username: l.business.username,
+                        role: l.role,
+                      }))}
+                      officialEmail={viewingUser.email && !isSyntheticPhoneEmail(viewingUser.email) ? viewingUser.email : null}
+                      onClose={closeViewingUser}
+                    />
+                  ) : null
+                }
+                tableSlot={
+                  <div className="space-y-4">
               {/* Bulk action bar */}
               {selected.size > 0 && (
                 <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex items-center gap-3 flex-wrap animate-in slide-in-from-top-1">
