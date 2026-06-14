@@ -125,7 +125,7 @@ describe('Admin Cron Runs UI', () => {
 
   it('has refresh control and loading/empty/error states', () => {
     expect(PAGE).toMatch(/Refresh|تحديث/);
-    expect(PAGE).toMatch(/Loader2/);
+    expect(PAGE).toMatch(/Skeleton/);
     expect(PAGE).toContain('No cron runs recorded yet.');
     expect(PAGE).toContain('لا توجد تشغيلات مسجلة بعد.');
     expect(PAGE).toMatch(/Failed to load logs|تعذر تحميل السجلات/);

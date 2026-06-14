@@ -7,15 +7,14 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TechnicalText } from '@/components/ui/technical-text';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Loader2, RefreshCw, Activity, AlertCircle, CheckCircle2, XCircle,
-  CalendarClock, Search, Timer, Gauge, ListChecks, ChevronDown, Zap, Database,
+  RefreshCw, Activity, AlertCircle,
+  CalendarClock, Timer, Gauge, ListChecks, ChevronDown, Zap, Database,
   Download, Printer, Radio, BarChart3,
 } from 'lucide-react';
 import {
@@ -27,8 +26,18 @@ import { buildCsv, downloadCsv, printCurrentView, tsStamp } from '@/lib/admin/ex
 import { useRealtimeInvalidate } from '@/hooks/useRealtimeInvalidate';
 import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { humanizeJobName } from '@/i18n/notificationLabels';
+import {
+  OperationsAdminPageShell,
+  OperationsStatsStrip,
+  OperationsFiltersBar,
+  OperationsStatusBadge,
+  type OperationsStatItem,
+  type OperationsSelectOption,
+} from '@/components/admin/ops';
+import type { AdminKpiTone } from '@/components/admin/AdminKpiCard';
+import { CronRunRow } from '@/components/admin/ops/cron-runs/CronRunRow';
 
-interface CronRunRow {
+interface CronRunRecord {
   id: string;
   job_name: string;
   function_name: string;
@@ -116,7 +125,7 @@ const AdminCronRuns = () => {
         jobName: jobFilter.trim() || undefined,
       });
       if (error) throw error;
-      return (data ?? []) as unknown as CronRunRow[];
+      return (data ?? []) as unknown as CronRunRecord[];
     },
     staleTime: 30_000,
   });
@@ -362,38 +371,52 @@ const AdminCronRuns = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl space-y-6">
-        {/* KPI cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <KpiCard
-            icon={<Gauge className="h-4 w-4" />}
-            label={isRTL ? 'معدّل النجاح' : 'Success rate'}
-            value={healthQuery.isLoading ? null : `${health.successRate}%`}
-            tone={hasIssues ? (health.successRate < 90 ? 'danger' : 'warning') : 'success'}
-            sub={isRTL ? `آخر ${windowDays} يوم` : `Last ${windowDays} days`}
-          />
-          <KpiCard
-            icon={<ListChecks className="h-4 w-4" />}
-            label={isRTL ? 'إجمالي التشغيلات' : 'Total runs'}
-            value={healthQuery.isLoading ? null : String(health.total)}
-            tone="neutral"
-            sub={`${health.succeeded} ${isRTL ? 'ناجحة' : 'OK'}`}
-          />
-          <KpiCard
-            icon={<XCircle className="h-4 w-4" />}
-            label={isRTL ? 'الإخفاقات' : 'Failures'}
-            value={healthQuery.isLoading ? null : String(health.failed)}
-            tone={health.failed > 0 ? 'danger' : 'success'}
-            sub={health.latestFailedJob ? truncate(health.latestFailedJob, 24) : (isRTL ? 'لا أخطاء' : 'No errors')}
-          />
-          <KpiCard
-            icon={<Timer className="h-4 w-4" />}
-            label={isRTL ? 'آخر تشغيل' : 'Last run'}
-            value={healthQuery.isLoading ? null : formatRelative(health.lastRun, isRTL)}
-            tone="info"
-            sub={`${health.jobsObserved} ${isRTL ? 'مهام مرصودة' : 'jobs tracked'}`}
-          />
-        </div>
-
+        <OperationsAdminPageShell
+          header={null}
+          statsSlot={
+            <OperationsStatsStrip
+              columns={4}
+              items={[
+                {
+                  key: 'success-rate',
+                  label: isRTL ? 'معدّل النجاح' : 'Success rate',
+                  value: healthQuery.isLoading ? '…' : `${health.successRate}%`,
+                  icon: Gauge,
+                  tone: (hasIssues
+                    ? (health.successRate < 90 ? 'destructive' : 'warning')
+                    : 'success') as AdminKpiTone,
+                  helper: isRTL ? `آخر ${windowDays} يوم` : `Last ${windowDays} days`,
+                },
+                {
+                  key: 'total-runs',
+                  label: isRTL ? 'إجمالي التشغيلات' : 'Total runs',
+                  value: healthQuery.isLoading ? '…' : String(health.total),
+                  icon: ListChecks,
+                  tone: 'muted',
+                  helper: `${health.succeeded} ${isRTL ? 'ناجحة' : 'OK'}`,
+                },
+                {
+                  key: 'failures',
+                  label: isRTL ? 'الإخفاقات' : 'Failures',
+                  value: healthQuery.isLoading ? '…' : String(health.failed),
+                  icon: AlertCircle,
+                  tone: (health.failed > 0 ? 'destructive' : 'success') as AdminKpiTone,
+                  helper: health.latestFailedJob
+                    ? truncate(health.latestFailedJob, 24)
+                    : (isRTL ? 'لا أخطاء' : 'No errors'),
+                },
+                {
+                  key: 'last-run',
+                  label: isRTL ? 'آخر تشغيل' : 'Last run',
+                  value: healthQuery.isLoading ? '…' : formatRelative(health.lastRun, isRTL),
+                  icon: Timer,
+                  tone: 'info',
+                  helper: `${health.jobsObserved} ${isRTL ? 'مهام مرصودة' : 'jobs tracked'}`,
+                } satisfies OperationsStatItem,
+              ] as OperationsStatItem[]}
+            />
+          }
+        >
         {/* Hourly distribution (24h) */}
         <Card className="overflow-hidden print:hidden">
           <CardHeader className="pb-3 border-b border-border/60 bg-muted/30">
@@ -544,59 +567,43 @@ const AdminCronRuns = () => {
           </CardContent>
         </Card>
 
+        {/* Runs filters */}
+        <OperationsFiltersBar
+          searchValue={jobFilter}
+          onSearchChange={setJobFilter}
+          searchPlaceholder={isRTL ? 'بحث باسم المهمة...' : 'Search job name...'}
+          statusValue={statusFilter}
+          onStatusChange={(v) => setStatusFilter(v as 'all' | 'ok' | 'fail')}
+          statusPlaceholder={isRTL ? 'الحالة' : 'Status'}
+          statusOptions={[
+            { value: 'all', label: isRTL ? 'الكل' : 'All' },
+            { value: 'ok', label: isRTL ? 'ناجحة' : 'OK' },
+            { value: 'fail', label: isRTL ? 'فاشلة' : 'Failed' },
+          ] satisfies OperationsSelectOption[]}
+          rightSlot={
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-xs"
+              onClick={exportRunsCsv}
+              disabled={filteredRuns.length === 0}
+            >
+              <Download className="h-3.5 w-3.5 me-1" />
+              CSV
+            </Button>
+          }
+        />
+
         {/* Runs timeline */}
         <Card className="overflow-hidden">
           <CardHeader className="pb-3 border-b border-border/60 bg-muted/30">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Database className="h-4 w-4 text-primary" />
-                {isRTL ? 'سجل التشغيلات الأخيرة' : 'Recent runs'}
-                <Badge variant="outline" className="text-[11px] ms-1">
-                  {filteredRuns.length}/{rows.length}
-                </Badge>
-              </CardTitle>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <Input
-                    value={jobFilter}
-                    onChange={(e) => setJobFilter(e.target.value)}
-                    placeholder={isRTL ? 'بحث باسم المهمة...' : 'Search job name...'}
-                    className="h-9 w-56 ps-8 text-xs"
-                  />
-                </div>
-                <div className="inline-flex items-center rounded-lg border border-border bg-background p-0.5">
-                  {(['all', 'ok', 'fail'] as const).map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setStatusFilter(s)}
-                      className={`px-2.5 h-7 text-[11px] font-medium rounded-md transition-colors ${
-                        statusFilter === s
-                          ? s === 'ok' ? 'bg-success/15 text-success'
-                            : s === 'fail' ? 'bg-destructive/15 text-destructive'
-                            : 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {s === 'all' ? (isRTL ? 'الكل' : 'All')
-                        : s === 'ok' ? (isRTL ? 'ناجحة' : 'OK')
-                        : (isRTL ? 'فاشلة' : 'Failed')}
-                    </button>
-                  ))}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 text-xs"
-                  onClick={exportRunsCsv}
-                  disabled={filteredRuns.length === 0}
-                >
-                  <Download className="h-3.5 w-3.5 me-1" />
-                  CSV
-                </Button>
-              </div>
-            </div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Database className="h-4 w-4 text-primary" />
+              {isRTL ? 'سجل التشغيلات الأخيرة' : 'Recent runs'}
+              <Badge variant="outline" className="text-[11px] ms-1">
+                {filteredRuns.length}/{rows.length}
+              </Badge>
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
@@ -622,117 +629,45 @@ const AdminCronRuns = () => {
               />
             ) : (
               <ul className="divide-y divide-border/60">
-                {filteredRuns.map((r) => {
-                  const isOpen = expanded === r.id;
-                  const okTone = r.ok === true ? 'success' : r.ok === false ? 'danger' : 'neutral';
-                  return (
-                    <li key={r.id}>
-                      <button
-                        type="button"
-                        onClick={() => setExpanded(isOpen ? null : r.id)}
-                        className="w-full text-start px-4 py-3 hover:bg-muted/40 transition-colors flex items-center gap-3"
-                      >
-                        <span
-                          className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${
-                            okTone === 'success' ? 'bg-success/15 text-success'
-                            : okTone === 'danger' ? 'bg-destructive/15 text-destructive'
-                            : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {okTone === 'success' ? <CheckCircle2 className="h-4 w-4" />
-                            : okTone === 'danger' ? <XCircle className="h-4 w-4" />
-                            : <Loader2 className="h-4 w-4" />}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className="text-xs font-semibold text-foreground"
-                              dir="auto"
-                              title={r.job_name}
-                            >
-                              {humanizeJobName(r.job_name, isRTL ? 'ar' : 'en')}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">·</span>
-                            <TechnicalText className="text-[11px] text-muted-foreground">
-                              {r.job_name}
-                            </TechnicalText>
-                            {r.status && (
-                              <Badge variant="outline" className="text-[10px] py-0 h-4">
-                                {r.status}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                            <span className="inline-flex items-center gap-1">
-                              <CalendarClock className="h-3 w-3" />
-                              {formatRelative(r.started_at, isRTL)}
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <Timer className="h-3 w-3" />
-                              {formatDuration(r.duration_ms)}
-                            </span>
-                            {r.error_code && (
-                              <span className="inline-flex items-center gap-1 text-destructive font-medium">
-                                <AlertCircle className="h-3 w-3" />
-                                {r.error_code}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronDown
-                          className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                        />
-                      </button>
-                      {isOpen && (
-                        <div className="px-4 pb-4 pt-1 bg-muted/20 border-t border-border/40">
-                          <div className="grid sm:grid-cols-2 gap-3 text-[11px]">
-                            <DetailRow label={isRTL ? 'بدأ في' : 'Started at'} value={formatDate(r.started_at, isRTL)} />
-                            <DetailRow label={isRTL ? 'انتهى في' : 'Finished at'} value={r.finished_at ? formatDate(r.finished_at, isRTL) : '—'} />
-                            <DetailRow label={isRTL ? 'المدة' : 'Duration'} value={formatDuration(r.duration_ms)} />
-                            <DetailRow label={isRTL ? 'الحالة' : 'Status'} value={r.status ?? '—'} />
-                          </div>
-                          {r.summary && typeof r.summary === 'object' && Object.keys(r.summary).length > 0 && (
-                            <div className="mt-3">
-                              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5 font-semibold">
-                                {isRTL ? 'الملخص' : 'Summary'}
-                              </div>
-                              <div className="flex flex-wrap gap-1.5">
-                                {Object.entries(r.summary).map(([k, v]) => (
-                                  <span
-                                    key={k}
-                                    className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px]"
-                                  >
-                                    <span className="text-muted-foreground">{k}:</span>
-                                    <TechnicalText className="font-semibold text-foreground">
-                                      {typeof v === 'object' ? JSON.stringify(v).slice(0, 60) : String(v)}
-                                    </TechnicalText>
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {r.error_message && (
-                            <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <AlertCircle className="h-3.5 w-3.5 text-destructive" />
-                                <span className="text-[11px] font-semibold text-destructive">
-                                  {r.error_code ?? (isRTL ? 'خطأ' : 'Error')}
-                                </span>
-                              </div>
-                              <TechnicalText as="p" mono={false} className="text-[11px] text-destructive/90 leading-relaxed">
-                                {truncate(r.error_message, 600)}
-                              </TechnicalText>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
+                {filteredRuns.map((r) => (
+                  <CronRunRow
+                    key={r.id}
+                    isOpen={expanded === r.id}
+                    onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
+                    item={{
+                      id: r.id,
+                      jobName: r.job_name,
+                      humanJobName: humanizeJobName(r.job_name, isRTL ? 'ar' : 'en'),
+                      status: r.status,
+                      ok: r.ok,
+                      startedAtRelative: formatRelative(r.started_at, isRTL),
+                      startedAtAbsolute: formatDate(r.started_at, isRTL),
+                      finishedAtAbsolute: r.finished_at ? formatDate(r.finished_at, isRTL) : '—',
+                      durationLabel: formatDuration(r.duration_ms),
+                      statusLabel: r.ok === true
+                        ? (isRTL ? 'ناجحة' : 'OK')
+                        : r.ok === false
+                          ? (isRTL ? 'فاشلة' : 'Failed')
+                          : (isRTL ? 'قيد التنفيذ' : 'Running'),
+                      errorCode: r.error_code,
+                      errorMessage: r.error_message,
+                      summary: r.summary,
+                    }}
+                    labels={{
+                      startedAt: isRTL ? 'بدأ في' : 'Started at',
+                      finishedAt: isRTL ? 'انتهى في' : 'Finished at',
+                      duration: isRTL ? 'المدة' : 'Duration',
+                      status: isRTL ? 'الحالة' : 'Status',
+                      summary: isRTL ? 'الملخص' : 'Summary',
+                      errorFallback: isRTL ? 'خطأ' : 'Error',
+                    }}
+                  />
+                ))}
               </ul>
             )}
           </CardContent>
         </Card>
+        </OperationsAdminPageShell>
       </div>
     </div>
     </DashboardLayout>
@@ -740,36 +675,6 @@ const AdminCronRuns = () => {
 };
 
 /* ---------- helper components ---------- */
-
-type Tone = 'success' | 'danger' | 'warning' | 'info' | 'neutral';
-const toneClasses: Record<Tone, { icon: string; ring: string }> = {
-  success: { icon: 'bg-success/15 text-success', ring: 'ring-success/20' },
-  danger:  { icon: 'bg-destructive/15 text-destructive', ring: 'ring-destructive/20' },
-  warning: { icon: 'bg-warning/15 text-warning', ring: 'ring-warning/20' },
-  info:    { icon: 'bg-primary/10 text-primary', ring: 'ring-primary/20' },
-  neutral: { icon: 'bg-muted text-muted-foreground', ring: 'ring-border' },
-};
-
-const KpiCard = ({
-  icon, label, value, sub, tone,
-}: { icon: React.ReactNode; label: string; value: string | null; sub?: string; tone: Tone }) => (
-  <Card className={`relative overflow-hidden ring-1 ${toneClasses[tone].ring}`}>
-    <CardContent className="p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</div>
-          <div className="mt-1.5 text-2xl font-bold tabular-nums text-foreground truncate">
-            {value == null ? <Skeleton className="h-7 w-20" /> : value}
-          </div>
-          {sub && <div className="mt-1 text-[11px] text-muted-foreground truncate">{sub}</div>}
-        </div>
-        <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${toneClasses[tone].icon}`}>
-          {icon}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 const SortableHead = ({
   label, k, sortKey, sortDir, onSort,
@@ -786,13 +691,6 @@ const SortableHead = ({
       />
     </button>
   </TableHead>
-);
-
-const DetailRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-center justify-between gap-2 rounded-md bg-background border border-border/60 px-2.5 py-1.5">
-    <span className="text-muted-foreground">{label}</span>
-    <TechnicalText className="font-semibold text-foreground text-[11px] truncate max-w-[60%]">{value}</TechnicalText>
-  </div>
 );
 
 const EmptyState = ({ isRTL, message }: { isRTL: boolean; message?: string }) => (

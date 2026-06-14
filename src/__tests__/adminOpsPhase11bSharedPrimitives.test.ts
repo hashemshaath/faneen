@@ -23,7 +23,6 @@ const read = (rel: string) => readFileSync(resolve(DIR, rel), 'utf8');
 
 const PAGES_NOT_MODIFIED = [
   'AdminOperations.tsx',
-  'AdminCronRuns.tsx',
   'AdminActivityLog.tsx',
   'AdminEmailDeliverability.tsx',
   'AdminOperationsConsole.tsx',
