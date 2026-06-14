@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  AlertCircle, CalendarClock, ChevronDown, Loader2, Timer,
+  AlertCircle, CalendarClock, CheckCircle2, ChevronDown, Loader2, Timer, XCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { TechnicalText } from '@/components/ui/technical-text';
@@ -70,8 +70,8 @@ export const CronRunRow: React.FC<CronRunRowProps> = ({
                 : 'bg-muted text-muted-foreground'
           }`}
         >
-          {opsStatus === 'success' ? <span aria-hidden>✓</span>
-            : opsStatus === 'failed' ? <span aria-hidden>✕</span>
+          {opsStatus === 'success' ? <CheckCircle2 className="h-4 w-4" />
+            : opsStatus === 'failed' ? <XCircle className="h-4 w-4" />
             : <Loader2 className="h-4 w-4" />}
         </span>
         <div className="flex-1 min-w-0">
