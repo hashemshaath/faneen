@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { User2 } from 'lucide-react';
-import { PDF_AUDIT_SOURCE_LABEL, safePdfAuditText, type PdfExportAuditRow as Row } from './types';
+import { PDF_AUDIT_SOURCE_LABEL, safePdfAuditText, type PdfExportAuditRowData as Row } from './types';
 
 export interface PdfExportAuditRowProps {
   row: Row;

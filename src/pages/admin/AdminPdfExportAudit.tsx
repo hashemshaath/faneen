@@ -23,7 +23,7 @@ import {
   PdfExportPrivacyNotice,
 } from '@/components/admin/contracts/pdf-audit';
 import type {
-  PdfExportAuditRow as PdfExportAuditRowType,
+  PdfExportAuditRowData,
   PdfExportAuditSummary,
 } from '@/components/admin/contracts/pdf-audit';
 
@@ -66,7 +66,7 @@ const AdminPdfExportAudit: React.FC = () => {
         _offset: page * PAGE_SIZE,
       });
       if (error) throw error;
-      return (data || []) as PdfExportAuditRowType[];
+      return (data || []) as PdfExportAuditRowData[];
     },
   });
 
