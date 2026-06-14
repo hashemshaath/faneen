@@ -111,6 +111,7 @@ const AdminBrands: React.FC = () => {
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const previewBrand = useMemo(() => allBrands.find((b) => b.id === previewId) ?? null, [allBrands, previewId]);
 
   const brandsQuery = useQuery({
     queryKey: ['admin-brands', q],
