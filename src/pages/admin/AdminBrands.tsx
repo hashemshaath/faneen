@@ -110,6 +110,7 @@ const AdminBrands: React.FC = () => {
   const [q, setQ] = useState('');
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const brandsQuery = useQuery({
     queryKey: ['admin-brands', q],
