@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Bi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -220,6 +219,3 @@ export default function AdminAuditLog() {
     </DashboardLayout>
   );
 }
-
-// Reference unused symbol to keep parity with prior import surface during refactor.
-void Input;
