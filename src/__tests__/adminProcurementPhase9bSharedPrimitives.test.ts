@@ -23,7 +23,6 @@ const COMPONENT_FILES = [
 ];
 
 const ADMIN_PAGES = [
-  'src/pages/admin/AdminQuoteRequests.tsx',
   'src/pages/admin/AdminQuoteRequestDetails.tsx',
   'src/pages/admin/AdminQuoteOperations.tsx',
   'src/pages/admin/AdminBrandRequests.tsx',
@@ -133,10 +132,9 @@ describe('Phase 9B — admin procurement shared primitives', () => {
     expect(/from\s+['"]@\/modules\/leads\/constants\/quoteStatuses['"]/.test(src)).toBe(true);
   });
 
-  it('does not modify any admin procurement/RFQ page in Phase 9B', () => {
-    // Phase 9B is creation-only; pages remain untouched. We assert each
-    // listed page still exists and does NOT import from the new shared
-    // barrel yet (adoption happens in later phases).
+  it('non-9C admin procurement/RFQ pages do not adopt the shared barrel yet', () => {
+    // Adoption is staged: Phase 9C adopts only AdminQuoteRequests.tsx.
+    // Other pages remain untouched until their dedicated phase.
     for (const rel of ADMIN_PAGES) {
       const src = readRepo(rel);
       expect(

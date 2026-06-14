@@ -14,3 +14,13 @@ export {
   type ProcurementStatsItem,
   type ProcurementStatsTone,
 } from './ProcurementStatsStrip';
+export {
+  ProcurementAdminPageShell,
+  type ProcurementAdminPageShellProps,
+} from './ProcurementAdminPageShell';
+export {
+  ProcurementFiltersBar,
+  type ProcurementFiltersBarProps,
+  type ProcurementSelectFilter,
+  type ProcurementFilterOption,
+} from './ProcurementFiltersBar';
