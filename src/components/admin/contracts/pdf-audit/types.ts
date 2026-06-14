@@ -1,4 +1,4 @@
-export interface PdfExportAuditRow {
+export interface PdfExportAuditRowData {
   export_ref: string;
   exported_at: string;
   exporter_display_name: string | null;
