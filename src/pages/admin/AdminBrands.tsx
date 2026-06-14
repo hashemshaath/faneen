@@ -369,6 +369,7 @@ const AdminBrands: React.FC = () => {
   const content = (
     <>
       {unlinkedCallout}
+      <div className={`grid gap-4 ${previewBrand ? 'lg:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center justify-between gap-3 flex-wrap">
@@ -414,6 +415,44 @@ const AdminBrands: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      {previewBrand && (
+        <div className="lg:block">
+          <BrandDetailsDrawer
+            open
+            onClose={() => setPreviewId(null)}
+            {...buildBrandDetailsDrawerProps({
+              brand: previewBrand,
+              summary: summaryMap.get(previewBrand.id),
+              locale,
+              sectorLabel: sectorMap.get(previewBrand.sector_id ?? '')
+                ? pick({
+                    ar: sectorMap.get(previewBrand.sector_id ?? '')?.name_ar ?? previewBrand.sector_id ?? '',
+                    en: sectorMap.get(previewBrand.sector_id ?? '')?.name_en
+                      ?? sectorMap.get(previewBrand.sector_id ?? '')?.name_ar
+                      ?? previewBrand.sector_id ?? '',
+                  }, locale)
+                : previewBrand.sector_id,
+              labels: {
+                statusLabel: pick(brandStatusLabel[previewBrand.status], locale),
+                officialLabel: pick(verificationLabel.official, locale),
+                closeLabel: pickBi(isRTL, 'إغلاق', 'Close'),
+                detailLabel: pickBi(isRTL, 'فتح صفحة التفاصيل', 'Open details page'),
+                localLabel: pickBi(isRTL, 'محلي', 'Local'),
+                sectorFieldLabel: pickBi(isRTL, 'القطاع', 'Sector'),
+                originFieldLabel: pickBi(isRTL, 'بلد المنشأ', 'Country of origin'),
+                ownerFieldLabel: pickBi(isRTL, 'الشركة المالكة', 'Owner company'),
+                foundedFieldLabel: pickBi(isRTL, 'سنة التأسيس', 'Founded'),
+                providersFieldLabel: pickBi(isRTL, 'إسناد مزودين/خدمات', 'Provider/service links'),
+                sectorsFieldLabel: pickBi(isRTL, 'قطاعات مرتبطة', 'Linked sectors'),
+                createdFieldLabel: pickBi(isRTL, 'أُنشئ في', 'Created at'),
+                updatedFieldLabel: pickBi(isRTL, 'آخر تحديث', 'Updated at'),
+                websiteFieldLabel: pickBi(isRTL, 'الموقع الإلكتروني', 'Website'),
+              },
+            })}
+          />
+        </div>
+      )}
+      </div>
     </>
   );
 
