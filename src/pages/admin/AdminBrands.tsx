@@ -429,12 +429,13 @@ const AdminBrands: React.FC = () => {
   );
 };
 
-function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, onApprove, onArchive, rejecting, onStartReject, onCancelReject, onConfirmReject, reason, setReason }: {
+function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, onApprove, onArchive, onPreview, isPreviewing, rejecting, onStartReject, onCancelReject, onConfirmReject, reason, setReason }: {
   brand: Brand; locale: 'ar' | 'en'; isRTL: boolean;
   summary?: AdminBrandLinkSummary;
   sectorLabel?: string | null;
   categoryHints: CategoryLite[];
   onApprove: () => void; onArchive: () => void;
+  onPreview: () => void; isPreviewing: boolean;
   rejecting: boolean; onStartReject: () => void; onCancelReject: () => void; onConfirmReject: () => void;
   reason: string; setReason: (v: string) => void;
 }) {
@@ -444,7 +445,7 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
     (brand.is_verified || brand.verification_status === 'verified' || brand.verification_status === 'official')
       ? 'verified' : 'unverified';
   return (
-    <div className="border rounded-xl p-4 hover-lift transition-all bg-card">
+    <div className={`border rounded-xl p-4 hover-lift transition-all bg-card ${isPreviewing ? 'ring-2 ring-primary/40' : ''}`}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           {brand.logo_url ? (
@@ -500,6 +501,15 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant={isPreviewing ? 'secondary' : 'ghost'}
+            onClick={onPreview}
+            aria-pressed={isPreviewing}
+            aria-label={pickBi(isRTL, 'معاينة', 'Preview')}
+          >
+            <Eye className="w-4 h-4 me-1" />{pickBi(isRTL, 'معاينة', 'Preview')}
+          </Button>
           <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.slug || brand.id}`}><Link2 className="w-4 h-4 me-1" />{pickBi(isRTL, 'تحسين وربط', 'Improve & link')}</Link></Button>
           {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
             <>
