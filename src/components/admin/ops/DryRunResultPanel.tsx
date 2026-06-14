@@ -20,7 +20,7 @@ export interface DryRunResultPanelProps {
  * DryRunResultPanel — display-only panel for preview/dry-run output.
  *
  * SAFETY CONTRACT:
- *   - Never imports `previewSlaSweepForAdmin` or any service.
+ *   - Never imports any preview service or executive module.
  *   - Never renders a "Run real dispatch" / send / mutation button.
  *   - Never accepts onSend / onDispatch callbacks.
  *   - Caller is responsible for ensuring the data passed in is masked.
