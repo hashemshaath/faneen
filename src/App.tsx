@@ -132,6 +132,7 @@ const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"));
 const AdminIdentity = lazyRetry(() => import("./pages/admin/AdminIdentity"));
+const AdminIdentityHub = lazyRetry(() => import("./pages/admin/AdminIdentityHub"));
 const AdminIdentityCenter = lazyRetry(() => import("./pages/admin/AdminIdentityCenter"));
 const AdminSystemSettings = lazyRetry(() => import("./pages/admin/AdminSystemSettings"));
 const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
@@ -538,7 +539,9 @@ const AppRoutes = () => (
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/users/:id" element={<ProtectedRoute requireSuperAdmin><AdminUserDetail /></ProtectedRoute>} />
-          <Route path="/admin/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentity /></ProtectedRoute>} />
+          {/* ADMIN UX RECONSOLIDATION PHASE 4 — Identity & Access center hub. */}
+          <Route path="/admin/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentityHub /></ProtectedRoute>} />
+          <Route path="/admin/identity/dashboard" element={<ProtectedRoute requireSuperAdmin><AdminIdentity /></ProtectedRoute>} />
           {/* ADMIN-REDESIGN PHASE 2 — Identity Center (unified visual tokens). */}
           <Route path="/admin/system/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentityCenter /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 17 — System Settings hub.
