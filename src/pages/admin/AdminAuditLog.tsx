@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Bi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -12,7 +9,16 @@ import { buildCsv, downloadCsv, defaultRange, type DateRange } from '@/lib/admin
 import { Loader2, Download, ShieldAlert, FileText, Building2, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
+import {
+  OperationsAdminPageShell,
+  OperationsStatsStrip,
+  OperationsFiltersBar,
+  type OperationsStatItem,
+} from '@/components/admin/ops';
+import {
+  AdminAuditLogTableSection,
+  type AdminAuditLogTableRow,
+} from '@/components/admin/ops/logs';
 
 type SourceKey = 'admin' | 'business' | 'security' | 'contract_amendment';
 
@@ -123,6 +129,36 @@ export default function AdminAuditLog() {
     downloadCsv(`audit-log_${range.from}_${range.to}.csv`, csv);
   }
 
+  const sourceKeys = Object.keys(SOURCE_META) as SourceKey[];
+
+  const statItems: OperationsStatItem[] = sourceKeys.map((k) => {
+    const meta = SOURCE_META[k];
+    return {
+      key: k,
+      label: isRTL ? meta.ar : meta.en,
+      value: counts[k],
+      icon: meta.icon,
+      tone: k === 'admin' ? 'primary' : k === 'business' ? 'success' : k === 'security' ? 'destructive' : 'warning',
+      active: filter === k,
+      onClick: () => setFilter((cur) => (cur === k ? 'all' : k)),
+    };
+  });
+
+  const tableRows: AdminAuditLogTableRow[] = visible.map((r) => {
+    const meta = SOURCE_META[r.source];
+    return {
+      id: r.id,
+      source: r.source,
+      sourceLabelAr: meta.ar,
+      sourceLabelEn: meta.en,
+      sourceBadgeClass: meta.color,
+      action: r.action,
+      actor: r.actor,
+      entity: r.entity,
+      created_at: r.created_at,
+    };
+  });
+
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -140,8 +176,6 @@ export default function AdminAuditLog() {
             : 'Admin, business, security, and contract amendment activity — one feed.'}
           actions={
             <>
-              <Input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="h-10 w-auto rounded-xl text-xs" />
-              <Input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="h-10 w-auto rounded-xl text-xs" />
               <Button variant="outline" size="sm" className="h-10 rounded-xl gap-1.5" onClick={onExport} disabled={!visible.length}>
                 <Download className="h-4 w-4" />
                 <span className="hidden sm:inline"><Bi ar="تصدير CSV" en="Export CSV" /></span>
@@ -149,96 +183,38 @@ export default function AdminAuditLog() {
               {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </>
           }
-          kpiSlot={
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <AdminKpiCard label={isRTL ? SOURCE_META.admin.ar : SOURCE_META.admin.en} value={counts.admin} icon={ShieldAlert} tone="primary" />
-              <AdminKpiCard label={isRTL ? SOURCE_META.business.ar : SOURCE_META.business.en} value={counts.business} icon={Building2} tone="success" />
-              <AdminKpiCard label={isRTL ? SOURCE_META.security.ar : SOURCE_META.security.en} value={counts.security} icon={ShieldAlert} tone="destructive" />
-              <AdminKpiCard label={isRTL ? SOURCE_META.contract_amendment.ar : SOURCE_META.contract_amendment.en} value={counts.contract_amendment} icon={FileText} tone="warning" />
-            </div>
-          }
         />
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {(Object.keys(SOURCE_META) as SourceKey[]).map((k) => {
-            const meta = SOURCE_META[k];
-            const Icon = meta.icon;
-            const active = filter === k;
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setFilter((cur) => (cur === k ? 'all' : k))}
-                className={`hover-lift rounded-xl border p-4 text-start transition ${active ? 'border-primary ring-2 ring-primary/30' : 'border-border'}`}
-              >
-                <div className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${meta.color}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  <Bi ar={meta.ar} en={meta.en} />
-                </div>
-                <div className="text-xl font-bold tech-content">{counts[k].toLocaleString()}</div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Input
-            placeholder={isRTL ? 'ابحث في السجل…' : 'Search the log…'}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-10 max-w-sm"
-            dir="auto"
+        <OperationsAdminPageShell
+          header={null}
+          statsSlot={<OperationsStatsStrip items={statItems} columns={4} />}
+          filtersSlot={
+            <OperationsFiltersBar
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder={isRTL ? 'ابحث في السجل…' : 'Search the log…'}
+              fromDate={range.from}
+              toDate={range.to}
+              onFromDateChange={(v) => setRange((r) => ({ ...r, from: v }))}
+              onToDateChange={(v) => setRange((r) => ({ ...r, to: v }))}
+              fromLabel={isRTL ? 'من' : 'From'}
+              toLabel={isRTL ? 'إلى' : 'To'}
+              canReset={filter !== 'all'}
+              onReset={() => setFilter('all')}
+              resetLabel={isRTL ? 'إزالة الفلتر' : 'Clear filter'}
+              rightSlot={
+                <span className="text-xs text-muted-foreground tech-content">{visible.length} / {rows.length}</span>
+              }
+            />
+          }
+        >
+          <AdminAuditLogTableSection
+            rows={tableRows}
+            loading={loading}
+            emptyAr="لا توجد سجلات في هذه الفترة"
+            emptyEn="No records in this period"
           />
-          {filter !== 'all' && (
-            <Button variant="ghost" size="sm" onClick={() => setFilter('all')}>
-              <Bi ar="إزالة الفلتر" en="Clear filter" />
-            </Button>
-          )}
-          <span className="ms-auto text-xs text-muted-foreground tech-content">{visible.length} / {rows.length}</span>
-        </div>
-
-        <Card className="overflow-hidden">
-          <div className="max-h-[60vh] overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted/60 backdrop-blur">
-                <tr className="text-start">
-                  <th className="px-3 py-2 text-start"><Bi ar="المصدر" en="Source" /></th>
-                  <th className="px-3 py-2 text-start"><Bi ar="الإجراء" en="Action" /></th>
-                  <th className="px-3 py-2 text-start"><Bi ar="الفاعل" en="Actor" /></th>
-                  <th className="px-3 py-2 text-start"><Bi ar="الكيان" en="Entity" /></th>
-                  <th className="px-3 py-2 text-start"><Bi ar="التاريخ" en="Date" /></th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((r) => {
-                  const meta = SOURCE_META[r.source];
-                  return (
-                    <tr key={r.id} className="border-t hover:bg-muted/30">
-                      <td className="px-3 py-2">
-                        <Badge variant="secondary" className={meta.color}>
-                          <Bi ar={meta.ar} en={meta.en} />
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-2 font-medium">{r.action}</td>
-                      <td className="px-3 py-2 tech-content text-xs text-muted-foreground">{r.actor?.slice(0, 8) ?? '—'}</td>
-                      <td className="px-3 py-2 tech-content text-xs text-muted-foreground">{r.entity ?? '—'}</td>
-                      <td className="px-3 py-2 tech-content text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
-                    </tr>
-                  );
-                })}
-                {!visible.length && !loading && (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-12 text-center text-muted-foreground">
-                      <Bi ar="لا توجد سجلات في هذه الفترة" en="No records in this period" />
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+        </OperationsAdminPageShell>
       </div>
     </DashboardLayout>
   );
