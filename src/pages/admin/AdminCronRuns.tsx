@@ -371,38 +371,51 @@ const AdminCronRuns = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl space-y-6">
-        {/* KPI cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <KpiCard
-            icon={<Gauge className="h-4 w-4" />}
-            label={isRTL ? 'معدّل النجاح' : 'Success rate'}
-            value={healthQuery.isLoading ? null : `${health.successRate}%`}
-            tone={hasIssues ? (health.successRate < 90 ? 'danger' : 'warning') : 'success'}
-            sub={isRTL ? `آخر ${windowDays} يوم` : `Last ${windowDays} days`}
-          />
-          <KpiCard
-            icon={<ListChecks className="h-4 w-4" />}
-            label={isRTL ? 'إجمالي التشغيلات' : 'Total runs'}
-            value={healthQuery.isLoading ? null : String(health.total)}
-            tone="neutral"
-            sub={`${health.succeeded} ${isRTL ? 'ناجحة' : 'OK'}`}
-          />
-          <KpiCard
-            icon={<XCircle className="h-4 w-4" />}
-            label={isRTL ? 'الإخفاقات' : 'Failures'}
-            value={healthQuery.isLoading ? null : String(health.failed)}
-            tone={health.failed > 0 ? 'danger' : 'success'}
-            sub={health.latestFailedJob ? truncate(health.latestFailedJob, 24) : (isRTL ? 'لا أخطاء' : 'No errors')}
-          />
-          <KpiCard
-            icon={<Timer className="h-4 w-4" />}
-            label={isRTL ? 'آخر تشغيل' : 'Last run'}
-            value={healthQuery.isLoading ? null : formatRelative(health.lastRun, isRTL)}
-            tone="info"
-            sub={`${health.jobsObserved} ${isRTL ? 'مهام مرصودة' : 'jobs tracked'}`}
-          />
-        </div>
-
+        <OperationsAdminPageShell
+          statsSlot={
+            <OperationsStatsStrip
+              columns={4}
+              items={[
+                {
+                  key: 'success-rate',
+                  label: isRTL ? 'معدّل النجاح' : 'Success rate',
+                  value: healthQuery.isLoading ? '…' : `${health.successRate}%`,
+                  icon: Gauge,
+                  tone: (hasIssues
+                    ? (health.successRate < 90 ? 'destructive' : 'warning')
+                    : 'success') as AdminKpiTone,
+                  helper: isRTL ? `آخر ${windowDays} يوم` : `Last ${windowDays} days`,
+                },
+                {
+                  key: 'total-runs',
+                  label: isRTL ? 'إجمالي التشغيلات' : 'Total runs',
+                  value: healthQuery.isLoading ? '…' : String(health.total),
+                  icon: ListChecks,
+                  tone: 'muted',
+                  helper: `${health.succeeded} ${isRTL ? 'ناجحة' : 'OK'}`,
+                },
+                {
+                  key: 'failures',
+                  label: isRTL ? 'الإخفاقات' : 'Failures',
+                  value: healthQuery.isLoading ? '…' : String(health.failed),
+                  icon: AlertCircle,
+                  tone: (health.failed > 0 ? 'destructive' : 'success') as AdminKpiTone,
+                  helper: health.latestFailedJob
+                    ? truncate(health.latestFailedJob, 24)
+                    : (isRTL ? 'لا أخطاء' : 'No errors'),
+                },
+                {
+                  key: 'last-run',
+                  label: isRTL ? 'آخر تشغيل' : 'Last run',
+                  value: healthQuery.isLoading ? '…' : formatRelative(health.lastRun, isRTL),
+                  icon: Timer,
+                  tone: 'info',
+                  helper: `${health.jobsObserved} ${isRTL ? 'مهام مرصودة' : 'jobs tracked'}`,
+                } satisfies OperationsStatItem,
+              ] as OperationsStatItem[]}
+            />
+          }
+        >
         {/* Hourly distribution (24h) */}
         <Card className="overflow-hidden print:hidden">
           <CardHeader className="pb-3 border-b border-border/60 bg-muted/30">
