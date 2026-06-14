@@ -24,3 +24,7 @@ export {
   type ProcurementSelectFilter,
   type ProcurementFilterOption,
 } from './ProcurementFiltersBar';
+export {
+  ProcurementTimelineCard,
+  type ProcurementTimelineCardProps,
+} from './ProcurementTimelineCard';

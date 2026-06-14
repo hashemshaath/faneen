@@ -25,6 +25,10 @@ import {
   QuoteStatusBadge,
   type ProcurementStatsItem,
 } from '@/components/admin/procurement/shared';
+import {
+  QuoteRequestDetailsDrawer,
+  buildQuoteRequestDrawerProps,
+} from '@/components/admin/procurement/quote-requests';
 
 const AdminQuoteRequests: React.FC = () => {
   useNoIndex();
@@ -33,6 +37,7 @@ const AdminQuoteRequests: React.FC = () => {
   const [cityFilter, setCityFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
+  const [viewingQuoteRequestId, setViewingQuoteRequestId] = useState<string | null>(null);
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ['admin-quote-requests'],
@@ -92,6 +97,19 @@ const AdminQuoteRequests: React.FC = () => {
     setSearch('');
   };
 
+  const viewingRow = useMemo(
+    () => (rows ?? []).find((r) => r.id === viewingQuoteRequestId) ?? null,
+    [rows, viewingQuoteRequestId],
+  );
+  const drawerProps = viewingRow
+    ? buildQuoteRequestDrawerProps({
+        row: viewingRow,
+        fileCount: fileCounts?.get(viewingRow.id),
+        isRTL: true,
+        onClose: () => setViewingQuoteRequestId(null),
+      })
+    : null;
+
   return (
     <ProcurementAdminPageShell
       icon={ReceiptText}
@@ -133,7 +151,14 @@ const AdminQuoteRequests: React.FC = () => {
         />
       }
     >
-      <div className="space-y-3">
+      <div
+        className={
+          drawerProps
+            ? 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 items-start'
+            : 'space-y-3'
+        }
+      >
+        <div className="space-y-3 min-w-0">
         {/* List */}
         {isLoading && (
           <div className="space-y-3">
@@ -151,8 +176,9 @@ const AdminQuoteRequests: React.FC = () => {
         <div className="space-y-2">
           {filtered.map((r) => {
             const fc = fileCounts?.get(r.id) ?? 0;
+            const isActive = r.id === viewingQuoteRequestId;
             return (
-              <Card key={r.id}>
+              <Card key={r.id} className={isActive ? 'border-primary/50 ring-1 ring-primary/20' : undefined}>
                 <CardContent className="p-4 flex flex-wrap items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -179,14 +205,32 @@ const AdminQuoteRequests: React.FC = () => {
                       {fc > 0 && <span className="inline-flex items-center gap-1"><Paperclip className="h-3 w-3" />{fc}</span>}
                     </div>
                   </div>
-                  <Button asChild size="sm" variant="outline" className="min-h-[36px]">
-                    <Link to={`/admin/quote-requests/${r.id}`}><Eye className="h-3.5 w-3.5" /> عرض التفاصيل</Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="min-h-[36px]"
+                      onClick={() => setViewingQuoteRequestId(r.id)}
+                      aria-pressed={isActive}
+                    >
+                      <Eye className="h-3.5 w-3.5" /> معاينة
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="min-h-[36px]">
+                      <Link to={`/admin/quote-requests/${r.id}`}>فتح التفاصيل</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
+        </div>
+        {drawerProps ? (
+          <div className="lg:sticky lg:top-4">
+            <QuoteRequestDetailsDrawer {...drawerProps} />
+          </div>
+        ) : null}
       </div>
     </ProcurementAdminPageShell>
   );
