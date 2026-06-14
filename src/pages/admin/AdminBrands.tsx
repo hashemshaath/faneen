@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Archive, Building2, Check, Filter, Globe2, Inbox, Link2,
+  Archive, Building2, Check, Eye, Filter, Globe2, Inbox, Link2,
   RefreshCw, ShieldCheck, Tag as TagIcon, X,
 } from 'lucide-react';
 
@@ -28,6 +28,10 @@ import {
   type ContentStatItem,
 } from '@/components/admin/content';
 import type { AdminFilterPill } from '@/components/admin/AdminFiltersBar';
+import {
+  BrandDetailsDrawer,
+  buildBrandDetailsDrawerProps,
+} from '@/components/admin/content/brands';
 // Phase 4: category hints now come from `taxonomy_categories` directly.
 import { supabase } from '@/integrations/supabase/client';
 
@@ -106,6 +110,7 @@ const AdminBrands: React.FC = () => {
   const [q, setQ] = useState('');
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const brandsQuery = useQuery({
     queryKey: ['admin-brands', q],
@@ -113,6 +118,7 @@ const AdminBrands: React.FC = () => {
     staleTime: 20_000,
   });
   const allBrands = brandsQuery.data ?? EMPTY_BRANDS;
+  const previewBrand = useMemo(() => allBrands.find((b) => b.id === previewId) ?? null, [allBrands, previewId]);
 
   const sectorsQuery = useQuery({
     queryKey: ['admin-brand-sectors-lite'],
@@ -364,6 +370,7 @@ const AdminBrands: React.FC = () => {
   const content = (
     <>
       {unlinkedCallout}
+      <div className={`grid gap-4 ${previewBrand ? 'lg:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center justify-between gap-3 flex-wrap">
@@ -397,6 +404,8 @@ const AdminBrands: React.FC = () => {
                 categoryHints={b.sector_id ? (categoryHints[b.sector_id] ?? []) : []}
                 onApprove={() => approve.mutate(b.id)}
                 onArchive={() => archive.mutate(b.id)}
+                onPreview={() => setPreviewId((curr) => curr === b.id ? null : b.id)}
+                isPreviewing={previewId === b.id}
                 rejecting={rejecting === b.id}
                 onStartReject={() => { setRejecting(b.id); setReason(''); }}
                 onCancelReject={() => { setRejecting(null); setReason(''); }}
@@ -407,6 +416,44 @@ const AdminBrands: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      {previewBrand && (
+        <div className="lg:block">
+          <BrandDetailsDrawer
+            open
+            onClose={() => setPreviewId(null)}
+            {...buildBrandDetailsDrawerProps({
+              brand: previewBrand,
+              summary: summaryMap.get(previewBrand.id),
+              locale,
+              sectorLabel: sectorMap.get(previewBrand.sector_id ?? '')
+                ? pick({
+                    ar: sectorMap.get(previewBrand.sector_id ?? '')?.name_ar ?? previewBrand.sector_id ?? '',
+                    en: sectorMap.get(previewBrand.sector_id ?? '')?.name_en
+                      ?? sectorMap.get(previewBrand.sector_id ?? '')?.name_ar
+                      ?? previewBrand.sector_id ?? '',
+                  }, locale)
+                : previewBrand.sector_id,
+              labels: {
+                statusLabel: pick(brandStatusLabel[previewBrand.status], locale),
+                officialLabel: pick(verificationLabel.official, locale),
+                closeLabel: pickBi(isRTL, 'إغلاق', 'Close'),
+                detailLabel: pickBi(isRTL, 'فتح صفحة التفاصيل', 'Open details page'),
+                localLabel: pickBi(isRTL, 'محلي', 'Local'),
+                sectorFieldLabel: pickBi(isRTL, 'القطاع', 'Sector'),
+                originFieldLabel: pickBi(isRTL, 'بلد المنشأ', 'Country of origin'),
+                ownerFieldLabel: pickBi(isRTL, 'الشركة المالكة', 'Owner company'),
+                foundedFieldLabel: pickBi(isRTL, 'سنة التأسيس', 'Founded'),
+                providersFieldLabel: pickBi(isRTL, 'إسناد مزودين/خدمات', 'Provider/service links'),
+                sectorsFieldLabel: pickBi(isRTL, 'قطاعات مرتبطة', 'Linked sectors'),
+                createdFieldLabel: pickBi(isRTL, 'أُنشئ في', 'Created at'),
+                updatedFieldLabel: pickBi(isRTL, 'آخر تحديث', 'Updated at'),
+                websiteFieldLabel: pickBi(isRTL, 'الموقع الإلكتروني', 'Website'),
+              },
+            })}
+          />
+        </div>
+      )}
+      </div>
     </>
   );
 
@@ -424,12 +471,13 @@ const AdminBrands: React.FC = () => {
   );
 };
 
-function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, onApprove, onArchive, rejecting, onStartReject, onCancelReject, onConfirmReject, reason, setReason }: {
+function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, onApprove, onArchive, onPreview, isPreviewing, rejecting, onStartReject, onCancelReject, onConfirmReject, reason, setReason }: {
   brand: Brand; locale: 'ar' | 'en'; isRTL: boolean;
   summary?: AdminBrandLinkSummary;
   sectorLabel?: string | null;
   categoryHints: CategoryLite[];
   onApprove: () => void; onArchive: () => void;
+  onPreview: () => void; isPreviewing: boolean;
   rejecting: boolean; onStartReject: () => void; onCancelReject: () => void; onConfirmReject: () => void;
   reason: string; setReason: (v: string) => void;
 }) {
@@ -439,7 +487,7 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
     (brand.is_verified || brand.verification_status === 'verified' || brand.verification_status === 'official')
       ? 'verified' : 'unverified';
   return (
-    <div className="border rounded-xl p-4 hover-lift transition-all bg-card">
+    <div className={`border rounded-xl p-4 hover-lift transition-all bg-card ${isPreviewing ? 'ring-2 ring-primary/40' : ''}`}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           {brand.logo_url ? (
@@ -495,6 +543,15 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant={isPreviewing ? 'secondary' : 'ghost'}
+            onClick={onPreview}
+            aria-pressed={isPreviewing}
+            aria-label={pickBi(isRTL, 'معاينة', 'Preview')}
+          >
+            <Eye className="w-4 h-4 me-1" />{pickBi(isRTL, 'معاينة', 'Preview')}
+          </Button>
           <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.slug || brand.id}`}><Link2 className="w-4 h-4 me-1" />{pickBi(isRTL, 'تحسين وربط', 'Improve & link')}</Link></Button>
           {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
             <>
