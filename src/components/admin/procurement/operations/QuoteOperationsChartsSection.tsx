@@ -2,8 +2,8 @@
  * Presentational charts panel for admin quote-operations.
  *
  * Pure UI — receives the daily aggregation series already built by the
- * parent (via `buildDailyQuoteOperationsSeries`). Recharts JSX, data
- * shape, and chart keys remain identical to the inline version.
+ * parent (from the aggregation lib). Recharts JSX, data shape, and
+ * chart keys remain identical to the inline version.
  */
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
