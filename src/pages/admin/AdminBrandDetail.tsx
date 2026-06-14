@@ -4,9 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, ArrowRight, Loader2, Check, X, Archive, ExternalLink,
-  Globe, Building2, Shield, History, AlertTriangle, Edit3,
-  Save, Plus, Package, Inbox, Trash2,
+  ArrowLeft, ArrowRight, Loader2, Check, X, Archive, Globe, Shield,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
