@@ -274,6 +274,11 @@ const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershi
 const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
 // Taxonomy & Reference Data Center — Phase 2.
 const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
+// ADMIN UX RECONSOLIDATION PHASE 2 — canonical center shells.
+const AdminProcurementCenter = lazyRetry(() => import("./pages/admin/AdminProcurementCenter"));
+const AdminContentCenter = lazyRetry(() => import("./pages/admin/AdminContentCenter"));
+const AdminFinanceCenter = lazyRetry(() => import("./pages/admin/AdminFinanceCenter"));
+const AdminSettingsCenter = lazyRetry(() => import("./pages/admin/AdminSettingsCenter"));
 
 const PageLoader = () => (
   <div className="flex min-h-dvh items-center justify-center bg-background">
