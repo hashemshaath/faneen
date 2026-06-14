@@ -118,6 +118,7 @@ const AdminBrands: React.FC = () => {
     staleTime: 20_000,
   });
   const allBrands = brandsQuery.data ?? EMPTY_BRANDS;
+  const previewBrand = useMemo(() => allBrands.find((b) => b.id === previewId) ?? null, [allBrands, previewId]);
 
   const sectorsQuery = useQuery({
     queryKey: ['admin-brand-sectors-lite'],
