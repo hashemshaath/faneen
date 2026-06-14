@@ -21,8 +21,10 @@ import {
   PdfExportAuditFiltersBar,
   PdfExportAuditTableSection,
   PdfExportPrivacyNotice,
-  type PdfExportAuditRow,
-  type PdfExportAuditSummary,
+} from '@/components/admin/contracts/pdf-audit';
+import type {
+  PdfExportAuditRow as PdfExportAuditRowType,
+  PdfExportAuditSummary,
 } from '@/components/admin/contracts/pdf-audit';
 
 const PAGE_SIZE = 50;
@@ -64,7 +66,7 @@ const AdminPdfExportAudit: React.FC = () => {
         _offset: page * PAGE_SIZE,
       });
       if (error) throw error;
-      return (data || []) as PdfExportAuditRow[];
+      return (data || []) as PdfExportAuditRowType[];
     },
   });
 
