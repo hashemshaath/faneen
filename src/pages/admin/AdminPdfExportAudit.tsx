@@ -14,60 +14,18 @@ import {
 import { useLanguage } from '@/i18n/LanguageContext';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { FileClock } from 'lucide-react';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import {
-  FileClock, Search, ChevronLeft, ChevronRight, User2, Activity,
-  CalendarDays, FileText,
-} from 'lucide-react';
-
-interface Row {
-  export_ref: string;
-  exported_at: string;
-  exporter_display_name: string | null;
-  source: string;
-  contract_number: string | null;
-  contract_status: string | null;
-  contract_version: number | null;
-  official_version_number: number | null;
-  document_hash_prefix: string | null;
-  template_version_number: number | null;
-  template_name_ar: string | null;
-  template_name_en: string | null;
-  amendment_count: number;
-  line_item_count: number;
-  boq_group_count: number;
-  export_locale: string | null;
-  total_count: number;
-}
-interface Summary {
-  exports_today: number;
-  exports_7d: number;
-  unique_contracts_30d: number;
-  top_source: string | null;
-  archived_count: number;
-}
-
-const SOURCE_LABEL: Record<string, { ar: string; en: string }> = {
-  contract_detail:     { ar: 'صفحة العقد',   en: 'Contract page' },
-  dashboard_contracts: { ar: 'لوحة العقود',  en: 'Contracts dashboard' },
-  admin:               { ar: 'الإدارة',       en: 'Admin' },
-  unknown:             { ar: 'غير محدد',     en: 'Unknown' },
-};
-const SOURCE_KEYS = ['contract_detail', 'dashboard_contracts', 'admin', 'unknown'] as const;
-
-const STATUS_KEYS = ['draft', 'pending_review', 'active', 'completed', 'cancelled', 'amended'] as const;
+  PdfExportAuditStatsSection,
+  PdfExportAuditFiltersBar,
+  PdfExportAuditTableSection,
+  PdfExportPrivacyNotice,
+  type PdfExportAuditRow,
+  type PdfExportAuditSummary,
+} from '@/components/admin/contracts/pdf-audit';
 
 const PAGE_SIZE = 50;
-
-const UUID_RX = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i;
-const safeText = (s: string | null | undefined): string =>
-  !s ? '' : UUID_RX.test(s) ? '' : s;
 
 const AdminPdfExportAudit: React.FC = () => {
   useNoIndex();
@@ -106,7 +64,7 @@ const AdminPdfExportAudit: React.FC = () => {
         _offset: page * PAGE_SIZE,
       });
       if (error) throw error;
-      return (data || []) as Row[];
+      return (data || []) as PdfExportAuditRow[];
     },
   });
 
@@ -115,7 +73,7 @@ const AdminPdfExportAudit: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await adminContractPdfExportsSummary();
       if (error) throw error;
-      return (data?.[0] || null) as Summary | null;
+      return (data?.[0] || null) as PdfExportAuditSummary | null;
     },
   });
 
@@ -152,217 +110,46 @@ const AdminPdfExportAudit: React.FC = () => {
           </div>
         </header>
 
-        {/* Summary */}
-        <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <SummaryCard
-            label={isRTL ? 'تصديرات اليوم' : 'Today'}
-            value={summary.data?.exports_today ?? '—'}
-            icon={<CalendarDays className="h-4 w-4 text-primary" />}
-          />
-          <SummaryCard
-            label={isRTL ? 'آخر 7 أيام' : 'Last 7 days'}
-            value={summary.data?.exports_7d ?? '—'}
-            icon={<Activity className="h-4 w-4 text-primary" />}
-          />
-          <SummaryCard
-            label={isRTL ? 'عقود فريدة (30 يوم)' : 'Unique contracts (30d)'}
-            value={summary.data?.unique_contracts_30d ?? '—'}
-            icon={<FileText className="h-4 w-4 text-primary" />}
-          />
-          <SummaryCard
-            label={isRTL ? 'أعلى مصدر' : 'Top source'}
-            value={(() => {
-              const s = summary.data?.top_source;
-              if (!s) return '—';
-              return isRTL ? (SOURCE_LABEL[s]?.ar ?? s) : (SOURCE_LABEL[s]?.en ?? s);
-            })()}
-            icon={<User2 className="h-4 w-4 text-primary" />}
-          />
-          <SummaryCard
-            label={isRTL ? 'مؤرشف' : 'Archived'}
-            value={summary.data?.archived_count ?? '—'}
-            icon={<FileClock className="h-4 w-4 text-muted-foreground" />}
-          />
-        </section>
+        <PdfExportAuditStatsSection summary={summary.data ?? null} isRTL={isRTL} />
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-3 md:p-4 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-              <form onSubmit={onSubmitSearch} className="relative">
-                <Search className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground start-2" />
-                <Input
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder={isRTL ? 'بحث (رقم العقد، #هاش، قالب، مُصدِّر...)' : 'Search (contract #, hash, template, exporter...)'}
-                  className="h-9 text-xs ps-7"
-                  dir="auto"
-                />
-              </form>
+        <PdfExportAuditFiltersBar
+          isRTL={isRTL}
+          searchInput={searchInput}
+          sourceFilter={sourceFilter}
+          statusFilter={statusFilter}
+          tplVersionFilter={tplVersionFilter}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onSearchInputChange={setSearchInput}
+          onSubmitSearch={onSubmitSearch}
+          onSourceChange={(v) => { setPage(0); setSourceFilter(v); }}
+          onStatusChange={(v) => { setPage(0); setStatusFilter(v); }}
+          onTplVersionChange={(v) => { setPage(0); setTplVersionFilter(v); }}
+          onDateFromChange={(v) => { setPage(0); setDateFrom(v); }}
+          onDateToChange={(v) => { setPage(0); setDateTo(v); }}
+          onReset={reset}
+        />
 
-              <Select value={sourceFilter} onValueChange={(v) => { setPage(0); setSourceFilter(v); }}>
-                <SelectTrigger className="h-9 text-xs">
-                  <SelectValue placeholder={isRTL ? 'المصدر' : 'Source'} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل المصادر' : 'All sources'}</SelectItem>
-                  {SOURCE_KEYS.map((s) => (
-                    <SelectItem key={s} value={s}>{isRTL ? SOURCE_LABEL[s].ar : SOURCE_LABEL[s].en}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <PdfExportAuditTableSection
+          rows={rows}
+          isLoading={list.isLoading}
+          isError={list.isError}
+          isFetching={list.isFetching}
+          isRTL={isRTL}
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          totalPages={totalPages}
+          canPrev={canPrev}
+          canNext={canNext}
+          onPrev={() => setPage((p) => Math.max(0, p - 1))}
+          onNext={() => setPage((p) => p + 1)}
+        />
 
-              <Select value={statusFilter} onValueChange={(v) => { setPage(0); setStatusFilter(v); }}>
-                <SelectTrigger className="h-9 text-xs">
-                  <SelectValue placeholder={isRTL ? 'حالة العقد' : 'Contract status'} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All statuses'}</SelectItem>
-                  {STATUS_KEYS.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Input
-                type="number" min={1} inputMode="numeric"
-                value={tplVersionFilter}
-                onChange={(e) => { setPage(0); setTplVersionFilter(e.target.value); }}
-                placeholder={isRTL ? 'إصدار القالب' : 'Template version'}
-                className="h-9 text-xs"
-                dir="ltr"
-              />
-
-              <Input
-                type="date" value={dateFrom}
-                onChange={(e) => { setPage(0); setDateFrom(e.target.value); }}
-                className="h-9 text-xs"
-                dir="ltr"
-              />
-              <Input
-                type="date" value={dateTo}
-                onChange={(e) => { setPage(0); setDateTo(e.target.value); }}
-                className="h-9 text-xs"
-                dir="ltr"
-              />
-
-              <Button variant="ghost" size="sm" className="h-9 text-xs justify-self-start" onClick={reset}>
-                {isRTL ? 'إعادة الضبط' : 'Reset'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* List */}
-        <Card>
-          <CardContent className="p-3 md:p-4 space-y-2">
-            {list.isLoading && (
-              <p className="text-xs text-muted-foreground">{isRTL ? 'جارٍ التحميل...' : 'Loading...'}</p>
-            )}
-            {list.isError && (
-              <p className="text-xs text-destructive">{isRTL ? 'تعذّر تحميل السجل.' : 'Failed to load history.'}</p>
-            )}
-            {!list.isLoading && !list.isError && rows.length === 0 && (
-              <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد نتائج.' : 'No results.'}</p>
-            )}
-
-            <ol className="divide-y">
-              {rows.map((r) => {
-                const src = SOURCE_LABEL[r.source] || SOURCE_LABEL.unknown;
-                const tplName = isRTL
-                  ? safeText(r.template_name_ar || r.template_name_en)
-                  : safeText(r.template_name_en || r.template_name_ar);
-                const exporterLabel = safeText(r.exporter_display_name)
-                  || (isRTL ? 'مستخدم قِطاعات' : 'Qitaat user');
-                return (
-                  <li key={r.export_ref} className="py-2 grid grid-cols-1 md:grid-cols-12 gap-2 text-xs">
-                    <div className="md:col-span-3 flex items-center gap-1.5 min-w-0 flex-wrap">
-                      <Badge variant="outline" className="text-[10px]">{isRTL ? src.ar : src.en}</Badge>
-                      <span className="font-mono truncate" dir="ltr">{safeText(r.contract_number) || '—'}</span>
-                      {r.contract_status && (
-                        <Badge variant="secondary" className="text-[10px]">{r.contract_status}</Badge>
-                      )}
-                    </div>
-                    <div className="md:col-span-3 min-w-0 flex items-center gap-1.5 flex-wrap">
-                      {tplName && (
-                        <Badge variant="outline" className="text-[10px]">
-                          {tplName}{r.template_version_number != null ? ` · v${r.template_version_number}` : ''}
-                        </Badge>
-                      )}
-                      {r.contract_version != null && (
-                        <span className="text-[10px] text-muted-foreground" dir="ltr">v{r.contract_version}</span>
-                      )}
-                      {r.document_hash_prefix && (
-                        <span className="font-mono text-[10px] text-muted-foreground" dir="ltr">#{r.document_hash_prefix}</span>
-                      )}
-                    </div>
-                    <div className="md:col-span-3 flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
-                      <span className="inline-flex items-center gap-1"><User2 className="h-3 w-3" />{exporterLabel}</span>
-                      <span>{isRTL ? `بنود: ${r.line_item_count}` : `${r.line_item_count} items`}</span>
-                      <span>{isRTL ? `BOQ: ${r.boq_group_count}` : `${r.boq_group_count} BOQ`}</span>
-                      <span>{isRTL ? `ملاحق: ${r.amendment_count}` : `${r.amendment_count} amend.`}</span>
-                      {r.export_locale && <span dir="ltr">{r.export_locale.toUpperCase()}</span>}
-                    </div>
-                    <div className="md:col-span-3 text-[10px] text-muted-foreground md:text-end" dir="ltr">
-                      {new Date(r.exported_at).toLocaleString()}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-
-            {/* Pagination */}
-            {total > PAGE_SIZE && (
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-[11px] text-muted-foreground">
-                  {(() => {
-                    const from = page * PAGE_SIZE + 1;
-                    const to = Math.min((page + 1) * PAGE_SIZE, total);
-                    return isRTL ? `عرض ${from} إلى ${to} من ${total}` : `Showing ${from}–${to} of ${total}`;
-                  })()}
-                  <span className="mx-2 opacity-50">·</span>
-                  <span dir="ltr">{page + 1} / {totalPages}</span>
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="sm" className="h-7 px-2"
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={!canPrev || list.isFetching}>
-                    {isRTL ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-                    <span className="text-xs ms-1">{isRTL ? 'السابق' : 'Prev'}</span>
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-7 px-2"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={!canNext || list.isFetching}>
-                    <span className="text-xs me-1">{isRTL ? 'التالي' : 'Next'}</span>
-                    {isRTL ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <p className="text-[11px] text-muted-foreground/80 italic">
-          {isRTL
-            ? 'هذه الواجهة للقراءة فقط. لا تكشف معرّفات المستخدمين الخام أو البريد أو روابط الملفات.'
-            : 'Read-only audit. No raw user IDs, emails, or file links are exposed.'}
-        </p>
+        <PdfExportPrivacyNotice isRTL={isRTL} />
       </main>
     </DashboardLayout>
   );
 };
-
-const SummaryCard: React.FC<{ label: string; value: number | string; icon: React.ReactNode }> =
-  ({ label, value, icon }) => (
-  <Card>
-    <CardContent className="p-3 flex items-center justify-between gap-2">
-      <div className="min-w-0">
-        <p className="text-[10px] text-muted-foreground truncate">{label}</p>
-        <p className="text-base font-semibold tabular-nums" dir="ltr">{value}</p>
-      </div>
-      {icon}
-    </CardContent>
-  </Card>
-);
 
 export default AdminPdfExportAudit;
