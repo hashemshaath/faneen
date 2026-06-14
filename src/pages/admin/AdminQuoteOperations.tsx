@@ -1,35 +1,35 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useQuery } from '@tanstack/react-query';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import {
   listAdminOpsQuoteRequests,
   listAdminOpsQuoteRequestLeads,
   listAdminOpsQuoteRequestEvents,
   listAdminOpsQuoteRequestLeadEvents,
 } from '@/modules/quotes';
-import {
-  Activity, RefreshCw, AlertCircle, ArrowUpRight, Sparkles, Users, Clock, Target, Info,
-  Download, TrendingUp,
-} from 'lucide-react';
+import { Activity, AlertCircle } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { QUOTE_STATUS_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus } from '@/lib/quoteRequests';
 import {
   buildDailyQuoteOperationsSeries, rowsToCsv, downloadCsv, DAILY_OPS_CSV_HEADERS,
 } from '@/lib/quoteOperationsAggregation';
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip as RTooltip, Legend,
-} from 'recharts';
+  QuoteOperationsFiltersBar,
+  QuoteOperationsCsvExportButton,
+  QuoteOperationsStatsSection,
+  QuoteOperationsChartsSection,
+  QuoteOperationsAttentionSection,
+  QuoteOperationsMatchingSection,
+  QuoteOperationsTableSection,
+  type QuoteOperationsRange,
+} from '@/components/admin/procurement/operations';
 
-type Range = 'today' | '7d' | '30d' | '90d' | 'all';
+type Range = QuoteOperationsRange;
 
 interface QuoteRow {
   id: string; ref_id: string | null; sector: string; city: string; status: string; created_at: string;
@@ -71,17 +71,6 @@ function rangeFrom(r: Range): Date | null {
   if (r === '30d') return new Date(now.getTime() - 30 * 86400000);
   if (r === '90d') return new Date(now.getTime() - 90 * 86400000);
   return null;
-}
-
-function fmtDuration(ms: number | null): string {
-  if (ms === null || !isFinite(ms) || ms < 0) return '—';
-  const m = Math.floor(ms / 60000);
-  if (m < 1) return 'أقل من دقيقة';
-  if (m < 60) return `${m} دقيقة`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} ساعة`;
-  const d = Math.floor(h / 24);
-  return `${d} يوم`;
 }
 
 function avg(nums: number[]): number | null {
