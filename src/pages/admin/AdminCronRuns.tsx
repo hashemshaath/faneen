@@ -37,7 +37,7 @@ import {
 import type { AdminKpiTone } from '@/components/admin/AdminKpiCard';
 import { CronRunRow } from '@/components/admin/ops/cron-runs/CronRunRow';
 
-interface CronRunRow {
+interface CronRunRecord {
   id: string;
   job_name: string;
   function_name: string;
@@ -125,7 +125,7 @@ const AdminCronRuns = () => {
         jobName: jobFilter.trim() || undefined,
       });
       if (error) throw error;
-      return (data ?? []) as unknown as CronRunRow[];
+      return (data ?? []) as unknown as CronRunRecord[];
     },
     staleTime: 30_000,
   });
