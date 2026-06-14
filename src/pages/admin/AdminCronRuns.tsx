@@ -676,36 +676,6 @@ const AdminCronRuns = () => {
 
 /* ---------- helper components ---------- */
 
-type Tone = 'success' | 'danger' | 'warning' | 'info' | 'neutral';
-const toneClasses: Record<Tone, { icon: string; ring: string }> = {
-  success: { icon: 'bg-success/15 text-success', ring: 'ring-success/20' },
-  danger:  { icon: 'bg-destructive/15 text-destructive', ring: 'ring-destructive/20' },
-  warning: { icon: 'bg-warning/15 text-warning', ring: 'ring-warning/20' },
-  info:    { icon: 'bg-primary/10 text-primary', ring: 'ring-primary/20' },
-  neutral: { icon: 'bg-muted text-muted-foreground', ring: 'ring-border' },
-};
-
-const KpiCard = ({
-  icon, label, value, sub, tone,
-}: { icon: React.ReactNode; label: string; value: string | null; sub?: string; tone: Tone }) => (
-  <Card className={`relative overflow-hidden ring-1 ${toneClasses[tone].ring}`}>
-    <CardContent className="p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</div>
-          <div className="mt-1.5 text-2xl font-bold tabular-nums text-foreground truncate">
-            {value == null ? <Skeleton className="h-7 w-20" /> : value}
-          </div>
-          {sub && <div className="mt-1 text-[11px] text-muted-foreground truncate">{sub}</div>}
-        </div>
-        <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${toneClasses[tone].icon}`}>
-          {icon}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
 const SortableHead = ({
   label, k, sortKey, sortDir, onSort,
 }: { label: string; k: SortKey; sortKey: SortKey; sortDir: 'asc' | 'desc'; onSort: (k: SortKey) => void }) => (
@@ -721,13 +691,6 @@ const SortableHead = ({
       />
     </button>
   </TableHead>
-);
-
-const DetailRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-center justify-between gap-2 rounded-md bg-background border border-border/60 px-2.5 py-1.5">
-    <span className="text-muted-foreground">{label}</span>
-    <TechnicalText className="font-semibold text-foreground text-[11px] truncate max-w-[60%]">{value}</TechnicalText>
-  </div>
 );
 
 const EmptyState = ({ isRTL, message }: { isRTL: boolean; message?: string }) => (
