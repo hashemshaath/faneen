@@ -4,21 +4,29 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { BrandLogo } from '@/components/common/BrandLogo';
 import { uploadBrandAsset } from '@/modules/files';
 import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
 import { BRAND_THEME_KEY_BY_FIELD, BRAND_THEME_FIELD_BY_KEY } from '@/hooks/useThemeColors';
 import { BRAND_COLORS, type BrandColorTokens } from '@/config/brandTheme';
 import { validateHexColor, isForbiddenBrandColor } from '@/lib/theme/brandThemeUtils';
+import {
+  BrandingOverviewSection,
+  BrandingActionsPanel,
+  BrandingLogoAssetsSection,
+  BrandingSizesSection,
+  BrandingColorTokensSection,
+  BrandingPreviewSection,
+  BrandingLivePreviewSection,
+} from '@/components/admin/content/branding';
+import type {
+  ColorSectionDef,
+  ImageFieldKey,
+  SizeFieldKey,
+} from '@/components/admin/content/branding';
 
 type FieldKey =
   | 'fullLightUrl' | 'fullDarkUrl' | 'markUrl'
@@ -83,6 +91,20 @@ const STATUS_GROUP: ColorFieldDef[] = [
 ];
 
 const ALL_COLOR_FIELDS: ColorFieldDef[] = [...BRAND_GROUP, ...NEUTRAL_GROUP, ...STATUS_GROUP];
+
+const COLOR_SECTIONS: ColorSectionDef[] = [
+  { title_ar: 'ألوان الهوية',   title_en: 'Brand colors',   group: BRAND_GROUP, isBrand: true },
+  { title_ar: 'الألوان المحايدة', title_en: 'Neutral colors', group: NEUTRAL_GROUP },
+  { title_ar: 'ألوان الحالات',   title_en: 'Status colors',  group: STATUS_GROUP },
+];
+
+const SIZE_ROWS: Array<{ field: SizeFieldKey; ar: string; en: string }> = [
+  { field: 'sizeNavbar', ar: 'الشريط العلوي', en: 'Top navbar' },
+  { field: 'sizeFooter', ar: 'التذييل', en: 'Footer' },
+  { field: 'sizeAuth', ar: 'صفحة الدخول', en: 'Auth page' },
+  { field: 'sizeLoader', ar: 'شاشة التحميل', en: 'Loading screen' },
+  { field: 'sizeMark', ar: 'الرمز (افتراضي)', en: 'Mark (default)' },
+];
 
 /** Subset of `BrandColorTokens` covering only the fields exposed in admin. */
 type AdminColorState = Record<AdminColorField, string>;
