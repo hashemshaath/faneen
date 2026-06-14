@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Loader2, Search, Check, X, Eye, AlertTriangle, Inbox, Info,
-  ExternalLink, Building2, MessageSquare, FileText,
+  Search, Eye, AlertTriangle, Inbox,
+  ExternalLink, Building2, FileText,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -29,6 +29,12 @@ import {
   requestStatusLabel, requestTypeLabel, relationshipLabel, pick,
   type BrandRequest, type BrandRequestStatus, type BrandRequestType,
 } from '@/modules/brands';
+import { BrandRequestStatusBadge } from '@/components/admin/procurement/shared';
+import {
+  BrandRequestRowActions,
+  BrandRequestReviewDrawer,
+  buildBrandRequestReviewDrawerProps,
+} from '@/components/admin/procurement/brand-requests';
 
 const STATUS_FILTERS: Array<BrandRequestStatus | 'all'> = [
   'pending', 'in_review', 'needs_more_info', 'approved', 'rejected', 'all',
@@ -36,14 +42,6 @@ const STATUS_FILTERS: Array<BrandRequestStatus | 'all'> = [
 const TYPE_FILTERS: Array<BrandRequestType | 'all'> = [
   'all', 'create_brand', 'claim_brand', 'link_provider', 'update_brand', 'report_duplicate',
 ];
-
-const STATUS_TONE: Record<string, string> = {
-  pending:         'bg-warning/10 text-warning border-warning/30',
-  in_review:       'bg-primary/10 text-primary border-primary/30',
-  needs_more_info: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
-  approved:        'bg-success/10 text-success border-success/30',
-  rejected:        'bg-destructive/10 text-destructive border-destructive/30',
-};
 
 const AdminBrandRequests: React.FC = () => {
   useNoIndex();
@@ -59,6 +57,7 @@ const AdminBrandRequests: React.FC = () => {
   const [type, setType] = useState<BrandRequestType | 'all'>('all');
   const [q, setQ] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [viewingBrandRequest, setViewingBrandRequest] = useState<string | null>(null);
   const [actionNote, setActionNote] = useState('');
   const [rejectReason, setRejectReason] = useState('');
 
@@ -158,6 +157,19 @@ const AdminBrandRequests: React.FC = () => {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
+  const viewingRow = useMemo(
+    () =>
+      viewingBrandRequest
+        ? (requests as BrandRequest[]).find((r) => r.id === viewingBrandRequest) ?? null
+        : null,
+    [requests, viewingBrandRequest],
+  );
+  const viewingBiz = viewingRow?.business_id ? bizById.get(viewingRow.business_id) : undefined;
+  const viewingBizLabel = viewingBiz
+    ? (locale === 'ar' ? (viewingBiz.name_ar ?? viewingBiz.name_en) : (viewingBiz.name_en ?? viewingBiz.name_ar))
+      ?? viewingBiz.username ?? viewingBiz.ref_id
+    : null;
+
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6">
@@ -225,31 +237,57 @@ const AdminBrandRequests: React.FC = () => {
                 {isRTL ? 'لا توجد طلبات مطابقة لهذه التصفية.' : 'No requests match these filters.'}
               </p>
             ) : (
-              <div className="space-y-3">
-                {filtered.map((r) => (
-                  <RequestRow
-                    key={r.id}
-                    req={r}
-                    locale={locale}
-                    isRTL={isRTL}
-                    biz={r.business_id ? bizById.get(r.business_id) : undefined}
-                    expanded={expanded === r.id}
-                    onExpand={() => { setExpanded(expanded === r.id ? null : r.id); setActionNote(''); setRejectReason(''); }}
-                    actionNote={actionNote} setActionNote={setActionNote}
-                    rejectReason={rejectReason} setRejectReason={setRejectReason}
-                    onApprove={() => approve.mutate(r.id)}
-                    onReject={() => {
-                      if (!rejectReason.trim()) { toast.error(isRTL ? 'أدخل سبب الرفض' : 'Enter a rejection reason'); return; }
-                      reject.mutate(r.id);
-                    }}
-                    onInReview={() => inReview.mutate(r.id)}
-                    onNeedsInfo={() => {
-                      if (!actionNote.trim()) { toast.error(isRTL ? 'أدخل المعلومات المطلوبة' : 'Describe what info is needed'); return; }
-                      needsInfo.mutate(r.id);
-                    }}
-                    busy={approve.isPending || reject.isPending || inReview.isPending || needsInfo.isPending}
-                  />
-                ))}
+              <div
+                className={
+                  viewingRow
+                    ? 'grid gap-3 lg:grid-cols-[1fr_360px] items-start'
+                    : 'space-y-3'
+                }
+              >
+                <div className="space-y-3 min-w-0">
+                  {filtered.map((r) => (
+                    <RequestRow
+                      key={r.id}
+                      req={r}
+                      locale={locale}
+                      isRTL={isRTL}
+                      biz={r.business_id ? bizById.get(r.business_id) : undefined}
+                      expanded={expanded === r.id}
+                      onExpand={() => { setExpanded(expanded === r.id ? null : r.id); setActionNote(''); setRejectReason(''); }}
+                      onView={() => setViewingBrandRequest(viewingBrandRequest === r.id ? null : r.id)}
+                      actionNote={actionNote} setActionNote={setActionNote}
+                      rejectReason={rejectReason} setRejectReason={setRejectReason}
+                      onApprove={() => approve.mutate(r.id)}
+                      onReject={() => {
+                        if (!rejectReason.trim()) { toast.error(isRTL ? 'أدخل سبب الرفض' : 'Enter a rejection reason'); return; }
+                        reject.mutate(r.id);
+                      }}
+                      onInReview={() => inReview.mutate(r.id)}
+                      onNeedsInfo={() => {
+                        if (!actionNote.trim()) { toast.error(isRTL ? 'أدخل المعلومات المطلوبة' : 'Describe what info is needed'); return; }
+                        needsInfo.mutate(r.id);
+                      }}
+                      busy={approve.isPending || reject.isPending || inReview.isPending || needsInfo.isPending}
+                    />
+                  ))}
+                </div>
+                {viewingRow ? (
+                  <div className="lg:sticky lg:top-4">
+                    <BrandRequestReviewDrawer
+                      {...buildBrandRequestReviewDrawerProps({
+                        row: viewingRow,
+                        isRTL,
+                        requestTypeLabel: pick(requestTypeLabel[viewingRow.request_type], locale),
+                        relationshipLabel: viewingRow.relationship_type
+                          ? pick(relationshipLabel[viewingRow.relationship_type], locale)
+                          : null,
+                        businessLabel: viewingBizLabel,
+                        businessRefId: viewingBiz?.ref_id ?? null,
+                        onClose: () => setViewingBrandRequest(null),
+                      })}
+                    />
+                  </div>
+                ) : null}
               </div>
             )}
           </CardContent>
@@ -266,6 +304,7 @@ function RequestRow(props: {
   biz?: { id: string; ref_id: string | null; name_ar: string | null; name_en: string | null; username: string | null };
   expanded: boolean;
   onExpand: () => void;
+  onView: () => void;
   actionNote: string; setActionNote: (v: string) => void;
   rejectReason: string; setRejectReason: (v: string) => void;
   onApprove: () => void;
@@ -274,7 +313,7 @@ function RequestRow(props: {
   onNeedsInfo: () => void;
   busy: boolean;
 }) {
-  const { req: r, locale, isRTL, biz, expanded, onExpand, actionNote, setActionNote, rejectReason, setRejectReason, onApprove, onReject, onInReview, onNeedsInfo, busy } = props;
+  const { req: r, locale, isRTL, biz, expanded, onExpand, onView, actionNote, setActionNote, rejectReason, setRejectReason, onApprove, onReject, onInReview, onNeedsInfo, busy } = props;
   const name = locale === 'ar' ? r.name_ar : (r.name_en ?? r.name_ar);
   const bizName = biz ? (locale === 'ar' ? (biz.name_ar ?? biz.name_en) : (biz.name_en ?? biz.name_ar)) : null;
 
@@ -294,9 +333,7 @@ function RequestRow(props: {
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold truncate" dir="auto">{name}</h3>
             {r.ref_id && <code className="tech-content text-xs bg-muted px-2 py-0.5 rounded">{r.ref_id}</code>}
-            <Badge variant="outline" className={`text-xs ${STATUS_TONE[r.status]}`}>
-              {pick(requestStatusLabel[r.status], locale)}
-            </Badge>
+            <BrandRequestStatusBadge status={r.status} isRTL={isRTL} />
             <Badge variant="secondary" className="text-xs">{pick(requestTypeLabel[r.request_type], locale)}</Badge>
             {r.relationship_type && (
               <Badge variant="outline" className="text-xs">{pick(relationshipLabel[r.relationship_type], locale)}</Badge>
@@ -320,6 +357,9 @@ function RequestRow(props: {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" onClick={onView} type="button">
+            <Eye className="w-4 h-4 me-1" />{isRTL ? 'معاينة' : 'Preview'}
+          </Button>
           <Button size="sm" variant="outline" onClick={onExpand}>
             <Eye className="w-4 h-4 me-1" />{expanded ? (isRTL ? 'إخفاء' : 'Hide') : (isRTL ? 'مراجعة' : 'Review')}
           </Button>
@@ -382,13 +422,13 @@ function RequestRow(props: {
 
           {r.admin_notes && (
             <div className="text-sm bg-muted/40 rounded-lg p-2 flex items-start gap-2">
-              <MessageSquare className="w-3 h-3 mt-0.5 text-muted-foreground" />
+              <FileText className="w-3 h-3 mt-0.5 text-muted-foreground" />
               <span><span className="font-medium">{isRTL ? 'ملاحظة الأدمن:' : 'Admin note:'}</span> {r.admin_notes}</span>
             </div>
           )}
           {r.reject_reason && (
             <div className="text-sm bg-destructive/5 border border-destructive/20 rounded-lg p-2 flex items-start gap-2">
-              <Info className="w-3 h-3 mt-0.5 text-destructive" />
+              <AlertTriangle className="w-3 h-3 mt-0.5 text-destructive" />
               <span><span className="font-medium">{isRTL ? 'سبب الرفض:' : 'Rejection reason:'}</span> {r.reject_reason}</span>
             </div>
           )}
@@ -400,23 +440,15 @@ function RequestRow(props: {
                 className="min-h-[60px]" />
               <Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
                 placeholder={isRTL ? 'سبب الرفض (إن وُجد)…' : 'Rejection reason (if rejecting)…'} className="h-10" />
-              <div className="flex flex-wrap gap-2">
-                {r.status === 'pending' && (
-                  <Button size="sm" variant="outline" onClick={onInReview} disabled={busy}>
-                    {busy ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Eye className="w-4 h-4 me-1" />}
-                    {isRTL ? 'قيد المراجعة' : 'Mark in review'}
-                  </Button>
-                )}
-                <Button size="sm" variant="outline" onClick={onNeedsInfo} disabled={busy}>
-                  <MessageSquare className="w-4 h-4 me-1" />{isRTL ? 'يحتاج معلومات' : 'Needs more info'}
-                </Button>
-                <Button size="sm" onClick={onApprove} disabled={busy}>
-                  <Check className="w-4 h-4 me-1" />{isRTL ? 'اعتماد' : 'Approve'}
-                </Button>
-                <Button size="sm" variant="destructive" onClick={onReject} disabled={busy}>
-                  <X className="w-4 h-4 me-1" />{isRTL ? 'رفض' : 'Reject'}
-                </Button>
-              </div>
+              <BrandRequestRowActions
+                status={r.status}
+                isRTL={isRTL}
+                busy={busy}
+                onApprove={onApprove}
+                onReject={onReject}
+                onSetInReview={onInReview}
+                onNeedsInfo={onNeedsInfo}
+              />
             </div>
           )}
         </div>
