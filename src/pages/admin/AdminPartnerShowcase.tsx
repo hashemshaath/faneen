@@ -2,48 +2,29 @@
  * AdminPartnerShowcase — full management UI for the Home "Related Partners"
  * (مواقع ذات صلة) showcase. Inline forms only (no popups), per project UX
  * rules. Wrapped in DashboardLayout via AdminRoute pattern in App.tsx.
+ *
+ * Phase 10F: display sections extracted into
+ * `@/components/admin/content/partner-showcase`. All queries, mutations,
+ * ordering logic and image URLs remain owned by this page.
  */
 import React, { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  Loader2, Plus, Save, Trash2, ImageIcon, ArrowUp, ArrowDown,
-  Eye, EyeOff, Building2, Link as LinkIcon, Search as SearchIcon, X,
-} from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+  PartnerShowcaseStatsSection,
+  PartnerShowcaseEditorPanel,
+  PartnerShowcaseAddPanel,
+  PartnerShowcaseListSection,
+  type PartnerShowcaseSettingsDraft,
+  type PartnerShowcaseAddDraft,
+  type PartnerShowcaseAddBusinessOption,
+} from '@/components/admin/content/partner-showcase';
 
-type Settings = {
-  id: string;
-  is_enabled: boolean;
-  title_ar: string;
-  title_en: string;
-  description_ar: string;
-  description_en: string;
-  display_mode: 'marquee' | 'grid' | 'static';
-  speed: number;
-  direction: 'ltr' | 'rtl';
-  pause_on_hover: boolean;
-  show_arrows: boolean;
-  logo_size: 'sm' | 'md' | 'lg';
-  gap_size: 'sm' | 'md' | 'lg';
-  grayscale: boolean;
-  open_in_new_tab: boolean;
-  style_variant: 'default' | 'muted' | 'bordered' | 'glass';
-};
+type Settings = PartnerShowcaseSettingsDraft;
 
 type Item = {
   id: string;
@@ -57,13 +38,7 @@ type Item = {
   is_active: boolean;
 };
 
-type BusinessLite = {
-  id: string;
-  name_ar: string | null;
-  name_en: string | null;
-  username: string | null;
-  logo_url: string | null;
-};
+type BusinessLite = PartnerShowcaseAddBusinessOption;
 
 const SETTINGS_KEY = ['admin', 'partner-showcase', 'settings'];
 const ITEMS_KEY = ['admin', 'partner-showcase', 'items'];
