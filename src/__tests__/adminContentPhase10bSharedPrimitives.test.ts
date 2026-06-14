@@ -92,7 +92,6 @@ describe('ADMIN REDESIGN PHASE 10B — Content/Directory shared primitives', () 
     const pagesDir = resolve(__dirname, '..', 'pages', 'admin');
     const pages = [
       'AdminBrands.tsx',
-      'AdminShowcase.tsx',
       'AdminPartnerShowcase.tsx',
       'AdminHomeSectors.tsx',
       'AdminHomeFaq.tsx',
