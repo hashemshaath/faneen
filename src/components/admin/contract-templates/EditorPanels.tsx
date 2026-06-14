@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   listContractTemplateSections,
@@ -22,34 +22,21 @@ import {
   updateContractTemplateAttachment,
   deleteContractTemplateAttachment,
 } from '@/modules/contracts';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, ChevronUp, ChevronDown, AlertTriangle, Lock } from 'lucide-react';
 import type {
   CTSection, CTClause, CTPricingRule, CTRequiredField,
   CTAttachment, CTMeasurementMethod,
 } from './types';
-
-const ReadOnlyNotice: React.FC<{ isRTL: boolean }> = ({ isRTL }) => (
-  <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800 mb-3">
-    <Lock className="h-4 w-4" />
-    <span>
-      {isRTL
-        ? 'هذه النسخة قيد المراجعة أو معتمدة، ولا يمكن تعديلها إلا بعد إعادتها إلى مسودة.'
-        : 'This version is under review or approved, and cannot be edited until it is reverted to draft.'}
-    </span>
-  </div>
-);
+import {
+  TemplateSectionsClausesPanel,
+  TemplatePricingRulesPanel,
+  TemplateRequiredFieldsPanel,
+  TemplateAttachmentsPanel,
+  TemplatePreviewPanel,
+} from './panels';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sections + Clauses
+// Sections + Clauses (container — keeps queries + mutations here)
 // ─────────────────────────────────────────────────────────────────────────────
 export const SectionsClausesPanel: React.FC<{
   versionId: string; isRTL: boolean; readOnly: boolean;
@@ -167,113 +154,28 @@ export const SectionsClausesPanel: React.FC<{
     updateSection.mutate({ ...b, sort_order: a.sort_order });
   };
 
-  if (sectionsQ.isLoading) return <div className="text-sm text-muted-foreground">{isRTL ? 'جارٍ التحميل...' : 'Loading...'}</div>;
-  if (sectionsQ.error) return <div className="text-sm text-red-600">{isRTL ? 'تعذّر تحميل الأقسام' : 'Failed to load sections'}</div>;
-
   return (
-    <div className="space-y-4">
-      {readOnly && <ReadOnlyNotice isRTL={isRTL} />}
-      {!readOnly && (
-        <Button size="sm" onClick={() => addSection.mutate()} disabled={addSection.isPending}>
-          <Plus className="h-4 w-4" />{isRTL ? 'إضافة قسم' : 'Add section'}
-        </Button>
-      )}
-      {(sectionsQ.data || []).length === 0 && (
-        <div className="text-sm text-muted-foreground">{isRTL ? 'لا توجد أقسام بعد.' : 'No sections yet.'}</div>
-      )}
-      {(sectionsQ.data || []).map((s) => {
-        const sectionClauses = (clausesQ.data || []).filter((c) => c.section_id === s.id);
-        return (
-          <Card key={s.id} className="border">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="flex-1 min-w-[200px]">
-                  <Label className="text-xs">{isRTL ? 'مفتاح القسم' : 'Section key'}</Label>
-                  <Input dir="ltr" value={s.section_key} disabled={readOnly}
-                    onChange={(e) => updateSection.mutate({ ...s, section_key: e.target.value })}
-                    onBlur={(e) => !readOnly && updateSection.mutate({ ...s, section_key: e.target.value })} />
-                </div>
-                <div className="flex-1 min-w-[200px]">
-                  <Label className="text-xs">{isRTL ? 'العنوان (عربي)' : 'Title (AR)'}</Label>
-                  <Input dir="auto" value={s.title_ar} disabled={readOnly}
-                    onChange={(e) => updateSection.mutate({ ...s, title_ar: e.target.value })} />
-                </div>
-                <div className="flex-1 min-w-[200px]">
-                  <Label className="text-xs">{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
-                  <Input dir="ltr" value={s.title_en || ''} disabled={readOnly}
-                    onChange={(e) => updateSection.mutate({ ...s, title_en: e.target.value })} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch checked={s.is_required} disabled={readOnly}
-                    onCheckedChange={(v) => updateSection.mutate({ ...s, is_required: v })} />
-                  <span className="text-xs">{isRTL ? 'إلزامي' : 'Required'}</span>
-                </div>
-                {!readOnly && (
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="outline" onClick={() => reorderSection(s, -1)} aria-label="Move up"><ChevronUp className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="outline" onClick={() => reorderSection(s, 1)} aria-label="Expand"><ChevronDown className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="outline" onClick={() => deleteSection.mutate(s.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-red-600" /></Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2 ps-3 border-s-2 border-muted">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {isRTL ? `البنود (${sectionClauses.length})` : `Clauses (${sectionClauses.length})`}
-                  </span>
-                  {!readOnly && (
-                    <Button size="sm" variant="outline" onClick={() => addClause.mutate(s.id)}>
-                      <Plus className="h-3 w-3" />{isRTL ? 'إضافة بند' : 'Add clause'}
-                    </Button>
-                  )}
-                </div>
-                {sectionClauses.map((c) => (
-                  <div key={c.id} className="rounded-md border p-2 space-y-2 bg-muted/20">
-                    <Textarea dir="auto" value={c.body_ar} disabled={readOnly} rows={2}
-                      placeholder={isRTL ? 'نص البند (عربي)' : 'Clause body (AR)'}
-                      onChange={(e) => updateClause.mutate({ ...c, body_ar: e.target.value })} />
-                    <Textarea dir="ltr" value={c.body_en || ''} disabled={readOnly} rows={2}
-                      placeholder="Clause body (EN)"
-                      onChange={(e) => updateClause.mutate({ ...c, body_en: e.target.value })} />
-                    <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <label className="flex items-center gap-1">
-                        <Switch checked={c.is_mandatory} disabled={readOnly}
-                          onCheckedChange={(v) => updateClause.mutate({ ...c, is_mandatory: v })} />
-                        {isRTL ? 'إلزامي' : 'Mandatory'}
-                      </label>
-                      <label className="flex items-center gap-1">
-                        <Switch checked={c.is_editable_by_provider} disabled={readOnly}
-                          onCheckedChange={(v) => updateClause.mutate({ ...c, is_editable_by_provider: v })} />
-                        {isRTL ? 'يحرّره المزود' : 'Provider-editable'}
-                      </label>
-                      <label className="flex items-center gap-1">
-                        <Switch checked={c.is_editable_by_client} disabled={readOnly}
-                          onCheckedChange={(v) => updateClause.mutate({ ...c, is_editable_by_client: v })} />
-                        {isRTL ? 'يحرّره العميل' : 'Client-editable'}
-                      </label>
-                      <Input dir="auto" className="h-8 max-w-[220px]" placeholder={isRTL ? 'مرجع قانوني' : 'Legal reference'}
-                        value={c.legal_reference || ''} disabled={readOnly}
-                        onChange={(e) => updateClause.mutate({ ...c, legal_reference: e.target.value })} />
-                      {!readOnly && (
-                        <Button size="sm" variant="outline" onClick={() => deleteClause.mutate(c.id)}>
-                          <Trash2 className="h-3 w-3 text-red-600" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+    <TemplateSectionsClausesPanel
+      sections={sectionsQ.data || []}
+      clauses={clausesQ.data || []}
+      isLoading={sectionsQ.isLoading}
+      isError={!!sectionsQ.error}
+      isRTL={isRTL}
+      readOnly={readOnly}
+      isAddingSection={addSection.isPending}
+      onAddSection={() => addSection.mutate()}
+      onUpdateSection={(s) => updateSection.mutate(s)}
+      onDeleteSection={(id) => deleteSection.mutate(id)}
+      onReorderSection={reorderSection}
+      onAddClause={(sectionId) => addClause.mutate(sectionId)}
+      onUpdateClause={(c) => updateClause.mutate(c)}
+      onDeleteClause={(id) => deleteClause.mutate(id)}
+    />
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pricing Rules
+// Pricing Rules (container)
 // ─────────────────────────────────────────────────────────────────────────────
 export const PricingRulesPanel: React.FC<{
   versionId: string; isRTL: boolean; readOnly: boolean; methods: CTMeasurementMethod[];
@@ -324,139 +226,21 @@ export const PricingRulesPanel: React.FC<{
   });
 
   return (
-    <div className="space-y-4">
-      {readOnly && <ReadOnlyNotice isRTL={isRTL} />}
-      <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-        <span>
-          {isRTL
-            ? 'هذه الطرق سيتم فرضها على بنود العقد المرتبطة بهذا القالب. أي طريقة غير مضافة هنا لن تكون متاحة للمزود.'
-            : 'These methods will be enforced on contract line items using this template. Any method not added here will not be available to the provider.'}
-        </span>
-      </div>
-      <div className="flex items-start gap-2 rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-900">
-        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-        <span>
-          {isRTL
-            ? 'تغيير طرق التسعير أو الضريبة يؤثر على العقود الجديدة فقط، ولا يغير العقود التي تم إنشاء Snapshot لها.'
-            : 'Changing pricing methods or VAT only affects new contracts. Contracts with an existing snapshot are not modified.'}
-        </span>
-      </div>
-      <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground space-y-1">
-        <div className="font-semibold text-foreground">{isRTL ? 'دليل معالجة الضريبة (VAT handling):' : 'VAT handling guide:'}</div>
-        <div>• <strong>{isRTL ? 'شاملة' : 'Inclusive'}</strong> — {isRTL ? 'سعر البند يشمل الضريبة بالفعل.' : 'Line total already includes VAT.'}</div>
-        <div>• <strong>{isRTL ? 'حصرية' : 'Exclusive'}</strong> — {isRTL ? 'سعر البند بدون ضريبة، تضاف فوقه.' : 'Line total excludes VAT — VAT added on top.'}</div>
-        <div>• <strong>{isRTL ? 'معفاة' : 'Exempt'}</strong> — {isRTL ? 'لا تطبق ضريبة على هذا البند.' : 'No VAT applied to this line.'}</div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Badge variant="secondary">
-          {isRTL
-            ? `عدد طرق التسعير المسموحة: ${(rulesQ.data || []).length}`
-            : `Allowed pricing methods: ${(rulesQ.data || []).length}`}
-        </Badge>
-        <span className="text-xs text-muted-foreground">
-          {isRTL ? 'تنفيذ المعادلات المخصصة غير مفعل بعد.' : 'Custom formula execution is not enabled yet.'}
-        </span>
-      </div>
-      {(rulesQ.data || []).length === 0 && (
-        <div className="rounded-md border border-dashed px-3 py-4 text-sm text-muted-foreground text-center">
-          {isRTL
-            ? 'لا توجد طرق تسعير محددة. سيتم السماح بجميع الطرق الأساسية حتى يتم إضافة قواعد.'
-            : 'No pricing methods defined. All standard methods will be allowed until rules are added.'}
-        </div>
-      )}
-      {!readOnly && (
-        <Button size="sm" onClick={() => add.mutate()} disabled={add.isPending}>
-          <Plus className="h-4 w-4" />{isRTL ? 'إضافة قاعدة تسعير' : 'Add pricing rule'}
-        </Button>
-      )}
-      {(rulesQ.data || []).map((r) => (
-        <Card key={r.id}>
-          <CardContent className="p-4 grid gap-3 md:grid-cols-2">
-            <div>
-              <Label className="text-xs">{isRTL ? 'طريقة القياس' : 'Measurement method'}</Label>
-              <Select value={r.method} disabled={readOnly}
-                onValueChange={(v) => upd.mutate({ ...r, method: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {methods.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {isRTL ? m.label_ar : m.label_en}{m.symbol ? ` (${m.symbol})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">{isRTL ? 'معالجة الضريبة' : 'VAT handling'}</Label>
-              <Select value={r.vat_handling} disabled={readOnly}
-                onValueChange={(v) => upd.mutate({ ...r, vat_handling: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inclusive">{isRTL ? 'شاملة' : 'Inclusive'}</SelectItem>
-                  <SelectItem value="exclusive">{isRTL ? 'حصرية' : 'Exclusive'}</SelectItem>
-                  <SelectItem value="exempt">{isRTL ? 'معفاة' : 'Exempt'}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="md:col-span-2">
-              <Label className="text-xs">{isRTL ? 'صيغة الحساب (للعرض فقط)' : 'Formula (display only)'}</Label>
-              <Input dir="ltr" value={r.formula || ''} disabled={readOnly}
-                placeholder="e.g. width_mm * height_mm / 1000000 * unit_price"
-                onChange={(e) => upd.mutate({ ...r, formula: e.target.value })} />
-            </div>
-            <div>
-              <Label className="text-xs">{isRTL ? 'الحقول المطلوبة (JSON)' : 'Required fields (JSON)'}</Label>
-              <JsonField value={r.required_fields} disabled={readOnly}
-                onChange={(v) => upd.mutate({ ...r, required_fields: v })} />
-            </div>
-            <div>
-              <Label className="text-xs">{isRTL ? 'التقريب (JSON)' : 'Rounding (JSON)'}</Label>
-              <JsonField value={r.rounding} disabled={readOnly}
-                onChange={(v) => upd.mutate({ ...r, rounding: v })} />
-            </div>
-            <div className="md:col-span-2">
-              <Label className="text-xs">{isRTL ? 'إعدادات العرض في PDF (JSON)' : 'Display in PDF (JSON)'}</Label>
-              <JsonField value={r.display_in_pdf} disabled={readOnly}
-                onChange={(v) => upd.mutate({ ...r, display_in_pdf: v })} />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={r.is_default} disabled={readOnly}
-                onCheckedChange={(v) => upd.mutate({ ...r, is_default: v })} />
-              <span className="text-xs">{isRTL ? 'افتراضية' : 'Default'}</span>
-            </div>
-            {!readOnly && (
-              <div className="flex justify-end">
-                <Button size="sm" variant="outline" onClick={() => del.mutate(r.id)}>
-                  <Trash2 className="h-4 w-4 text-red-600" />
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-};
-
-const JsonField: React.FC<{ value: unknown; disabled?: boolean; onChange: (v: unknown) => void }> = ({ value, disabled, onChange }) => {
-  const [text, setText] = useState(() => JSON.stringify(value ?? null, null, 0));
-  const [err, setErr] = useState<string | null>(null);
-  return (
-    <div>
-      <Textarea dir="ltr" rows={2} disabled={disabled} value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          try { const parsed = JSON.parse(e.target.value); setErr(null); onChange(parsed); }
-          catch { setErr('Invalid JSON'); }
-        }} />
-      {err && <p className="text-[11px] text-red-600 mt-1">{err}</p>}
-    </div>
+    <TemplatePricingRulesPanel
+      rules={rulesQ.data || []}
+      methods={methods}
+      isRTL={isRTL}
+      readOnly={readOnly}
+      isAdding={add.isPending}
+      onAdd={() => add.mutate()}
+      onUpdate={(r) => upd.mutate(r)}
+      onDelete={(id) => del.mutate(id)}
+    />
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Required Fields
+// Required Fields (container)
 // ─────────────────────────────────────────────────────────────────────────────
 export const RequiredFieldsPanel: React.FC<{
   versionId: string; isRTL: boolean; readOnly: boolean;
@@ -509,86 +293,19 @@ export const RequiredFieldsPanel: React.FC<{
   });
 
   return (
-    <div className="space-y-3">
-      {readOnly && <ReadOnlyNotice isRTL={isRTL} />}
-      {!readOnly && <Button size="sm" onClick={() => add.mutate()}><Plus className="h-4 w-4" />{isRTL ? 'إضافة حقل' : 'Add field'}</Button>}
-      {(q.data || []).map((f) => (
-        <Card key={f.id}><CardContent className="p-3 grid gap-2 md:grid-cols-3">
-          <div>
-            <Label className="text-xs">{isRTL ? 'مفتاح الحقل' : 'Field key'}</Label>
-            <Input dir="ltr" value={f.field_key} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...f, field_key: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'النوع' : 'Type'}</Label>
-            <Select value={f.field_type} disabled={readOnly}
-              onValueChange={(v) => upd.mutate({ ...f, field_type: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['text','number','date','enum','boolean','json'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'يطبّق على' : 'Applies to'}</Label>
-            <Select value={f.applies_to} disabled={readOnly}
-              onValueChange={(v) => upd.mutate({ ...f, applies_to: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['contract','line_item','milestone','site'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'العنوان (عربي)' : 'Label (AR)'}</Label>
-            <Input dir="auto" value={f.label_ar} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...f, label_ar: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'العنوان (إنجليزي)' : 'Label (EN)'}</Label>
-            <Input dir="ltr" value={f.label_en || ''} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...f, label_en: e.target.value })} />
-          </div>
-          <div className="flex items-center gap-2 pt-5">
-            <Switch checked={f.is_required} disabled={readOnly}
-              onCheckedChange={(v) => upd.mutate({ ...f, is_required: v })} />
-            <span className="text-xs">{isRTL ? 'إلزامي' : 'Required'}</span>
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'مساعدة (عربي)' : 'Help (AR)'}</Label>
-            <Input dir="auto" value={f.help_ar || ''} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...f, help_ar: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'مساعدة (إنجليزي)' : 'Help (EN)'}</Label>
-            <Input dir="ltr" value={f.help_en || ''} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...f, help_en: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">enum_values JSON</Label>
-            <JsonField value={f.enum_values} disabled={readOnly}
-              onChange={(v) => upd.mutate({ ...f, enum_values: v })} />
-          </div>
-          <div className="md:col-span-2">
-            <Label className="text-xs">validation JSON</Label>
-            <JsonField value={f.validation} disabled={readOnly}
-              onChange={(v) => upd.mutate({ ...f, validation: v })} />
-          </div>
-          {!readOnly && (
-            <div className="flex justify-end items-end">
-              <Button size="sm" variant="outline" onClick={() => del.mutate(f.id)}>
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </Button>
-            </div>
-          )}
-        </CardContent></Card>
-      ))}
-    </div>
+    <TemplateRequiredFieldsPanel
+      fields={q.data || []}
+      isRTL={isRTL}
+      readOnly={readOnly}
+      onAdd={() => add.mutate()}
+      onUpdate={(f) => upd.mutate(f)}
+      onDelete={(id) => del.mutate(id)}
+    />
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Attachments
+// Attachments (container)
 // ─────────────────────────────────────────────────────────────────────────────
 export const AttachmentsPanel: React.FC<{
   versionId: string; isRTL: boolean; readOnly: boolean;
@@ -637,56 +354,19 @@ export const AttachmentsPanel: React.FC<{
   });
 
   return (
-    <div className="space-y-3">
-      {readOnly && <ReadOnlyNotice isRTL={isRTL} />}
-      {!readOnly && <Button size="sm" onClick={() => add.mutate()}><Plus className="h-4 w-4" />{isRTL ? 'إضافة مرفق' : 'Add attachment'}</Button>}
-      {(q.data || []).map((a) => (
-        <Card key={a.id}><CardContent className="p-3 grid gap-2 md:grid-cols-3">
-          <div>
-            <Label className="text-xs">{isRTL ? 'النوع (kind)' : 'Kind'}</Label>
-            <Input dir="ltr" value={a.kind} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...a, kind: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'العنوان (عربي)' : 'Title (AR)'}</Label>
-            <Input dir="auto" value={a.title_ar} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...a, title_ar: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
-            <Input dir="ltr" value={a.title_en || ''} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...a, title_en: e.target.value })} />
-          </div>
-          <div className="md:col-span-2">
-            <Label className="text-xs">{isRTL ? 'رابط الملف (URL)' : 'File URL'}</Label>
-            <Input dir="ltr" value={a.file_url || ''} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...a, file_url: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">{isRTL ? 'ترتيب الأولوية' : 'Precedence order'}</Label>
-            <Input type="number" value={a.precedence_order} disabled={readOnly}
-              onChange={(e) => upd.mutate({ ...a, precedence_order: Number(e.target.value) })} />
-          </div>
-          <div className="flex items-center gap-2 pt-5">
-            <Switch checked={a.is_mandatory} disabled={readOnly}
-              onCheckedChange={(v) => upd.mutate({ ...a, is_mandatory: v })} />
-            <span className="text-xs">{isRTL ? 'إلزامي' : 'Mandatory'}</span>
-          </div>
-          {!readOnly && (
-            <div className="flex justify-end items-end md:col-span-2">
-              <Button size="sm" variant="outline" onClick={() => del.mutate(a.id)}>
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </Button>
-            </div>
-          )}
-        </CardContent></Card>
-      ))}
-    </div>
+    <TemplateAttachmentsPanel
+      attachments={q.data || []}
+      isRTL={isRTL}
+      readOnly={readOnly}
+      onAdd={() => add.mutate()}
+      onUpdate={(a) => upd.mutate(a)}
+      onDelete={(id) => del.mutate(id)}
+    />
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Preview
+// Preview (container)
 // ─────────────────────────────────────────────────────────────────────────────
 export const PreviewPanel: React.FC<{
   versionId: string; isRTL: boolean; methods: CTMeasurementMethod[];
@@ -736,67 +416,14 @@ export const PreviewPanel: React.FC<{
   });
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border bg-blue-50 border-blue-200 px-3 py-2 text-sm text-blue-800">
-        {isRTL
-          ? 'هذا استعراض إداري للقالب فقط، ولا يؤثر على العقود الحالية.'
-          : 'This is an admin preview only and does not affect existing contracts.'}
-      </div>
-      <Card><CardContent className="p-4 space-y-4">
-        <h3 className="text-base font-semibold">{isRTL ? 'الأقسام والبنود' : 'Sections & clauses'}</h3>
-        {(sectionsQ.data || []).map((s) => (
-          <div key={s.id} className="border-s-2 border-primary/40 ps-3">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">{isRTL ? s.title_ar : (s.title_en || s.title_ar)}</span>
-              {s.is_required && <Badge variant="secondary" className="text-[10px]">{isRTL ? 'إلزامي' : 'required'}</Badge>}
-            </div>
-            <ol className="list-decimal ms-5 me-5 mt-1 space-y-1 text-sm text-muted-foreground">
-              {(clausesQ.data || []).filter((c) => c.section_id === s.id).map((c) => (
-                <li key={c.id} dir="auto">{isRTL ? c.body_ar : (c.body_en || c.body_ar)}</li>
-              ))}
-            </ol>
-          </div>
-        ))}
-      </CardContent></Card>
-      <Card><CardContent className="p-4 space-y-2">
-        <h3 className="text-base font-semibold">{isRTL ? 'طرق التسعير' : 'Pricing methods'}</h3>
-        <ul className="text-sm space-y-1">
-          {(pricingQ.data || []).map((r) => {
-            const m = methods.find((x) => x.id === r.method);
-            return (
-              <li key={r.id}>
-                {m ? (isRTL ? m.label_ar : m.label_en) : r.method}
-                {r.is_default && <Badge className="ms-2 text-[10px]" variant="secondary">{isRTL ? 'افتراضي' : 'default'}</Badge>}
-                <span className="ms-2 text-xs text-muted-foreground">VAT: {r.vat_handling}</span>
-              </li>
-            );
-          })}
-        </ul>
-      </CardContent></Card>
-      <Card><CardContent className="p-4 space-y-2">
-        <h3 className="text-base font-semibold">{isRTL ? 'الحقول المطلوبة' : 'Required fields'}</h3>
-        <ul className="text-sm space-y-1">
-          {(fieldsQ.data || []).map((f) => (
-            <li key={f.id}>
-              <span className="font-medium">{isRTL ? f.label_ar : (f.label_en || f.label_ar)}</span>
-              <span className="text-xs text-muted-foreground ms-2">({f.field_type} • {f.applies_to})</span>
-              {f.is_required && <Badge variant="secondary" className="text-[10px] ms-2">{isRTL ? 'إلزامي' : 'required'}</Badge>}
-            </li>
-          ))}
-        </ul>
-      </CardContent></Card>
-      <Card><CardContent className="p-4 space-y-2">
-        <h3 className="text-base font-semibold">{isRTL ? 'المرفقات' : 'Attachments'}</h3>
-        <ul className="text-sm space-y-1">
-          {(attachQ.data || []).map((a) => (
-            <li key={a.id}>
-              <span className="font-medium">{isRTL ? a.title_ar : (a.title_en || a.title_ar)}</span>
-              <span className="text-xs text-muted-foreground ms-2">[{a.kind}] precedence #{a.precedence_order}</span>
-              {a.is_mandatory && <Badge variant="secondary" className="text-[10px] ms-2">{isRTL ? 'إلزامي' : 'mandatory'}</Badge>}
-            </li>
-          ))}
-        </ul>
-      </CardContent></Card>
-    </div>
+    <TemplatePreviewPanel
+      sections={sectionsQ.data || []}
+      clauses={clausesQ.data || []}
+      pricing={pricingQ.data || []}
+      fields={fieldsQ.data || []}
+      attachments={attachQ.data || []}
+      methods={methods}
+      isRTL={isRTL}
+    />
   );
 };
