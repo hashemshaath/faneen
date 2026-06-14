@@ -45,12 +45,16 @@ describe('Phase 2.3 — Catalog image pipeline integration', () => {
   });
 
   it('AdminBrandDetail wires the product pipeline + persists asset link columns', () => {
-    const src = read('src/pages/admin/AdminBrandDetail.tsx');
-    expect(src).toContain('pipeline="product"');
-    expect(src).toContain('image_asset_id');
-    expect(src).toContain('image_variants');
-    expect(src).toContain('ResponsiveImage');
+    // Phase 9G extracted the equivalence/products UI into a panel; the page
+    // still owns state + mutations, while the panel renders the upload +
+    // responsive image. Assert across both files.
+    const page = read('src/pages/admin/AdminBrandDetail.tsx');
+    const panel = read('src/components/admin/procurement/brand-detail/BrandEquivalencePanel.tsx');
+    expect(page).toContain('image_asset_id');
+    expect(page).toContain('image_variants');
+    expect(panel).toContain('pipeline="product"');
+    expect(panel).toContain('ResponsiveImage');
     // Fallback to legacy URL for old rows.
-    expect(src).toContain('originalUrl={p.image_url}');
+    expect(panel).toContain('originalUrl={p.image_url}');
   });
 });
