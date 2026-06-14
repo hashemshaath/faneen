@@ -11,7 +11,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { uploadBrandAsset } from '@/modules/files';
 import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
 import { BRAND_THEME_KEY_BY_FIELD, BRAND_THEME_FIELD_BY_KEY } from '@/hooks/useThemeColors';
-import { BRAND_COLORS, type BrandColorTokens } from '@/config/brandTheme';
+import { BRAND_COLORS } from '@/config/brandTheme';
 import { validateHexColor, isForbiddenBrandColor } from '@/lib/theme/brandThemeUtils';
 import {
   BrandingOverviewSection,
@@ -25,7 +25,6 @@ import {
   SIZE_LIMITS,
   SIZE_ROWS,
   ALL_COLOR_FIELDS,
-  ALL_COLOR_KEYS,
   COLOR_SECTIONS,
 } from '@/components/admin/content/branding';
 import type {
