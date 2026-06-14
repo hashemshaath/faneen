@@ -95,7 +95,6 @@ describe('ADMIN REDESIGN PHASE 10B — Content/Directory shared primitives', () 
       'AdminHomeFaq.tsx',
       'AdminPrivateSectors.tsx',
       'AdminBusinessVisibility.tsx',
-      'AdminBranding.tsx',
       'AdminAssets.tsx',
       'AdminAssetOverrides.tsx',
       'AdminSeoHub.tsx',
