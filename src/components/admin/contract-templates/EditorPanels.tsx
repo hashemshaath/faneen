@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   listContractTemplateSections,
@@ -22,31 +22,18 @@ import {
   updateContractTemplateAttachment,
   deleteContractTemplateAttachment,
 } from '@/modules/contracts';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, ChevronUp, ChevronDown, AlertTriangle, Lock } from 'lucide-react';
 import type {
   CTSection, CTClause, CTPricingRule, CTRequiredField,
   CTAttachment, CTMeasurementMethod,
 } from './types';
-
-const ReadOnlyNotice: React.FC<{ isRTL: boolean }> = ({ isRTL }) => (
-  <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800 mb-3">
-    <Lock className="h-4 w-4" />
-    <span>
-      {isRTL
-        ? 'هذه النسخة قيد المراجعة أو معتمدة، ولا يمكن تعديلها إلا بعد إعادتها إلى مسودة.'
-        : 'This version is under review or approved, and cannot be edited until it is reverted to draft.'}
-    </span>
-  </div>
-);
+import {
+  TemplateSectionsClausesPanel,
+  TemplatePricingRulesPanel,
+  TemplateRequiredFieldsPanel,
+  TemplateAttachmentsPanel,
+  TemplatePreviewPanel,
+} from './panels';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sections + Clauses
