@@ -194,7 +194,7 @@ const AdminPartnerShowcase: React.FC = () => {
   // --------------------------------------------------------------
   // New item draft
   // --------------------------------------------------------------
-  const emptyDraft: Partial<Item> = {
+  const emptyDraft: PartnerShowcaseAddDraft = {
     source_type: 'external',
     business_id: null,
     name_ar: '',
@@ -203,7 +203,7 @@ const AdminPartnerShowcase: React.FC = () => {
     target_url: '',
     is_active: true,
   };
-  const [newDraft, setNewDraft] = useState<Partial<Item>>(emptyDraft);
+  const [newDraft, setNewDraft] = useState<PartnerShowcaseAddDraft>(emptyDraft);
 
   const addFromBusiness = (b: BusinessLite) => {
     if (linkedBusinessIds.has(b.id)) {
