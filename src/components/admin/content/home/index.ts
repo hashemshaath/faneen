@@ -12,3 +12,5 @@ export { HomeFaqStatsSection } from './HomeFaqStatsSection';
 export { HomeFaqRow } from './HomeFaqRow';
 export type { HomeFaqRowItem, HomeFaqRowProps } from './HomeFaqRow';
 export { HomeFaqListSection } from './HomeFaqListSection';
+export { HomeFaqEditForm } from './HomeFaqEditForm';
+export type { HomeFaqDraft, HomeFaqEditFormProps } from './HomeFaqEditForm';
