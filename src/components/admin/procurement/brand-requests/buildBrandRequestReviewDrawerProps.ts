@@ -1,6 +1,6 @@
 /**
  * Pure adapter — maps an admin brand-request row to props for
- * `BrandRequestReviewDrawer`. No Supabase, no async, no I/O, no side
+ * `BrandRequestReviewDrawer`. Synchronous, no Supabase, no I/O, no side
  * effects. Labels are resolved upstream by the calling page (the brand
  * module owns the canonical label maps).
  */
