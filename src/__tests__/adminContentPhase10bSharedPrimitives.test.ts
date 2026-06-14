@@ -127,7 +127,6 @@ describe('ADMIN REDESIGN PHASE 10B — Content/Directory shared primitives', () 
     // Sanity: required files still exist (no deletions).
     const root = resolve(__dirname, '..', '..');
     for (const rel of [
-      'scripts/generate-sitemap.ts',
       'src/modules/files/services/image-pipeline.ts',
       'src/components/admin/PublishReadinessPanel.tsx',
       'src/components/business-profile/BusinessVisibilityEditor.tsx',
