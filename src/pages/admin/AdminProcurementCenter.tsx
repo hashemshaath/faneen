@@ -1,29 +1,34 @@
-import { Inbox, FileText, Wrench, CheckCircle2, ShieldCheck } from 'lucide-react';
+import {
+  Inbox, FileText, Wrench, GitBranch, Users,
+  Clock, BarChart3, LayoutGrid,
+} from 'lucide-react';
 import { TabbedShell } from '@/components/dashboard/TabbedShell';
 
 /**
- * ADMIN UX RECONSOLIDATION PHASE 2 — Procurement Center shell.
+ * ADMIN UX RECONSOLIDATION PHASE 7 — Procurement Center.
  *
- * Thin presentational wrapper that exposes existing procurement admin
- * pages as tabs. NO queries, mutations, or business logic are moved or
- * altered here; each tab lazy-loads its existing page component which
- * detects the embedded context and renders without its own shell.
+ * Canonical 7-tab consolidation of every procurement admin surface.
+ * Each tab either embeds an existing page or renders a presentational
+ * landing. NO queries, NO mutations, and NO service calls are moved
+ * into the shell.
  */
 const AdminProcurementCenter = () => (
   <TabbedShell
     icon={FileText}
     title={{ ar: 'مركز المشتريات', en: 'Procurement Center' }}
     description={{
-      ar: 'طلبات عروض الأسعار، الفرص، طلبات الخدمات، والتفعيلات في مكان واحد.',
-      en: 'Quote requests, leads, service requests, and activations — unified.',
+      ar: 'طلبات عروض الأسعار، المطابقة، الفرص، والعمليات في مكان واحد.',
+      en: 'Quote requests, matching, leads, and operations — unified.',
     }}
     noIndex
     tabs={[
-      { key: 'requests',     label: { ar: 'الطلبات',          en: 'Requests' },        icon: Inbox,        loader: () => import('./AdminQuoteOperations') },
-      { key: 'leads',        label: { ar: 'الفرص',            en: 'Leads' },           icon: Inbox,        loader: () => import('./AdminLeadRequests') },
-      { key: 'services',     label: { ar: 'طلبات الخدمات',    en: 'Service Requests' },icon: Wrench,       loader: () => import('./AdminServiceRequests') },
-      { key: 'activations',  label: { ar: 'تفعيل الخدمات',    en: 'Activations' },     icon: CheckCircle2, loader: () => import('./AdminServiceActivations') },
-      { key: 'provider-leads', label: { ar: 'فرص المزودين',   en: 'Provider Leads' },  icon: ShieldCheck,  loader: () => import('./AdminProviderLeads') },
+      { key: 'overview',   label: { ar: 'نظرة عامة', en: 'Overview' },        icon: LayoutGrid, loader: () => import('@/components/admin/centers/procurement/ProcurementOverviewLanding') },
+      { key: 'requests',   label: { ar: 'الطلبات',   en: 'Requests' },        icon: Inbox,      loader: () => import('./AdminQuoteRequests') },
+      { key: 'matching',   label: { ar: 'المطابقة',  en: 'Matching' },        icon: GitBranch,  loader: () => import('@/components/admin/centers/procurement/MatchingLanding') },
+      { key: 'leads',      label: { ar: 'الفرص',     en: 'Leads' },           icon: Users,      loader: () => import('./AdminProviderLeads') },
+      { key: 'operations', label: { ar: 'العمليات',  en: 'Operations' },      icon: Wrench,     loader: () => import('./AdminQuoteOperations') },
+      { key: 'follow-up',  label: { ar: 'المتابعة',  en: 'Follow-up / SLA' }, icon: Clock,      loader: () => import('@/components/admin/centers/procurement/FollowUpLanding') },
+      { key: 'reports',    label: { ar: 'التقارير',  en: 'Reports' },         icon: BarChart3,  loader: () => import('@/components/admin/centers/procurement/ReportsLanding') },
     ]}
   />
 );
