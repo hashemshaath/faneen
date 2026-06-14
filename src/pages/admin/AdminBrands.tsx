@@ -54,6 +54,7 @@ const STATUS_PILL_TONE: Record<BrandStatus | 'all', AdminFilterPill['tone']> = {
   rejected: 'destructive',
   archived: 'default',
   draft: 'default',
+  merged: 'default',
 };
 
 const STATUS_BADGE_TONE: Record<BrandStatus, 'success' | 'warning' | 'info' | 'destructive' | 'muted'> = {
@@ -63,6 +64,7 @@ const STATUS_BADGE_TONE: Record<BrandStatus, 'success' | 'warning' | 'info' | 'd
   rejected: 'destructive',
   archived: 'muted',
   draft: 'muted',
+  merged: 'muted',
 };
 
 interface CategoryLite {
