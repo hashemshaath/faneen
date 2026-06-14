@@ -644,24 +644,6 @@ const AdminBrandDetail: React.FC = () => {
   );
 };
 
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className="text-sm mt-0.5 break-words" dir="auto">{value}</div>
-    </div>
-  );
-}
-
-function FieldLabeled({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <Label className="text-xs">{label}</Label>
-      <div className="mt-1">{children}</div>
-    </div>
-  );
-}
-
 export default AdminBrandDetail;
 
 function LinkProductsEditor({
