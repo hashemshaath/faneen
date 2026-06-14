@@ -539,7 +539,9 @@ const AppRoutes = () => (
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/users/:id" element={<ProtectedRoute requireSuperAdmin><AdminUserDetail /></ProtectedRoute>} />
-          <Route path="/admin/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentity /></ProtectedRoute>} />
+          {/* ADMIN UX RECONSOLIDATION PHASE 4 — Identity & Access center hub. */}
+          <Route path="/admin/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentityHub /></ProtectedRoute>} />
+          <Route path="/admin/identity/dashboard" element={<ProtectedRoute requireSuperAdmin><AdminIdentity /></ProtectedRoute>} />
           {/* ADMIN-REDESIGN PHASE 2 — Identity Center (unified visual tokens). */}
           <Route path="/admin/system/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentityCenter /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 17 — System Settings hub.
