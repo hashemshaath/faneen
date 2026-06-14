@@ -4,62 +4,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import {
-  Camera, Trash2, ArrowDown, ArrowUp, Minus, Search as SearchIcon, Tags,
-  FileText, Type, History,
-} from 'lucide-react';
+import { Camera, Search as SearchIcon } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ALL_SECTORS, getSectorMeta, type SectorSlug } from '@/lib/sector-keywords';
-import { useNoIndex } from "@/hooks/useNoIndex";
+import { useNoIndex } from '@/hooks/useNoIndex';
+import {
+  SectorSeoMetaPreviewCard,
+  SectorSeoTableSection,
+  type SectorSeoSnapshotRow,
+} from '@/components/admin/content/seo';
 
-type Snapshot = {
-  id: string;
-  sector_slug: string;
-  title: string;
-  description: string;
-  keywords: string;
+type Snapshot = SectorSeoSnapshotRow & {
   tagline: string | null;
-  language: 'ar' | 'en';
-  title_length: number;
-  description_length: number;
-  keywords_count: number;
-  note: string | null;
-  created_at: string;
-};
-
-const titleScore = (len: number) => (len >= 30 && len <= 60 ? 'good' : len < 30 ? 'short' : 'long');
-const descScore = (len: number) => (len >= 120 && len <= 160 ? 'good' : len < 120 ? 'short' : 'long');
-const kwScore = (n: number) => (n >= 8 && n <= 25 ? 'good' : n < 8 ? 'short' : 'long');
-
-const ScoreBadge: React.FC<{ status: 'good' | 'short' | 'long'; isRTL: boolean }> = ({ status, isRTL }) => {
-  useNoIndex();
-  const map = {
-    good: { label: isRTL ? 'مثالي' : 'Optimal', cls: 'bg-success/10 text-success border-success/30' },
-    short: { label: isRTL ? 'قصير' : 'Short', cls: 'bg-warning/10 text-warning border-warning/30' },
-    long: { label: isRTL ? 'طويل' : 'Long', cls: 'bg-destructive/10 text-destructive border-destructive/30' },
-  } as const;
-  const { label, cls } = map[status];
-  return <Badge variant="outline" className={cls}>{label}</Badge>;
-};
-
-const Delta: React.FC<{ current: number; previous: number | null }> = ({ current, previous }) => {
-  if (previous == null) return <span className="text-xs text-muted-foreground">—</span>;
-  const diff = current - previous;
-  if (diff === 0) return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Minus className="w-3 h-3" />0</span>;
-  const Icon = diff > 0 ? ArrowUp : ArrowDown;
-  const cls = diff > 0 ? 'text-success' : 'text-destructive';
-  return (
-    <span className={`inline-flex items-center gap-1 text-xs font-mono ${cls}`}>
-      <Icon className="w-3 h-3" />{diff > 0 ? '+' : ''}{diff}
-    </span>
-  );
 };
 
 const AdminSectorSeo: React.FC = () => {

@@ -1,20 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
-  CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play,
-  History, Shield, Mail, Activity, Link2, Copy, Download, Send, Globe2,
-  Wrench, Lightbulb, Zap,
+  AlertTriangle, RefreshCw, Play, Globe2, Wrench, Zap,
+  Download, Send,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { auditSitemapStatus, pingSearchEngines } from '@/modules/seo';
 import { toast } from '@/hooks/use-toast';
 import { useMemo, useState } from 'react';
-import { PageHeader, MetricCard, FiltersBar, StatusBadge } from '@/components/shared';
+import { PageHeader, FiltersBar } from '@/components/shared';
+import {
+  SeoHubPageShell,
+  SitemapStatusSummarySection,
+  SitemapRecommendationsSection,
+  SitemapRoutesTableSection,
+  SitemapRobotsRulesSection,
+  SitemapAuditHistorySection,
+  type SitemapRecommendation,
+  type SitemapAuditRunRow,
+} from '@/components/admin/content/seo';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
