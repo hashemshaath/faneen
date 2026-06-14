@@ -245,9 +245,15 @@ const AdminPartnerShowcase: React.FC = () => {
     ]);
   };
 
+
   // --------------------------------------------------------------
   // Render
   // --------------------------------------------------------------
+  const statsItems = useMemo(
+    () => items.map((i) => ({ is_active: i.is_active, source_type: i.source_type })),
+    [items],
+  );
+
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-6 space-y-6 max-w-5xl">
@@ -263,310 +269,45 @@ const AdminPartnerShowcase: React.FC = () => {
           </p>
         </div>
 
-        {/* SETTINGS */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{bi('إعدادات القسم', 'Section Settings')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {settingsLoading || !current ? (
-              <div className="space-y-3">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-2/3" />
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <div className="flex items-center gap-3">
-                    {current.is_enabled ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                    <div>
-                      <Label className="font-medium">{bi('تفعيل القسم', 'Enable section')}</Label>
-                      <p className="text-xs text-muted-foreground">
-                        {bi('عند الإيقاف لن يظهر القسم للزوار.', 'When disabled the section is hidden from visitors.')}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={current.is_enabled}
-                    onCheckedChange={(v) => setDraft({ ...current, is_enabled: v })}
-                  />
-                </div>
+        <PartnerShowcaseStatsSection items={statsItems} />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>{bi('العنوان (عربي)', 'Title (Arabic)')}</Label>
-                    <Input dir="auto" value={current.title_ar} onChange={(e) => setDraft({ ...current, title_ar: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label>{bi('العنوان (إنجليزي)', 'Title (English)')}</Label>
-                    <Input dir="auto" value={current.title_en} onChange={(e) => setDraft({ ...current, title_en: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label>{bi('الوصف (عربي)', 'Description (Arabic)')}</Label>
-                    <Textarea dir="auto" rows={2} value={current.description_ar} onChange={(e) => setDraft({ ...current, description_ar: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label>{bi('الوصف (إنجليزي)', 'Description (English)')}</Label>
-                    <Textarea dir="auto" rows={2} value={current.description_en} onChange={(e) => setDraft({ ...current, description_en: e.target.value })} />
-                  </div>
-                </div>
+        <PartnerShowcaseEditorPanel
+          current={current}
+          loading={settingsLoading}
+          dirty={Boolean(draft)}
+          saving={saveSettings.isPending}
+          onChange={(next) => setDraft(next)}
+          onCancel={() => setDraft(null)}
+          onSave={() => draft && saveSettings.mutate(draft)}
+        />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>{bi('السرعة (ثوانٍ/دورة)', 'Speed (s/loop)')}</Label>
-                    <Input
-                      type="number"
-                      min={10}
-                      max={200}
-                      value={current.speed}
-                      onChange={(e) => setDraft({ ...current, speed: Math.max(10, Math.min(200, Number(e.target.value) || 40)) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>{bi('اتجاه الحركة', 'Direction')}</Label>
-                    <Select value={current.direction} onValueChange={(v) => setDraft({ ...current, direction: v as Settings['direction'] })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="rtl">RTL ←</SelectItem>
-                        <SelectItem value="ltr">LTR →</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{bi('حجم الشعار', 'Logo size')}</Label>
-                    <Select value={current.logo_size} onValueChange={(v) => setDraft({ ...current, logo_size: v as Settings['logo_size'] })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sm">SM</SelectItem>
-                        <SelectItem value="md">MD</SelectItem>
-                        <SelectItem value="lg">LG</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{bi('المسافة بين الشعارات', 'Gap')}</Label>
-                    <Select value={current.gap_size} onValueChange={(v) => setDraft({ ...current, gap_size: v as Settings['gap_size'] })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sm">SM</SelectItem>
-                        <SelectItem value="md">MD</SelectItem>
-                        <SelectItem value="lg">LG</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{bi('نمط الخلفية', 'Style variant')}</Label>
-                    <Select value={current.style_variant} onValueChange={(v) => setDraft({ ...current, style_variant: v as Settings['style_variant'] })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="default">Default</SelectItem>
-                        <SelectItem value="muted">Muted</SelectItem>
-                        <SelectItem value="bordered">Bordered</SelectItem>
-                        <SelectItem value="glass">Glass</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+        <PartnerShowcaseAddPanel
+          bizQuery={bizQuery}
+          onBizQueryChange={setBizQuery}
+          bizResults={bizResults}
+          isTaken={(id) => linkedBusinessIds.has(id)}
+          onPickBusiness={addFromBusiness}
+          draft={newDraft}
+          onDraftChange={setNewDraft}
+          onUnlink={() => setNewDraft({ ...newDraft, source_type: 'external', business_id: null })}
+          onSubmit={submitNew}
+          submitting={upsertItem.isPending}
+        />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <ToggleRow label={bi('إيقاف عند المرور', 'Pause on hover')} checked={current.pause_on_hover}
-                    onChange={(v) => setDraft({ ...current, pause_on_hover: v })} />
-                  <ToggleRow label={bi('إظهار الأسهم', 'Show arrows')} checked={current.show_arrows}
-                    onChange={(v) => setDraft({ ...current, show_arrows: v })} />
-                  <ToggleRow label={bi('Grayscale', 'Grayscale')} checked={current.grayscale}
-                    onChange={(v) => setDraft({ ...current, grayscale: v })} />
-                  <ToggleRow label={bi('فتح بتبويب جديد', 'Open in new tab')} checked={current.open_in_new_tab}
-                    onChange={(v) => setDraft({ ...current, open_in_new_tab: v })} />
-                </div>
-
-                <div className="flex items-center justify-end gap-2">
-                  {draft && (
-                    <Button variant="ghost" onClick={() => setDraft(null)}>
-                      {bi('إلغاء', 'Cancel')}
-                    </Button>
-                  )}
-                  <Button
-                    disabled={!draft || saveSettings.isPending}
-                    onClick={() => draft && saveSettings.mutate(draft)}
-                  >
-                    {saveSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <Save className="w-4 h-4 me-2" />}
-                    {bi('حفظ الإعدادات', 'Save settings')}
-                  </Button>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* ADD NEW ITEM */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{bi('إضافة شريك جديد', 'Add a partner')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* From system business */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" /> {bi('اختيار شركة من النظام', 'Pick a business from the system')}
-              </Label>
-              <div className="relative">
-                <SearchIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  dir="auto"
-                  placeholder={bi('ابحث بالاسم أو اسم المستخدم…', 'Search by name or username…')}
-                  value={bizQuery}
-                  onChange={(e) => setBizQuery(e.target.value)}
-                  className="ps-9"
-                />
-              </div>
-              {bizResults.length > 0 && (
-                <ul className="border border-border rounded-lg divide-y divide-border max-h-64 overflow-auto">
-                  {bizResults.map((b) => {
-                    const taken = linkedBusinessIds.has(b.id);
-                    return (
-                      <li key={b.id} className="flex items-center justify-between gap-3 p-2">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {b.logo_url ? (
-                            <img src={b.logo_url} alt="" className="w-8 h-8 object-contain rounded bg-muted/50" />
-                          ) : (
-                            <div className="w-8 h-8 flex items-center justify-center rounded bg-muted/50">
-                              <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="text-sm font-medium truncate">{b.name_ar || b.name_en || '—'}</div>
-                            <div className="text-xs text-muted-foreground truncate">@{b.username ?? b.id.slice(0, 8)}</div>
-                          </div>
-                        </div>
-                        <Button size="sm" variant={taken ? 'ghost' : 'outline'} disabled={taken} onClick={() => addFromBusiness(b)}>
-                          {taken ? bi('مضافة', 'Added') : bi('اختيار', 'Pick')}
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-
-            {/* Manual fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <Label>{bi('الاسم (عربي)', 'Name (Arabic)')}</Label>
-                <Input dir="auto" value={newDraft.name_ar ?? ''} onChange={(e) => setNewDraft({ ...newDraft, name_ar: e.target.value })} />
-              </div>
-              <div>
-                <Label>{bi('الاسم (إنجليزي)', 'Name (English)')}</Label>
-                <Input dir="auto" value={newDraft.name_en ?? ''} onChange={(e) => setNewDraft({ ...newDraft, name_en: e.target.value })} />
-              </div>
-              <div className="md:col-span-2">
-                <Label className="flex items-center gap-2"><ImageIcon className="w-4 h-4" /> {bi('رابط الشعار', 'Logo URL')}</Label>
-                <Input dir="ltr" placeholder="https://…" value={newDraft.logo_url ?? ''} onChange={(e) => setNewDraft({ ...newDraft, logo_url: e.target.value })} />
-              </div>
-              <div className="md:col-span-2">
-                <Label className="flex items-center gap-2"><LinkIcon className="w-4 h-4" /> {bi('الرابط المستهدف', 'Target URL')}</Label>
-                <Input dir="ltr" placeholder="https://… or /username" value={newDraft.target_url ?? ''} onChange={(e) => setNewDraft({ ...newDraft, target_url: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {newDraft.source_type === 'business' && newDraft.business_id ? (
-                  <Badge variant="secondary">{bi('مرتبط بشركة في النظام', 'Linked to system business')}</Badge>
-                ) : (
-                  <Badge variant="outline">{bi('شريك خارجي', 'External partner')}</Badge>
-                )}
-                {newDraft.business_id && (
-                  <Button variant="ghost" size="sm" onClick={() => setNewDraft({ ...newDraft, source_type: 'external', business_id: null })}>
-                    <X className="w-3.5 h-3.5 me-1" /> {bi('إلغاء الربط', 'Unlink')}
-                  </Button>
-                )}
-              </div>
-              <Button onClick={submitNew} disabled={upsertItem.isPending}>
-                <Plus className="w-4 h-4 me-2" /> {bi('إضافة', 'Add')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ITEMS LIST */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center justify-between">
-              <span>{bi('الشركاء الحاليون', 'Current partners')}</span>
-              <Badge variant="secondary">{items.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {itemsLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
-            ) : items.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                {bi('لا يوجد شركاء بعد. أضف أول شريك من الأعلى.', 'No partners yet. Add the first one above.')}
-              </p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {[...items].sort((a, b) => a.sort_order - b.sort_order).map((it, idx, arr) => (
-                  <li key={it.id} className="py-3 flex items-center gap-3">
-                    <div className="flex flex-col gap-1">
-                      <Button size="icon" variant="ghost" disabled={idx === 0} onClick={() => move(it.id, -1)} aria-label="Up">
-                        <ArrowUp className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" disabled={idx === arr.length - 1} onClick={() => move(it.id, +1)} aria-label="Down">
-                        <ArrowDown className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <img src={it.logo_url} alt="" className="w-14 h-10 object-contain rounded bg-muted/40 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{it.name_ar} <span className="text-muted-foreground">— {it.name_en}</span></div>
-                      <div className="text-xs text-muted-foreground truncate">{it.target_url ?? bi('بدون رابط', 'No link')}</div>
-                      <div className="mt-1 flex items-center gap-2">
-                        {it.source_type === 'business'
-                          ? <Badge variant="secondary" className="text-[10px]">{bi('من النظام', 'System')}</Badge>
-                          : <Badge variant="outline" className="text-[10px]">{bi('خارجي', 'External')}</Badge>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Switch
-                        checked={it.is_active}
-                        onCheckedChange={(v) => upsertItem.mutate({ id: it.id, is_active: v })}
-                        aria-label={bi('تفعيل', 'Active')}
-                      />
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        aria-label={bi('حذف', 'Delete')}
-                        onClick={() => {
-                          if (confirm(bi('حذف هذا الشريك؟', 'Delete this partner?'))) {
-                            deleteItem.mutate(it.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <PartnerShowcaseListSection
+          items={items}
+          isLoading={itemsLoading}
+          onMove={(id, dir) => { void move(id, dir); }}
+          onToggleShow={(id, next) => upsertItem.mutate({ id, is_active: next })}
+          onDelete={(id) => {
+            if (confirm(bi('حذف هذا الشريك؟', 'Delete this partner?'))) {
+              deleteItem.mutate(id);
+            }
+          }}
+        />
       </div>
     </DashboardLayout>
   );
 };
-
-const ToggleRow: React.FC<{ label: string; checked: boolean; onChange: (v: boolean) => void }> = ({
-  label, checked, onChange,
-}) => (
-  <div className="flex items-center justify-between rounded-lg border border-border p-2.5">
-    <Label className="text-sm">{label}</Label>
-    <Switch checked={checked} onCheckedChange={onChange} />
-  </div>
-);
 
 export default AdminPartnerShowcase;
