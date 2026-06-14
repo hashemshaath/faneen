@@ -402,6 +402,8 @@ const AdminBrands: React.FC = () => {
                 categoryHints={b.sector_id ? (categoryHints[b.sector_id] ?? []) : []}
                 onApprove={() => approve.mutate(b.id)}
                 onArchive={() => archive.mutate(b.id)}
+                onPreview={() => setPreviewId((curr) => curr === b.id ? null : b.id)}
+                isPreviewing={previewId === b.id}
                 rejecting={rejecting === b.id}
                 onStartReject={() => { setRejecting(b.id); setReason(''); }}
                 onCancelReject={() => { setRejecting(null); setReason(''); }}
