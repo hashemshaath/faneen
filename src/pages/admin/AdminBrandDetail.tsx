@@ -523,647 +523,124 @@ const AdminBrandDetail: React.FC = () => {
           )}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-4">
-          {/* Identity & origin — inline editor */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2"><Edit3 className="w-4 h-4" />{pickBi(isRTL, 'البيانات الأساسية', 'Identity & origin')}</span>
-                {identityDirty && <Badge variant="warning" className="text-[10px]">{pickBi(isRTL, 'تعديلات غير محفوظة', 'Unsaved')}</Badge>}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid sm:grid-cols-2 gap-3">
-                <FieldLabeled label={pickBi(isRTL, 'الاسم (عربي) *', 'Name (AR) *')}>
-                  <Input dir="auto" value={identityForm.name_ar}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, name_ar: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-                <FieldLabeled label={pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (EN)')}>
-                  <Input dir="ltr" value={identityForm.name_en}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, name_en: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-                <FieldLabeled label={pickBi(isRTL, 'الموقع الرسمي', 'Official website')}>
-                  <Input dir="ltr" placeholder="https://example.com" className="tech-content" value={identityForm.website}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, website: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-                <FieldLabeled label={pickBi(isRTL, 'الشركة المالكة', 'Brand owner')}>
-                  <Input dir="auto" value={identityForm.brand_owner_company}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, brand_owner_company: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-                <FieldLabeled label={pickBi(isRTL, 'سنة التأسيس', 'Founded year')}>
-                  <Input type="number" inputMode="numeric" className="tech-content" value={identityForm.founded_year}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, founded_year: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-                <FieldLabeled label={pickBi(isRTL, 'كود البلد (ISO)', 'Country code (ISO)')}>
-                  <Input maxLength={3} dir="ltr" className="tech-content uppercase" value={identityForm.country_of_origin_code}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_code: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-                <FieldLabeled label={pickBi(isRTL, 'اسم البلد (عربي)', 'Country (AR)')}>
-                  <Input dir="auto" value={identityForm.country_of_origin_name_ar}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_ar: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-                <FieldLabeled label={pickBi(isRTL, 'اسم البلد (إنجليزي)', 'Country (EN)')}>
-                  <Input dir="ltr" value={identityForm.country_of_origin_name_en}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_en: e.target.value })); setIdentityDirty(true); }} />
-                </FieldLabeled>
-              </div>
-              <FieldLabeled label={pickBi(isRTL, 'وصف العلامة (عربي)', 'Description (AR)')}>
-                <Textarea dir="auto" rows={2} value={identityForm.description_ar}
-                  onChange={(e) => { setIdentityForm(f => ({ ...f, description_ar: e.target.value })); setIdentityDirty(true); }} />
-              </FieldLabeled>
-              <FieldLabeled label={pickBi(isRTL, 'وصف العلامة (إنجليزي)', 'Description (EN)')}>
-                <Textarea dir="ltr" rows={2} value={identityForm.description_en}
-                  onChange={(e) => { setIdentityForm(f => ({ ...f, description_en: e.target.value })); setIdentityDirty(true); }} />
-              </FieldLabeled>
-              <div>
-                <Label className="text-xs mb-2 block">{pickBi(isRTL, 'الشعار (يُضغط تلقائياً إلى WebP)', 'Logo (auto-compressed to WebP)')}</Label>
-                <ImageUpload bucket="business-assets" value={identityForm.logo_url}
-                  onChange={(url) => { setIdentityForm(f => ({ ...f, logo_url: url || '' })); setIdentityDirty(true); }}
-                  onRemove={() => { setIdentityForm(f => ({ ...f, logo_url: '' })); setIdentityDirty(true); }}
-                  placeholder={pickBi(isRTL, 'رفع شعار العلامة', 'Upload brand logo')} />
-              </div>
-              <div className="flex items-center justify-between gap-2 pt-1">
-                <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" className="h-4 w-4" checked={identityForm.is_local}
-                    onChange={(e) => { setIdentityForm(f => ({ ...f, is_local: e.target.checked })); setIdentityDirty(true); }} />
-                  <span>{pickBi(isRTL, 'علامة محلية', 'Local brand')}</span>
-                </label>
-                <Button size="sm" onClick={() => saveIdentity.mutate()}
-                  disabled={!identityDirty || saveIdentity.isPending || !identityForm.name_ar.trim()}>
-                  {saveIdentity.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
-                  {pickBi(isRTL, 'حفظ التعديلات', 'Save changes')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <BrandDetailOverviewPanel
+          isRTL={isRTL}
+          locale={locale}
+          brand={brand}
+          identityForm={identityForm}
+          setIdentityForm={setIdentityForm}
+          identityDirty={identityDirty}
+          setIdentityDirty={setIdentityDirty}
+          onSaveIdentity={() => saveIdentity.mutate()}
+          saveIdentityPending={saveIdentity.isPending}
+          seoForm={seoForm}
+          setSeoForm={setSeoForm}
+          onSaveSeo={() => saveSeo.mutate()}
+          saveSeoPending={saveSeo.isPending}
+          mfgData={mfgQ.data}
+          mfgLoading={mfgQ.isLoading}
+          sectorsData={sectorsQ.data}
+          sectorsLoading={sectorsQ.isLoading}
+          sectorMap={sectorMap}
+          mergeTarget={mergeTarget}
+          setMergeTarget={setMergeTarget}
+          onMerge={(target) => merge.mutate(target)}
+          mergePending={merge.isPending}
+        />
 
-          {/* SEO */}
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" />SEO</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <SEOPreviewCard
-                kind="brand"
-                customTitleAr={seoForm.seo_title_ar}
-                customTitleEn={seoForm.seo_title_en}
-                customDescriptionAr={seoForm.seo_description_ar}
-                customDescriptionEn={seoForm.seo_description_en}
-                nameAr={brand.name_ar}
-                nameEn={brand.name_en ?? brand.name_ar}
-                rawDescriptionAr={brand.description_ar}
-                rawDescriptionEn={brand.description_en}
-                url={brand.slug ? `https://qitaat.com/brands/${brand.slug}` : null}
-                ogImageUrl={seoForm.og_image_url || brand.logo_url}
-                focusKeyword={seoForm.brand_keywords.split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'عنوان SEO (عربي)', 'SEO Title (AR)')}</Label>
-                    <FieldAiActions value={seoForm.seo_title_ar || brand.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_title" compact
-                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_title_ar: t }))}
-                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_title_ar: t }))} />
-                  </div>
-                  <Input value={seoForm.seo_title_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_ar: e.target.value }))} className="mt-1" dir="auto" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'عنوان SEO (إنجليزي)', 'SEO Title (EN)')}</Label>
-                    <FieldAiActions value={seoForm.seo_title_en || brand.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_title" compact
-                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_title_en: t }))}
-                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_title_en: t }))} />
-                  </div>
-                  <Input value={seoForm.seo_title_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_en: e.target.value }))} className="mt-1" dir="ltr" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'وصف SEO (عربي)', 'SEO Description (AR)')}</Label>
-                    <FieldAiActions value={seoForm.seo_description_ar || brand.description_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_description" compact
-                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_description_ar: t }))}
-                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_description_ar: t }))} />
-                  </div>
-                  <Textarea value={seoForm.seo_description_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_ar: e.target.value }))} rows={2} className="mt-1" dir="auto" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">{pickBi(isRTL, 'وصف SEO (إنجليزي)', 'SEO Description (EN)')}</Label>
-                    <FieldAiActions value={seoForm.seo_description_en || brand.description_en || ''} lang="en" isRTL={isRTL} fieldType="meta_description" compact
-                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_description_en: t }))}
-                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_description_en: t }))} />
-                  </div>
-                  <Textarea value={seoForm.seo_description_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_en: e.target.value }))} rows={2} className="mt-1" dir="ltr" />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs">{pickBi(isRTL, 'كلمات العلامة', 'Brand keywords')}</Label>
-                <Input value={seoForm.brand_keywords} onChange={(e) => setSeoForm(f => ({ ...f, brand_keywords: e.target.value }))} className="mt-1" dir="auto" />
-              </div>
-              <div>
-                <Label className="text-xs mb-2 block">{pickBi(isRTL, 'صورة OG', 'OG image')}</Label>
-                <ImageUpload bucket="business-assets" value={seoForm.og_image_url}
-                  onChange={(url) => setSeoForm(f => ({ ...f, og_image_url: url || '' }))}
-                  onRemove={() => setSeoForm(f => ({ ...f, og_image_url: '' }))}
-                  placeholder={pickBi(isRTL, 'رفع صورة المشاركة', 'Upload share image')} />
-              </div>
-              <Button onClick={() => saveSeo.mutate()} disabled={saveSeo.isPending} className="w-full gap-2">
-                {saveSeo.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {pickBi(isRTL, 'حفظ SEO', 'Save SEO')}
-              </Button>
-            </CardContent>
-          </Card>
+        <BrandProvidersPanel
+          isRTL={isRTL}
+          locale={locale}
+          links={linksQ.data}
+          linksLoading={linksQ.isLoading}
+          bizMap={bizMap}
+          linkSearch={linkSearch}
+          setLinkSearch={setLinkSearch}
+          linkBusinessId={linkBusinessId}
+          setLinkBusinessId={setLinkBusinessId}
+          linkBusinessLabel={linkBusinessLabel}
+          setLinkBusinessLabel={setLinkBusinessLabel}
+          linkServiceId={linkServiceId}
+          setLinkServiceId={setLinkServiceId}
+          linkRelationship={linkRelationship}
+          setLinkRelationship={setLinkRelationship}
+          linkScope={linkScope}
+          setLinkScope={setLinkScope}
+          linkProductIds={linkProductIds}
+          setLinkProductIds={setLinkProductIds}
+          products={productsQ.data}
+          linkSearchData={linkSearchQ.data}
+          linkServicesData={linkServicesQ.data}
+          linkServicesLoading={linkServicesQ.isLoading}
+          onCreateLink={() => createLink.mutate()}
+          createLinkPending={createLink.isPending}
+          expandedLinkId={expandedLinkId}
+          setExpandedLinkId={setExpandedLinkId}
+          renderLinkProductsEditor={(l) => (
+            <LinkProductsEditor
+              linkId={l.id}
+              businessId={l.business_id}
+              brandProducts={productsQ.data ?? []}
+              isRTL={isRTL}
+              locale={locale}
+              addProductForLinkId={addProductForLinkId}
+              setAddProductForLinkId={setAddProductForLinkId}
+              onAdd={(productId) => addLinkProduct.mutate({ linkId: l.id, productId, businessId: l.business_id })}
+              onRemove={(rowId) => removeLinkProduct.mutate(rowId)}
+              addPending={addLinkProduct.isPending}
+            />
+          )}
+          rejectingLinkId={rejectingLinkId}
+          setRejectingLinkId={setRejectingLinkId}
+          linkReason={linkReason}
+          setLinkReason={setLinkReason}
+          onApproveLink={(linkId) => approveLink.mutate(linkId)}
+          approveLinkPending={approveLink.isPending}
+          onRejectLink={(linkId, reasonText) => rejectLink.mutate({ linkId, reason: reasonText })}
+          rejectLinkPending={rejectLink.isPending}
+        />
 
-          {/* Manufacturing countries */}
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">{pickBi(isRTL, 'دول التصنيع', 'Manufacturing countries')}</CardTitle></CardHeader>
-            <CardContent>
-              {mfgQ.isLoading ? <Skeleton className="h-20" /> : (mfgQ.data ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد بيانات', 'None recorded')}</p>
-              ) : (
-                <ul className="space-y-1 text-sm">
-                  {(mfgQ.data ?? []).map((c) => (
-                    <li key={c.id} className="flex items-center gap-2 flex-wrap">
-                      <code className="tech-content bg-muted px-2 py-0.5 rounded text-xs">{c.country_code}</code>
-                      <span>{locale === 'ar' ? (c.country_name_ar ?? '—') : (c.country_name_en ?? '—')}</span>
-                      <Badge variant="outline" className="text-[10px]">{c.manufacturing_type}</Badge>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+        <BrandEquivalencePanel
+          isRTL={isRTL}
+          locale={locale}
+          products={productsQ.data}
+          productsLoading={productsQ.isLoading}
+          newProduct={newProduct}
+          setNewProduct={setNewProduct}
+          onCreateProduct={() => createProduct.mutate()}
+          createPending={createProduct.isPending}
+          editingProductId={editingProductId}
+          setEditingProductId={setEditingProductId}
+          editProduct={editProduct}
+          setEditProduct={setEditProduct}
+          onUpdateProduct={(productId) => updateProduct.mutate({ productId })}
+          updatePending={updateProduct.isPending}
+          onDeleteProduct={(productId) => deleteProduct.mutate(productId)}
+          deletePending={deleteProduct.isPending}
+          productRequests={productRequestsQ.data}
+          productRequestsLoading={productRequestsQ.isLoading}
+          rejectingReqId={rejectingReqId}
+          setRejectingReqId={setRejectingReqId}
+          reqRejectReason={reqRejectReason}
+          setReqRejectReason={setReqRejectReason}
+          onApproveProductReq={(reqId) => approveProductReq.mutate(reqId)}
+          approveProductReqPending={approveProductReq.isPending}
+          onRejectProductReq={(reqId, reasonText) => rejectProductReq.mutate({ reqId, reason: reasonText })}
+          rejectProductReqPending={rejectProductReq.isPending}
+        />
 
-          {/* Sectors */}
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">{pickBi(isRTL, 'القطاعات المرتبطة', 'Linked sectors')}</CardTitle></CardHeader>
-            <CardContent>
-              {sectorsQ.isLoading ? <Skeleton className="h-16" /> : (sectorsQ.data ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد قطاعات مرتبطة', 'No sectors linked')}</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {(sectorsQ.data ?? []).map((l) => {
-                    const s = sectorMap.get(l.sector_id);
-                    return (
-                      <Badge key={l.id} variant={l.is_primary ? 'default' : 'outline'} className="text-xs">
-                        {s ? (locale === 'ar' ? s.name_ar : (s.name_en ?? s.name_ar)) : l.sector_id}
-                        {l.is_primary && <span className="ms-1 opacity-70">★</span>}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <BrandClaimsPanel
+          isRTL={isRTL}
+          locale={locale}
+          requests={reqsQ.data}
+          loading={reqsQ.isLoading}
+        />
 
-          {/* Merge */}
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4" />{pickBi(isRTL, 'دمج العلامة', 'Merge brand')}</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                {pickBi(isRTL, 'دمج هذه العلامة في علامة أخرى (تظل المراجع كما هي).', 'Merge this brand into another (refs are preserved).')}
-              </p>
-              <Input value={mergeTarget} onChange={(e) => setMergeTarget(e.target.value)}
-                placeholder={pickBi(isRTL, 'UUID العلامة الهدف', 'Target brand UUID')} className="h-10 tech-content" />
-              <Button size="sm" variant="outline"
-                onClick={() => { if (mergeTarget.trim()) merge.mutate(mergeTarget.trim()); }}
-                disabled={!mergeTarget.trim() || merge.isPending}>
-                {merge.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
-                {pickBi(isRTL, 'دمج', 'Merge')}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Provider relationships */}
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4" />{pickBi(isRTL, 'علاقات المزودين', 'Provider relationships')} <span className="text-xs text-muted-foreground">({linksQ.data?.length ?? 0})</span></CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground mb-3">
-              {pickBi(isRTL, 'نوع العلاقة (وكيل حصري، موزع معتمد، مُصنِّع، إلخ) يُحدَّد من قِبل المزود ويُعتمَد من هنا.', 'Relationship type (exclusive agent, authorized distributor, manufacturer, etc.) is declared by the provider and approved here.')}
-            </p>
-
-            {/* Admin-only: directly link a provider business+service to this brand. */}
-            <div className="mb-4 rounded-lg border border-dashed bg-muted/30 p-3 space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Plus className="w-4 h-4" />
-                {pickBi(isRTL, 'إضافة وربط مزود بالعلامة', 'Link a provider to this brand')}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-                <div className="md:col-span-5 relative">
-                  <Input
-                    value={linkBusinessId ? linkBusinessLabel : linkSearch}
-                    onChange={(e) => { setLinkSearch(e.target.value); setLinkBusinessId(''); setLinkBusinessLabel(''); setLinkServiceId('__all__'); }}
-                    placeholder={pickBi(isRTL, 'ابحث عن جهة بالاسم أو الرمز…', 'Search business by name or ref…')}
-                    className="h-10"
-                  />
-                  {linkSearch.trim().length >= 2 && !linkBusinessId && (linkSearchQ.data?.length ?? 0) > 0 && (
-                    <div className="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border bg-background shadow-md">
-                      {(linkSearchQ.data ?? []).map((b) => {
-                        const bname = locale === 'ar' ? (b.name_ar ?? b.name_en ?? '') : (b.name_en ?? b.name_ar ?? '');
-                        return (
-                          <button
-                            key={b.id}
-                            type="button"
-                            className="w-full text-start px-3 py-2 hover:bg-muted text-sm flex items-center justify-between gap-2"
-                            onClick={() => { setLinkBusinessId(b.id); setLinkBusinessLabel(bname || b.username || b.ref_id || b.id.slice(0, 8)); setLinkSearch(''); }}
-                          >
-                            <span className="truncate" dir="auto">{bname || b.username || b.id.slice(0, 8)}</span>
-                            {b.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{b.ref_id}</code>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <div className="md:col-span-4">
-                  <select
-                    value={linkServiceId}
-                    onChange={(e) => setLinkServiceId(e.target.value)}
-                    disabled={!linkBusinessId || linkServicesQ.isLoading}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    <option value="__all__">
-                      {(linkServicesQ.data ?? []).length === 0
-                        ? pickBi(isRTL, 'لا توجد خدمات — سيتم إنشاء خدمة عامة وربطها', 'No services — a general placeholder will be created')
-                        : pickBi(isRTL, 'كل الخدمات (افتراضي)', 'All services (default)')}
-                    </option>
-                    {(linkServicesQ.data ?? []).map((s) => (
-                      <option key={s.id} value={s.id}>{locale === 'ar' ? (s.name_ar ?? s.name_en ?? s.id.slice(0,8)) : (s.name_en ?? s.name_ar ?? s.id.slice(0,8))}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="md:col-span-3">
-                  <select
-                    value={linkRelationship}
-                    onChange={(e) => setLinkRelationship(e.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    {(['manufacturer','official_agent','authorized_distributor','distributor','reseller','importer','installer','fabricator','maintenance_provider','showroom','supplier','other'] as const).map((rt) => (
-                      <option key={rt} value={rt}>{pick(relationshipLabel[rt], locale)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              {/* Scope: whole brand vs specific products */}
-              <div className="rounded-md border bg-background/50 p-2 space-y-2">
-                <div className="flex items-center gap-3 text-xs">
-                  <span className="font-medium">{pickBi(isRTL, 'نطاق الربط:', 'Link scope:')}</span>
-                  <label className="inline-flex items-center gap-1 cursor-pointer">
-                    <input type="radio" name="link-scope" checked={linkScope === 'all'}
-                      onChange={() => { setLinkScope('all'); setLinkProductIds([]); }} />
-                    <span>{pickBi(isRTL, 'العلامة كاملة', 'Whole brand')}</span>
-                  </label>
-                  <label className="inline-flex items-center gap-1 cursor-pointer">
-                    <input type="radio" name="link-scope" checked={linkScope === 'products'}
-                      onChange={() => setLinkScope('products')} />
-                    <span>{pickBi(isRTL, 'منتجات محددة', 'Specific products')}</span>
-                  </label>
-                  <span className="text-muted-foreground ms-auto">
-                    {pickBi(isRTL, `المنتجات المتاحة: ${productsQ.data?.length ?? 0}`, `${productsQ.data?.length ?? 0} available`)}
-                  </span>
-                </div>
-                {linkScope === 'products' && (
-                  (productsQ.data ?? []).length === 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      {pickBi(isRTL, 'لا توجد منتجات لهذه العلامة. أضف منتجات أولاً من قسم منتجات العلامة أدناه.', 'No products for this brand yet. Add some from the Brand products section below.')}
-                    </p>
-                  ) : (
-                    <div className="max-h-40 overflow-auto rounded border bg-background p-2 grid grid-cols-1 sm:grid-cols-2 gap-1">
-                      {(productsQ.data ?? []).map((p: BrandProduct) => {
-                        const checked = linkProductIds.includes(p.id);
-                        const pname = locale === 'ar' ? (p.name_ar ?? p.name_en ?? '') : (p.name_en ?? p.name_ar ?? '');
-                        return (
-                          <label key={p.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/40 rounded px-1 py-0.5">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={(e) => setLinkProductIds((prev) => e.target.checked ? [...prev, p.id] : prev.filter((x) => x !== p.id))}
-                            />
-                            {p.image_url && <img src={p.image_url} alt="" className="w-5 h-5 rounded object-cover" />}
-                            <span className="truncate" dir="auto">{pname || p.id.slice(0, 8)}</span>
-                            {p.model_number && <code className="tech-content text-[10px] text-muted-foreground ms-auto">{p.model_number}</code>}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )
-                )}
-              </div>
-              <div className="flex items-center justify-end">
-                <Button
-                  size="sm"
-                  onClick={() => createLink.mutate()}
-                  disabled={!linkBusinessId || createLink.isPending || (linkScope === 'products' && linkProductIds.length === 0)}
-                >
-                  {createLink.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
-                  {pickBi(isRTL, 'ربط واعتماد', 'Link & verify')}
-                </Button>
-              </div>
-            </div>
-
-            {linksQ.isLoading ? <Skeleton className="h-24" /> : (linksQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد علاقات بعد', 'No provider links yet')}</p>
-            ) : (
-              <div className="space-y-2">
-                {(linksQ.data ?? []).map((l) => {
-                  const biz = bizMap.get(l.business_id);
-                  const bizName = biz ? (locale === 'ar' ? (biz.name_ar ?? biz.name_en) : (biz.name_en ?? biz.name_ar)) : null;
-                  return (
-                    <div key={l.id} className="border rounded-lg p-3 flex items-start justify-between gap-2 flex-wrap">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm">{bizName ?? biz?.username ?? biz?.ref_id ?? l.business_id.slice(0, 8)}</span>
-                          {biz?.ref_id && <code className="tech-content text-xs">{biz.ref_id}</code>}
-                          {l.relationship_type && <Badge variant="outline" className="text-xs">{pick(relationshipLabel[l.relationship_type], locale)}</Badge>}
-                          {l.authorization_status && <Badge variant="secondary" className="text-xs">{pick(authStatusLabel[l.authorization_status], locale)}</Badge>}
-                        </div>
-                        {l.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{l.ref_id}</code>}
-                        {l.authorization_document_url && (
-                          <a href={l.authorization_document_url} target="_blank" rel="noopener noreferrer"
-                             className="text-xs text-primary underline ms-2 inline-flex items-center gap-1">
-                            <ExternalLink className="w-3 h-3" />{pickBi(isRTL, 'مستند التفويض', 'Auth doc')}
-                          </a>
-                        )}
-                        <div className="mt-2">
-                          <button
-                            type="button"
-                            className="text-[11px] text-primary underline"
-                            onClick={() => setExpandedLinkId((cur) => cur === l.id ? null : l.id)}
-                          >
-                            {expandedLinkId === l.id
-                              ? pickBi(isRTL, 'إخفاء المنتجات', 'Hide products')
-                              : pickBi(isRTL, 'إدارة المنتجات المرتبطة', 'Manage scoped products')}
-                          </button>
-                          {expandedLinkId === l.id && (
-                            <LinkProductsEditor
-                              linkId={l.id}
-                              businessId={l.business_id}
-                              brandProducts={productsQ.data ?? []}
-                              isRTL={isRTL}
-                              locale={locale}
-                              addProductForLinkId={addProductForLinkId}
-                              setAddProductForLinkId={setAddProductForLinkId}
-                              onAdd={(productId) => addLinkProduct.mutate({ linkId: l.id, productId, businessId: l.business_id })}
-                              onRemove={(rowId) => removeLinkProduct.mutate(rowId)}
-                              addPending={addLinkProduct.isPending}
-                            />
-                          )}
-                        </div>
-                      </div>
-                      {l.authorization_status === 'pending' && (
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => approveLink.mutate(l.id)} disabled={approveLink.isPending}>
-                            <Check className="w-4 h-4 me-1" />{pickBi(isRTL, 'اعتماد', 'Approve')}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => { setRejectingLinkId(l.id); setLinkReason(''); }}>
-                            <X className="w-4 h-4 me-1" />{pickBi(isRTL, 'رفض', 'Reject')}
-                          </Button>
-                        </div>
-                      )}
-                      {rejectingLinkId === l.id && (
-                        <div className="w-full mt-2 p-2 rounded bg-muted/40 space-y-2">
-                          <Input value={linkReason} onChange={(e) => setLinkReason(e.target.value)}
-                            placeholder={pickBi(isRTL, 'سبب الرفض…', 'Rejection reason…')} className="h-9" />
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="destructive"
-                              onClick={() => linkReason.trim() && rejectLink.mutate({ linkId: l.id, reason: linkReason })}
-                              disabled={!linkReason.trim() || rejectLink.isPending}>
-                              {pickBi(isRTL, 'تأكيد', 'Confirm')}
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => { setRejectingLinkId(null); setLinkReason(''); }}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Related requests */}
-        {/* Brand products — central catalog */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Package className="w-4 h-4" />{pickBi(isRTL, 'منتجات العلامة', 'Brand products')}
-              <span className="text-xs text-muted-foreground">({productsQ.data?.length ?? 0})</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="border rounded-xl p-3 bg-muted/30 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-semibold"><Plus className="w-4 h-4" />{pickBi(isRTL, 'إضافة منتج مركزياً (معتمد فوراً)', 'Add product centrally (instantly approved)')}</div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Input dir="auto" placeholder={pickBi(isRTL, 'الاسم (عربي) *', 'Name (AR) *')} value={newProduct.name_ar}
-                  onChange={(e) => setNewProduct(p => ({ ...p, name_ar: e.target.value }))} />
-                <Input dir="ltr" placeholder={pickBi(isRTL, 'الاسم (إنجليزي)', 'Name (EN)')} value={newProduct.name_en}
-                  onChange={(e) => setNewProduct(p => ({ ...p, name_en: e.target.value }))} />
-                <Input dir="ltr" placeholder={pickBi(isRTL, 'رقم الموديل', 'Model number')} className="tech-content" value={newProduct.model_number}
-                  onChange={(e) => setNewProduct(p => ({ ...p, model_number: e.target.value }))} />
-                <Input dir="ltr" placeholder="SKU" className="tech-content" value={newProduct.sku}
-                  onChange={(e) => setNewProduct(p => ({ ...p, sku: e.target.value }))} />
-              </div>
-              <Textarea dir="auto" rows={2} placeholder={pickBi(isRTL, 'وصف موجز', 'Short description')} value={newProduct.description_ar}
-                onChange={(e) => setNewProduct(p => ({ ...p, description_ar: e.target.value }))} />
-              <div>
-                <Label className="text-xs mb-2 block">{pickBi(isRTL, 'صورة المنتج (تُضغط تلقائياً)', 'Product image (auto-compressed)')}</Label>
-                <ImageUpload bucket="business-assets" value={newProduct.image_url}
-                  pipeline="product"
-                  onChange={(url) => setNewProduct(p => ({ ...p, image_url: url || '' }))}
-                  onRemove={() => setNewProduct(p => ({ ...p, image_url: '' }))}
-                  onUploadedMeta={(meta) => setNewProduct(p => ({
-                    ...p,
-                    image_asset_id: meta.imageAssetId ?? '',
-                    image_variants: (meta.variants ?? {}) as Record<string, string>,
-                  }))}
-                  placeholder={pickBi(isRTL, 'رفع صورة', 'Upload image')} />
-              </div>
-              <Button size="sm" onClick={() => createProduct.mutate()}
-                disabled={!newProduct.name_ar.trim() || createProduct.isPending}>
-                {createProduct.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
-                {pickBi(isRTL, 'إضافة', 'Add')}
-              </Button>
-            </div>
-
-            {productsQ.isLoading ? <Skeleton className="h-24" /> : (productsQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">{pickBi(isRTL, 'لا توجد منتجات بعد', 'No products yet')}</p>
-            ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {(productsQ.data ?? []).map((p: BrandProduct) => editingProductId === p.id ? (
-                  <div key={p.id} className="border rounded-xl p-3 space-y-2 bg-card">
-                    <Input dir="auto" value={editProduct.name_ar} onChange={(e) => setEditProduct(s => ({ ...s, name_ar: e.target.value }))} placeholder={pickBi(isRTL, 'العربية', 'Arabic')} />
-                    <Input dir="ltr" value={editProduct.name_en} onChange={(e) => setEditProduct(s => ({ ...s, name_en: e.target.value }))} placeholder="English" />
-                    <Input dir="ltr" value={editProduct.model_number} onChange={(e) => setEditProduct(s => ({ ...s, model_number: e.target.value }))} placeholder="Model" className="tech-content" />
-                    <Input dir="ltr" value={editProduct.sku} onChange={(e) => setEditProduct(s => ({ ...s, sku: e.target.value }))} placeholder="SKU" className="tech-content" />
-                    <Textarea dir="auto" rows={2} value={editProduct.description_ar} onChange={(e) => setEditProduct(s => ({ ...s, description_ar: e.target.value }))} />
-                    <ImageUpload bucket="business-assets" value={editProduct.image_url}
-                      pipeline="product"
-                      onChange={(url) => setEditProduct(s => ({ ...s, image_url: url || '' }))}
-                      onRemove={() => setEditProduct(s => ({ ...s, image_url: '' }))}
-                      onUploadedMeta={(meta) => setEditProduct(s => ({
-                        ...s,
-                        image_asset_id: meta.imageAssetId ?? '',
-                        image_variants: (meta.variants ?? {}) as Record<string, string>,
-                      }))} />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => updateProduct.mutate({ productId: p.id })} disabled={updateProduct.isPending}>
-                        <Save className="w-4 h-4 me-1" />{pickBi(isRTL, 'حفظ', 'Save')}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setEditingProductId(null)}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div key={p.id} className="border rounded-xl p-3 bg-card hover-lift">
-                    {p.image_url || (p.image_variants && Object.keys(p.image_variants).length > 0) ? (
-                      <ResponsiveImage
-                        variants={p.image_variants ?? null}
-                        originalUrl={p.image_url}
-                        alt={p.name_ar}
-                        sizes="(max-width: 768px) 100vw, 320px"
-                        className="w-full h-28 object-cover rounded-lg border bg-background mb-2"
-                      />
-                    ) : (
-                      <div className="w-full h-28 rounded-lg bg-muted grid place-items-center text-xs text-muted-foreground mb-2"><Package className="w-6 h-6 opacity-40" /></div>
-                    )}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="font-medium text-sm truncate" dir="auto">{locale === 'ar' ? p.name_ar : (p.name_en ?? p.name_ar)}</div>
-                        {p.model_number && <div className="text-[10px] text-muted-foreground tech-content">{p.model_number}</div>}
-                      </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0">{pick(brandProductStatusLabel[p.status], locale)}</Badge>
-                    </div>
-                    {p.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{p.ref_id}</code>}
-                    <div className="flex gap-1 mt-2">
-                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => {
-                        setEditingProductId(p.id);
-                        setEditProduct({
-                          name_ar: p.name_ar, name_en: p.name_en ?? '',
-                          model_number: p.model_number ?? '', sku: p.sku ?? '',
-                          description_ar: p.description_ar ?? '', image_url: p.image_url ?? '',
-                          image_asset_id: p.image_asset_id ?? '',
-                          image_variants: p.image_variants ?? {},
-                        });
-                      }}><Edit3 className="w-3 h-3 me-1" />{pickBi(isRTL, 'تعديل', 'Edit')}</Button>
-                      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
-                        onClick={() => deleteProduct.mutate(p.id)} disabled={deleteProduct.isPending}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Brand product requests — provider proposals awaiting approval */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Inbox className="w-4 h-4" />{pickBi(isRTL, 'طلبات منتجات من المزودين', 'Provider product requests')}
-              <span className="text-xs text-muted-foreground">({productRequestsQ.data?.length ?? 0})</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {productRequestsQ.isLoading ? <Skeleton className="h-20" /> : (productRequestsQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-3">{pickBi(isRTL, 'لا توجد طلبات', 'No requests')}</p>
-            ) : (
-              <ul className="space-y-2">
-                {(productRequestsQ.data ?? []).map((r: BrandProductRequest) => (
-                  <li key={r.id} className="border rounded-xl p-3">
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        {r.image_url ? (
-                          <img src={r.image_url} alt={r.name_ar} className="w-12 h-12 rounded-lg object-cover border" loading="lazy" decoding="async" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-muted grid place-items-center"><Package className="w-4 h-4 opacity-40" /></div>
-                        )}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-sm" dir="auto">{locale === 'ar' ? r.name_ar : (r.name_en ?? r.name_ar)}</span>
-                            <Badge variant="outline" className="text-[10px]">{pick(brandProductRequestStatusLabel[r.status], locale)}</Badge>
-                            {r.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{r.ref_id}</code>}
-                          </div>
-                          {r.model_number && <div className="text-[11px] text-muted-foreground tech-content">{r.model_number}</div>}
-                          {(r.description_ar || r.description_en) && <p className="text-xs text-muted-foreground mt-1 line-clamp-2" dir="auto">{locale === 'ar' ? r.description_ar : (r.description_en ?? r.description_ar)}</p>}
-                          {r.reject_reason && <p className="text-xs text-destructive mt-1" dir="auto">{r.reject_reason}</p>}
-                        </div>
-                      </div>
-                      {(r.status === 'pending' || r.status === 'in_review' || r.status === 'needs_more_info') && (
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => approveProductReq.mutate(r.id)} disabled={approveProductReq.isPending}>
-                            <Check className="w-4 h-4 me-1" />{pickBi(isRTL, 'اعتماد', 'Approve')}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => { setRejectingReqId(r.id); setReqRejectReason(''); }}>
-                            <X className="w-4 h-4 me-1" />{pickBi(isRTL, 'رفض', 'Reject')}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {rejectingReqId === r.id && (
-                      <div className="mt-2 p-2 rounded-lg bg-muted/40 space-y-2">
-                        <Input value={reqRejectReason} onChange={(e) => setReqRejectReason(e.target.value)}
-                          placeholder={pickBi(isRTL, 'سبب الرفض…', 'Rejection reason…')} className="h-9" />
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="destructive"
-                            onClick={() => rejectProductReq.mutate({ reqId: r.id, reason: reqRejectReason })}
-                            disabled={!reqRejectReason.trim() || rejectProductReq.isPending}>
-                            {pickBi(isRTL, 'تأكيد', 'Confirm')}
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => { setRejectingReqId(null); setReqRejectReason(''); }}>{pickBi(isRTL, 'إلغاء', 'Cancel')}</Button>
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Related requests (legacy brand requests) */}
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">{pickBi(isRTL, 'الطلبات المرتبطة', 'Related requests')} <span className="text-xs text-muted-foreground">({reqsQ.data?.length ?? 0})</span></CardTitle></CardHeader>
-          <CardContent>
-            {reqsQ.isLoading ? <Skeleton className="h-20" /> : (reqsQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد طلبات مرتبطة', 'No related requests')}</p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {(reqsQ.data ?? []).map((r) => (
-                  <li key={r.id} className="flex items-center justify-between gap-2 flex-wrap border rounded-lg p-2">
-                    <div className="flex items-center gap-2 flex-wrap min-w-0">
-                      {r.ref_id && <code className="tech-content text-xs">{r.ref_id}</code>}
-                      <Badge variant="outline" className="text-xs">{pick(requestTypeLabel[r.request_type], locale)}</Badge>
-                      <Badge variant="secondary" className="text-xs">{pick(requestStatusLabel[r.status], locale)}</Badge>
-                      <span className="truncate" dir="auto">{locale === 'ar' ? r.name_ar : (r.name_en ?? r.name_ar)}</span>
-                    </div>
-                    <Button size="sm" variant="ghost" asChild>
-                      <Link to="/admin/brand-requests">{pickBi(isRTL, 'فتح القائمة', 'Open queue')}</Link>
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Audit log */}
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4" />{pickBi(isRTL, 'سجل التدقيق', 'Audit log')}</CardTitle></CardHeader>
-          <CardContent>
-            {auditQ.isLoading ? <Skeleton className="h-24" /> : (auditQ.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{pickBi(isRTL, 'لا توجد أحداث', 'No events')}</p>
-            ) : (
-              <ul className="space-y-1 text-xs">
-                {(auditQ.data ?? []).map((e) => (
-                  <li key={e.id} className="flex items-center justify-between gap-2 border-b border-border/40 py-1.5">
-                    <code className="tech-content">{e.action}</code>
-                    <span className="text-muted-foreground">{new Date(e.created_at).toLocaleString(pickBi(isRTL, 'ar-SA-u-nu-latn', 'en-US'))}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <BrandAuditPanel
+          isRTL={isRTL}
+          events={auditQ.data}
+          loading={auditQ.isLoading}
+        />
       </div>
     </DashboardLayout>
   );
