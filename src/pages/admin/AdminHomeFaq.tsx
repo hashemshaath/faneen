@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, Plus, Save, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
@@ -17,15 +17,12 @@ import {
 } from '@/modules/home';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   HomeFaqStatsSection,
   HomeFaqListSection,
   HomeFaqRow,
+  HomeFaqEditForm,
 } from '@/components/admin/content/home';
 
 type DraftKey = 'new' | string;
@@ -120,53 +117,30 @@ const AdminHomeFaq: React.FC = () => {
     moveUp: 'Move up',
     moveDown: 'Move down',
   };
+  const formLabels = {
+    questionAr: bi('السؤال (عربي)', 'Question (Arabic)'),
+    questionEn: bi('السؤال (إنجليزي)', 'Question (English)'),
+    answerAr: bi('الإجابة (عربي)', 'Answer (Arabic)'),
+    answerEn: bi('الإجابة (إنجليزي)', 'Answer (English)'),
+    order: bi('الترتيب', 'Order'),
+    enabled: bi('مفعّل', 'Enabled'),
+    cancel: bi('إلغاء', 'Cancel'),
+    save: bi('حفظ', 'Save'),
+  };
 
   const renderForm = (key: DraftKey, draft: HomeFaqInput, onSave: () => void) => (
-    <div className="space-y-3 border-t border-border/60 pt-3 mt-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <Label>{bi('السؤال (عربي)', 'Question (Arabic)')} *</Label>
-          <Input dir="auto" value={draft.question_ar} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, question_ar: e.target.value } }))} maxLength={180} />
-          <div className="text-[10px] text-muted-foreground mt-1">{draft.question_ar.length}/180</div>
-        </div>
-        <div>
-          <Label>{bi('السؤال (إنجليزي)', 'Question (English)')}</Label>
-          <Input dir="auto" value={draft.question_en ?? ''} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, question_en: e.target.value } }))} maxLength={180} />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <Label>{bi('الإجابة (عربي)', 'Answer (Arabic)')} *</Label>
-          <Textarea dir="auto" rows={3} value={draft.answer_ar} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, answer_ar: e.target.value } }))} maxLength={1200} />
-          <div className="text-[10px] text-muted-foreground mt-1">{draft.answer_ar.length}/1200</div>
-        </div>
-        <div>
-          <Label>{bi('الإجابة (إنجليزي)', 'Answer (English)')}</Label>
-          <Textarea dir="auto" rows={3} value={draft.answer_en ?? ''} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, answer_en: e.target.value } }))} maxLength={1200} />
-        </div>
-      </div>
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Label className="text-xs">{bi('الترتيب', 'Order')}</Label>
-          <Input type="number" className="h-9 w-24" value={draft.sort_order ?? 0} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, sort_order: Number(e.target.value) } }))} />
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch checked={draft.is_enabled ?? true} onCheckedChange={(v) => setEditing((p) => ({ ...p, [key]: { ...draft, is_enabled: v } }))} />
-          <span className="text-xs">{bi('مفعّل', 'Enabled')}</span>
-        </div>
-        <div className="ms-auto flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => cancelEdit(key)}><X className="w-4 h-4 me-1" />{bi('إلغاء', 'Cancel')}</Button>
-          <Button size="sm" onClick={() => {
-            const err = validate(draft, bi);
-            if (err) { toast.error(err); return; }
-            onSave();
-          }} disabled={createMut.isPending || updateMut.isPending}>
-            {(createMut.isPending || updateMut.isPending) ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
-            {bi('حفظ', 'Save')}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <HomeFaqEditForm
+      draft={draft}
+      isSaving={createMut.isPending || updateMut.isPending}
+      onChange={(patch) => setEditing((p) => ({ ...p, [key]: { ...draft, ...patch } }))}
+      onCancel={() => cancelEdit(key)}
+      onSave={() => {
+        const err = validate(draft, bi);
+        if (err) { toast.error(err); return; }
+        onSave();
+      }}
+      labels={formLabels}
+    />
   );
 
   return (
