@@ -567,6 +567,13 @@ const AppRoutes = () => (
           <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminReportsHub /></ProtectedRoute>} />
           <Route path="/admin/kpis" element={<ProtectedRoute requireAdmin><Navigate to="/admin/reports?tab=kpis" replace /></ProtectedRoute>} />
           <Route path="/admin/audit-log" element={<ProtectedRoute requireAdmin><AdminAuditLog /></ProtectedRoute>} />
+          {/* ADMIN UX RECONSOLIDATION PHASE 2 — new canonical center shells.
+              Legacy URLs continue to work unchanged; these add unified
+              entry points without moving any queries or mutations. */}
+          <Route path="/admin/procurement" element={<ProtectedRoute requireAdmin><AdminProcurementCenter /></ProtectedRoute>} />
+          <Route path="/admin/content" element={<ProtectedRoute requireAdmin><AdminContentCenter /></ProtectedRoute>} />
+          <Route path="/admin/finance" element={<ProtectedRoute requireAdmin><AdminFinanceCenter /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsCenter /></ProtectedRoute>} />
           <Route path="/admin" element={<Navigate to="/admin/operations" replace />} />
           {/* NAVIGATION-CONSOLIDATION-1 group 3 — RFQ hub. */}
           <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfqHub /></ProtectedRoute>} />
