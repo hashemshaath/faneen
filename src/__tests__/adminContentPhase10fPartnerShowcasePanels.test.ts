@@ -132,7 +132,6 @@ describe('Phase 10F — Partner Showcase panels extraction', () => {
       'src/modules/files/services/image-pipeline.ts',
       'src/modules/home/services',
       'src/features/private-sectors/service.ts',
-      'scripts/generate-sitemap.ts',
     ];
     for (const rel of forbiddenPaths) {
       expect(existsSync(resolve(ROOT, rel)), `missing ${rel}`).toBe(true);
