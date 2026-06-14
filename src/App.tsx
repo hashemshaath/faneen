@@ -132,6 +132,7 @@ const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"));
 const AdminIdentity = lazyRetry(() => import("./pages/admin/AdminIdentity"));
+const AdminIdentityHub = lazyRetry(() => import("./pages/admin/AdminIdentityHub"));
 const AdminIdentityCenter = lazyRetry(() => import("./pages/admin/AdminIdentityCenter"));
 const AdminSystemSettings = lazyRetry(() => import("./pages/admin/AdminSystemSettings"));
 const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
