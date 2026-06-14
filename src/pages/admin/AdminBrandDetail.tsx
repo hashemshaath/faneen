@@ -14,17 +14,10 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { ImageUpload } from '@/components/ui/image-upload';
-import { ResponsiveImage } from '@/modules/files';
-import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
-import { FieldAiActions } from '@/components/blog/FieldAiActions';
 
 import {
   adminGetBrand, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
@@ -33,18 +26,23 @@ import {
   listProviderBrandLinksForBrand, listBrandRequestsForBrand,
   listBrandAuditLog, listSectorsLite, lookupBusinessesByIds,
   adminApproveProviderBrandLink, adminRejectProviderBrandLink,
-  brandStatusLabel, verificationLabel, relationshipLabel,
-  requestStatusLabel, requestTypeLabel, authStatusLabel, pick,
+  brandStatusLabel, verificationLabel, pick,
   adminListBrandProducts, adminCreateBrandProduct, adminUpdateBrandProduct,
   adminDeleteBrandProduct,
   listBrandProductRequests, adminApproveBrandProductRequest, adminRejectBrandProductRequest,
-  brandProductStatusLabel, brandProductRequestStatusLabel,
   adminSearchBusinessesForBrand, adminListBusinessServices, adminCreateProviderBrandLink,
   adminLinkBrandToAllServices,
   listProviderBrandLinkProducts, adminSetProviderBrandLinkProducts,
   adminRemoveProviderBrandLinkProduct,
-  type BrandProduct, type BrandProductRequest,
+  type BrandProduct,
 } from '@/modules/brands';
+import {
+  BrandDetailOverviewPanel,
+  BrandClaimsPanel,
+  BrandEquivalencePanel,
+  BrandProvidersPanel,
+  BrandAuditPanel,
+} from '@/components/admin/procurement/brand-detail';
 
 const AdminBrandDetail: React.FC = () => {
   useNoIndex();
