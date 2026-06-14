@@ -5,10 +5,11 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, Plus, Save, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { Loader2, Plus, Save, X } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   useAdminHomeFaq, createHomeFaq, updateHomeFaq, deleteHomeFaq,
   HOME_FAQ_ADMIN_KEY, HOME_FAQ_PUBLIC_KEY,
@@ -20,8 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  HomeFaqStatsSection,
+  HomeFaqListSection,
+  HomeFaqRow,
+} from '@/components/admin/content/home';
 
 type DraftKey = 'new' | string;
 
@@ -40,6 +45,7 @@ function validate(d: HomeFaqInput, bi: ReturnType<typeof useBi>) {
 const AdminHomeFaq: React.FC = () => {
   useNoIndex();
   const bi = useBi();
+  const { isRTL } = useLanguage();
   const qc = useQueryClient();
   const { data: items, isLoading } = useAdminHomeFaq();
 
@@ -99,6 +105,20 @@ const AdminHomeFaq: React.FC = () => {
     if (!neighbor) return;
     updateMut.mutate({ id: it.id, patch: { sort_order: neighbor.sort_order } });
     updateMut.mutate({ id: neighbor.id, patch: { sort_order: it.sort_order } });
+  };
+
+  const enabledCount = (items ?? []).filter((i) => i.is_enabled).length;
+  const hiddenCount = (items ?? []).length - enabledCount;
+  const rowLabels = {
+    enabled: bi('مفعّل', 'Enabled'),
+    hidden: bi('مخفي', 'Hidden'),
+    hide: bi('إخفاء', 'Hide'),
+    show: bi('إظهار', 'Show'),
+    edit: bi('تعديل', 'Edit'),
+    close: bi('إغلاق', 'Close'),
+    delete: bi('حذف', 'Delete'),
+    moveUp: 'Move up',
+    moveDown: 'Move down',
   };
 
   const renderForm = (key: DraftKey, draft: HomeFaqInput, onSave: () => void) => (
@@ -162,6 +182,15 @@ const AdminHomeFaq: React.FC = () => {
           </Button>
         </div>
 
+        {!isLoading && items && (
+          <HomeFaqStatsSection
+            isRTL={isRTL}
+            total={items.length}
+            enabled={enabledCount}
+            hidden={hiddenCount}
+          />
+        )}
+
         {editing.new && (
           <Card>
             <CardHeader><CardTitle className="text-base">{bi('سؤال جديد', 'New question')}</CardTitle></CardHeader>
@@ -181,46 +210,30 @@ const AdminHomeFaq: React.FC = () => {
           </CardContent></Card>
         )}
 
-        <div className="space-y-3">
-          {items?.map((it) => {
+        <HomeFaqListSection>
+          {items?.map((it, idx) => {
             const draft = editing[it.id];
             return (
-              <Card key={it.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex flex-col gap-1">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, -1)} aria-label="Move up"><ArrowUp className="w-3 h-3" /></Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, 1)} aria-label="Move down"><ArrowDown className="w-3 h-3" /></Button>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">{it.question_ar}</span>
-                        <Badge variant="outline" className="text-[10px]">#{it.sort_order}</Badge>
-                        {it.is_enabled
-                          ? <Badge className="text-[10px] bg-emerald-500/15 text-emerald-700">{bi('مفعّل', 'Enabled')}</Badge>
-                          : <Badge variant="secondary" className="text-[10px]">{bi('مخفي', 'Hidden')}</Badge>}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{it.answer_ar}</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" title={it.is_enabled ? bi('إخفاء','Hide') : bi('إظهار','Show')}
-                        onClick={() => updateMut.mutate({ id: it.id, patch: { is_enabled: !it.is_enabled } })} aria-label="Hide">
-                        {it.is_enabled ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => (draft ? cancelEdit(it.id) : startEdit(it))}>
-                        {draft ? bi('إغلاق', 'Close') : bi('تعديل', 'Edit')}
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" aria-label={bi('حذف', 'Delete')} onClick={() => {
-                        if (confirm(bi('حذف هذا السؤال؟','Delete this question?'))) deleteMut.mutate(it.id);
-                      }}><Trash2 className="w-4 h-4" /></Button>
-                    </div>
-                  </div>
-                  {draft && renderForm(it.id, draft, () => updateMut.mutate({ id: it.id, patch: draft }))}
-                </CardContent>
-              </Card>
+              <HomeFaqRow
+                key={it.id}
+                isRTL={isRTL}
+                item={it}
+                canUp={idx > 0}
+                canDown={!!items && idx < items.length - 1}
+                isEditing={!!draft}
+                onMoveUp={() => move(it, -1)}
+                onMoveDown={() => move(it, 1)}
+                onToggleVisible={() => updateMut.mutate({ id: it.id, patch: { is_enabled: !it.is_enabled } })}
+                onEditToggle={() => (draft ? cancelEdit(it.id) : startEdit(it))}
+                onDelete={() => {
+                  if (confirm(bi('حذف هذا السؤال؟','Delete this question?'))) deleteMut.mutate(it.id);
+                }}
+                labels={rowLabels}
+                editForm={draft && renderForm(it.id, draft, () => updateMut.mutate({ id: it.id, patch: draft }))}
+              />
             );
           })}
-        </div>
+        </HomeFaqListSection>
       </div>
     </DashboardLayout>
   );
