@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Activity, Search, Filter, Download, X,
-  FileText, TrendingUp, Users, Zap, Printer, Radio, Calendar, RefreshCw,
+  Activity, Filter, Download, X,
+  FileText, TrendingUp, Users, Zap, Printer, Radio, RefreshCw,
 } from 'lucide-react';
 import { format, isToday, subDays, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -394,9 +394,5 @@ const AdminActivityLog = () => {
     </DashboardLayout>
   );
 };
-
-// Suppress unused import warning for Search/Calendar lucide icons that are now
-// rendered inside OperationsFiltersBar (which provides its own Search icon).
-void Search; void Calendar;
 
 export default AdminActivityLog;
