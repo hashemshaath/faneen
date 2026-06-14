@@ -138,8 +138,8 @@ const AdminPrivateSectors: React.FC = () => {
     tone: k === 'pending' ? 'warning'
         : k === 'approved' ? 'success'
         : k === 'rejected' ? 'destructive'
-        : k === 'suspended' ? 'muted'
-        : k === 'draft' ? 'muted'
+        : k === 'suspended' ? 'default'
+        : k === 'draft' ? 'default'
         : 'default',
   }));
 
