@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import {
   listAdminQuoteRequests,
@@ -8,19 +7,24 @@ import {
 } from '@/modules/leads/services/list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  ReceiptText, Search, Eye, Phone, MapPin, Tag, Calendar, Paperclip, Filter,
+  ReceiptText, Eye, Phone, MapPin, Tag, Calendar, Paperclip, Filter,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
-  QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
+  QUOTE_STATUS_LABEL_AR, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus,
 } from '@/lib/quoteRequests';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+import {
+  ProcurementAdminPageShell,
+  ProcurementFiltersBar,
+  ProcurementStatsStrip,
+  QuoteStatusBadge,
+  type ProcurementStatsItem,
+} from '@/components/admin/procurement/shared';
 
 const AdminQuoteRequests: React.FC = () => {
   useNoIndex();
@@ -66,71 +70,70 @@ const AdminQuoteRequests: React.FC = () => {
     });
   }, [rows, statusFilter, sectorFilter, typeFilter, cityFilter, search]);
 
+  const statsItems: ProcurementStatsItem[] = useMemo(() => [
+    { key: 'total', label: 'الإجمالي', value: stats.total, tone: 'muted' },
+    { key: 'new', label: 'جديد', value: stats.new, tone: 'primary' },
+    { key: 'under_review', label: 'قيد المراجعة', value: stats.under_review, tone: 'warning' },
+    { key: 'matched', label: 'تم توجيهه', value: stats.matched, tone: 'info' },
+    { key: 'completed', label: 'مكتمل', value: stats.completed, tone: 'success' },
+  ], [stats]);
+
+  const canReset =
+    statusFilter !== 'all' ||
+    sectorFilter !== 'all' ||
+    typeFilter !== 'all' ||
+    cityFilter !== '' ||
+    search !== '';
+  const resetFilters = () => {
+    setStatusFilter('all');
+    setSectorFilter('all');
+    setTypeFilter('all');
+    setCityFilter('');
+    setSearch('');
+  };
+
   return (
-    <DashboardLayout>
-      <div className="space-y-5">
-        <header>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-            <ReceiptText className="h-5 w-5" /> طلبات عروض الأسعار
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            راجع الطلبات الواردة، غيّر حالتها، وأضف ملاحظات داخلية للفريق.
-          </p>
-        </header>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <StatCard label="الإجمالي" value={stats.total} tone="bg-muted text-foreground" />
-          <StatCard label="جديد" value={stats.new} tone="bg-primary/10 text-primary" />
-          <StatCard label="قيد المراجعة" value={stats.under_review} tone="bg-warning/10 text-warning" />
-          <StatCard label="تم توجيهه" value={stats.matched} tone="bg-info/10 text-info" />
-          <StatCard label="مكتمل" value={stats.completed} tone="bg-emerald-500/10 text-emerald-600" />
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                dir="auto" placeholder="بحث بالاسم أو رقم الجوال"
-                className="ps-9" value={search} onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue placeholder="الحالة" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل الحالات</SelectItem>
-                {QUOTE_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>{QUOTE_STATUS_LABEL_AR[s]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sectorFilter} onValueChange={setSectorFilter}>
-              <SelectTrigger><SelectValue placeholder="القطاع" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل القطاعات</SelectItem>
-                {Object.entries(SECTOR_LABEL_AR).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger><SelectValue placeholder="نوع العميل" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل الأنواع</SelectItem>
-                {Object.entries(CUSTOMER_TYPE_LABEL_AR).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              dir="auto" placeholder="فلترة حسب المدينة"
-              className="md:col-span-1" value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}
-            />
-          </CardContent>
-        </Card>
-
+    <ProcurementAdminPageShell
+      icon={ReceiptText}
+      title="طلبات عروض الأسعار"
+      description="راجع الطلبات الواردة، غيّر حالتها، وأضف ملاحظات داخلية للفريق."
+      statsSlot={<ProcurementStatsStrip items={statsItems} columnsClassName="grid-cols-2 sm:grid-cols-5" />}
+      filtersSlot={
+        <ProcurementFiltersBar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="بحث بالاسم أو رقم الجوال"
+          status={{
+            value: statusFilter,
+            onChange: setStatusFilter,
+            placeholder: 'الحالة',
+            allLabel: 'كل الحالات',
+            options: QUOTE_STATUSES.map((s) => ({ value: s, label: QUOTE_STATUS_LABEL_AR[s] })),
+          }}
+          sector={{
+            value: sectorFilter,
+            onChange: setSectorFilter,
+            placeholder: 'القطاع',
+            allLabel: 'كل القطاعات',
+            options: Object.entries(SECTOR_LABEL_AR).map(([k, v]) => ({ value: k, label: v })),
+          }}
+          type={{
+            value: typeFilter,
+            onChange: setTypeFilter,
+            placeholder: 'نوع العميل',
+            allLabel: 'كل الأنواع',
+            options: Object.entries(CUSTOMER_TYPE_LABEL_AR).map(([k, v]) => ({ value: k, label: v })),
+          }}
+          cityValue={cityFilter}
+          onCityChange={setCityFilter}
+          cityPlaceholder="فلترة حسب المدينة"
+          onReset={resetFilters}
+          canReset={canReset}
+          resetLabel="إعادة الضبط"
+        />
+      }
+    >
+      <div className="space-y-3">
         {/* List */}
         {isLoading && (
           <div className="space-y-3">
@@ -147,7 +150,6 @@ const AdminQuoteRequests: React.FC = () => {
 
         <div className="space-y-2">
           {filtered.map((r) => {
-            const tone = QUOTE_STATUS_TONE[r.status as QuoteStatus] ?? 'bg-muted text-foreground border-border';
             const fc = fileCounts?.get(r.id) ?? 0;
             return (
               <Card key={r.id}>
@@ -162,9 +164,7 @@ const AdminQuoteRequests: React.FC = () => {
                             </span>
                           )
                         : <span className="font-mono text-xs text-muted-foreground tech-content">#{r.id.slice(-6)}</span>}
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
-                        {QUOTE_STATUS_LABEL_AR[r.status as QuoteStatus] ?? r.status}
-                      </span>
+                      <QuoteStatusBadge status={r.status as QuoteStatus} />
                       <span className="text-xs text-muted-foreground tech-content inline-flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {new Date(r.created_at).toLocaleDateString('ar-SA-u-nu-latn')}
@@ -188,15 +188,8 @@ const AdminQuoteRequests: React.FC = () => {
           })}
         </div>
       </div>
-    </DashboardLayout>
+    </ProcurementAdminPageShell>
   );
 };
-
-const StatCard: React.FC<{ label: string; value: number; tone: string }> = ({ label, value, tone }) => (
-  <Card><CardContent className={`p-3 rounded-xl ${tone}`}>
-    <div className="text-xs opacity-80">{label}</div>
-    <div className="text-2xl font-bold tech-content">{value}</div>
-  </CardContent></Card>
-);
 
 export default AdminQuoteRequests;
