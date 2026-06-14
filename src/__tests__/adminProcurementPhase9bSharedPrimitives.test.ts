@@ -25,7 +25,6 @@ const COMPONENT_FILES = [
 const ADMIN_PAGES = [
   'src/pages/admin/AdminQuoteRequestDetails.tsx',
   'src/pages/admin/AdminQuoteOperations.tsx',
-  'src/pages/admin/AdminBrandRequests.tsx',
   'src/pages/admin/AdminBrandDetail.tsx',
   'src/pages/admin/AdminBrands.tsx',
 ];
