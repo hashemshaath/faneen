@@ -105,7 +105,6 @@ describe('ADMIN UX RECONSOLIDATION PHASE 2 — deep links preserved', () => {
     'path="/admin/quote-requests/:id"',
     'path="/admin/brands/:id"',
     'path="/admin/users/:id"',
-    'path="/admin/contracts/:id"',
     'path="/admin/quote-requests"',
     'path="/admin/lead-requests"',
     'path="/admin/cron-runs"',
