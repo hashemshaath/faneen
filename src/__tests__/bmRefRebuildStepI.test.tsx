@@ -80,7 +80,11 @@ describe('Step I — admin quote request select guard', () => {
   });
 
   it('admin quote ops attention list renders ref badge when ref_id is present', () => {
-    const src = read('src/pages/admin/AdminQuoteOperations.tsx');
+    // Phase 9E moved the attention list out of the page into a section
+    // component. The ref badge guarantee now lives there.
+    const src = read(
+      'src/components/admin/procurement/operations/QuoteOperationsAttentionSection.tsx',
+    );
     expect(src).toContain('ReferenceBadge');
     expect(src).toMatch(/a\.quote\.ref_id\s*\?/);
   });
