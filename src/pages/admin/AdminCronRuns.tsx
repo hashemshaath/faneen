@@ -7,15 +7,14 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TechnicalText } from '@/components/ui/technical-text';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Loader2, RefreshCw, Activity, AlertCircle, CheckCircle2, XCircle,
-  CalendarClock, Search, Timer, Gauge, ListChecks, ChevronDown, Zap, Database,
+  RefreshCw, Activity, AlertCircle,
+  CalendarClock, Timer, Gauge, ListChecks, ChevronDown, Zap, Database,
   Download, Printer, Radio, BarChart3,
 } from 'lucide-react';
 import {
@@ -27,6 +26,16 @@ import { buildCsv, downloadCsv, printCurrentView, tsStamp } from '@/lib/admin/ex
 import { useRealtimeInvalidate } from '@/hooks/useRealtimeInvalidate';
 import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { humanizeJobName } from '@/i18n/notificationLabels';
+import {
+  OperationsAdminPageShell,
+  OperationsStatsStrip,
+  OperationsFiltersBar,
+  OperationsStatusBadge,
+  type OperationsStatItem,
+  type OperationsSelectOption,
+} from '@/components/admin/ops';
+import type { AdminKpiTone } from '@/components/admin/AdminKpiCard';
+import { CronRunRow } from '@/components/admin/ops/cron-runs/CronRunRow';
 
 interface CronRunRow {
   id: string;
