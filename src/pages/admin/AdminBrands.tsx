@@ -5,20 +5,29 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Archive, Building2, Check, Filter, Globe2, Inbox, Link2,
-  RefreshCw, Search, ShieldCheck, SlidersHorizontal, Tag as TagIcon, X,
+  RefreshCw, ShieldCheck, Tag as TagIcon, X,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  ContentAdminPageShell,
+  ContentFiltersBar,
+  ContentStatsStrip,
+  DirectoryStatusBadge,
+  VerificationStatusBadge,
+  type ContentStatItem,
+} from '@/components/admin/content';
+import type { AdminFilterPill } from '@/components/admin/AdminFiltersBar';
 // Phase 4: category hints now come from `taxonomy_categories` directly.
 import { supabase } from '@/integrations/supabase/client';
 
@@ -36,6 +45,27 @@ const VERIFICATION_FILTERS = ['all', 'official', 'verified', 'unverified'] as co
 
 type ProviderFilter = typeof PROVIDER_FILTERS[number];
 type VerificationFilter = typeof VERIFICATION_FILTERS[number];
+
+const STATUS_PILL_TONE: Record<BrandStatus | 'all', AdminFilterPill['tone']> = {
+  all: 'default',
+  approved: 'success',
+  pending: 'warning',
+  in_review: 'info',
+  rejected: 'destructive',
+  archived: 'default',
+  draft: 'default',
+  merged: 'default',
+};
+
+const STATUS_BADGE_TONE: Record<BrandStatus, 'success' | 'warning' | 'info' | 'destructive' | 'muted'> = {
+  approved: 'success',
+  pending: 'warning',
+  in_review: 'info',
+  rejected: 'destructive',
+  archived: 'muted',
+  draft: 'muted',
+  merged: 'muted',
+};
 
 interface CategoryLite {
   id: string;
@@ -196,6 +226,9 @@ const AdminBrands: React.FC = () => {
     setProviderFilter('all');
     setQ('');
   };
+  const canReset =
+    status !== 'all' || sectorId !== ALL || country !== ALL ||
+    verification !== 'all' || providerFilter !== 'all' || q.trim() !== '';
 
   const approve = useMutation({
     mutationFn: (id: string) => adminApproveBrand(id),
@@ -213,179 +246,183 @@ const AdminBrands: React.FC = () => {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
+  const statusPills: AdminFilterPill[] = STATUS_FILTERS.map((s) => ({
+    key: s,
+    label: s === 'all'
+      ? pickBi(isRTL, 'الكل', 'All')
+      : pick(brandStatusLabel[s as BrandStatus], locale),
+    count: s === 'all' ? allBrands.length : counts[s as string],
+    tone: STATUS_PILL_TONE[s],
+  }));
+
+  const statItems: ContentStatItem[] = [
+    { key: 'total', label: pickBi(isRTL, 'إجمالي العلامات', 'Total brands'), value: stats.total, icon: TagIcon, tone: 'primary' },
+    { key: 'approved', label: pickBi(isRTL, 'معتمدة', 'Approved'), value: stats.approved, icon: Check, tone: 'success' },
+    { key: 'verified', label: pickBi(isRTL, 'موثقة', 'Verified'), value: stats.verified, icon: ShieldCheck, tone: 'info' },
+    { key: 'providers', label: pickBi(isRTL, 'مرتبطة بمزودين', 'Provider-linked'), value: stats.withProviders, icon: Link2, tone: stats.withProviders === 0 ? 'muted' : 'accent' },
+  ];
+
+  const sectorOptions = [
+    { value: ALL, label: pickBi(isRTL, 'كل القطاعات', 'All sectors') },
+    ...sectors.map((sector) => ({
+      value: sector.id,
+      label: locale === 'ar' ? sector.name_ar : (sector.name_en ?? sector.name_ar),
+    })),
+  ];
+
+  const filtersRightSlot = (
+    <>
+      <Select value={country} onValueChange={setCountry}>
+        <SelectTrigger className="h-11 w-40 rounded-xl bg-background/60"><SelectValue placeholder={pickBi(isRTL, 'بلد المنشأ', 'Origin')} /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>{pickBi(isRTL, 'كل البلدان', 'All origins')}</SelectItem>
+          {countries.map(([code, label]) => <SelectItem key={code} value={code}>{label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={verification} onValueChange={(value) => setVerification(value as VerificationFilter)}>
+        <SelectTrigger className="h-11 w-40 rounded-xl bg-background/60"><SelectValue placeholder={pickBi(isRTL, 'التوثيق', 'Verification')} /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{pickBi(isRTL, 'كل حالات التوثيق', 'All verification')}</SelectItem>
+          <SelectItem value="official">{pickBi(isRTL, 'رسمية', 'Official')}</SelectItem>
+          <SelectItem value="verified">{pickBi(isRTL, 'موثقة', 'Verified')}</SelectItem>
+          <SelectItem value="unverified">{pickBi(isRTL, 'غير موثقة', 'Unverified')}</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={providerFilter} onValueChange={(value) => setProviderFilter(value as ProviderFilter)}>
+        <SelectTrigger className="h-11 w-40 rounded-xl bg-background/60"><SelectValue placeholder={pickBi(isRTL, 'الربط', 'Linking')} /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{pickBi(isRTL, 'كل حالات الربط', 'All links')}</SelectItem>
+          <SelectItem value="with_providers">{pickBi(isRTL, 'مرتبطة بمزودين', 'With providers')}</SelectItem>
+          <SelectItem value="without_providers">{pickBi(isRTL, 'بدون مزودين', 'Without providers')}</SelectItem>
+          <SelectItem value="with_sectors">{pickBi(isRTL, 'مرتبطة بقطاعات', 'With sectors')}</SelectItem>
+          <SelectItem value="without_sectors">{pickBi(isRTL, 'بدون قطاعات', 'Without sectors')}</SelectItem>
+        </SelectContent>
+      </Select>
+    </>
+  );
+
+  const header = (
+    <AdminPageHeader
+      icon={TagIcon}
+      tone="primary"
+      eyebrow={pickBi(isRTL, 'الإدارة', 'Admin')}
+      title={pickBi(isRTL, 'سجل العلامات التجارية', 'Brands Registry')}
+      subtitle={pickBi(isRTL, 'إدارة العلامات وربطها بالقطاعات والخدمات والمزودين من مكان واحد', 'Manage brands, sector mapping, services, and provider assignments in one place')}
+      breadcrumbs={[
+        { label: pickBi(isRTL, 'الإدارة', 'Admin'), href: '/admin' },
+        { label: pickBi(isRTL, 'العلامات التجارية', 'Brands') },
+      ]}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/admin/taxonomy"><Filter className="w-4 h-4 me-2" />{pickBi(isRTL, 'مركز التصنيفات', 'Taxonomy Center')}</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{pickBi(isRTL, 'طلبات العلامات', 'Brand requests')}</Link>
+          </Button>
+        </div>
+      }
+    />
+  );
+
+  const filters = (
+    <ContentFiltersBar
+      searchValue={q}
+      onSearchChange={setQ}
+      searchPlaceholder={pickBi(isRTL, 'ابحث بالاسم أو الرابط أو الرقم المرجعي…', 'Search by name, slug, website, or ref id…')}
+      pills={statusPills}
+      activePill={status}
+      onPillSelect={(key) => setStatus(key as BrandStatus | 'all')}
+      sectorOptions={sectorOptions}
+      activeSector={sectorId}
+      onSectorChange={setSectorId}
+      sectorAllValue={ALL}
+      sectorPlaceholder={pickBi(isRTL, 'القطاع', 'Sector')}
+      canReset={canReset}
+      onReset={resetFilters}
+      resetLabel={pickBi(isRTL, 'إعادة ضبط', 'Reset')}
+      rightSlot={filtersRightSlot}
+    />
+  );
+
+  const unlinkedCallout = stats.total > 0 && stats.withProviders === 0 && !brandsQuery.isLoading ? (
+    <Card className="border-dashed">
+      <CardContent className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <p className="font-semibold">{pickBi(isRTL, 'العلامات موجودة لكن لم تُسند بعد إلى خدمات المزودين', 'Brands exist but are not assigned to provider services yet')}</p>
+          <p className="text-sm text-muted-foreground">
+            {pickBi(isRTL, 'تم العثور على العلامات في السجل وربطها بالقطاعات، لكن جدول ربط العلامات بخدمات الشركات لا يحتوي على روابط حالياً.', 'The registry and sector links are populated, but the provider-service brand assignment table has no links yet.')}
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm" className="h-10 rounded-xl">
+          <Link to="/admin/businesses"><Building2 className="w-4 h-4 me-2" />{pickBi(isRTL, 'إسناد عبر الشركات', 'Assign via businesses')}</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  ) : null;
+
+  const content = (
+    <>
+      {unlinkedCallout}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center justify-between gap-3 flex-wrap">
+            <span>{pickBi(isRTL, 'العلامات', 'Brands')} <span className="text-muted-foreground text-sm">({brands.length})</span></span>
+            <Button size="sm" variant="ghost" onClick={() => { qc.invalidateQueries({ queryKey: ['admin-brands'] }); qc.invalidateQueries({ queryKey: ['admin-brand-link-summaries'] }); }}>
+              <RefreshCw className="w-4 h-4 me-2" />{pickBi(isRTL, 'تحديث', 'Refresh')}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {brandsQuery.isLoading ? (
+            <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+          ) : brandsQuery.isError ? (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-3">
+              <p className="font-semibold text-destructive">{pickBi(isRTL, 'تعذر تحميل العلامات', 'Could not load brands')}</p>
+              <p className="text-sm text-muted-foreground">{errorMessage(brandsQuery.error, pickBi(isRTL, 'تحقق من صلاحيات المدير وسياسات الوصول.', 'Check admin permissions and access rules.'))}</p>
+              <Button size="sm" variant="outline" onClick={() => brandsQuery.refetch()}>{pickBi(isRTL, 'إعادة المحاولة', 'Try again')}</Button>
+            </div>
+          ) : brands.length === 0 ? (
+            <div className="py-10 text-center space-y-3">
+              <TagIcon className="h-10 w-10 mx-auto text-muted-foreground/50" />
+              <p className="font-semibold">{pickBi(isRTL, 'لا توجد علامات بهذه التصفية', 'No brands match these filters')}</p>
+              <p className="text-muted-foreground text-sm max-w-md mx-auto">{pickBi(isRTL, 'البيانات موجودة في السجل؛ وسّع الفلاتر أو أعد ضبطها لعرض العلامات المعتمدة.', 'The registry has data; widen or reset filters to show approved brands.')}</p>
+              <Button size="sm" variant="outline" onClick={resetFilters}>{pickBi(isRTL, 'عرض كل العلامات', 'Show all brands')}</Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {brands.map((b) => <BrandRow key={b.id} brand={b} locale={locale} isRTL={isRTL}
+                summary={summaryMap.get(b.id)}
+                sectorLabel={sectorMap.get(b.sector_id ?? '') ? pick({ ar: sectorMap.get(b.sector_id ?? '')?.name_ar ?? b.sector_id ?? '', en: sectorMap.get(b.sector_id ?? '')?.name_en ?? sectorMap.get(b.sector_id ?? '')?.name_ar ?? b.sector_id ?? '' }, locale) : b.sector_id}
+                categoryHints={b.sector_id ? (categoryHints[b.sector_id] ?? []) : []}
+                onApprove={() => approve.mutate(b.id)}
+                onArchive={() => archive.mutate(b.id)}
+                rejecting={rejecting === b.id}
+                onStartReject={() => { setRejecting(b.id); setReason(''); }}
+                onCancelReject={() => { setRejecting(null); setReason(''); }}
+                onConfirmReject={() => reject.mutate({ id: b.id, reason })}
+                reason={reason} setReason={setReason}
+              />)}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6">
-        <AdminPageHeader
-          icon={TagIcon}
-          tone="primary"
-          eyebrow={pickBi(isRTL, 'الإدارة', 'Admin')}
-          title={pickBi(isRTL, 'سجل العلامات التجارية', 'Brands Registry')}
-          subtitle={pickBi(isRTL, 'إدارة العلامات وربطها بالقطاعات والخدمات والمزودين من مكان واحد', 'Manage brands, sector mapping, services, and provider assignments in one place')}
-          breadcrumbs={[
-            { label: pickBi(isRTL, 'الإدارة', 'Admin'), href: '/admin' },
-            { label: pickBi(isRTL, 'العلامات التجارية', 'Brands') },
-          ]}
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/admin/taxonomy"><Filter className="w-4 h-4 me-2" />{pickBi(isRTL, 'مركز التصنيفات', 'Taxonomy Center')}</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{pickBi(isRTL, 'طلبات العلامات', 'Brand requests')}</Link>
-              </Button>
-            </div>
-          }
+      <div className="p-4 md:p-6">
+        <ContentAdminPageShell
+          header={header}
+          statsSlot={<ContentStatsStrip items={statItems} columns={4} />}
+          filtersSlot={filters}
+          contentSlot={content}
         />
-
-        <section className="grid gap-3 md:grid-cols-4" aria-label={pickBi(isRTL, 'ملخص العلامات', 'Brands summary')}>
-          <StatCard icon={TagIcon} label={pickBi(isRTL, 'إجمالي العلامات', 'Total brands')} value={stats.total} />
-          <StatCard icon={Check} label={pickBi(isRTL, 'معتمدة', 'Approved')} value={stats.approved} />
-          <StatCard icon={ShieldCheck} label={pickBi(isRTL, 'موثقة', 'Verified')} value={stats.verified} />
-          <StatCard icon={Link2} label={pickBi(isRTL, 'مرتبطة بمزودين', 'Provider-linked')} value={stats.withProviders} muted={stats.withProviders === 0} />
-        </section>
-
-        {stats.total > 0 && stats.withProviders === 0 && !brandsQuery.isLoading && (
-          <Card className="border-dashed">
-            <CardContent className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-1">
-                <p className="font-semibold">{pickBi(isRTL, 'العلامات موجودة لكن لم تُسند بعد إلى خدمات المزودين', 'Brands exist but are not assigned to provider services yet')}</p>
-                <p className="text-sm text-muted-foreground">
-                  {pickBi(isRTL, 'تم العثور على العلامات في السجل وربطها بالقطاعات، لكن جدول ربط العلامات بخدمات الشركات لا يحتوي على روابط حالياً.', 'The registry and sector links are populated, but the provider-service brand assignment table has no links yet.')}
-                </p>
-              </div>
-              <Button asChild variant="outline" size="sm" className="h-10 rounded-xl">
-                <Link to="/admin/businesses"><Building2 className="w-4 h-4 me-2" />{pickBi(isRTL, 'إسناد عبر الشركات', 'Assign via businesses')}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" />{pickBi(isRTL, 'فلاتر العلامات والتصنيفات', 'Brand and taxonomy filters')}</CardTitle>
-            <CardDescription>{pickBi(isRTL, 'اعرض العلامات حسب الحالة، القطاع، بلد المنشأ، التوثيق، وحالة الإسناد للمزودين.', 'Filter by status, sector, origin, verification, and provider assignment state.')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {STATUS_FILTERS.map((s) => (
-                <Button key={s} size="sm" variant={status === s ? 'default' : 'outline'} onClick={() => setStatus(s)} className="h-9">
-                  {s === 'all' ? (pickBi(isRTL, 'الكل', 'All')) : pick(brandStatusLabel[s as BrandStatus], locale)}
-                  {counts[s as string] != null && <span className="ms-2 text-xs opacity-70">{counts[s as string]}</span>}
-                </Button>
-              ))}
-            </div>
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_auto]">
-              <div className="relative">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input dir="auto" value={q} onChange={(e) => setQ(e.target.value)} placeholder={pickBi(isRTL, 'ابحث بالاسم أو الرابط أو الرقم المرجعي…', 'Search by name, slug, website, or ref id…')} className="ps-9 h-11" />
-              </div>
-              <Select value={sectorId} onValueChange={setSectorId}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'القطاع', 'Sector')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>{pickBi(isRTL, 'كل القطاعات', 'All sectors')}</SelectItem>
-                  {sectors.map((sector) => (
-                    <SelectItem key={sector.id} value={sector.id}>{locale === 'ar' ? sector.name_ar : (sector.name_en ?? sector.name_ar)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'بلد المنشأ', 'Origin')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>{pickBi(isRTL, 'كل البلدان', 'All origins')}</SelectItem>
-                  {countries.map(([code, label]) => <SelectItem key={code} value={code}>{label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={verification} onValueChange={(value) => setVerification(value as VerificationFilter)}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'التوثيق', 'Verification')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{pickBi(isRTL, 'كل حالات التوثيق', 'All verification')}</SelectItem>
-                  <SelectItem value="official">{pickBi(isRTL, 'رسمية', 'Official')}</SelectItem>
-                  <SelectItem value="verified">{pickBi(isRTL, 'موثقة', 'Verified')}</SelectItem>
-                  <SelectItem value="unverified">{pickBi(isRTL, 'غير موثقة', 'Unverified')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={providerFilter} onValueChange={(value) => setProviderFilter(value as ProviderFilter)}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={pickBi(isRTL, 'الربط', 'Linking')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{pickBi(isRTL, 'كل حالات الربط', 'All links')}</SelectItem>
-                  <SelectItem value="with_providers">{pickBi(isRTL, 'مرتبطة بمزودين', 'With providers')}</SelectItem>
-                  <SelectItem value="without_providers">{pickBi(isRTL, 'بدون مزودين', 'Without providers')}</SelectItem>
-                  <SelectItem value="with_sectors">{pickBi(isRTL, 'مرتبطة بقطاعات', 'With sectors')}</SelectItem>
-                  <SelectItem value="without_sectors">{pickBi(isRTL, 'بدون قطاعات', 'Without sectors')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" className="h-11 rounded-xl" onClick={resetFilters}>{pickBi(isRTL, 'إعادة ضبط', 'Reset')}</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between gap-3 flex-wrap">
-              <span>{pickBi(isRTL, 'العلامات', 'Brands')} <span className="text-muted-foreground text-sm">({brands.length})</span></span>
-              <Button size="sm" variant="ghost" onClick={() => { qc.invalidateQueries({ queryKey: ['admin-brands'] }); qc.invalidateQueries({ queryKey: ['admin-brand-link-summaries'] }); }}>
-                <RefreshCw className="w-4 h-4 me-2" />{pickBi(isRTL, 'تحديث', 'Refresh')}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {brandsQuery.isLoading ? (
-              <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
-            ) : brandsQuery.isError ? (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-3">
-                <p className="font-semibold text-destructive">{pickBi(isRTL, 'تعذر تحميل العلامات', 'Could not load brands')}</p>
-                <p className="text-sm text-muted-foreground">{errorMessage(brandsQuery.error, pickBi(isRTL, 'تحقق من صلاحيات المدير وسياسات الوصول.', 'Check admin permissions and access rules.'))}</p>
-                <Button size="sm" variant="outline" onClick={() => brandsQuery.refetch()}>{pickBi(isRTL, 'إعادة المحاولة', 'Try again')}</Button>
-              </div>
-            ) : brands.length === 0 ? (
-              <div className="py-10 text-center space-y-3">
-                <TagIcon className="h-10 w-10 mx-auto text-muted-foreground/50" />
-                <p className="font-semibold">{pickBi(isRTL, 'لا توجد علامات بهذه التصفية', 'No brands match these filters')}</p>
-                <p className="text-muted-foreground text-sm max-w-md mx-auto">{pickBi(isRTL, 'البيانات موجودة في السجل؛ وسّع الفلاتر أو أعد ضبطها لعرض العلامات المعتمدة.', 'The registry has data; widen or reset filters to show approved brands.')}</p>
-                <Button size="sm" variant="outline" onClick={resetFilters}>{pickBi(isRTL, 'عرض كل العلامات', 'Show all brands')}</Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {brands.map((b) => <BrandRow key={b.id} brand={b} locale={locale} isRTL={isRTL}
-                  summary={summaryMap.get(b.id)}
-                  sectorLabel={sectorMap.get(b.sector_id ?? '') ? pick({ ar: sectorMap.get(b.sector_id ?? '')?.name_ar ?? b.sector_id ?? '', en: sectorMap.get(b.sector_id ?? '')?.name_en ?? sectorMap.get(b.sector_id ?? '')?.name_ar ?? b.sector_id ?? '' }, locale) : b.sector_id}
-                  categoryHints={b.sector_id ? (categoryHints[b.sector_id] ?? []) : []}
-                  onApprove={() => approve.mutate(b.id)}
-                  onArchive={() => archive.mutate(b.id)}
-                  rejecting={rejecting === b.id}
-                  onStartReject={() => { setRejecting(b.id); setReason(''); }}
-                  onCancelReject={() => { setRejecting(null); setReason(''); }}
-                  onConfirmReject={() => reject.mutate({ id: b.id, reason })}
-                  reason={reason} setReason={setReason}
-                />)}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );
 };
-
-function StatCard({ icon: Icon, label, value, muted = false }: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  muted?: boolean;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary grid place-items-center"><Icon className="h-5 w-5" /></div>
-        <div>
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className={muted ? 'text-2xl font-bold text-muted-foreground' : 'text-2xl font-bold'}>{value}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, onApprove, onArchive, rejecting, onStartReject, onCancelReject, onConfirmReject, reason, setReason }: {
   brand: Brand; locale: 'ar' | 'en'; isRTL: boolean;
@@ -398,6 +435,9 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
 }) {
   const name = locale === 'ar' ? brand.name_ar : (brand.name_en ?? brand.name_ar);
   const providerCount = (summary?.business_count ?? 0) + (summary?.service_count ?? 0);
+  const verificationStatus: 'verified' | 'unverified' =
+    (brand.is_verified || brand.verification_status === 'verified' || brand.verification_status === 'official')
+      ? 'verified' : 'unverified';
   return (
     <div className="border rounded-xl p-4 hover-lift transition-all bg-card">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -411,9 +451,16 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
             <div className="flex items-center gap-2 flex-wrap">
               <Link to={`/admin/brands/${brand.slug || brand.id}`} className="font-semibold truncate hover:underline">{name}</Link>
               {brand.ref_id && <code className="tech-content text-xs bg-muted px-2 py-0.5 rounded">{brand.ref_id}</code>}
-              <Badge variant="outline" className="text-xs">{pick(brandStatusLabel[brand.status], locale)}</Badge>
-              {brand.verification_status !== 'unverified' && (
-                <Badge variant="secondary" className="text-xs">{pick(verificationLabel[brand.verification_status], locale)}</Badge>
+              <DirectoryStatusBadge
+                label={pick(brandStatusLabel[brand.status], locale)}
+                tone={STATUS_BADGE_TONE[brand.status]}
+              />
+              <VerificationStatusBadge status={verificationStatus} />
+              {brand.verification_status === 'official' && (
+                <DirectoryStatusBadge
+                  label={pick(verificationLabel.official, locale)}
+                  tone="info"
+                />
               )}
               {brand.is_local && <Badge variant="outline" className="text-xs">{pickBi(isRTL, 'محلي', 'Local')}</Badge>}
             </div>
