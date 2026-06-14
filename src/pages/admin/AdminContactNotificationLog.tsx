@@ -9,32 +9,23 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, FileText, FileSpreadsheet, ChevronDown, ChevronUp, RefreshCw, Mail, Webhook } from 'lucide-react';
+import {
+  FileText, FileSpreadsheet, RefreshCw, Activity, CheckCircle2, Clock, XCircle,
+} from 'lucide-react';
 import { setupArabicDoc, getArabicTableStyles } from '@/lib/pdf-arabic-font';
+import {
+  OperationsAdminPageShell,
+  OperationsFiltersBar,
+  OperationsStatsStrip,
+  type OperationsSelectOption,
+} from '@/components/admin/ops';
+import {
+  ContactNotificationLogTableSection,
+  type ContactNotificationLogRow,
+} from '@/components/admin/ops/contact-logs';
 
-type LogRow = {
-  id: string; event_id: string | null; message_id: string | null; ticket_number: string | null;
-  event_type: string | null; channel: 'email' | 'webhook'; recipient: string;
-  status: 'pending' | 'success' | 'failed' | 'max_retries' | 'skipped';
-  attempt_count: number; max_attempts: number;
-  http_status: number | null; error_code: string | null; error_message: string | null;
-  response_body: string | null; next_retry_at: string | null; last_attempt_at: string | null;
-  created_at: string;
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  success:     'bg-success text-success',
-  pending:     'bg-warning text-warning',
-  failed:      'bg-destructive text-destructive',
-  max_retries: 'bg-destructive text-destructive',
-  skipped:     'bg-muted text-muted-foreground',
-};
+type LogRow = ContactNotificationLogRow;
 
 export default function AdminContactNotificationLog() {
   useNoIndex();
@@ -136,155 +127,105 @@ export default function AdminContactNotificationLog() {
     doc.save(`notification-log-${new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')}.pdf`);
   };
 
+  const channelOptions: OperationsSelectOption[] = [
+    { value: 'all', label: isRTL ? 'كل القنوات' : 'All channels' },
+    { value: 'email', label: 'Email' },
+    { value: 'webhook', label: 'Webhook' },
+  ];
+  const statusOptions: OperationsSelectOption[] = [
+    { value: 'all', label: isRTL ? 'كل الحالات' : 'All statuses' },
+    { value: 'success', label: 'success' },
+    { value: 'pending', label: 'pending' },
+    { value: 'failed', label: 'failed' },
+    { value: 'max_retries', label: 'max_retries' },
+  ];
+  const eventOptions: OperationsSelectOption[] = [
+    { value: 'all', label: isRTL ? 'كل الأحداث' : 'All events' },
+    { value: 'assignee_changed', label: 'assignee_changed' },
+    { value: 'status_changed', label: 'status_changed' },
+    { value: 'priority_changed', label: 'priority_changed' },
+    { value: 'ai_triaged', label: 'ai_triaged' },
+  ];
+
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold">{isRTL ? 'سجل إرسال الإشعارات' : 'Notification Delivery Log'}</h1>
-            <p className="text-sm text-muted-foreground">{isRTL ? 'سجل محاولات Email/Webhook لكل حدث' : 'Email/Webhook attempts per event'}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="rounded-lg h-12" onClick={exportCSV} disabled={rows.length === 0}>
-              <FileSpreadsheet className="w-4 h-4 me-2" />CSV
-            </Button>
-            <Button variant="outline" className="rounded-lg h-12" onClick={exportPDF} disabled={rows.length === 0}>
-              <FileText className="w-4 h-4 me-2" />PDF
-            </Button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <Card><CardContent className="p-4 grid grid-cols-2 md:grid-cols-6 gap-3">
-          <div className="space-y-1"><Label className="text-xs">{isRTL ? 'من' : 'From'}</Label>
-            <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="h-12 rounded-xl tech-content" /></div>
-          <div className="space-y-1"><Label className="text-xs">{isRTL ? 'إلى' : 'To'}</Label>
-            <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="h-12 rounded-xl tech-content" /></div>
-          <div className="space-y-1"><Label className="text-xs">{isRTL ? 'القناة' : 'Channel'}</Label>
-            <Select value={channel} onValueChange={setChannel}>
-              <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="webhook">Webhook</SelectItem>
-              </SelectContent>
-            </Select></div>
-          <div className="space-y-1"><Label className="text-xs">{isRTL ? 'الحالة' : 'Status'}</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                <SelectItem value="success">success</SelectItem>
-                <SelectItem value="pending">pending</SelectItem>
-                <SelectItem value="failed">failed</SelectItem>
-                <SelectItem value="max_retries">max_retries</SelectItem>
-              </SelectContent>
-            </Select></div>
-          <div className="space-y-1"><Label className="text-xs">{isRTL ? 'الحدث' : 'Event'}</Label>
-            <Select value={eventType} onValueChange={setEventType}>
-              <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                <SelectItem value="assignee_changed">assignee_changed</SelectItem>
-                <SelectItem value="status_changed">status_changed</SelectItem>
-                <SelectItem value="priority_changed">priority_changed</SelectItem>
-                <SelectItem value="ai_triaged">ai_triaged</SelectItem>
-              </SelectContent>
-            </Select></div>
-          <div className="space-y-1"><Label className="text-xs opacity-0">refresh</Label>
-            <Button onClick={() => refetch()} disabled={isFetching} className="h-12 rounded-xl w-full">
-              <RefreshCw className={`w-4 h-4 me-2 ${isFetching ? 'animate-spin' : ''}`} />{isRTL ? 'تحديث' : 'Refresh'}
-            </Button></div>
-        </CardContent></Card>
-
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Stat label={isRTL ? 'الإجمالي' : 'Total'} value={stats.total} />
-          <Stat label={isRTL ? 'ناجح' : 'Success'} value={stats.success} color="text-success" />
-          <Stat label={isRTL ? 'قيد الإرسال' : 'Pending'} value={stats.pending} color="text-warning" />
-          <Stat label={isRTL ? 'فشل/مستنفذ' : 'Failed'} value={stats.failed} color="text-destructive" />
-        </div>
-
-        <Card>
-          <CardHeader><CardTitle className="text-base">{isRTL ? 'محاولات الإرسال' : 'Delivery attempts'}</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin" /></div>
-            ) : rows.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-12 text-center">{isRTL ? 'لا توجد سجلات' : 'No records'}</p>
-            ) : (
-              <div className="divide-y">
-                {rows.map((r) => {
-                  const isOpen = expanded.has(r.id);
-                  return (
-                    <div key={r.id} className="px-4 py-3 hover:bg-muted/30">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {r.channel === 'email'
-                          ? <Mail className="w-4 h-4 text-info" />
-                          : <Webhook className="w-4 h-4 text-secondary" />}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${STATUS_COLORS[r.status]}`}>{r.status}</span>
-                            {r.event_type && <Badge variant="outline" className="rounded-md text-xs tech-content">{r.event_type}</Badge>}
-                            {r.ticket_number && <Badge variant="secondary" className="rounded-md text-xs tech-content">{r.ticket_number}</Badge>}
-                            <span className="text-xs text-muted-foreground tech-content">
-                              {isRTL ? 'محاولة' : 'attempt'} {r.attempt_count}/{r.max_attempts}
-                              {r.http_status ? ` • HTTP ${r.http_status}` : ''}
-                            </span>
-                          </div>
-                          <div className="text-sm tech-content truncate mt-0.5" dir="ltr">{r.recipient}</div>
-                          {r.error_message && (
-                            <div className="text-xs text-destructive mt-0.5 line-clamp-1 tech-content">
-                              {r.error_code ? `[${r.error_code}] ` : ''}{r.error_message}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground tech-content whitespace-nowrap">
-                          {new Date(r.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => toggle(r.id)}>
-                          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                      {isOpen && (
-                        <div className="mt-3 grid md:grid-cols-2 gap-3 text-xs">
-                          {r.next_retry_at && (
-                            <div className="bg-warning text-warning p-2 rounded-lg">
-                              <b>{isRTL ? 'إعادة المحاولة في' : 'Next retry'}:</b>{' '}
-                              <span className="tech-content">{new Date(r.next_retry_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
-                            </div>
-                          )}
-                          {r.response_body && (
-                            <div className="bg-muted/50 p-2 rounded-lg md:col-span-2">
-                              <div className="text-muted-foreground mb-1">{isRTL ? 'الاستجابة' : 'Response'}</div>
-                              <pre className="text-[11px] whitespace-pre-wrap break-all max-h-48 overflow-auto tech-content" dir="ltr">{r.response_body}</pre>
-                            </div>
-                          )}
-                          {r.error_message && (
-                            <div className="bg-destructive text-destructive p-2 rounded-lg md:col-span-2">
-                              <div className="font-medium mb-1">{isRTL ? 'تفاصيل الخطأ' : 'Error details'}</div>
-                              <pre className="text-[11px] whitespace-pre-wrap break-all tech-content" dir="ltr">{r.error_code ? `[${r.error_code}]\n` : ''}{r.error_message}</pre>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="max-w-7xl mx-auto p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        <OperationsAdminPageShell
+          header={<h1 className="text-2xl font-bold">{isRTL ? 'سجل إرسال الإشعارات' : 'Notification Delivery Log'}</h1>}
+          description={isRTL ? 'سجل محاولات Email/Webhook لكل حدث' : 'Email/Webhook attempts per event'}
+          actionsSlot={(
+            <>
+              <Button variant="outline" className="rounded-lg" onClick={() => refetch()} disabled={isFetching}>
+                <RefreshCw className={`w-4 h-4 me-2 ${isFetching ? 'animate-spin' : ''}`} />{isRTL ? 'تحديث' : 'Refresh'}
+              </Button>
+              <Button variant="outline" className="rounded-lg" onClick={exportCSV} disabled={rows.length === 0}>
+                <FileSpreadsheet className="w-4 h-4 me-2" />CSV
+              </Button>
+              <Button variant="outline" className="rounded-lg" onClick={exportPDF} disabled={rows.length === 0}>
+                <FileText className="w-4 h-4 me-2" />PDF
+              </Button>
+            </>
+          )}
+          statsSlot={(
+            <OperationsStatsStrip
+              columns={4}
+              items={[
+                { key: 'total', label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: Activity, tone: 'muted' },
+                { key: 'success', label: isRTL ? 'ناجح' : 'Success', value: stats.success, icon: CheckCircle2, tone: 'success' },
+                { key: 'pending', label: isRTL ? 'قيد الإرسال' : 'Pending', value: stats.pending, icon: Clock, tone: 'warning' },
+                { key: 'failed', label: isRTL ? 'فشل/مستنفذ' : 'Failed', value: stats.failed, icon: XCircle, tone: 'destructive' },
+              ]}
+            />
+          )}
+          filtersSlot={(
+            <OperationsFiltersBar
+              fromDate={from}
+              toDate={to}
+              onFromDateChange={setFrom}
+              onToDateChange={setTo}
+              fromLabel={isRTL ? 'من' : 'From'}
+              toLabel={isRTL ? 'إلى' : 'To'}
+              statusOptions={statusOptions}
+              statusValue={status}
+              onStatusChange={setStatus}
+              statusPlaceholder={isRTL ? 'الحالة' : 'Status'}
+              typeOptions={channelOptions}
+              typeValue={channel}
+              onTypeChange={setChannel}
+              typePlaceholder={isRTL ? 'القناة' : 'Channel'}
+              rightSlot={(
+                <select
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value)}
+                  className="h-11 rounded-xl bg-background/60 border border-input px-3 text-sm"
+                  aria-label={isRTL ? 'الحدث' : 'Event'}
+                >
+                  {eventOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              )}
+            />
+          )}
+          contentSlot={(
+            <ContactNotificationLogTableSection
+              title={isRTL ? 'محاولات الإرسال' : 'Delivery attempts'}
+              rows={rows}
+              isLoading={isLoading}
+              emptyLabel={isRTL ? 'لا توجد سجلات' : 'No records'}
+              expanded={expanded}
+              onToggle={toggle}
+              isRTL={isRTL}
+              labels={{
+                attempt: isRTL ? 'محاولة' : 'attempt',
+                nextRetry: isRTL ? 'إعادة المحاولة في' : 'Next retry',
+                response: isRTL ? 'الاستجابة' : 'Response',
+                errorDetails: isRTL ? 'تفاصيل الخطأ' : 'Error details',
+              }}
+            />
+          )}
+        />
       </div>
     </DashboardLayout>
-  );
-}
-
-function Stat({ label, value, color }: { label: string; value: number; color?: string }) {
-  return (
-    <Card><CardContent className="p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-bold tech-content ${color ?? ''}`}>{value}</div>
-    </CardContent></Card>
   );
 }

@@ -8,43 +8,31 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Download, FileText, RefreshCw, Filter, History } from 'lucide-react';
+import { Download, FileText, RefreshCw, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { setupArabicDoc, getArabicTableStyles } from '@/lib/pdf-arabic-font';
+import {
+  OperationsAdminPageShell,
+  OperationsFiltersBar,
+  type OperationsSelectOption,
+} from '@/components/admin/ops';
+import {
+  ContactAuditLogTableSection,
+  type ContactAuditLogRow,
+  type ContactAuditEventLabel,
+} from '@/components/admin/ops/contact-logs';
 
-type AuditRow = {
-  id: string;
-  message_id: string;
-  ticket_number: string | null;
-  event_type: string;
-  from_value: string | null;
-  to_value: string | null;
-  note: string | null;
-  actor_id: string | null;
-  actor_name: string | null;
-  actor_email: string | null;
-  message_subject: string | null;
-  message_name: string | null;
-  message_email: string | null;
-  created_at: string;
-};
+type AuditRow = ContactAuditLogRow;
 
 const EVENT_TYPES = [
   'created', 'status_changed', 'assignee_changed', 'priority_changed',
   'work_state_changed', 'ai_triaged', 'replied', 'note_added',
 ] as const;
 
-const EVENT_LABELS: Record<string, { ar: string; en: string; color: string }> = {
+const EVENT_LABELS: Record<string, ContactAuditEventLabel> = {
   created:            { ar: 'إنشاء', en: 'Created', color: 'bg-info/15 text-info' },
   status_changed:     { ar: 'تغيير الحالة', en: 'Status', color: 'bg-warning/15 text-warning' },
   assignee_changed:   { ar: 'تغيير المسؤول', en: 'Assignee', color: 'bg-secondary/15 text-secondary' },
@@ -153,133 +141,76 @@ export default function AdminContactAuditLog() {
     toast.success(isRTL ? 'تم تصدير PDF' : 'PDF exported');
   };
 
+  const typeOptions: OperationsSelectOption[] = useMemo(() => [
+    { value: 'all', label: isRTL ? 'كل الأحداث' : 'All events' },
+    ...EVENT_TYPES.map((e) => ({
+      value: e,
+      label: isRTL ? EVENT_LABELS[e]?.ar ?? e : EVENT_LABELS[e]?.en ?? e,
+    })),
+  ], [isRTL]);
+
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-4 p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
+      <div className="max-w-7xl mx-auto p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        <OperationsAdminPageShell
+          header={(
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <History className="w-6 h-6 text-primary" />
               {isRTL ? 'سجل تدقيق رسائل التواصل' : 'Contact Audit Log'}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {isRTL ? 'كل تغييرات الحالة والمسؤول والأولوية والرد' : 'All status, assignee, priority and reply changes'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="rounded-lg" onClick={() => refetch()} disabled={isFetching}>
-              <RefreshCw className={`w-4 h-4 me-2 ${isFetching ? 'animate-spin' : ''}`} />
-              {isRTL ? 'تحديث' : 'Refresh'}
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-lg" onClick={exportCSV} disabled={filtered.length === 0}>
-              <Download className="w-4 h-4 me-2" />CSV
-            </Button>
-            <Button size="sm" className="rounded-lg" onClick={exportPDF} disabled={filtered.length === 0}>
-              <FileText className="w-4 h-4 me-2" />PDF
-            </Button>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2"><Filter className="w-4 h-4" />
-              {isRTL ? 'الفلاتر' : 'Filters'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid md:grid-cols-4 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">{isRTL ? 'من' : 'From'}</Label>
-              <Input type="date" className="h-11 rounded-xl tech-content" value={from} onChange={(e) => setFrom(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{isRTL ? 'إلى' : 'To'}</Label>
-              <Input type="date" className="h-11 rounded-xl tech-content" value={to} onChange={(e) => setTo(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{isRTL ? 'نوع الحدث' : 'Event type'}</Label>
-              <Select value={eventType} onValueChange={setEventType}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                  {EVENT_TYPES.map((e) => (
-                    <SelectItem key={e} value={e}>{isRTL ? EVENT_LABELS[e]?.ar ?? e : EVENT_LABELS[e]?.en ?? e}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{isRTL ? 'بحث' : 'Search'}</Label>
-              <Input dir="auto" placeholder={isRTL ? 'تذكرة / شخص / موضوع…' : 'Ticket / person / subject…'}
-                className="h-11 rounded-xl" value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">
-              {isRTL ? `${filtered.length} حدث` : `${filtered.length} events`}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-16"><Loader2 className="w-5 h-5 animate-spin" /></div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground text-sm">
-                {isRTL ? 'لا توجد أحداث' : 'No events'}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/40 text-xs">
-                    <tr>
-                      <th className="text-start p-3">{isRTL ? 'التاريخ' : 'Date'}</th>
-                      <th className="text-start p-3">{isRTL ? 'التذكرة' : 'Ticket'}</th>
-                      <th className="text-start p-3">{isRTL ? 'الحدث' : 'Event'}</th>
-                      <th className="text-start p-3">{isRTL ? 'التغيير' : 'Change'}</th>
-                      <th className="text-start p-3">{isRTL ? 'الفاعل' : 'Actor'}</th>
-                      <th className="text-start p-3">{isRTL ? 'العميل / الموضوع' : 'Customer / Subject'}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((r) => {
-                      const evt = EVENT_LABELS[r.event_type];
-                      return (
-                        <tr key={r.id} className="border-t hover:bg-muted/30 transition">
-                          <td className="p-3 tech-content text-xs whitespace-nowrap">
-                            {format(new Date(r.created_at), 'yyyy-MM-dd HH:mm')}
-                          </td>
-                          <td className="p-3 tech-content text-xs">{r.ticket_number ?? '—'}</td>
-                          <td className="p-3">
-                            <Badge className={`rounded-lg ${evt?.color ?? 'bg-muted'}`} variant="secondary">
-                              {isRTL ? evt?.ar ?? r.event_type : evt?.en ?? r.event_type}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-xs">
-                            <span className="text-muted-foreground">{r.from_value ?? '—'}</span>
-                            <span className="mx-1">→</span>
-                            <span className="font-medium">{r.to_value ?? '—'}</span>
-                          </td>
-                          <td className="p-3 text-xs">
-                            {r.actor_name ?? r.actor_email ?? (
-                              <span className="text-muted-foreground italic">{isRTL ? 'النظام' : 'system'}</span>
-                            )}
-                          </td>
-                          <td className="p-3 text-xs max-w-xs truncate">
-                            <div className="font-medium truncate">{r.message_name ?? '—'}</div>
-                            {r.message_subject && (
-                              <div className="text-muted-foreground truncate">{r.message_subject}</div>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+          description={isRTL ? 'كل تغييرات الحالة والمسؤول والأولوية والرد' : 'All status, assignee, priority and reply changes'}
+          actionsSlot={(
+            <>
+              <Button variant="outline" size="sm" className="rounded-lg" onClick={() => refetch()} disabled={isFetching}>
+                <RefreshCw className={`w-4 h-4 me-2 ${isFetching ? 'animate-spin' : ''}`} />
+                {isRTL ? 'تحديث' : 'Refresh'}
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-lg" onClick={exportCSV} disabled={filtered.length === 0}>
+                <Download className="w-4 h-4 me-2" />CSV
+              </Button>
+              <Button size="sm" className="rounded-lg" onClick={exportPDF} disabled={filtered.length === 0}>
+                <FileText className="w-4 h-4 me-2" />PDF
+              </Button>
+            </>
+          )}
+          filtersSlot={(
+            <OperationsFiltersBar
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder={isRTL ? 'تذكرة / شخص / موضوع…' : 'Ticket / person / subject…'}
+              typeOptions={typeOptions}
+              typeValue={eventType}
+              onTypeChange={setEventType}
+              typePlaceholder={isRTL ? 'نوع الحدث' : 'Event type'}
+              fromDate={from}
+              toDate={to}
+              onFromDateChange={setFrom}
+              onToDateChange={setTo}
+              fromLabel={isRTL ? 'من' : 'From'}
+              toLabel={isRTL ? 'إلى' : 'To'}
+            />
+          )}
+          contentSlot={(
+            <ContactAuditLogTableSection
+              title={isRTL ? `${filtered.length} حدث` : `${filtered.length} events`}
+              rows={filtered}
+              isLoading={isLoading}
+              emptyLabel={isRTL ? 'لا توجد أحداث' : 'No events'}
+              isRTL={isRTL}
+              eventLabels={EVENT_LABELS}
+              labels={{
+                date: isRTL ? 'التاريخ' : 'Date',
+                ticket: isRTL ? 'التذكرة' : 'Ticket',
+                event: isRTL ? 'الحدث' : 'Event',
+                change: isRTL ? 'التغيير' : 'Change',
+                actor: isRTL ? 'الفاعل' : 'Actor',
+                customer: isRTL ? 'العميل / الموضوع' : 'Customer / Subject',
+                system: isRTL ? 'النظام' : 'system',
+              }}
+            />
+          )}
+        />
       </div>
     </DashboardLayout>
   );
