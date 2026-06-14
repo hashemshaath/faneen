@@ -11,7 +11,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, Save, ArrowUp, ArrowDown, Eye, EyeOff, RotateCcw } from 'lucide-react';
 import { Square as FallbackIcon } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -29,31 +28,19 @@ import {
 } from '@/modules/home';
 import { HOME_ALLOWED_SLUGS, HOME_SECTOR_GRID_SLUGS } from '@/components/home/v2/data/homeTaxonomy';
 import { HOME_SECTOR_GRID_DEFAULTS } from '@/components/home/v2/sections/HomeSectorGrid';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+  HomeSectorsStatsSection,
+  HomeSectorsListSection,
+  HomeSectorRow as HomeSectorRowCard,
+  type HomeSectorRowState,
+  type HomeSectorIconOption,
+} from '@/components/admin/content/home';
 
 const BODY_MAX = 140;
 const TITLE_MAX = 40;
 
-interface RowState {
-  show: boolean;
-  position: number;
-  icon: string;
-  title_ar: string;
-  title_en: string;
-  body_ar: string;
-  body_en: string;
-  dirty: boolean;
-}
+type RowState = HomeSectorRowState;
 
 function defaultsFor(slug: string) {
   return HOME_SECTOR_GRID_DEFAULTS.find((d) => d.slug === slug);
@@ -176,6 +163,34 @@ const AdminHomeSectors: React.FC = () => {
     update(other, { position: a.position });
   };
 
+  const iconOptions: HomeSectorIconOption[] = useMemo(
+    () => SECTOR_ICON_NAMES.map((name) => ({
+      name,
+      Icon: resolveSectorIcon(name, FallbackIcon),
+    })),
+    [],
+  );
+
+  const dirtyCount = Object.values(drafts).filter((d) => d.dirty).length;
+  const hiddenCount = eligible.length - visible.length;
+
+  const rowLabels = {
+    titleAr: bi('العنوان (عربي)', 'Title (Arabic)'),
+    titleEn: bi('العنوان (إنجليزي)', 'Title (English)'),
+    bodyAr: bi('الوصف القصير (عربي)', 'Short body (Arabic)'),
+    bodyEn: bi('الوصف القصير (إنجليزي)', 'Short body (English)'),
+    icon: bi('الأيقونة', 'Icon'),
+    show: bi('إظهار على الرئيسية', 'Show on home'),
+    showHint: bi('الحدّ الأقصى 10 بلاطات', 'Hard cap: 10 tiles'),
+    visible: bi('ظاهر', 'Visible'),
+    hidden: bi('مخفي', 'Hidden'),
+    unsaved: bi('تغييرات غير محفوظة', 'Unsaved'),
+    discard: bi('تجاهل', 'Discard'),
+    save: bi('حفظ', 'Save'),
+    up: bi('للأعلى', 'Up'),
+    down: bi('للأسفل', 'Down'),
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-6 max-w-6xl">
@@ -191,12 +206,24 @@ const AdminHomeSectors: React.FC = () => {
           </p>
         </header>
 
+        {!isLoading && (
+          <div className="mb-4">
+            <HomeSectorsStatsSection
+              isRTL={isRTL}
+              total={eligible.length}
+              visible={visible.length}
+              hidden={hiddenCount}
+              unsaved={dirtyCount}
+            />
+          </div>
+        )}
+
         {isLoading ? (
           <div className="space-y-3">
             {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full" />)}
           </div>
         ) : (
-          <div className="space-y-4">
+          <HomeSectorsListSection>
             {eligible
               .sort((a, b) => stateFor(a).position - stateFor(b).position)
               .map((row) => {
@@ -207,118 +234,29 @@ const AdminHomeSectors: React.FC = () => {
                 const canUp = s.show && posInVisible > 0;
                 const canDown = s.show && posInVisible >= 0 && posInVisible < visible.length - 1;
                 return (
-                  <Card key={row.id} className={s.show ? '' : 'opacity-70'}>
-                    <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0">
-                          <Icon className="w-5 h-5" strokeWidth={1.75} />
-                        </span>
-                        <div className="min-w-0">
-                          <CardTitle className="text-base truncate">
-                            {bi(s.title_ar || row.name_ar, s.title_en || row.name_en || row.name_ar)}
-                          </CardTitle>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <Badge variant="outline" className="text-[10px] tech-content">{row.slug}</Badge>
-                            {s.show ? (
-                              <Badge className="text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">
-                                {bi('ظاهر', 'Visible')} · #{posInVisible + 1}
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-[10px]">{bi('مخفي', 'Hidden')}</Badge>
-                            )}
-                            {s.dirty && (
-                              <Badge className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
-                                {bi('تغييرات غير محفوظة', 'Unsaved')}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" disabled={!canUp} onClick={() => swap(row, -1)} aria-label={bi('للأعلى', 'Up')}>
-                          <ArrowUp className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" disabled={!canDown} onClick={() => swap(row, 1)} aria-label={bi('للأسفل', 'Down')}>
-                          <ArrowDown className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">{bi('العنوان (عربي)', 'Title (Arabic)')}</Label>
-                          <Input dir="auto" maxLength={TITLE_MAX} value={s.title_ar}
-                            onChange={(e) => update(row, { title_ar: e.target.value })} />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">{bi('العنوان (إنجليزي)', 'Title (English)')}</Label>
-                          <Input dir="auto" maxLength={TITLE_MAX} value={s.title_en}
-                            onChange={(e) => update(row, { title_en: e.target.value })} />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">{bi('الوصف القصير (عربي)', 'Short body (Arabic)')}</Label>
-                          <Textarea dir="auto" rows={2} maxLength={BODY_MAX} value={s.body_ar}
-                            onChange={(e) => update(row, { body_ar: e.target.value })} />
-                          <span className="text-[10px] text-muted-foreground">{s.body_ar.length}/{BODY_MAX}</span>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">{bi('الوصف القصير (إنجليزي)', 'Short body (English)')}</Label>
-                          <Textarea dir="auto" rows={2} maxLength={BODY_MAX} value={s.body_en}
-                            onChange={(e) => update(row, { body_en: e.target.value })} />
-                          <span className="text-[10px] text-muted-foreground">{s.body_en.length}/{BODY_MAX}</span>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">{bi('الأيقونة', 'Icon')}</Label>
-                          <Select value={s.icon} onValueChange={(v) => update(row, { icon: v })} dir={isRTL ? 'rtl' : 'ltr'}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent className="max-h-72">
-                              {SECTOR_ICON_NAMES.map((name) => {
-                                const I = resolveSectorIcon(name, Icon);
-                                return (
-                                  <SelectItem key={name} value={name}>
-                                    <span className="inline-flex items-center gap-2">
-                                      <I className="w-4 h-4" strokeWidth={1.75} />
-                                      <span className="tech-content">{name}</span>
-                                    </span>
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border bg-muted/30 px-4">
-                          <div>
-                            <Label className="text-xs flex items-center gap-1.5">
-                              {s.show ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                              {bi('إظهار على الرئيسية', 'Show on home')}
-                            </Label>
-                            <p className="text-[11px] text-muted-foreground mt-1">
-                              {bi('الحدّ الأقصى 10 بلاطات', 'Hard cap: 10 tiles')}
-                            </p>
-                          </div>
-                          <Switch checked={s.show} onCheckedChange={(v) => update(row, { show: v })} />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t">
-                        {s.dirty && (
-                          <Button variant="ghost" size="sm" onClick={() => reset(row)}>
-                            <RotateCcw className="w-4 h-4 me-1.5" />
-                            {bi('تجاهل', 'Discard')}
-                          </Button>
-                        )}
-                        <Button size="sm" disabled={!s.dirty || mutation.isPending} onClick={() => save(row)}>
-                          {mutation.isPending
-                            ? <Loader2 className="w-4 h-4 me-1.5 animate-spin" />
-                            : <Save className="w-4 h-4 me-1.5" />}
-                          {bi('حفظ', 'Save')}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <HomeSectorRowCard
+                    key={row.id}
+                    isRTL={isRTL}
+                    row={{ id: row.id, slug: row.slug, name_ar: row.name_ar, name_en: row.name_en ?? null }}
+                    state={s}
+                    Icon={Icon}
+                    iconOptions={iconOptions}
+                    posInVisible={posInVisible}
+                    canUp={canUp}
+                    canDown={canDown}
+                    isSaving={mutation.isPending}
+                    titleMax={TITLE_MAX}
+                    bodyMax={BODY_MAX}
+                    onMoveUp={() => swap(row, -1)}
+                    onMoveDown={() => swap(row, 1)}
+                    onChange={(patch) => update(row, patch)}
+                    onSave={() => save(row)}
+                    onReset={() => reset(row)}
+                    labels={rowLabels}
+                  />
                 );
               })}
-          </div>
+          </HomeSectorsListSection>
         )}
       </div>
     </DashboardLayout>

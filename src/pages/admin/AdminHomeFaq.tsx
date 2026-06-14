@@ -5,10 +5,11 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, Plus, Save, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   useAdminHomeFaq, createHomeFaq, updateHomeFaq, deleteHomeFaq,
   HOME_FAQ_ADMIN_KEY, HOME_FAQ_PUBLIC_KEY,
@@ -16,12 +17,13 @@ import {
 } from '@/modules/home';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  HomeFaqStatsSection,
+  HomeFaqListSection,
+  HomeFaqRow,
+  HomeFaqEditForm,
+} from '@/components/admin/content/home';
 
 type DraftKey = 'new' | string;
 
@@ -40,6 +42,7 @@ function validate(d: HomeFaqInput, bi: ReturnType<typeof useBi>) {
 const AdminHomeFaq: React.FC = () => {
   useNoIndex();
   const bi = useBi();
+  const { isRTL } = useLanguage();
   const qc = useQueryClient();
   const { data: items, isLoading } = useAdminHomeFaq();
 
@@ -101,52 +104,43 @@ const AdminHomeFaq: React.FC = () => {
     updateMut.mutate({ id: neighbor.id, patch: { sort_order: it.sort_order } });
   };
 
+  const enabledCount = (items ?? []).filter((i) => i.is_enabled).length;
+  const hiddenCount = (items ?? []).length - enabledCount;
+  const rowLabels = {
+    enabled: bi('مفعّل', 'Enabled'),
+    hidden: bi('مخفي', 'Hidden'),
+    hide: bi('إخفاء', 'Hide'),
+    show: bi('إظهار', 'Show'),
+    edit: bi('تعديل', 'Edit'),
+    close: bi('إغلاق', 'Close'),
+    delete: bi('حذف', 'Delete'),
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+  };
+  const formLabels = {
+    questionAr: bi('السؤال (عربي)', 'Question (Arabic)'),
+    questionEn: bi('السؤال (إنجليزي)', 'Question (English)'),
+    answerAr: bi('الإجابة (عربي)', 'Answer (Arabic)'),
+    answerEn: bi('الإجابة (إنجليزي)', 'Answer (English)'),
+    order: bi('الترتيب', 'Order'),
+    enabled: bi('مفعّل', 'Enabled'),
+    cancel: bi('إلغاء', 'Cancel'),
+    save: bi('حفظ', 'Save'),
+  };
+
   const renderForm = (key: DraftKey, draft: HomeFaqInput, onSave: () => void) => (
-    <div className="space-y-3 border-t border-border/60 pt-3 mt-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <Label>{bi('السؤال (عربي)', 'Question (Arabic)')} *</Label>
-          <Input dir="auto" value={draft.question_ar} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, question_ar: e.target.value } }))} maxLength={180} />
-          <div className="text-[10px] text-muted-foreground mt-1">{draft.question_ar.length}/180</div>
-        </div>
-        <div>
-          <Label>{bi('السؤال (إنجليزي)', 'Question (English)')}</Label>
-          <Input dir="auto" value={draft.question_en ?? ''} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, question_en: e.target.value } }))} maxLength={180} />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <Label>{bi('الإجابة (عربي)', 'Answer (Arabic)')} *</Label>
-          <Textarea dir="auto" rows={3} value={draft.answer_ar} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, answer_ar: e.target.value } }))} maxLength={1200} />
-          <div className="text-[10px] text-muted-foreground mt-1">{draft.answer_ar.length}/1200</div>
-        </div>
-        <div>
-          <Label>{bi('الإجابة (إنجليزي)', 'Answer (English)')}</Label>
-          <Textarea dir="auto" rows={3} value={draft.answer_en ?? ''} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, answer_en: e.target.value } }))} maxLength={1200} />
-        </div>
-      </div>
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Label className="text-xs">{bi('الترتيب', 'Order')}</Label>
-          <Input type="number" className="h-9 w-24" value={draft.sort_order ?? 0} onChange={(e) => setEditing((p) => ({ ...p, [key]: { ...draft, sort_order: Number(e.target.value) } }))} />
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch checked={draft.is_enabled ?? true} onCheckedChange={(v) => setEditing((p) => ({ ...p, [key]: { ...draft, is_enabled: v } }))} />
-          <span className="text-xs">{bi('مفعّل', 'Enabled')}</span>
-        </div>
-        <div className="ms-auto flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => cancelEdit(key)}><X className="w-4 h-4 me-1" />{bi('إلغاء', 'Cancel')}</Button>
-          <Button size="sm" onClick={() => {
-            const err = validate(draft, bi);
-            if (err) { toast.error(err); return; }
-            onSave();
-          }} disabled={createMut.isPending || updateMut.isPending}>
-            {(createMut.isPending || updateMut.isPending) ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
-            {bi('حفظ', 'Save')}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <HomeFaqEditForm
+      draft={draft}
+      isSaving={createMut.isPending || updateMut.isPending}
+      onChange={(patch) => setEditing((p) => ({ ...p, [key]: { ...draft, ...patch } }))}
+      onCancel={() => cancelEdit(key)}
+      onSave={() => {
+        const err = validate(draft, bi);
+        if (err) { toast.error(err); return; }
+        onSave();
+      }}
+      labels={formLabels}
+    />
   );
 
   return (
@@ -161,6 +155,15 @@ const AdminHomeFaq: React.FC = () => {
             <Plus className="w-4 h-4 me-1" />{bi('إضافة سؤال', 'Add question')}
           </Button>
         </div>
+
+        {!isLoading && items && (
+          <HomeFaqStatsSection
+            isRTL={isRTL}
+            total={items.length}
+            enabled={enabledCount}
+            hidden={hiddenCount}
+          />
+        )}
 
         {editing.new && (
           <Card>
@@ -181,46 +184,30 @@ const AdminHomeFaq: React.FC = () => {
           </CardContent></Card>
         )}
 
-        <div className="space-y-3">
-          {items?.map((it) => {
+        <HomeFaqListSection>
+          {items?.map((it, idx) => {
             const draft = editing[it.id];
             return (
-              <Card key={it.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex flex-col gap-1">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, -1)} aria-label="Move up"><ArrowUp className="w-3 h-3" /></Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(it, 1)} aria-label="Move down"><ArrowDown className="w-3 h-3" /></Button>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">{it.question_ar}</span>
-                        <Badge variant="outline" className="text-[10px]">#{it.sort_order}</Badge>
-                        {it.is_enabled
-                          ? <Badge className="text-[10px] bg-emerald-500/15 text-emerald-700">{bi('مفعّل', 'Enabled')}</Badge>
-                          : <Badge variant="secondary" className="text-[10px]">{bi('مخفي', 'Hidden')}</Badge>}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{it.answer_ar}</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" title={it.is_enabled ? bi('إخفاء','Hide') : bi('إظهار','Show')}
-                        onClick={() => updateMut.mutate({ id: it.id, patch: { is_enabled: !it.is_enabled } })} aria-label="Hide">
-                        {it.is_enabled ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => (draft ? cancelEdit(it.id) : startEdit(it))}>
-                        {draft ? bi('إغلاق', 'Close') : bi('تعديل', 'Edit')}
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" aria-label={bi('حذف', 'Delete')} onClick={() => {
-                        if (confirm(bi('حذف هذا السؤال؟','Delete this question?'))) deleteMut.mutate(it.id);
-                      }}><Trash2 className="w-4 h-4" /></Button>
-                    </div>
-                  </div>
-                  {draft && renderForm(it.id, draft, () => updateMut.mutate({ id: it.id, patch: draft }))}
-                </CardContent>
-              </Card>
+              <HomeFaqRow
+                key={it.id}
+                isRTL={isRTL}
+                item={it}
+                canUp={idx > 0}
+                canDown={!!items && idx < items.length - 1}
+                isEditing={!!draft}
+                onMoveUp={() => move(it, -1)}
+                onMoveDown={() => move(it, 1)}
+                onToggleVisible={() => updateMut.mutate({ id: it.id, patch: { is_enabled: !it.is_enabled } })}
+                onEditToggle={() => (draft ? cancelEdit(it.id) : startEdit(it))}
+                onDelete={() => {
+                  if (confirm(bi('حذف هذا السؤال؟','Delete this question?'))) deleteMut.mutate(it.id);
+                }}
+                labels={rowLabels}
+                editForm={draft && renderForm(it.id, draft, () => updateMut.mutate({ id: it.id, patch: draft }))}
+              />
             );
           })}
-        </div>
+        </HomeFaqListSection>
       </div>
     </DashboardLayout>
   );
