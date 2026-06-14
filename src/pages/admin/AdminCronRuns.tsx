@@ -372,6 +372,7 @@ const AdminCronRuns = () => {
 
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl space-y-6">
         <OperationsAdminPageShell
+          header={null}
           statsSlot={
             <OperationsStatsStrip
               columns={4}
