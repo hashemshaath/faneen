@@ -25,8 +25,6 @@ const PAGES_NOT_MODIFIED = [
   'AdminOperations.tsx',
   'AdminEmailDeliverability.tsx',
   'AdminOperationsConsole.tsx',
-  'AdminContactNotificationLog.tsx',
-  'AdminContactAuditLog.tsx',
   'AdminContactSlaDashboard.tsx',
   'AdminProviderGrowthQueue.tsx',
   'AdminOperationsCenterUnified.tsx',
