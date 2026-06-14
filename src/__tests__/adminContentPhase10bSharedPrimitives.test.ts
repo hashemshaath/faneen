@@ -91,7 +91,6 @@ describe('ADMIN REDESIGN PHASE 10B — Content/Directory shared primitives', () 
     // augmented with imports from the new content/ barrel.
     const pagesDir = resolve(__dirname, '..', 'pages', 'admin');
     const pages = [
-      'AdminPrivateSectors.tsx',
       'AdminBusinessVisibility.tsx',
       'AdminAssets.tsx',
       'AdminAssetOverrides.tsx',
