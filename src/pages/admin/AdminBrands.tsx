@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Archive, Building2, Check, Filter, Globe2, Inbox, Link2,
+  Archive, Building2, Check, Eye, Filter, Globe2, Inbox, Link2,
   RefreshCw, ShieldCheck, Tag as TagIcon, X,
 } from 'lucide-react';
 
@@ -28,6 +28,10 @@ import {
   type ContentStatItem,
 } from '@/components/admin/content';
 import type { AdminFilterPill } from '@/components/admin/AdminFiltersBar';
+import {
+  BrandDetailsDrawer,
+  buildBrandDetailsDrawerProps,
+} from '@/components/admin/content/brands';
 // Phase 4: category hints now come from `taxonomy_categories` directly.
 import { supabase } from '@/integrations/supabase/client';
 
