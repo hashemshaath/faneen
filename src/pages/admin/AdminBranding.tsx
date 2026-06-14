@@ -367,7 +367,7 @@ const AdminBranding: React.FC = () => {
             <BrandingLogoAssetsSection
               isRTL={isRTL}
               values={values}
-              meta={META}
+              meta={IMAGE_FIELD_META}
               uploadingFor={uploadingFor as ImageFieldKey | null}
               onUrlChange={(field, value) => update(field, value)}
               onUpload={(field) => onUpload(field)}
