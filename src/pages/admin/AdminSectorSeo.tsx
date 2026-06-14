@@ -18,11 +18,10 @@ import {
   type SectorSeoSnapshotRow,
 } from '@/components/admin/content/seo';
 
-type Snapshot = SectorSeoSnapshotRow & {
-  tagline: string | null;
-};
+type Snapshot = SectorSeoSnapshotRow & { tagline: string | null };
 
 const AdminSectorSeo: React.FC = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -102,7 +101,6 @@ const AdminSectorSeo: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header + capture */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-heading text-2xl font-bold flex items-center gap-2">
@@ -124,14 +122,11 @@ const AdminSectorSeo: React.FC = () => {
             />
             <Button onClick={() => captureAll.mutate()} disabled={captureAll.isPending} className="gap-2 shrink-0">
               <Camera className="w-4 h-4" />
-              {captureAll.isPending
-                ? (isRTL ? 'جاري…' : 'Capturing…')
-                : (isRTL ? 'التقاط لقطة' : 'Capture Snapshot')}
+              {captureAll.isPending ? (isRTL ? 'جاري…' : 'Capturing…') : (isRTL ? 'التقاط لقطة' : 'Capture Snapshot')}
             </Button>
           </div>
         </div>
 
-        {/* Language tabs */}
         <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as 'ar' | 'en')}>
           <TabsList>
             <TabsTrigger value="ar">العربية</TabsTrigger>
@@ -139,7 +134,6 @@ const AdminSectorSeo: React.FC = () => {
           </TabsList>
 
           <TabsContent value={activeLang} className="mt-4 space-y-4">
-            {/* Sector picker */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {ALL_SECTORS.map((s) => {
                 const isActive = s.slug === activeSector;
@@ -159,155 +153,23 @@ const AdminSectorSeo: React.FC = () => {
               })}
             </div>
 
-            {/* Live meta preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Type className="w-4 h-4 text-gold" />
-                  {isRTL ? 'الميتا الحالية (مباشر من الكود)' : 'Current Meta (live from code)'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Title */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                      <Type className="w-3.5 h-3.5" />
-                      {isRTL ? 'العنوان' : 'Title'}
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-muted-foreground">{sectorMeta.title.length} / 60</span>
-                      <ScoreBadge status={titleScore(sectorMeta.title.length)} isRTL={isRTL} />
-                      <Delta current={sectorMeta.title.length} previous={lastSnapshot?.title_length ?? null} />
-                    </div>
-                  </div>
-                  <p className="p-2.5 rounded-lg bg-muted/50 text-sm font-medium" dir="auto">{sectorMeta.title}</p>
-                </div>
-                {/* Description */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5" />
-                      {isRTL ? 'الوصف' : 'Description'}
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-muted-foreground">{sectorMeta.description.length} / 160</span>
-                      <ScoreBadge status={descScore(sectorMeta.description.length)} isRTL={isRTL} />
-                      <Delta current={sectorMeta.description.length} previous={lastSnapshot?.description_length ?? null} />
-                    </div>
-                  </div>
-                  <p className="p-2.5 rounded-lg bg-muted/50 text-sm" dir="auto">{sectorMeta.description}</p>
-                </div>
-                {/* Keywords */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                      <Tags className="w-3.5 h-3.5" />
-                      {isRTL ? 'الكلمات المفتاحية' : 'Keywords'}
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-muted-foreground">
-                        {sectorMeta.keywords.split(',').filter(Boolean).length} {isRTL ? 'كلمة' : 'kw'}
-                      </span>
-                      <ScoreBadge
-                        status={kwScore(sectorMeta.keywords.split(',').filter(Boolean).length)}
-                        isRTL={isRTL}
-                      />
-                      <Delta
-                        current={sectorMeta.keywords.split(',').filter(Boolean).length}
-                        previous={lastSnapshot?.keywords_count ?? null}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg bg-muted/50">
-                    {sectorMeta.keywords.split(',').map((k, i) => (
-                      <Badge key={`${k}-${i}`} variant="secondary" className="text-xs font-normal" dir="auto">
-                        {k.trim()}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                {/* Tagline */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground">{isRTL ? 'الوسم' : 'Tagline'}</label>
-                  <p className="p-2.5 rounded-lg bg-muted/50 text-sm italic" dir="auto">{sectorMeta.tagline}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <SectorSeoMetaPreviewCard
+              title={sectorMeta.title}
+              description={sectorMeta.description}
+              keywords={sectorMeta.keywords}
+              tagline={sectorMeta.tagline}
+              previousTitleLen={lastSnapshot?.title_length ?? null}
+              previousDescLen={lastSnapshot?.description_length ?? null}
+              previousKeywordsCount={lastSnapshot?.keywords_count ?? null}
+              isRTL={isRTL}
+            />
 
-            {/* History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <History className="w-4 h-4 text-gold" />
-                  {isRTL ? `سجل اللقطات (${sectorHistory.length})` : `Snapshots history (${sectorHistory.length})`}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}</div>
-                ) : sectorHistory.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    {isRTL
-                      ? 'لا توجد لقطات بعد. اضغط «التقاط لقطة» لبدء تتبع التغييرات.'
-                      : 'No snapshots yet. Click "Capture Snapshot" to start tracking changes.'}
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {sectorHistory.map((snap, idx) => {
-                      const prev = sectorHistory[idx + 1] ?? null;
-                      return (
-                        <div key={snap.id} className="border rounded-lg p-3 space-y-2 hover:border-gold/30 transition-colors">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="font-mono text-xs">
-                                {new Date(snap.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
-                              </Badge>
-                              {snap.note && <Badge variant="secondary" className="text-xs">{snap.note}</Badge>}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteSnapshot.mutate(snap.id)}
-                              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="flex items-center gap-1.5">
-                              <Type className="w-3 h-3 text-muted-foreground" />
-                              <span className="font-mono">{snap.title_length}</span>
-                              <Delta current={snap.title_length} previous={prev?.title_length ?? null} />
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <FileText className="w-3 h-3 text-muted-foreground" />
-                              <span className="font-mono">{snap.description_length}</span>
-                              <Delta current={snap.description_length} previous={prev?.description_length ?? null} />
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Tags className="w-3 h-3 text-muted-foreground" />
-                              <span className="font-mono">{snap.keywords_count}</span>
-                              <Delta current={snap.keywords_count} previous={prev?.keywords_count ?? null} />
-                            </div>
-                          </div>
-                          <details className="text-xs">
-                            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                              {isRTL ? 'عرض التفاصيل' : 'View details'}
-                            </summary>
-                            <div className="mt-2 space-y-1.5 pt-2 border-t">
-                              <p dir="auto"><strong>{isRTL ? 'العنوان:' : 'Title:'}</strong> {snap.title}</p>
-                              <p dir="auto"><strong>{isRTL ? 'الوصف:' : 'Desc:'}</strong> {snap.description}</p>
-                              <p dir="auto" className="line-clamp-2"><strong>{isRTL ? 'الكلمات:' : 'Keywords:'}</strong> {snap.keywords}</p>
-                            </div>
-                          </details>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <SectorSeoTableSection
+              isLoading={isLoading}
+              rows={sectorHistory}
+              onDelete={(id) => deleteSnapshot.mutate(id)}
+              isRTL={isRTL}
+            />
           </TabsContent>
         </Tabs>
       </div>
