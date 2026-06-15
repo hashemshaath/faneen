@@ -36,8 +36,11 @@ import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarco
 import {
   ChartTooltipStyle, getStatusLabel, getStatusColor, getMonths,
   QuickAction, OverdueAlerts, TodaySummary,
-  RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
+import {
+  UnifiedDashboardHero,
+  formatLastUpdated,
+} from '@/components/dashboard/overview/UnifiedDashboardHero';
 
 
 type ProviderProfile = {
@@ -183,6 +186,7 @@ export default function ProviderDashboardView({
 
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedRevenue = useCountUp(stats?.totalRevenue ?? 0, isVisible, 1500);
+  const [lastRefresh, setLastRefresh] = React.useState<Date>(() => new Date());
 
   const completionRate = stats?.contracts ? Math.round((stats.completedContracts / stats.contracts) * 100) : 0;
   const hasRevenueData = (stats?.completedContracts ?? 0) > 0 && (stats?.totalRevenue ?? 0) > 0;
@@ -195,90 +199,67 @@ export default function ProviderDashboardView({
     qc.invalidateQueries({ queryKey: ['provider-recent-reviews-overview'] });
     qc.invalidateQueries({ queryKey: ['today-summary'] });
     qc.invalidateQueries({ queryKey: ['overdue-alerts'] });
+    setLastRefresh(new Date());
     refetch();
   };
 
   return (
     <div className="space-y-5" ref={ref}>
-      {/* A — Welcome hero (Qitaat brand: green primary + navy) */}
-      <section
-        aria-label={isRTL ? 'لوحة تحكم المزود' : 'Provider dashboard'}
-        className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/8 via-card to-info/5 p-5 sm:p-7 shadow-[var(--elev-1)]"
-      >
-        <div className="pointer-events-none absolute -top-24 -end-24 h-56 w-56 rounded-full bg-primary/15 blur-3xl" aria-hidden />
-        <div className="relative flex flex-col gap-5">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-primary/25 bg-primary/10">
-                {business?.logo_url
-                  ? <img src={business.logo_url} alt={isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || '')} className="w-full h-full object-cover" loading="lazy" />
-                  : <Building2 className="w-7 h-7 text-primary" aria-hidden="true" />}
-              </div>
-              <div className="min-w-0">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-1 mb-2 bg-primary/10 text-primary border border-primary/15">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
-                  {isRTL ? 'لوحة مزود الخدمة' : 'Provider dashboard'}
-                  {isPublished && (
-                    <span className="inline-flex items-center gap-0.5 ms-1">
-                      <CheckCircle2 className="w-3 h-3 text-success" aria-hidden="true" />
-                      {isRTL ? 'موثق' : 'Verified'}
-                    </span>
-                  )}
-                </span>
-                <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight truncate">
-                  {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
-                </h1>
-                <p className="text-xs sm:text-sm mt-1 text-muted-foreground truncate">
-                  {business
-                    ? (isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || ''))
-                    : (isRTL ? 'ابدأ بإعداد ملف منشأتك' : 'Set up your business profile')}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap shrink-0">
-              <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
-              {profile?.ref_id && (
-                <Badge variant="outline" className="tech-content text-[10px] h-6 px-2">{profile.ref_id}</Badge>
-              )}
-              {membershipTier && (
-                <Badge className="text-[10px] h-6 px-2 capitalize bg-info/10 text-info border border-info/20">
-                  {membershipTier}
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <p className="text-xs sm:text-sm text-foreground/80 max-w-2xl">
-            {isRTL
-              ? 'هذه لوحة التحكم تساعدك على تحسين ظهورك واستقبال فرص أكثر عبر قطاعات.'
-              : 'This dashboard helps you improve visibility and receive more opportunities through Qitaat.'}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild size="sm" className="gap-1.5">
-              <Link to="/dashboard/business-completion">
-                <Sparkles className="w-3.5 h-3.5" aria-hidden />
-                {isRTL ? 'أكمل ملفك' : 'Complete profile'}
-                <Arrow className="w-3.5 h-3.5" />
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline" className="gap-1.5">
-              <Link to="/dashboard/services">
-                <Wrench className="w-3.5 h-3.5" aria-hidden />
-                {isRTL ? 'إدارة الخدمات' : 'Manage services'}
-              </Link>
-            </Button>
-            {publicUsername && (
-              <Button asChild size="sm" variant="ghost" className="gap-1.5">
-                <Link to={`/${publicUsername}`}>
-                  <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-                  {isRTL ? 'مشاهدة الصفحة العامة' : 'View public page'}
-                </Link>
-              </Button>
+      {/* A — Unified Hero (Phase A) */}
+      <UnifiedDashboardHero
+        isRTL={isRTL}
+        roleLabel={{ ar: 'لوحة مزود الخدمة', en: 'Provider Dashboard' }}
+        fullName={profile?.full_name ?? null}
+        refId={profile?.ref_id ?? null}
+        lastUpdated={formatLastUpdated(lastRefresh, isRTL)}
+        onRefresh={handleRefresh}
+        isRefreshing={isFetching}
+        subline={
+          business
+            ? (isRTL ? (business.name_ar ?? '') : (business.name_en || business.name_ar || ''))
+            : (isRTL ? 'ابدأ بإعداد ملف منشأتك' : 'Set up your business profile')
+        }
+        rightSlot={
+          <>
+            {isPublished && (
+              <Badge variant="outline" className="h-6 px-2 text-[10px] gap-1 border-success/30 text-success">
+                <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
+                {isRTL ? 'موثق' : 'Verified'}
+              </Badge>
             )}
-          </div>
-        </div>
-      </section>
+            {membershipTier && (
+              <Badge className="text-[10px] h-6 px-2 capitalize bg-info/10 text-info border border-info/20">
+                {membershipTier}
+              </Badge>
+            )}
+          </>
+        }
+      />
+
+      {/* A2 — Primary CTAs */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button asChild size="sm" className="gap-1.5">
+          <Link to="/dashboard/business-completion">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden />
+            {isRTL ? 'أكمل ملفك' : 'Complete profile'}
+            <Arrow className="w-3.5 h-3.5" />
+          </Link>
+        </Button>
+        <Button asChild size="sm" variant="outline" className="gap-1.5">
+          <Link to="/dashboard/services">
+            <Wrench className="w-3.5 h-3.5" aria-hidden />
+            {isRTL ? 'إدارة الخدمات' : 'Manage services'}
+          </Link>
+        </Button>
+        {publicUsername && (
+          <Button asChild size="sm" variant="ghost" className="gap-1.5">
+            <Link to={`/${publicUsername}`}>
+              <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+              {isRTL ? 'مشاهدة الصفحة العامة' : 'View public page'}
+            </Link>
+          </Button>
+        )}
+      </div>
 
       {/* B — Performance overview (KPIs + secondary metrics, professional B2B) */}
       <ProviderStatsOverview
