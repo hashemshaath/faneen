@@ -58,6 +58,7 @@ const INVENTORY: Record<string, Classification> = {
   'email-track-click': 'webhook',
   'admin-retry-dlq-email': 'admin',
   'admin-preview-email': 'admin',
+  'admin-email-smoke-test': 'admin',
 
   // --- contact / leads / quotes ---
   'triage-contact-message': 'frontend',
