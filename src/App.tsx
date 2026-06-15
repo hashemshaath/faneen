@@ -311,9 +311,6 @@ const AppRoutes = () => (
           <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
           {/* AUTH SIMPLIFICATION UX — post-login context selection */}
           <Route path="/start" element={<ProtectedRoute skipOnboarding><Start /></ProtectedRoute>} />
-          {/* Safe legacy redirects: /login + /register collapse into /auth */}
-          <Route path="/login" element={<Navigate to="/auth" replace />} />
-          <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/search" element={<Search />} />
           <Route path="/quote" element={<Quote />} />
