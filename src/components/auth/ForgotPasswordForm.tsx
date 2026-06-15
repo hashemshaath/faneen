@@ -245,10 +245,10 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     return (
       <div className="space-y-4 animate-fade-in">
         <div className="text-center space-y-2">
-          <div className="w-10 h-10 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-accent" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
           </div>
-          <h2 className="font-heading font-semibold text-base text-foreground">
+          <h2 className="font-heading font-semibold text-base sm:text-lg text-foreground">
             {isRTL ? 'تحقق من بريدك الإلكتروني' : 'Check Your Email'}
           </h2>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
@@ -478,8 +478,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
         )}
 
-        <Button onClick={onBack} variant="outline" className="w-full h-9 gap-2 text-xs">
-          <LogIn className="w-3.5 h-3.5" />
+        <Button onClick={onBack} variant="outline" className="w-full h-10 sm:h-11 rounded-xl gap-2 text-xs sm:text-sm font-medium">
+          <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           {isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login'}
         </Button>
 
