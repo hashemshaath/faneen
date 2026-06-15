@@ -77,7 +77,11 @@ if (typeof document !== 'undefined') {
  * below-the-fold sections here — that would defeat the bundle split.
  */
 const ROUTES = {
-  quote: '/search?intent=quote',
+  // Phase 12B — Primary conversion CTA now points to the dedicated RFQ
+  // wizard at /quote instead of an `intent` flag on the search page so
+  // the CTA matches its label ("اطلب عرض سعر مجانًا"). The /quote route,
+  // RFQ submit logic, matching, credits and reveal remain untouched.
+  quote: '/quote',
   search: '/search',
   signupProvider: '/auth?mode=signup&role=provider',
   categories: '/categories',
@@ -846,7 +850,7 @@ export const HeroV2 = () => {
             <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <PrimaryCTA
                 to={ROUTES.quote}
-                label={bi('استكشف كل القطاعات الصناعية', 'Explore every industrial sector')}
+                label={bi('اطلب عرض سعر مجانًا', 'Request a free quote')}
                 onClick={() => trackAbClick('hero_headline')}
               />
               <Link to={ROUTES.signupProvider}>
@@ -859,6 +863,33 @@ export const HeroV2 = () => {
                 </Button>
               </Link>
             </div>
+
+            {/*
+              Phase 12B — Mobile-only social proof / trust strip.
+              The desktop strip (md+) is rendered absolutely at the bottom of
+              the hero. On mobile the absolute strip is hidden, so this inline
+              version makes the same three trust signals visible above the
+              fold without overlapping the search bar or thumbnails.
+              Copy uses qualitative, non-numeric statements so we never ship
+              inflated counts.
+            */}
+            <ul
+              className="md:hidden mt-6 flex flex-col gap-2 text-white/90 text-xs"
+              aria-label={bi('لماذا قِطاعات', 'Why Qitaat')}
+            >
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-300 shrink-0" aria-hidden="true" />
+                <span>{bi('مزودون موثّقون قبل النشر', 'Providers vetted before listing')}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-sky-300 shrink-0" aria-hidden="true" />
+                <span>{bi('طلبات عروض منظمة بدل التواصل العشوائي', 'Structured quote requests, not scattered chats')}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-amber-300 shrink-0" aria-hidden="true" />
+                <span>{bi('بدون عمولة على العميل', 'No fees for customers')}</span>
+              </li>
+            </ul>
           </div>
 
           {/* Trust strip — absolutely positioned bottom-start (RTL: bottom-right) */}
