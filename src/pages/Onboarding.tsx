@@ -537,6 +537,27 @@ const Onboarding = () => {
               {bi('اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.', 'Pick the path that fits you — you can add an entity later.')}
             </p>
           </div>
+          {/* AUTH-14E · Duplicate-entity guidance (UX-only; no DB lookup) */}
+          <div
+            data-testid="onboarding-duplicate-warning"
+            className="rounded-xl border border-warning/30 bg-warning/5 p-3 flex items-start gap-2"
+          >
+            <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" aria-hidden />
+            <div className="space-y-1 text-xs leading-relaxed text-foreground/90">
+              <p>
+                {bi(
+                  'إذا كانت منشأتك مسجلة مسبقًا في قطاعات، اطلب الانضمام بدل إنشاء منشأة جديدة.',
+                  'If your business is already registered on Qitaat, request to join it instead of creating a new entity.',
+                )}
+              </p>
+              <p className="text-muted-foreground">
+                {bi(
+                  'لدي دعوة أو أريد الانضمام لمنشأة — استخدم الخيارات أدناه.',
+                  'I have an invitation or want to join an entity — use the options below.',
+                )}
+              </p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-3">
             {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => (
               <button key={id} data-intent={id}
@@ -577,6 +598,15 @@ const Onboarding = () => {
 
           <div className="rounded-xl border border-border/60 bg-muted/10 p-3 space-y-2" data-feature="request-access">
             <Label className="text-xs">{bi('طلب الانضمام لمنشأة قائمة', 'Request access to an existing entity')}</Label>
+            <p
+              data-testid="request-access-clarification"
+              className="text-[11px] text-muted-foreground leading-relaxed"
+            >
+              {bi(
+                'طلب الانضمام للمنشأة يحتاج مراجعة من مسؤول المنشأة. إذا لديك دعوة، استخدم رابط الدعوة المرسل لك.',
+                'Joining an existing entity requires approval from its administrator. If you have an invitation, use the invitation link sent to you.',
+              )}
+            </p>
             {requestAccessSubmittedRef ? (
               <div className="rounded-md bg-success/10 border border-success/30 p-2 text-xs text-success-foreground">
                 {bi(`تم إرسال طلبك (${requestAccessSubmittedRef}).`, `Your request was sent (${requestAccessSubmittedRef}).`)}

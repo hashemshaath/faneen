@@ -269,6 +269,28 @@ export default function ProviderDashboardView({
       </div>
 
       {/* Action Center — role-aware provider CTAs (Phase B2) */}
+      {/* AUTH-14E · State-aware "Next Step" guidance header above the
+          existing action center. Pure presentation; readiness/approval
+          logic and visibility logic are NOT touched. */}
+      <div data-testid="provider-next-step-guidance" className="space-y-1">
+        <h3 className="text-sm font-heading font-bold text-foreground flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-gold" aria-hidden />
+          {isRTL ? 'الخطوة التالية' : 'Next step'}
+        </h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {isPublished
+            ? (isRTL
+                ? 'منشأتك ظاهرة للعملاء. تابع طلبات العملاء وحدّث الخدمات والصور بانتظام.'
+                : 'Your business is visible to customers. Track customer requests and keep services and images up to date.')
+            : business
+              ? (isRTL
+                  ? 'أكمل ملف منشأتك وأضف الخدمات والصور، ثم انتظر مراجعة فريق قطاعات قبل الظهور العام.'
+                  : 'Complete your business profile and add services & images, then wait for the Qitaat team to review your visibility.')
+              : (isRTL
+                  ? 'ابدأ بإعداد ملف منشأتك لتفعيل خطة الإطلاق المجانية واستقبال الطلبات.'
+                  : 'Start by setting up your business profile to activate the Free Launch plan and receive requests.')}
+        </p>
+      </div>
       <DashboardActionCenter
         isRTL={isRTL}
         role="provider"
