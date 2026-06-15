@@ -24,8 +24,11 @@ function grep(pattern: string, paths: string[]): string {
 
 describe('Email Infrastructure Phase 15A — Central Resend audit guards', () => {
   it('no VITE_RESEND_* env reference exists in client source', () => {
-    const hits = grep('VITE_RESEND', ['src']);
-    expect(hits.trim()).toBe('');
+    const hits = grep('VITE_RESEND', ['src'])
+      .split('\n')
+      .filter(Boolean)
+      .filter((line) => !/emailInfrastructurePhase15aCentralResendAudit\.test\.ts/.test(line));
+    expect(hits).toEqual([]);
   });
 
   it('no hardcoded Resend live key (re_...) appears in src or supabase', () => {
@@ -41,11 +44,11 @@ describe('Email Infrastructure Phase 15A — Central Resend audit guards', () =>
 
   it('RESEND_API_KEY is only read via Deno.env.get inside supabase/functions/', () => {
     const hits = grep('RESEND_API_KEY', ['src']);
-    // Allowed in src: display-only label strings inside admin UI files.
+    // Allowed in src: display-only label strings inside admin UI files, and this audit test itself.
     const offending = hits
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx/.test(line));
+      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx|emailInfrastructurePhase15aCentralResendAudit\.test\.ts/.test(line));
     expect(offending).toEqual([]);
   });
 
