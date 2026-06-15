@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth';
-import { createPasswordResetLog } from '@/modules/identity';
+import {
+  createPasswordResetLog,
+  sanitizeAnalyticsPath,
+  sanitizeAnalyticsReferrer,
+} from '@/modules/identity';
 import { PasswordField } from '@/components/auth/PasswordField';
 import { PasswordResetSuccessView } from '@/components/auth/PasswordResetSuccessView';
 import { Button } from '@/components/ui/button';
@@ -45,8 +49,10 @@ const ResetPassword = () => {
           status: 'link_clicked',
           user_agent: navigator.userAgent?.substring(0, 200) || null,
           metadata: {
-            path: window.location.pathname,
-            referrer: document.referrer || null,
+            // PRA-2: pathname-only + sanitized referrer; only booleans for
+            // hash/query so a recovery token can never reach the table.
+            path: sanitizeAnalyticsPath(window.location.pathname),
+            referrer: sanitizeAnalyticsReferrer(document.referrer),
             has_hash_token: window.location.hash.includes('access_token'),
             has_query_error: window.location.search.includes('error'),
             locale: isRTL ? 'ar' : 'en',
