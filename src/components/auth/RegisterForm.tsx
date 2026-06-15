@@ -23,6 +23,7 @@ import { UsernamePicker } from '@/components/common/UsernamePicker';
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
   onEmailSent: (email: string) => void;
+  onForgotPassword?: () => void;
 }
 
 /**
@@ -34,7 +35,7 @@ interface RegisterFormProps {
  */
 type RegisterIntent = 'individual' | 'create-entity' | 'join-invite' | 'request-access';
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onEmailSent }) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onEmailSent, onForgotPassword }) => {
   const { t, isRTL } = useLanguage();
 
   const [registerType, setRegisterType] = useState<RegisterType>('individual');
@@ -420,9 +421,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           <PhoneField
             value={phoneParts}
             onChange={(v) => { setPhoneParts(v); clearError('phone'); }}
+            onBlur={() => { if (phoneParts.national) validatePhoneField(phoneParts.national); }}
             optional
             error={errors.phone}
           />
+          {phoneParts.national && !errors.phone && (
+            <p className="flex items-center gap-1 text-xs text-accent -mt-2">
+              <CheckCircle className="w-3 h-3" />
+              {isRTL ? 'صيغة الجوال صحيحة' : 'Valid phone format'}
+            </p>
+          )}
 
           <PasswordField
             password={password} onChange={setPassword} label={t('auth.password')}
