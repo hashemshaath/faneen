@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
-import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut, ShieldAlert, Shield, ChevronDown, LifeBuoy, Store, GraduationCap, Sparkles, LayoutGrid } from "lucide-react";
+import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut, ShieldAlert, Shield, ChevronDown, LifeBuoy, Store, GraduationCap, Sparkles, LayoutGrid, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -107,6 +107,12 @@ export const Navbar = () => {
       label: language === 'ar' ? 'القطاعات' : 'Sectors',
       icon: Layers,
       links: [
+        {
+          to: '/sectors',
+          label: language === 'ar' ? 'كل القطاعات' : 'All sectors',
+          icon: Layers,
+          desc: language === 'ar' ? 'تصفّح القطاعات الصناعية الموثّقة' : 'Browse the industrial sectors',
+        },
         {
           to: '/profile-systems',
           label: language === 'ar' ? 'أنظمة القطاعات' : 'Profile systems',
@@ -278,6 +284,19 @@ export const Navbar = () => {
 
           {/* Right side */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/*
+              Phase 12B — Primary conversion CTA in the navbar (desktop).
+              Hidden when an admin/super-admin is signed in to avoid clutter
+              for staff. Route /quote and RFQ submit logic are untouched.
+            */}
+            {!(user && (isAdmin || isSuperAdmin)) && (
+              <PrefetchLink to="/quote" className="hidden lg:inline-flex">
+                <Button variant="primary" size="sm" className="gap-1.5">
+                  <Send className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'اطلب عرض سعر' : 'Request quote'}
+                </Button>
+              </PrefetchLink>
+            )}
             <ThemeToggle variant="navbar" />
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
