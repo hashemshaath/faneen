@@ -57,8 +57,9 @@ describe('AUTH-14C · Verification + Password Recovery UX guard', () => {
     expect(src).toMatch(/'checking'\s*\|\s*'valid'\s*\|\s*'expired'\s*\|\s*'invalid'/);
     expect(src).toMatch(/انتهت صلاحية الرابط|Link Expired/);
     expect(src).toMatch(/رابط غير صالح|Invalid Link/);
-    // password mismatch + weakness messages localised
-    expect(src).toMatch(/كلمة المرور غير متطابقة|Passwords do not match/);
+    // password weakness messages localised
+    // Note: confirm-password field intentionally removed in favour of show-password toggle;
+    // mismatch copy no longer applies.
     expect(src).toMatch(/ضعيفة|too weak/);
   });
 
