@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Sparkles, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -142,8 +141,3 @@ export const DashboardActionCenter: React.FC<DashboardActionCenterProps> = ({
 };
 
 DashboardActionCenter.displayName = 'DashboardActionCenter';
-
-export { Button as _Button }; // no-op re-export to ensure tree-shake friendliness if Button is unused
-
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-type _Unused = typeof Button;
