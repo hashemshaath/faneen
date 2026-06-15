@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import { DashboardViewSkeleton } from '@/components/dashboard/overview/shared';
+import { UnverifiedEmailBanner } from '@/components/dashboard/UnverifiedEmailBanner';
 import { lazyRetry } from '@/lib/lazyRetry';
 import '@/styles/dashboard-emerald.css';
 
@@ -27,6 +28,7 @@ const DashboardOverview = () => {
   return (
     <DashboardLayout>
       <div className="dash-emerald">
+        <UnverifiedEmailBanner />
         <Suspense fallback={<DashboardViewSkeleton />}>
           {isAdmin ? (
             <AdminDashboardView isRTL={isRTL} />
