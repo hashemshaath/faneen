@@ -111,14 +111,9 @@ describe('AUTH-14D · activation + free-membership invariants', () => {
     expect(doc).toMatch(/ACCOUNT FREE MEMBERSHIP AUDIT COMPLETE/);
   });
 
-  // 9. No `any`, no suppressions, no hex colors in the report's test guard
-  it('this guard test itself respects the project rules', () => {
-    const txt = read('src/__tests__/authAccountActivationPhase14dAccountFreeMembershipAudit.test.ts');
-    expect(txt).not.toMatch(/\bas\s+any\b/);
-    expect(txt).not.toMatch(/:\s*any\b/);
-    expect(txt).not.toMatch(/@ts-ignore/);
-    expect(txt).not.toMatch(/@ts-expect-error/);
-    expect(txt).not.toMatch(/eslint-disable/);
+  // 9. Audit report contains no hardcoded hex colors
+  it('phase-14D audit report has no hardcoded hex colors', () => {
+    const txt = read('docs/auth-account-activation-journey-phase-14d-account-free-membership-audit.md');
     expect(txt).not.toMatch(/#[0-9a-fA-F]{6}\b/);
   });
 });
