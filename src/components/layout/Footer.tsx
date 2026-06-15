@@ -5,6 +5,7 @@ import { FooterBrand } from "./footer/FooterBrand";
 import { FooterLinks } from "./footer/FooterLinks";
 import { FooterBottom } from "./footer/FooterBottom";
 import { MobileFooter } from "./footer/MobileFooter";
+import { WhatsAppFab } from "@/components/common/WhatsAppFab";
 
 const useInView = (threshold = 0.1) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -24,6 +25,7 @@ export const Footer = () => {
   const { ref: footerRef, visible } = useInView();
 
   return (
+    <>
     <footer
       ref={footerRef}
       role="contentinfo"
@@ -56,5 +58,11 @@ export const Footer = () => {
         <FooterBottom visible={visible} />
       </div>
     </footer>
+    {/* Phase 12B — Public WhatsApp FAB. Renders null when no number is
+        configured (VITE_QITAAT_WHATSAPP). Mounted from Footer so it appears
+        on every public page that renders <Footer /> and never inside
+        admin/dashboard layouts (which don't use this Footer). */}
+    <WhatsAppFab />
+    </>
   );
 };
