@@ -17,7 +17,7 @@ import {
 import {
   Wrench, Image as ImageIcon, Star, FileText, TrendingUp,
   Plus, Send, MessageSquare, Crown, Building2,
-  CheckCircle2, ExternalLink, Sparkles, ArrowLeft, ArrowRight,
+  CheckCircle2, ExternalLink, Sparkles, ArrowLeft, ArrowRight, Eye, Inbox,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -41,6 +41,10 @@ import {
   UnifiedDashboardHero,
   formatLastUpdated,
 } from '@/components/dashboard/overview/UnifiedDashboardHero';
+import {
+  DashboardActionCenter,
+  type DashboardAction,
+} from '@/components/dashboard/overview/DashboardActionCenter';
 
 
 type ProviderProfile = {
@@ -260,6 +264,43 @@ export default function ProviderDashboardView({
           </Button>
         )}
       </div>
+
+      {/* Action Center — role-aware provider CTAs (Phase B2) */}
+      <DashboardActionCenter
+        isRTL={isRTL}
+        role="provider"
+        actions={[
+          {
+            id: 'complete-profile',
+            label: { ar: 'أكمل ملفك', en: 'Complete profile' },
+            description: {
+              ar: 'استكمل الحقول لزيادة فرص الظهور',
+              en: 'Finish required fields to improve visibility',
+            },
+            to: '/dashboard/business-completion',
+            icon: Sparkles,
+            primary: true,
+          },
+          {
+            id: 'visibility',
+            label: { ar: 'راجع حالة الظهور', en: 'Review visibility' },
+            to: '/dashboard/business-visibility',
+            icon: Eye,
+          },
+          {
+            id: 'leads',
+            label: { ar: 'تابع طلبات العملاء', en: 'Customer requests' },
+            to: '/dashboard/leads',
+            icon: Inbox,
+          },
+          {
+            id: 'services-images',
+            label: { ar: 'حدّث خدماتك وصورك', en: 'Update services & images' },
+            to: '/dashboard/services',
+            icon: Wrench,
+          },
+        ] satisfies DashboardAction[]}
+      />
 
       {/* B — Performance overview (KPIs + secondary metrics, professional B2B) */}
       <ProviderStatsOverview
