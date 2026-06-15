@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth';
@@ -31,6 +31,33 @@ const ResetPassword = () => {
 
   const strength = checkPasswordStrength(password);
 
+  // Reset-link click analytics: log arrival + link outcome exactly once.
+  const arrivalLoggedRef = useRef(false);
+  const outcomeLoggedRef = useRef(false);
+  useEffect(() => {
+    if (arrivalLoggedRef.current) return;
+    arrivalLoggedRef.current = true;
+    void (async () => {
+      try {
+        await createPasswordResetLog({
+          email: session?.user?.email || '',
+          user_id: session?.user?.id || null,
+          status: 'link_clicked',
+          user_agent: navigator.userAgent?.substring(0, 200) || null,
+          metadata: {
+            path: window.location.pathname,
+            referrer: document.referrer || null,
+            has_hash_token: window.location.hash.includes('access_token'),
+            has_query_error: window.location.search.includes('error'),
+            locale: isRTL ? 'ar' : 'en',
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            arrived_at: new Date().toISOString(),
+          },
+        });
+      } catch { /* silent */ }
+    })();
+  }, [isRTL, session?.user?.email, session?.user?.id]);
+
   useEffect(() => {
     const hash = window.location.hash;
     const search = window.location.search;
@@ -57,6 +84,31 @@ const ResetPassword = () => {
       setLinkStatus('invalid');
     }
   }, [session]);
+
+  // Log the resolved link outcome once it stabilizes.
+  useEffect(() => {
+    if (outcomeLoggedRef.current) return;
+    if (linkStatus === 'checking') return;
+    outcomeLoggedRef.current = true;
+    const status =
+      linkStatus === 'valid' ? 'link_valid'
+      : linkStatus === 'expired' ? 'link_expired'
+      : 'link_invalid';
+    void (async () => {
+      try {
+        await createPasswordResetLog({
+          email: session?.user?.email || '',
+          user_id: session?.user?.id || null,
+          status,
+          user_agent: navigator.userAgent?.substring(0, 200) || null,
+          metadata: {
+            link_status: linkStatus,
+            resolved_at: new Date().toISOString(),
+          },
+        });
+      } catch { /* silent */ }
+    })();
+  }, [linkStatus, session?.user?.email, session?.user?.id]);
 
   const handleReset = async () => {
     if (strength.score < 2) {
