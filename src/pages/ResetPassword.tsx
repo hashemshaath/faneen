@@ -10,8 +10,6 @@ import {
 import { PasswordField } from '@/components/auth/PasswordField';
 import { PasswordResetSuccessView } from '@/components/auth/PasswordResetSuccessView';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { Loader2, ShieldCheck, AlertTriangle, Clock, KeyRound, RefreshCw, LogIn, XCircle } from 'lucide-react';
@@ -25,7 +23,6 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
