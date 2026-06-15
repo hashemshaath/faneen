@@ -48,7 +48,8 @@ describe('Phase 8 — Admin Contracts Center', () => {
 
   it('4. /admin/pdf-exports preserved as a safe redirect', () => {
     const src = app();
-    expect(src).toMatch(/path="\/admin\/pdf-exports"[^>]*Navigate[^>]*to="\/admin\/contracts\?tab=exports"/);
+    expect(src).toMatch(/path="\/admin\/pdf-exports"/);
+    expect(src).toMatch(/Navigate\s+to="\/admin\/contracts\?tab=exports"/);
   });
 
   it('5. No legacy contract route was deleted without a redirect', () => {
