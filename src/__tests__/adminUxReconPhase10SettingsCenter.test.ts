@@ -56,8 +56,8 @@ describe('Phase 10 — Admin Settings Center', () => {
   it('7. No legacy settings route is deleted without a redirect', () => {
     const src = app();
     for (const r of ['/admin/branding', '/admin/analytics-settings', '/admin/api-settings']) {
-      const re = new RegExp(`path="${r.replace(/\//g, '\\/')}"[^>]*Navigate to=`);
-      expect(re.test(src), `route ${r} must redirect`).toBe(true);
+      const line = src.split('\n').find((l) => l.includes(`path="${r}"`)) || '';
+      expect(line.includes('Navigate to='), `route ${r} must redirect`).toBe(true);
     }
   });
 
