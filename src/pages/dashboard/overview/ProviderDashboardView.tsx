@@ -17,12 +17,13 @@ import {
 import {
   Wrench, Image as ImageIcon, Star, FileText, TrendingUp,
   Plus, Send, MessageSquare, Crown, Building2,
-  CheckCircle2, ExternalLink, Sparkles, ArrowLeft, ArrowRight, Eye, Inbox,
+  CheckCircle2, ExternalLink, Sparkles, ArrowLeft, ArrowRight, Eye, Inbox, MapPin,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
+import { ProviderVisibilityStatusCard } from '@/components/dashboard/ProviderVisibilityStatusCard';
 import { ProviderMembershipCard } from '@/components/dashboard/ProviderMembershipCard';
 import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngagementPreviews';
 import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
@@ -282,6 +283,12 @@ export default function ProviderDashboardView({
             primary: true,
           },
           {
+            id: 'services-images',
+            label: { ar: 'أضف الخدمات والصور', en: 'Add services & images' },
+            to: '/dashboard/services',
+            icon: ImageIcon,
+          },
+          {
             id: 'visibility',
             label: { ar: 'راجع حالة الظهور', en: 'Review visibility' },
             to: '/dashboard/business-visibility',
@@ -294,13 +301,16 @@ export default function ProviderDashboardView({
             icon: Inbox,
           },
           {
-            id: 'services-images',
-            label: { ar: 'حدّث خدماتك وصورك', en: 'Update services & images' },
-            to: '/dashboard/services',
-            icon: Wrench,
+            id: 'service-areas',
+            label: { ar: 'حدّث مناطق الخدمة', en: 'Update service areas' },
+            to: '/dashboard/provider/service-areas',
+            icon: MapPin,
           },
         ] satisfies DashboardAction[]}
       />
+
+      {/* B3 — Public visibility status (presentational, reads existing state) */}
+      <ProviderVisibilityStatusCard />
 
       {/* B — Performance overview (KPIs + secondary metrics, professional B2B) */}
       <ProviderStatsOverview
@@ -335,6 +345,11 @@ export default function ProviderDashboardView({
 
       {/* C — Profile readiness (single strong card) */}
       <div id="provider-readiness" className="scroll-mt-24">
+        <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+          {isRTL
+            ? 'كلما اكتمل ملفك زادت فرصة ظهورك واستقبال طلبات مناسبة. أكمل البيانات الناقصة قبل طلب الظهور العام.'
+            : 'The more complete your profile, the more visible you are and the better the matching. Finish the missing fields before requesting public visibility.'}
+        </p>
         <ProviderReadinessCard />
       </div>
 
