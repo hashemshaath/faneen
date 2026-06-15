@@ -696,6 +696,9 @@ const Onboarding = () => {
               {bi('الخطوة 1 من 3 — سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Step 1 of 3 — register business data before the account manager')}
             </p>
             <Progress value={completionPct} className="h-1.5" />
+            <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1" data-testid="onboarding-review-note">
+              {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.', 'After completing the details, the Qitaat team reviews the business before public visibility.')}
+            </p>
           </div>
 
           <div className="space-y-5">
