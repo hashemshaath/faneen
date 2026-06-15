@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { adminEmailSmokeTest } from '@/modules/admin';
+import { authService } from '@/services/auth/authService';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,11 +77,14 @@ const AdminEmailSmokeTests = () => {
   const otpMutation = useMutation({
     mutationFn: async (): Promise<{ ok: boolean; error?: string; message?: string; sms_sent?: boolean; test_mode?: boolean }> => {
       const cleanPhone = otpPhone.replace(/\D/g, '');
-      const { data, error } = await supabase.functions.invoke('send-login-otp', {
-        body: { phone: cleanPhone, country_code: otpCountryCode },
-      });
-      if (error) return { ok: false, error: 'invoke_error', message: error.message };
-      const payload = (data ?? {}) as { success?: boolean; error?: string; message?: string; sms_sent?: boolean; test_mode?: boolean };
+      let payload: { success?: boolean; error?: string; message?: string; sms_sent?: boolean; test_mode?: boolean };
+      try {
+        const data = await authService.sendLoginOtp(cleanPhone, otpCountryCode);
+        payload = (data ?? {}) as typeof payload;
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        return { ok: false, error: 'invoke_error', message };
+      }
       return {
         ok: !!payload.success,
         error: payload.error,
@@ -111,9 +116,7 @@ const AdminEmailSmokeTests = () => {
 
   const runMutation = useMutation({
     mutationFn: async (email: string): Promise<SmokeRunResponse> => {
-      const { data, error } = await supabase.functions.invoke('admin-email-smoke-test', {
-        body: { testEmail: email },
-      });
+      const { data, error } = await adminEmailSmokeTest<SmokeRunResponse>({ testEmail: email });
       if (error) throw new Error(error.message);
       if (!data || typeof data !== 'object') throw new Error('Empty response');
       return data as SmokeRunResponse;
