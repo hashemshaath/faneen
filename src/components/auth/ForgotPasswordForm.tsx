@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
-import { createPasswordResetLog } from '@/modules/identity';
+import {
+  createPasswordResetLog,
+  sanitizeAnalyticsPath,
+  sanitizeAnalyticsReferrer,
+} from '@/modules/identity';
 import { useLoginLockout } from '@/hooks/useLoginLockout';
 import { translateAuthError, isRateLimitError, isNetworkError } from '@/services/auth/errorMessages';
 import { getAuthErrorHelpLinks } from '@/services/auth/errorMessages';
@@ -66,8 +70,9 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           status: 'forgot_page_viewed',
           user_agent: navigator.userAgent?.substring(0, 200) || null,
           metadata: {
-            path: window.location.pathname + window.location.search,
-            referrer: document.referrer || null,
+            // PRA-2: strip query/hash; raw search can carry incidental params.
+            path: sanitizeAnalyticsPath(window.location.pathname),
+            referrer: sanitizeAnalyticsReferrer(document.referrer),
             locale: isRTL ? 'ar' : 'en',
             viewport: `${window.innerWidth}x${window.innerHeight}`,
             arrived_at: new Date().toISOString(),
