@@ -215,6 +215,7 @@ const DashboardBadge = lazyRetry(() => import("./pages/dashboard/DashboardBadge"
 const DashboardMyRequests = lazyRetry(() => import("./pages/dashboard/DashboardMyRequests"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Onboarding = lazyRetry(() => import("./pages/Onboarding"));
+const Start = lazyRetry(() => import("./pages/Start"));
 const Categories = lazyRetry(() => import("./pages/Categories"));
 const SectorLanding = lazyRetry(() => import("./pages/SectorLanding"));
 const SectorsIndex = lazyRetry(() => import("./pages/SectorLanding").then(m => ({ default: m.SectorsIndex })));
@@ -308,6 +309,8 @@ const AppRoutes = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/verified" element={<AuthVerified />} />
           <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
+          {/* AUTH SIMPLIFICATION UX — post-login context selection */}
+          <Route path="/start" element={<ProtectedRoute skipOnboarding><Start /></ProtectedRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/search" element={<Search />} />
           <Route path="/quote" element={<Quote />} />
