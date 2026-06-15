@@ -5,6 +5,7 @@ import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilde
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import { Footer } from '@/components/layout/Footer';
+import { Navbar } from '@/components/layout/Navbar';
 import {
   useDebouncedValue,
   useCategories,
@@ -303,6 +304,7 @@ const SearchV3 = () => {
   // ── Render ──────────────────────────────────────────
   return (
     <div className="min-h-dvh bg-background">
+      <Navbar />
       <SearchHeaderV3
         query={query}
         onQueryChange={handleQueryChange}
