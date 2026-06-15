@@ -147,17 +147,19 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
 
   if (uiState === 'success') {
     return (
-      <div className="space-y-4 animate-fade-in text-center py-6">
-        <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-500" />
-        <h3 className="font-heading font-bold text-lg">
+      <div className="space-y-3 animate-fade-in text-center py-5 sm:py-6">
+        <div className="w-11 h-11 sm:w-12 sm:h-12 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center">
+          <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+        </div>
+        <h3 className="font-heading font-semibold text-base sm:text-lg text-foreground">
           {isRTL ? 'تم تسجيل الدخول' : 'Signed in'}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground leading-relaxed">
           {isRTL
             ? 'جارٍ تحويلك إلى لوحة التحكم…'
             : 'Redirecting you to your dashboard…'}
         </p>
-        <Loader2 className="w-4 h-4 animate-spin mx-auto text-muted-foreground" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto text-muted-foreground" />
       </div>
     );
   }

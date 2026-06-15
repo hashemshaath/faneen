@@ -245,10 +245,10 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     return (
       <div className="space-y-4 animate-fade-in">
         <div className="text-center space-y-2">
-          <div className="w-10 h-10 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-accent" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
           </div>
-          <h2 className="font-heading font-semibold text-base text-foreground">
+          <h2 className="font-heading font-semibold text-base sm:text-lg text-foreground">
             {isRTL ? 'تحقق من بريدك الإلكتروني' : 'Check Your Email'}
           </h2>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
@@ -478,8 +478,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
         )}
 
-        <Button onClick={onBack} variant="outline" className="w-full h-9 gap-2 text-xs">
-          <LogIn className="w-3.5 h-3.5" />
+        <Button onClick={onBack} variant="outline" className="w-full h-10 sm:h-11 rounded-xl gap-2 text-xs sm:text-sm font-medium">
+          <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           {isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login'}
         </Button>
 
@@ -492,16 +492,16 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.reset_password')}</h2>
-        <p className="text-sm text-muted-foreground">
+    <div className="space-y-5 sm:space-y-6">
+      <div className="space-y-1.5">
+        <h2 className="font-heading font-semibold text-base sm:text-lg text-foreground">{t('auth.reset_password')}</h2>
+        <p className="text-xs text-muted-foreground leading-relaxed">
           {isRTL ? 'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين' : 'Enter your email and we will send a reset link'}
         </p>
       </div>
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>{t('auth.email')}</Label>
+          <Label className="text-xs font-semibold">{t('auth.email')}</Label>
           <div className="relative">
             <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
             <Input
@@ -511,7 +511,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
               onBlur={() => email && validateEmailField(email)}
               dir="ltr"
               style={{ paddingInlineStart: '40px' }}
-              className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
+              className={`h-11 sm:h-12 rounded-xl ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               autoComplete="email"
             />
@@ -520,15 +520,15 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         </div>
         {/* Lockout warning */}
         {lockout.isLocked && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in duration-300">
-            <ShieldAlert className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 animate-in fade-in duration-300">
+            <ShieldAlert className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
             <div className="space-y-0.5">
               <p className="text-xs text-destructive font-semibold">
                 {isRTL
                   ? `تم قفل الطلبات مؤقتاً. أعد المحاولة بعد ${lockout.remainingSeconds} ثانية.`
                   : `Requests temporarily locked. Try again in ${lockout.remainingSeconds}s.`}
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground leading-snug">
                 {isRTL ? 'هذا الإجراء لحماية حسابك من الاستخدام غير المصرح.' : 'This protects your account from unauthorized use.'}
               </p>
             </div>
@@ -537,26 +537,26 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
         {/* Auto-retry indicator */}
         {autoRetrying && (
-          <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-4 py-3 animate-in fade-in duration-300">
-            <Loader2 className="w-4 h-4 text-accent animate-spin shrink-0" />
+          <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 animate-in fade-in duration-300">
+            <Loader2 className="w-3.5 h-3.5 text-accent animate-spin shrink-0" />
             <p className="text-xs text-accent font-medium">
               {isRTL ? 'جاري المحاولة تلقائياً...' : 'Auto-retrying...'}
             </p>
           </div>
         )}
 
-        <Button onClick={handleSubmit} disabled={loading || !!errors.email || lockout.isLocked || autoRetrying} className="w-full h-11" variant="hero">
+        <Button onClick={handleSubmit} disabled={loading || !!errors.email || lockout.isLocked || autoRetrying} className="w-full h-11 sm:h-12 rounded-xl text-sm font-semibold" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.reset_password')}
         </Button>
 
         {/* Inline error with guidance */}
         {submitError && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
-            <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+            <AlertTriangle className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
             <div className="space-y-1.5">
               <p className="text-xs text-destructive font-medium">{submitError}</p>
-              <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5">
+              <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5 leading-snug">
                 <li>{isRTL ? 'تحقق من كتابة البريد الإلكتروني بشكل صحيح' : 'Double-check your email spelling'}</li>
                 <li>{isRTL ? 'جرّب البريد الآخر إذا كنت تستخدم أكثر من بريد' : 'Try another email if you have multiple'}</li>
                 <li>{isRTL ? 'إذا استمرت المشكلة، تواصل مع الدعم الفني' : 'Contact support if the issue persists'}</li>
@@ -573,8 +573,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
         )}
       </div>
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <BackArrow className="w-4 h-4" />
+      <button onClick={onBack} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+        <BackArrow className="w-3.5 h-3.5" />
         {t('auth.back')}
       </button>
     </div>
