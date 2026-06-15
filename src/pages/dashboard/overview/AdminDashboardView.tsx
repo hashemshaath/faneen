@@ -16,7 +16,7 @@ import {
   Users, Building2, DollarSign, FileText, Crown, MessageSquare, Mail,
   ShieldAlert, Zap, AlertCircle, AlertTriangle, UserPlus, ShieldCheck, Inbox,
   TrendingUp, BarChart3, PieChart as PieChartIcon, Activity, Newspaper,
-  ArrowUpRight, ClipboardList, Sliders,
+  ArrowUpRight, ClipboardList, Sliders, ScrollText,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
