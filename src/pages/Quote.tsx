@@ -822,6 +822,20 @@ const Quote: React.FC = () => {
                         className="hidden"
                         onChange={(e) => handleFiles(e.target.files)}
                       />
+                      <p
+                        data-testid="quote-upload-helper"
+                        className="mt-2 text-xs text-muted-foreground leading-relaxed"
+                      >
+                        <Bi
+                          ar="الصيغ المدعومة: صور (JPG, PNG, WEBP)، PDF، مستندات Word، أو DWG. الحد الأقصى 10 ميجابايت لكل ملف، حتى 8 ملفات."
+                          en="Supported: images (JPG, PNG, WEBP), PDF, Word, or DWG. Up to 10 MB per file, max 8 files."
+                        />
+                        <br />
+                        <Bi
+                          ar="ارفع صور الموقع أو مخططات أو مقاسات لمساعدة المزود على فهم المطلوب."
+                          en="Attach site photos, plans or measurements so providers understand the request."
+                        />
+                      </p>
                       {form.files.length > 0 && (
                         <ul className="mt-3 space-y-2">
                           {form.files.map((f, i) => (
