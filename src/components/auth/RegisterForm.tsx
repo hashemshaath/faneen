@@ -403,12 +403,29 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             </div>
             <FieldError message={errors.email} />
             {emailExists && (
-              <p className="flex items-center gap-1 text-xs text-destructive mt-1 animate-fade-in">
-                {isRTL ? 'هذا البريد مسجل بالفعل.' : 'This email is already registered.'}{' '}
-                <button onClick={onSwitchToLogin} className="underline font-medium">
-                  {isRTL ? 'تسجيل الدخول' : 'Login'}
-                </button>
-              </p>
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 mt-1 animate-fade-in space-y-2">
+                <p className="text-xs text-destructive font-medium">
+                  {isRTL ? 'هذا البريد مسجل بالفعل في قِطاعات.' : 'This email is already registered on Qitaat.'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={onSwitchToLogin}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition"
+                  >
+                    {isRTL ? 'تسجيل الدخول' : 'Sign in'}
+                  </button>
+                  {onForgotPassword && (
+                    <button
+                      type="button"
+                      onClick={onForgotPassword}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition"
+                    >
+                      {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
             {email && !errors.email && !emailExists && (
               <p className="flex items-center gap-1 text-xs text-accent mt-1">
