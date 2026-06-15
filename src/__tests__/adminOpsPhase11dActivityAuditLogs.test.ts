@@ -6,7 +6,7 @@ const ROOT = resolve(__dirname, '..', '..');
 const ACTIVITY = resolve(__dirname, '..', 'pages', 'admin', 'AdminActivityLog.tsx');
 const AUDIT = resolve(__dirname, '..', 'pages', 'admin', 'AdminAuditLog.tsx');
 const APP = resolve(__dirname, '..', 'App.tsx');
-const LOGS_DIR = resolve(__dirname, '..', 'components', 'admin', 'ops', 'logs');
+const LOGS_DIR = resolve(__dirname, '..', 'components', 'admin', 'ops', 'activity-logs');
 
 const NEW_FILES = [
   'adminActivityLogDict.ts',

@@ -18,7 +18,7 @@ import {
 import {
   AdminAuditLogTableSection,
   type AdminAuditLogTableRow,
-} from '@/components/admin/ops/logs';
+} from '@/components/admin/ops/activity-logs';
 
 type SourceKey = 'admin' | 'business' | 'security' | 'contract_amendment';
 
