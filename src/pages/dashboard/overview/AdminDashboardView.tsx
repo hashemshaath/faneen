@@ -53,6 +53,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   const { user, profile } = useAuth();
   const qc = useQueryClient();
   const layout = useAdminDashboardLayout();
+  const [lastRefresh, setLastRefresh] = React.useState<Date>(() => new Date());
 
   const { data: svcCounters } = useQuery({
     queryKey: ['admin-service-activation-counters'],
