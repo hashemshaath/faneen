@@ -185,9 +185,11 @@ describe('Email Infrastructure Phase 15F — Full Email Regression', () => {
     expect(src).not.toMatch(/:\s*any\b/);
   });
 
-  it('19. only one transactional sender + one queue worker exist (no duplicate helpers)', () => {
+  it('19. only the two canonical senders + the admin diagnostic post to Resend (no duplicate user-facing senders)', () => {
     const fnDirs = readdirSync(resolve(root, 'supabase/functions'));
-    // A second sender would surface as another folder posting to api.resend.com/emails.
+    // A second user-facing sender would surface as another folder posting to api.resend.com/emails.
+    // `resend-status` is an explicit admin-only diagnostic (action=test) and is allowlisted.
+    const ALLOWED_DIAGNOSTICS = new Set(['resend-status']);
     const resendPosters: string[] = [];
     for (const dir of fnDirs) {
       const indexPath = `supabase/functions/${dir}/index.ts`;
@@ -195,7 +197,8 @@ describe('Email Infrastructure Phase 15F — Full Email Regression', () => {
       const src = read(indexPath);
       if (/https:\/\/api\.resend\.com\/emails/.test(src)) resendPosters.push(dir);
     }
-    expect(resendPosters.sort()).toEqual(['process-email-queue', 'send-transactional-email']);
+    const userFacing = resendPosters.filter((d) => !ALLOWED_DIAGNOSTICS.has(d)).sort();
+    expect(userFacing).toEqual(['process-email-queue', 'send-transactional-email']);
   });
 
   it('20. Phase 15G webhook follow-up is documented as deferred', () => {
