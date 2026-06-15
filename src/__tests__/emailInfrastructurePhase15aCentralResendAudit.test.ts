@@ -27,7 +27,7 @@ describe('Email Infrastructure Phase 15A — Central Resend audit guards', () =>
     const hits = grep('VITE_RESEND', ['src'])
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/emailInfrastructurePhase15aCentralResendAudit\.test\.ts/.test(line));
+      .filter((line) => !/emailInfrastructurePhase15(a|c).*\.test\.ts/.test(line));
     expect(hits).toEqual([]);
   });
 
@@ -48,7 +48,7 @@ describe('Email Infrastructure Phase 15A — Central Resend audit guards', () =>
     const offending = hits
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx|emailInfrastructurePhase15aCentralResendAudit\.test\.ts/.test(line));
+      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx|emailInfrastructurePhase15(a|c).*\.test\.ts/.test(line));
     expect(offending).toEqual([]);
   });
 
@@ -64,12 +64,12 @@ describe('Email Infrastructure Phase 15A — Central Resend audit guards', () =>
     expect(src).toMatch(/Deno\.env\.get\(['"]RESEND_API_KEY['"]\)/);
   });
 
-  it('PINNED: process-email-queue still dispatches via Lovable gateway (off-policy — Phase 15C)', () => {
-    // This pin is deliberate. When Phase 15C migrates the queue worker to
-    // Resend, update this assertion in the same change.
+  it('Phase 15C: process-email-queue now dispatches via Resend (Lovable gateway removed)', () => {
     const src = read('supabase/functions/process-email-queue/index.ts');
-    expect(src).toMatch(/from\s+['"]npm:@lovable\.dev\/email-js['"]/);
-    expect(src).toMatch(/sendLovableEmail\s*\(/);
+    expect(src).not.toMatch(/@lovable\.dev\/email-js/);
+    expect(src).not.toMatch(/sendLovableEmail/);
+    expect(src).toMatch(/https:\/\/api\.resend\.com\/emails/);
+    expect(src).toMatch(/Deno\.env\.get\(['"]RESEND_API_KEY['"]\)/);
   });
 
   it('no client component invokes send-transactional-email outside the wrapper', () => {
