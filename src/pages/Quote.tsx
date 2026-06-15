@@ -26,7 +26,7 @@ import {
 import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
-  ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle,
+  ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle, Save,
 } from 'lucide-react';
 
 /**
@@ -256,6 +256,7 @@ const Quote: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const initialDraftHadSector = useRef<boolean>(!!loadDraft().sector);
   const [draftNotice, setDraftNotice] = useState<boolean>(false);
+  const [autosaveTick, setAutosaveTick] = useState<number>(0);
 
   // Prefill sector from ?sector= (e.g. /quote?sector=aluminum). Runs once.
   // If a different sector was already saved as a draft, prefer the URL value
@@ -273,7 +274,10 @@ const Quote: React.FC = () => {
   }, []);
 
   // persist draft on every change
-  useEffect(() => { saveDraft(form); }, [form]);
+  useEffect(() => {
+    saveDraft(form);
+    setAutosaveTick((n) => n + 1);
+  }, [form]);
 
   // scroll to top of form on step change
   useEffect(() => {
