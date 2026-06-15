@@ -21,11 +21,17 @@ import { cn } from '@/lib/utils';
 import {
   CHART_COLORS, getStatusLabel, getStatusColor,
   QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
-  RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
-import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+import {
+  UnifiedDashboardHero,
+  formatLastUpdated,
+} from '@/components/dashboard/overview/UnifiedDashboardHero';
+import {
+  UnifiedKpiGrid,
+  type UnifiedKpiTile,
+} from '@/components/dashboard/overview/UnifiedKpiGrid';
 import { useDashboardCustomization } from '@/hooks/useDashboardCustomization';
-import { CustomizableGrid, CustomizationToolbar } from '@/components/dashboard/overview/CustomizableSection';
+import { CustomizableGrid } from '@/components/dashboard/overview/CustomizableSection';
 import { LiveActivityWidget } from '@/components/dashboard/overview/widgets/LiveActivityWidget';
 import { SmartTasksWidget } from '@/components/dashboard/overview/widgets/SmartTasksWidget';
 import { TrendsWidget } from '@/components/dashboard/overview/widgets/TrendsWidget';
@@ -109,6 +115,8 @@ export default function UserDashboardView({
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedSpent = useCountUp(stats?.totalSpent ?? 0, isVisible, 1500);
 
+  const [lastRefresh, setLastRefresh] = React.useState<Date>(() => new Date());
+
   const contractStatusData = useMemo(() =>
     stats?.statusCounts ? Object.entries(stats.statusCounts).map(([name, value], i) => ({
       name: getStatusLabel(name, isRTL), value, color: CHART_COLORS[i % CHART_COLORS.length],
@@ -123,6 +131,7 @@ export default function UserDashboardView({
     qc.invalidateQueries({ queryKey: ['overdue-alerts'] });
     qc.invalidateQueries({ queryKey: ['live-activity'] });
     qc.invalidateQueries({ queryKey: ['dashboard-trends'] });
+    setLastRefresh(new Date());
     refetch();
   };
 
@@ -252,37 +261,59 @@ export default function UserDashboardView({
 
   const itemSpan = (id: string) => (id === 'activity' || id === 'tasks' ? 'lg:col-span-1' : 'lg:col-span-1');
 
+  const kpiTiles: UnifiedKpiTile[] = [
+    {
+      id: 'spent',
+      label: isRTL ? 'إجمالي الإنفاق' : 'Total Spent',
+      value: `${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`,
+      sub: isRTL
+        ? `${stats?.completedContracts ?? 0} عقد مكتمل`
+        : `${stats?.completedContracts ?? 0} completed`,
+      icon: DollarSign,
+    },
+    {
+      id: 'active',
+      label: isRTL ? 'العقود النشطة' : 'Active Contracts',
+      value: stats?.activeContracts ?? 0,
+      sub: `${isRTL ? 'من أصل' : 'of'} ${stats?.totalContracts ?? 0}`,
+      to: '/dashboard/contracts',
+      icon: FileText,
+    },
+    {
+      id: 'messages',
+      label: isRTL ? 'المحادثات' : 'Conversations',
+      value: stats?.messages ?? 0,
+      to: '/dashboard/messages',
+      icon: MessageSquare,
+    },
+    {
+      id: 'unread',
+      label: isRTL ? 'إشعارات جديدة' : 'Unread',
+      value: stats?.unreadNotifications ?? 0,
+      to: '/dashboard/notifications',
+      icon: Bell,
+    },
+  ];
+
   return (
     <div className="space-y-5" ref={ref}>
-      {/* Welcome — Emerald Prestige hero */}
-      <div className="dash-hero p-5 sm:p-7">
-        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div className="min-w-0">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider dash-hero-chip rounded-full px-2.5 py-1 mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--de-gold))]" aria-hidden="true" />
-              {isRTL ? 'لوحة العميل' : 'Client Dashboard'}
-            </span>
-            <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight">
-              {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
-            </h1>
-            <p className="dash-hero-sub text-xs sm:text-sm mt-1.5 max-w-md">
-              {isRTL ? 'تتبع عقودك ورسائلك بأناقة — اضغط ؟ لعرض الاختصارات' : 'Track your contracts & messages — press ? for shortcuts'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <CustomizationToolbar
-              isRTL={isRTL}
-              editMode={customization.editMode}
-              onToggle={() => customization.setEditMode(!customization.editMode)}
-              onReset={customization.reset}
-            />
-            <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
-            {profile?.ref_id && (
-              <Badge className="dash-hero-chip tech-content text-[10px] h-6 px-2">{profile.ref_id}</Badge>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Unified Hero (Phase A) */}
+      <UnifiedDashboardHero
+        isRTL={isRTL}
+        roleLabel={{ ar: 'لوحة العميل', en: 'Client Dashboard' }}
+        fullName={profile?.full_name ?? null}
+        refId={profile?.ref_id ?? null}
+        lastUpdated={formatLastUpdated(lastRefresh, isRTL)}
+        onRefresh={handleRefresh}
+        isRefreshing={isFetching}
+        onCustomize={() => customization.setEditMode(!customization.editMode)}
+        customizeActive={customization.editMode}
+        subline={
+          isRTL
+            ? 'تتبع عقودك ورسائلك بأناقة — اضغط ؟ لعرض الاختصارات'
+            : 'Track your contracts & messages — press ? for shortcuts'
+        }
+      />
 
       {/* Widgets */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -291,39 +322,8 @@ export default function UserDashboardView({
         <MembershipWidget isRTL={isRTL} userId={user.id} />
       </div>
 
-      {/* Bento KPI grid */}
-      <div className="dash-bento">
-        <BentoTile
-          variant="feature"
-          icon={DollarSign}
-          accent="gold"
-          label={isRTL ? 'إجمالي الإنفاق' : 'Total Spent'}
-          value={`${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
-          sub={isRTL ? `${stats?.completedContracts ?? 0} عقد مكتمل` : `${stats?.completedContracts ?? 0} completed contracts`}
-        />
-        <BentoTile
-          variant="wide"
-          icon={FileText}
-          label={isRTL ? 'العقود النشطة' : 'Active Contracts'}
-          value={stats?.activeContracts ?? 0}
-          sub={`${isRTL ? 'من أصل' : 'of'} ${stats?.totalContracts ?? 0}`}
-          to="/dashboard/contracts"
-        />
-        <BentoTile
-          variant="tile"
-          icon={MessageSquare}
-          label={isRTL ? 'المحادثات' : 'Conversations'}
-          value={stats?.messages ?? 0}
-          to="/dashboard/messages"
-        />
-        <BentoTile
-          variant="tile"
-          icon={Bell}
-          label={isRTL ? 'إشعارات جديدة' : 'Unread'}
-          value={stats?.unreadNotifications ?? 0}
-          to="/dashboard/notifications"
-        />
-      </div>
+      {/* Unified KPI grid (Phase A) */}
+      <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
 
       <CustomizableGrid
         order={customization.layout.order}
