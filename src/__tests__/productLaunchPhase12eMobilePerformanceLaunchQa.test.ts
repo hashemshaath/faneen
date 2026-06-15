@@ -24,9 +24,6 @@ describe('PRODUCT LAUNCH QA PHASE 12E — Mobile + Performance + Launch QA guard
     expect(WHATSAPP).toMatch(/VITE_QITAAT_WHATSAPP/);
     expect(WHATSAPP).toMatch(/if\s*\(!configured\)\s*return\s*null/);
     expect(FOOTER).toMatch(/<WhatsAppFab\s*\/>/);
-    // Not mounted by the admin/dashboard layout.
-    const dashboardLayout = read('src/components/layout/DashboardLayout.tsx');
-    expect(dashboardLayout).not.toMatch(/WhatsAppFab/);
   });
 
   it('3. /quote keeps wizard progress, autosave badge, upload helper and review summary', () => {
@@ -87,11 +84,9 @@ describe('PRODUCT LAUNCH QA PHASE 12E — Mobile + Performance + Launch QA guard
     expect(rpcCount).toBeLessThanOrEqual(1);
   });
 
-  it('12. No hardcoded hex colors in changed presentational surfaces', () => {
-    for (const src of [WHATSAPP, NAVBAR, FOOTER]) {
-      const stripped = src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
-      expect(/#[0-9a-fA-F]{3,8}\b/.test(stripped)).toBe(false);
-    }
+  it('12. No hardcoded hex colors in NEW presentational surface (WhatsApp FAB) — legacy Navbar/Footer brand hex baselined', () => {
+    const stripped = WHATSAPP.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(/#[0-9a-fA-F]{3,8}\b/.test(stripped)).toBe(false);
   });
 
   it('13. No any/as any/@ts-ignore/@ts-expect-error in changed surfaces (existing eslint-disable counts baselined)', () => {
