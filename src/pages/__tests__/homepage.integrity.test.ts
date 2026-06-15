@@ -36,7 +36,11 @@ describe('Homepage (/) integrity', () => {
 
   it('uses real internal routes for hero CTAs (no placeholder hrefs)', () => {
     // Hero CTAs must point at real app routes.
-    expect(home).toMatch(/['"]\/search\?intent=quote['"]/);
+    // Phase 12B updated the primary conversion CTA from
+    // `/search?intent=quote` to the dedicated RFQ route `/quote` to match
+    // the new label ("اطلب عرض سعر مجانًا"). /quote is a real route in
+    // App.tsx; RFQ submit logic is unchanged.
+    expect(home).toMatch(/quote:\s*['"]\/quote['"]/);
     expect(home).toMatch(/['"]\/auth\?mode=signup&role=provider['"]/);
     // No placeholder hrefs.
     expect(home).not.toMatch(/href=["']#["']/);
