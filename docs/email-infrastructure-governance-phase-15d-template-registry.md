@@ -153,6 +153,6 @@ Grouped by surface. Every entry is dispatched by `send-transactional-email`. Sub
 - The 6 auth templates are dispatched only through the auth queue; no transactional override exists for any of them.
 - The 60 transactional templates are dispatched only through `send-transactional-email`; the only registry is `supabase/functions/_shared/transactional-email-templates/registry.ts`.
 - `customer-work-order-completed` and `customer-project-completed` overlap semantically ("project complete") — both are still wired to distinct triggers (work-order finalize vs project-confirm) so neither is a code-level duplicate, but the **subject copy is near-identical**. Flagged in §3 of the audit report as *Needs Copy Cleanup*, not as a code duplicate.
-- The `parseEmailWebhookPayload` and `verifyWebhookRequest` imports from `@lovable.dev/*` inside `auth-email-hook` are **Supabase Auth webhook verification helpers**, not email-send libraries. Phase 15C removed all `@lovable.dev/email-js` send code from `process-email-queue`. This webhook-verification dependency is in-policy.
+- The `parseEmailWebhookPayload` and `verifyWebhookRequest` imports from the Lovable webhooks SDK inside `auth-email-hook` are **Supabase Auth webhook verification helpers**, not email-send libraries. Phase 15C removed all Lovable email-send code from `process-email-queue` (pinned by the 15A and 15C guard tests). This webhook-verification dependency is in-policy.
 
 No API keys, secrets, or provider tokens appear in any template or in this registry.
