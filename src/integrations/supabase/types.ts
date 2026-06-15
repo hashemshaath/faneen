@@ -21188,6 +21188,10 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      detect_delayed_auth_emails: {
+        Args: { p_threshold_minutes?: number }
+        Returns: number
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -21265,6 +21269,17 @@ export type Database = {
           _period?: string
         }
         Returns: Json
+      }
+      get_auth_email_timing_report: {
+        Args: { p_hours?: number }
+        Returns: {
+          bucket_hour: string
+          enqueued_count: number
+          failed_count: number
+          median_delivery_seconds: number
+          p95_delivery_seconds: number
+          sent_count: number
+        }[]
       }
       get_branch_visit_count: { Args: { _branch_id: string }; Returns: number }
       get_business_full_by_id: {
@@ -21663,6 +21678,22 @@ export type Database = {
       get_quotation_by_token: {
         Args: { _ref_id: string; _token: string }
         Returns: Json
+      }
+      get_recent_auth_email_attempts: {
+        Args: { p_hours?: number; p_limit?: number }
+        Returns: {
+          attempts: number
+          delivery_seconds: number
+          enqueued_at: string
+          error_message: string
+          latest_status: string
+          message_id: string
+          provider: string
+          provider_id: string
+          recipient_email: string
+          sent_at: string
+          template_name: string
+        }[]
       }
       get_review_authors: {
         Args: { _user_ids: string[] }
