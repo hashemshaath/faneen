@@ -10,8 +10,6 @@ import {
 import { PasswordField } from '@/components/auth/PasswordField';
 import { PasswordResetSuccessView } from '@/components/auth/PasswordResetSuccessView';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { Loader2, ShieldCheck, AlertTriangle, Clock, KeyRound, RefreshCw, LogIn, XCircle } from 'lucide-react';
@@ -25,7 +23,6 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
@@ -119,10 +116,6 @@ const ResetPassword = () => {
   const handleReset = async () => {
     if (strength.score < 2) {
       toast.error(isRTL ? 'كلمة المرور ضعيفة' : 'Password is too weak');
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match');
       return;
     }
     if (password.length < 8) {
@@ -300,19 +293,6 @@ const ResetPassword = () => {
               onToggleShow={() => setShowPassword(!showPassword)}
             />
 
-            <div className="space-y-2">
-              <Label>{t('auth.password.confirm')}</Label>
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleReset()}
-              />
-              {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-destructive">{isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'}</p>
-              )}
-            </div>
-
             {/* Inline error */}
             {resetError && (
               <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in duration-300">
@@ -323,7 +303,7 @@ const ResetPassword = () => {
 
             <Button
               onClick={handleReset}
-              disabled={loading || strength.score < 2 || password !== confirmPassword || !password}
+              disabled={loading || strength.score < 2 || !password}
               className="w-full"
               variant="hero"
             >
