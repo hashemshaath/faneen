@@ -317,13 +317,18 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
       <AuthDivider isRTL={isRTL} />
       <GoogleAuthButton onClick={handleGoogle} loading={googleLoading} isRTL={isRTL} />
 
-      <div className="text-center pt-1 space-y-1.5">
-        <button
-          onClick={onAdvancedRegister}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {isRTL ? 'تسجيل عمل تجاري بخطوات متقدّمة ←' : 'Register a business with advanced setup →'}
-        </button>
+      <div className="text-center pt-2 space-y-2">
+        <div className="flex items-center justify-center gap-1.5 text-sm">
+          <span className="text-muted-foreground">
+            {isRTL ? 'ليس لديك حساب؟' : "Don't have an account?"}
+          </span>
+          <button
+            onClick={onAdvancedRegister}
+            className="text-primary font-semibold hover:underline"
+          >
+            {isRTL ? 'إنشاء حساب جديد' : 'Create a new account'}
+          </button>
+        </div>
         <p className="text-[10px] text-muted-foreground/60 leading-relaxed px-4">
           {isRTL
             ? 'بمتابعتك، فأنت توافق على شروط الاستخدام وسياسة الخصوصية.'
