@@ -33,9 +33,17 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
     try {
       const data = await onSendOtp();
       if (!data?.success) {
+        const rawMsg = `${data?.error ?? ''} ${data?.message ?? ''}`;
+        const isOtpCreateFailure =
+          data?.error === 'otp_create_failed' ||
+          /failed to create otp|otp_create_failed/i.test(rawMsg);
         const msg = data?.error === 'no_account'
           ? (isRTL ? 'لم يتم العثور على حساب بهذا الرقم' : 'No account found with this number')
-          : data?.message || (isRTL ? 'تعذر إرسال الرمز' : 'Could not send code');
+          : isOtpCreateFailure
+            ? (isRTL
+                ? 'نعتذر، حدث خطأ تقني أثناء إرسال رمز التحقق عبر الرسائل. يمكنك بدلًا من ذلك تسجيل الدخول باستخدام البريد الإلكتروني.'
+                : 'Sorry, a technical error occurred while sending the verification code. You can sign in using your email instead.')
+            : data?.message || (isRTL ? 'تعذر إرسال الرمز' : 'Could not send code');
         try {
           trackOtpFailed({
             method: 'otp',
