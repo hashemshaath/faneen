@@ -48,7 +48,7 @@ describe('Email Infrastructure Phase 15C — Auth queue Resend migration', () =>
     const hits = grep('VITE_RESEND', ['src', 'supabase'])
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/emailInfrastructurePhase15(a|c).*\.test\.ts/.test(line));
+      .filter((line) => !/emailInfrastructurePhase15(a|c|d).*\.test\.ts/.test(line));
     expect(hits).toEqual([]);
   });
 
