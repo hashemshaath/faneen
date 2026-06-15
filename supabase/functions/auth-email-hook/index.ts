@@ -38,13 +38,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 // Configuration
 const SITE_NAME = "qitaat"
 const ROOT_DOMAIN = "qitaat.com"
-const FROM_DOMAIN = "qitaat.com" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "qitaat.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
-// URLs are baked in at scaffold time from the project's real data.
-// The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
-// can always find-and-replace it with the actual recipient when sending test emails,
-// even if the project's domain has changed since the template was scaffolded.
 const SAMPLE_PROJECT_URL = "https://qitaat.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
@@ -129,7 +125,7 @@ async function handlePreview(req: Request): Promise<Response> {
   })
 }
 
-// Webhook handler - verifies signature and sends email
+// Webhook handler - verifies signature and enqueues email for async sending
 async function handleWebhook(req: Request): Promise<Response> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
 
@@ -204,7 +200,6 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
-  // payload.type is the hook event type ("auth")
   const emailType = payload.data.action_type
   console.log('Received auth event', { emailType, email: payload.data.email, run_id })
 
@@ -217,7 +212,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Build template props from payload.data (HookData structure)
+  // Build template props from payload.data
   const templateProps = {
     siteName: SITE_NAME,
     siteUrl: `https://${ROOT_DOMAIN}`,
@@ -235,127 +230,66 @@ async function handleWebhook(req: Request): Promise<Response> {
     plainText: true,
   })
 
-  // Send directly via Resend (project uses Resend, not Lovable Emails infra).
+  const subject = EMAIL_SUBJECTS[emailType] || 'Notification'
+  const messageId = crypto.randomUUID()
+  const fromAddress = `${SITE_NAME} <noreply@${FROM_DOMAIN}>`
+
+  // Enqueue to auth_emails queue for async processing by process-email-queue
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  const messageId = crypto.randomUUID()
-  const subject = EMAIL_SUBJECTS[emailType] || 'Notification'
-  const fromAddress = `${SITE_NAME} <noreply@${FROM_DOMAIN}>`
-
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: emailType,
-    recipient_email: payload.data.email,
-    status: 'pending',
+  const { data: enqueueMsgId, error: enqueueError } = await supabase.rpc('enqueue_email', {
+    queue_name: 'auth_emails',
+    payload: {
+      message_id: messageId,
+      run_id: run_id,
+      to: payload.data.email,
+      from: fromAddress,
+      sender_domain: `notify.${ROOT_DOMAIN}`,
+      subject,
+      html,
+      text,
+      purpose: 'auth',
+      label: emailType,
+      idempotency_key: messageId,
+    },
   })
 
-  const resendApiKey = Deno.env.get('RESEND_API_KEY')
-  if (!resendApiKey) {
-    console.error('RESEND_API_KEY not configured')
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'dlq',
-      error_message: 'RESEND_API_KEY not configured',
-    })
-    return new Response(JSON.stringify({ error: 'Email provider not configured' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  try {
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        to: [payload.data.email],
-        subject,
-        html,
-        text,
-        headers: {
-          'X-Entity-Ref-ID': messageId,
-          'X-Idempotency-Key': messageId,
-        },
-      }),
-    })
-
-    const resendJson = await resendResponse.json().catch(() => ({}))
-
-    if (!resendResponse.ok) {
-      const errMsg = `Resend API error: ${resendResponse.status} ${JSON.stringify(resendJson)}`
-      console.error('Resend send failed', { errMsg, run_id, emailType })
-      await supabase.from('email_send_log').insert({
-        message_id: messageId,
-        template_name: emailType,
-        recipient_email: payload.data.email,
-        status: 'dlq',
-        error_message: errMsg,
-      })
-      return new Response(JSON.stringify({ error: 'Email send failed' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'sent',
-      metadata: { provider: 'resend', provider_id: resendJson?.id ?? null },
-    })
-
-    console.log('Auth email sent via Resend', {
-      emailType,
-      email: payload.data.email,
-      run_id,
-      provider_id: resendJson?.id,
-    })
-
+  if (enqueueError) {
+    console.error('Failed to enqueue auth email', { enqueueError, run_id, emailType })
     return new Response(
-      JSON.stringify({ success: true, sent: true, provider: 'resend', provider_id: resendJson?.id }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Failed to enqueue email' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('Resend send exception', { msg, run_id, emailType })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'dlq',
-      error_message: `Resend exception: ${msg}`,
-    })
-    return new Response(JSON.stringify({ error: 'Email send exception' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
   }
+
+  console.log('Auth email enqueued', {
+    emailType,
+    email: payload.data.email,
+    run_id,
+    message_id: messageId,
+    queue_msg_id: enqueueMsgId,
+  })
+
+  return new Response(
+    JSON.stringify({ success: true, enqueued: true, message_id: messageId, queue_msg_id: enqueueMsgId }),
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
 }
 
 Deno.serve(async (req) => {
   const url = new URL(req.url)
 
-  // Handle CORS preflight for main endpoint
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Route to preview handler for /preview path
   if (url.pathname.endsWith('/preview')) {
     return handlePreview(req)
   }
 
-  // Main webhook handler
   try {
     return await handleWebhook(req)
   } catch (error) {
