@@ -1,4 +1,3 @@
-import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const MAX_RETRIES = 5
@@ -7,31 +6,110 @@ const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
-// Check if an error is a rate-limit (429) response.
-// Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
-// falls back to parsing the error message for older versions.
+// Phase 15C — Resend-backed HTTP error envelope used to drive retry semantics
+// (rate-limit cooldown, forbidden -> DLQ) without leaking provider secrets.
+interface ResendSendError extends Error {
+  status: number
+  retryAfterSeconds: number | null
+}
+
 function isRateLimited(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 429
-  }
-  return error instanceof Error && error.message.includes('429')
+  return error instanceof Error && 'status' in error && (error as ResendSendError).status === 429
 }
 
-// Check if an error is a forbidden (403) response. Retrying won't help.
-// Move straight to DLQ.
 function isForbidden(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 403
-  }
-  return error instanceof Error && error.message.includes('403')
+  return error instanceof Error && 'status' in error && (error as ResendSendError).status === 403
 }
 
-// Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
 function getRetryAfterSeconds(error: unknown): number {
-  if (error && typeof error === 'object' && 'retryAfterSeconds' in error) {
-    return (error as { retryAfterSeconds: number | null }).retryAfterSeconds ?? 60
+  if (error instanceof Error && 'retryAfterSeconds' in error) {
+    return (error as ResendSendError).retryAfterSeconds ?? 60
   }
   return 60
+}
+
+function parseRetryAfter(headerValue: string | null): number | null {
+  if (!headerValue) return null
+  const asInt = Number.parseInt(headerValue, 10)
+  if (Number.isFinite(asInt) && asInt >= 0) return asInt
+  const asDate = Date.parse(headerValue)
+  if (Number.isFinite(asDate)) {
+    return Math.max(0, Math.ceil((asDate - Date.now()) / 1000))
+  }
+  return null
+}
+
+interface AuthQueuePayload {
+  message_id?: string
+  run_id?: string
+  to?: string
+  from?: string
+  sender_domain?: string
+  subject?: string
+  html?: string
+  text?: string
+  purpose?: string
+  label?: string
+  idempotency_key?: string
+  unsubscribe_token?: string
+  queued_at?: string
+}
+
+// Phase 15C — send an enqueued auth/transactional email through Resend's HTTP
+// API. Never logs the API key or the Authorization header; on non-2xx
+// responses, surfaces a typed error with the HTTP status + sanitized body so
+// the queue loop can apply 429/403 policy uniformly.
+async function sendViaResend(
+  payload: AuthQueuePayload,
+  resendApiKey: string,
+): Promise<{ providerId: string | null }> {
+  if (!payload.to || !payload.from || !payload.subject || !payload.html) {
+    throw new Error('Invalid queue payload: missing to/from/subject/html')
+  }
+
+  const body: Record<string, unknown> = {
+    from: payload.from,
+    to: [payload.to],
+    subject: payload.subject,
+    html: payload.html,
+    headers: {
+      'X-Entity-Ref-ID': payload.message_id ?? '',
+      'X-Idempotency-Key': payload.idempotency_key ?? payload.message_id ?? '',
+    },
+    tags: [
+      { name: 'purpose', value: (payload.purpose ?? 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_') },
+      { name: 'label', value: (payload.label ?? 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_') },
+    ],
+  }
+  if (payload.text) body.text = payload.text
+
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  const respText = await resp.text()
+  if (!resp.ok) {
+    const err = new Error(
+      `Resend send failed: ${resp.status} ${respText.slice(0, 500)}`,
+    ) as ResendSendError
+    err.status = resp.status
+    err.retryAfterSeconds = parseRetryAfter(resp.headers.get('Retry-After'))
+    throw err
+  }
+
+  let providerId: string | null = null
+  try {
+    const parsed = JSON.parse(respText) as { id?: string }
+    providerId = parsed?.id ?? null
+  } catch {
+    /* ignore — Resend success bodies are JSON, but tolerate non-JSON */
+  }
+  return { providerId }
 }
 
 function parseJwtClaims(token: string): Record<string, unknown> | null {
