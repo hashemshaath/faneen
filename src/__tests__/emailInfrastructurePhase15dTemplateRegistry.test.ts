@@ -96,11 +96,19 @@ describe('Email Infrastructure Phase 15D — Template Registry + Copy Cleanup', 
   });
 
   it('8. no hardcoded Resend live keys in templates or send code', () => {
-    const hits = grep(
-      `['"\\\`]re_[A-Za-z0-9]{12,}['"\\\`]`,
-      ['supabase/functions/_shared', 'supabase/functions/send-transactional-email', 'supabase/functions/process-email-queue'],
-    );
-    expect(hits.trim()).toBe('');
+    const paths = [
+      'supabase/functions/_shared',
+      'supabase/functions/send-transactional-email',
+      'supabase/functions/process-email-queue',
+    ];
+    const literalKey = /re_[A-Za-z0-9]{12,}/;
+    for (const p of paths) {
+      const out = execSync(
+        `grep -RIn --exclude-dir=node_modules ${literalKey.source} ${p} || true`,
+        { encoding: 'utf8', cwd: root, maxBuffer: 16 * 1024 * 1024 },
+      );
+      expect(out.trim(), `unexpected re_ literal in ${p}`).toBe('');
+    }
   });
 
   it('9. no VITE_RESEND* anywhere in src/ or supabase/', () => {
