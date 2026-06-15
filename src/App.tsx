@@ -24,6 +24,7 @@ const Index = lazyRetry(() => import("./pages/Index"));
 const DeferredAppOverlays = lazyRetry(() => import("./components/DeferredAppOverlays"));
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
+const AuthVerified = lazyRetry(() => import("./pages/AuthVerified"));
 const HelpCenterHome = lazyRetry(() => import("./pages/help/HelpCenterHome"));
 const HelpCategoryPage = lazyRetry(() => import("./pages/help/HelpCategoryPage"));
 const HelpArticlePage = lazyRetry(() => import("./pages/help/HelpArticlePage"));
