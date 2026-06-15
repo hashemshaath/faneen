@@ -163,11 +163,12 @@ describe('AUTH-14E · Provider/Business onboarding UI-only fixes guard', () => {
     }
   });
 
-  // 15. No `any` / @ts-ignore / @ts-expect-error / eslint-disable in 14E files
-  it('14E new/touched files contain no escape hatches', () => {
+  // 15. No `any` / @ts-ignore / @ts-expect-error / eslint-disable in 14E
+  //     production files (the guard test itself mentions these tokens in
+  //     comments, so it is intentionally excluded from the scan).
+  it('14E production files contain no escape hatches', () => {
     const files = [
       'src/components/dashboard/FreeLaunchBadge.tsx',
-      'src/__tests__/authAccountActivationPhase14eProviderBusinessOnboardingUi.test.tsx',
     ];
     for (const f of files) {
       const txt = read(f);
