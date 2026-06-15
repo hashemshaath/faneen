@@ -1,4 +1,4 @@
-import { Mail, Activity, PlayCircle } from 'lucide-react';
+import { Mail, Activity, PlayCircle, ShieldAlert } from 'lucide-react';
 import { TabbedShell } from '@/components/dashboard/TabbedShell';
 
 /** NAVIGATION-CONSOLIDATION-1 group 14 — Email Center + Deliverability. */
@@ -15,6 +15,7 @@ const AdminEmailHub = () => (
       { key: 'email', label: { ar: 'البريد', en: 'Email' }, icon: Mail, loader: () => import('./AdminEmailCenter') },
       { key: 'deliverability', label: { ar: 'قابلية التسليم', en: 'Deliverability' }, icon: Activity, loader: () => import('./AdminEmailDeliverability') },
       { key: 'smoke-tests', label: { ar: 'اختبارات سريعة', en: 'Smoke tests' }, icon: PlayCircle, loader: () => import('./AdminEmailSmokeTests') },
+      { key: 'otp-failures', label: { ar: 'فشل OTP', en: 'OTP failures' }, icon: ShieldAlert, loader: () => import('./AdminOtpFailures') },
     ]}
   />
 );

@@ -111,6 +111,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     const result = await otp.sendOtp();
     if (result.ok) {
       toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
+    } else if (result.fallback === 'email') {
+      // Auto-switch to email sign-in so the user is never stuck on a broken
+      // OTP path. The notification explains why the channel changed.
+      otp.resetOtp();
+      setLoginMethod('email');
+      clearError('email');
+      toast.info(
+        result.error ||
+          (isRTL
+            ? 'تعذّر إرسال رمز التحقق — تم تحويلك إلى تسجيل الدخول بالبريد الإلكتروني.'
+            : 'Could not send verification code — switched to email sign-in.'),
+        {
+          duration: 6000,
+          description: isRTL
+            ? 'استخدم بريدك الإلكتروني وكلمة المرور للمتابعة.'
+            : 'Use your email and password to continue.',
+        },
+      );
     } else {
       // Always surface feedback — never leave the user with no response.
       toast.error(
