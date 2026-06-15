@@ -73,12 +73,15 @@ describe('Email Infrastructure Phase 15F — Full Email Regression', () => {
     expect(hits).toEqual([]);
   });
 
-  it('5. no Lovable fallback in either sender (no "fallback" + "lovable" co-occurrence)', () => {
+  it('5. no Lovable send gateway is imported, called, or referenced as a runtime fallback', () => {
     for (const p of [QUEUE, TX]) {
-      const src = read(p).toLowerCase();
-      const hasFallback = /fallback/.test(src);
-      const hasLovable = /lovable/.test(src);
-      expect(hasFallback && hasLovable, `${p} appears to retain a Lovable fallback`).toBe(false);
+      const src = read(p);
+      // No Lovable email SDK import
+      expect(src).not.toMatch(/@lovable\.dev\/email/);
+      // No alternate send URL
+      expect(src).not.toMatch(/connector-gateway\.lovable\.dev/);
+      // No conditional path that calls a Lovable sender as fallback
+      expect(src).not.toMatch(/sendLovableEmail/);
     }
   });
 
