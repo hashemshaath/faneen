@@ -121,10 +121,6 @@ const ResetPassword = () => {
       toast.error(isRTL ? 'كلمة المرور ضعيفة' : 'Password is too weak');
       return;
     }
-    if (password !== confirmPassword) {
-      toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match');
-      return;
-    }
     if (password.length < 8) {
       toast.error(isRTL ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters');
       return;
