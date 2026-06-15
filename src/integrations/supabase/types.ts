@@ -11982,6 +11982,7 @@ export type Database = {
           email: string
           id: string
           ip_address: string | null
+          metadata: Json
           request_id: string | null
           status: string
           user_agent: string | null
@@ -11992,6 +11993,7 @@ export type Database = {
           email: string
           id?: string
           ip_address?: string | null
+          metadata?: Json
           request_id?: string | null
           status?: string
           user_agent?: string | null
@@ -12002,6 +12004,7 @@ export type Database = {
           email?: string
           id?: string
           ip_address?: string | null
+          metadata?: Json
           request_id?: string | null
           status?: string
           user_agent?: string | null
