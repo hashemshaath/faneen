@@ -34,7 +34,7 @@ import {
   buildSummary,
   buildDetailItems,
   getDateGroup,
-} from '@/components/admin/ops/logs';
+} from '@/components/admin/ops/activity-logs';
 
 const AdminActivityLog = () => {
   useNoIndex();
