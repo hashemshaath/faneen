@@ -135,16 +135,21 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   };
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-3', className)}>
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium flex items-center gap-1.5">
-          <Languages className="w-3.5 h-3.5 text-muted-foreground" />
-          {labelAr}
-          {required && <span className="text-destructive">*</span>}
+    <div className={cn('grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4', className)}>
+      <div className="space-y-2 min-w-0">
+        <Label className="text-xs font-semibold flex items-center gap-2">
+          <span className="truncate">{labelAr}</span>
+          {required && <span className="text-destructive leading-none">*</span>}
+          <span
+            aria-hidden="true"
+            className="ms-auto inline-flex items-center justify-center h-5 min-w-[26px] px-1.5 rounded-md bg-muted text-[10px] font-bold tracking-wide text-muted-foreground tech-content"
+          >
+            AR
+          </span>
           {enableTranslate && (
             <Button
               type="button" size="sm" variant="ghost"
-              className="ms-auto h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+              className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
               disabled={disabled || translating !== null}
               onClick={() => handleTranslate('ar')}
               title={isRTL ? 'ترجمة من العربي إلى الإنجليزي' : 'Translate Arabic → English'}
@@ -155,7 +160,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
           )}
         </Label>
         <div className="relative">
-          <FieldIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <FieldIcon className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" />
           <Input
             value={value.full_name_ar || ''}
             onChange={(e) => update({ full_name_ar: e.target.value })}
@@ -163,21 +168,30 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
             placeholder={placeholderAr}
             dir="rtl"
             maxLength={100}
-            className={cn('h-10 ps-9 rounded-xl', errors?.full_name_ar && 'border-destructive')}
+            className={cn(
+              'h-12 ps-10 rounded-xl text-sm placeholder:text-muted-foreground/50',
+              'transition-colors focus-visible:ring-2 focus-visible:ring-primary/30',
+              errors?.full_name_ar && 'border-destructive focus-visible:ring-destructive/30',
+            )}
           />
         </div>
         {errors?.full_name_ar && <p className="text-xs text-destructive">{errors.full_name_ar}</p>}
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium flex items-center gap-1.5">
-          <Languages className="w-3.5 h-3.5 text-muted-foreground" />
-          {labelEn}
-          {required && <span className="text-destructive">*</span>}
+      <div className="space-y-2 min-w-0">
+        <Label className="text-xs font-semibold flex items-center gap-2">
+          <span className="truncate">{labelEn}</span>
+          {required && <span className="text-destructive leading-none">*</span>}
+          <span
+            aria-hidden="true"
+            className="ms-auto inline-flex items-center justify-center h-5 min-w-[26px] px-1.5 rounded-md bg-muted text-[10px] font-bold tracking-wide text-muted-foreground tech-content"
+          >
+            EN
+          </span>
           {enableTranslate && (
             <Button
               type="button" size="sm" variant="ghost"
-              className="ms-auto h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
+              className="h-6 px-2 text-[10.5px] gap-1 text-muted-foreground hover:text-primary"
               disabled={disabled || translating !== null}
               onClick={() => handleTranslate('en')}
               title={isRTL ? 'ترجمة من الإنجليزي إلى العربي' : 'Translate English → Arabic'}
@@ -188,7 +202,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
           )}
         </Label>
         <div className="relative">
-          <FieldIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <FieldIcon className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" />
           <Input
             value={value.full_name_en || ''}
             onChange={(e) => update({ full_name_en: e.target.value })}
@@ -196,7 +210,11 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
             placeholder={placeholderEn}
             dir="ltr"
             maxLength={100}
-            className={cn('h-10 ps-9 rounded-xl', errors?.full_name_en && 'border-destructive')}
+            className={cn(
+              'h-12 ps-10 rounded-xl text-sm placeholder:text-muted-foreground/50',
+              'transition-colors focus-visible:ring-2 focus-visible:ring-primary/30',
+              errors?.full_name_en && 'border-destructive focus-visible:ring-destructive/30',
+            )}
           />
         </div>
         {errors?.full_name_en && <p className="text-xs text-destructive">{errors.full_name_en}</p>}
