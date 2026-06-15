@@ -378,6 +378,21 @@ export const Navbar = () => {
         }`}
       >
         <div className="max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-4.5rem)] overflow-y-auto py-3 px-4 safe-min-pb space-y-1 font-body text-sm">
+          {/*
+            Phase 12B — Mobile primary CTA pinned above the nav groups so
+            "اطلب عرض سعر" is the first action the user sees on phones.
+            Hidden for admins to keep their menu compact.
+          */}
+          {!(user && (isAdmin || isSuperAdmin)) && (
+            <Link
+              to="/quote"
+              onClick={closeMobile}
+              className="flex items-center justify-center gap-2 min-h-ctrl-md py-3 px-3 rounded-xl bg-primary text-primary-foreground font-semibold mb-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            >
+              <Send className="w-4 h-4" />
+              <span>{language === 'ar' ? 'اطلب عرض سعر مجانًا' : 'Request a free quote'}</span>
+            </Link>
+          )}
           {/* Primary: Search */}
           <Link
             to={primaryLink.to!}
