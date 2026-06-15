@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, User } from 'lucide-react';
-import { Ticket, FileText, AtSign } from 'lucide-react';
+import { Mail, Loader2, CheckCircle, Info } from 'lucide-react';
 import { PhoneField, toE164 } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { PasswordField } from './PasswordField';
@@ -15,10 +14,8 @@ import { GoogleAuthButton } from './GoogleAuthButton';
 import { AuthDivider } from './AuthDivider';
 import { FieldError } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
-import type { RegisterStep, RegisterType } from '@/services/auth/types';
 import { track, trackRegisterFailed, categorizeReason } from '@/lib/analytics-events';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
-import { UsernamePicker } from '@/components/common/UsernamePicker';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -27,13 +24,19 @@ interface RegisterFormProps {
 }
 
 /**
- * REGISTRATION-UX-VISIBLE-FIX — intent picker surfaced directly on the
- * register screen, mirroring the new Onboarding flow (Model D Hybrid
- * User-First). Four intents: individual / create-entity / join-invite /
- * request-access. The latter two persist a pending intent in localStorage
- * so the post-signup /onboarding flow can resume on the correct step.
+ * AUTH SIMPLIFICATION UX — One Account + Post-Login Context Selection.
+ *
+ * Single-screen registration: no account-type picker, no intent cards.
+ * Every user creates ONE personal account. After verifying their email
+ * and signing in, they pick a usage context (individual / create entity /
+ * join entity) at `/start` — see `src/pages/Start.tsx`. The legacy 4-card
+ * intent picker (individual / create-entity / join-invite / request-access)
+ * has been removed from the register surface.
+ *
+ * `accountType` is retained as an internal field set to `'individual'`
+ * because downstream profile records and the AUTH-14B guard test expect
+ * the field to exist. It does NOT branch the UI any more.
  */
-type RegisterIntent = 'individual' | 'create-entity' | 'join-invite' | 'request-access';
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onEmailSent, onForgotPassword }) => {
   const { t, isRTL } = useLanguage();
