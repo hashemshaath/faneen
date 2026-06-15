@@ -296,19 +296,6 @@ const ResetPassword = () => {
               onToggleShow={() => setShowPassword(!showPassword)}
             />
 
-            <div className="space-y-2">
-              <Label>{t('auth.password.confirm')}</Label>
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleReset()}
-              />
-              {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-destructive">{isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'}</p>
-              )}
-            </div>
-
             {/* Inline error */}
             {resetError && (
               <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in duration-300">
@@ -319,7 +306,7 @@ const ResetPassword = () => {
 
             <Button
               onClick={handleReset}
-              disabled={loading || strength.score < 2 || password !== confirmPassword || !password}
+              disabled={loading || strength.score < 2 || !password}
               className="w-full"
               variant="hero"
             >
