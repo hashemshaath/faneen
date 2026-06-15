@@ -104,6 +104,7 @@ Flow under test:
 - One transactional sender: `send-transactional-email`.
 - One client wrapper: `src/modules/notifications/services/sendTransactionalEmail.ts`.
 - One template registry: `supabase/functions/_shared/transactional-email-templates/registry.ts`.
+- One admin-only diagnostic that may POST to Resend on explicit `action=test`: `resend-status`. Allowlisted in the regression guard; never triggered by user flows and never enqueued.
 - No second SMTP, second provider SDK, or browser-side mailer exists. Verified by grep across the workspace.
 - pgmq `already-sent` guard in `process-email-queue` prevents the same `message_id` from being delivered twice if a worker crashes after Resend acceptance.
 
