@@ -51,7 +51,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [email, setEmail] = useState('');
   const [phoneParts, setPhoneParts] = useState<{ countryCode: string; national: string }>({ countryCode: '+966', national: '' });
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
   const [usernameOk, setUsernameOk] = useState(false);
@@ -111,7 +110,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     if (!email || !validateEmailField(email)) { toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email'); return; }
     if (phoneParts.national && !validatePhoneField(phoneParts.national)) { toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number'); return; }
     if (passwordStrength.score < 2) { toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak'); return; }
-    if (password !== confirmPassword) { toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'); return; }
     if (registerType === 'business' && !usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
 
     // Intent-specific validation
@@ -293,7 +291,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     const intentValid =
       (intent !== 'join-invite' || inviteToken.trim().length > 0) &&
       (intent !== 'request-access' || targetEntityRef.trim().length > 0);
-    const isFormValid = !!email && fullName.length > 0 && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists && intentValid;
+    const isFormValid = !!email && fullName.length > 0 && passwordStrength.score >= 2 && !errors.email && !errors.phone && !emailExists && intentValid;
     const intentLabel: Record<RegisterIntent, { ar: string; en: string }> = {
       'individual': { ar: 'متابعة كفرد', en: 'Continue as individual' },
       'create-entity': { ar: 'إنشاء منشأة', en: 'Create entity' },
@@ -454,14 +452,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             showStrength isRTL={isRTL} showPassword={showPassword}
             onToggleShow={() => setShowPassword(!showPassword)}
           />
-
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold">{t('auth.password.confirm')}</Label>
-            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-12 rounded-xl" />
-            {confirmPassword && password !== confirmPassword && (
-              <p className="text-xs text-destructive">{isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'}</p>
-            )}
-          </div>
 
           <Button onClick={handleRegister} disabled={loading || !isFormValid || (registerType === 'business' && !usernameOk)} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
