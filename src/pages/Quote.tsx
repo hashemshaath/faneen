@@ -1009,6 +1009,47 @@ const Quote: React.FC = () => {
                 {step === 5 && (
                   <div className="space-y-5">
                     <StepHeading ar="بيانات التواصل" en="Contact details" />
+                    {/* Review Summary — compact recap before final submit */}
+                    <div
+                      data-testid="quote-review-summary"
+                      className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm space-y-1.5"
+                    >
+                      <div className="font-semibold text-foreground mb-1">
+                        <Bi ar="مراجعة سريعة لطلبك" en="Quick review of your request" />
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
+                        <span>
+                          <Bi ar="القطاع:" en="Sector:" />{' '}
+                          <span className="text-foreground font-medium">
+                            {form.sector
+                              ? bi(
+                                  CANONICAL_PRIMARY_LABELS[form.sector as CanonicalPrimarySlug]?.ar ?? form.sector,
+                                  CANONICAL_PRIMARY_LABELS[form.sector as CanonicalPrimarySlug]?.en ?? form.sector,
+                                )
+                              : bi('—', '—')}
+                          </span>
+                        </span>
+                        <span>
+                          <Bi ar="المدينة:" en="City:" />{' '}
+                          <span className="text-foreground font-medium">{form.city || bi('—', '—')}</span>
+                        </span>
+                        <span>
+                          <Bi ar="المرفقات:" en="Attachments:" />{' '}
+                          <span className="text-foreground font-medium tech-content">{form.files.length}</span>
+                        </span>
+                      </div>
+                      {form.description.trim() && (
+                        <p className="text-foreground/90 line-clamp-2" dir="auto">
+                          {form.description.trim()}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground pt-1">
+                        <Bi
+                          ar="أكمل بيانات التواصل أدناه ثم اضغط إرسال طلب عرض السعر."
+                          en="Complete the contact details below, then press send."
+                        />
+                      </p>
+                    </div>
                     <div>
                       <Label htmlFor="q-name"><Bi ar="الاسم" en="Name" /></Label>
                       <Input
