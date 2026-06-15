@@ -11,9 +11,9 @@ import { useLanguage } from '@/i18n/LanguageContext';
 export const FreeLaunchBadge: React.FC<{ tier?: string | null }> = ({ tier }) => {
   const { isRTL } = useLanguage();
   // AUTH-14E · Treat both the modern `free_launch` tier and the DB-mirrored
-  // legacy `free` tier as the same active soft-launch plan, so the badge
-  // matches what `ensure_provider_subscription` actually stamps on the
-  // business row. Pure presentation — no grant/fetch/mutate.
+  // legacy `free` tier as the same active soft-launch plan, matching what
+  // the activation pipeline stamps on the business row.
+  // Pure presentation — no grant/fetch/mutate.
   const normalized = (tier ?? '').toLowerCase();
   const isFreeLaunch = normalized === 'free_launch' || normalized === 'free';
 
