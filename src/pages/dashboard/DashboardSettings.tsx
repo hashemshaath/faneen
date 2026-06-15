@@ -70,7 +70,6 @@ const DashboardSettings = () => {
 
   const [accent, setAccentState] = useState(getStoredAccent);
   const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -158,7 +157,6 @@ const DashboardSettings = () => {
   });
 
   const passwordStrength = useMemo(() => newPassword ? checkPasswordStrength(newPassword) : null, [newPassword]);
-  const passwordsMatch = confirmPassword && newPassword === confirmPassword;
 
   const handleAccent = useCallback((key: string) => {
     setAccentState(key);
@@ -168,13 +166,12 @@ const DashboardSettings = () => {
 
   const handleUpdatePassword = async () => {
     if (newPassword.length < 8) { toast.error(pickBi(isRTL, 'كلمة المرور قصيرة (8 أحرف على الأقل)', 'Password too short (min 8 chars)')); return; }
-    if (newPassword !== confirmPassword) { toast.error(pickBi(isRTL, 'كلمتا المرور غير متطابقتين', 'Passwords do not match')); return; }
     setLoading(true);
     try {
       const { error } = await updateUserPassword(newPassword);
       if (error) throw error;
       toast.success(pickBi(isRTL, 'تم تحديث كلمة المرور بنجاح', 'Password updated successfully'));
-      setNewPassword(''); setConfirmPassword('');
+      setNewPassword('');
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Error'); }
     finally { setLoading(false); }
   };
@@ -747,20 +744,8 @@ const DashboardSettings = () => {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <Label className="text-[10px]">{pickBi(isRTL, 'تأكيد كلمة المرور', 'Confirm Password')}</Label>
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      className={cn('h-8 text-xs mt-0.5', confirmPassword && (passwordsMatch ? 'border-success/50' : 'border-destructive/50'))}
-                    />
-                    {confirmPassword && !passwordsMatch && (
-                      <p className="text-[9px] text-destructive mt-0.5">{pickBi(isRTL, 'كلمتا المرور غير متطابقتين', 'Passwords do not match')}</p>
-                    )}
-                  </div>
                   <Button size="sm" className="gap-1.5 text-xs" onClick={handleUpdatePassword}
-                    disabled={loading || !newPassword || !passwordsMatch}>
+                    disabled={loading || !newPassword || (passwordStrength?.score ?? 0) < 2}>
                     {loading ? <span className="animate-spin">⏳</span> : <Lock className="w-3 h-3" />}
                     {pickBi(isRTL, 'تحديث كلمة المرور', 'Update Password')}
                   </Button>
