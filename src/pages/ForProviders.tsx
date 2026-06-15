@@ -378,7 +378,7 @@ const ForProviders = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
-              <Button asChild size="lg" className="h-12 px-7 text-base shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+              <Button asChild size="lg" data-testid="for-providers-primary-cta" className="h-12 px-7 text-base shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                 onClick={onPrimaryCta('hero', 'primary')}>
                 <Link to={hero?.cta_primary_href || PROVIDER_SIGNUP}>
                   {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (bi('سجّل جهتك كمزود خدمة', 'Register your business'))}
