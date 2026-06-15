@@ -58,5 +58,11 @@ export const Footer = () => {
         <FooterBottom visible={visible} />
       </div>
     </footer>
+    {/* Phase 12B — Public WhatsApp FAB. Renders null when no number is
+        configured (VITE_QITAAT_WHATSAPP). Mounted from Footer so it appears
+        on every public page that renders <Footer /> and never inside
+        admin/dashboard layouts (which don't use this Footer). */}
+    <WhatsAppFab />
+    </>
   );
 };
