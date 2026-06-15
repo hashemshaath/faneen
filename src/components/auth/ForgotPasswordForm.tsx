@@ -402,11 +402,16 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         {deliveryCountdown === 0 && activityLog.length > 0 && (
           <div className="flex items-center gap-2 rounded-lg border border-warning dark:border-warning bg-warning dark:bg-warning/20 px-4 py-3">
             <AlertTriangle className="w-4 h-4 text-warning dark:text-warning shrink-0" />
-            <p className="text-xs text-warning dark:text-warning font-medium">
-              {isRTL
-                ? 'انتهى الوقت المتوقع. إذا لم تصلك الرسالة، أعد الإرسال أو تحقق من البريد المهمل.'
-                : "Expected time has passed. If you haven't received it, resend or check your spam folder."}
-            </p>
+            <div className="text-xs text-warning dark:text-warning font-medium space-y-1">
+              <p>
+                {isRTL
+                  ? 'انتهى الوقت المتوقع. إذا لم تصلك الرسالة، أعد الإرسال أو تحقق من البريد المهمل.'
+                  : "Expected time has passed. If you haven't received it, resend or check your spam folder."}
+              </p>
+              <a href="/help/email-not-arriving" target="_blank" rel="noreferrer" className="underline text-accent">
+                {isRTL ? 'افتح دليل: لم تصلني الرسالة (Gmail/Spam/Promotions) ←' : 'Open guide: Email not arriving (Gmail/Spam/Promotions) →'}
+              </a>
+            </div>
           </div>
         )}
 

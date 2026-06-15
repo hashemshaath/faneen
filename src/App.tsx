@@ -30,6 +30,7 @@ const HelpCategoryPage = lazyRetry(() => import("./pages/help/HelpCategoryPage")
 const HelpArticlePage = lazyRetry(() => import("./pages/help/HelpArticlePage"));
 const ReportIssuePage = lazyRetry(() => import("./pages/help/ReportIssuePage"));
 const FeatureRequestPage = lazyRetry(() => import("./pages/help/FeatureRequestPage"));
+const EmailNotArrivingHelp = lazyRetry(() => import("./pages/help/EmailNotArriving"));
 const AdminHelpCenter = lazyRetry(() => import("./pages/admin/AdminHelpCenter"));
 const DashboardHelpCenter = lazyRetry(() => import("./pages/dashboard/DashboardHelpCenter"));
 // HelpLauncherFloating, ConsentBanner, and BuildVersionWatcher are now
@@ -358,6 +359,7 @@ const AppRoutes = () => (
           <Route path="/help/article/:slug" element={<HelpArticlePage />} />
           <Route path="/help/report-issue" element={<ProtectedRoute><ReportIssuePage /></ProtectedRoute>} />
           <Route path="/help/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
+          <Route path="/help/email-not-arriving" element={<EmailNotArrivingHelp />} />
           <Route path="/dashboard/help" element={<ProtectedRoute><DashboardHelpCenter /></ProtectedRoute>} />
           <Route path="/admin/help" element={<ProtectedRoute requireAdmin><AdminHelpCenter /></ProtectedRoute>} />
           <Route path="/privacy" element={<Privacy />} />
