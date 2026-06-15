@@ -11,6 +11,16 @@ interface UseOtpFlowOptions {
 export interface SendOtpResult {
   ok: boolean;
   error?: string | null;
+  /**
+   * Suggested fallback channel when OTP delivery fails for technical reasons
+   * (otp_create_failed, sms_delivery_failed, edge function offline). The
+   * caller (LoginForm) uses this to auto-switch the UI to the email login
+   * tab and surface a notification — never set for soft errors like
+   * `no_account` or `rate_limited`.
+   */
+  fallback?: 'email' | null;
+  /** Stable failure code from the server (when known), useful for analytics. */
+  failureCode?: string | null;
 }
 
 export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions) {
@@ -37,13 +47,21 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
         const isOtpCreateFailure =
           data?.error === 'otp_create_failed' ||
           /failed to create otp|otp_create_failed/i.test(rawMsg);
+        const isSmsDeliveryFailure =
+          data?.error === 'sms_delivery_failed' ||
+          /sms_delivery_failed|could not send sms/i.test(rawMsg);
+        const shouldFallbackToEmail = isOtpCreateFailure || isSmsDeliveryFailure;
         const msg = data?.error === 'no_account'
           ? (isRTL ? 'لم يتم العثور على حساب بهذا الرقم' : 'No account found with this number')
           : isOtpCreateFailure
             ? (isRTL
                 ? 'نعتذر، حدث خطأ تقني أثناء إرسال رمز التحقق عبر الرسائل. يمكنك بدلًا من ذلك تسجيل الدخول باستخدام البريد الإلكتروني.'
                 : 'Sorry, a technical error occurred while sending the verification code. You can sign in using your email instead.')
-            : data?.message || (isRTL ? 'تعذر إرسال الرمز' : 'Could not send code');
+            : isSmsDeliveryFailure
+              ? (isRTL
+                  ? 'نعتذر، تعذّر إرسال الرسالة النصية حاليًا. تم تحويلك تلقائيًا إلى تسجيل الدخول بالبريد الإلكتروني.'
+                  : 'Sorry, we could not deliver the SMS right now. We have switched you to email sign-in.')
+              : data?.message || (isRTL ? 'تعذر إرسال الرمز' : 'Could not send code');
         try {
           trackOtpFailed({
             method: 'otp',
@@ -53,7 +71,12 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
           });
         } catch { /* analytics never breaks otp */ }
         setError(msg);
-        return { ok: false, error: msg };
+        return {
+          ok: false,
+          error: msg,
+          fallback: shouldFallbackToEmail ? 'email' : null,
+          failureCode: typeof data?.error === 'string' ? data.error : null,
+        };
       }
       setDemoOtp(data.demo_otp ?? null);
       setOtpCode('');
@@ -74,7 +97,12 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
             : 'Messaging is currently being configured. You can use email login or request a temporary code from Qitaat team.')
         : (isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'An error occurred, try again');
       setError(msg);
-      return { ok: false, error: msg };
+      return {
+        ok: false,
+        error: msg,
+        fallback: looksLikeMessagingMissing ? 'email' : null,
+        failureCode: looksLikeMessagingMissing ? 'messaging_unavailable' : 'unknown_error',
+      };
     } finally {
       setLoading(false);
     }
