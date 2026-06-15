@@ -1,4 +1,5 @@
-import { SearchX, RotateCcw } from 'lucide-react';
+import { SearchX, RotateCcw, Send } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useBi } from '@/components/common/Bilingual';
 
@@ -52,6 +53,26 @@ export const SearchEmptyStateV3 = ({
           {bi('مسح الفلاتر', 'Clear filters')}
         </Button>
       ) : null}
+
+      {/*
+        Phase 12B — Conversion CTA: when the search returns nothing, give
+        the user a clear path to /quote so they don't leave the funnel.
+        /quote and RFQ submit logic are untouched — this is a link only.
+      */}
+      <div className="mt-8 max-w-md w-full rounded-2xl border border-border/60 bg-card p-5 text-start">
+        <p className="text-sm text-foreground mb-3">
+          {bi(
+            'ما لقيت المزوّد المناسب؟ أرسل طلبك ونساعدك توصل لمزودين مناسبين.',
+            "Didn't find the right provider? Send your request and we'll help you reach matching ones.",
+          )}
+        </p>
+        <Link to="/quote" className="inline-block">
+          <Button variant="primary" size="app" className="gap-2">
+            <Send className="w-4 h-4" />
+            {bi('اطلب عرض سعر', 'Request a quote')}
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 };
