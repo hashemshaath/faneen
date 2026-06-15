@@ -11,5 +11,12 @@ import { supabase } from '@/integrations/supabase/client';
 import type { PasswordResetLogInsert } from './types';
 
 export function createPasswordResetLog(payload: PasswordResetLogInsert) {
-  return supabase.from('password_reset_log').insert(payload);
+  // Metadata is typed loosely on the caller side; cast to the generated
+  // Json shape expected by the Supabase client without losing type-safety
+  // on the rest of the payload.
+  const row = {
+    ...payload,
+    metadata: (payload.metadata ?? {}) as Record<string, unknown>,
+  };
+  return supabase.from('password_reset_log').insert(row as never);
 }

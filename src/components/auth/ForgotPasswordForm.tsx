@@ -54,6 +54,29 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
   }, []);
 
+  // Page-arrival analytics: log once per mount (StrictMode-safe via ref).
+  const arrivalLoggedRef = useRef(false);
+  useEffect(() => {
+    if (arrivalLoggedRef.current) return;
+    arrivalLoggedRef.current = true;
+    void (async () => {
+      try {
+        await createPasswordResetLog({
+          email: '',
+          status: 'forgot_page_viewed',
+          user_agent: navigator.userAgent?.substring(0, 200) || null,
+          metadata: {
+            path: window.location.pathname + window.location.search,
+            referrer: document.referrer || null,
+            locale: isRTL ? 'ar' : 'en',
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            arrived_at: new Date().toISOString(),
+          },
+        });
+      } catch { /* silent — analytics must never break UX */ }
+    })();
+  }, [isRTL]);
+
   const addActivity = useCallback((type: ActivityEvent['type'], detail?: string) => {
     setActivityLog(prev => [{
       id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
