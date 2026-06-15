@@ -32,7 +32,6 @@ export const OtpInput: React.FC<OtpInputProps> = ({
       </p>
     </div>
     <div className="space-y-2">
-      <Label className="text-xs font-semibold">{isRTL ? 'رمز التحقق' : 'Verification Code'}</Label>
       <Input
         value={otpCode}
         onChange={(e) => onCodeChange(e.target.value)}
