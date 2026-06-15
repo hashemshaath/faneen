@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Facebook, Twitter, Instagram, Youtube, Linkedin, ArrowUp } from "lucide-react";
+import { PrefetchLink } from "@/components/PrefetchLink";
 
 const socialLinks = [
   { icon: Twitter, href: "https://x.com/qitaatcom", label: "X" },
@@ -13,9 +14,36 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
   const { t, isRTL } = useLanguage();
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  // Unified legal links — same order on every page (Privacy → Terms → Contact).
+  const legalLinks = [
+    { to: '/privacy', label: t('footer.privacy') },
+    { to: '/terms', label: t('footer.terms') },
+    { to: '/contact', label: isRTL ? 'تواصل معنا' : 'Contact' },
+  ];
+
   return (
     <div className="border-t border-surface-nav-foreground/[0.08]">
       <div className={`container-app py-5 sm:py-6 safe-pb transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {/* Unified legal links row — appears on every page in identical order */}
+        <nav
+          aria-label={isRTL ? 'الروابط القانونية' : 'Legal links'}
+          className="mb-4 pb-4 border-b border-surface-nav-foreground/[0.06] flex flex-wrap items-center justify-center gap-x-5 gap-y-2"
+        >
+          {legalLinks.map((l, i) => (
+            <span key={l.to} className="inline-flex items-center gap-5">
+              <PrefetchLink
+                to={l.to}
+                className="text-[12px] font-medium text-surface-nav-foreground/85 hover:text-primary transition-colors duration-200 rounded focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none"
+              >
+                {l.label}
+              </PrefetchLink>
+              {i < legalLinks.length - 1 && (
+                <span aria-hidden="true" className="text-surface-nav-foreground/25 text-[10px]">·</span>
+              )}
+            </span>
+          ))}
+        </nav>
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
           {/* Copyright & extra links */}
           <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-4 order-2 sm:order-1 text-center sm:text-start">
