@@ -353,10 +353,10 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
                 <div className={`w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center shrink-0 z-10`}>
                   <StepIcon className={`w-2.5 h-2.5 ${step.color}`} />
                 </div>
-                <div className="pb-2.5">
-                  <p className="text-[11px] font-semibold text-foreground leading-tight">{isRTL ? step.titleAr : step.titleEn}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{isRTL ? step.descAr : step.descEn}</p>
-                </div>
+                <p className="pb-2 text-[11px] leading-snug">
+                  <span className="font-semibold text-foreground">{isRTL ? step.titleAr : step.titleEn}</span>
+                  <span className="text-muted-foreground"> — {isRTL ? step.descAr : step.descEn}</span>
+                </p>
               </div>
             );
           })}
