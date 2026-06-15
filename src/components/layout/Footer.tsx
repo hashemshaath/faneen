@@ -5,6 +5,7 @@ import { FooterBrand } from "./footer/FooterBrand";
 import { FooterLinks } from "./footer/FooterLinks";
 import { FooterBottom } from "./footer/FooterBottom";
 import { MobileFooter } from "./footer/MobileFooter";
+import { WhatsAppFab } from "@/components/common/WhatsAppFab";
 
 const useInView = (threshold = 0.1) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -24,6 +25,7 @@ export const Footer = () => {
   const { ref: footerRef, visible } = useInView();
 
   return (
+    <>
     <footer
       ref={footerRef}
       role="contentinfo"
