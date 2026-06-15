@@ -90,7 +90,10 @@ describe('AUTH-14C · Verification + Password Recovery UX guard', () => {
     expect(src).not.toMatch(/functions\.invoke/);
     expect(src).not.toMatch(/\.rpc\(/);
     expect(src).not.toMatch(/fetch\(/);
-    expect(src).not.toMatch(/resend/i);
+    // No resend function call / handler — the comment that documents the
+    // deliberate omission is fine, but no code path may invoke a resend.
+    expect(src).not.toMatch(/resend\s*\(/i);
+    expect(src).not.toMatch(/onResend|handleResend|resendVerification/);
   });
 
   // 9. Auth core surfaces unchanged in this phase — Auth.tsx still mounts
