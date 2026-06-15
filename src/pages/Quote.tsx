@@ -629,6 +629,16 @@ const Quote: React.FC = () => {
                       aria-hidden="true"
                     />
                   </div>
+                  {/* Autosave badge — visible reassurance that the draft is persisted */}
+                  <div
+                    data-testid="quote-autosave-badge"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 text-[11px] font-medium"
+                    aria-live="polite"
+                  >
+                    <Save className="w-3 h-3" aria-hidden="true" />
+                    <Bi ar="محفوظ تلقائيًا" en="Saved automatically" />
+                    <span className="sr-only">{autosaveTick}</span>
+                  </div>
                 </div>
 
                 {/* Draft notice when ?sector= overrides a saved draft */}
