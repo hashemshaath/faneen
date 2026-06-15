@@ -26,7 +26,7 @@ import {
 import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
-  ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle,
+  ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle, Save,
 } from 'lucide-react';
 
 /**
@@ -256,6 +256,7 @@ const Quote: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const initialDraftHadSector = useRef<boolean>(!!loadDraft().sector);
   const [draftNotice, setDraftNotice] = useState<boolean>(false);
+  const [autosaveTick, setAutosaveTick] = useState<number>(0);
 
   // Prefill sector from ?sector= (e.g. /quote?sector=aluminum). Runs once.
   // If a different sector was already saved as a draft, prefer the URL value
@@ -273,7 +274,10 @@ const Quote: React.FC = () => {
   }, []);
 
   // persist draft on every change
-  useEffect(() => { saveDraft(form); }, [form]);
+  useEffect(() => {
+    saveDraft(form);
+    setAutosaveTick((n) => n + 1);
+  }, [form]);
 
   // scroll to top of form on step change
   useEffect(() => {
@@ -625,6 +629,16 @@ const Quote: React.FC = () => {
                       aria-hidden="true"
                     />
                   </div>
+                  {/* Autosave badge — visible reassurance that the draft is persisted */}
+                  <div
+                    data-testid="quote-autosave-badge"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 text-[11px] font-medium"
+                    aria-live="polite"
+                  >
+                    <Save className="w-3 h-3" aria-hidden="true" />
+                    <Bi ar="محفوظ تلقائيًا" en="Saved automatically" />
+                    <span className="sr-only">{autosaveTick}</span>
+                  </div>
                 </div>
 
                 {/* Draft notice when ?sector= overrides a saved draft */}
@@ -808,6 +822,20 @@ const Quote: React.FC = () => {
                         className="hidden"
                         onChange={(e) => handleFiles(e.target.files)}
                       />
+                      <p
+                        data-testid="quote-upload-helper"
+                        className="mt-2 text-xs text-muted-foreground leading-relaxed"
+                      >
+                        <Bi
+                          ar="الصيغ المدعومة: صور (JPG, PNG, WEBP)، PDF، مستندات Word، أو DWG. الحد الأقصى 10 ميجابايت لكل ملف، حتى 8 ملفات."
+                          en="Supported: images (JPG, PNG, WEBP), PDF, Word, or DWG. Up to 10 MB per file, max 8 files."
+                        />
+                        <br />
+                        <Bi
+                          ar="ارفع صور الموقع أو مخططات أو مقاسات لمساعدة المزود على فهم المطلوب."
+                          en="Attach site photos, plans or measurements so providers understand the request."
+                        />
+                      </p>
                       {form.files.length > 0 && (
                         <ul className="mt-3 space-y-2">
                           {form.files.map((f, i) => (
@@ -981,6 +1009,47 @@ const Quote: React.FC = () => {
                 {step === 5 && (
                   <div className="space-y-5">
                     <StepHeading ar="بيانات التواصل" en="Contact details" />
+                    {/* Review Summary — compact recap before final submit */}
+                    <div
+                      data-testid="quote-review-summary"
+                      className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm space-y-1.5"
+                    >
+                      <div className="font-semibold text-foreground mb-1">
+                        <Bi ar="مراجعة سريعة لطلبك" en="Quick review of your request" />
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
+                        <span>
+                          <Bi ar="القطاع:" en="Sector:" />{' '}
+                          <span className="text-foreground font-medium">
+                            {form.sector
+                              ? bi(
+                                  CANONICAL_PRIMARY_LABELS[form.sector as CanonicalPrimarySlug]?.ar ?? form.sector,
+                                  CANONICAL_PRIMARY_LABELS[form.sector as CanonicalPrimarySlug]?.en ?? form.sector,
+                                )
+                              : bi('—', '—')}
+                          </span>
+                        </span>
+                        <span>
+                          <Bi ar="المدينة:" en="City:" />{' '}
+                          <span className="text-foreground font-medium">{form.city || bi('—', '—')}</span>
+                        </span>
+                        <span>
+                          <Bi ar="المرفقات:" en="Attachments:" />{' '}
+                          <span className="text-foreground font-medium tech-content">{form.files.length}</span>
+                        </span>
+                      </div>
+                      {form.description.trim() && (
+                        <p className="text-foreground/90 line-clamp-2" dir="auto">
+                          {form.description.trim()}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground pt-1">
+                        <Bi
+                          ar="أكمل بيانات التواصل أدناه ثم اضغط إرسال طلب عرض السعر."
+                          en="Complete the contact details below, then press send."
+                        />
+                      </p>
+                    </div>
                     <div>
                       <Label htmlFor="q-name"><Bi ar="الاسم" en="Name" /></Label>
                       <Input
