@@ -1,4 +1,4 @@
-import { Mail, Activity } from 'lucide-react';
+import { Mail, Activity, PlayCircle } from 'lucide-react';
 import { TabbedShell } from '@/components/dashboard/TabbedShell';
 
 /** NAVIGATION-CONSOLIDATION-1 group 14 — Email Center + Deliverability. */
@@ -14,6 +14,7 @@ const AdminEmailHub = () => (
     tabs={[
       { key: 'email', label: { ar: 'البريد', en: 'Email' }, icon: Mail, loader: () => import('./AdminEmailCenter') },
       { key: 'deliverability', label: { ar: 'قابلية التسليم', en: 'Deliverability' }, icon: Activity, loader: () => import('./AdminEmailDeliverability') },
+      { key: 'smoke-tests', label: { ar: 'اختبارات سريعة', en: 'Smoke tests' }, icon: PlayCircle, loader: () => import('./AdminEmailSmokeTests') },
     ]}
   />
 );
