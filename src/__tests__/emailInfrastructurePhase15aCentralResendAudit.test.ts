@@ -27,7 +27,7 @@ describe('Email Infrastructure Phase 15A — Central Resend audit guards', () =>
     const hits = grep('VITE_RESEND', ['src'])
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/emailInfrastructurePhase15(a|c|d).*\.test\.ts/.test(line));
+      .filter((line) => !/emailInfrastructurePhase15(a|c|d|e).*\.test\.ts/.test(line));
     expect(hits).toEqual([]);
   });
 
@@ -48,7 +48,7 @@ describe('Email Infrastructure Phase 15A — Central Resend audit guards', () =>
     const offending = hits
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx|emailInfrastructurePhase15(a|c|d).*\.test\.ts/.test(line));
+      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx|emailInfrastructurePhase15(a|c|d|e).*\.test\.ts/.test(line));
     expect(offending).toEqual([]);
   });
 
