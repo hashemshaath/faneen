@@ -115,7 +115,7 @@ describe('Email Infrastructure Phase 15D — Template Registry + Copy Cleanup', 
     const hits = grep('VITE_RESEND', ['src', 'supabase'])
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/emailInfrastructurePhase15(a|c|d|e).*\.test\.ts/.test(line));
+      .filter((line) => !/emailInfrastructurePhase15(a|c|d|e|f).*\.test\.ts/.test(line));
     expect(hits).toEqual([]);
   });
 
