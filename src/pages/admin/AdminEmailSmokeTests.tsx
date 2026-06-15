@@ -44,9 +44,9 @@ interface LogRow {
 }
 
 const STEP_LABEL: Record<SmokeStep, { ar: string; en: string }> = {
-  signup: { ar: '١. تحقق التسجيل', en: '1. Signup verification' },
-  recovery: { ar: '٢. استعادة كلمة المرور', en: '2. Password recovery' },
-  transactional: { ar: '٣. بريد transactional', en: '3. Transactional email' },
+  signup: { ar: '1. تحقق التسجيل', en: '1. Signup verification' },
+  recovery: { ar: '2. استعادة كلمة المرور', en: '2. Password recovery' },
+  transactional: { ar: '3. بريد transactional', en: '3. Transactional email' },
 };
 
 function maskEmail(email: string): string {
