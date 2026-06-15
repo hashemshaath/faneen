@@ -100,7 +100,7 @@ export const AuthShowcase: React.FC = () => {
         return (
           <div
             key={slide.img}
-            className={`absolute inset-0 transition-opacity duration-[1200ms] ease-out ${
+            className={`absolute inset-0 transition-opacity [transition-duration:1200ms] ease-out ${
               active ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
             aria-hidden={!active}
@@ -113,7 +113,7 @@ export const AuthShowcase: React.FC = () => {
               loading={i === 0 ? 'eager' : 'lazy'}
               decoding="async"
               fetchPriority={i === 0 ? 'high' : 'auto'}
-              className={`w-full h-full object-cover object-center will-change-transform transition-transform duration-[8000ms] ease-out ${
+              className={`w-full h-full object-cover object-center will-change-transform transition-transform [transition-duration:8000ms] ease-out ${
                 active ? 'scale-105' : 'scale-100'
               }`}
             />
