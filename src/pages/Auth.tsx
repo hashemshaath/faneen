@@ -91,6 +91,7 @@ const Auth = () => {
           <RegisterForm
             onSwitchToLogin={() => setMode('identity')}
             onEmailSent={handleEmailSent}
+            onForgotPassword={() => setMode('forgot-password')}
           />
         )}
         {mode === 'forgot-password' && (

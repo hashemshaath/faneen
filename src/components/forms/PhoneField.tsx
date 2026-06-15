@@ -36,6 +36,7 @@ export interface PhoneFieldProps {
   placeholder?: string;
   ariaLabel?: string;
   id?: string;
+  onBlur?: () => void;
 }
 
 const DEFAULT_CC = '+966';
@@ -83,6 +84,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   placeholder = '5XXXXXXXX',
   ariaLabel,
   id,
+  onBlur,
 }) => {
   const { isRTL } = useLanguage();
   const labelText = label ?? (isRTL ? 'رقم الجوال' : 'Phone Number');
@@ -143,6 +145,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
             disabled={disabled}
             value={value.national}
             onChange={(e) => handleNational(e.target.value)}
+            onBlur={onBlur}
             placeholder={placeholder}
             aria-label={ariaLabel ?? labelText}
             dir="ltr"
