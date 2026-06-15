@@ -55,11 +55,20 @@ d('RLS anonymous regression', () => {
   });
 
   // ---------- password_reset_log ----------
-  it('password_reset_log: anon INSERT is rejected', async () => {
-    const { error } = await anon
+  // PRA-1/PRA-2: anon (and authenticated) are intentionally allowed to INSERT
+  // privacy-safe rows so the forgot-password flow can record the attempt
+  // without first creating a session. Reads remain admin-only.
+  it('password_reset_log: anon SELECT is rejected', async () => {
+    const { data, error } = await anon
       .from('password_reset_log')
-      .insert({ email: 'attacker@example.com' } as never);
-    expect(error).not.toBeNull();
+      .select('id')
+      .limit(1);
+    // Either an RLS error, or zero rows visible to anon — never expose data.
+    if (error) {
+      expect(error).not.toBeNull();
+    } else {
+      expect(data ?? []).toEqual([]);
+    }
   });
 
   // ---------- provider_landing_settings.indexnow_key ----------

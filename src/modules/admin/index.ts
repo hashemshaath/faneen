@@ -4,6 +4,7 @@ export { abEvaluate } from './services/experiments/abEvaluate';
 // EF-6: thin email-center wrappers.
 export { adminPreviewEmail } from './services/email/adminPreviewEmail';
 export { adminRetryDlqEmail } from './services/email/adminRetryDlqEmail';
+export { adminEmailSmokeTest } from './services/email/adminEmailSmokeTest';
 export { adminCreateUser } from './services/users/adminCreateUser';
 export type {
   AdminCreateUserPayload,

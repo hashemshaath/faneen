@@ -30,15 +30,22 @@ const fromMock = supabase.from as unknown as Mock;
 beforeEach(() => fromMock.mockReset());
 
 describe('createPasswordResetLog', () => {
-  it('inserts payload verbatim into password_reset_log', () => {
+  it('inserts payload with sanitized metadata into password_reset_log', () => {
     const b = makeBuilder();
     fromMock.mockReturnValue(b);
     const payload = { email: 'a@b.com', status: 'requested', user_id: 'u', request_id: 'r', user_agent: 'ua' };
     createPasswordResetLog(payload);
     expect(fromMock).toHaveBeenCalledWith('password_reset_log');
-    expect(b.insert).toHaveBeenCalledWith(payload);
-    // Safety: no transformation, no extra props.
-    expect(b.insert.mock.calls[0][0]).toEqual(payload);
+    // PRA-2: wrapper always forces `metadata` through the sanitizer so
+    // forbidden keys/oversized blobs can never reach the table, even when
+    // the caller omits metadata. The remaining payload is preserved verbatim.
+    expect(b.insert).toHaveBeenCalledWith({ ...payload, metadata: {} });
+    const inserted = b.insert.mock.calls[0][0] as Record<string, unknown>;
+    expect(inserted).toEqual({ ...payload, metadata: {} });
+    // Safety: no other transformation, no extra props beyond the sanitized metadata.
+    expect(Object.keys(inserted).sort()).toEqual(
+      [...Object.keys(payload), 'metadata'].sort(),
+    );
   });
 });
 

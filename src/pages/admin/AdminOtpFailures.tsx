@@ -101,7 +101,7 @@ const AdminOtpFailures = () => {
                 className="h-8 rounded-lg"
                 onClick={() => setHours(h)}
               >
-                {h === 24 ? (isRTL ? '٢٤ ساعة' : '24h') : h === 72 ? (isRTL ? '٣ أيام' : '3d') : (isRTL ? '٧ أيام' : '7d')}
+                {h === 24 ? (isRTL ? '24 ساعة' : '24h') : h === 72 ? (isRTL ? '3 أيام' : '3d') : (isRTL ? '7 أيام' : '7d')}
               </Button>
             ))}
             <Button
