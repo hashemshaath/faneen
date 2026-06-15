@@ -31,19 +31,19 @@ interface RegisterFormProps {
  * and signing in, they pick a usage context (individual / create entity /
  * join entity) at `/start` — see `src/pages/Start.tsx`. The legacy 4-card
  * intent picker (individual / create-entity / join-invite / request-access)
- * has been removed from the register surface.
+ * has been removed from this surface.
  *
- * `accountType` is retained as an internal field set to `'individual'`
- * because downstream profile records and the AUTH-14B guard test expect
- * the field to exist. It does NOT branch the UI any more.
+ * The `accountType` constant is retained as an internal field set to
+ * `'individual'` because downstream profile records and the AUTH-14B guard
+ * test expect the field to exist. It no longer branches the UI.
  */
-
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onEmailSent, onForgotPassword }) => {
   const { t, isRTL } = useLanguage();
 
-  const [registerType, setRegisterType] = useState<RegisterType>('individual');
-  const [step, setStep] = useState<RegisterStep>('type');
-  const [intent, setIntent] = useState<RegisterIntent | null>(null);
+  // Every register submits a personal account. Context (individual /
+  // entity / join entity) is selected post-login at /start.
+  const accountType: 'individual' = 'individual';
+
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -54,18 +54,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [email, setEmail] = useState('');
   const [phoneParts, setPhoneParts] = useState<{ countryCode: string; national: string }>({ countryCode: '+966', national: '' });
   const [password, setPassword] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  const [username, setUsername] = useState('');
-  const [usernameOk, setUsernameOk] = useState(false);
-  // Intent-specific fields
-  const [inviteToken, setInviteToken] = useState('');
-  const [targetEntityRef, setTargetEntityRef] = useState('');
-  const [accessReason, setAccessReason] = useState('');
 
   const passwordStrength = checkPasswordStrength(password);
   const fullName = (fullNameAr.trim() || fullNameEn.trim());
   const phoneE164 = toE164(phoneParts);
-  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
 
   const handleEmailBlur = async () => {
@@ -79,75 +71,45 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     } catch { /* non-blocking */ }
   };
 
-  const pickIntent = (id: RegisterIntent) => {
-    setIntent(id);
-    // Persist pending intent so /onboarding resumes on the correct step.
-    try {
-      if (id === 'individual' || id === 'create-entity') {
-        localStorage.removeItem('qitaat_pending_intent');
-      } else {
-        localStorage.setItem('qitaat_pending_intent', id);
-      }
-    } catch { /* storage unavailable — non-blocking */ }
-    setRegisterType(id === 'create-entity' ? 'business' : 'individual');
-    // For business intent collect business data FIRST, then manager account.
-    // For individual / invite / request-access go straight to personal details.
-    setStep(id === 'create-entity' ? 'business-details' : 'details');
-  };
-
-  // Persist intent-specific payload right before signup so /onboarding can pick it up.
-  const persistIntentPayload = () => {
-    try {
-      if (intent === 'join-invite' && inviteToken.trim()) {
-        localStorage.setItem('qitaat_pending_invite_token', inviteToken.trim());
-      }
-      if (intent === 'request-access') {
-        if (targetEntityRef.trim()) localStorage.setItem('qitaat_pending_access_target', targetEntityRef.trim());
-        if (accessReason.trim()) localStorage.setItem('qitaat_pending_access_reason', accessReason.trim());
-      }
-    } catch { /* non-blocking */ }
-  };
-
   const handleRegister = async () => {
-    if (!fullNameAr.trim() && !fullNameEn.trim()) { toast.error(isRTL ? 'يرجى إدخال الاسم بالعربية أو الإنجليزية' : 'Please enter your name (Arabic or English)'); return; }
-    if (!email || !validateEmailField(email)) { toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email'); return; }
-    if (phoneParts.national && !validatePhoneField(phoneParts.national)) { toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number'); return; }
-    if (passwordStrength.score < 2) { toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak'); return; }
-    if (registerType === 'business' && !usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
+    if (!fullNameAr.trim() && !fullNameEn.trim()) {
+      toast.error(isRTL ? 'يرجى إدخال الاسم بالعربية أو الإنجليزية' : 'Please enter your name (Arabic or English)');
+      return;
+    }
+    if (!email || !validateEmailField(email)) {
+      toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email');
+      return;
+    }
+    if (phoneParts.national && !validatePhoneField(phoneParts.national)) {
+      toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number');
+      return;
+    }
+    if (passwordStrength.score < 2) {
+      toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak');
+      return;
+    }
 
-    // Intent-specific validation
-    if (intent === 'join-invite' && !inviteToken.trim()) {
-      toast.error(isRTL ? 'يرجى إدخال رمز الدعوة' : 'Please enter your invitation token');
-      return;
-    }
-    if (intent === 'request-access' && !targetEntityRef.trim()) {
-      toast.error(isRTL ? 'يرجى إدخال معرّف المنشأة المطلوبة' : 'Please enter the target entity reference');
-      return;
-    }
-    persistIntentPayload();
     setLoading(true);
-    track.signupStarted({ account_type: registerType, method: 'email' });
+    track.signupStarted({ account_type: accountType, method: 'email' });
     try {
       await authService.signUp(email, password, {
         full_name: fullName,
         full_name_ar: fullNameAr,
         full_name_en: fullNameEn,
-        username: registerType === 'business' ? username : undefined,
-        account_type: registerType,
+        account_type: accountType,
         phone: phoneE164,
         phone_country_code: phoneParts.national ? phoneParts.countryCode : '',
         phone_national: phoneParts.national,
       });
       onEmailSent(email);
       const attribution = getAttributionPayload();
-      // Canonical conversion event (Phase 6). `signupCompleted` deprecated.
-      track.registerCompleted({ account_type: registerType, method: 'email', ...attribution });
-      toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
+      track.registerCompleted({ account_type: accountType, method: 'email', ...attribution });
+      toast.success(isRTL ? 'تم إنشاء حسابك. تحقق من بريدك لإكمال التفعيل.' : 'Account created. Check your email to complete activation.');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       try {
         trackRegisterFailed({
-          account_type: registerType,
+          account_type: accountType,
           method: 'email',
           source_page: 'auth_register',
           reason_category: msg.includes('already registered') ? 'validation' : categorizeReason(err),
@@ -166,352 +128,131 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    try { await authService.signInWithGoogle(); } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Google sign-in failed'); } finally { setGoogleLoading(false); }
+    try { await authService.signInWithGoogle(); }
+    catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Google sign-in failed'); }
+    finally { setGoogleLoading(false); }
   };
 
-  // ─── Step: Intent (NEW design — Compact Card Stack) ───
-  if (step === 'type') {
-    const totalSteps = 2;
-    return (
-      <div className="space-y-6" data-feature="register-intent">
-        {/* Progress header */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
-              {isRTL ? 'إنشاء حساب جديد' : 'Create a new account'}
-            </h2>
-            <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
-              {isRTL ? `خطوة 1 من ${totalSteps}` : `Step 1 of ${totalSteps}`}
-            </span>
-          </div>
-          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-            <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: '50%' }} />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {isRTL ? 'ما هو غرضك الأساسي من الانضمام لقطاعات؟' : 'What brings you to Qitaat?'}
-          </p>
-        </div>
+  const isFormValid =
+    !!email && fullName.length > 0 && passwordStrength.score >= 2 &&
+    !errors.email && !errors.phone && !emailExists;
 
-        {/* Intent grid: 2 full-width primary + 2 half compact */}
-        <div className="grid grid-cols-1 gap-3">
-          {/* Individual */}
-          <button
-            type="button"
-            data-intent="individual"
-            onClick={() => pickIntent('individual')}
-            className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
-          >
-            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shrink-0 transition-colors group-hover:bg-primary/10">
-              <User className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-heading font-bold text-sm text-foreground">
-                {isRTL ? 'متابعة كفرد' : 'Continue as individual'}
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                {isRTL ? 'للتصفح والبحث وطلب عروض الأسعار' : 'Browse, search, and request quotes'}
-              </p>
-            </div>
-          </button>
-
-          {/* Create entity */}
-          <button
-            type="button"
-            data-intent="create-entity"
-            onClick={() => pickIntent('create-entity')}
-            className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
-          >
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
-              <Building2 className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-heading font-bold text-sm text-foreground">
-                {isRTL ? 'إنشاء منشأة أو شركة' : 'Create a business / entity'}
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                {isRTL ? 'مزوّد، مشتري، أو الاثنين' : 'Provider, buyer, or both'}
-              </p>
-            </div>
-          </button>
-
-          {/* Compact pair */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              data-intent="join-invite"
-              onClick={() => pickIntent('join-invite')}
-              className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
-            >
-              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-heading font-bold text-sm text-foreground">
-                  {isRTL ? 'انضمام بدعوة' : 'Join by invite'}
-                </h3>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {isRTL ? 'لديك رمز دعوة' : 'I have a token'}
-                </p>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              data-intent="request-access"
-              onClick={() => pickIntent('request-access')}
-              className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
-            >
-              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                <UserPlus className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-heading font-bold text-sm text-foreground">
-                  {isRTL ? 'طلب انضمام' : 'Request access'}
-                </h3>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {isRTL ? 'لمنشأة قائمة' : 'To existing entity'}
-                </p>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <AuthDivider isRTL={isRTL} />
-        <GoogleAuthButton onClick={handleGoogle} loading={googleLoading} isRTL={isRTL} mode="register" />
-
-        <div className="text-center text-sm pt-1">
-          <span className="text-muted-foreground">{isRTL ? 'لديك حساب؟' : 'Have an account?'} </span>
-          <button onClick={onSwitchToLogin} className="text-primary font-semibold hover:underline">
-            {t('auth.has_account')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── Step: Details ───
-  if (step === 'details') {
-    const intentValid =
-      (intent !== 'join-invite' || inviteToken.trim().length > 0) &&
-      (intent !== 'request-access' || targetEntityRef.trim().length > 0);
-    const isFormValid = !!email && fullName.length > 0 && passwordStrength.score >= 2 && !errors.email && !errors.phone && !emailExists && intentValid;
-    const intentLabel: Record<RegisterIntent, { ar: string; en: string }> = {
-      'individual': { ar: 'متابعة كفرد', en: 'Continue as individual' },
-      'create-entity': { ar: 'إنشاء منشأة', en: 'Create entity' },
-      'join-invite': { ar: 'انضمام بدعوة', en: 'Join by invite' },
-      'request-access': { ar: 'طلب انضمام', en: 'Request access' },
-    };
-    const activeIntent = intent ?? (registerType === 'business' ? 'create-entity' : 'individual');
-
-    return (
-      <div className="space-y-6">
-        {/* Progress header (step 2) */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
-              {registerType === 'business'
-                ? (isRTL ? 'بيانات مدير الحساب' : 'Account manager details')
-                : (isRTL ? 'أدخل بياناتك' : 'Your details')}
-            </h2>
-            <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
-              {registerType === 'business'
-                ? (isRTL ? 'خطوة 3 من 3' : 'Step 3 of 3')
-                : (isRTL ? 'خطوة 2 من 2' : 'Step 2 of 2')}
-            </span>
-          </div>
-          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-            <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: '100%' }} />
-          </div>
-          <div className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-full px-3 py-1">
-            <CheckCircle className="w-3.5 h-3.5 text-primary" />
-            <span className="font-medium">
-              {isRTL ? intentLabel[activeIntent].ar : intentLabel[activeIntent].en}
-            </span>
-          </div>
-        </div>
-
-        {/* Intent-specific fields shown BEFORE common details so each path looks distinct */}
-        {activeIntent === 'join-invite' && (
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2">
-            <Label className="text-xs font-semibold flex items-center gap-1.5">
-              <Ticket className="w-3.5 h-3.5 text-primary" />
-              {isRTL ? 'رمز الدعوة' : 'Invitation token'} <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              value={inviteToken}
-              onChange={(e) => setInviteToken(e.target.value)}
-              placeholder={isRTL ? 'الصق الرمز الذي وصلك' : 'Paste the token you received'}
-              dir="ltr"
-              className="h-12 rounded-xl bg-card tech-content"
-            />
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'سنربط حسابك بالمنشأة تلقائياً بعد التحقق من البريد.' : 'We will link your account to the entity after email verification.'}
-            </p>
-          </div>
-        )}
-        {activeIntent === 'request-access' && (
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <AtSign className="w-3.5 h-3.5 text-primary" />
-                {isRTL ? 'معرّف أو اسم مستخدم المنشأة' : 'Entity username or reference'} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                value={targetEntityRef}
-                onChange={(e) => setTargetEntityRef(e.target.value)}
-                placeholder={isRTL ? 'مثل: my-business أو USR-1000001' : 'e.g. my-business or USR-1000001'}
-                dir="ltr"
-                className="h-12 rounded-xl bg-card tech-content"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-primary" />
-                {isRTL ? 'سبب الطلب (اختياري)' : 'Reason (optional)'}
-              </Label>
-              <Input
-                value={accessReason}
-                onChange={(e) => setAccessReason(e.target.value)}
-                placeholder={isRTL ? 'مثل: موظف مبيعات' : 'e.g. sales staff'}
-                className="h-12 rounded-xl bg-card"
-              />
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'سيراجع مالك المنشأة طلبك بعد إنشاء الحساب.' : 'The entity owner will review your request after signup.'}
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <BilingualNameField
-            value={{ full_name_ar: fullNameAr, full_name_en: fullNameEn }}
-            onChange={(v) => { setFullNameAr(v.full_name_ar); setFullNameEn(v.full_name_en); }}
-            showUsername={false}
-            required
-          />
-
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold">{t('auth.email')} <span className="text-destructive">*</span></Label>
-            <div className="relative">
-              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
-              <Input
-                type="email" placeholder="example@email.com" value={email}
-                onChange={(e) => { setEmail(e.target.value); clearError('email'); setEmailExists(false); }}
-                onBlur={handleEmailBlur}
-                dir="ltr" style={{ paddingInlineStart: '42px' }}
-                className={`h-12 rounded-xl ${errors.email || emailExists ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-              />
-            </div>
-            <FieldError message={errors.email} />
-            {emailExists && (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 mt-1 animate-fade-in space-y-2">
-                <p className="text-xs text-destructive font-medium">
-                  {isRTL ? 'هذا البريد مسجل بالفعل في قِطاعات.' : 'This email is already registered on Qitaat.'}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={onSwitchToLogin}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition"
-                  >
-                    {isRTL ? 'تسجيل الدخول' : 'Sign in'}
-                  </button>
-                  {onForgotPassword && (
-                    <button
-                      type="button"
-                      onClick={onForgotPassword}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition"
-                    >
-                      {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-            {email && !errors.email && !emailExists && (
-              <p className="flex items-center gap-1 text-xs text-accent mt-1">
-                <CheckCircle className="w-3 h-3" />
-                {isRTL ? 'صيغة البريد صحيحة' : 'Valid email format'}
-              </p>
-            )}
-          </div>
-
-          <PhoneField
-            value={phoneParts}
-            onChange={(v) => { setPhoneParts(v); clearError('phone'); }}
-            onBlur={() => { if (phoneParts.national) validatePhoneField(phoneParts.national); }}
-            optional
-            error={errors.phone}
-          />
-          {phoneParts.national && !errors.phone && (
-            <p className="flex items-center gap-1 text-xs text-accent -mt-2">
-              <CheckCircle className="w-3 h-3" />
-              {isRTL ? 'صيغة الجوال صحيحة' : 'Valid phone format'}
-            </p>
-          )}
-
-          <PasswordField
-            password={password} onChange={setPassword} label={t('auth.password')}
-            showStrength isRTL={isRTL} showPassword={showPassword}
-            onToggleShow={() => setShowPassword(!showPassword)}
-          />
-
-          <Button onClick={handleRegister} disabled={loading || !isFormValid || (registerType === 'business' && !usernameOk)} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-            {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-            {loading ? t('common.loading') : (isRTL ? 'إنشاء الحساب' : 'Create account')}
-          </Button>
-        </div>
-        <button onClick={() => setStep(registerType === 'business' ? 'business-details' : 'type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <BackArrow className="w-4 h-4" /> {t('auth.back')}
-        </button>
-      </div>
-    );
-  }
-
-  // ─── Step: Business Details (collected BEFORE manager account) ───
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
-            {isRTL ? 'بيانات المنشأة' : 'Business details'}
-          </h2>
-          <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
-            {isRTL ? 'خطوة 2 من 3' : 'Step 2 of 3'}
-          </span>
-        </div>
-        <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-          <div className="bg-primary h-full rounded-full" style={{ width: '66%' }} />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {isRTL ? 'سجّل بيانات المنشأة أولاً، ثم بيانات مدير الحساب في الخطوة التالية.' : 'Register the business data first, then the account manager in the next step.'}
+    <div className="space-y-6" data-feature="register-single-account">
+      {/* Header */}
+      <div className="space-y-2">
+        <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
+          {isRTL ? 'إنشاء حساب جديد' : 'Create a new account'}
+        </h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {isRTL
+            ? 'حساب واحد يتيح لك إدارة مشاريعك كفرد، أو إنشاء منشأة، أو الانضمام إلى منشأة لاحقًا.'
+            : 'One account lets you manage projects as an individual, create a business, or join a business later.'}
         </p>
       </div>
+
+      {/* Form */}
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold">{t('auth.business_name')} <span className="text-destructive">*</span></Label>
-          <div className="relative">
-            <Building2 className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
-            <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
-          </div>
-        </div>
-        <UsernamePicker
-          isRTL={isRTL}
+        <BilingualNameField
+          value={{ full_name_ar: fullNameAr, full_name_en: fullNameEn }}
+          onChange={(v) => { setFullNameAr(v.full_name_ar); setFullNameEn(v.full_name_en); }}
+          showUsername={false}
           required
-          label={t('auth.business_username')}
-          value={username}
-          onChange={setUsername}
-          onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
-          placeholder="my-business"
         />
-        <Button onClick={() => setStep('details')} disabled={!businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-          {isRTL ? 'متابعة إلى بيانات المدير' : 'Continue to manager details'}
-          <BackArrow className="w-4 h-4 ms-2 rotate-180" />
+
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold">
+            {t('auth.email')} <span className="text-destructive">*</span>
+          </Label>
+          <div className="relative">
+            <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
+            <Input
+              type="email" placeholder="example@email.com" value={email}
+              onChange={(e) => { setEmail(e.target.value); clearError('email'); setEmailExists(false); }}
+              onBlur={handleEmailBlur}
+              dir="ltr" style={{ paddingInlineStart: '42px' }}
+              autoComplete="email"
+              className={`h-12 rounded-xl ${errors.email || emailExists ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            />
+          </div>
+          <FieldError message={errors.email} />
+          {emailExists && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 mt-1 animate-fade-in space-y-2">
+              <p className="text-xs text-destructive font-medium">
+                {isRTL ? 'هذا البريد مسجل بالفعل في قِطاعات.' : 'This email is already registered on Qitaat.'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={onSwitchToLogin}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition"
+                >
+                  {isRTL ? 'تسجيل الدخول' : 'Sign in'}
+                </button>
+                {onForgotPassword && (
+                  <button
+                    type="button"
+                    onClick={onForgotPassword}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition"
+                  >
+                    {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          {email && !errors.email && !emailExists && (
+            <p className="flex items-center gap-1 text-xs text-accent mt-1">
+              <CheckCircle className="w-3 h-3" />
+              {isRTL ? 'صيغة البريد صحيحة' : 'Valid email format'}
+            </p>
+          )}
+        </div>
+
+        <PhoneField
+          value={phoneParts}
+          onChange={(v) => { setPhoneParts(v); clearError('phone'); }}
+          onBlur={() => { if (phoneParts.national) validatePhoneField(phoneParts.national); }}
+          optional
+          error={errors.phone}
+        />
+
+        <PasswordField
+          password={password} onChange={setPassword} label={t('auth.password')}
+          showStrength isRTL={isRTL} showPassword={showPassword}
+          onToggleShow={() => setShowPassword(!showPassword)}
+        />
+
+        <Button
+          onClick={handleRegister}
+          disabled={loading || !isFormValid}
+          className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20"
+          variant="hero"
+        >
+          {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+          {loading ? t('common.loading') : (isRTL ? 'إنشاء الحساب' : 'Create account')}
         </Button>
+
+        {/* Helper note: context selection happens later */}
+        <div className="flex items-start gap-2 rounded-xl border border-border/50 bg-muted/30 p-3">
+          <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            {isRTL
+              ? 'بعد إنشاء الحساب يمكنك اختيار طريقة استخدامك لقطاعات من داخل لوحة التحكم.'
+              : 'After creating your account, you can choose how to use Qitaat from inside the dashboard.'}
+          </p>
+        </div>
       </div>
-      <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <BackArrow className="w-4 h-4" /> {t('auth.back')}
-      </button>
+
+      <AuthDivider isRTL={isRTL} />
+      <GoogleAuthButton onClick={handleGoogle} loading={googleLoading} isRTL={isRTL} mode="register" />
+
+      <div className="text-center text-sm pt-1">
+        <span className="text-muted-foreground">{isRTL ? 'لديك حساب؟' : 'Have an account?'} </span>
+        <button onClick={onSwitchToLogin} className="text-primary font-semibold hover:underline">
+          {t('auth.has_account')}
+        </button>
+      </div>
     </div>
   );
 };
