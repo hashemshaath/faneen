@@ -537,6 +537,27 @@ const Onboarding = () => {
               {bi('اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.', 'Pick the path that fits you — you can add an entity later.')}
             </p>
           </div>
+          {/* AUTH-14E · Duplicate-entity guidance (UX-only; no DB lookup) */}
+          <div
+            data-testid="onboarding-duplicate-warning"
+            className="rounded-xl border border-warning/30 bg-warning/5 p-3 flex items-start gap-2"
+          >
+            <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" aria-hidden />
+            <div className="space-y-1 text-xs leading-relaxed text-foreground/90">
+              <p>
+                {bi(
+                  'إذا كانت منشأتك مسجلة مسبقًا في قطاعات، اطلب الانضمام بدل إنشاء منشأة جديدة.',
+                  'If your business is already registered on Qitaat, request to join it instead of creating a new entity.',
+                )}
+              </p>
+              <p className="text-muted-foreground">
+                {bi(
+                  'لدي دعوة أو أريد الانضمام لمنشأة — استخدم الخيارات أدناه.',
+                  'I have an invitation or want to join an entity — use the options below.',
+                )}
+              </p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-3">
             {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => (
               <button key={id} data-intent={id}
