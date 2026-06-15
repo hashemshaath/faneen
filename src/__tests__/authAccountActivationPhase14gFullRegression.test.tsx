@@ -59,10 +59,13 @@ describe('AUTH-14G · Full regression + launch readiness sweep', () => {
   // 8. Unverified-email banner exists, masks the email, hides phone-synth emails
   it('UnverifiedEmailBanner masks email and skips phone-synth emails', () => {
     const src = read('src/components/dashboard/UnverifiedEmailBanner.tsx');
-    // mask pattern (a***z@domain)
+    // mask helper applied (a***z@domain style)
     expect(src).toMatch(/\*{2,}/);
-    // No raw email rendering
-    expect(src).not.toMatch(/\{[^}]*\bemail\b[^}]*\}\s*<\/(p|span|div)>/);
+    // Phone-only logins skipped
+    expect(src).toMatch(/isSyntheticPhoneEmail/);
+    // Email value rendered through the mask helper, never raw user.email
+    expect(src).toMatch(/maskEmail\(\s*user\.email\s*\)/);
+    expect(src).not.toMatch(/\{\s*user\.email\s*\}/);
   });
 
   // 9. FreeLaunchBadge present with corrected tier mapping
@@ -186,8 +189,10 @@ describe('AUTH-14G · Full regression + launch readiness sweep', () => {
     for (const f of files) {
       if (!exists(f)) continue;
       const txt = read(f);
-      expect(txt, `${f} :any`).not.toMatch(/[:\s]any\b/);
-      expect(txt, `${f} as any`).not.toMatch(/as\s+any\b/);
+      // Match real TS `: any` typings only, not the English word "any"
+      expect(txt, `${f} :any`).not.toMatch(/:\s*any\b/);
+      expect(txt, `${f} <any>`).not.toMatch(/<any>/);
+      expect(txt, `${f} as any`).not.toMatch(/\bas\s+any\b/);
       expect(txt, `${f} @ts-ignore`).not.toMatch(/@ts-ignore/);
       expect(txt, `${f} @ts-expect-error`).not.toMatch(/@ts-expect-error/);
       expect(txt, `${f} eslint-disable`).not.toMatch(/eslint-disable/);
