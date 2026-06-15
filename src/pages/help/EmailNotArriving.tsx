@@ -1,11 +1,19 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Inbox, Search, ShieldCheck, Clock, ArrowRight, AlertTriangle } from 'lucide-react';
 
 const EmailNotArriving = () => {
   const { isRTL } = useLanguage();
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = isRTL
+      ? 'لم تصلني رسالة OTP أو استعادة كلمة المرور — قطاعات'
+      : 'Email or OTP not arriving — Qitaat';
+    return () => { document.title = prev; };
+  }, [isRTL]);
 
   const steps = isRTL ? [
     {
@@ -49,12 +57,6 @@ const EmailNotArriving = () => {
 
   return (
     <div className="min-h-screen bg-background py-10 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <Helmet>
-        <title>{isRTL ? 'لم تصلني رسالة OTP أو استعادة كلمة المرور — قطاعات' : 'Email or OTP not arriving — Qitaat'}</title>
-        <meta name="description" content={isRTL ? 'خطوات عملية إذا لم تصلك رسالة التحقق أو رابط استعادة كلمة المرور من قطاعات.' : 'Practical steps if your verification email or password reset link from Qitaat did not arrive.'} />
-        <meta name="robots" content="index, follow" />
-      </Helmet>
-
       <div className="mx-auto max-w-2xl">
         <div className="mb-6">
           <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
