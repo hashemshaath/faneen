@@ -16,7 +16,7 @@ import {
   Users, Building2, DollarSign, FileText, Crown, MessageSquare, Mail,
   ShieldAlert, Zap, AlertCircle, AlertTriangle, UserPlus, ShieldCheck, Inbox,
   TrendingUp, BarChart3, PieChart as PieChartIcon, Activity, Newspaper,
-  ArrowUpRight, ClipboardList, Sliders,
+  ArrowUpRight, ClipboardList, Sliders, ScrollText,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -45,6 +45,7 @@ import {
   DashboardActionCenter,
   type DashboardAction,
 } from '@/components/dashboard/overview/DashboardActionCenter';
+import { AdminSoftLaunchKpiStrip } from '@/components/dashboard/overview/AdminSoftLaunchKpiStrip';
 import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
   AdminQuickActionsWidget,
@@ -217,6 +218,42 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                   icon: Sliders,
                 },
               ] satisfies DashboardAction[]}
+            />
+            {/* Phase B4 — Soft launch operational KPI strip (links only). */}
+            <AdminSoftLaunchKpiStrip
+              isRTL={isRTL}
+              items={[
+                {
+                  id: 'requests-today',
+                  label: { ar: 'طلبات اليوم', en: "Today's requests" },
+                  to: '/admin/quote-requests',
+                  icon: ClipboardList,
+                  value: stats?.leadsToday ?? null,
+                  tone: 'info',
+                },
+                {
+                  id: 'providers-pending',
+                  label: { ar: 'مزودون بانتظار المراجعة', en: 'Providers pending review' },
+                  to: '/admin/provider-review',
+                  icon: ShieldCheck,
+                  value: stats?.providersPending ?? null,
+                  tone: 'warning',
+                },
+                {
+                  id: 'operations',
+                  label: { ar: 'تشغيل النظام', en: 'System operations' },
+                  to: '/admin/operations',
+                  icon: Activity,
+                  tone: 'accent',
+                },
+                {
+                  id: 'activity-log',
+                  label: { ar: 'السجلات والتنبيهات', en: 'Logs & alerts' },
+                  to: '/admin/activity-log',
+                  icon: ScrollText,
+                  tone: 'primary',
+                },
+              ]}
             />
           </div>
         );
