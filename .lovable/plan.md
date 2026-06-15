@@ -1,130 +1,136 @@
-# خطة إعادة بناء لوحة الأدمن والداشبورد ومركز الهوية
 
-> ملاحظة: هذا المشروع يلامس ~40+ صفحة أدمن، ~20+ صفحة داشبورد، نظام تصميم كامل، ومركز هوية. التنفيذ سيكون على **7 مراحل متسلسلة بموافقة منفصلة لكل مرحلة** — لا أقفز للتنفيذ قبل اعتمادك للـ Audit ولا أبدأ كل مرحلة قبل تأكيدك لمخرجات سابقتها.
+# خطة تبسيط ودمج /dashboard
 
----
-
-## المرحلة 1 — Audit & Architecture (قراءة فقط، بدون أي تعديل كود)
-
-**المخرج:** 4 وثائق تحت `docs/admin-redesign/`:
-
-1. `01-audit-report.md`
-   - جرد كامل لـ `src/pages/admin/*` (الصفحات، حجمها، حالتها، تكرارها)
-   - جرد كامل لـ `src/pages/dashboard/*`
-   - جرد لمركز الهوية الحالي (`ThemeApplier`, `useThemeColors`, `brandTheme`, الـ tokens في `index.css` و `tailwind.config.ts`)
-   - خريطة التكرار: أي صفحات تدير نفس البيانات من مكانين
-   - خريطة تضارب الهوية: أي `hex/hsl/font-size/spacing` hardcoded خارج التوكنز
-   - مشاكل التنقل: سايدبار، هيدر، breadcrumbs، تبويبات
-   - حالة الأزرار والحقول والجداول (variants غير موحدة، أحجام عشوائية)
-   - مشاكل النماذج المعقدة
-
-2. `02-information-architecture.md`
-   - الهيكل الجديد للأدمن بالـ 7 مجموعات الرئيسية التي حددتها
-   - جدول: كل صفحة حالية → مكانها الجديد → الحالة (تبقى/تُدمج/تُحذف/تُقسم)
-   - جدول الـ Shortcuts (مصدر واحد + اختصارات تشير إليه)
-
-3. `03-identity-center-plan.md`
-   - الـ tokens المركزية: typography / colors / radii / shadows / spacing / motion / z-index
-   - schema الـ tokens في الـ DB (إن لزم) أو في `theme_overrides`
-   - كيف يحقن مركز الهوية CSS variables في `<head>` بشكل live
-   - قائمة الـ "anti-patterns" الممنوعة (text-white, hex literals, size={n})
-   - خطة الترحيل التدريجي للصفحات القديمة
-
-4. `04-execution-roadmap.md`
-   - الـ 6 مراحل التنفيذية اللاحقة بالتفصيل، مع scope ودleliverable لكل مرحلة
-
-**مدة المرحلة 1:** جلسة واحدة. **بدون أي تعديل كود.** فقط 4 ملفات docs.
+تجربة موحّدة لكل الأدوار (Admin / Provider / Customer / Staff) على ثلاث طبقات: **Overview** → **Sidebar/تنقل** → **دمج صفحات Hub**. تغييرات UI/IA فقط — لا DB/RLS/RPC/migrations.
 
 ---
 
-## المرحلة 2 — Design System & Identity Center Core
+## الطبقة 1 — توحيد صفحة Overview
 
-- توسيع الـ tokens في `src/index.css` (إكمال الناقص: button states, form states, table density, alerts)
-- بناء جدول `admin_identity_tokens` في الـ DB (RLS: admin فقط) لحفظ overrides
-- توسيع `ThemeApplier` ليحقن **كل** الـ tokens (ليس فقط الألوان)
-- بناء `IdentityCenterPage` جديدة تحت `/admin/system/identity` تتحكم في:
-  - الخطوط (نوع/أوزان/أحجام/line-height)
-  - الألوان (8 مجموعات: primary, secondary, accent, success, warning, error, info, neutral)
-  - أنماط الأزرار (لكل variant: radius, height, hover, focus)
-  - الحقول والنماذج
-  - الجداول والبطاقات
-  - التنبيهات
-  - الـ Layout (sidebar width, header height, spacing scale)
-- منع hardcoded values مستقبلًا: ESLint rule + CI check
-- preview حي داخل المركز قبل الحفظ
+اليوم: ثلاث ملفات منفصلة (`AdminDashboardView` 602 سطر، `ProviderDashboardView` 477، `UserDashboardView` 346) ببنية مختلفة وويدجتات متكرّرة.
 
----
+**الهدف**: قالب واحد `DashboardOverviewShell` يستضيف نفس البنية لكل الأدوار، مع ويدجتات قابلة للتركيب (role-aware):
 
-## المرحلة 3 — Admin Shell (Sidebar + Header + Navigation)
+```text
+┌──────────────────────────────────────────────────────────┐
+│  Hero موحّد (تحية + Ref ID + Refresh + Customize)        │
+├──────────────────────────────────────────────────────────┤
+│  3 ويدجتات حالة:                                          │
+│   - OverdueAlerts / TodaySummary / MembershipWidget       │
+│  (مشتركة بين الأدوار — موجودة فعلًا في shared)             │
+├──────────────────────────────────────────────────────────┤
+│  Bento KPI (4 بطاقات حسب الدور):                          │
+│   Admin    → Users · Businesses · Revenue · Health        │
+│   Provider → Leads · Bookings · Revenue · Rating          │
+│   Customer → Spent · Active · Messages · Unread           │
+├──────────────────────────────────────────────────────────┤
+│  CustomizableGrid (نفس النظام الحالي، توسيع للأدوار)       │
+│   - Trends / Activity / Tasks / Recent / Notifications    │
+└──────────────────────────────────────────────────────────┘
+```
 
-- إعادة بناء `DashboardSidebar` بالـ IA الجديدة (7 مجموعات)
-- بحث داخلي في السايدبار + Favorites/Pinned + Recent pages + Counters/Badges
-- Header موحد: page title + breadcrumb + quick actions + global search + notifications + command palette (Cmd+K) + theme toggle + language toggle + workspace switcher
-- collapse/expand ذكي + حفظ الحالة per-user
+**ما يُحذف**:
+- التكرار بين ثلاث views.
+- البطاقات المكرّرة (Notifications/Recent Contracts تظهر بصور مختلفة في كل view).
+- Hero بثلاث صياغات مختلفة.
 
----
+**ما يُحفظ بالكامل**:
+- جميع الاستعلامات الحالية (نفس React Query keys).
+- `useDashboardCustomization` و `BentoTile` و `KeyboardShortcuts`.
+- روابط الوجهة (لا تغيير routes).
 
-## المرحلة 4 — Dashboard & Widgets (Drag/Drop + Personalization)
-
-- نظام widgets modular مع `dnd-kit`
-- 5 layouts جاهزة: Executive / Operations / Finance / Content / Provider mgmt
-- حفظ التخصيص per-admin في DB (`admin_dashboard_layouts`)
-- إخفاء/إظهار + إعادة ترتيب + density mode (compact/comfortable)
-
----
-
-## المرحلة 5 — Module Refactor (الصفحات الأساسية)
-
-إعادة بناء على template موحد (`AdminListPageTemplate`): KPIs + Filters + Search + Tabs + Table/List + Details Drawer + Activity trail + Quick actions.
-
-ترتيب الأولوية:
-1. Businesses (الأضخم — 2,800 سطر، يحتاج تقسيم BusinessTable / BusinessFilters / BusinessCreateInline)
-2. Approvals Center (موحد مسبقًا، يحتاج صقل)
-3. Users & Roles
-4. Memberships
-5. Provider Reviews
-6. Activity Log
-7. Contact/Messages
-8. Taxonomy/Content
-9. System & Identity (مغطى في المرحلة 2)
+> أوفّر **3 اتجاهات بصرية** لـ Overview قبل البناء (Refined Bento / Minimal Apple / Operations-dense)، تختار واحدًا — ثم أنفّذه.
 
 ---
 
-## المرحلة 6 — Form Simplification
+## الطبقة 2 — تبسيط Sidebar/التنقل
 
-- تقسيم النماذج الكبيرة إلى steppers/accordions/sections
-- inline editing + Drawer/Sheet للعلاقات
-- drag/drop للترتيب (صور، أقسام، widgets)
-- validation فوري موحد عبر `react-hook-form` + `zod`
+اليوم:
+- `providerGroups`: **8 مجموعات / 27 عنصرًا**.
+- `userGroups`: **5 مجموعات / 11 عنصرًا**.
+- `adminBaseGroups`: 7 مجموعات من الـ registry.
+
+**المشاكل**: عناصر "جديد" مبعثرة، تكرار بين Settings و Profile، Rentals تبتلع 4 صفوف، Operations + Sales يتداخلان.
+
+**التقليل المقترح للمزوّد** (8 → 5 مجموعات):
+
+| القديم | الجديد |
+|---|---|
+| Overview | **Overview** (Dashboard, Analytics, Operations Feed) |
+| Business Profile (11 عنصر) | **Business** (Profile, Services, Brands, Portfolio + Projects, Promotions, Service Areas + Sites, Reviews, Badge) — يدمج Projects تحت Portfolio و Sites تحت Service Areas |
+| Sales & Requests + Operations + Communication | **Work** (Requests, Bookings, Clients, RFQ, Work Orders, Contracts, Warranties, Messages, Notifications) |
+| Rentals & Assets | **Rentals** (Rentals مع تبويبات Calendar/Analytics داخل الصفحة + Assets) |
+| Membership + Settings | **Account** (Membership, Installments, Loyalty, Profile, Comm. Prefs, Staff, Settings) |
+
+نفس المنطق للعميل (5 → 3 مجموعات: Overview · My Activity · Account).
+
+**ما لا يتغيّر**:
+- لا تغيير routes — كل الروابط القديمة تستمر.
+- لا تغيير في `ADMIN_NAV_GROUPS` registry (مصدر حقيقة).
+- لا تغيير RBAC أو `canViewWorkspaceRoute`.
 
 ---
 
-## المرحلة 7 — Final Cleanup & Governance
+## الطبقة 3 — دمج صفحات Hub المكرّرة
 
-- حذف dead UI components (بعد second-pass كما فعلنا في Phase C3)
-- توحيد المكونات المتشابهة
-- ESLint rules تمنع hex/font-size hardcoded
-- تقرير نهائي: ما تم دمجه، ما تم حذفه، ما تم توحيده، ولماذا
+من تحليل الملفات، عدة صفحات Hub رفيعة (19 سطر فقط) تعيد توجيه أو تغلّف صفحة رئيسية:
 
----
+| Hub | الحجم | الإجراء |
+|---|---|---|
+| `DashboardContractsHub` | 19 سطر | يبقى كـ wrapper إن كان tabs-based؛ وإلا redirect إلى `Contracts` |
+| `DashboardLoyaltyHub` | 19 سطر | redirect إلى `Loyalty` + tabs (Wallet / Store) |
+| `DashboardRequestsHub` | 19 سطر | يحلّ محل `/dashboard/leads` بتبويبات (Requests · Opportunities · RFQ) |
+| `DashboardOperations` 445 + `DashboardOperationsCenter` 539 + `DashboardOperationsFeed` 310 | دمج في `Operations` بتبويبات (Center / Feed / Manual) | يُحفظ المحتوى بالكامل داخل tabs |
+| `DashboardLoyalty` + `DashboardLoyaltyStore` | tabs داخل صفحة واحدة |
 
-## ضمانات السلامة المطبقة في كل مرحلة
-
-- لا حذف صفحة قبل توثيق ما حلّ محلها
-- لا تعديل DB schema بدون migration + RLS + GRANTs
-- لا كسر للصلاحيات أو المنطق التشغيلي
-- لا `any` / `@ts-ignore`
-- كل مرحلة تنتهي بـ `tsc --noEmit` نظيف + توقف لاعتمادك قبل البدء بالتالية
+كل الدمج يستخدم `TabbedShell` الموجود فعلًا، وتُحفظ الـ routes القديمة عبر `<Navigate to="…?tab=…" replace />` (نفس النمط المتّبع حاليًا للـ `/dashboard/staff-access`).
 
 ---
 
-## ما أحتاجه منك للبدء
+## التنفيذ المرحلي
 
-**موافقة على هذه الخطة + إذن البدء بالمرحلة 1 فقط (Audit، docs فقط، صفر تعديل كود).**
+1. **Phase A — Overview Unification** (هذه المرحلة فقط أعرض 3 اتجاهات بصرية):
+   - استخراج `DashboardOverviewShell` + role-config.
+   - تقليل الـ 3 views إلى ملف واحد + 3 ملفات تكوين صغيرة (admin/provider/user.config.ts).
+   - تشغيل اختبار جديد `dashboardOverviewUnified.test.ts` يتحقق من ظهور Hero/Bento/Widgets لكل دور.
 
-بعد عرض مخرجات المرحلة 1 (4 ملفات docs)، نتفق على:
-- أي صفحات تُدمج فعلًا؟
-- أي مجموعات IA تعتمدها كما هي وأيها تعدّل؟
-- نطاق مركز الهوية: هل يشمل tokens في DB أم ملف JSON محلي فقط؟
+2. **Phase B — Sidebar Consolidation**:
+   - إعادة تنظيم `providerGroups` و `userGroups` (5 و 3 مجموعات).
+   - حذف badges "جديد" المتقادمة.
+   - اختبار: `dashboardSidebarConsolidation.test.ts` يتحقّق من عدد المجموعات والروابط.
 
-ثم ننتقل للمرحلة 2.
+3. **Phase C — Hub Merge**:
+   - دمج Operations الثلاث في tabs.
+   - دمج Loyalty Hub/Store.
+   - تثبيت `<Navigate>` لكل الروابط القديمة.
+   - اختبار: `dashboardHubsMerge.test.ts` يتحقّق من tabs والـ redirects.
+
+---
+
+## تفاصيل تقنية
+
+- **بدون** أي تغيير في: Supabase queries, RLS, RPC, migrations, edge functions, مصادر بيانات الإشعارات/العقود/الفواتير.
+- **بدون** popups/dialogs (سياسة المشروع).
+- **بدون** أي `any` أو `@ts-ignore`.
+- **يُحفظ** نظام `useDashboardCustomization` كما هو.
+- **يُحفظ** كل الـ routes في `App.tsx` (الدمج عبر tabs + redirects فقط).
+- استخدام Brand Identity v1.0 tokens + `surface`/`btn-ds` primitives.
+- RTL/LTR عبر `<Bi>` و `useBi()`.
+- اختبارات تكاملية بعد كل Phase + `tsc --noEmit`.
+
+---
+
+## ما لا يُلمس مطلقًا
+
+- لا DB / RLS / RPC / migrations / edge.
+- لا منطق RFQ / Matching / Credits / Membership tier logic.
+- لا تغيير في صلاحيات `canViewWorkspaceRoute` أو `useVisibleModules`.
+- لا تغيير في `ADMIN_NAV_GROUPS` registry (يبقى المصدر الوحيد للحقيقة لـ admin).
+- لا حذف routes — فقط `<Navigate>` للقديم.
+
+---
+
+## نقطة القرار
+
+- إن وافقت على هذه الخطة، أبدأ بـ **Phase A** وأعرض **3 اتجاهات بصرية مرسومة** لصفحة Overview الجديدة لتختار واحدًا قبل البناء.
+- Phase B و C تُنفّذان مباشرة بعد اعتماد Phase A، بدون اتجاهات بصرية إضافية (تنظيم IA فقط).
