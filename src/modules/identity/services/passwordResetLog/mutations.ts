@@ -9,14 +9,17 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { PasswordResetLogInsert } from './types';
+import { sanitizePasswordResetMetadata } from './sanitize';
 
 export function createPasswordResetLog(payload: PasswordResetLogInsert) {
-  // Metadata is typed loosely on the caller side; cast to the generated
-  // Json shape expected by the Supabase client without losing type-safety
-  // on the rest of the payload.
+  // Every payload runs through the PRA-2 sanitizer so forbidden keys
+  // (token/cookie/Authorization/etc.) and oversized blobs can never reach
+  // the table, even if a future caller forgets to pre-sanitize.
   const row = {
     ...payload,
-    metadata: (payload.metadata ?? {}) as Record<string, unknown>,
+    metadata: sanitizePasswordResetMetadata(
+      (payload.metadata ?? {}) as Record<string, unknown>,
+    ),
   };
   return supabase.from('password_reset_log').insert(row as never);
 }
