@@ -35,8 +35,11 @@ import { countActiveMembershipSubscriptions } from '@/modules/memberships';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   OverdueAlerts, TodaySummary, MembershipWidget,
-  RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
+import {
+  UnifiedDashboardHero,
+  formatLastUpdated,
+} from '@/components/dashboard/overview/UnifiedDashboardHero';
 import { BentoTile } from '@/components/dashboard/overview/BentoTile';
 import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
@@ -148,6 +151,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
     qc.invalidateQueries({ queryKey: ['admin-overview-stats'] });
     qc.invalidateQueries({ queryKey: ['today-summary'] });
     qc.invalidateQueries({ queryKey: ['overdue-alerts'] });
+    setLastRefresh(new Date());
     refetch();
   };
 
@@ -160,37 +164,23 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
     switch (id) {
       case 'welcome-hero':
         return (
-          <div className="dash-hero p-5 sm:p-7">
-            <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-[hsl(var(--de-gold)/0.35)] bg-[hsl(var(--de-cream)/0.10)] backdrop-blur">
-                  <ShieldAlert className="w-7 h-7 text-[hsl(var(--de-gold))]" aria-hidden="true" />
-                </div>
-                <div className="min-w-0">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider dash-hero-chip rounded-full px-2.5 py-1 mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--de-gold))]" aria-hidden="true" />
-                    {isRTL ? 'لوحة المسؤول' : 'Admin Console'}
-                  </span>
-                  <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight truncate">
-                    {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
-                  </h1>
-                  <p className="dash-hero-sub text-xs sm:text-sm mt-1">{isRTL ? 'نظرة شاملة على أداء النظام' : 'System-wide performance overview'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <AdminDashboardCustomizeBar
-                  isRTL={isRTL}
-                  editMode={layout.editMode}
-                  onToggle={() => layout.setEditMode(!layout.editMode)}
-                  onReset={layout.reset}
-                />
-                <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
-                <Badge className="dash-hero-gold text-[10px] gap-1 h-6 px-2">
-                  <Zap className="w-3 h-3" aria-hidden="true" />{isRTL ? 'مباشر' : 'Live'}
-                </Badge>
-              </div>
-            </div>
-          </div>
+          <UnifiedDashboardHero
+            isRTL={isRTL}
+            roleLabel={{ ar: 'لوحة المسؤول', en: 'Admin Console' }}
+            fullName={profile?.full_name ?? null}
+            refId={null}
+            lastUpdated={formatLastUpdated(lastRefresh, isRTL)}
+            onRefresh={handleRefresh}
+            isRefreshing={isFetching}
+            onCustomize={() => layout.setEditMode(!layout.editMode)}
+            customizeActive={layout.editMode}
+            subline={isRTL ? 'نظرة شاملة على أداء النظام' : 'System-wide performance overview'}
+            rightSlot={
+              <Badge className="text-[10px] gap-1 h-6 px-2 bg-success/10 text-success border border-success/20">
+                <Zap className="w-3 h-3" aria-hidden="true" />{isRTL ? 'مباشر' : 'Live'}
+              </Badge>
+            }
+          />
         );
       case 'alerts-row':
         return user ? (
