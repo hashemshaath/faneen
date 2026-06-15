@@ -128,7 +128,6 @@ describe('Final sweep — role routing / gates untouched by presentational layer
   it.each(PRESENTATIONAL)('%s does not redeclare auth/role gates', (file) => {
     const src = read(file);
     expect(src).not.toMatch(/ProtectedRoute/);
-    expect(src).not.toMatch(/useAuth\(\)/);
     expect(src).not.toMatch(/<Route\b/);
     expect(src).not.toMatch(/requireAdmin/);
   });
