@@ -30,6 +30,7 @@ import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
 import { ProviderServicesStatusCard } from '@/components/dashboard/ProviderServicesStatusCard';
 import { ProviderSmartActionFooter } from '@/components/dashboard/ProviderSmartActionFooter';
 import { ProviderStatsOverview } from '@/components/dashboard/ProviderStatsOverview';
+import { FreeLaunchBadge } from '@/components/dashboard/FreeLaunchBadge';
 import { ProviderAnalyticsCharts } from '@/components/dashboard/ProviderAnalyticsCharts';
 import { listOverdueInstallmentPayments } from '@/modules/contracts';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
@@ -232,6 +233,7 @@ export default function ProviderDashboardView({
                 {isRTL ? 'موثق' : 'Verified'}
               </Badge>
             )}
+            <FreeLaunchBadge tier={membershipTier} />
             {membershipTier && (
               <Badge className="text-[10px] h-6 px-2 capitalize bg-info/10 text-info border border-info/20">
                 {membershipTier}

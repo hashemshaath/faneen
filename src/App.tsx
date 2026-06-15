@@ -24,6 +24,7 @@ const Index = lazyRetry(() => import("./pages/Index"));
 const DeferredAppOverlays = lazyRetry(() => import("./components/DeferredAppOverlays"));
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
+const AuthVerified = lazyRetry(() => import("./pages/AuthVerified"));
 const HelpCenterHome = lazyRetry(() => import("./pages/help/HelpCenterHome"));
 const HelpCategoryPage = lazyRetry(() => import("./pages/help/HelpCategoryPage"));
 const HelpArticlePage = lazyRetry(() => import("./pages/help/HelpArticlePage"));
@@ -304,6 +305,7 @@ const AppRoutes = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/verified" element={<AuthVerified />} />
           <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/search" element={<Search />} />
