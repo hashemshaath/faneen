@@ -43,7 +43,6 @@ import {
 import { BentoTile } from '@/components/dashboard/overview/BentoTile';
 import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
-  AdminDashboardCustomizeBar,
   AdminQuickActionsWidget,
   AdminWidgetShell,
   useAdminDashboardLayout,
