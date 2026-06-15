@@ -243,18 +243,18 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
   if (sent) {
     return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
-            <CheckCircle className="w-8 h-8 text-accent" />
+      <div className="space-y-4 animate-fade-in">
+        <div className="text-center space-y-2">
+          <div className="w-10 h-10 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-accent" />
           </div>
-          <h2 className="font-heading font-bold text-2xl text-foreground">
+          <h2 className="font-heading font-semibold text-base text-foreground">
             {isRTL ? 'تحقق من بريدك الإلكتروني' : 'Check Your Email'}
           </h2>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
             {isRTL
-              ? <>أرسلنا رابط إعادة تعيين كلمة المرور إلى:<br /><span className="inline-flex items-center gap-1"><strong className="text-foreground" dir="ltr">{email}</strong><CopyButton value={email} label="البريد الإلكتروني" size="xs" /></span></>
-              : <>We sent a password reset link to:<br /><span className="inline-flex items-center gap-1"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span></>
+              ? <>أرسلنا رابط إعادة التعيين إلى <span className="inline-flex items-center gap-1 align-middle"><strong className="text-foreground" dir="ltr">{email}</strong><CopyButton value={email} label="البريد الإلكتروني" size="xs" /></span></>
+              : <>We sent a reset link to <span className="inline-flex items-center gap-1 align-middle"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span></>
             }
           </p>
 
@@ -262,7 +262,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           {!editingEmail ? (
             <button
               onClick={() => { setEditedEmail(email); setEditingEmail(true); }}
-              className="inline-flex items-center gap-1 text-xs text-accent hover:underline mx-auto"
+              className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline mx-auto"
             >
               <Pencil className="w-3 h-3" />
               {isRTL ? 'تعديل البريد الإلكتروني' : 'Change email'}
@@ -313,8 +313,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         </div>
 
         {/* Next steps timeline */}
-        <div className="rounded-xl border border-border bg-muted/20 p-5 text-start space-y-0">
-          <p className="text-xs font-semibold text-foreground mb-3">
+        <div className="rounded-lg border border-border bg-muted/20 p-3 text-start">
+          <p className="text-[11px] font-semibold text-foreground mb-2">
             {isRTL ? 'الخطوات التالية:' : 'What to do next:'}
           </p>
           {[
@@ -323,39 +323,39 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
               color: 'text-accent',
               titleAr: 'افتح صندوق الوارد',
               titleEn: 'Open your inbox',
-              descAr: 'ابحث عن رسالة بعنوان "إعادة تعيين كلمة المرور". قد تستغرق 1-3 دقائق.',
-              descEn: 'Look for an email titled "Reset your password". It may take 1-3 minutes.',
+              descAr: 'قد تستغرق 1-3 دقائق.',
+              descEn: 'May take 1-3 minutes.',
             },
             {
               icon: AlertTriangle,
               color: 'text-warning',
               titleAr: 'تحقق من البريد المهمل',
               titleEn: 'Check Spam / Junk',
-              descAr: 'إذا لم تجد الرسالة، تحقق من مجلد الرسائل غير المرغوب فيها (Spam).',
-              descEn: "If you don't see it, check your Spam or Junk folder.",
+              descAr: 'تحقق من مجلد Spam إن لم تجدها.',
+              descEn: 'Check Spam if you don\'t see it.',
             },
             {
               icon: Mail,
               color: 'text-accent',
               titleAr: 'اضغط على رابط إعادة التعيين',
               titleEn: 'Click the reset link',
-              descAr: 'اضغط على الرابط في الرسالة لإنشاء كلمة مرور جديدة. الرابط صالح لمدة ساعة واحدة.',
-              descEn: 'Click the link in the email to create a new password. The link is valid for 1 hour.',
+              descAr: 'الرابط صالح لساعة واحدة.',
+              descEn: 'Valid for 1 hour.',
             },
           ].map((step, i) => {
             const StepIcon = step.icon;
             return (
-              <div key={i} className="flex items-start gap-3 relative">
+              <div key={i} className="flex items-start gap-2 relative">
                 {/* Connector line */}
                 {i < 2 && (
-                  <div className="absolute top-6 w-px h-[calc(100%-4px)] bg-border" style={{ insetInlineStart: '11px' }} />
+                  <div className="absolute top-5 w-px h-[calc(100%-2px)] bg-border" style={{ insetInlineStart: '9px' }} />
                 )}
-                <div className={`w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center shrink-0 z-10`}>
-                  <StepIcon className={`w-3 h-3 ${step.color}`} />
+                <div className={`w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center shrink-0 z-10`}>
+                  <StepIcon className={`w-2.5 h-2.5 ${step.color}`} />
                 </div>
-                <div className="pb-4">
-                  <p className="text-xs font-semibold text-foreground">{isRTL ? step.titleAr : step.titleEn}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{isRTL ? step.descAr : step.descEn}</p>
+                <div className="pb-2.5">
+                  <p className="text-[11px] font-semibold text-foreground leading-tight">{isRTL ? step.titleAr : step.titleEn}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{isRTL ? step.descAr : step.descEn}</p>
                 </div>
               </div>
             );
@@ -363,26 +363,26 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         </div>
 
         {/* Privacy note */}
-        <div className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5 transition-all">
-          <ShieldCheck className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-          <div className="space-y-1.5">
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+        <div className="flex items-start gap-2 rounded-md bg-muted/30 px-2.5 py-2 transition-all">
+          <ShieldCheck className="w-3 h-3 text-accent mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground leading-snug">
               {isRTL
-                ? 'لحماية خصوصيتك، نعرض هذه الرسالة سواء كان البريد مسجلاً أم لا. الرسالة تُرسل دائماً بطريقة آمنة.'
-                : 'For your privacy, this message appears whether the email is registered or not. The email is always sent securely.'}
+                ? 'نعرض الرسالة دائماً سواء كان البريد مسجلاً أم لا — لحماية خصوصيتك.'
+                : 'Shown whether the email is registered or not — to protect your privacy.'}
             </p>
             <button
               onClick={() => setShowPrivacyExplainer(prev => !prev)}
-              className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline font-medium"
+              className="inline-flex items-center gap-1 text-[10px] text-accent hover:underline font-medium"
             >
-              <HelpCircle className="w-3 h-3" />
-              {isRTL ? 'لماذا نعرض رسالة عامة؟' : 'Why do we show a generic message?'}
+              <HelpCircle className="w-2.5 h-2.5" />
+              {isRTL ? 'لماذا؟' : 'Why?'}
             </button>
             {showPrivacyExplainer && (
-              <div className="text-[11px] text-muted-foreground leading-relaxed bg-muted/40 rounded-lg p-3 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="text-[10px] text-muted-foreground leading-snug bg-muted/40 rounded-md p-2 animate-in fade-in slide-in-from-top-1 duration-200">
                 {isRTL
-                  ? 'نعرض نفس الرسالة لجميع المستخدمين — سواء كان البريد مسجلاً أم لا — لمنع أي شخص من معرفة ما إذا كان بريد معين مرتبطاً بحساب. هذا إجراء أمني معياري يُعرف بـ "عدم الكشف عن وجود الحساب" لحماية خصوصية المستخدمين.'
-                  : 'We show the same message to everyone — whether or not the email is registered — to prevent anyone from discovering if a particular email has an account. This is a standard security practice known as "account enumeration prevention" to protect user privacy.'}
+                  ? 'نفس الرسالة للجميع لمنع كشف ما إذا كان البريد مرتبطاً بحساب (إجراء أمني معياري).'
+                  : 'Same message for everyone to prevent revealing whether an email is registered (standard security).'}
               </div>
             )}
           </div>
@@ -390,26 +390,26 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
         {/* Expected delivery countdown */}
         {deliveryCountdown > 0 && (
-          <div className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/5 px-4 py-3">
-            <Timer className="w-4 h-4 text-accent shrink-0" />
-            <p className="text-xs text-foreground font-medium">
+          <div className="flex items-center gap-2 rounded-md border border-accent/20 bg-accent/5 px-3 py-2">
+            <Timer className="w-3.5 h-3.5 text-accent shrink-0" />
+            <p className="text-[11px] text-foreground font-medium">
               {isRTL
-                ? `الوقت المتوقع لاستلام الرسالة: ${Math.floor(deliveryCountdown / 60)}:${(deliveryCountdown % 60).toString().padStart(2, '0')}`
+                ? `الوقت المتوقع: ${Math.floor(deliveryCountdown / 60)}:${(deliveryCountdown % 60).toString().padStart(2, '0')}`
                 : `Expected delivery: ${Math.floor(deliveryCountdown / 60)}:${(deliveryCountdown % 60).toString().padStart(2, '0')}`}
             </p>
           </div>
         )}
         {deliveryCountdown === 0 && activityLog.length > 0 && (
-          <div className="flex items-center gap-2 rounded-lg border border-warning dark:border-warning bg-warning dark:bg-warning/20 px-4 py-3">
-            <AlertTriangle className="w-4 h-4 text-warning dark:text-warning shrink-0" />
-            <div className="text-xs text-warning dark:text-warning font-medium space-y-1">
+          <div className="flex items-start gap-2 rounded-md border border-warning dark:border-warning bg-warning dark:bg-warning/20 px-3 py-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning dark:text-warning shrink-0 mt-0.5" />
+            <div className="text-[11px] text-warning dark:text-warning font-medium space-y-1">
               <p>
                 {isRTL
-                  ? 'انتهى الوقت المتوقع. إذا لم تصلك الرسالة، أعد الإرسال أو تحقق من البريد المهمل.'
-                  : "Expected time has passed. If you haven't received it, resend or check your spam folder."}
+                  ? 'انتهى الوقت المتوقع. أعد الإرسال أو تحقق من Spam.'
+                  : "Time's up. Resend or check Spam."}
               </p>
-              <a href="/help/email-not-arriving" target="_blank" rel="noreferrer" className="underline text-accent">
-                {isRTL ? 'افتح دليل: لم تصلني الرسالة (Gmail/Spam/Promotions) ←' : 'Open guide: Email not arriving (Gmail/Spam/Promotions) →'}
+              <a href="/help/email-not-arriving" target="_blank" rel="noreferrer" className="underline text-accent text-[10px]">
+                {isRTL ? 'دليل المساعدة ←' : 'Help guide →'}
               </a>
             </div>
           </div>
@@ -417,22 +417,22 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
         {/* Resend success confirmation */}
         {resendSuccess && (
-          <div className="flex items-center gap-2 rounded-lg border border-success dark:border-success bg-success dark:bg-success/20 px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
-            <CheckCircle className="w-4 h-4 text-success dark:text-success shrink-0" />
-            <p className="text-xs text-success dark:text-success font-medium">
+          <div className="flex items-center gap-2 rounded-md border border-success dark:border-success bg-success dark:bg-success/20 px-3 py-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <CheckCircle className="w-3.5 h-3.5 text-success dark:text-success shrink-0" />
+            <p className="text-[11px] text-success dark:text-success font-medium">
               {isRTL
-                ? `تم إعادة إرسال الرابط بنجاح (المرة ${resendCount}). تحقق من بريدك.`
-                : `Link resent successfully (attempt ${resendCount}). Check your email.`}
+                ? `تم إعادة الإرسال (${resendCount}).`
+                : `Resent (attempt ${resendCount}).`}
             </p>
           </div>
         )}
 
         {/* Resend button with cooldown and reason */}
-        <div className="text-center space-y-1.5">
+        <div className="text-center space-y-1">
         <button
           onClick={handleResend}
           disabled={resendCooldown > 0 || loading}
-          className="w-full text-center text-sm text-accent hover:underline font-medium disabled:text-muted-foreground disabled:no-underline disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 py-2 transition-colors"
+          className="w-full text-center text-xs text-accent hover:underline font-medium disabled:text-muted-foreground disabled:no-underline disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 py-1.5 transition-colors"
         >
           {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
           {resendCooldown > 0
@@ -441,35 +441,35 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           }
         </button>
         {resendCooldown > 0 && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[10px] text-muted-foreground">
             {isRTL
-              ? 'لحماية حسابك، يرجى الانتظار قبل إعادة المحاولة'
-              : 'For your security, please wait before retrying'}
+              ? 'انتظر قليلاً قبل إعادة المحاولة'
+              : 'Please wait before retrying'}
           </p>
         )}
         {resendCount >= 3 && resendCooldown === 0 && (
-          <p className="text-[11px] text-warning dark:text-warning flex items-center justify-center gap-1">
+          <p className="text-[10px] text-warning dark:text-warning flex items-center justify-center gap-1">
             <AlertTriangle className="w-3 h-3" />
             {isRTL
-              ? 'إذا لم تصلك الرسالة، تواصل مع الدعم الفني'
-              : "If you still haven't received it, contact support"}
+              ? 'تواصل مع الدعم إن لم تصلك'
+              : 'Contact support if not received'}
           </p>
         )}
         </div>
 
         {/* Activity log */}
         {activityLog.length > 0 && (
-          <div className="rounded-xl border border-border bg-muted/10 p-4 space-y-2">
+          <div className="rounded-lg border border-border bg-muted/10 p-2.5 space-y-1.5">
             <div className="flex items-center gap-1.5">
-              <History className="w-3.5 h-3.5 text-muted-foreground" />
-              <p className="text-[11px] font-semibold text-muted-foreground">
+              <History className="w-3 h-3 text-muted-foreground" />
+              <p className="text-[10px] font-semibold text-muted-foreground">
                 {isRTL ? 'سجل النشاط' : 'Activity Log'}
               </p>
             </div>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-0.5 max-h-24 overflow-y-auto">
               {activityLog.map((ev) => (
-                <div key={ev.id} className="flex items-center gap-2 text-[11px]">
-                  <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                <div key={ev.id} className="flex items-center gap-2 text-[10px]">
+                  <Clock className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
                   <span className="text-muted-foreground font-mono tabular-nums">{formatTime(ev.timestamp)}</span>
                   <span className="text-foreground">{getActivityLabel(ev)}</span>
                 </div>
@@ -478,13 +478,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
         )}
 
-        <Button onClick={onBack} variant="outline" className="w-full h-10 gap-2">
-          <LogIn className="w-4 h-4" />
+        <Button onClick={onBack} variant="outline" className="w-full h-9 gap-2 text-xs">
+          <LogIn className="w-3.5 h-3.5" />
           {isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login'}
         </Button>
 
-        <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mt-1">
-          <BackArrow className="w-4 h-4" />
+        <button onClick={onBack} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1">
+          <BackArrow className="w-3.5 h-3.5" />
           {t('auth.back')}
         </button>
       </div>
