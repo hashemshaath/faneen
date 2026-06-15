@@ -34,8 +34,10 @@ describe('AUTH SIMPLIFICATION UX · One Account + Post-Login Context Selection',
 
   // 3. Sign-in screen has no account-type chooser.
   it('sign-in screen does not surface account-type selection', () => {
-    expect(SIGNIN).not.toMatch(/account[_-]?type\s*[:=]/);
+    // No UI-level account-type chooser, no register-style intent cards.
     expect(SIGNIN).not.toMatch(/data-intent=/);
+    expect(SIGNIN).not.toMatch(/setAccountType\(/);
+    expect(SIGNIN).not.toMatch(/<RegisterForm/);
   });
 
   // 4. Forgot password is non-enumerating.

@@ -30,8 +30,7 @@ interface RegisterFormProps {
  * Every user creates ONE personal account. After verifying their email
  * and signing in, they pick a usage context (individual / create entity /
  * join entity) at `/start` — see `src/pages/Start.tsx`. The legacy 4-card
- * intent picker (individual / create-entity / join-invite / request-access)
- * has been removed from this surface.
+ * intent picker has been removed from this surface.
  *
  * The `accountType` constant is retained as an internal field set to
  * `'individual'` because downstream profile records and the AUTH-14B guard
