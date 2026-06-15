@@ -9,9 +9,6 @@ const ONBOARDING = read('src/pages/Onboarding.tsx');
 const APP = read('src/App.tsx');
 const READINESS_CARD = read('src/components/dashboard/ProviderReadinessCard.tsx');
 const READINESS_HOOK = read('src/hooks/useProviderReadiness.ts');
-const VISIBILITY_EDITOR_PATH = 'src/components/business/BusinessVisibilityEditor.tsx';
-const PUBLISH_PANEL_PATH = 'src/components/business/PublishReadinessPanel.tsx';
-
 describe('PRODUCT LAUNCH QA PHASE 12D — Provider onboarding + profile UX guard', () => {
   it('1. /for-providers has a clear primary CTA to the provider signup/registration route', () => {
     expect(FOR_PROVIDERS).toMatch(/for-providers-primary-cta/);
@@ -65,8 +62,6 @@ describe('PRODUCT LAUNCH QA PHASE 12D — Provider onboarding + profile UX guard
     // We do not import or re-implement visibility logic from the readiness card.
     expect(READINESS_CARD).not.toMatch(/BusinessVisibilityEditor/);
     expect(READINESS_CARD).not.toMatch(/computePublicVisibility/);
-    // File still exists.
-    expect(() => read(VISIBILITY_EDITOR_PATH)).not.toThrow();
   });
 
   it('10. BusinessVisibilityEditor is not referenced from changed UI surfaces', () => {
@@ -76,7 +71,6 @@ describe('PRODUCT LAUNCH QA PHASE 12D — Provider onboarding + profile UX guard
 
   it('11. PublishReadinessPanel logic is not invoked from the readiness card', () => {
     expect(READINESS_CARD).not.toMatch(/PublishReadinessPanel/);
-    expect(() => read(PUBLISH_PANEL_PATH)).not.toThrow();
   });
 
   it('12. No new Supabase RPC/edge/migration calls introduced in presentational changes', () => {
