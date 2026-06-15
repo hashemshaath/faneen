@@ -80,6 +80,8 @@ describe('AUTH-14B · Simplified Auth UX + duplication cleanup guard', () => {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) walk(full);
         else if (/\.(ts|tsx)$/.test(entry.name)) {
+          // Skip this guard test itself — it references the RPC name as a literal.
+          if (full.endsWith('authAccountActivationPhase14bSimplifiedAuthUx.test.tsx')) continue;
           const txt = fs.readFileSync(full, 'utf8');
           if (txt.includes('ensure_provider_subscription')) offenders.push(full);
         }
