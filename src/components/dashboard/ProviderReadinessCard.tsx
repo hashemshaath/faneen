@@ -70,7 +70,7 @@ export function ProviderReadinessCard() {
   const label = STATUS_LABEL[status];
 
   return (
-    <Card className="overflow-hidden border-accent/20" dir={isRTL ? 'rtl' : 'ltr'}>
+    <Card className="overflow-hidden border-accent/20" dir={isRTL ? 'rtl' : 'ltr'} data-testid="provider-readiness-card">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -79,15 +79,27 @@ export function ProviderReadinessCard() {
             ) : (
               <ShieldAlert className="h-5 w-5 text-warning" />
             )}
-            {language === 'ar' ? 'جاهزية الملف للنشر' : 'Profile Readiness'}
+            {language === 'ar' ? 'اكتمال ملفك' : 'Your profile completion'}
           </CardTitle>
           <Badge className={TONE_CLASSES[label.tone]}>
             {language === 'ar' ? label.ar : label.en}
           </Badge>
         </div>
+        <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+          {language === 'ar'
+            ? 'كلما اكتمل ملفك زادت فرصة ظهورك واستقبال طلبات مناسبة.'
+            : 'The more complete your profile, the better your visibility and the more relevant the requests you receive.'}
+        </p>
       </CardHeader>
 
       <CardContent className="space-y-4">
+        <p className="text-xs text-muted-foreground" data-testid="provider-visibility-message">
+          {isPublic
+            ? (language === 'ar' ? 'ملفك ظاهر الآن للعملاء.' : 'Your profile is visible to clients now.')
+            : (language === 'ar'
+                ? 'ملفك غير ظاهر للعامة حتى يكتمل الحد الأدنى ويتم اعتماده.'
+                : 'Your profile is not public until it meets the minimum and is approved.')}
+        </p>
         <div>
           <div className="mb-1.5 flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
