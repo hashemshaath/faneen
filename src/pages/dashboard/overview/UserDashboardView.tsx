@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import {
   FileText, MessageSquare, Bell, Bookmark, CreditCard, TrendingUp, DollarSign,
-  PieChart as PieChartIcon,
+  PieChart as PieChartIcon, Send, Search as SearchIcon,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -36,6 +36,10 @@ import { LiveActivityWidget } from '@/components/dashboard/overview/widgets/Live
 import { SmartTasksWidget } from '@/components/dashboard/overview/widgets/SmartTasksWidget';
 import { TrendsWidget } from '@/components/dashboard/overview/widgets/TrendsWidget';
 import { KeyboardShortcuts } from '@/components/dashboard/overview/KeyboardShortcuts';
+import {
+  DashboardActionCenter,
+  type DashboardAction,
+} from '@/components/dashboard/overview/DashboardActionCenter';
 import { countConversationsForUser } from '@/modules/messaging';
 
 const WIDGET_DEFAULTS = ['trends', 'activity', 'tasks', 'contracts', 'notifications', 'status', 'links'];
@@ -313,6 +317,37 @@ export default function UserDashboardView({
             ? 'تتبع عقودك ورسائلك بأناقة — اضغط ؟ لعرض الاختصارات'
             : 'Track your contracts & messages — press ? for shortcuts'
         }
+      />
+
+      {/* Action Center — role-aware client CTAs (Phase B2) */}
+      <DashboardActionCenter
+        isRTL={isRTL}
+        role="user"
+        actions={[
+          {
+            id: 'request-quote',
+            label: { ar: 'اطلب عرض سعر', en: 'Request a quote' },
+            description: {
+              ar: 'أرسل طلبك للمزودين المناسبين',
+              en: 'Send your RFQ to matching providers',
+            },
+            to: '/rfq/new',
+            icon: Send,
+            primary: true,
+          },
+          {
+            id: 'my-requests',
+            label: { ar: 'تابع طلباتك', en: 'Track requests' },
+            to: '/dashboard/my-requests',
+            icon: FileText,
+          },
+          {
+            id: 'browse-providers',
+            label: { ar: 'استعرض المزودين', en: 'Browse providers' },
+            to: '/search',
+            icon: SearchIcon,
+          },
+        ] satisfies DashboardAction[]}
       />
 
       {/* Widgets */}
