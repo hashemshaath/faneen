@@ -53,7 +53,7 @@ export const AddressTab: React.FC<Props> = ({
   const [openIdx, setOpenIdx] = useState<Record<number, boolean>>({});
 
   const hasMapPin = latitude !== null && longitude !== null;
-  const hasAddress = !!(primary.region || primary.city || primary.district);
+  const hasAddress = !!(primary.region || primary.district || primary.short_address);
   const totalBranches = 1 + branches.length;
 
   const updateBranch = (i: number, patch: Partial<BranchDraft>) => {
@@ -205,7 +205,7 @@ export const AddressTab: React.FC<Props> = ({
               </p>
               <p className="text-[11px] text-muted-foreground truncate">
                 {hasAddress
-                  ? [primary.region, primary.city, primary.district].filter(Boolean).join(' • ')
+                  ? [primary.region, primary.district, primary.short_address].filter(Boolean).join(' • ')
                   : tt(isRTL, 'حدّد العنوان أعلاه', 'Set address above')}
               </p>
             </div>
