@@ -9,6 +9,8 @@ import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { RegistrationSuccessView } from '@/components/auth/RegistrationSuccessView';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { toast } from 'sonner';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 /**
  * Unified auth view. The IdentitySignInForm is the single sign-in entry point.
@@ -39,8 +41,9 @@ const normalizeMode = (raw: string | null): ViewMode => {
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const { redirectByRole } = useRoleRedirect();
+  const { isRTL } = useLanguage();
 
   const initialMode = useMemo(() => normalizeMode(searchParams.get('mode')), [searchParams]);
   const [mode, setMode] = useState<ViewMode>(initialMode);
@@ -66,9 +69,25 @@ const Auth = () => {
           return;
         }
       } catch { /* ignore storage errors */ }
+      // Show welcome toast on fresh sign-in / sign-up (Google OAuth, email signup
+      // with auto-confirm, or email-link verification landing back here).
+      try {
+        const fromGoogle = searchParams.get('welcome') === '1';
+        const flagged = sessionStorage.getItem('qitaat_show_welcome') === '1';
+        if (fromGoogle || flagged) {
+          sessionStorage.removeItem('qitaat_show_welcome');
+          const name = (profile?.full_name_ar || profile?.full_name_en || profile?.full_name || '').trim();
+          const msg = isRTL
+            ? (name ? `أهلاً بك ${name} في قِطاعات` : 'أهلاً بك في قِطاعات')
+            : (name ? `Welcome, ${name}!` : 'Welcome to Qitaat!');
+          toast.success(msg, {
+            description: isRTL ? 'تم تسجيل دخولك بنجاح' : 'You are now signed in',
+          });
+        }
+      } catch { /* storage may be unavailable */ }
       redirectByRole();
     }
-  }, [user, loading, redirectByRole]);
+  }, [user, profile, loading, redirectByRole, searchParams, isRTL]);
 
   const handleEmailSent = (email: string) => {
     setSentEmail(email);
