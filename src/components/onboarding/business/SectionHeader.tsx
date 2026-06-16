@@ -23,10 +23,15 @@ interface Props {
   tone?: SectionHeaderTone;
   rightSlot?: React.ReactNode;
   size?: 'sm' | 'md';
+  /** Show a small "Required" badge next to the title. */
+  required?: boolean;
+  /** Localized label for the required badge. Defaults to Arabic/English. */
+  requiredLabel?: React.ReactNode;
 }
 
 export const OnboardingSectionHeader: React.FC<Props> = ({
   icon: Icon, title, description, tone = 'emerald', rightSlot, size = 'sm',
+  required = false, requiredLabel,
 }) => {
   const boxCls = size === 'md' ? 'w-9 h-9 rounded-xl' : 'w-7 h-7 rounded-lg';
   const iconCls = size === 'md' ? 'w-4 h-4' : 'w-3.5 h-3.5';
@@ -38,7 +43,18 @@ export const OnboardingSectionHeader: React.FC<Props> = ({
           <Icon className={iconCls} />
         </div>
         <div className="min-w-0">
-          <h3 className={`${titleCls} text-foreground leading-tight truncate`}>{title}</h3>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h3 className={`${titleCls} text-foreground leading-tight truncate`}>{title}</h3>
+            {required && (
+              <span
+                className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 text-[9px] font-bold leading-none"
+                aria-label="required"
+              >
+                <span className="text-destructive">*</span>
+                {requiredLabel ?? 'إلزامي'}
+              </span>
+            )}
+          </div>
           {description && (
             <p className="text-[10px] sm:text-[11px] text-muted-foreground leading-snug mt-0.5">
               {description}
