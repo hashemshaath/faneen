@@ -113,7 +113,7 @@ export const authService = {
   // ─── Google OAuth ─────────────────────────────────────
   async signInWithGoogle() {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth?welcome=1`,
     });
     if (result.error) throw new Error('Google sign-in failed');
     return result;
