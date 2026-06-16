@@ -788,26 +788,38 @@ const Onboarding = () => {
     };
 
     return (
-      <AuthLayout>
-        <div className="space-y-6">
+      <AuthLayout wide>
+        <div className="space-y-5 sm:space-y-6">
           <WizardStepper current="business" />
-          <div className="space-y-2 text-center">
-            <h2 className="font-heading font-bold text-2xl text-foreground">
-              {bi('المعلومات', 'Information')}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {bi('سجّل معلومات منشأتك قبل تسجيل مدير الحساب', 'Register your business information before the account manager')}
-            </p>
-            <div className="flex items-center justify-center gap-3 pt-1">
-              <div className="flex-1 max-w-[220px]">
-                <Progress value={completionPct} className="h-1.5" />
+
+          {/* Page header — title + autosave + progress, with a thin meta row */}
+          <header className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <h2 className="font-heading font-bold text-xl sm:text-2xl text-foreground leading-tight">
+                  {bi('معلومات المنشأة', 'Business information')}
+                </h2>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+                  {bi('أكمل بيانات المنشأة قبل تسجيل مدير الحساب — يُحفظ تلقائياً.',
+                      'Complete your business details before the account manager — saved automatically.')}
+                </p>
               </div>
               <AutosaveBadge lastSavedAt={lastSavedAt} />
             </div>
-            <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1" data-testid="onboarding-review-note">
-              {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.', 'After completing the details, the Qitaat team reviews the business before public visibility.')}
+            <div className="mt-3 flex items-center gap-3">
+              <Progress value={completionPct} className="h-1.5 flex-1" />
+              <span className="text-[11px] font-semibold text-muted-foreground tabular-nums whitespace-nowrap">
+                {completionPct}%
+              </span>
+            </div>
+            <p
+              className="text-[11px] text-muted-foreground/80 leading-relaxed mt-2"
+              data-testid="onboarding-review-note"
+            >
+              {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.',
+                  'After completing the details, the Qitaat team reviews the business before public visibility.')}
             </p>
-          </div>
+          </header>
 
           <BusinessDetailsTabs
             active={businessTab}
@@ -1036,10 +1048,12 @@ const Onboarding = () => {
             )}
           />
 
-          <button onClick={() => setStep('intent')}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            {bi('→', '←')} {bi('رجوع', 'Back')}
-          </button>
+          <div className="flex justify-start pt-1">
+            <button onClick={() => setStep('intent')}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {bi('→', '←')} {bi('رجوع للخطوة السابقة', 'Back to previous step')}
+            </button>
+          </div>
         </div>
       </AuthLayout>
     );
