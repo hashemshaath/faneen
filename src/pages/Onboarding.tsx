@@ -504,11 +504,11 @@ const Onboarding = () => {
   if (step === 'intent') {
     const intents = [
       { id: 'individual' as const, icon: User,
-        titleAr: 'المتابعة كفرد', titleEn: 'Continue as individual',
+        titleAr: 'الأفراد', titleEn: 'Individuals',
         descAr: 'استخدم قطاعات كفرد، اطلب عروض الأسعار، وأنشئ منشأة لاحقاً.',
         descEn: 'Use Qitaat as an individual, request quotes, and create an entity later.' },
       { id: 'create-entity' as const, icon: Building2,
-        titleAr: 'إنشاء منشأة أو شركة', titleEn: 'Create a business/entity',
+        titleAr: 'الأعمال', titleEn: 'Business',
         descAr: 'سجّل بيانات المنشأة أولاً، ثم بيانات مدير الحساب.',
         descEn: 'Register the business data first, then the account manager.' },
     ];
@@ -522,27 +522,6 @@ const Onboarding = () => {
             <p className="text-sm text-muted-foreground">
               {bi('اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.', 'Pick the path that fits you — you can add an entity later.')}
             </p>
-          </div>
-          {/* AUTH-14E · Duplicate-entity guidance (UX-only; no DB lookup) */}
-          <div
-            data-testid="onboarding-duplicate-warning"
-            className="rounded-xl border border-warning/30 bg-warning/5 p-3 flex items-start gap-2"
-          >
-            <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" aria-hidden />
-            <div className="space-y-1 text-xs leading-relaxed text-foreground/90">
-              <p>
-                {bi(
-                  'إذا كانت منشأتك مسجلة مسبقًا في قطاعات، فاطلب من مسؤول المنشأة إرسال رابط دعوة لك بدل إنشاء منشأة جديدة.',
-                  'If your business is already registered on Qitaat, ask its administrator to send you an invitation link instead of creating a new entity.',
-                )}
-              </p>
-              <p className="text-muted-foreground">
-                {bi(
-                  'الانضمام لمنشأة قائمة يتم فقط من خلال رابط الدعوة المرسل إليك.',
-                  'Joining an existing entity is only possible through the invitation link sent to you.',
-                )}
-              </p>
-            </div>
           </div>
           <div className="grid grid-cols-1 gap-3">
             {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => (
@@ -562,9 +541,9 @@ const Onboarding = () => {
                 <div className="rounded-lg bg-gold/10 p-2 shrink-0">
                   <Icon className="w-5 h-5 text-gold" />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-heading font-bold text-base text-foreground">{bi(titleAr, titleEn)}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{bi(descAr, descEn)}</p>
+                <div className="min-w-0 flex flex-wrap items-baseline gap-x-2">
+                  <h3 className="font-heading font-bold text-base text-foreground whitespace-nowrap">{bi(titleAr, titleEn)}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{bi(descAr, descEn)}</p>
                 </div>
               </button>
             ))}
