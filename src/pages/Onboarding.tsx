@@ -650,30 +650,49 @@ const Onboarding = () => {
               {bi('اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.', 'Pick the path that fits you — you can add an entity later.')}
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-3">
-            {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => (
-              <button key={id} data-intent={id}
-                onClick={() => {
-                  if (id === 'individual') {
-                    setAccountType('individual');
-                    if (profile?.full_name && profile?.phone) void completeOnboarding();
-                    else setStep('details');
-                  } else if (id === 'create-entity') {
-                    setAccountType('business');
-                    setStep('business-details');
-                  }
-                }}
-                className="p-4 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-start group flex items-start gap-3"
-                aria-label={bi(titleAr, titleEn)}>
-                <div className="rounded-lg bg-gold/10 p-2 shrink-0">
-                  <Icon className="w-5 h-5 text-gold" />
-                </div>
-                <div className="min-w-0 flex flex-wrap items-baseline gap-x-2">
-                  <h3 className="font-heading font-bold text-base text-foreground whitespace-nowrap">{bi(titleAr, titleEn)}</h3>
-                  <p className="text-xs text-muted-foreground truncate">{bi(descAr, descEn)}</p>
-                </div>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => {
+              const isBusiness = id === 'create-entity';
+              return (
+                <button key={id} data-intent={id}
+                  onClick={() => {
+                    if (id === 'individual') {
+                      setAccountType('individual');
+                      if (profile?.full_name && profile?.phone) void completeOnboarding();
+                      else setStep('details');
+                    } else {
+                      setAccountType('business');
+                      setStep('business-details');
+                    }
+                  }}
+                  className={`relative p-5 rounded-2xl border-2 text-start transition-all duration-300 hover-lift group ${
+                    isBusiness
+                      ? 'border-gold/40 bg-gradient-to-br from-gold/10 via-background to-emerald-500/5 hover:border-gold hover:shadow-lg hover:shadow-gold/10'
+                      : 'border-border bg-card hover:border-emerald-500/40 hover:shadow-md'
+                  }`}
+                  aria-label={bi(titleAr, titleEn)}>
+                  {isBusiness && (
+                    <span className="absolute top-2 end-2 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold/15 text-gold">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      {bi('موصى به', 'Featured')}
+                    </span>
+                  )}
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${
+                    isBusiness ? 'bg-gold/15 text-gold' : 'bg-emerald-500/10 text-emerald-600'
+                  }`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-heading font-bold text-base text-foreground mb-1">{bi(titleAr, titleEn)}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{bi(descAr, descEn)}</p>
+                  <span className={`mt-3 inline-flex items-center gap-1 text-xs font-medium ${
+                    isBusiness ? 'text-gold' : 'text-emerald-600'
+                  }`}>
+                    {bi('ابدأ الآن', 'Start now')}
+                    <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </AuthLayout>
