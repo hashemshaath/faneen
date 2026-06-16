@@ -831,9 +831,20 @@ const Onboarding = () => {
                 </div>
                 <UsernamePicker isRTL={isRTL} required
                   label={bi('اسم المستخدم (رابط الملف العام)', 'Username (public profile URL)')}
-                  value={username} onChange={setUsername}
+                  value={username}
+                  onChange={(v) => { setUsername(v); setUsernameTouched(true); }}
                   onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
                   excludeUserId={user?.id ?? null} placeholder="my-business" />
+                {usernameSuggestion && (
+                  <button
+                    type="button"
+                    onClick={() => { setUsername(usernameSuggestion); setUsernameTouched(true); }}
+                    className="text-[11px] text-emerald-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    {bi('اقتراح:', 'Suggestion:')} <span className="font-mono">{usernameSuggestion}</span>
+                  </button>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs">
