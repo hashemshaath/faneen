@@ -61,6 +61,8 @@ interface Props {
   hideEntityType?: boolean;
   /** Compact mode shrinks spacing for tight onboarding card. */
   compact?: boolean;
+  /** Free-text filter applied to primary + secondary chip labels (AR+EN). */
+  filter?: string;
 }
 
 const t = (rtl: boolean, ar: string, en: string) => (rtl ? ar : en);
@@ -69,9 +71,18 @@ const labelOf = (cat: TaxonomyCategory, isRTL: boolean): string =>
         : (cat.name_en || cat.name_ar || cat.slug);
 
 export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
-  value, onChange, onLoadStatusChange, hideEntityType, compact,
+  value, onChange, onLoadStatusChange, hideEntityType, compact, filter,
 }) => {
   const { isRTL } = useLanguage();
+  const q = (filter ?? '').trim().toLowerCase();
+  const matchesFilter = (c: TaxonomyCategory): boolean => {
+    if (!q) return true;
+    return (
+      (c.name_ar ?? '').toLowerCase().includes(q) ||
+      (c.name_en ?? '').toLowerCase().includes(q) ||
+      (c.slug ?? '').toLowerCase().includes(q)
+    );
+  };
 
   const entityTypesQ = useQuery({
     queryKey: ['tx:entity-types'],
