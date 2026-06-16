@@ -629,7 +629,7 @@ const Membership = () => {
       toast.info(
         bi('باقات العضوية مخصّصة لمزوّدي الخدمات. حوّل حسابك إلى حساب مزوّد للاشتراك.', 'Membership plans are for service providers. Switch your account to a provider to subscribe.'),
       );
-      navigate('/onboarding');
+      navigate('/register-entity');
       return;
     }
     if (!myBusiness) {
