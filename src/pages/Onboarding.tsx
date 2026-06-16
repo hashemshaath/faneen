@@ -10,12 +10,11 @@ import { PhoneInput } from '@/components/auth/PhoneInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import {
   User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight,
-  AlertCircle, Mail, UserPlus, MapPin, FileText, Upload, X, Sparkles,
+  AlertCircle, Mail, MapPin, FileText, Upload, X, Sparkles,
 } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -35,9 +34,8 @@ import { UsernamePicker } from '@/components/common/UsernamePicker';
 import {
   readDraft, saveDraft, clearDraft, pullRemoteDraft, syncDraftToServer,
 } from '@/lib/onboarding-draft';
-import { createEntityAccessRequest } from '@/modules/entities/services/access';
 import {
-  getOwnerBusiness, updateBusinessById, getBusinessIdByRefOrLegacyRef,
+  getOwnerBusiness, updateBusinessById,
   updateBusinessSensitiveFields,
 } from '@/modules/businesses';
 import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
@@ -84,11 +82,6 @@ const Onboarding = () => {
   const { getTargetRoute } = useRoleRedirect();
 
   const [step, setStep] = useState<OnboardingStep>('intent');
-  const [inviteToken, setInviteToken] = useState('');
-  const [requestAccessQuery, setRequestAccessQuery] = useState('');
-  const [requestAccessMessage, setRequestAccessMessage] = useState('');
-  const [requestAccessSubmitting, setRequestAccessSubmitting] = useState(false);
-  const [requestAccessSubmittedRef, setRequestAccessSubmittedRef] = useState<string | null>(null);
   const [accountType, setAccountType] = useState<'individual' | 'business'>('individual');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -233,8 +226,7 @@ const Onboarding = () => {
       } else {
         try {
           const pending = localStorage.getItem('qitaat_pending_intent');
-          if (pending === 'create-entity' || pending === 'individual'
-              || pending === 'join-invite' || pending === 'request-access') {
+          if (pending === 'create-entity' || pending === 'individual') {
             if (pending === 'create-entity') setAccountType('business');
             else setAccountType('individual');
             setStep(pending === 'create-entity' ? 'business-details' : 'details');
