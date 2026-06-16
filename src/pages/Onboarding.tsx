@@ -991,12 +991,14 @@ const Onboarding = () => {
                   </div>
                 </section>
 
-                <div className="flex justify-end pt-1">
-                  <Button type="button" variant="hero" size="sm" className="h-10 px-4"
-                    onClick={() => setBusinessTab('classification')}>
-                    {bi('التالي: التصنيف', 'Next: Classification')}
-                    <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
-                  </Button>
+                <div className="sticky bottom-2 z-10 -mx-1 px-1 pt-2">
+                  <div className="flex justify-end gap-2 rounded-xl border border-border/40 bg-card/85 backdrop-blur-md p-2 shadow-sm">
+                    <Button type="button" variant="hero" className="min-h-11 px-5 flex-1 sm:flex-none"
+                      onClick={() => setBusinessTab('classification')}>
+                      {bi('التالي: التصنيف', 'Next: Classification')}
+                      <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1014,16 +1016,18 @@ const Onboarding = () => {
                     </p>
                   </div>
                 )}
-                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40 mt-1">
-                  <Button type="button" variant="ghost" size="sm" className="h-10"
-                    onClick={() => setBusinessTab('identity')}>
-                    {bi('السابق', 'Back')}
-                  </Button>
-                  <Button type="button" variant="hero" size="sm" className="h-10 px-4"
-                    onClick={() => setBusinessTab('address')}>
-                    {bi('التالي: العنوان', 'Next: Address')}
-                    <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
-                  </Button>
+                <div className="sticky bottom-2 z-10 -mx-1 px-1 pt-2">
+                  <div className="flex items-center justify-between gap-2 rounded-xl border border-border/40 bg-card/85 backdrop-blur-md p-2 shadow-sm">
+                    <Button type="button" variant="outline" className="min-h-11 px-4"
+                      onClick={() => setBusinessTab('identity')}>
+                      {bi('السابق', 'Back')}
+                    </Button>
+                    <Button type="button" variant="hero" className="min-h-11 px-5 flex-1 sm:flex-none"
+                      onClick={() => setBusinessTab('address')}>
+                      {bi('التالي: العنوان', 'Next: Address')}
+                      <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1038,16 +1042,18 @@ const Onboarding = () => {
                   branches={branches}
                   onBranchesChange={setBranches}
                 />
-                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40 mt-1">
-                  <Button type="button" variant="ghost" size="sm" className="h-10"
-                    onClick={() => setBusinessTab('classification')}>
-                    {bi('السابق', 'Back')}
-                  </Button>
-                  <Button onClick={onContinue} disabled={!allValid || loading} variant="hero"
-                    size="sm" className="h-10 px-4">
-                    {bi('متابعة لتسجيل مدير الحساب', 'Continue to account manager')}
-                    <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
-                  </Button>
+                <div className="sticky bottom-2 z-10 -mx-1 px-1 pt-2">
+                  <div className="flex items-center justify-between gap-2 rounded-xl border border-border/40 bg-card/85 backdrop-blur-md p-2 shadow-sm">
+                    <Button type="button" variant="outline" className="min-h-11 px-4"
+                      onClick={() => setBusinessTab('classification')}>
+                      {bi('السابق', 'Back')}
+                    </Button>
+                    <Button onClick={onContinue} disabled={!allValid || loading} variant="hero"
+                      className="min-h-11 px-5 flex-1 sm:flex-none">
+                      {bi('متابعة لتسجيل مدير الحساب', 'Continue')}
+                      <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
