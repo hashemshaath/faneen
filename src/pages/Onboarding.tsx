@@ -412,6 +412,59 @@ const Onboarding = () => {
               );
             }
           }
+
+          // Persist additional branches (if any). Each branch is a row in
+          // `business_branches`; when "same_as_primary" is checked, we copy
+          // the primary address coords + region. Otherwise the user can
+          // complete the branch address later from the dashboard. Failure
+          // is non-blocking.
+          if (businessId && branches.length > 0) {
+            try {
+              const rows = branches
+                .filter((b) => b.name_ar.trim().length > 0)
+                .map((b, idx) => ({
+                  business_id: businessId,
+                  name_ar: b.name_ar.trim(),
+                  name_en: b.name_en.trim() || null,
+                  phone: b.phone?.trim() || null,
+                  region: b.same_as_primary ? (primaryAddress.region ?? null) : null,
+                  is_main: false,
+                  sort_order: idx + 1,
+                }));
+              if (rows.length > 0) {
+                 
+                const sb: any = supabase;
+                const { data: inserted, error: brErr } = await sb
+                  .from('business_branches').insert(rows).select('id');
+                if (brErr) throw brErr;
+                // For "same as primary" branches, upsert a copy of the
+                // primary address under owner_type='branch'.
+                if (inserted && primaryAddress.region) {
+                  await Promise.all(branches
+                    .filter((b, i) => b.same_as_primary && b.name_ar.trim().length > 0 && inserted[i])
+                    .map((_, i) => upsertPrimaryAddress({
+                      ownerType: 'branch',
+                      ownerId: (inserted[i] as { id: string }).id,
+                      addressType: 'primary',
+                      fields: {
+                        ...primaryAddress,
+                        latitude: addrLat,
+                        longitude: addrLng,
+                        source: 'manual',
+                      },
+                    })));
+                }
+              }
+            } catch (brErr) {
+              if (import.meta.env.DEV) {
+                // eslint-disable-next-line no-console
+                console.warn('[onboarding] branches persist failed', brErr);
+              }
+              toast.warning(
+                bi('تم إنشاء المنشأة، لكن تعذر حفظ الفروع الإضافية. يمكنك إضافتها لاحقًا من لوحة التحكم.', 'Business created, but additional branches could not be saved. You can add them later from your dashboard.'),
+              );
+            }
+          }
         } catch { /* non-blocking */ }
       }
 
