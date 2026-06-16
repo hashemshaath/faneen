@@ -58,7 +58,9 @@ const Start: React.FC = () => {
       // is the first surface. Signed-in users continue into the dashboard
       // onboarding wizard for completion; new users start at the basic
       // registration page.
-      to: user ? '/onboarding' : '/register-entity',
+      // RegisterEntity itself redirects signed-in users to `/onboarding`,
+      // so this single href works for both contexts.
+      to: '/register-entity',
     },
   ];
 
