@@ -99,21 +99,15 @@ export const ClassificationTab: React.FC<Props> = ({ value, onChange, onLoadStat
         </p>
       </div>
 
-      <FilterContext.Provider value={filter.trim().toLowerCase()}>
-        <MultiPrimaryTaxonomyPicker
-          value={value}
-          onChange={onChange}
-          onLoadStatusChange={onLoadStatusChange}
-          compact
-        />
-      </FilterContext.Provider>
+      <MultiPrimaryTaxonomyPicker
+        value={value}
+        onChange={onChange}
+        onLoadStatusChange={onLoadStatusChange}
+        compact
+        filter={filter}
+      />
     </div>
   );
 };
-
-// Filter context is provided here in case the picker is extended later to
-// honor it. The current picker renders all options and stays controlled;
-// this keeps the API forward-compatible without forking the picker.
-export const FilterContext = React.createContext<string>('');
 
 export default ClassificationTab;
