@@ -986,6 +986,7 @@ const Onboarding = () => {
     return (
       <AuthLayout>
         <div className="space-y-6">
+          {accountType === 'business' && <WizardStepper current="manager" completed={{ business: true }} />}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-gold/10 to-emerald-500/10 border border-gold/20">
               <User className="w-6 h-6 text-gold" />
@@ -997,7 +998,7 @@ const Onboarding = () => {
             </h2>
             {accountType === 'business' && (
               <p className="text-xs text-muted-foreground">
-                {bi('الخطوة 2 من 3 — مسؤول المنشأة الرئيسي', 'Step 2 of 3 — primary entity manager')}
+                {bi('مسؤول المنشأة الرئيسي', 'Primary entity manager')}
               </p>
             )}
             <Progress value={completionPct} className="h-1.5" />
