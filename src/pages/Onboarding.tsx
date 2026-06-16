@@ -49,6 +49,8 @@ import { normalizeOnboardingTaxonomyDraft } from '@/modules/taxonomy/components/
 import { BusinessDetailsTabs, type BusinessTabKey } from '@/components/onboarding/business/BusinessDetailsTabs';
 import { ClassificationTab } from '@/components/onboarding/business/ClassificationTab';
 import { AddressTab, type BranchDraft } from '@/components/onboarding/business/AddressTab';
+import { WizardStepper } from '@/components/onboarding/business/WizardStepper';
+import { AutosaveBadge } from '@/components/onboarding/business/AutosaveBadge';
 import { upsertPrimaryAddress } from '@/modules/addresses';
 import type { NationalAddressValue } from '@/modules/addresses/components/NationalAddressForm';
 
@@ -150,6 +152,11 @@ const Onboarding = () => {
 
   const [loading, setLoading] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  // Timestamp of the most recent autosave; powers the inline AutosaveBadge.
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  // Track whether the user has manually edited the username so we don't
+  // overwrite their choice with the auto-suggestion from the business name.
+  const [usernameTouched, setUsernameTouched] = useState(false);
 
   // Persist draft on every relevant change
   useEffect(() => {
@@ -160,6 +167,7 @@ const Onboarding = () => {
       sectors, subServices,
       taxonomy,
     });
+    setLastSavedAt(Date.now());
     if (user?.id) void syncDraftToServer(user.id);
   }, [step, accountType, fullName, phone, countryCode, businessName, username,
       sectors, subServices, taxonomy, draftLoaded, user?.id]);
@@ -642,30 +650,49 @@ const Onboarding = () => {
               {bi('اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.', 'Pick the path that fits you — you can add an entity later.')}
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-3">
-            {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => (
-              <button key={id} data-intent={id}
-                onClick={() => {
-                  if (id === 'individual') {
-                    setAccountType('individual');
-                    if (profile?.full_name && profile?.phone) void completeOnboarding();
-                    else setStep('details');
-                  } else if (id === 'create-entity') {
-                    setAccountType('business');
-                    setStep('business-details');
-                  }
-                }}
-                className="p-4 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-start group flex items-start gap-3"
-                aria-label={bi(titleAr, titleEn)}>
-                <div className="rounded-lg bg-gold/10 p-2 shrink-0">
-                  <Icon className="w-5 h-5 text-gold" />
-                </div>
-                <div className="min-w-0 flex flex-wrap items-baseline gap-x-2">
-                  <h3 className="font-heading font-bold text-base text-foreground whitespace-nowrap">{bi(titleAr, titleEn)}</h3>
-                  <p className="text-xs text-muted-foreground truncate">{bi(descAr, descEn)}</p>
-                </div>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => {
+              const isBusiness = id === 'create-entity';
+              return (
+                <button key={id} data-intent={id}
+                  onClick={() => {
+                    if (id === 'individual') {
+                      setAccountType('individual');
+                      if (profile?.full_name && profile?.phone) void completeOnboarding();
+                      else setStep('details');
+                    } else {
+                      setAccountType('business');
+                      setStep('business-details');
+                    }
+                  }}
+                  className={`relative p-5 rounded-2xl border-2 text-start transition-all duration-300 hover-lift group ${
+                    isBusiness
+                      ? 'border-gold/40 bg-gradient-to-br from-gold/10 via-background to-emerald-500/5 hover:border-gold hover:shadow-lg hover:shadow-gold/10'
+                      : 'border-border bg-card hover:border-emerald-500/40 hover:shadow-md'
+                  }`}
+                  aria-label={bi(titleAr, titleEn)}>
+                  {isBusiness && (
+                    <span className="absolute top-2 end-2 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold/15 text-gold">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      {bi('موصى به', 'Featured')}
+                    </span>
+                  )}
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${
+                    isBusiness ? 'bg-gold/15 text-gold' : 'bg-emerald-500/10 text-emerald-600'
+                  }`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-heading font-bold text-base text-foreground mb-1">{bi(titleAr, titleEn)}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{bi(descAr, descEn)}</p>
+                  <span className={`mt-3 inline-flex items-center gap-1 text-xs font-medium ${
+                    isBusiness ? 'text-gold' : 'text-emerald-600'
+                  }`}>
+                    {bi('ابدأ الآن', 'Start now')}
+                    <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </AuthLayout>
@@ -704,6 +731,41 @@ const Onboarding = () => {
     const unifiedValid = /^7[0-9]{9}$/.test(unifiedNumber);
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail);
     const onlyDigits = (v: string, max: number) => v.replace(/\D/g, '').slice(0, max);
+    // Tiny slugifier used to suggest a username from the English business name.
+    const slugify = (v: string) => v
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 24);
+    const usernameSuggestion = !usernameTouched && !username && businessNameEn
+      ? slugify(businessNameEn)
+      : '';
+
+    // Per-tab progress for the inline tab progress bars (visual polish).
+    const identityFields = [
+      !!businessName.trim(), !!businessNameEn.trim(), !!usernameOk,
+      unifiedValid, emailValid,
+    ];
+    const identityProgress = Math.round(
+      (identityFields.filter(Boolean).length / identityFields.length) * 100,
+    );
+    const classificationProgress = taxonomyStatus === 'ok'
+      ? Math.round(
+          (((taxonomy.entityTypeCategoryId ? 1 : 0)
+            + (taxonomy.primaryActivityCategoryIds.length > 0 ? 1 : 0)
+            + (taxonomy.secondaryActivityCategoryIds.length > 0 ? 1 : 0)) / 3) * 100,
+        )
+      : 0;
+    const addressProgress = (() => {
+      const filled = [
+        !!primaryAddress.region, !!primaryAddress.district,
+        !!primaryAddress.short_address || addrLat != null,
+      ].filter(Boolean).length;
+      return Math.round((filled / 3) * 100);
+    })();
     const allValid =
       !!businessName.trim() && !!businessNameEn.trim() && !!usernameOk &&
       unifiedValid && emailValid && !!regionId && crValid &&
@@ -728,17 +790,20 @@ const Onboarding = () => {
     return (
       <AuthLayout>
         <div className="space-y-6">
+          <WizardStepper current="business" />
           <div className="space-y-2 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-gold/10 border border-emerald-500/20">
-              <Building2 className="w-6 h-6 text-emerald-600" />
-            </div>
             <h2 className="font-heading font-bold text-2xl text-foreground">
               {bi('بيانات المنشأة', 'Business Information')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {bi('الخطوة 1 من 3 — سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Step 1 of 3 — register business data before the account manager')}
+              {bi('سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Register business data before the account manager')}
             </p>
-            <Progress value={completionPct} className="h-1.5" />
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <div className="flex-1 max-w-[220px]">
+                <Progress value={completionPct} className="h-1.5" />
+              </div>
+              <AutosaveBadge lastSavedAt={lastSavedAt} />
+            </div>
             <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1" data-testid="onboarding-review-note">
               {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.', 'After completing the details, the Qitaat team reviews the business before public visibility.')}
             </p>
@@ -752,14 +817,16 @@ const Onboarding = () => {
                 complete:
                   !!businessName.trim() && !!businessNameEn.trim() && !!usernameOk &&
                   unifiedValid && emailValid && crValid,
+                progress: identityProgress,
               },
               classification: {
                 complete:
                   taxonomyStatus === 'ok'
                     ? (!!taxonomy.entityTypeCategoryId && taxonomy.primaryActivityCategoryIds.length > 0)
                     : false,
+                progress: classificationProgress,
               },
-              address: { complete: !!regionId },
+              address: { complete: !!regionId, progress: addressProgress },
             }}
             identity={(
               <div className="space-y-5">
@@ -783,9 +850,20 @@ const Onboarding = () => {
                 </div>
                 <UsernamePicker isRTL={isRTL} required
                   label={bi('اسم المستخدم (رابط الملف العام)', 'Username (public profile URL)')}
-                  value={username} onChange={setUsername}
+                  value={username}
+                  onChange={(v) => { setUsername(v); setUsernameTouched(true); }}
                   onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
                   excludeUserId={user?.id ?? null} placeholder="my-business" />
+                {usernameSuggestion && (
+                  <button
+                    type="button"
+                    onClick={() => { setUsername(usernameSuggestion); setUsernameTouched(true); }}
+                    className="text-[11px] text-emerald-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    {bi('اقتراح:', 'Suggestion:')} <span className="font-mono">{usernameSuggestion}</span>
+                  </button>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs">
@@ -908,6 +986,7 @@ const Onboarding = () => {
     return (
       <AuthLayout>
         <div className="space-y-6">
+          {accountType === 'business' && <WizardStepper current="manager" completed={{ business: true }} />}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-gold/10 to-emerald-500/10 border border-gold/20">
               <User className="w-6 h-6 text-gold" />
@@ -919,7 +998,7 @@ const Onboarding = () => {
             </h2>
             {accountType === 'business' && (
               <p className="text-xs text-muted-foreground">
-                {bi('الخطوة 2 من 3 — مسؤول المنشأة الرئيسي', 'Step 2 of 3 — primary entity manager')}
+                {bi('مسؤول المنشأة الرئيسي', 'Primary entity manager')}
               </p>
             )}
             <Progress value={completionPct} className="h-1.5" />
@@ -1023,6 +1102,7 @@ const Onboarding = () => {
     return (
       <AuthLayout>
         <div className="space-y-6">
+          <WizardStepper current="documents" completed={{ business: true, manager: true }} />
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-gold/10 border border-emerald-500/20">
               <FileText className="w-6 h-6 text-emerald-600" />
@@ -1031,7 +1111,7 @@ const Onboarding = () => {
               {bi('مستندات التوثيق', 'Verification Documents')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {bi('الخطوة 3 من 3 — يمكنك تخطي هذه الخطوة وإضافة المستندات لاحقاً', 'Step 3 of 3 — you can skip and add documents later')}
+              {bi('يمكنك تخطي هذه الخطوة وإضافة المستندات لاحقاً', 'You can skip and add documents later')}
             </p>
           </div>
 

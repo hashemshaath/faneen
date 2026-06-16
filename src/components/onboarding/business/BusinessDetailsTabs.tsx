@@ -12,13 +12,16 @@
  */
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Check, AlertCircle } from 'lucide-react';
+import { Check, Building2, Tags, MapPin } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 export type BusinessTabKey = 'identity' | 'classification' | 'address';
 
-interface TabState { complete: boolean }
+interface TabState {
+  complete: boolean;
+  /** 0-100 — controls the thin progress bar under the tab label. */
+  progress?: number;
+}
 
 interface Props {
   active: BusinessTabKey;
@@ -36,33 +39,61 @@ export const BusinessDetailsTabs: React.FC<Props> = ({
 }) => {
   const { isRTL } = useLanguage();
 
-  const trigger = (key: BusinessTabKey, ar: string, en: string) => {
+  const ICONS: Record<BusinessTabKey, typeof Building2> = {
+    identity: Building2,
+    classification: Tags,
+    address: MapPin,
+  };
+
+  const trigger = (
+    key: BusinessTabKey,
+    ar: string,
+    en: string,
+    num: string,
+  ) => {
     const s = states[key];
+    const Icon = ICONS[key];
+    const pct = Math.max(0, Math.min(100, s.progress ?? (s.complete ? 100 : 0)));
     return (
-      <TabsTrigger value={key} className="flex-1 gap-1.5 text-xs sm:text-sm">
-        {s.complete
-          ? <Check className="w-3.5 h-3.5 text-emerald-600" />
-          : <AlertCircle className="w-3.5 h-3.5 text-muted-foreground" />}
-        <span>{tt(isRTL, ar, en)}</span>
-        {!s.complete && (
-          <Badge variant="outline" className="text-[9px] px-1 h-4">
-            {tt(isRTL, 'غير مكتمل', 'incomplete')}
-          </Badge>
-        )}
+      <TabsTrigger
+        value={key}
+        className="flex-1 flex-col items-stretch gap-1 px-2 py-2 h-auto data-[state=active]:bg-background data-[state=active]:shadow-sm"
+      >
+        <span className="flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+          <span
+            className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-colors ${
+              s.complete
+                ? 'bg-emerald-500 text-white'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {s.complete ? <Check className="w-3 h-3" /> : num}
+          </span>
+          <Icon className="w-3.5 h-3.5 opacity-70" />
+          <span className="font-medium">{tt(isRTL, ar, en)}</span>
+        </span>
+        <span className="h-1 w-full rounded-full bg-muted overflow-hidden">
+          <span
+            className={`block h-full transition-all duration-500 ${
+              s.complete ? 'bg-emerald-500' : 'bg-gold'
+            }`}
+            style={{ width: `${pct}%` }}
+          />
+        </span>
       </TabsTrigger>
     );
   };
 
   return (
     <Tabs value={active} onValueChange={(v) => onChange(v as BusinessTabKey)} className="w-full">
-      <TabsList className="w-full grid grid-cols-3 h-auto p-1">
-        {trigger('identity', '١. الهوية', '1. Identity')}
-        {trigger('classification', '٢. التصنيف', '2. Classification')}
-        {trigger('address', '٣. العنوان والفروع', '3. Address & Branches')}
+      <TabsList className="w-full grid grid-cols-3 h-auto p-1 gap-1 bg-muted/40 rounded-xl">
+        {trigger('identity', 'الهوية', 'Identity', '1')}
+        {trigger('classification', 'التصنيف', 'Classification', '2')}
+        {trigger('address', 'العنوان والفروع', 'Address', '3')}
       </TabsList>
-      <TabsContent value="identity" className="mt-4 space-y-4">{identity}</TabsContent>
-      <TabsContent value="classification" className="mt-4">{classification}</TabsContent>
-      <TabsContent value="address" className="mt-4">{address}</TabsContent>
+      <TabsContent value="identity" className="mt-4 space-y-4 animate-fade-in">{identity}</TabsContent>
+      <TabsContent value="classification" className="mt-4 animate-fade-in">{classification}</TabsContent>
+      <TabsContent value="address" className="mt-4 animate-fade-in">{address}</TabsContent>
     </Tabs>
   );
 };
