@@ -49,6 +49,8 @@ import { normalizeOnboardingTaxonomyDraft } from '@/modules/taxonomy/components/
 import { BusinessDetailsTabs, type BusinessTabKey } from '@/components/onboarding/business/BusinessDetailsTabs';
 import { ClassificationTab } from '@/components/onboarding/business/ClassificationTab';
 import { AddressTab, type BranchDraft } from '@/components/onboarding/business/AddressTab';
+import { WizardStepper } from '@/components/onboarding/business/WizardStepper';
+import { AutosaveBadge } from '@/components/onboarding/business/AutosaveBadge';
 import { upsertPrimaryAddress } from '@/modules/addresses';
 import type { NationalAddressValue } from '@/modules/addresses/components/NationalAddressForm';
 
