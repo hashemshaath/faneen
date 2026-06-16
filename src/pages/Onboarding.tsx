@@ -841,9 +841,9 @@ const Onboarding = () => {
               address: { complete: !!regionId, progress: addressProgress },
             }}
             identity={(
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {/* Section: Names */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-3">
                   <header className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                       <FileSignature className="w-3.5 h-3.5" />
@@ -886,7 +886,7 @@ const Onboarding = () => {
                 </section>
 
                 {/* Section: Public identity (username) */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-2">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-2">
                   <header className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-gold/10 text-gold flex items-center justify-center">
                       <AtSign className="w-3.5 h-3.5" />
@@ -915,7 +915,7 @@ const Onboarding = () => {
                 </section>
 
                 {/* Section: Contact + legal numbers */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-3">
                   <header className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                       <Hash className="w-3.5 h-3.5" />
@@ -991,8 +991,9 @@ const Onboarding = () => {
                   </div>
                 </section>
 
-                <div className="flex justify-end">
-                  <Button type="button" variant="outline" onClick={() => setBusinessTab('classification')}>
+                <div className="flex justify-end pt-1">
+                  <Button type="button" variant="hero" size="sm" className="h-10 px-4"
+                    onClick={() => setBusinessTab('classification')}>
                     {bi('التالي: التصنيف', 'Next: Classification')}
                     <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
                   </Button>
@@ -1000,7 +1001,7 @@ const Onboarding = () => {
               </div>
             )}
             classification={(
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <ClassificationTab
                   value={taxonomy}
                   onChange={setTaxonomy}
@@ -1013,11 +1014,13 @@ const Onboarding = () => {
                     </p>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <Button type="button" variant="ghost" onClick={() => setBusinessTab('identity')}>
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40 mt-1">
+                  <Button type="button" variant="ghost" size="sm" className="h-10"
+                    onClick={() => setBusinessTab('identity')}>
                     {bi('السابق', 'Back')}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setBusinessTab('address')}>
+                  <Button type="button" variant="hero" size="sm" className="h-10 px-4"
+                    onClick={() => setBusinessTab('address')}>
                     {bi('التالي: العنوان', 'Next: Address')}
                     <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
                   </Button>
@@ -1025,7 +1028,7 @@ const Onboarding = () => {
               </div>
             )}
             address={(
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <AddressTab
                   primary={primaryAddress}
                   onPrimaryChange={setPrimaryAddress}
@@ -1035,11 +1038,13 @@ const Onboarding = () => {
                   branches={branches}
                   onBranchesChange={setBranches}
                 />
-                <div className="flex justify-between">
-                  <Button type="button" variant="ghost" onClick={() => setBusinessTab('classification')}>
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40 mt-1">
+                  <Button type="button" variant="ghost" size="sm" className="h-10"
+                    onClick={() => setBusinessTab('classification')}>
                     {bi('السابق', 'Back')}
                   </Button>
-                  <Button onClick={onContinue} disabled={!allValid || loading} variant="hero">
+                  <Button onClick={onContinue} disabled={!allValid || loading} variant="hero"
+                    size="sm" className="h-10 px-4">
                     {bi('متابعة لتسجيل مدير الحساب', 'Continue to account manager')}
                     <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
                   </Button>
