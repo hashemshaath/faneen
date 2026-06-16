@@ -61,6 +61,8 @@ interface Props {
   hideEntityType?: boolean;
   /** Compact mode shrinks spacing for tight onboarding card. */
   compact?: boolean;
+  /** Free-text filter applied to primary + secondary chip labels (AR+EN). */
+  filter?: string;
 }
 
 const t = (rtl: boolean, ar: string, en: string) => (rtl ? ar : en);
@@ -69,9 +71,18 @@ const labelOf = (cat: TaxonomyCategory, isRTL: boolean): string =>
         : (cat.name_en || cat.name_ar || cat.slug);
 
 export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
-  value, onChange, onLoadStatusChange, hideEntityType, compact,
+  value, onChange, onLoadStatusChange, hideEntityType, compact, filter,
 }) => {
   const { isRTL } = useLanguage();
+  const q = (filter ?? '').trim().toLowerCase();
+  const matchesFilter = (c: TaxonomyCategory): boolean => {
+    if (!q) return true;
+    return (
+      (c.name_ar ?? '').toLowerCase().includes(q) ||
+      (c.name_en ?? '').toLowerCase().includes(q) ||
+      (c.slug ?? '').toLowerCase().includes(q)
+    );
+  };
 
   const entityTypesQ = useQuery({
     queryKey: ['tx:entity-types'],
@@ -265,28 +276,45 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
             <div
               role="group"
               aria-label={t(isRTL, 'الأنشطة الرئيسية', 'Primary activities')}
-              className="flex flex-wrap gap-2"
+              className="grid grid-cols-2 sm:grid-cols-3 gap-2"
             >
-              {primaryOptions.map((p) => {
-                const active = selectedPrimaryIds.includes(p.id);
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => togglePrimary(p.id)}
-                    aria-pressed={active}
-                    className={
-                      'text-xs rounded-full border px-3 py-1.5 transition-colors hover-lift inline-flex items-center gap-1 ' +
-                      (active
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background hover:bg-muted')
-                    }
-                  >
-                    {active && <Check className="w-3 h-3" />}
-                    {labelOf(p, isRTL)}
-                  </button>
-                );
-              })}
+              {primaryOptions
+                .filter((p) => selectedPrimaryIds.includes(p.id) || matchesFilter(p))
+                .map((p) => {
+                  const active = selectedPrimaryIds.includes(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => togglePrimary(p.id)}
+                      aria-pressed={active}
+                      className={
+                        'group relative text-xs rounded-xl border px-3 py-2.5 transition-all hover-lift flex items-center gap-2 text-start ' +
+                        (active
+                          ? 'bg-primary/10 border-primary text-foreground shadow-sm ring-1 ring-primary/30'
+                          : 'bg-background hover:bg-muted hover:border-primary/40')
+                      }
+                    >
+                      <span
+                        className={
+                          'shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-md border transition-colors ' +
+                          (active
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'bg-background border-border')
+                        }
+                        aria-hidden="true"
+                      >
+                        {active && <Check className="w-3 h-3" />}
+                      </span>
+                      <span className="truncate font-medium">{labelOf(p, isRTL)}</span>
+                    </button>
+                  );
+                })}
+              {q && primaryOptions.filter((p) => !selectedPrimaryIds.includes(p.id) && matchesFilter(p)).length === 0 && (
+                <p className="col-span-full text-[11px] text-muted-foreground py-2">
+                  {t(isRTL, 'لا نتائج مطابقة للبحث.', 'No matches for your search.')}
+                </p>
+              )}
             </div>
             {selectedPrimaryIds.length === 0 && (
               <p className="text-[11px] text-amber-600">
@@ -368,27 +396,42 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                               </p>
                             ) : (
                               <>
-                                <div className="flex flex-wrap gap-2">
-                                  {children.map((c) => {
-                                    const active = value.secondaryActivityCategoryIds.includes(c.id);
+                                {(() => {
+                                  const visible = children.filter(
+                                    (c) => value.secondaryActivityCategoryIds.includes(c.id) || matchesFilter(c),
+                                  );
+                                  if (visible.length === 0) {
                                     return (
-                                      <button
-                                        key={c.id}
-                                        type="button"
-                                        onClick={() => toggleSecondary(c.id)}
-                                        aria-pressed={active}
-                                        className={
-                                          'text-[11px] rounded-full border px-2.5 py-1 transition-colors ' +
-                                          (active
-                                            ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'bg-background hover:bg-muted')
-                                        }
-                                      >
-                                        {labelOf(c, isRTL)}
-                                      </button>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        {t(isRTL, 'لا نتائج مطابقة للبحث.', 'No matches for your search.')}
+                                      </p>
                                     );
-                                  })}
-                                </div>
+                                  }
+                                  return (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {visible.map((c) => {
+                                        const active = value.secondaryActivityCategoryIds.includes(c.id);
+                                        return (
+                                          <button
+                                            key={c.id}
+                                            type="button"
+                                            onClick={() => toggleSecondary(c.id)}
+                                            aria-pressed={active}
+                                            className={
+                                              'text-[11px] rounded-full border px-2.5 py-1 transition-all inline-flex items-center gap-1 ' +
+                                              (active
+                                                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                                : 'bg-background hover:bg-primary/5 hover:border-primary/40')
+                                            }
+                                          >
+                                            {active && <Check className="w-2.5 h-2.5" />}
+                                            {labelOf(c, isRTL)}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })()}
                                 {primaryHasChildren(pid) && count === 0 && (
                                   <p className="text-[11px] text-amber-600 mt-2">
                                     {t(isRTL,
