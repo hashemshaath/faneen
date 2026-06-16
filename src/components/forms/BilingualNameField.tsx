@@ -4,7 +4,7 @@
  * Three inputs: Arabic name, English name, optional username (@handle).
  * Auto-fills `full_name` from AR or EN when consumers need a single string.
  */
-import React, { useState } from 'react';
+import React, { useId, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User, Languages, Building2, Loader2 } from 'lucide-react';
@@ -78,6 +78,14 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   const { isRTL } = useLanguage();
   const { settings } = useAiSettings();
   const [translating, setTranslating] = useState<'ar' | 'en' | null>(null);
+  const [touched, setTouched] = useState<{ ar?: boolean; en?: boolean }>({});
+  const uid = useId();
+  const arId = `${uid}-name-ar`;
+  const enId = `${uid}-name-en`;
+  const arErrId = `${arId}-err`;
+  const enErrId = `${enId}-err`;
+  const arHintId = `${arId}-hint`;
+  const enHintId = `${enId}-hint`;
   const handleTranslate = async (from: 'ar' | 'en') => {
     const text = (from === 'ar' ? value.full_name_ar : value.full_name_en) || '';
     if (!text.trim()) {
@@ -134,12 +142,38 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
     }
   };
 
+  // Soft, in-field validation (does not block submit — parent `errors` still wins).
+  const arRaw = value.full_name_ar || '';
+  const enRaw = value.full_name_en || '';
+  const arTrim = arRaw.trim();
+  const enTrim = enRaw.trim();
+  const ARABIC_RE = /[\u0600-\u06FF]/;
+  const LATIN_RE = /[A-Za-z]/;
+  const DIGIT_RE = /\d/;
+  const localArError = useMemo(() => {
+    if (!touched.ar || !arTrim) return null;
+    if (arTrim.length < 2) return isRTL ? 'الاسم قصير جدًا (حرفان على الأقل)' : 'Name too short (min 2 chars)';
+    if (!ARABIC_RE.test(arTrim)) return isRTL ? 'يجب أن يحتوي الاسم على حروف عربية' : 'Must contain Arabic letters';
+    if (DIGIT_RE.test(arTrim)) return isRTL ? 'لا يُسمح بالأرقام في الاسم' : 'Digits are not allowed in the name';
+    return null;
+  }, [touched.ar, arTrim, isRTL]);
+  const localEnError = useMemo(() => {
+    if (!touched.en || !enTrim) return null;
+    if (enTrim.length < 2) return isRTL ? 'الاسم قصير جدًا (حرفان على الأقل)' : 'Name too short (min 2 chars)';
+    if (!LATIN_RE.test(enTrim)) return isRTL ? 'يجب أن يحتوي الاسم على حروف لاتينية (A-Z)' : 'Must contain Latin letters (A–Z)';
+    if (DIGIT_RE.test(enTrim)) return isRTL ? 'لا يُسمح بالأرقام في الاسم' : 'Digits are not allowed in the name';
+    return null;
+  }, [touched.en, enTrim, isRTL]);
+  const arError = errors?.full_name_ar || localArError;
+  const enError = errors?.full_name_en || localEnError;
+  const previewLabel = isRTL ? 'معاينة' : 'Preview';
+
   return (
-    <div className={cn('flex flex-col gap-4', className)}>
+    <div className={cn('flex flex-col gap-4', className)} role="group" aria-label={isRTL ? 'حقول الاسم' : 'Name fields'}>
       <div className="space-y-2 min-w-0">
-        <Label className="text-xs font-semibold flex items-center gap-2">
+        <Label htmlFor={arId} className="text-xs font-semibold flex flex-wrap items-center gap-2">
           <span className="truncate">{labelAr}</span>
-          {required && <span className="text-destructive leading-none">*</span>}
+          {required && <span className="text-destructive leading-none" aria-hidden="true">*</span>}
           <span
             aria-hidden="true"
             className="ms-auto inline-flex items-center justify-center h-5 min-w-[26px] px-1.5 rounded-md bg-muted text-[10px] font-bold tracking-wide text-muted-foreground tech-content"
@@ -160,8 +194,17 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
           )}
         </Label>
         <div className="relative">
-          <FieldIcon className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" />
+          <FieldIcon aria-hidden="true" className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" />
           <Input
+            id={arId}
+            name="full_name_ar"
+            lang="ar"
+            autoComplete="given-name"
+            inputMode="text"
+            aria-required={required || undefined}
+            aria-invalid={arError ? true : undefined}
+            aria-describedby={cn(arError ? arErrId : '', arTrim ? arHintId : '').trim() || undefined}
+            onBlur={() => setTouched((t) => ({ ...t, ar: true }))}
             value={value.full_name_ar || ''}
             onChange={(e) => update({ full_name_ar: e.target.value })}
             disabled={disabled}
@@ -171,17 +214,27 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
             className={cn(
               'h-12 ps-10 rounded-xl text-sm placeholder:text-muted-foreground/50',
               'transition-colors focus-visible:ring-2 focus-visible:ring-primary/30',
-              errors?.full_name_ar && 'border-destructive focus-visible:ring-destructive/30',
+              arError && 'border-destructive focus-visible:ring-destructive/30',
             )}
           />
         </div>
-        {errors?.full_name_ar && <p className="text-xs text-destructive">{errors.full_name_ar}</p>}
+        {arTrim && !arError && (
+          <p id={arHintId} dir="rtl" className="text-[11px] text-muted-foreground truncate">
+            <span className="me-1 opacity-70">{previewLabel}:</span>
+            <span className="font-medium text-foreground">{arTrim}</span>
+          </p>
+        )}
+        {arError && (
+          <p id={arErrId} role="alert" aria-live="polite" className="text-xs text-destructive">
+            {arError}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2 min-w-0">
-        <Label className="text-xs font-semibold flex items-center gap-2">
+        <Label htmlFor={enId} className="text-xs font-semibold flex flex-wrap items-center gap-2">
           <span className="truncate">{labelEn}</span>
-          {required && <span className="text-destructive leading-none">*</span>}
+          {required && <span className="text-destructive leading-none" aria-hidden="true">*</span>}
           <span
             aria-hidden="true"
             className="ms-auto inline-flex items-center justify-center h-5 min-w-[26px] px-1.5 rounded-md bg-muted text-[10px] font-bold tracking-wide text-muted-foreground tech-content"
@@ -202,8 +255,17 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
           )}
         </Label>
         <div className="relative">
-          <FieldIcon className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" />
+          <FieldIcon aria-hidden="true" className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" />
           <Input
+            id={enId}
+            name="full_name_en"
+            lang="en"
+            autoComplete="given-name"
+            inputMode="text"
+            aria-required={required || undefined}
+            aria-invalid={enError ? true : undefined}
+            aria-describedby={cn(enError ? enErrId : '', enTrim ? enHintId : '').trim() || undefined}
+            onBlur={() => setTouched((t) => ({ ...t, en: true }))}
             value={value.full_name_en || ''}
             onChange={(e) => update({ full_name_en: e.target.value })}
             disabled={disabled}
@@ -213,11 +275,21 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
             className={cn(
               'h-12 ps-10 rounded-xl text-sm placeholder:text-muted-foreground/50',
               'transition-colors focus-visible:ring-2 focus-visible:ring-primary/30',
-              errors?.full_name_en && 'border-destructive focus-visible:ring-destructive/30',
+              enError && 'border-destructive focus-visible:ring-destructive/30',
             )}
           />
         </div>
-        {errors?.full_name_en && <p className="text-xs text-destructive">{errors.full_name_en}</p>}
+        {enTrim && !enError && (
+          <p id={enHintId} dir="ltr" className="text-[11px] text-muted-foreground truncate">
+            <span className="me-1 opacity-70">{previewLabel}:</span>
+            <span className="font-medium text-foreground">{enTrim}</span>
+          </p>
+        )}
+        {enError && (
+          <p id={enErrId} role="alert" aria-live="polite" className="text-xs text-destructive">
+            {enError}
+          </p>
+        )}
       </div>
 
       {showUsername && (
