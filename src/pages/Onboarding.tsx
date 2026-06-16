@@ -845,6 +845,8 @@ const Onboarding = () => {
                     tone="emerald"
                     title={bi('اسم المنشأة', 'Business name')}
                     description={bi('كما في السجل التجاري', 'Exactly as in the CR')}
+                    required
+                    requiredLabel={bi('إلزامي', 'Required')}
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
@@ -885,6 +887,8 @@ const Onboarding = () => {
                     tone="gold"
                     title={bi('الهوية العامة', 'Public identity')}
                     description={<>qitaat.com/<span className="font-mono">{username || 'my-business'}</span></>}
+                    required
+                    requiredLabel={bi('إلزامي', 'Required')}
                   />
                   <UsernamePicker isRTL={isRTL} required
                     label={bi('اسم المستخدم', 'Username')}
@@ -911,6 +915,8 @@ const Onboarding = () => {
                     tone="emerald"
                     title={bi('الاتصال والأرقام الرسمية', 'Contact & official numbers')}
                     description={bi('تُعرض في الملف العام وفي العقود', 'Shown on public profile and contracts')}
+                    required
+                    requiredLabel={bi('إلزامي', 'Required')}
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
