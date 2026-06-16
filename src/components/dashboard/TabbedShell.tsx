@@ -90,17 +90,24 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
           <PageHeader icon={Icon} title={headerTitle} subtitle={headerSubtitle} tone="primary" />
 
           <Tabs value={active} onValueChange={onChange} className="space-y-4">
-            <TabsList className="flex flex-wrap h-auto justify-start gap-1 overflow-x-auto">
-              {tabs.map((t) => {
-                const TabIcon = t.icon;
-                return (
-                  <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
-                    {TabIcon ? <TabIcon className="size-3.5" /> : null}
-                    {isRTL ? t.label.ar : t.label.en}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
+            {/* Sticky on mobile for easier section switching while scrolling long tab content. */}
+            <div className="sticky top-0 z-20 -mx-2 px-2 py-1 bg-background/85 backdrop-blur-md border-b border-border/30 md:static md:border-0 md:bg-transparent md:backdrop-blur-0 md:p-0 md:mx-0">
+              <TabsList className="flex flex-nowrap md:flex-wrap h-auto justify-start gap-1 overflow-x-auto no-scrollbar w-full">
+                {tabs.map((t) => {
+                  const TabIcon = t.icon;
+                  return (
+                    <TabsTrigger
+                      key={t.key}
+                      value={t.key}
+                      className="gap-1.5 min-h-11 px-3 whitespace-nowrap shrink-0"
+                    >
+                      {TabIcon ? <TabIcon className="size-3.5" /> : null}
+                      {isRTL ? t.label.ar : t.label.en}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </div>
 
             {tabs.map((t) => {
               const Comp = lazyMap[t.key];
