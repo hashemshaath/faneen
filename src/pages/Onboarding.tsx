@@ -14,7 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import {
   User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight,
-  AlertCircle, Mail, MapPin, FileText, Upload, X, Sparkles,
+  AlertCircle, Mail, MapPin, FileText, Upload, X, Sparkles, AtSign, Hash, FileSignature,
 } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -793,10 +793,10 @@ const Onboarding = () => {
           <WizardStepper current="business" />
           <div className="space-y-2 text-center">
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {bi('بيانات المنشأة', 'Business Information')}
+              {bi('المعلومات', 'Information')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {bi('سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Register business data before the account manager')}
+              {bi('سجّل معلومات منشأتك قبل تسجيل مدير الحساب', 'Register your business information before the account manager')}
             </p>
             <div className="flex items-center justify-center gap-3 pt-1">
               <div className="flex-1 max-w-[220px]">
@@ -829,80 +829,156 @@ const Onboarding = () => {
               address: { complete: !!regionId, progress: addressProgress },
             }}
             identity={(
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {bi('الاسم كما في السجل التجاري (عربي)', 'Name as in CR (Arabic)')}
-                      <span className="text-destructive ms-1">*</span>
-                    </Label>
-                    <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)}
-                      dir="rtl" lang="ar" placeholder="مثال: شركة الواجهات الحديثة" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {bi('الاسم كما في السجل التجاري (إنجليزي)', 'Name as in CR (English)')}
-                      <span className="text-destructive ms-1">*</span>
-                    </Label>
-                    <Input value={businessNameEn} onChange={(e) => setBusinessNameEn(e.target.value)}
-                      dir="ltr" lang="en" placeholder="e.g. Modern Facades Co." />
-                  </div>
-                </div>
-                <UsernamePicker isRTL={isRTL} required
-                  label={bi('اسم المستخدم (رابط الملف العام)', 'Username (public profile URL)')}
-                  value={username}
-                  onChange={(v) => { setUsername(v); setUsernameTouched(true); }}
-                  onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
-                  excludeUserId={user?.id ?? null} placeholder="my-business" />
-                {usernameSuggestion && (
-                  <button
-                    type="button"
-                    onClick={() => { setUsername(usernameSuggestion); setUsernameTouched(true); }}
-                    className="text-[11px] text-emerald-600 hover:underline inline-flex items-center gap-1"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    {bi('اقتراح:', 'Suggestion:')} <span className="font-mono">{usernameSuggestion}</span>
-                  </button>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {bi('الرقم الموحد للمنشأة (700)', 'Unified Entity Number (700)')}
-                      <span className="text-destructive ms-1">*</span>
-                    </Label>
-                    <Input value={unifiedNumber}
-                      onChange={(e) => setUnifiedNumber(onlyDigits(e.target.value, 10))}
-                      inputMode="numeric" pattern="[0-9]*" placeholder="7XXXXXXXXX" dir="ltr" maxLength={10}
-                      className={`tech-content ${unifiedNumber && !unifiedValid ? 'border-destructive' : ''}`} />
-                    <p className={`text-[11px] ${unifiedNumber && !unifiedValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
-                      {bi('10 أرقام تبدأ بـ 7', '10 digits starting with 7')} ({unifiedNumber.length}/10)
-                    </p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {bi('البريد الإلكتروني للمنشأة', 'Business Email')}
-                      <span className="text-destructive ms-1">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
-                      <Input value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)}
-                        type="email" dir="ltr" placeholder="info@company.com" style={{ paddingInlineStart: '40px' }}
-                        className={businessEmail && !emailValid ? 'border-destructive' : ''} />
+              <div className="space-y-4">
+                {/* Section: Names */}
+                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+                  <header className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                      <FileSignature className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-foreground">{bi('اسم المنشأة', 'Business name')}</h3>
+                      <p className="text-[10px] text-muted-foreground">{bi('كما في السجل التجاري', 'Exactly as in the CR')}</p>
+                    </div>
+                  </header>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">
+                        {bi('بالعربي', 'Arabic')}
+                        <span className="text-destructive ms-1">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)}
+                          dir="rtl" lang="ar" placeholder={bi('مثال: شركة الواجهات الحديثة', 'Example in Arabic')}
+                          style={{ paddingInlineEnd: '34px' }} />
+                        {businessName.trim() && (
+                          <Check className="absolute top-3 w-4 h-4 text-emerald-500" style={{ insetInlineEnd: '10px' }} />
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">
+                        {bi('بالإنجليزي', 'English')}
+                        <span className="text-destructive ms-1">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input value={businessNameEn} onChange={(e) => setBusinessNameEn(e.target.value)}
+                          dir="ltr" lang="en" placeholder="e.g. Modern Facades Co."
+                          style={{ paddingInlineEnd: '34px' }} />
+                        {businessNameEn.trim() && (
+                          <Check className="absolute top-3 w-4 h-4 text-emerald-500" style={{ insetInlineEnd: '10px' }} />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">
-                    {bi('رقم السجل التجاري', 'Commercial Registration (CR)')}
-                    <span className="text-muted-foreground ms-1">({bi('اختياري', 'optional')})</span>
-                  </Label>
-                  <Input value={crNumber} onChange={(e) => setCrNumber(onlyDigits(e.target.value, 10))}
-                    inputMode="numeric" pattern="[0-9]*" placeholder="1010XXXXXX" dir="ltr" maxLength={10}
-                    className={`tech-content ${crNumber && !crValid ? 'border-destructive' : ''}`} />
-                  <p className={`text-[11px] ${crNumber && !crValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
-                    {bi('10 أرقام — أرقام فقط', '10 digits — numbers only')} ({crNumber.length}/10)
-                  </p>
-                </div>
+                </section>
+
+                {/* Section: Public identity (username) */}
+                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-2">
+                  <header className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-gold/10 text-gold flex items-center justify-center">
+                      <AtSign className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-foreground">{bi('الهوية العامة', 'Public identity')}</h3>
+                      <p className="text-[10px] text-muted-foreground">qitaat.com/<span className="font-mono">{username || 'my-business'}</span></p>
+                    </div>
+                  </header>
+                  <UsernamePicker isRTL={isRTL} required
+                    label={bi('اسم المستخدم', 'Username')}
+                    value={username}
+                    onChange={(v) => { setUsername(v); setUsernameTouched(true); }}
+                    onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
+                    excludeUserId={user?.id ?? null} placeholder="my-business" />
+                  {usernameSuggestion && (
+                    <button
+                      type="button"
+                      onClick={() => { setUsername(usernameSuggestion); setUsernameTouched(true); }}
+                      className="text-[11px] text-emerald-600 hover:underline inline-flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {bi('اقتراح:', 'Suggestion:')} <span className="font-mono">{usernameSuggestion}</span>
+                    </button>
+                  )}
+                </section>
+
+                {/* Section: Contact + legal numbers */}
+                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+                  <header className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                      <Hash className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-foreground">{bi('الاتصال والأرقام الرسمية', 'Contact & official numbers')}</h3>
+                      <p className="text-[10px] text-muted-foreground">{bi('تُعرض في الملف العام وفي العقود', 'Shown on public profile and contracts')}</p>
+                    </div>
+                  </header>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">
+                        {bi('الرقم الموحد (700)', 'Unified Number (700)')}
+                        <span className="text-destructive ms-1">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input value={unifiedNumber}
+                          onChange={(e) => setUnifiedNumber(onlyDigits(e.target.value, 10))}
+                          inputMode="numeric" pattern="[0-9]*" placeholder="7XXXXXXXXX" dir="ltr" maxLength={10}
+                          style={{ paddingInlineEnd: '34px' }}
+                          className={`tech-content ${unifiedNumber && !unifiedValid ? 'border-destructive' : ''}`} />
+                        {unifiedValid && (
+                          <Check className="absolute top-3 w-4 h-4 text-emerald-500" style={{ insetInlineEnd: '10px' }} />
+                        )}
+                        {unifiedNumber && !unifiedValid && (
+                          <AlertCircle className="absolute top-3 w-4 h-4 text-destructive" style={{ insetInlineEnd: '10px' }} />
+                        )}
+                      </div>
+                      <p className={`text-[11px] ${unifiedNumber && !unifiedValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
+                        {bi('10 أرقام تبدأ بـ 7', '10 digits starting with 7')} ({unifiedNumber.length}/10)
+                      </p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">
+                        {bi('البريد الإلكتروني للمنشأة', 'Business Email')}
+                        <span className="text-destructive ms-1">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
+                        <Input value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)}
+                          type="email" dir="ltr" placeholder="info@company.com"
+                          style={{ paddingInlineStart: '40px', paddingInlineEnd: '34px' }}
+                          className={businessEmail && !emailValid ? 'border-destructive' : ''} />
+                        {emailValid && (
+                          <Check className="absolute top-3 w-4 h-4 text-emerald-500" style={{ insetInlineEnd: '10px' }} />
+                        )}
+                        {businessEmail && !emailValid && (
+                          <AlertCircle className="absolute top-3 w-4 h-4 text-destructive" style={{ insetInlineEnd: '10px' }} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {bi('رقم السجل التجاري', 'Commercial Registration (CR)')}
+                      <span className="text-muted-foreground ms-1">({bi('اختياري', 'optional')})</span>
+                    </Label>
+                    <div className="relative">
+                      <Input value={crNumber} onChange={(e) => setCrNumber(onlyDigits(e.target.value, 10))}
+                        inputMode="numeric" pattern="[0-9]*" placeholder="1010XXXXXX" dir="ltr" maxLength={10}
+                        style={{ paddingInlineEnd: '34px' }}
+                        className={`tech-content ${crNumber && !crValid ? 'border-destructive' : ''}`} />
+                      {crNumber && crValid && (
+                        <Check className="absolute top-3 w-4 h-4 text-emerald-500" style={{ insetInlineEnd: '10px' }} />
+                      )}
+                      {crNumber && !crValid && (
+                        <AlertCircle className="absolute top-3 w-4 h-4 text-destructive" style={{ insetInlineEnd: '10px' }} />
+                      )}
+                    </div>
+                    <p className={`text-[11px] ${crNumber && !crValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
+                      {bi('10 أرقام — يساعد في التحقق الرسمي والظهور بشارة موثّق', '10 digits — helps with official verification and earning the verified badge')} ({crNumber.length}/10)
+                    </p>
+                  </div>
+                </section>
+
                 <div className="flex justify-end">
                   <Button type="button" variant="outline" onClick={() => setBusinessTab('classification')}>
                     {bi('التالي: التصنيف', 'Next: Classification')}
