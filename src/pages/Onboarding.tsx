@@ -790,36 +790,31 @@ const Onboarding = () => {
 
     return (
       <AuthLayout wide>
-        <div className="space-y-5 sm:space-y-6">
-          <WizardStepper current="business" />
-
-          {/* Page header — title + autosave + progress, with a thin meta row */}
-          <header className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5">
+        <div className="space-y-4 sm:space-y-5">
+          {/* Unified header card: title + autosave + percentage + stepper + thin progress */}
+          <header className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 space-y-4">
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div className="min-w-0">
-                <h2 className="font-heading font-bold text-xl sm:text-2xl text-foreground leading-tight">
+                <h2 className="font-heading font-bold text-lg sm:text-xl text-foreground leading-tight">
                   {bi('معلومات المنشأة', 'Business information')}
                 </h2>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-                  {bi('أكمل بيانات المنشأة قبل تسجيل مدير الحساب — يُحفظ تلقائياً.',
-                      'Complete your business details before the account manager — saved automatically.')}
+                <p
+                  className="text-[11px] text-muted-foreground mt-0.5"
+                  data-testid="onboarding-review-note"
+                >
+                  {bi('يُحفظ تلقائياً. يُراجع الفريق المنشأة قبل الظهور العام.',
+                      'Saved automatically. The team reviews the business before public visibility.')}
                 </p>
               </div>
-              <AutosaveBadge lastSavedAt={lastSavedAt} />
+              <div className="flex items-center gap-3 shrink-0">
+                <AutosaveBadge lastSavedAt={lastSavedAt} />
+                <span className="text-xs font-bold text-foreground tabular-nums">
+                  {completionPct}%
+                </span>
+              </div>
             </div>
-            <div className="mt-3 flex items-center gap-3">
-              <Progress value={completionPct} className="h-1.5 flex-1" />
-              <span className="text-[11px] font-semibold text-muted-foreground tabular-nums whitespace-nowrap">
-                {completionPct}%
-              </span>
-            </div>
-            <p
-              className="text-[11px] text-muted-foreground/80 leading-relaxed mt-2"
-              data-testid="onboarding-review-note"
-            >
-              {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.',
-                  'After completing the details, the Qitaat team reviews the business before public visibility.')}
-            </p>
+            <Progress value={completionPct} className="h-1" />
+            <WizardStepper current="business" />
           </header>
 
           <BusinessDetailsTabs
@@ -842,9 +837,9 @@ const Onboarding = () => {
               address: { complete: !!regionId, progress: addressProgress },
             }}
             identity={(
-              <div className="space-y-4 sm:space-y-5">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Section: Names */}
-                <section className="rounded-xl border border-border/60 bg-background p-4 sm:p-5 space-y-3">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-3">
                   <OnboardingSectionHeader
                     icon={FileSignature}
                     tone="emerald"
@@ -884,7 +879,7 @@ const Onboarding = () => {
                 </section>
 
                 {/* Section: Public identity (username) */}
-                <section className="rounded-xl border border-border/60 bg-background p-4 sm:p-5 space-y-3">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-3">
                   <OnboardingSectionHeader
                     icon={AtSign}
                     tone="gold"
@@ -910,7 +905,7 @@ const Onboarding = () => {
                 </section>
 
                 {/* Section: Contact + legal numbers */}
-                <section className="rounded-xl border border-border/60 bg-background p-4 sm:p-5 space-y-3">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-3">
                   <OnboardingSectionHeader
                     icon={Hash}
                     tone="emerald"
@@ -982,16 +977,6 @@ const Onboarding = () => {
                     </p>
                   </div>
                 </section>
-
-                <div className="sticky bottom-2 z-10 -mx-1 px-1 pt-2">
-                  <div className="flex justify-end gap-2 rounded-xl border border-border/40 bg-card/85 backdrop-blur-md p-2 shadow-sm">
-                    <Button type="button" variant="hero" className="min-h-11 px-5 flex-1 sm:flex-none"
-                      onClick={() => setBusinessTab('classification')}>
-                      {bi('التالي: التصنيف', 'Next: Classification')}
-                      <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
-                    </Button>
-                  </div>
-                </div>
               </div>
             )}
             classification={(
@@ -1008,19 +993,6 @@ const Onboarding = () => {
                     </p>
                   </div>
                 )}
-                <div className="sticky bottom-2 z-10 -mx-1 px-1 pt-2">
-                  <div className="flex items-center justify-between gap-2 rounded-xl border border-border/40 bg-card/85 backdrop-blur-md p-2 shadow-sm">
-                    <Button type="button" variant="outline" className="min-h-11 px-4"
-                      onClick={() => setBusinessTab('identity')}>
-                      {bi('السابق', 'Back')}
-                    </Button>
-                    <Button type="button" variant="hero" className="min-h-11 px-5 flex-1 sm:flex-none"
-                      onClick={() => setBusinessTab('address')}>
-                      {bi('التالي: العنوان', 'Next: Address')}
-                      <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
-                    </Button>
-                  </div>
-                </div>
               </div>
             )}
             address={(
@@ -1034,28 +1006,40 @@ const Onboarding = () => {
                   branches={branches}
                   onBranchesChange={setBranches}
                 />
-                <div className="sticky bottom-2 z-10 -mx-1 px-1 pt-2">
-                  <div className="flex items-center justify-between gap-2 rounded-xl border border-border/40 bg-card/85 backdrop-blur-md p-2 shadow-sm">
-                    <Button type="button" variant="outline" className="min-h-11 px-4"
-                      onClick={() => setBusinessTab('classification')}>
-                      {bi('السابق', 'Back')}
-                    </Button>
-                    <Button onClick={onContinue} disabled={!allValid || loading} variant="hero"
-                      className="min-h-11 px-5 flex-1 sm:flex-none">
-                      {bi('متابعة لتسجيل مدير الحساب', 'Continue')}
-                      <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
-                    </Button>
-                  </div>
-                </div>
               </div>
             )}
           />
 
-          <div className="flex justify-start pt-1">
-            <button onClick={() => setStep('intent')}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              {bi('→', '←')} {bi('رجوع للخطوة السابقة', 'Back to previous step')}
-            </button>
+          {/* Single shared sticky navigation bar (replaces the 3 per-tab bars) */}
+          <div className="sticky bottom-2 z-20 -mx-1 px-1">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-card/90 backdrop-blur-md p-2 shadow-md">
+              <Button type="button" variant="ghost" size="sm" className="min-h-10 px-3 text-xs text-muted-foreground"
+                onClick={() => {
+                  if (businessTab === 'identity') setStep('intent');
+                  else if (businessTab === 'classification') setBusinessTab('identity');
+                  else setBusinessTab('classification');
+                }}>
+                <ArrowRight className={`w-3.5 h-3.5 me-1 ${bi('', 'rotate-180')}`} />
+                {businessTab === 'identity'
+                  ? bi('رجوع', 'Back')
+                  : bi('السابق', 'Previous')}
+              </Button>
+              {businessTab !== 'address' ? (
+                <Button type="button" variant="hero" className="min-h-11 px-5 flex-1 sm:flex-none"
+                  onClick={() => setBusinessTab(businessTab === 'identity' ? 'classification' : 'address')}>
+                  {businessTab === 'identity'
+                    ? bi('التالي: التصنيف', 'Next: Classification')
+                    : bi('التالي: العنوان', 'Next: Address')}
+                  <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                </Button>
+              ) : (
+                <Button onClick={onContinue} disabled={!allValid || loading} variant="hero"
+                  className="min-h-11 px-5 flex-1 sm:flex-none">
+                  {bi('متابعة لمدير الحساب', 'Continue')}
+                  <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </AuthLayout>
