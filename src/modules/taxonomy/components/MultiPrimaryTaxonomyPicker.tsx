@@ -396,27 +396,42 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                               </p>
                             ) : (
                               <>
-                                <div className="flex flex-wrap gap-2">
-                                  {children.map((c) => {
-                                    const active = value.secondaryActivityCategoryIds.includes(c.id);
+                                {(() => {
+                                  const visible = children.filter(
+                                    (c) => value.secondaryActivityCategoryIds.includes(c.id) || matchesFilter(c),
+                                  );
+                                  if (visible.length === 0) {
                                     return (
-                                      <button
-                                        key={c.id}
-                                        type="button"
-                                        onClick={() => toggleSecondary(c.id)}
-                                        aria-pressed={active}
-                                        className={
-                                          'text-[11px] rounded-full border px-2.5 py-1 transition-colors ' +
-                                          (active
-                                            ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'bg-background hover:bg-muted')
-                                        }
-                                      >
-                                        {labelOf(c, isRTL)}
-                                      </button>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        {t(isRTL, 'لا نتائج مطابقة للبحث.', 'No matches for your search.')}
+                                      </p>
                                     );
-                                  })}
-                                </div>
+                                  }
+                                  return (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {visible.map((c) => {
+                                        const active = value.secondaryActivityCategoryIds.includes(c.id);
+                                        return (
+                                          <button
+                                            key={c.id}
+                                            type="button"
+                                            onClick={() => toggleSecondary(c.id)}
+                                            aria-pressed={active}
+                                            className={
+                                              'text-[11px] rounded-full border px-2.5 py-1 transition-all inline-flex items-center gap-1 ' +
+                                              (active
+                                                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                                : 'bg-background hover:bg-primary/5 hover:border-primary/40')
+                                            }
+                                          >
+                                            {active && <Check className="w-2.5 h-2.5" />}
+                                            {labelOf(c, isRTL)}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })()}
                                 {primaryHasChildren(pid) && count === 0 && (
                                   <p className="text-[11px] text-amber-600 mt-2">
                                     {t(isRTL,
