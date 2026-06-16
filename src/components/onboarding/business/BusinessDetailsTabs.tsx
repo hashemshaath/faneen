@@ -2,7 +2,7 @@
  * Tabs container for the business onboarding details step.
  *
  * Splits the long single form into three focused tabs:
- *   1. الهوية / Identity      — names, username, unified number, email, CR
+ *   1. البيانات / Details     — names, username, unified number, email, CR
  *   2. التصنيف / Classification — central taxonomy (entity/primary/secondary)
  *   3. العنوان / Address      — National Address + map + branches
  *
@@ -87,7 +87,7 @@ export const BusinessDetailsTabs: React.FC<Props> = ({
   return (
     <Tabs value={active} onValueChange={(v) => onChange(v as BusinessTabKey)} className="w-full">
       <TabsList className="w-full grid grid-cols-3 h-auto p-1 gap-1 bg-muted/40 rounded-xl">
-        {trigger('identity', 'الهوية', 'Identity', '1')}
+        {trigger('identity', 'البيانات', 'Details', '1')}
         {trigger('classification', 'التصنيف', 'Classification', '2')}
         {trigger('address', 'العنوان والفروع', 'Address', '3')}
       </TabsList>
