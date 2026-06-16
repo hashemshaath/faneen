@@ -50,13 +50,15 @@ const Start: React.FC = () => {
       icon: Building2,
       titleAr: 'أنشئ منشأة',
       titleEn: 'Create a business',
-      descAr: 'أضف منشأتك، خدماتك، فريقك، وابدأ استقبال الطلبات بعد المراجعة.',
-      descEn: 'Add your business, services, team, and start receiving requests after review.',
+      descAr: 'سجّل بيانات الجهة الأساسية ومدير الحساب الآن، وأكمل الباقي لاحقًا من لوحة التحكم.',
+      descEn: 'Register the basic entity details and account manager now; complete the rest later from the dashboard.',
       ctaAr: 'إنشاء منشأة',
       ctaEn: 'Create business',
-      // Logged-in users continue into the dashboard onboarding wizard.
-      // Unauthenticated entity sign-ups go through `/register-entity`.
-      to: '/onboarding',
+      // ENTITY REGISTRATION SIMPLIFICATION — basic entity + account manager
+      // is the first surface. Signed-in users continue into the dashboard
+      // onboarding wizard for completion; new users start at the basic
+      // registration page.
+      to: user ? '/onboarding' : '/register-entity',
     },
   ];
 
