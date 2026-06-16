@@ -270,6 +270,15 @@ const Onboarding = () => {
     [regionId],
   );
 
+  // Keep the legacy `regionId` in sync with the National Address form so the
+  // existing validation + createBusiness payload keep working unchanged.
+  useEffect(() => {
+    const inferred =
+      findRegionByLabel(primaryAddress.region) ??
+      findRegionByLabel(primaryAddress.region_en);
+    if (inferred && inferred !== regionId) setRegionId(inferred);
+  }, [primaryAddress.region, primaryAddress.region_en, regionId]);
+
   // Header progress
   const completionPct = useMemo(() => {
     let total = 2; // account type, full name
