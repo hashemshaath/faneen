@@ -1102,6 +1102,7 @@ const Onboarding = () => {
     return (
       <AuthLayout>
         <div className="space-y-6">
+          <WizardStepper current="documents" completed={{ business: true, manager: true }} />
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-gold/10 border border-emerald-500/20">
               <FileText className="w-6 h-6 text-emerald-600" />
@@ -1110,7 +1111,7 @@ const Onboarding = () => {
               {bi('مستندات التوثيق', 'Verification Documents')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {bi('الخطوة 3 من 3 — يمكنك تخطي هذه الخطوة وإضافة المستندات لاحقاً', 'Step 3 of 3 — you can skip and add documents later')}
+              {bi('يمكنك تخطي هذه الخطوة وإضافة المستندات لاحقاً', 'You can skip and add documents later')}
             </p>
           </div>
 
