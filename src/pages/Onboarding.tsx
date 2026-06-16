@@ -152,6 +152,11 @@ const Onboarding = () => {
 
   const [loading, setLoading] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  // Timestamp of the most recent autosave; powers the inline AutosaveBadge.
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  // Track whether the user has manually edited the username so we don't
+  // overwrite their choice with the auto-suggestion from the business name.
+  const [usernameTouched, setUsernameTouched] = useState(false);
 
   // Persist draft on every relevant change
   useEffect(() => {
@@ -162,6 +167,7 @@ const Onboarding = () => {
       sectors, subServices,
       taxonomy,
     });
+    setLastSavedAt(Date.now());
     if (user?.id) void syncDraftToServer(user.id);
   }, [step, accountType, fullName, phone, countryCode, businessName, username,
       sectors, subServices, taxonomy, draftLoaded, user?.id]);
