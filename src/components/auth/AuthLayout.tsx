@@ -6,7 +6,11 @@ import { Shield } from 'lucide-react';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AuthShowcase } from './AuthShowcase';
 
-export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthLayout: React.FC<{
+  children: React.ReactNode;
+  /** Use a wider form container — for multi-column wizard steps (e.g. address + map). */
+  wide?: boolean;
+}> = ({ children, wide }) => {
   const { language, setLanguage, isRTL } = useLanguage();
 
   return (
@@ -40,7 +44,13 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 
         {/* Form container */}
         <div className="flex-1 flex items-center justify-center px-5 sm:px-8 lg:px-12 py-6 sm:py-8">
-          <div className="w-full max-w-[460px] sm:max-w-[520px] lg:max-w-[560px]">
+          <div
+            className={
+              wide
+                ? 'w-full max-w-[560px] md:max-w-[720px] lg:max-w-[860px] xl:max-w-[920px]'
+                : 'w-full max-w-[460px] sm:max-w-[520px] lg:max-w-[560px]'
+            }
+          >
             {children}
           </div>
         </div>

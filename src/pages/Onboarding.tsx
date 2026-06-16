@@ -788,26 +788,38 @@ const Onboarding = () => {
     };
 
     return (
-      <AuthLayout>
-        <div className="space-y-6">
+      <AuthLayout wide>
+        <div className="space-y-5 sm:space-y-6">
           <WizardStepper current="business" />
-          <div className="space-y-2 text-center">
-            <h2 className="font-heading font-bold text-2xl text-foreground">
-              {bi('المعلومات', 'Information')}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {bi('سجّل معلومات منشأتك قبل تسجيل مدير الحساب', 'Register your business information before the account manager')}
-            </p>
-            <div className="flex items-center justify-center gap-3 pt-1">
-              <div className="flex-1 max-w-[220px]">
-                <Progress value={completionPct} className="h-1.5" />
+
+          {/* Page header — title + autosave + progress, with a thin meta row */}
+          <header className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <h2 className="font-heading font-bold text-xl sm:text-2xl text-foreground leading-tight">
+                  {bi('معلومات المنشأة', 'Business information')}
+                </h2>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+                  {bi('أكمل بيانات المنشأة قبل تسجيل مدير الحساب — يُحفظ تلقائياً.',
+                      'Complete your business details before the account manager — saved automatically.')}
+                </p>
               </div>
               <AutosaveBadge lastSavedAt={lastSavedAt} />
             </div>
-            <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1" data-testid="onboarding-review-note">
-              {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.', 'After completing the details, the Qitaat team reviews the business before public visibility.')}
+            <div className="mt-3 flex items-center gap-3">
+              <Progress value={completionPct} className="h-1.5 flex-1" />
+              <span className="text-[11px] font-semibold text-muted-foreground tabular-nums whitespace-nowrap">
+                {completionPct}%
+              </span>
+            </div>
+            <p
+              className="text-[11px] text-muted-foreground/80 leading-relaxed mt-2"
+              data-testid="onboarding-review-note"
+            >
+              {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.',
+                  'After completing the details, the Qitaat team reviews the business before public visibility.')}
             </p>
-          </div>
+          </header>
 
           <BusinessDetailsTabs
             active={businessTab}
@@ -829,9 +841,9 @@ const Onboarding = () => {
               address: { complete: !!regionId, progress: addressProgress },
             }}
             identity={(
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {/* Section: Names */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-3">
                   <header className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                       <FileSignature className="w-3.5 h-3.5" />
@@ -874,7 +886,7 @@ const Onboarding = () => {
                 </section>
 
                 {/* Section: Public identity (username) */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-2">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-2">
                   <header className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-gold/10 text-gold flex items-center justify-center">
                       <AtSign className="w-3.5 h-3.5" />
@@ -903,7 +915,7 @@ const Onboarding = () => {
                 </section>
 
                 {/* Section: Contact + legal numbers */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+                <section className="rounded-xl border border-border/60 bg-background p-3.5 sm:p-4 space-y-3">
                   <header className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                       <Hash className="w-3.5 h-3.5" />
@@ -979,8 +991,9 @@ const Onboarding = () => {
                   </div>
                 </section>
 
-                <div className="flex justify-end">
-                  <Button type="button" variant="outline" onClick={() => setBusinessTab('classification')}>
+                <div className="flex justify-end pt-1">
+                  <Button type="button" variant="hero" size="sm" className="h-10 px-4"
+                    onClick={() => setBusinessTab('classification')}>
                     {bi('التالي: التصنيف', 'Next: Classification')}
                     <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
                   </Button>
@@ -988,7 +1001,7 @@ const Onboarding = () => {
               </div>
             )}
             classification={(
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <ClassificationTab
                   value={taxonomy}
                   onChange={setTaxonomy}
@@ -1001,11 +1014,13 @@ const Onboarding = () => {
                     </p>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <Button type="button" variant="ghost" onClick={() => setBusinessTab('identity')}>
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40 mt-1">
+                  <Button type="button" variant="ghost" size="sm" className="h-10"
+                    onClick={() => setBusinessTab('identity')}>
                     {bi('السابق', 'Back')}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setBusinessTab('address')}>
+                  <Button type="button" variant="hero" size="sm" className="h-10 px-4"
+                    onClick={() => setBusinessTab('address')}>
                     {bi('التالي: العنوان', 'Next: Address')}
                     <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
                   </Button>
@@ -1013,7 +1028,7 @@ const Onboarding = () => {
               </div>
             )}
             address={(
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <AddressTab
                   primary={primaryAddress}
                   onPrimaryChange={setPrimaryAddress}
@@ -1023,11 +1038,13 @@ const Onboarding = () => {
                   branches={branches}
                   onBranchesChange={setBranches}
                 />
-                <div className="flex justify-between">
-                  <Button type="button" variant="ghost" onClick={() => setBusinessTab('classification')}>
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40 mt-1">
+                  <Button type="button" variant="ghost" size="sm" className="h-10"
+                    onClick={() => setBusinessTab('classification')}>
                     {bi('السابق', 'Back')}
                   </Button>
-                  <Button onClick={onContinue} disabled={!allValid || loading} variant="hero">
+                  <Button onClick={onContinue} disabled={!allValid || loading} variant="hero"
+                    size="sm" className="h-10 px-4">
                     {bi('متابعة لتسجيل مدير الحساب', 'Continue to account manager')}
                     <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
                   </Button>
@@ -1036,10 +1053,12 @@ const Onboarding = () => {
             )}
           />
 
-          <button onClick={() => setStep('intent')}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            {bi('→', '←')} {bi('رجوع', 'Back')}
-          </button>
+          <div className="flex justify-start pt-1">
+            <button onClick={() => setStep('intent')}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {bi('→', '←')} {bi('رجوع للخطوة السابقة', 'Back to previous step')}
+            </button>
+          </div>
         </div>
       </AuthLayout>
     );
