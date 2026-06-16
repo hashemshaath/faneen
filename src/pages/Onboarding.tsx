@@ -113,6 +113,26 @@ const Onboarding = () => {
   const [taxonomyStatus, setTaxonomyStatus] =
     useState<'loading' | 'ok' | 'error'>('loading');
 
+  // Wizard sub-tab inside the business-details step.
+  const [businessTab, setBusinessTab] = useState<BusinessTabKey>('identity');
+
+  // Central-address driven primary address (replaces the standalone Region
+  // <select> in the old form). Latitude/Longitude come from the map picker.
+  const EMPTY_NATIONAL_ADDRESS: NationalAddressValue = {
+    short_address: null,
+    region: null, region_en: null, city_id: null,
+    district: null, district_en: null,
+    street_name: null, street_name_en: null,
+    building_number: null, additional_number: null, post_code: null,
+    address: null, address_en: null,
+    complex_name: null, complex_name_en: null, site_number: null,
+    address_manual: false,
+  };
+  const [primaryAddress, setPrimaryAddress] = useState<NationalAddressValue>(EMPTY_NATIONAL_ADDRESS);
+  const [addrLat, setAddrLat] = useState<number | null>(null);
+  const [addrLng, setAddrLng] = useState<number | null>(null);
+  const [branches, setBranches] = useState<BranchDraft[]>([]);
+
   // Documents
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [logoUploading, setLogoUploading] = useState(false);
