@@ -46,16 +46,16 @@ describe('AUTH SIMPLIFICATION UX · One Account + Post-Login Context Selection',
     expect(FORGOT).toMatch(/إذا كان الحساب موجود|If an account exists/);
   });
 
-  // 5. /start page exists and shows 3 context cards only.
-  it('post-login /start surface ships with exactly 3 context cards', () => {
+  // 5. /start page exists and shows 2 context cards only (join via link only).
+  it('post-login /start surface ships with exactly 2 context cards', () => {
     expect(exists('src/pages/Start.tsx')).toBe(true);
     const start = read('src/pages/Start.tsx');
     expect(start).toContain('data-feature="start-context-cards"');
     expect(start).toContain("data-context={c.id}");
     expect(start).toMatch(/id:\s*'individual'/);
     expect(start).toMatch(/id:\s*'create-entity'/);
-    expect(start).toMatch(/id:\s*'join-entity'/);
-    // No 4th option (legacy request-access)
+    // Joining an existing business is link-only — no card surfaces it.
+    expect(start).not.toMatch(/id:\s*'join-entity'/);
     expect(start).not.toMatch(/id:\s*'request-access'/);
   });
 
