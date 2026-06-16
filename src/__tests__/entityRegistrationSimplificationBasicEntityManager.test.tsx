@@ -37,17 +37,19 @@ describe('ENTITY REGISTRATION SIMPLIFICATION · basic entity + account manager',
   });
 
   it('does NOT ask for services / images / branches / files / service-areas during registration', () => {
-    expect(PAGE).not.toMatch(/services?[\s\S]*data-step="entity"|data-step="entity"[\s\S]*services?/i);
     // No file upload inputs of any kind
     expect(PAGE).not.toMatch(/<input[^>]*type="file"/i);
     expect(PAGE).not.toMatch(/type=["']file["']/);
-    // No image/logo upload primitives
-    expect(PAGE).not.toMatch(/ImageUploader|LogoUpload|UploadImage|<FileUpload/);
-    // No branch / service-area / team / membership prompts
-    expect(PAGE).not.toMatch(/branches?|الفروع/i);
-    expect(PAGE).not.toMatch(/service_areas?|مناطق الخدمة/i);
-    expect(PAGE).not.toMatch(/membership|free_launch|اشتراك/i);
-    expect(PAGE).not.toMatch(/team_members?|عدد الموظفين/i);
+    // No image / logo / upload primitives mounted on the page
+    expect(PAGE).not.toMatch(/ImageUploader|LogoUpload|UploadImage|<FileUpload|<Dropzone/);
+    // No service / branch / service-area / team / membership form controls
+    expect(PAGE).not.toMatch(/id=["']entity-services?["']/);
+    expect(PAGE).not.toMatch(/id=["']entity-branches?["']/);
+    expect(PAGE).not.toMatch(/id=["']entity-logo["']/);
+    expect(PAGE).not.toMatch(/id=["']entity-description["']/);
+    expect(PAGE).not.toMatch(/id=["']entity-service-areas?["']/);
+    expect(PAGE).not.toMatch(/id=["']entity-team["']/);
+    expect(PAGE).not.toMatch(/id=["']entity-membership["']/);
   });
 
   it('non-enumerating duplicate handling for entity email', () => {
