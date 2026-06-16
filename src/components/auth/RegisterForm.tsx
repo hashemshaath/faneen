@@ -91,7 +91,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     setLoading(true);
     track.signupStarted({ account_type: accountType, method: 'email' });
     try {
-      await authService.signUp(email, password, {
+      const result = await authService.signUp(email, password, {
         full_name: fullName,
         full_name_ar: fullNameAr,
         full_name_en: fullNameEn,
@@ -100,10 +100,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         phone_country_code: phoneParts.national ? phoneParts.countryCode : '',
         phone_national: phoneParts.national,
       });
-      onEmailSent(email);
       const attribution = getAttributionPayload();
       track.registerCompleted({ account_type: accountType, method: 'email', ...attribution });
-      toast.success(isRTL ? 'تم إنشاء حسابك. تحقق من بريدك لإكمال التفعيل.' : 'Account created. Check your email to complete activation.');
+      // If Supabase returned a session (auto-confirm enabled), the user is
+      // already signed in — flag a welcome toast and let Auth.tsx route to
+      // the dashboard via redirectByRole. Otherwise, show the email-sent
+      // verification screen as before.
+      if (result?.session) {
+        try { sessionStorage.setItem('qitaat_show_welcome', '1'); } catch { /* ignore */ }
+        // AuthContext will pick up the new session and Auth.tsx will redirect.
+      } else {
+        onEmailSent(email);
+        toast.success(isRTL ? 'تم إنشاء حسابك. تحقق من بريدك لإكمال التفعيل.' : 'Account created. Check your email to complete activation.');
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       try {
