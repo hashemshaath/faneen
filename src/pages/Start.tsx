@@ -54,6 +54,8 @@ const Start: React.FC = () => {
       descEn: 'Add your business, services, team, and start receiving requests after review.',
       ctaAr: 'إنشاء منشأة',
       ctaEn: 'Create business',
+      // Logged-in users continue into the dashboard onboarding wizard.
+      // Unauthenticated entity sign-ups go through `/register-entity`.
       to: '/onboarding',
     },
   ];
