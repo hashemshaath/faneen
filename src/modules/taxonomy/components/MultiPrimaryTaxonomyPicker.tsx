@@ -276,7 +276,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
             <div
               role="group"
               aria-label={t(isRTL, 'الأنشطة الرئيسية', 'Primary activities')}
-              className="grid grid-cols-2 sm:grid-cols-3 gap-2"
+              className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2"
             >
               {primaryOptions
                 .filter((p) => selectedPrimaryIds.includes(p.id) || matchesFilter(p))
@@ -289,7 +289,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                       onClick={() => togglePrimary(p.id)}
                       aria-pressed={active}
                       className={
-                        'group relative text-xs rounded-xl border px-3 py-2.5 transition-all hover-lift flex items-center gap-2 text-start ' +
+                        'group relative text-xs rounded-xl border px-3 py-2.5 transition-all hover-lift flex items-start gap-2 text-start min-h-[44px] ' +
                         (active
                           ? 'bg-primary/10 border-primary text-foreground shadow-sm ring-1 ring-primary/30'
                           : 'bg-background hover:bg-muted hover:border-primary/40')
@@ -297,7 +297,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                     >
                       <span
                         className={
-                          'shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-md border transition-colors ' +
+                          'shrink-0 inline-flex items-center justify-center w-5 h-5 mt-0.5 rounded-md border transition-colors ' +
                           (active
                             ? 'bg-primary border-primary text-primary-foreground'
                             : 'bg-background border-border')
@@ -306,7 +306,7 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                       >
                         {active && <Check className="w-3 h-3" />}
                       </span>
-                      <span className="truncate font-medium">{labelOf(p, isRTL)}</span>
+                      <span className="font-medium leading-snug break-words flex-1" dir="auto">{labelOf(p, isRTL)}</span>
                     </button>
                   );
                 })}
@@ -418,14 +418,14 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
                                             onClick={() => toggleSecondary(c.id)}
                                             aria-pressed={active}
                                             className={
-                                              'text-[11px] rounded-full border px-2.5 py-1 transition-all inline-flex items-center gap-1 ' +
+                                              'text-[11px] rounded-full border px-2.5 py-1 transition-all inline-flex items-center gap-1 whitespace-normal text-start leading-snug ' +
                                               (active
                                                 ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                                                 : 'bg-background hover:bg-primary/5 hover:border-primary/40')
                                             }
                                           >
-                                            {active && <Check className="w-2.5 h-2.5" />}
-                                            {labelOf(c, isRTL)}
+                                            {active && <Check className="w-2.5 h-2.5 shrink-0" />}
+                                            <span dir="auto">{labelOf(c, isRTL)}</span>
                                           </button>
                                         );
                                       })}
