@@ -135,7 +135,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   };
 
   return (
-    <div className={cn('grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4', className)}>
+    <div className={cn('flex flex-col gap-4', className)}>
       <div className="space-y-2 min-w-0">
         <Label className="text-xs font-semibold flex items-center gap-2">
           <span className="truncate">{labelAr}</span>
@@ -221,7 +221,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
       </div>
 
       {showUsername && (
-        <div className="md:col-span-2">
+        <div>
           <UsernamePicker
             value={value.username || ''}
             onChange={(v) => update({ username: v })}
