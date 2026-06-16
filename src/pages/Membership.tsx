@@ -629,7 +629,7 @@ const Membership = () => {
       toast.info(
         bi('باقات العضوية مخصّصة لمزوّدي الخدمات. حوّل حسابك إلى حساب مزوّد للاشتراك.', 'Membership plans are for service providers. Switch your account to a provider to subscribe.'),
       );
-      navigate('/onboarding');
+      navigate('/register-entity');
       return;
     }
     if (!myBusiness) {
@@ -723,7 +723,7 @@ const Membership = () => {
                       {bi('تصفّح الدليل الصناعي', 'Browse the directory')}
                     </Button>
                   </Link>
-                  <Link to="/onboarding">
+                  <Link to="/register-entity">
                     <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
                       <Building2 className="w-3.5 h-3.5" />
                       {bi('تحويل حسابي إلى مزوّد خدمة', 'Become a service provider')}

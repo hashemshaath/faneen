@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -46,7 +46,8 @@ function deriveUsername(seedAr: string, seedEn: string): string {
 
 const RegisterEntity: React.FC = () => {
   const { isRTL } = useLanguage();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+  const isSignedIn = !!user;
   const navigate = useNavigate();
   usePageMeta({
     title: bi(isRTL, 'تسجيل جهة جديدة | قِطاعات', 'Register a new entity | Qitaat'),
@@ -71,6 +72,19 @@ const RegisterEntity: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // When the visitor is already authenticated, prefill the manager fields
+  // from their profile and skip the password requirement entirely. The
+  // existing account simply becomes the entity's account manager.
+  useEffect(() => {
+    if (!isSignedIn) return;
+    if (!managerName && (profile?.full_name || user?.email)) {
+      setManagerName(profile?.full_name || (user?.email ?? '').split('@')[0] || '');
+    }
+    if (!managerEmail && user?.email) {
+      setManagerEmail(user.email);
+    }
+  }, [isSignedIn, profile, user, managerName, managerEmail]);
+
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
   const passwordStrength = checkPasswordStrength(password);
 
@@ -85,14 +99,15 @@ const RegisterEntity: React.FC = () => {
   const step2Valid = useMemo(() => (
     managerName.trim().length >= 2 &&
     !!managerEmail && validateEmailField(managerEmail) &&
-    passwordStrength.score >= 2 &&
+    (isSignedIn || passwordStrength.score >= 2) &&
     (!managerPhone.national || validatePhoneField(managerPhone.national))
-  ), [managerName, managerEmail, managerPhone, passwordStrength, validateEmailField, validatePhoneField]);
+  ), [managerName, managerEmail, managerPhone, passwordStrength, isSignedIn, validateEmailField, validatePhoneField]);
 
   if (authLoading) return null;
-  // If a user is already signed in, they should use the in-dashboard
-  // entity-creation flow (existing onboarding). Send them there.
-  if (user) return <Navigate to="/onboarding" replace />;
+  // Both anonymous AND signed-in visitors land here. Anonymous visitors
+  // also create their account manager credentials (password). Signed-in
+  // visitors simply confirm the manager fields (prefilled) and the
+  // existing account becomes the manager — no new auth account is created.
 
   const ChevronNext = isRTL ? ArrowLeft : ArrowRight;
 
@@ -102,17 +117,19 @@ const RegisterEntity: React.FC = () => {
     try {
       const username = deriveUsername(entityNameAr, entityNameEn);
       const phoneE164 = toE164(managerPhone);
-      const result = await authService.signUp(managerEmail, password, {
-        full_name: managerName,
-        full_name_ar: isRTL ? managerName : '',
-        full_name_en: !isRTL ? managerName : '',
-        account_type: 'business',
-        phone: phoneE164,
-        phone_country_code: managerPhone.national ? managerPhone.countryCode : '',
-        phone_national: managerPhone.national,
-      });
+      const result = isSignedIn
+        ? null
+        : await authService.signUp(managerEmail, password, {
+            full_name: managerName,
+            full_name_ar: isRTL ? managerName : '',
+            full_name_en: !isRTL ? managerName : '',
+            account_type: 'business',
+            phone: phoneE164,
+            phone_country_code: managerPhone.national ? managerPhone.countryCode : '',
+            phone_national: managerPhone.national,
+          });
 
-      const newUserId = result?.user?.id;
+      const newUserId = isSignedIn ? user!.id : result?.user?.id;
       if (newUserId) {
         try {
           await authService.createBusiness(newUserId, entityNameAr.trim(), username, {
@@ -131,7 +148,7 @@ const RegisterEntity: React.FC = () => {
 
       try { sessionStorage.setItem('qitaat_entity_welcome', '1'); } catch { /* noop */ }
 
-      if (result?.session) {
+      if (isSignedIn || result?.session) {
         toast.success(bi(isRTL, 'تم إنشاء حساب الجهة بنجاح', 'Entity account created successfully'));
         navigate('/dashboard', { replace: true });
       } else {
@@ -403,15 +420,29 @@ const RegisterEntity: React.FC = () => {
                 error={errors.phone}
               />
 
-              <PasswordField
-                password={password}
-                onChange={setPassword}
-                label={bi(isRTL, 'كلمة المرور', 'Password')}
-                showStrength
-                isRTL={isRTL}
-                showPassword={showPassword}
-                onToggleShow={() => setShowPassword(!showPassword)}
-              />
+              {!isSignedIn && (
+                <PasswordField
+                  password={password}
+                  onChange={setPassword}
+                  label={bi(isRTL, 'كلمة المرور', 'Password')}
+                  showStrength
+                  isRTL={isRTL}
+                  showPassword={showPassword}
+                  onToggleShow={() => setShowPassword(!showPassword)}
+                />
+              )}
+              {isSignedIn && (
+                <div
+                  className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-[12px] text-foreground/80"
+                  data-feature="register-entity-manager-confirm"
+                >
+                  {bi(
+                    isRTL,
+                    'سيتم استخدام حسابك الحالي كمدير لهذه الجهة. لا حاجة لإنشاء كلمة مرور جديدة.',
+                    'Your current account will become the manager for this entity. No new password is required.',
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-2 gap-3">
                 <Button
