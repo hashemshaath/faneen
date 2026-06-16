@@ -276,28 +276,45 @@ export const MultiPrimaryTaxonomyPicker: React.FC<Props> = ({
             <div
               role="group"
               aria-label={t(isRTL, 'الأنشطة الرئيسية', 'Primary activities')}
-              className="flex flex-wrap gap-2"
+              className="grid grid-cols-2 sm:grid-cols-3 gap-2"
             >
-              {primaryOptions.map((p) => {
-                const active = selectedPrimaryIds.includes(p.id);
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => togglePrimary(p.id)}
-                    aria-pressed={active}
-                    className={
-                      'text-xs rounded-full border px-3 py-1.5 transition-colors hover-lift inline-flex items-center gap-1 ' +
-                      (active
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background hover:bg-muted')
-                    }
-                  >
-                    {active && <Check className="w-3 h-3" />}
-                    {labelOf(p, isRTL)}
-                  </button>
-                );
-              })}
+              {primaryOptions
+                .filter((p) => selectedPrimaryIds.includes(p.id) || matchesFilter(p))
+                .map((p) => {
+                  const active = selectedPrimaryIds.includes(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => togglePrimary(p.id)}
+                      aria-pressed={active}
+                      className={
+                        'group relative text-xs rounded-xl border px-3 py-2.5 transition-all hover-lift flex items-center gap-2 text-start ' +
+                        (active
+                          ? 'bg-primary/10 border-primary text-foreground shadow-sm ring-1 ring-primary/30'
+                          : 'bg-background hover:bg-muted hover:border-primary/40')
+                      }
+                    >
+                      <span
+                        className={
+                          'shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-md border transition-colors ' +
+                          (active
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'bg-background border-border')
+                        }
+                        aria-hidden="true"
+                      >
+                        {active && <Check className="w-3 h-3" />}
+                      </span>
+                      <span className="truncate font-medium">{labelOf(p, isRTL)}</span>
+                    </button>
+                  );
+                })}
+              {q && primaryOptions.filter((p) => !selectedPrimaryIds.includes(p.id) && matchesFilter(p)).length === 0 && (
+                <p className="col-span-full text-[11px] text-muted-foreground py-2">
+                  {t(isRTL, 'لا نتائج مطابقة للبحث.', 'No matches for your search.')}
+                </p>
+              )}
             </div>
             {selectedPrimaryIds.length === 0 && (
               <p className="text-[11px] text-amber-600">
