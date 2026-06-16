@@ -511,12 +511,6 @@ const Onboarding = () => {
         titleAr: 'إنشاء منشأة أو شركة', titleEn: 'Create a business/entity',
         descAr: 'سجّل بيانات المنشأة أولاً، ثم بيانات مدير الحساب.',
         descEn: 'Register the business data first, then the account manager.' },
-      { id: 'join-invite' as const, icon: Mail,
-        titleAr: 'الانضمام بدعوة', titleEn: 'Join by invitation',
-        descAr: 'لديّ رمز دعوة من منشأة قائمة', descEn: 'I have an invitation token' },
-      { id: 'request-access' as const, icon: UserPlus,
-        titleAr: 'طلب الانضمام لمنشأة قائمة', titleEn: 'Request access to an existing entity',
-        descAr: 'ابحث بالاسم أو معرّف ENT- / BIZ-', descEn: 'Search by name or ENT- / BIZ- reference' },
     ];
     return (
       <AuthLayout>
@@ -538,14 +532,14 @@ const Onboarding = () => {
             <div className="space-y-1 text-xs leading-relaxed text-foreground/90">
               <p>
                 {bi(
-                  'إذا كانت منشأتك مسجلة مسبقًا في قطاعات، اطلب الانضمام بدل إنشاء منشأة جديدة.',
-                  'If your business is already registered on Qitaat, request to join it instead of creating a new entity.',
+                  'إذا كانت منشأتك مسجلة مسبقًا في قطاعات، فاطلب من مسؤول المنشأة إرسال رابط دعوة لك بدل إنشاء منشأة جديدة.',
+                  'If your business is already registered on Qitaat, ask its administrator to send you an invitation link instead of creating a new entity.',
                 )}
               </p>
               <p className="text-muted-foreground">
                 {bi(
-                  'لدي دعوة أو أريد الانضمام لمنشأة — استخدم الخيارات أدناه.',
-                  'I have an invitation or want to join an entity — use the options below.',
+                  'الانضمام لمنشأة قائمة يتم فقط من خلال رابط الدعوة المرسل إليك.',
+                  'Joining an existing entity is only possible through the invitation link sent to you.',
                 )}
               </p>
             </div>
@@ -574,77 +568,6 @@ const Onboarding = () => {
                 </div>
               </button>
             ))}
-          </div>
-
-          <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2">
-            <Label className="text-xs">{bi('لديك رمز دعوة؟', 'Have an invitation token?')}</Label>
-            <div className="flex gap-2">
-              <Input value={inviteToken} onChange={(e) => setInviteToken(e.target.value.trim())}
-                placeholder={bi('الصق رمز الدعوة', 'Paste invitation token')} dir="auto" />
-              <Button variant="outline" disabled={inviteToken.length < 6}
-                onClick={() => navigate(`/invite/${encodeURIComponent(inviteToken)}`)}>
-                {bi('متابعة', 'Continue')}
-              </Button>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-border/60 bg-muted/10 p-3 space-y-2" data-feature="request-access">
-            <Label className="text-xs">{bi('طلب الانضمام لمنشأة قائمة', 'Request access to an existing entity')}</Label>
-            <p
-              data-testid="request-access-clarification"
-              className="text-[11px] text-muted-foreground leading-relaxed"
-            >
-              {bi(
-                'طلب الانضمام للمنشأة يحتاج مراجعة من مسؤول المنشأة. إذا لديك دعوة، استخدم رابط الدعوة المرسل لك.',
-                'Joining an existing entity requires approval from its administrator. If you have an invitation, use the invitation link sent to you.',
-              )}
-            </p>
-            {requestAccessSubmittedRef ? (
-              <div className="rounded-md bg-success/10 border border-success/30 p-2 text-xs text-success-foreground">
-                {bi(`تم إرسال طلبك (${requestAccessSubmittedRef}).`, `Your request was sent (${requestAccessSubmittedRef}).`)}
-              </div>
-            ) : (
-              <>
-                <Input value={requestAccessQuery} onChange={(e) => setRequestAccessQuery(e.target.value)}
-                  placeholder={bi('اسم المنشأة أو معرّفها', 'Entity name or reference')} dir="auto" />
-                <Textarea value={requestAccessMessage}
-                  onChange={(e) => setRequestAccessMessage(e.target.value.slice(0, 500))}
-                  placeholder={bi('رسالة قصيرة (اختياري)', 'Short message (optional)')} rows={2} dir="auto" />
-                <div className="flex items-center justify-end">
-                  <Button size="sm" variant="outline"
-                    disabled={!user || requestAccessQuery.trim().length < 2 || requestAccessSubmitting}
-                    onClick={async () => {
-                      if (!user) return;
-                      setRequestAccessSubmitting(true);
-                      try {
-                        const q = requestAccessQuery.trim();
-                        const looksLikeRef = /^(ENT|BIZ)-/i.test(q);
-                        let targetBusinessId: string | null = null;
-                        if (looksLikeRef) {
-                          const { data } = await getBusinessIdByRefOrLegacyRef({ reference: q });
-                          targetBusinessId = (data as { id?: string } | null)?.id ?? null;
-                        }
-                        const { data, error } = await createEntityAccessRequest({
-                          requesterUserId: user.id, targetBusinessId,
-                          targetRef: targetBusinessId ? null : q,
-                          message: requestAccessMessage.trim() || null,
-                        });
-                        if (error) throw error;
-                        if (data?.ref_id) {
-                          setRequestAccessSubmittedRef(data.ref_id);
-                          toast.success(bi('تم إرسال طلب الانضمام', 'Access request sent'));
-                        }
-                      } catch (err) {
-                        toast.error(err instanceof Error && err.message ? err.message
-                          : (bi('تعذّر إرسال الطلب', 'Could not send the request')));
-                      } finally { setRequestAccessSubmitting(false); }
-                    }}>
-                    {requestAccessSubmitting ? <Loader2 className="w-3 h-3 animate-spin" />
-                      : (bi('إرسال الطلب', 'Send request'))}
-                  </Button>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </AuthLayout>
