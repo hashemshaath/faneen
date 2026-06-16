@@ -659,120 +659,143 @@ const Onboarding = () => {
             </p>
           </div>
 
-          <div className="space-y-5">
-            {/* Name AR/EN */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">
-                  {bi('الاسم كما في السجل التجاري (عربي)', 'Name as in CR (Arabic)')}
-                  <span className="text-destructive ms-1">*</span>
-                </Label>
-                <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)}
-                  dir="rtl" lang="ar" placeholder="مثال: شركة الواجهات الحديثة" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">
-                  {bi('الاسم كما في السجل التجاري (إنجليزي)', 'Name as in CR (English)')}
-                  <span className="text-destructive ms-1">*</span>
-                </Label>
-                <Input value={businessNameEn} onChange={(e) => setBusinessNameEn(e.target.value)}
-                  dir="ltr" lang="en" placeholder="e.g. Modern Facades Co." />
-              </div>
-            </div>
-
-            <UsernamePicker isRTL={isRTL} required
-              label={bi('اسم المستخدم (رابط الملف العام)', 'Username (public profile URL)')}
-              value={username} onChange={setUsername}
-              onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
-              excludeUserId={user?.id ?? null} placeholder="my-business" />
-
-            {/* Unified number + email + region grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">
-                  {bi('الرقم الموحد للمنشأة (700)', 'Unified Entity Number (700)')}
-                  <span className="text-destructive ms-1">*</span>
-                </Label>
-                <Input value={unifiedNumber}
-                  onChange={(e) => setUnifiedNumber(onlyDigits(e.target.value, 10))}
-                  inputMode="numeric" pattern="[0-9]*" placeholder="7XXXXXXXXX" dir="ltr" maxLength={10}
-                  className={`tech-content ${unifiedNumber && !unifiedValid ? 'border-destructive' : ''}`} />
-                <p className={`text-[11px] ${unifiedNumber && !unifiedValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
-                  {bi('10 أرقام تبدأ بـ 7', '10 digits starting with 7')} ({unifiedNumber.length}/10)
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">
-                  {bi('البريد الإلكتروني للمنشأة', 'Business Email')}
-                  <span className="text-destructive ms-1">*</span>
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
-                  <Input value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)}
-                    type="email" dir="ltr" placeholder="info@company.com" style={{ paddingInlineStart: '40px' }}
-                    className={businessEmail && !emailValid ? 'border-destructive' : ''} />
+          <BusinessDetailsTabs
+            active={businessTab}
+            onChange={setBusinessTab}
+            states={{
+              identity: {
+                complete:
+                  !!businessName.trim() && !!businessNameEn.trim() && !!usernameOk &&
+                  unifiedValid && emailValid && crValid,
+              },
+              classification: {
+                complete:
+                  taxonomyStatus === 'ok'
+                    ? (!!taxonomy.entityTypeCategoryId && taxonomy.primaryActivityCategoryIds.length > 0)
+                    : false,
+              },
+              address: { complete: !!regionId },
+            }}
+            identity={(
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {bi('الاسم كما في السجل التجاري (عربي)', 'Name as in CR (Arabic)')}
+                      <span className="text-destructive ms-1">*</span>
+                    </Label>
+                    <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)}
+                      dir="rtl" lang="ar" placeholder="مثال: شركة الواجهات الحديثة" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {bi('الاسم كما في السجل التجاري (إنجليزي)', 'Name as in CR (English)')}
+                      <span className="text-destructive ms-1">*</span>
+                    </Label>
+                    <Input value={businessNameEn} onChange={(e) => setBusinessNameEn(e.target.value)}
+                      dir="ltr" lang="en" placeholder="e.g. Modern Facades Co." />
+                  </div>
+                </div>
+                <UsernamePicker isRTL={isRTL} required
+                  label={bi('اسم المستخدم (رابط الملف العام)', 'Username (public profile URL)')}
+                  value={username} onChange={setUsername}
+                  onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
+                  excludeUserId={user?.id ?? null} placeholder="my-business" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {bi('الرقم الموحد للمنشأة (700)', 'Unified Entity Number (700)')}
+                      <span className="text-destructive ms-1">*</span>
+                    </Label>
+                    <Input value={unifiedNumber}
+                      onChange={(e) => setUnifiedNumber(onlyDigits(e.target.value, 10))}
+                      inputMode="numeric" pattern="[0-9]*" placeholder="7XXXXXXXXX" dir="ltr" maxLength={10}
+                      className={`tech-content ${unifiedNumber && !unifiedValid ? 'border-destructive' : ''}`} />
+                    <p className={`text-[11px] ${unifiedNumber && !unifiedValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
+                      {bi('10 أرقام تبدأ بـ 7', '10 digits starting with 7')} ({unifiedNumber.length}/10)
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {bi('البريد الإلكتروني للمنشأة', 'Business Email')}
+                      <span className="text-destructive ms-1">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
+                      <Input value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)}
+                        type="email" dir="ltr" placeholder="info@company.com" style={{ paddingInlineStart: '40px' }}
+                        className={businessEmail && !emailValid ? 'border-destructive' : ''} />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">
+                    {bi('رقم السجل التجاري', 'Commercial Registration (CR)')}
+                    <span className="text-muted-foreground ms-1">({bi('اختياري', 'optional')})</span>
+                  </Label>
+                  <Input value={crNumber} onChange={(e) => setCrNumber(onlyDigits(e.target.value, 10))}
+                    inputMode="numeric" pattern="[0-9]*" placeholder="1010XXXXXX" dir="ltr" maxLength={10}
+                    className={`tech-content ${crNumber && !crValid ? 'border-destructive' : ''}`} />
+                  <p className={`text-[11px] ${crNumber && !crValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
+                    {bi('10 أرقام — أرقام فقط', '10 digits — numbers only')} ({crNumber.length}/10)
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <Button type="button" variant="outline" onClick={() => setBusinessTab('classification')}>
+                    {bi('التالي: التصنيف', 'Next: Classification')}
+                    <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Region */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">
-                {bi('المنطقة', 'Region')} <span className="text-destructive ms-1">*</span>
-              </Label>
-              <div className="relative">
-                <MapPin className="absolute top-3 text-muted-foreground w-4 h-4 pointer-events-none z-10" style={{ insetInlineStart: '12px' }} />
-                <select value={regionId} onChange={(e) => setRegionId(e.target.value as SaRegionId)}
-                  className="flex h-12 w-full rounded-xl border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  style={{ paddingInlineStart: '40px', paddingInlineEnd: '12px' }}>
-                  <option value="">{bi('— اختر المنطقة —', '— Select region —')}</option>
-                  {SA_REGIONS.map((r) => (
-                    <option key={r.id} value={r.id}>{bi(r.name_ar, r.name_en)}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* CR number (optional) */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">
-                {bi('رقم السجل التجاري', 'Commercial Registration (CR)')}
-                <span className="text-muted-foreground ms-1">({bi('اختياري', 'optional')})</span>
-              </Label>
-              <Input value={crNumber} onChange={(e) => setCrNumber(onlyDigits(e.target.value, 10))}
-                inputMode="numeric" pattern="[0-9]*" placeholder="1010XXXXXX" dir="ltr" maxLength={10}
-                className={`tech-content ${crNumber && !crValid ? 'border-destructive' : ''}`} />
-              <p className={`text-[11px] ${crNumber && !crValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
-                {bi('10 أرقام — أرقام فقط', '10 digits — numbers only')} ({crNumber.length}/10)
-              </p>
-            </div>
-
-            {/* Phase 13.c — central taxonomy is the primary classification UI. */}
-            <OnboardingTaxonomyStep
-              value={taxonomy}
-              onChange={setTaxonomy}
-              onLoadStatusChange={setTaxonomyStatus}
-            />
-
-            {/* Phase 2.1 — Taxonomy-only UI. Legacy SectorPicker is no longer
-                shown to users in either branch. If the taxonomy fails to load,
-                we show a soft notice and let the user continue and update later.
-                The legacy `sectors` / `subServices` state is preserved as an
-                internal fallback (draft restore, non-blocking persistence). */}
-            {taxonomyStatus !== 'ok' && taxonomyStatus !== 'loading' && (
-              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                <p className="text-xs text-muted-foreground">
-                  {bi('تعذّر تحميل التصنيفات الحديثة. يمكنك إكمال التسجيل وتحديث التصنيف لاحقًا من لوحة التحكم.', 'Could not load the latest classifications. You can complete registration and update them later from your dashboard.')}
-                </p>
+            )}
+            classification={(
+              <div className="space-y-4">
+                <ClassificationTab
+                  value={taxonomy}
+                  onChange={setTaxonomy}
+                  onLoadStatusChange={setTaxonomyStatus}
+                />
+                {taxonomyStatus !== 'ok' && taxonomyStatus !== 'loading' && (
+                  <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                    <p className="text-xs text-muted-foreground">
+                      {bi('تعذّر تحميل التصنيفات الحديثة. يمكنك إكمال التسجيل وتحديث التصنيف لاحقًا من لوحة التحكم.', 'Could not load the latest classifications. You can complete registration and update them later from your dashboard.')}
+                    </p>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <Button type="button" variant="ghost" onClick={() => setBusinessTab('identity')}>
+                    {bi('السابق', 'Back')}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setBusinessTab('address')}>
+                    {bi('التالي: العنوان', 'Next: Address')}
+                    <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                  </Button>
+                </div>
               </div>
             )}
-
-            <Button onClick={onContinue} disabled={!allValid || loading}
-              className="w-full" variant="hero">
-              {bi('متابعة لتسجيل مدير الحساب', 'Continue to account manager')}
-              <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
-            </Button>
-          </div>
+            address={(
+              <div className="space-y-4">
+                <AddressTab
+                  primary={primaryAddress}
+                  onPrimaryChange={setPrimaryAddress}
+                  latitude={addrLat}
+                  longitude={addrLng}
+                  onCoordsChange={(lat, lng) => { setAddrLat(lat); setAddrLng(lng); }}
+                  branches={branches}
+                  onBranchesChange={setBranches}
+                />
+                <div className="flex justify-between">
+                  <Button type="button" variant="ghost" onClick={() => setBusinessTab('classification')}>
+                    {bi('السابق', 'Back')}
+                  </Button>
+                  <Button onClick={onContinue} disabled={!allValid || loading} variant="hero">
+                    {bi('متابعة لتسجيل مدير الحساب', 'Continue to account manager')}
+                    <ArrowRight className={`w-4 h-4 ms-1 ${bi('rotate-180', '')}`} />
+                  </Button>
+                </div>
+              </div>
+            )}
+          />
 
           <button onClick={() => setStep('intent')}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
