@@ -57,7 +57,7 @@ export const BusinessDetailsTabs: React.FC<Props> = ({
     return (
       <TabsTrigger
         value={key}
-        className="flex-1 flex-col items-stretch gap-1 px-2 py-2 h-auto data-[state=active]:bg-background data-[state=active]:shadow-sm"
+        className="flex-1 flex-col items-stretch gap-1 px-2 py-2 min-h-[52px] sm:min-h-[56px] h-auto data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-colors"
       >
         <span className="flex items-center justify-center gap-1.5 text-xs sm:text-sm">
           <span
@@ -70,7 +70,7 @@ export const BusinessDetailsTabs: React.FC<Props> = ({
             {s.complete ? <Check className="w-3 h-3" /> : num}
           </span>
           <Icon className="w-3.5 h-3.5 opacity-70" />
-          <span className="font-medium">{tt(isRTL, ar, en)}</span>
+          <span className="font-medium truncate">{tt(isRTL, ar, en)}</span>
         </span>
         <span className="h-1 w-full rounded-full bg-muted overflow-hidden">
           <span
