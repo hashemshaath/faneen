@@ -14,7 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import {
   User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight,
-  AlertCircle, Mail, MapPin, FileText, Upload, X, Sparkles,
+  AlertCircle, Mail, MapPin, FileText, Upload, X, Sparkles, AtSign, Hash, FileSignature,
 } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
