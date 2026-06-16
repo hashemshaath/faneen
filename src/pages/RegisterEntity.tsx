@@ -420,15 +420,29 @@ const RegisterEntity: React.FC = () => {
                 error={errors.phone}
               />
 
-              <PasswordField
-                password={password}
-                onChange={setPassword}
-                label={bi(isRTL, 'كلمة المرور', 'Password')}
-                showStrength
-                isRTL={isRTL}
-                showPassword={showPassword}
-                onToggleShow={() => setShowPassword(!showPassword)}
-              />
+              {!isSignedIn && (
+                <PasswordField
+                  password={password}
+                  onChange={setPassword}
+                  label={bi(isRTL, 'كلمة المرور', 'Password')}
+                  showStrength
+                  isRTL={isRTL}
+                  showPassword={showPassword}
+                  onToggleShow={() => setShowPassword(!showPassword)}
+                />
+              )}
+              {isSignedIn && (
+                <div
+                  className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-[12px] text-foreground/80"
+                  data-feature="register-entity-manager-confirm"
+                >
+                  {bi(
+                    isRTL,
+                    'سيتم استخدام حسابك الحالي كمدير لهذه الجهة. لا حاجة لإنشاء كلمة مرور جديدة.',
+                    'Your current account will become the manager for this entity. No new password is required.',
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-2 gap-3">
                 <Button
