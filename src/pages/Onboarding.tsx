@@ -541,9 +541,9 @@ const Onboarding = () => {
                 <div className="rounded-lg bg-gold/10 p-2 shrink-0">
                   <Icon className="w-5 h-5 text-gold" />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-heading font-bold text-base text-foreground">{bi(titleAr, titleEn)}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{bi(descAr, descEn)}</p>
+                <div className="min-w-0 flex flex-wrap items-baseline gap-x-2">
+                  <h3 className="font-heading font-bold text-base text-foreground whitespace-nowrap">{bi(titleAr, titleEn)}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{bi(descAr, descEn)}</p>
                 </div>
               </button>
             ))}
