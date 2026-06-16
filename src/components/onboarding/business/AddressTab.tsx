@@ -14,7 +14,7 @@
  * during onboarding (name + reuse main address by default).
  */
 import React, { useState } from 'react';
-import { Plus, Trash2, MapPin, Building2, ChevronDown, ChevronUp, Home, Network, Phone } from 'lucide-react';
+import { Plus, Trash2, MapPin, Building2, ChevronDown, ChevronUp, Network, Phone, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,48 +77,24 @@ export const AddressTab: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-5">
-      {/* Section header — Main branch */}
-      <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.04] via-background to-emerald-500/[0.04] p-3 sm:p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
-            <Home className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {tt(isRTL, 'الفرع الرئيسي', 'Main branch')}
-                </h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
-                  {tt(isRTL, 'مطلوب', 'Required')}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                  hasMapPin
-                    ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30'
-                    : 'bg-muted text-muted-foreground border-border'
-                }`}>
-                  <MapPin className="w-3 h-3" />
-                  {tt(isRTL, hasMapPin ? 'موقع محدد' : 'لا موقع', hasMapPin ? 'Pinned' : 'No pin')}
-                </span>
-                <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                  hasAddress
-                    ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30'
-                    : 'bg-muted text-muted-foreground border-border'
-                }`}>
-                  <Network className="w-3 h-3" />
-                  {tt(isRTL, hasAddress ? 'العنوان مكتمل' : 'عنوان ناقص', hasAddress ? 'Address set' : 'Incomplete')}
-                </span>
-              </div>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
-              {tt(isRTL,
-                'حدّد موقع منشأتك على الخريطة، ثم اعتمد العنوان الوطني — الحقول الأخرى تُملأ تلقائياً.',
-                'Pin your business on the map, then confirm the National Address — other fields auto-fill.')}
-            </p>
-          </div>
+    <div className="space-y-4">
+      {/* Inline status strip — no header card */}
+      <div className="flex items-center justify-between gap-3 px-0.5 flex-wrap">
+        <p className="text-[11px] text-muted-foreground">
+          {tt(isRTL,
+            'حدّد الموقع على الخريطة ← يُملأ العنوان تلقائياً.',
+            'Pin on the map ← address auto-fills.')}
+        </p>
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${hasMapPin ? 'text-emerald-600' : 'text-muted-foreground/70'}`}>
+            {hasMapPin ? <CheckCircle2 className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
+            {tt(isRTL, 'الموقع', 'Pin')}
+          </span>
+          <span className="text-muted-foreground/30">·</span>
+          <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${hasAddress ? 'text-emerald-600' : 'text-muted-foreground/70'}`}>
+            {hasAddress ? <CheckCircle2 className="w-3 h-3" /> : <Network className="w-3 h-3" />}
+            {tt(isRTL, 'العنوان', 'Address')}
+          </span>
         </div>
       </div>
 
