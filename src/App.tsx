@@ -216,6 +216,7 @@ const DashboardMyRequests = lazyRetry(() => import("./pages/dashboard/DashboardM
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Onboarding = lazyRetry(() => import("./pages/Onboarding"));
 const Start = lazyRetry(() => import("./pages/Start"));
+const RegisterEntity = lazyRetry(() => import("./pages/RegisterEntity"));
 const Categories = lazyRetry(() => import("./pages/Categories"));
 const SectorLanding = lazyRetry(() => import("./pages/SectorLanding"));
 const SectorsIndex = lazyRetry(() => import("./pages/SectorLanding").then(m => ({ default: m.SectorsIndex })));
