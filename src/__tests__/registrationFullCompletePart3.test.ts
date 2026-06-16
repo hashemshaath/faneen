@@ -85,8 +85,9 @@ describe('Part 3 (refreshed) — admin access requests navigation', () => {
 });
 
 describe('Part 3 (refreshed) — regression guards', () => {
-  it('invite route /invite/:token still wired from intent screen', () => {
-    expect(ONBOARDING).toMatch(/navigate\(`\/invite\/\$\{encodeURIComponent\(inviteToken\)\}`\)/);
+  it('intent screen no longer surfaces a manual invite-token paste box (link-only join)', () => {
+    expect(ONBOARDING).not.toMatch(/inviteToken/);
+    expect(ONBOARDING).not.toMatch(/Paste invitation token/);
   });
 
   it('no government wording anywhere in Onboarding', () => {

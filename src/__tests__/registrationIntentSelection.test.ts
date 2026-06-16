@@ -13,23 +13,25 @@ const ONBOARDING = fs.readFileSync(
 );
 
 describe('Registration Intent Selection (P1)', () => {
-  it('declares the new "intent" step first in STEP_ORDER', () => {
+  it('declares the "intent" step first in STEP_ORDER', () => {
     expect(ONBOARDING).toMatch(/STEP_ORDER:\s*OnboardingStep\[\]\s*=\s*\[\s*'intent'/);
     expect(ONBOARDING).toContain("useState<OnboardingStep>('intent')");
   });
 
-  it('shows all four intent options in Arabic', () => {
+  it('shows the remaining intent options in Arabic (join-by-link only)', () => {
     expect(ONBOARDING).toContain('المتابعة كفرد');
     expect(ONBOARDING).toContain('إنشاء منشأة أو شركة');
-    expect(ONBOARDING).toContain('الانضمام بدعوة');
-    expect(ONBOARDING).toContain('طلب الانضمام لمنشأة قائمة');
+    // Join-by-invitation / request-access cards removed — invite link only.
+    expect(ONBOARDING).not.toContain('الانضمام بدعوة');
+    expect(ONBOARDING).not.toMatch(/id: 'request-access'/);
   });
 
-  it('shows all four intent options in English', () => {
+  it('shows the remaining intent options in English (join-by-link only)', () => {
     expect(ONBOARDING).toContain('Continue as individual');
     expect(ONBOARDING).toContain('Create a business/entity');
-    expect(ONBOARDING).toContain('Join by invitation');
-    expect(ONBOARDING).toContain('Request access to an existing entity');
+    expect(ONBOARDING).not.toContain('Join by invitation');
+    expect(ONBOARDING).not.toMatch(/data-intent="join-invite"/);
+    expect(ONBOARDING).not.toMatch(/data-intent="request-access"/);
   });
 
   it('individual path does not create an entity automatically', () => {
@@ -41,15 +43,14 @@ describe('Registration Intent Selection (P1)', () => {
     expect(ONBOARDING).toMatch(/id === 'create-entity'[\s\S]*setAccountType\('business'\)/);
   });
 
-  it('join-invite path uses existing /invite/:token route', () => {
-    expect(ONBOARDING).toMatch(/navigate\(`\/invite\/\$\{encodeURIComponent\(inviteToken\)\}`\)/);
+  it('no in-form invitation-token paste box (link-only join)', () => {
+    expect(ONBOARDING).not.toMatch(/inviteToken/);
+    expect(ONBOARDING).not.toMatch(/Paste invitation token/);
   });
 
-  it('request-access is wired to the entity_access_requests backend', () => {
-    // REGISTRATION-UX-FULL-COMPLETE-1 — placeholder replaced by functional MVP
-    expect(ONBOARDING).toContain('data-feature="request-access"');
-    expect(ONBOARDING).toContain('createEntityAccessRequest');
-    expect(ONBOARDING).not.toContain('data-deferred="request-access"');
+  it('request-access UI is fully removed from onboarding intent screen', () => {
+    expect(ONBOARDING).not.toContain('data-feature="request-access"');
+    expect(ONBOARDING).not.toContain('createEntityAccessRequest');
   });
 
   it('contains no government terminology in registration UI', () => {

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
-import { User, Building2, UserPlus, ArrowRight, ArrowLeft } from 'lucide-react';
+import { User, Building2, ArrowRight, ArrowLeft } from 'lucide-react';
 
 /**
  * AUTH SIMPLIFICATION UX — `/start` is the post-login context selection
@@ -56,17 +56,6 @@ const Start: React.FC = () => {
       ctaEn: 'Create business',
       to: '/onboarding',
     },
-    {
-      id: 'join-entity',
-      icon: UserPlus,
-      titleAr: 'انضم إلى منشأة',
-      titleEn: 'Join a business',
-      descAr: 'استخدم رابط الدعوة أو اطلب الانضمام لمنشأة قائمة.',
-      descEn: 'Use an invitation link or request to join an existing business.',
-      ctaAr: 'الانضمام إلى منشأة',
-      ctaEn: 'Join a business',
-      to: '/dashboard/team-access',
-    },
   ];
 
   return (
@@ -84,7 +73,7 @@ const Start: React.FC = () => {
             </p>
           </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-feature="start-context-cards">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-feature="start-context-cards">
             {cards.map((c) => {
               const Icon = c.icon;
               return (
@@ -122,8 +111,8 @@ const Start: React.FC = () => {
             </Button>
             <p className="text-[11px] text-muted-foreground/70">
               {isRTL
-                ? 'يمكنك إنشاء أو الانضمام إلى منشأة لاحقًا من لوحة التحكم.'
-                : 'You can create or join a business later from the dashboard.'}
+                ? 'يمكنك إنشاء منشأة لاحقًا من لوحة التحكم. الانضمام لمنشأة قائمة يتم فقط من خلال رابط دعوة.'
+                : 'You can create a business later from the dashboard. Joining an existing business is only possible via an invitation link.'}
             </p>
           </div>
         </div>
