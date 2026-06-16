@@ -793,10 +793,10 @@ const Onboarding = () => {
           <WizardStepper current="business" />
           <div className="space-y-2 text-center">
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {bi('بيانات المنشأة', 'Business Information')}
+              {bi('المعلومات', 'Information')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {bi('سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Register business data before the account manager')}
+              {bi('سجّل معلومات منشأتك قبل تسجيل مدير الحساب', 'Register your business information before the account manager')}
             </p>
             <div className="flex items-center justify-center gap-3 pt-1">
               <div className="flex-1 max-w-[220px]">
