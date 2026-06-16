@@ -380,6 +380,38 @@ const Onboarding = () => {
               bi('تم إنشاء المنشأة، ويمكن تحديث التصنيف لاحقًا من لوحة التحكم.', 'Business created. You can update the classification later from your dashboard.'),
             );
           }
+
+          // Save the primary national address through the central addresses
+          // microservice (owner_type='business', address_type='primary').
+          // Non-blocking: address can be edited later from the dashboard.
+          if (businessId) {
+            try {
+              const hasAddressInput =
+                !!primaryAddress.region || !!primaryAddress.short_address ||
+                !!primaryAddress.address || addrLat != null;
+              if (hasAddressInput) {
+                await upsertPrimaryAddress({
+                  ownerType: 'business',
+                  ownerId: businessId,
+                  addressType: 'primary',
+                  fields: {
+                    ...primaryAddress,
+                    latitude: addrLat,
+                    longitude: addrLng,
+                    source: addrLat != null ? 'map_pick' : (primaryAddress.short_address ? 'spl' : 'manual'),
+                  },
+                });
+              }
+            } catch (addrErr) {
+              if (import.meta.env.DEV) {
+                // eslint-disable-next-line no-console
+                console.warn('[onboarding] primary address persist failed', addrErr);
+              }
+              toast.warning(
+                bi('تم إنشاء المنشأة، لكن تعذر حفظ العنوان. يمكنك إكماله لاحقًا من لوحة التحكم.', 'Business created, but the address could not be saved. You can complete it later from your dashboard.'),
+              );
+            }
+          }
         } catch { /* non-blocking */ }
       }
 
