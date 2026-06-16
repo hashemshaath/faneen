@@ -630,70 +630,38 @@ const Onboarding = () => {
 
   // ───────────────────────────── INTENT ─────────────────────────────
   if (step === 'intent') {
-    const intents = [
-      { id: 'individual' as const, icon: User,
-        titleAr: 'الأفراد', titleEn: 'Individuals',
-        descAr: 'استخدم قطاعات كفرد، اطلب عروض الأسعار، وأنشئ منشأة لاحقاً.',
-        descEn: 'Use Qitaat as an individual, request quotes, and create an entity later.' },
-      { id: 'create-entity' as const, icon: Building2,
-        titleAr: 'الأعمال', titleEn: 'Business',
-        descAr: 'سجّل بيانات المنشأة أولاً، ثم بيانات مدير الحساب.',
-        descEn: 'Register the business data first, then the account manager.' },
-    ];
+    // ENTITY REGISTRATION SIMPLIFICATION — /onboarding is no longer the
+    // first-entry point for creating an entity. Context selection lives
+    // on /start, and basic entity creation lives on /register-entity.
+    // This redirect card replaces the old long intent screen so a user
+    // who lands here without a draft is sent to the right place.
     return (
       <AuthLayout>
-        <div className="space-y-6">
-          <div className="text-center space-y-2">
+        <div
+          className="space-y-5 text-center"
+          data-feature="onboarding-redirect-card"
+        >
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+            <Building2 className="w-6 h-6" />
+          </div>
+          <div className="space-y-2">
             <h2 className="font-heading font-bold text-2xl text-foreground">
-              {bi('كيف تريد البدء؟', 'How would you like to start?')}
+              {bi('ابدأ بتسجيل بيانات الجهة الأساسية', 'Start by registering basic entity details')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {bi('اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.', 'Pick the path that fits you — you can add an entity later.')}
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {bi(
+                'سجّل بيانات الجهة الأساسية ومدير الحساب أولاً، ثم يمكنك إكمال الخدمات والصور والفروع من هنا.',
+                'Register the basic entity details and the account manager first, then complete services, images, and branches from here.',
+              )}
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => {
-              const isBusiness = id === 'create-entity';
-              return (
-                <button key={id} data-intent={id}
-                  onClick={() => {
-                    if (id === 'individual') {
-                      setAccountType('individual');
-                      if (profile?.full_name && profile?.phone) void completeOnboarding();
-                      else setStep('details');
-                    } else {
-                      setAccountType('business');
-                      setStep('business-details');
-                    }
-                  }}
-                  className={`relative p-5 rounded-2xl border-2 text-start transition-all duration-300 hover-lift group ${
-                    isBusiness
-                      ? 'border-gold/40 bg-gradient-to-br from-gold/10 via-background to-emerald-500/5 hover:border-gold hover:shadow-lg hover:shadow-gold/10'
-                      : 'border-border bg-card hover:border-emerald-500/40 hover:shadow-md'
-                  }`}
-                  aria-label={bi(titleAr, titleEn)}>
-                  {isBusiness && (
-                    <span className="absolute top-2 end-2 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold/15 text-gold">
-                      <Sparkles className="w-2.5 h-2.5" />
-                      {bi('موصى به', 'Featured')}
-                    </span>
-                  )}
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${
-                    isBusiness ? 'bg-gold/15 text-gold' : 'bg-emerald-500/10 text-emerald-600'
-                  }`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-heading font-bold text-base text-foreground mb-1">{bi(titleAr, titleEn)}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{bi(descAr, descEn)}</p>
-                  <span className={`mt-3 inline-flex items-center gap-1 text-xs font-medium ${
-                    isBusiness ? 'text-gold' : 'text-emerald-600'
-                  }`}>
-                    {bi('ابدأ الآن', 'Start now')}
-                    <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
-                  </span>
-                </button>
-              );
-            })}
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button asChild className="h-11 rounded-xl px-5">
+              <a href="/register-entity">{bi('تسجيل جهة جديدة', 'Register a new entity')}</a>
+            </Button>
+            <Button asChild variant="ghost" className="h-11 rounded-xl px-5">
+              <a href="/dashboard">{bi('الذهاب إلى لوحة التحكم', 'Go to dashboard')}</a>
+            </Button>
           </div>
         </div>
       </AuthLayout>
