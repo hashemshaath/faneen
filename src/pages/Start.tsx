@@ -54,7 +54,7 @@ const Start: React.FC = () => {
       descEn: 'Add your business, services, team, and start receiving requests after review.',
       ctaAr: 'إنشاء منشأة',
       ctaEn: 'Create business',
-      to: '/onboarding',
+      to: '/register-entity',
     },
   ];
 
