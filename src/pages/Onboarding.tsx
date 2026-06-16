@@ -712,6 +712,41 @@ const Onboarding = () => {
     const unifiedValid = /^7[0-9]{9}$/.test(unifiedNumber);
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail);
     const onlyDigits = (v: string, max: number) => v.replace(/\D/g, '').slice(0, max);
+    // Tiny slugifier used to suggest a username from the English business name.
+    const slugify = (v: string) => v
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 24);
+    const usernameSuggestion = !usernameTouched && !username && businessNameEn
+      ? slugify(businessNameEn)
+      : '';
+
+    // Per-tab progress for the inline tab progress bars (visual polish).
+    const identityFields = [
+      !!businessName.trim(), !!businessNameEn.trim(), !!usernameOk,
+      unifiedValid, emailValid,
+    ];
+    const identityProgress = Math.round(
+      (identityFields.filter(Boolean).length / identityFields.length) * 100,
+    );
+    const classificationProgress = taxonomyStatus === 'ok'
+      ? Math.round(
+          (((taxonomy.entityTypeCategoryId ? 1 : 0)
+            + (taxonomy.primaryActivityCategoryIds.length > 0 ? 1 : 0)
+            + (taxonomy.secondaryActivityCategoryIds.length > 0 ? 1 : 0)) / 3) * 100,
+        )
+      : 0;
+    const addressProgress = (() => {
+      const filled = [
+        !!primaryAddress.region, !!primaryAddress.district,
+        !!primaryAddress.short_address || addrLat != null,
+      ].filter(Boolean).length;
+      return Math.round((filled / 3) * 100);
+    })();
     const allValid =
       !!businessName.trim() && !!businessNameEn.trim() && !!usernameOk &&
       unifiedValid && emailValid && !!regionId && crValid &&
@@ -736,17 +771,20 @@ const Onboarding = () => {
     return (
       <AuthLayout>
         <div className="space-y-6">
+          <WizardStepper current="business" />
           <div className="space-y-2 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-gold/10 border border-emerald-500/20">
-              <Building2 className="w-6 h-6 text-emerald-600" />
-            </div>
             <h2 className="font-heading font-bold text-2xl text-foreground">
               {bi('بيانات المنشأة', 'Business Information')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {bi('الخطوة 1 من 3 — سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Step 1 of 3 — register business data before the account manager')}
+              {bi('سجّل بيانات منشأتك قبل تسجيل مدير الحساب', 'Register business data before the account manager')}
             </p>
-            <Progress value={completionPct} className="h-1.5" />
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <div className="flex-1 max-w-[220px]">
+                <Progress value={completionPct} className="h-1.5" />
+              </div>
+              <AutosaveBadge lastSavedAt={lastSavedAt} />
+            </div>
             <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1" data-testid="onboarding-review-note">
               {bi('بعد إكمال البيانات، يراجع فريق قطاعات المنشأة قبل الظهور العام.', 'After completing the details, the Qitaat team reviews the business before public visibility.')}
             </p>
@@ -760,14 +798,16 @@ const Onboarding = () => {
                 complete:
                   !!businessName.trim() && !!businessNameEn.trim() && !!usernameOk &&
                   unifiedValid && emailValid && crValid,
+                progress: identityProgress,
               },
               classification: {
                 complete:
                   taxonomyStatus === 'ok'
                     ? (!!taxonomy.entityTypeCategoryId && taxonomy.primaryActivityCategoryIds.length > 0)
                     : false,
+                progress: classificationProgress,
               },
-              address: { complete: !!regionId },
+              address: { complete: !!regionId, progress: addressProgress },
             }}
             identity={(
               <div className="space-y-5">
