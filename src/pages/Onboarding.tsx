@@ -20,7 +20,7 @@ import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import { ONBOARDING_SECTORS, type SectorId } from '@/data/onboarding-sectors';
-import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
+import { SA_REGIONS, type SaRegionId, findRegionByLabel } from '@/data/sa-regions';
 import { supabase } from '@/integrations/supabase/client';
 import {
   uploadPrivateDocument,
@@ -46,6 +46,11 @@ import {
 } from '@/modules/taxonomy';
 import { setBusinessTaxonomyCategoriesV2 } from '@/modules/taxonomy/business-services';
 import { normalizeOnboardingTaxonomyDraft } from '@/modules/taxonomy/components/OnboardingTaxonomyStep';
+import { BusinessDetailsTabs, type BusinessTabKey } from '@/components/onboarding/business/BusinessDetailsTabs';
+import { ClassificationTab } from '@/components/onboarding/business/ClassificationTab';
+import { AddressTab, type BranchDraft } from '@/components/onboarding/business/AddressTab';
+import { upsertPrimaryAddress } from '@/modules/addresses';
+import type { NationalAddressValue } from '@/modules/addresses/components/NationalAddressForm';
 
 // ──────────────────────────────────────────────────────────────────────────
 // New simplified flow (2026-05-29):
