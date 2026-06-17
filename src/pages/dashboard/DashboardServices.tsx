@@ -568,6 +568,15 @@ const DashboardServices: React.FC = () => {
             : 'These services mirror what you picked in your business profile.'}
           actions={
             <>
+              {displayList.length > 0 && (
+                <ExportMenu
+                  rows={exportRows}
+                  columns={serviceExportColumns}
+                  filename={`services-${new Date().toISOString().slice(0, 10)}`}
+                  title={pickBi(isRTL, 'تقرير الخدمات', 'Services Report')}
+                  subtitle={pickBi(isRTL, `إجمالي ${exportRows.length} خدمة`, `Total ${exportRows.length} services`)}
+                />
+              )}
               <Button asChild variant="outline" className="rounded-xl">
                 <Link to="/dashboard/business-edit?tab=sectors">
                   <Pencil className="h-4 w-4 me-2" />
