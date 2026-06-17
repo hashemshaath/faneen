@@ -29,11 +29,17 @@ import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { PageHeader } from '@/components/shared';
 import { resolveNotificationActionUrl } from '@/modules/notifications/resolveNotificationActionUrl';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import type { ExportColumn } from '@/lib/export/exportTable';
 
 /* ── Notification Item (memo) ── */
-const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate }: {
+const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate, isSelected, onToggleSelect }: {
   notification: any; isRTL: boolean; language: string;
   onRead: (id: string) => void; onDelete: (id: string) => void; onNavigate: (n: any) => void;
+  isSelected: boolean; onToggleSelect: (id: string) => void;
 }) => {
   const meta = getNotificationMeta(notification);
   const Icon = meta.icon;
@@ -49,11 +55,22 @@ const NotificationItem = React.memo(({ notification, isRTL, language, onRead, on
       className={cn(
         'cursor-pointer transition-all duration-200 group border-border/40 hover:shadow-sm hover:border-border/60',
         !notification.is_read && isUrgent && 'border-destructive/30 bg-destructive/[0.02]',
-        !notification.is_read && !isUrgent && 'border-accent/30 bg-accent/[0.02]'
+        !notification.is_read && !isUrgent && 'border-accent/30 bg-accent/[0.02]',
+        isSelected && 'ring-2 ring-primary/40 border-primary/40'
       )}
       onClick={() => onNavigate(notification)}
     >
       <CardContent className="p-2.5 sm:p-3 flex gap-2.5">
+        <div
+          className="flex items-start pt-0.5"
+          onClick={(e) => { e.stopPropagation(); onToggleSelect(notification.id); }}
+        >
+          <Checkbox
+            checked={isSelected}
+            aria-label={isRTL ? 'تحديد الإشعار' : 'Select notification'}
+            className="h-4 w-4"
+          />
+        </div>
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${color}`}>
           <Icon className="w-3.5 h-3.5" />
         </div>
