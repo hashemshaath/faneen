@@ -507,7 +507,6 @@ const AdminBusinesses = () => {
   const approvalStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const payload: Record<string, unknown> = { approval_status: status };
-      if (status === 'published') payload.published_at = new Date().toISOString();
       const { error } = await updateBusinessById({ id, values: payload as never });
       if (error) throw error;
       await logAction(`business_approval_status_${status}`, id, { status });
@@ -517,6 +516,54 @@ const AdminBusinesses = () => {
       toast.success(pickBi(isRTL, 'تم تحديث الحالة', 'Status updated'));
     },
     onError: () => toast.error(pickBi(isRTL, 'فشل تحديث الحالة', 'Status update failed')),
+  });
+
+  const publishBusinessMutation = useMutation({
+    mutationFn: async (business: AdminBusinessRow) => {
+      const existingUsername = normalizeUsername(business.username);
+      const generatedUsername = existingUsername || generateBusinessUsernameCandidate(business);
+      if (!generatedUsername) {
+        throw new Error(pickBi(isRTL, 'أضف اسمًا إنجليزيًا أو رابطًا عامًا صالحًا قبل النشر.', 'Add an English name or a valid public handle before publishing.'));
+      }
+      if (isReservedUsername(generatedUsername)) {
+        throw new Error(pickBi(isRTL, `الرابط ${generatedUsername} محجوز للنظام. اختر رابطًا آخر.`, `The handle ${generatedUsername} is reserved. Choose another handle.`));
+      }
+      const { count } = await supabase
+        .from('businesses')
+        .select('id', { count: 'exact', head: true })
+        .ilike('username', generatedUsername)
+        .neq('id', business.id);
+      if ((count ?? 0) > 0) {
+        throw new Error(pickBi(isRTL, `الرابط ${generatedUsername} مستخدم بالفعل. اختر رابطًا آخر.`, `The handle ${generatedUsername} is already used. Choose another handle.`));
+      }
+      const payload = createAdminPublishPayload(generatedUsername);
+      const { error } = await updateBusinessById({ id: business.id, values: payload });
+      if (error) throw error;
+      await logAction('business_published_for_public_profile', business.id, {
+        username: generatedUsername,
+        route_source: 'username',
+      });
+      return { username: generatedUsername };
+    },
+    onSuccess: async (result) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      await Promise.all([refetchPublicVisibilityProbe(), refetchPublicUsernameDuplicateCount()]);
+      setEditingBiz((prev) => prev
+        ? {
+            ...prev,
+            username: result.username,
+            approval_status: 'published',
+            is_active: true,
+            is_demo: false,
+            username_status: 'approved',
+            is_verified: true,
+          }
+        : prev);
+      toast.success(pickBi(isRTL, 'تم نشر الجهة للعامة', 'Business published publicly'));
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : pickBi(isRTL, 'فشل نشر الجهة', 'Publish failed'));
+    },
   });
 
   const tierMutation = useMutation({
