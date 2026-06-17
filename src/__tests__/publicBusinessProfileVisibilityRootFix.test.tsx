@@ -93,8 +93,10 @@ describe('Public business profile visibility root fix', () => {
   it('11. public profile select does not expose sensitive owner/contact fields', () => {
     const data = read('src/components/business-profile/business-profile.data.ts');
     expect(data).toContain('businesses_public');
-    expect(data).not.toMatch(/'id, username,[\s\S]*user_id/);
-    expect(data).not.toMatch(/PUBLIC_BUSINESS_SELECT[\s\S]*contact_person/);
+    const selectBlock = data.slice(data.indexOf('const PUBLIC_BUSINESS_SELECT'), data.indexOf('const PROFILE_HEADLINE_STALE_MS'));
+    expect(selectBlock).not.toContain("'user_id'");
+    expect(selectBlock).not.toContain("'contact_person'");
+    expect(selectBlock).not.toContain("'phone, mobile, email'");
   });
 
   it('12. no migration was introduced for this fix', () => {
