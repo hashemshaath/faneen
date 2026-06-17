@@ -216,12 +216,19 @@ Deno.serve(async (req) => {
 
   async function alreadySent(template: string, recipient: string): Promise<boolean> {
     try {
+      // Scope the duplicate guard to THIS quote_request only. Without this scope
+      // the very first admin email blocks every subsequent admin notification,
+      // because admin notifications all go to the same shared inbox.
+      const idempotencyKey = `quote-${refId ?? inserted.id}-${template}`;
       const { data } = await admin
         .from('email_send_log')
         .select('id')
         .eq('template_name', template)
         .eq('recipient_email', recipient)
         .in('status', ['sent', 'pending'])
+        .or(
+          `metadata->>idempotency_key.eq.${idempotencyKey},metadata->>quote_request_id.eq.${inserted.id}`,
+        )
         .limit(1)
         .maybeSingle();
       return !!data;
