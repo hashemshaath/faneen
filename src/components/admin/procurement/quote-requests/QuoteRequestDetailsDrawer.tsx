@@ -51,7 +51,7 @@ export const QuoteRequestDetailsDrawer: React.FC<QuoteRequestDetailsDrawerProps>
   onClose,
   className,
 }) => {
-  const href = detailsHref ?? `/admin/quote-requests/${id}`;
+  const href = detailsHref ?? `/admin/quote-requests/${refId ?? id}`;
   return (
     <aside
       role="region"
