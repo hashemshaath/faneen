@@ -79,6 +79,7 @@ import {
   Zap, Target, PieChart, ArrowUpRight, ArrowDownRight,
   Star, Filter, LayoutGrid, List, MoreHorizontal,
   RefreshCw, Edit3, ExternalLink, CircleCheck,
+  CheckSquare, Square,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -153,7 +154,6 @@ import { ExportMenu } from '@/components/dashboard/ExportMenu';
 import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { exportToCSV, type ExportColumn } from '@/lib/export/exportTable';
-import { CheckSquare, Square } from 'lucide-react';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
