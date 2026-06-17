@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
   const { data: inserted, error } = await admin
     .from('quote_requests')
     .insert(insertPayload)
-    .select('id')
+    .select('id, ref_id')
     .single();
 
   if (error || !inserted) {
