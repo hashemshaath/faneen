@@ -267,7 +267,8 @@ export const HOME_ROW_BINDINGS: ReadonlyArray<{
 }> = [
   { rowId: 'aluminum-glass',           primarySlug: 'aluminum-works',            providerSlugs: ['aluminum-works', 'glass-securit-works', 'facades-cladding'] },
   { rowId: 'steel-stainless',          primarySlug: 'steel-metal-works',         providerSlugs: ['steel-metal-works', 'stainless-steel-works'] },
-  { rowId: 'wood-kitchens',            primarySlug: 'wood-carpentry',            providerSlugs: ['wood-carpentry', 'kitchens-works'] },
+  { rowId: 'wood-kitchens',            primarySlug: 'wood-carpentry',            providerSlugs: ['wood-carpentry'] },
+  { rowId: 'kitchens',                 primarySlug: 'kitchens-works',            providerSlugs: ['kitchens-works'] },
   { rowId: 'elevators-maintenance',    primarySlug: 'elevators-maintenance',     providerSlugs: ['elevators-maintenance'] },
   { rowId: 'energy-sustainability',    primarySlug: 'energy-sustainability',     providerSlugs: ['energy-sustainability'] },
   { rowId: 'technology-networks',      primarySlug: 'technology-networks',       providerSlugs: ['technology-networks'] },
