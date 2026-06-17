@@ -1027,6 +1027,28 @@ const DashboardProjects = () => {
           <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />
         </div>
       )}
+      {!!businessId && projects.length > 0 && (
+        <BulkActionBar
+          count={selectedIds.size}
+          onClear={() => setSelectedIds(new Set())}
+          actions={[
+            {
+              id: 'export-selected-csv',
+              label: pickBi(isRTL, 'تصدير CSV', 'Export CSV'),
+              icon: Download,
+              variant: 'default',
+              onClick: bulkExportSelectedCsv,
+            },
+            {
+              id: 'export-selected-pdf',
+              label: pickBi(isRTL, 'تصدير PDF', 'Export PDF'),
+              icon: Download,
+              variant: 'outline',
+              onClick: bulkExportSelectedPdf,
+            },
+          ]}
+        />
+      )}
     </DashboardLayout>
   );
 };
