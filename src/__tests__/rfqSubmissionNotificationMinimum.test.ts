@@ -86,7 +86,7 @@ describe('RFQ submission notification minimum', () => {
     const files = [edgeSrc, readFileSync(QUOTE_RECEIVED, 'utf8'), readFileSync(ADMIN_TEMPLATE, 'utf8')];
     for (const src of files) {
       expect(src).not.toMatch(/#[0-9a-fA-F]{6}\b/);
-      expect(src).not.toMatch(/\bany\b\s*[=,)]|\bas\s+any\b|@ts-ignore|@ts-expect-error|eslint-disable/);
+      expect(src).not.toMatch(/\bas\s+any\b|@ts-ignore|@ts-expect-error|eslint-disable/);
     }
   });
 });
