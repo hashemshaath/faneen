@@ -316,8 +316,9 @@ Deno.serve(async (req) => {
       account_manager_email: ownerEmailResolved,
       account_manager_position: owner.position ?? null,
       membership_tier: business.membership_tier ?? "free",
-      approval_status: "approved",
-      is_active: true,
+      approval_status: "draft",
+      is_active: false,
+      is_demo: false,
       placeholder_owner: isPlaceholderOwner,
     };
 
