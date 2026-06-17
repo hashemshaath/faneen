@@ -429,9 +429,9 @@ const DashboardBusinessCompletion: React.FC = () => {
             <p className="text-sm text-foreground mb-3">
               {isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد.' : 'No business is linked to your account yet.'}
             </p>
-            <Button size="sm" onClick={() => navigate('/onboarding')} className="gap-1.5">
+            <Button size="sm" onClick={() => navigate('/register-entity')} className="gap-1.5">
               <Building2 className="w-4 h-4" />
-              {isRTL ? 'إنشاء المنشأة' : 'Create business'}
+              {isRTL ? 'إضافة منشأة جديدة' : 'Add new business'}
             </Button>
           </div>
         )}

@@ -460,7 +460,7 @@ const DashboardBusinessEdit: React.FC = () => {
               {t(isRTL, 'لا توجد منشأة مرتبطة بحسابك', 'No business linked to your account')}</CardTitle>
             <CardDescription>{t(isRTL, 'أكمل خطوات الإعداد أولاً.', 'Complete onboarding to create your business first.')}</CardDescription>
           </CardHeader>
-          <CardContent><Button asChild><Link to="/register-entity">{t(isRTL, 'تسجيل جهة جديدة', 'Register entity')}</Link></Button></CardContent>
+          <CardContent><Button asChild><Link to="/register-entity">{t(isRTL, 'إضافة منشأة جديدة', 'Add new business')}</Link></Button></CardContent>
         </Card>
       </DashboardLayout>
     );

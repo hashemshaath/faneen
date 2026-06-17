@@ -204,7 +204,7 @@ const userGroups: MenuGroup[] = [
     groupLabel: { ar: 'نشاطي', en: 'My Activity' },
     icon: FileText,
     items: [
-      { label: { ar: 'جهاتي', en: 'My Entities' }, url: '/dashboard/entities', icon: Building2 },
+      { label: { ar: 'الأعمال', en: 'Businesses' }, url: '/dashboard/entities', icon: Building2 },
       { label: { ar: 'طلباتي', en: 'My Requests' }, url: '/dashboard/my-requests', icon: Inbox },
       { label: { ar: 'عناوين المواقع', en: 'Site Addresses' }, url: '/dashboard/sites', icon: MapPin, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
