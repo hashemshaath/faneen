@@ -133,13 +133,16 @@ export async function getProviderLeadDetail(
 }
 
 export async function getMyQuoteRequestDetail(
-  id: string,
+  idOrRef: string,
   userId: string,
 ): Promise<MyQuoteRequestDetailRow | null> {
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const column = UUID_RE.test(idOrRef) ? 'id' : 'ref_id';
   const { data, error } = await supabase
     .from('quote_requests')
     .select('*')
-    .eq('id', id)
+    .eq(column, idOrRef)
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw error;

@@ -217,7 +217,7 @@ const AdminQuoteRequests: React.FC = () => {
                       <Eye className="h-3.5 w-3.5" /> معاينة
                     </Button>
                     <Button asChild size="sm" variant="outline" className="min-h-[36px]">
-                      <Link to={`/admin/quote-requests/${r.id}`}>فتح التفاصيل</Link>
+                      <Link to={`/admin/quote-requests/${r.ref_id ?? r.id}`}>فتح التفاصيل</Link>
                     </Button>
                   </div>
                 </CardContent>

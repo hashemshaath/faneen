@@ -273,7 +273,7 @@ const DashboardMyRequests: React.FC = () => {
                   <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>
                   <div className="pt-1">
                     <Button asChild size="sm" variant="outline" className="min-h-[36px]">
-                      <Link to={`/dashboard/my-requests/${q.id}`}>
+                      <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
                         {isRTL ? 'عرض التفاصيل' : 'View details'}
                       </Link>
                     </Button>

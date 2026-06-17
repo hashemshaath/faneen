@@ -94,10 +94,14 @@ const QuoteRequestDetails: React.FC = () => {
     queryFn: () => getMyQuoteRequestDetail(id!, user!.id) as Promise<QuoteRow | null>,
   });
 
+  // URL `id` may be a UUID or REF; downstream queries / mutations need the
+  // canonical UUID resolved from the loaded row.
+  const quoteUuid = quote?.id ?? null;
+
   const { data: files, refetch: refetchFiles } = useQuery({
-    queryKey: ['quote-request-files', id],
-    enabled: !!id && !!quote,
-    queryFn: () => listQuoteRequestFiles(id!) as Promise<FileRow[]>,
+    queryKey: ['quote-request-files', quoteUuid],
+    enabled: !!quoteUuid,
+    queryFn: () => listQuoteRequestFiles(quoteUuid!) as Promise<FileRow[]>,
   });
 
   const canEdit = useMemo(
@@ -118,12 +122,13 @@ const QuoteRequestDetails: React.FC = () => {
   };
   const updateMutation = useMutation({
     mutationFn: async (patch: UpdatePatch) => {
-      await updateMyQuoteRequest(id!, user!.id, patch);
+      await updateMyQuoteRequest(quoteUuid!, user!.id, patch);
     },
     onSuccess: () => {
       toast.success('تم تحديث الطلب بنجاح');
       setEditing(false);
       qc.invalidateQueries({ queryKey: ['quote-request', id] });
+      qc.invalidateQueries({ queryKey: ['quote-request-files', quoteUuid] });
       qc.invalidateQueries({ queryKey: ['my-quote-requests'] });
     },
     onError: () => toast.error('تعذر تحديث الطلب حاليًا'),

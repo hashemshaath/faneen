@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
         body_en: 'We received your request and will route it by sector and city.',
         reference_id: inserted.id,
         reference_type: 'quote_request',
-        action_url: `/dashboard/my-requests/${inserted.id}`,
+        action_url: `/dashboard/my-requests/${refId ?? inserted.id}`,
       });
     }
     // Notify admins
@@ -300,7 +300,7 @@ Deno.serve(async (req) => {
         body_en: `New quote request in sector ${sector} (${city}).`,
         reference_id: inserted.id,
         reference_type: 'quote_request',
-        action_url: `/admin/quote-requests`,
+        action_url: `/admin/quote-requests/${refId ?? inserted.id}`,
       }));
       await admin.from('notifications').insert(rows);
     }
