@@ -12,7 +12,25 @@ const SAUDI_PHONE = /^(?:\+?966|0)?5\d{8}$/;
 // Keep `false` while admin review is the default operating mode.
 const AUTO_MATCH_ON_SUBMISSION = false;
 
+// Must stay in sync with src/modules/taxonomy/canonical-primaries.ts
+// (the 13 canonical primary slugs the public RFQ form is allowed to submit).
+// Legacy short slugs are kept for back-compat with older clients/links.
 const ALLOWED_SECTORS = new Set([
+  // Canonical (current)
+  'aluminum-works',
+  'glass-securit-works',
+  'steel-metal-works',
+  'stainless-steel-works',
+  'wood-carpentry',
+  'kitchens-works',
+  'facades-cladding',
+  'contracting-finishing',
+  'elevators-maintenance',
+  'energy-sustainability',
+  'technology-networks',
+  'security-control-systems',
+  'equipment-rental',
+  // Legacy short slugs (back-compat)
   'aluminum','iron','wood','glass','stainless','fabrication','storefronts','project-fitout','other',
 ]);
 const ALLOWED_CONTACT = new Set(['whatsapp','call','email']);
