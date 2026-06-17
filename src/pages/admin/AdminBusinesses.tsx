@@ -1490,6 +1490,14 @@ const AdminBusinesses = () => {
 
                 {/* ── Info Tab ── */}
                 <TabsContent value="info" className="space-y-4 mt-3">
+                  <BusinessPublicVisibilityCard
+                    business={editingBiz}
+                    publicProbe={publicVisibilityProbe}
+                    duplicateCount={publicUsernameDuplicateCount}
+                    isRTL={isRTL}
+                    isPublishing={publishBusinessMutation.isPending}
+                    onPublish={(business) => publishBusinessMutation.mutate(business as AdminBusinessRow)}
+                  />
                   <BusinessBasicInfoSection
                     editForm={editForm}
                     setField={setField}
