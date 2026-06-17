@@ -114,6 +114,113 @@ export const RefreshButton = React.memo(function RefreshButton({
   );
 });
 
+/* ================================================================== */
+/*  Unified dashboard primitives — single source of truth for cards.  */
+/* ================================================================== */
+
+/** Standard card shell — apply to every dashboard section Card. */
+export const SECTION_CARD_CLASS = 'border-border/60 bg-card';
+
+/** Standard CardContent padding + vertical rhythm. */
+export const SECTION_CONTENT_CLASS = 'p-3 sm:p-4 space-y-3';
+
+type SectionTone = 'neutral' | 'accent' | 'warning' | 'success' | 'primary';
+
+const toneIconClasses: Record<SectionTone, string> = {
+  neutral: 'bg-muted/40 text-muted-foreground border-border/60',
+  accent:  'bg-accent/10 text-accent border-accent/20',
+  warning: 'bg-warning/10 text-warning border-warning/25',
+  success: 'bg-success/10 text-success border-success/25',
+  primary: 'bg-primary/10 text-primary border-primary/20',
+};
+
+/**
+ * Unified header for every dashboard section card.
+ * Renders an icon-in-tinted-box + heading + optional right-side slot.
+ */
+export const SectionHeader = React.memo(function SectionHeader({
+  icon: Icon,
+  title,
+  tone = 'neutral',
+  right,
+  description,
+}: {
+  icon: React.ElementType;
+  title: string;
+  tone?: SectionTone;
+  right?: React.ReactNode;
+  description?: string;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className={cn('p-1.5 rounded-lg border shrink-0', toneIconClasses[tone])}>
+          <Icon className="w-4 h-4" aria-hidden="true" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="font-heading font-bold text-[13px] leading-tight text-foreground truncate">
+            {title}
+          </h3>
+          {description && (
+            <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 truncate">
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+      {right && <div className="shrink-0 flex items-center gap-1.5">{right}</div>}
+    </div>
+  );
+});
+
+/** Small pill/chip — use for "Last 24h", counts, status tags inside SectionHeader.right. */
+export const SectionChip = React.memo(function SectionChip({
+  children,
+  tone = 'neutral',
+}: {
+  children: React.ReactNode;
+  tone?: SectionTone;
+}) {
+  const toneClass =
+    tone === 'accent'  ? 'text-accent bg-accent/10 border-accent/20'   :
+    tone === 'warning' ? 'text-warning bg-warning/10 border-warning/25' :
+    tone === 'success' ? 'text-success bg-success/10 border-success/25' :
+    tone === 'primary' ? 'text-primary bg-primary/10 border-primary/20' :
+                         'text-muted-foreground bg-muted/50 border-border/40';
+  return (
+    <span className={cn('text-[10px] font-medium rounded-full px-2 py-0.5 border tracking-tight', toneClass)}>
+      {children}
+    </span>
+  );
+});
+
+/** "View all" style link button shown in SectionHeader.right. */
+export const SectionLinkAction = React.memo(function SectionLinkAction({
+  to, label,
+}: { to: string; label: string }) {
+  return (
+    <Link to={to}>
+      <Button variant="ghost" size="sm" className="text-[11px] text-accent h-7 px-2 gap-1 font-medium">
+        {label}
+        <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
+      </Button>
+    </Link>
+  );
+});
+
+/** Empty-state body for section cards. */
+export const SectionEmpty = React.memo(function SectionEmpty({
+  icon: Icon, message, action,
+}: { icon: React.ElementType; message: string; action?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+      <Icon className="w-8 h-8 mb-2 opacity-20" aria-hidden="true" />
+      <p className="text-[11px]">{message}</p>
+      {action && <div className="mt-2">{action}</div>}
+    </div>
+  );
+});
+
 export const StatCard = React.memo(function StatCard({
   icon: Icon, label, value, sub, color, to,
 }: {
