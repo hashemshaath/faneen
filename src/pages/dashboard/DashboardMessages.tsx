@@ -36,6 +36,8 @@ import {
 import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { MessageTemplates } from '@/components/messages/MessageTemplates';
+import { ImageLightbox, type LightboxImage } from '@/components/messages/ImageLightbox';
+import { useChatPersistence } from '@/hooks/useChatPersistence';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
@@ -111,7 +113,7 @@ const TypingIndicator = React.memo(({ isRTL }: { isRTL: boolean }) => (
 TypingIndicator.displayName = 'TypingIndicator';
 
 /* ─── Attachment Preview (memo) ─── */
-const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: string; name?: string }) => {
+const AttachmentPreview = React.memo(({ url, type, name, onOpenImage, imageId }: { url: string; type: string; name?: string; onOpenImage?: (id: string) => void; imageId?: string }) => {
   const [showPdf, setShowPdf] = React.useState(false);
   const isImage = IMAGE_TYPES.some(t => url.toLowerCase().includes(t.split('/')[1]) || type === t);
   const inferredImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
@@ -119,14 +121,26 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 
   if (isImage || inferredImage) {
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-2 group/img">
+      <button
+        type="button"
+        onClick={(e) => {
+          if (onOpenImage && imageId) {
+            e.preventDefault();
+            onOpenImage(imageId);
+          } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        }}
+        className="block mt-2 group/img w-full text-start"
+        aria-label={name || 'attachment'}
+      >
         <div className="relative overflow-hidden rounded-xl border border-border/20 shadow-sm">
           <img src={url} alt={name || 'attachment'} className="max-w-[260px] max-h-[220px] object-cover transition-transform duration-300 group-hover/img:scale-105" loading="lazy" />
           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
             <Eye className="w-5 h-5 text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-lg" />
           </div>
         </div>
-      </a>
+      </button>
     );
   }
   if (isPdf) {
@@ -256,7 +270,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
 ConversationItem.displayName = 'ConversationItem';
 
 /* ─── Message Bubble (memo) ─── */
-const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar, onForward }: { msg: any; isMine: boolean; language: string; isRTL: boolean; onReply: (msg: any) => void; onCopy: (text: string) => void; onReact: (id: string, emoji: string | null) => void; onStar: (id: string) => void; onForward: (msg: any) => void }) => {
+const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar, onForward, onOpenImage }: { msg: any; isMine: boolean; language: string; isRTL: boolean; onReply: (msg: any) => void; onCopy: (text: string) => void; onReact: (id: string, emoji: string | null) => void; onStar: (id: string) => void; onForward: (msg: any) => void; onOpenImage?: (id: string) => void }) => {
   const [showReactions, setShowReactions] = useState(false);
   const isReply = msg.content?.startsWith('↩️');
   let replyPreview = '';
@@ -310,7 +324,13 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
           {/* Attachment */}
           {msg.attachment_url && (
             <div className="px-3 pt-1">
-              <AttachmentPreview url={msg.attachment_url} type={msg.message_type} name={msg.content?.startsWith('📎') ? msg.content.slice(3) : undefined} />
+              <AttachmentPreview
+                url={msg.attachment_url}
+                type={msg.message_type}
+                name={msg.content?.startsWith('📎') ? msg.content.slice(3) : undefined}
+                onOpenImage={onOpenImage}
+                imageId={msg.id}
+              />
             </div>
           )}
 
@@ -614,13 +634,15 @@ const DashboardMessages = () => {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<any | null>(null);
 
-  // Local state for pinned/starred/muted/labels and message reactions/stars
-  const [pinnedConvs, setPinnedConvs] = useState<Set<string>>(new Set());
-  const [starredConvs, setStarredConvs] = useState<Set<string>>(new Set());
-  const [mutedConvs, setMutedConvs] = useState<Set<string>>(new Set());
-  const [convLabels, setConvLabels] = useState<Record<string, string>>({});
-  const [messageReactions, setMessageReactions] = useState<Record<string, string>>({});
-  const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
+  // Persistent prefs (per-user, localStorage-backed). Survives reload.
+  const {
+    pinnedConvs, starredConvs, mutedConvs, convLabels, messageReactions, starredMessages,
+    togglePinConv, toggleStarConv, toggleMuteConv: toggleMuteConvBase,
+    setConvLabel: setConvLabelBase,
+    handleReactMessage, toggleStarMessage,
+  } = useChatPersistence(user?.id);
+  // Lightbox for inline image attachments.
+  const [lightboxId, setLightboxId] = useState<string | null>(null);
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduleTime, setScheduleTime] = useState('');
   const [scheduledMessages, setScheduledMessages] = useState<{ convId: string; text: string; time: string; id: string }[]>([]);
@@ -637,37 +659,15 @@ const DashboardMessages = () => {
     startTransition(() => setDeferredSearch(val));
   }, []);
 
-  const togglePinConv = useCallback((id: string) => {
-    setPinnedConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
-  const toggleStarConv = useCallback((id: string) => {
-    setStarredConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
   const toggleMuteConv = useCallback((id: string) => {
-    setMutedConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+    toggleMuteConvBase(id);
     toast.success(pickBi(isRTL, 'تم تحديث الإشعارات', 'Notifications updated'));
-  }, [isRTL]);
+  }, [toggleMuteConvBase, isRTL]);
   const setConvLabel = useCallback((id: string, label: string) => {
-    setConvLabels(prev => {
-      const next = { ...prev };
-      if (label === 'none') delete next[id];
-      else next[id] = label;
-      return next;
-    });
+    setConvLabelBase(id, label);
     const found = CONV_LABELS.find(l => l.key === label);
     if (found && label !== 'none') toast.success(isRTL ? `تم تصنيف المحادثة: ${found.label_ar}` : `Labeled: ${found.label_en}`);
-  }, [isRTL]);
-  const handleReactMessage = useCallback((msgId: string, emoji: string | null) => {
-    setMessageReactions(prev => {
-      const next = { ...prev };
-      if (emoji === null || next[msgId] === emoji) delete next[msgId];
-      else next[msgId] = emoji;
-      return next;
-    });
-  }, []);
-  const toggleStarMessage = useCallback((msgId: string) => {
-    setStarredMessages(prev => { const next = new Set(prev); if (next.has(msgId)) next.delete(msgId); else next.add(msgId); return next; });
-  }, []);
+  }, [setConvLabelBase, isRTL]);
   const handleForwardMessage = useCallback((msg: any) => {
     setForwardMsg(msg);
     toast.info(pickBi(isRTL, 'اختر محادثة لتحويل الرسالة إليها', 'Select a conversation to forward to'));
@@ -707,16 +707,16 @@ const DashboardMessages = () => {
       allIds.delete(user!.id);
 
       if (allIds.size > 0) {
-        const { data: profiles } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null; email: string | null }>({
+        const { data: profiles } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null; email: string | null; username: string | null }>({
           userIds: Array.from(allIds),
-          select: 'user_id, full_name, avatar_url, email',
+          select: 'user_id, full_name, avatar_url, email, username',
         });
         const profileMap = new Map((profiles || []).map((p) => [p.user_id, p] as const));
 
         if (isSuperAdmin) {
-          const { data: allProfiles } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null; email: string | null }>({
+          const { data: allProfiles } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null; email: string | null; username: string | null }>({
             userIds: Array.from(new Set(data.flatMap((c) => [c.participant_1, c.participant_2]))),
-            select: 'user_id, full_name, avatar_url, email',
+            select: 'user_id, full_name, avatar_url, email, username',
           });
           (allProfiles || []).forEach((p) => { if (!profileMap.has(p.user_id)) profileMap.set(p.user_id, p); });
         }
@@ -906,7 +906,14 @@ const DashboardMessages = () => {
   /* ─── Filter & Select ─── */
   const filteredConversations = useMemo(() => {
     let result = conversations;
-    if (deferredSearch) result = result.filter((c) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
+    if (deferredSearch) {
+      const q = deferredSearch.toLowerCase();
+      result = result.filter((c) => {
+        const name = c.other_profile?.full_name?.toLowerCase() || '';
+        const lastMsg = (c.last_message_text || '').toLowerCase();
+        return name.includes(q) || lastMsg.includes(q);
+      });
+    }
     if (convFilter === 'unread') result = result.filter((c) => (unreadCounts as Record<string, number>)[c.id] > 0);
     if (convFilter === 'starred') result = result.filter((c) => starredConvs.has(c.id));
     if (convFilter === 'pinned') result = result.filter((c) => pinnedConvs.has(c.id));
@@ -973,6 +980,48 @@ const DashboardMessages = () => {
     starred: starredConvs.size,
     pinned: pinnedConvs.size,
   }), [conversations.length, totalUnread, starredConvs.size, pinnedConvs.size]);
+
+  /* ─── Lightbox source: every image attachment in current chat ─── */
+  const lightboxImages = useMemo<LightboxImage[]>(() => {
+    return messages
+      .filter(m => m.attachment_url && (m.message_type === 'image' || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(m.attachment_url)))
+      .map(m => ({
+        id: m.id,
+        url: m.attachment_url as string,
+        name: m.content?.startsWith('📎') ? m.content.slice(3) : (m.content || null),
+        createdAt: m.created_at,
+      }));
+  }, [messages]);
+
+  /* ─── Smart quick replies (contextual, language-aware) ─── */
+  const quickReplies = useMemo(() => {
+    const lastIncoming = [...messages].reverse().find(m => m.sender_id !== user?.id);
+    const text = (lastIncoming?.content || '').toLowerCase();
+    const ar = [
+      'شكراً لك! 🙏',
+      'تمام، سأرد قريباً',
+      'هل يمكنك إرسال المزيد من التفاصيل؟',
+      'موافق ✅',
+    ];
+    const en = [
+      'Thanks! 🙏',
+      "Got it, I'll get back shortly",
+      'Could you share more details?',
+      'Sounds good ✅',
+    ];
+    // Tiny contextual nudges
+    if (/(price|سعر|تكلفة)/i.test(text)) {
+      ar[2] = 'هل يمكنك إرسال عرض السعر؟';
+      en[2] = 'Could you share a price quote?';
+    } else if (/(when|متى|موعد|date)/i.test(text)) {
+      ar[2] = 'ما المواعيد المتاحة لديك؟';
+      en[2] = 'What dates work for you?';
+    } else if (/(photo|صورة|image|file|ملف)/i.test(text)) {
+      ar[2] = 'هل يمكنك إرسال الصور/الملفات؟';
+      en[2] = 'Could you send the photos/files?';
+    }
+    return isRTL ? ar : en;
+  }, [messages, user?.id, isRTL]);
 
   return (
     <DashboardLayout>
@@ -1251,9 +1300,14 @@ const DashboardMessages = () => {
                           <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl" aria-label="More options"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align={pickBi(isRTL, 'start', 'end')} className="rounded-xl min-w-[180px]">
-                          <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg text-xs gap-2">
-                            <Eye className="w-3.5 h-3.5" />{pickBi(isRTL, 'عرض الملف الشخصي', 'View profile')}
-                          </DropdownMenuItem>
+                          {selectedConv?.other_profile?.username && (
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/${selectedConv.other_profile.username}`)}
+                              className="rounded-lg text-xs gap-2"
+                            >
+                              <Eye className="w-3.5 h-3.5" />{pickBi(isRTL, 'عرض الملف الشخصي', 'View profile')}
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => togglePinConv(selectedConversation!)}>
                             <Pin className={`w-3.5 h-3.5 ${pinnedConvs.has(selectedConversation!) ? 'fill-current text-accent' : ''}`} />
                             {pinnedConvs.has(selectedConversation!) ? (pickBi(isRTL, 'إلغاء التثبيت', 'Unpin')) : (pickBi(isRTL, 'تثبيت', 'Pin'))}
@@ -1358,7 +1412,8 @@ const DashboardMessages = () => {
                               return (
                                 <div key={msg.id} id={`msg-${msg.id}`} className={isSearchMatch ? 'bg-accent/10 rounded-xl -mx-1 px-1 transition-colors' : ''}>
                                   <MessageBubble msg={msg} isMine={msg.sender_id === user?.id} language={language} isRTL={isRTL}
-                                    onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} onForward={handleForwardMessage} />
+                                    onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} onForward={handleForwardMessage}
+                                    onOpenImage={setLightboxId} />
                                 </div>
                               );
                             })}
@@ -1423,6 +1478,23 @@ const DashboardMessages = () => {
                       <MessageTemplates onSelectTemplate={(content) => { setMessageText(content); setShowTemplates(false); inputRef.current?.focus(); }} onClose={() => setShowTemplates(false)} />
                     )}
                     {showEmoji && <EmojiQuickPicker onSelect={handleEmojiSelect} isRTL={isRTL} />}
+
+                    {/* Smart quick replies — show only when composer is empty and idle. */}
+                    {!messageText.trim() && !attachedFile && !replyTo && !showTemplates && !showEmoji && !showScheduler && (
+                      <div className="flex items-center gap-1.5 mb-2 overflow-x-auto no-scrollbar -mt-1">
+                        <Sparkles className="w-3 h-3 text-accent/60 shrink-0" aria-hidden="true" />
+                        {quickReplies.map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => { setMessageText(q); setTimeout(() => inputRef.current?.focus(), 0); }}
+                            className="shrink-0 text-[11px] px-2.5 py-1 rounded-full border border-border/40 bg-muted/30 hover:bg-accent/10 hover:border-accent/40 hover:text-accent text-muted-foreground transition-colors font-medium"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="flex gap-1.5 items-end">
                       <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" className="hidden" onChange={handleFileSelect} />
@@ -1551,6 +1623,15 @@ const DashboardMessages = () => {
             )}
           </div>
         </div>
+
+        {/* Fullscreen image viewer for chat attachments */}
+        <ImageLightbox
+          images={lightboxImages}
+          currentId={lightboxId}
+          isRTL={isRTL}
+          onClose={() => setLightboxId(null)}
+          onChange={setLightboxId}
+        />
       </TooltipProvider>
     </DashboardLayout>
   );
