@@ -66,7 +66,10 @@ export const NotificationBell = () => {
         icon: <Icon className="w-4 h-4" />,
         action: n.action_url ? {
           label: language === 'ar' ? 'عرض' : 'View',
-          onClick: () => navigate(n.action_url),
+            onClick: () => {
+              const actionUrl = resolveNotificationActionUrl(n);
+              if (actionUrl) navigate(actionUrl);
+            },
         } : undefined,
         duration: 5000,
       });
