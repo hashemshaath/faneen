@@ -75,16 +75,16 @@ describe('AUTH-14G · Full regression + launch readiness sweep', () => {
     expect(src).toMatch(/normalized === 'free'/);
   });
 
-  // 10. Duplicate business warning on onboarding intent screen
-  it('onboarding intent screen carries duplicate-entity warning', () => {
-    const src = read('src/pages/Onboarding.tsx');
+  // 10. Duplicate business warning lives on /register-entity (intent moved to /start).
+  it('register-entity carries duplicate-entity warning', () => {
+    const src = read('src/pages/RegisterEntity.tsx');
     expect(src).toMatch(/onboarding-duplicate-warning/);
     expect(src).toMatch(/إذا كانت منشأتك مسجلة مسبقًا في قطاعات/);
   });
 
-  // 11. request-access clarification copy present
-  it('request-access surface carries admin-approval clarification', () => {
-    const src = read('src/pages/Onboarding.tsx');
+  // 11. request-access clarification lives on /start (context selection).
+  it('start surface carries admin-approval clarification', () => {
+    const src = read('src/pages/Start.tsx');
     expect(src).toMatch(/request-access-clarification/);
     expect(src).toMatch(/يحتاج مراجعة من مسؤول المنشأة/);
   });
