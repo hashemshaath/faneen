@@ -906,7 +906,14 @@ const DashboardMessages = () => {
   /* ─── Filter & Select ─── */
   const filteredConversations = useMemo(() => {
     let result = conversations;
-    if (deferredSearch) result = result.filter((c) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
+    if (deferredSearch) {
+      const q = deferredSearch.toLowerCase();
+      result = result.filter((c) => {
+        const name = c.other_profile?.full_name?.toLowerCase() || '';
+        const lastMsg = (c.last_message_text || '').toLowerCase();
+        return name.includes(q) || lastMsg.includes(q);
+      });
+    }
     if (convFilter === 'unread') result = result.filter((c) => (unreadCounts as Record<string, number>)[c.id] > 0);
     if (convFilter === 'starred') result = result.filter((c) => starredConvs.has(c.id));
     if (convFilter === 'pinned') result = result.filter((c) => pinnedConvs.has(c.id));
