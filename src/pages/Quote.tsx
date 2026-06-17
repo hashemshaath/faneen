@@ -252,6 +252,7 @@ const Quote: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const [submittedRefId, setSubmittedRefId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const initialDraftHadSector = useRef<boolean>(!!loadDraft().sector);
