@@ -108,14 +108,18 @@ const DashboardMyRequests: React.FC = () => {
   const qc = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [tab, setTab] = useState<'quotes' | 'leads'>('quotes');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [search, setSearch] = useState<string>('');
+  const deferredSearch = useDeferredValue(search);
 
-  const { data: leads, isLoading } = useQuery({
+  const { data: leads, isLoading, isFetching: leadsFetching, refetch: refetchLeads } = useQuery({
     queryKey: ['my-service-requests', user?.id],
     enabled: !!user?.id,
     queryFn: () => listMyLeadRequests(user!.id) as unknown as Promise<MyLeadRow[]>,
   });
 
-  const { data: quoteRequests, isLoading: loadingQuotes } = useQuery({
+  const { data: quoteRequests, isLoading: loadingQuotes, isFetching: quotesFetching, refetch: refetchQuotes } = useQuery({
     queryKey: ['my-quote-requests', user?.id],
     enabled: !!user?.id,
     queryFn: () => listMyQuoteRequests(user!.id) as unknown as Promise<QuoteRequestRow[]>,
