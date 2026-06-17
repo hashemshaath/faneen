@@ -1,73 +1,93 @@
-# إعادة بناء صفحة تسجيل بيانات المنشأة
+## نطاق العمل
 
-## 1) تدقيق التصنيفات المركزية (DB)
+تحسينات شاملة للداشبورد تشمل بناء مزايا احترافية مشتركة وتطبيقها على الأقسام الأربعة المحددة، مع فحص الروابط وتوحيد التصميم وتحسين الأداء والاستجابة.
 
-### المشاكل المكتشفة
-- **7 تصنيفات مكررة بالاسم العربي** عبر `taxonomy_categories`: المطابخ، الزجاج والسيكوريت، الستانلس ستيل، مولدات، الألمنيوم، سقالات، مطابخ ألمنيوم.
-- **تداخل نوعين** يخدمان نفس الغرض: `sector` (34 تصنيفًا، إصدار قديم) و`primary_activity` (31 تصنيفًا، الإصدار الحديث المستخدم في الـpicker).
-- `secondary_activity` فيها 175 تخصصًا — جيد لكن بحاجة تنظيف وربط واضح بالأنشطة الرئيسية عبر `taxonomy_category_relations` (parent_id) ليعمل الفلترة في الواجهة.
-- بعض `primary_activity` غير ظاهرة في التسجيل (24 من 31 فقط `show_in_registration=true`).
+## المزايا المشتركة الجديدة (Foundations)
 
-### الإجراءات (Migration واحدة، قابلة للمراجعة)
-1. **دمج المكررات**: لكل اسم مكرر نُبقي السجل الأقدم/الأنشط ونؤرشف الآخر (`is_archived=true`, `is_active=false`)، مع تحويل أي ربط في `business_taxonomy_categories` و`taxonomy_aliases` إلى السجل المُبقى.
-2. **تصفية `sector` القديم**: تحويله إلى alias-only — يُؤرشف نوع `sector` من قوائم الاختيار العامة، وتُنقل أسماؤه كـ`taxonomy_aliases` على ما يقابلها في `primary_activity`. تقرير قبل التنفيذ.
-3. **تفعيل `show_in_registration=true`** لكل تصنيفات `entity_type` و`primary_activity` و`secondary_activity` النشطة.
-4. **التحقق من parent_id** لكل `secondary_activity` ليكون مرتبطًا بنشاط رئيسي واحد على الأقل.
+سأبني هذه المكونات مرة واحدة وأعيد استخدامها عبر كل الأقسام:
 
-## 2) إعادة بناء صفحة بيانات المنشأة (UI)
+1. **Command Palette (Cmd+K / Ctrl+K)**
+   - `src/components/dashboard/CommandPalette.tsx` فوق كل صفحات `/dashboard/*`
+   - بحث في: الصفحات، العقود، الأعمال، المشاريع، الإشعارات
+   - اختصارات سريعة: عقد جديد، مشروع جديد، رفع صورة، تبديل الثيم/اللغة
+   - تكامل مع `cmdk` (متوفر في shadcn)
 
-تُستبدل خطوة `business-details` الواحدة الطويلة بـ Wizard من 4 خطوات فرعية مع شريط تقدم خاص بها (داخل خطوة Onboarding "بيانات المنشأة"):
+2. **Pin & Reorder للوحة Overview**
+   - `usePinnedWidgets` hook يحفظ في `localStorage` بمفتاح `qitaat_dashboard_widgets_v1`
+   - أيقونة تثبيت/إخفاء على كل widget، مع ترتيب بالسحب الخفيف (بدون مكتبة جديدة)
 
-```text
-[ 1 الهوية ] → [ 2 التصنيف ] → [ 3 العنوان والفروع ] → [ 4 مدير الحساب ]
-```
+3. **Export Utility (CSV + PDF)**
+   - `src/lib/export/exportTable.ts` — `exportToCSV(rows, columns, filename)` و `exportToPDF(rows, columns, { title, rtl })`
+   - يستخدم `jsPDF + Amiri font` المسجّل مسبقاً (سياسة الـ Arabic engine)
+   - زر موحد `<ExportMenu />` يظهر في رؤوس الجداول
 
-### خطوة 1 — الهوية
-الاسم بالعربي/الإنجليزي، اسم المستخدم، الرقم الموحد 700، البريد، السجل التجاري (اختياري).
+4. **Bulk Actions Bar**
+   - `<BulkActionBar selected={n} actions={[...]} />` شريط سفلي عائم
+   - `useBulkSelection<T>()` hook عام (selectAll/clear/toggle)
+   - دعم: حذف، أرشفة، تصدير المحدد، تغيير الحالة
 
-### خطوة 2 — التصنيف (سهل وسريع)
-- **بحث ذكي موحَّد** أعلى الصفحة يبحث في النوع/النشاط/التخصص ويقترح فورًا.
-- **3 شرائح أفقية** قابلة للتوسعة:
-  - نوع الجهة (Chips أحادي الاختيار، 15 خيار، أيقونة لكل نوع).
-  - النشاط الرئيسي (Chips متعدد، يظهر فقط الأنشطة المرتبطة بنوع الجهة المختار).
-  - التخصصات (Chips متعدد، تظهر فقط التخصصات التابعة للأنشطة المختارة عبر parent_id).
-- اقتراحات شائعة في الأعلى + "الأكثر اختيارًا في منطقتك".
-- زر "لم أجد تخصصي" يفتح حقل اقتراح يُسجَّل في `service_addition_requests`.
+## التحسينات حسب القسم
 
-### خطوة 3 — العنوان والفروع (مرتبط بنظام العناوين المركزي)
-تبويبان جنبًا إلى جنب:
+### 1. العقود والمشاريع (`/dashboard/contracts`, `/dashboard/projects`)
+- إضافة Bulk Actions: تصدير CSV/PDF، أرشفة، تحديث الحالة
+- زر "تصدير الكل" في الهيدر
+- إصلاح أي روابط معطّلة في صفحة تفاصيل العقد
+- توحيد رؤوس الأقسام مع `SectionHeader` من `shared.tsx`
 
-**أ. العنوان الوطني (SPL)** — إدخال الرمز القصير (4 أحرف + 4 أرقام) → استدعاء `nationalAddressLookup` (موجود) → تعبئة تلقائية لكل الحقول + تحديث الخريطة.
+### 2. الأعمال والخدمات (`/dashboard/business*`, `/dashboard/services`)
+- Bulk Actions على قائمة الخدمات والفروع
+- تصدير كتالوج الخدمات
+- زر Quick Add في الـ Command Palette
+- توحيد البطاقات بنفس النظام المدمج
 
-**ب. الخريطة** — Google Maps (Connector موجود): تحريك Marker → reverse geocode عبر `reverseGeocode` → تعبئة الحقول.
+### 3. المحفظة والمشاريع المنفذة (`/dashboard/portfolio`)
+- إجراءات مجمّعة (نشر/إخفاء/حذف عدة عناصر)
+- تصدير قائمة المشاريع المنفذة
+- تحسين الـ grid على الجوال (`xs:` breakpoint)
 
-كلا التبويبين يكتبان في نفس الـstate. النموذج يستخدم `NationalAddressForm` الموجود ويُحفظ عبر `upsertPrimaryAddress` من `@/modules/addresses` مع `owner_type='business'` و`address_type='primary'` (لا تكرار كود — استخدام كامل للوحدة المركزية).
+### 4. الإشعارات والتقارير (`/dashboard/notifications`)
+- إجراءات مجمّعة (تعليم كمقروء، حذف، أرشفة)
+- فلتر سريع متقدم (نوع، تاريخ، حالة)
+- تصدير سجل الإشعارات
 
-**الفروع**: قسم قابل للطي تحت العنوان مع زر "+ إضافة فرع". كل فرع له نفس مكوّن العنوان (تبويبان) ويُحفظ كـ `address` مرتبط بـ `business_branches` عبر نفس الـmodule. الفرع الأول = الرئيسي تلقائيًا.
+## الفحص والتدقيق
 
-### خطوة 4 — مدير الحساب
-الاسم + الجوال (كما هو الحالي).
+- **فحص الروابط**: مرور على روابط الـ Sidebar وأزرار CTA الرئيسية في كل صفحة (نتائج في رد قصير بعد التنفيذ)
+- **توحيد التصميم**: تطبيق `SECTION_CARD_CLASS` و `SectionHeader` بشكل متّسق
+- **الأداء**: التأكد من lazy loading للصفحات الثقيلة (Portfolio/Projects)
+- **الجوال**: مراجعة الـ touch targets (>=44px) و RTL على الـ Bulk Bar
 
-## 3) المكوّنات الجديدة (frontend فقط)
+## التغييرات التقنية
 
-- `src/components/onboarding/business/BusinessWizard.tsx` — موجِّه الخطوات الفرعية وحالة الـDraft.
-- `src/components/onboarding/business/steps/IdentityStep.tsx`
-- `src/components/onboarding/business/steps/ClassificationStep.tsx` — يستخدم `MultiPrimaryTaxonomyPicker` الموجود لكن بواجهة Chips أبسط + بحث.
-- `src/components/onboarding/business/steps/AddressStep.tsx` — يستخدم `NationalAddressForm` + خريطة جديدة `BusinessAddressMap.tsx`.
-- `src/components/onboarding/business/steps/AccountManagerStep.tsx` — نقل الكود الحالي.
-- `src/components/onboarding/business/BranchesEditor.tsx` — قائمة فروع inline.
-- `src/components/maps/AddressPickerMap.tsx` — Google Maps + Marker + reverseGeocode (مشترك مع لوحة التحكم لاحقًا).
+**ملفات جديدة:**
+- `src/components/dashboard/CommandPalette.tsx`
+- `src/components/dashboard/ExportMenu.tsx`
+- `src/components/dashboard/BulkActionBar.tsx`
+- `src/hooks/useBulkSelection.ts`
+- `src/hooks/usePinnedWidgets.ts`
+- `src/lib/export/exportTable.ts`
 
-`src/pages/Onboarding.tsx` يقلص ليصبح موجِّهًا فقط (يستدعي `BusinessWizard`)، مع الحفاظ على منطق الحفظ والتنقل الحالي.
+**ملفات معدّلة:**
+- `src/components/dashboard/DashboardLayout.tsx` (إضافة CommandPalette + اختصار)
+- `src/pages/dashboard/DashboardContracts.tsx`
+- `src/pages/dashboard/DashboardProjects.tsx`
+- `src/pages/dashboard/DashboardPortfolio.tsx`
+- `src/pages/dashboard/DashboardNotifications.tsx`
+- `src/pages/dashboard/DashboardServices.tsx`
+- `src/pages/dashboard/overview/UserDashboardView.tsx` (Pin/Reorder)
 
-## 4) ما لن يتغيّر
-- منطق إنشاء `businesses` / `profiles` الحالي يبقى — Wizard فقط يجمّع البيانات.
-- نظام العناوين المركزي `@/modules/addresses` لا يُعدّل — نستهلكه فقط.
-- لا تغيير على الـauth أو الأدوار.
+**القيود المحترمة:**
+- لا popups/dialogs خارج CommandPalette (Cmd+K هو UX قياسي مقبول)
+- لا تغييرات في الـ business logic، فقط UI و UX
+- جميع المفاتيح بـ `qitaat_*` prefix
+- بدون مكتبات جديدة (نستخدم cmdk + jsPDF الموجودين)
 
-## التحقق
-- Migration: تقرير قبل/بعد لعدد التصنيفات لكل نوع + قائمة المُؤرشَفات.
-- Playwright سريع للـwizard: ملء الحقول → اختيار من الخريطة → إنشاء منشأة تجريبية والتأكد من حفظ العنوان مع `address_type='primary'`.
+## خطة التنفيذ
 
-## ملاحظة قبل التنفيذ
-هذه خطة كبيرة. **سأبدأ بالـmigration للتصنيفات أولاً** (تحتاج موافقتك بشكل منفصل عبر أداة migration)، وبعد تطبيقها أنفّذ الـUI. هل تأذن؟
+دفعة واحدة في مراحل متتالية:
+1. بناء الـ foundations (4 ملفات جديدة)
+2. ربط CommandPalette في DashboardLayout
+3. تطبيق Bulk + Export على كل قسم بالترتيب
+4. فحص نهائي وتقرير بالنتائج
+
+هل تريدني أبدأ التنفيذ كاملاً، أم تفضل تجزئته على دفعتين (Foundations + قسم أو قسمين أولاً، ثم الباقي)؟
