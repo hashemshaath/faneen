@@ -20,8 +20,7 @@ export async function updateBusinessById(
   const { id, values } = options;
   const { data, error } = await supabase
     .from('businesses')
-     
-    .update(values as any)
+    .update(values as never)
     .eq('id', id);
   return { data, error };
 }

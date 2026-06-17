@@ -112,6 +112,12 @@ import { BusinessFiltersBar } from '@/components/admin/businesses/BusinessFilter
 import { BusinessTableSection } from '@/components/admin/businesses/BusinessTableSection';
 import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
 import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/BusinessVerifyConfirmDialog';
+import {
+  BusinessPublicVisibilityCard,
+  createAdminPublishPayload,
+  generateBusinessUsernameCandidate,
+  type PublicVisibilityProbeRow,
+} from '@/components/admin/businesses/BusinessPublicVisibilityCard';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import { BusinessBasicInfoSection } from '@/components/admin/businesses/edit/BusinessBasicInfoSection';
@@ -139,6 +145,7 @@ import { BusinessBranchesSection } from '@/components/admin/businesses/branches/
 import type {
   BranchRow as AdminBranchRow,
 } from '@/components/admin/businesses/branches/types';
+import { getBusinessProfileHref, isReservedUsername, normalizeUsername } from '@/lib/business/profileHref';
 import {
   TIERS as tiers,
   reverseGeocode,
@@ -148,6 +155,47 @@ import { BusinessTableView, type BusinessTableRow } from './businesses/BusinessT
 import { BusinessCardView, type BusinessCardRow } from './businesses/BusinessCardView';
 import { BusinessCreatePanel } from '@/components/admin/businesses/create/BusinessCreatePanel';
 import { emptyCreateBusinessForm } from '@/components/admin/businesses/create/createFormDefaults';
+
+type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
+  id: string;
+  user_id: string;
+  username: string | null;
+  name_ar: string;
+  ref_id: string | null;
+  created_at: string;
+  is_active?: boolean | null;
+  is_verified?: boolean | null;
+  is_demo?: boolean | null;
+  approval_status?: string | null;
+  rating_avg: number | null;
+  rating_count: number | null;
+} & AdminBusinessImageColumns;
+
+type AdminBranchFormState = {
+  name_ar: string;
+  name_en: string;
+  is_main: boolean;
+  is_active: boolean;
+  branch_type: AdminBusinessBranchType;
+  contact_person: string;
+  phone: string;
+  mobile: string;
+  unified_number: string;
+  customer_service_phone: string;
+  email: string;
+  website: string;
+  country_id: string;
+  city_id: string;
+  region: string;
+  district: string;
+  street_name: string;
+  building_number: string;
+  national_id: string;
+  additional_number: string;
+  address: string;
+  latitude: string | number;
+  longitude: string | number;
+};
 
 const AdminBusinesses = () => {
   useNoIndex();
@@ -208,7 +256,7 @@ const AdminBusinesses = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
-  const [editingBiz, setEditingBiz] = useState<any | null>(null);
+  const [editingBiz, setEditingBiz] = useState<AdminBusinessRow | null>(null);
   const [editForm, setEditForm] = useState<AdminEditBusinessFormState>({});
   const [viewingBiz, setViewingBiz] = useState<BusinessDrawerRow | null>(null);
   // ── Create new business (admin) ──
@@ -221,7 +269,7 @@ const AdminBusinesses = () => {
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
-  const [branchForm, setBranchForm] = useState<any | null>(null);
+  const [branchForm, setBranchForm] = useState<AdminBranchFormState | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [branchTranslating, setBranchTranslating] = useState<'ar' | 'en' | null>(null);
   const translateBranchName = useCallback(async (from: 'ar' | 'en') => {
@@ -390,6 +438,35 @@ const AdminBusinesses = () => {
       return data;
     },
     enabled: !!editingBiz?.user_id,
+  });
+
+  const normalizedEditingUsername = normalizeUsername(editingBiz?.username);
+  const { data: publicVisibilityProbe = null, refetch: refetchPublicVisibilityProbe } = useQuery({
+    queryKey: ['admin-business-public-visibility-probe', editingBiz?.id, normalizedEditingUsername],
+    queryFn: async () => {
+      if (!editingBiz?.id || !normalizedEditingUsername) return null;
+      const { data } = await supabase
+        .from('businesses_public')
+        .select('id, username')
+        .eq('username', normalizedEditingUsername)
+        .maybeSingle();
+      return (data ?? null) as PublicVisibilityProbeRow | null;
+    },
+    enabled: !!editingBiz?.id,
+  });
+
+  const { data: publicUsernameDuplicateCount = 0, refetch: refetchPublicUsernameDuplicateCount } = useQuery({
+    queryKey: ['admin-business-public-username-duplicates', editingBiz?.id, normalizedEditingUsername],
+    queryFn: async () => {
+      if (!editingBiz?.id || !normalizedEditingUsername) return 0;
+      const { count } = await supabase
+        .from('businesses')
+        .select('id', { count: 'exact', head: true })
+        .ilike('username', normalizedEditingUsername)
+        .neq('id', editingBiz.id);
+      return count ?? 0;
+    },
+    enabled: !!editingBiz?.id,
   });
 
   const { data: contractBusinessIds = [] } = useQuery({
@@ -1084,7 +1161,7 @@ const AdminBusinesses = () => {
       is_active: biz.is_active, is_verified: biz.is_verified,
       membership_tier: biz.membership_tier,
     } as AdminEditBusinessFormState);
-    setEditingBiz(biz);
+    setEditingBiz(biz as AdminBusinessRow);
     scrollToTop();
   };
   useEffect(() => { openEditRef.current = openEdit; });
