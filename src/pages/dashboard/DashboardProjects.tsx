@@ -44,6 +44,9 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
+import { exportToCSV, exportToPDF, type ExportColumn } from '@/lib/export/exportTable';
 
 type ViewMode = 'grid' | 'list';
 type StatusFilter = 'all' | 'published' | 'draft' | 'featured';
