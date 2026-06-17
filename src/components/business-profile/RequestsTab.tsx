@@ -70,7 +70,7 @@ export const RequestsAsBeneficiaryTab = ({ businessId }: { businessId: string })
         return (
           <Link
             key={r.id}
-            to={`/rfq/${r.id}`}
+            to={`/dashboard/rfq/${r.id}`}
             className="group flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/70 p-4 shadow-sm transition-all hover-lift hover:border-primary/40 dark:bg-card/40"
           >
             <div className="flex items-start justify-between gap-2">
