@@ -149,6 +149,11 @@ import type { Json } from '@/integrations/supabase/types';
 import { templateCategoryConfig } from '@/modules/contracts/constants/templateCategories';
 import { TemplateCard } from '@/modules/contracts/components/TemplateCard';
 import { emptyForm } from '@/modules/contracts/constants/contractForm';
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { exportToCSV, type ExportColumn } from '@/lib/export/exportTable';
+import { CheckSquare, Square } from 'lucide-react';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
