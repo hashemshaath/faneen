@@ -1623,6 +1623,15 @@ const DashboardMessages = () => {
             )}
           </div>
         </div>
+
+        {/* Fullscreen image viewer for chat attachments */}
+        <ImageLightbox
+          images={lightboxImages}
+          currentId={lightboxId}
+          isRTL={isRTL}
+          onClose={() => setLightboxId(null)}
+          onChange={setLightboxId}
+        />
       </TooltipProvider>
     </DashboardLayout>
   );
