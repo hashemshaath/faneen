@@ -105,6 +105,47 @@ const QUOTE_STATUS_TONE: Record<string, string> = {
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
+type SortKey = 'newest' | 'oldest' | 'updated' | 'status';
+type Density = 'comfortable' | 'compact';
+
+const STORAGE_KEY_SORT = 'qitaat_my_requests_sort_v1';
+const STORAGE_KEY_DENSITY = 'qitaat_my_requests_density_v1';
+
+function formatRelative(iso: string | null, isRTL: boolean): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  const diff = (Date.now() - date.getTime()) / 1000;
+  const abs = Math.abs(diff);
+  const rtf = new Intl.RelativeTimeFormat(isRTL ? 'ar' : 'en', { numeric: 'auto' });
+  if (abs < 60) return rtf.format(-Math.round(diff), 'second');
+  if (abs < 3600) return rtf.format(-Math.round(diff / 60), 'minute');
+  if (abs < 86400) return rtf.format(-Math.round(diff / 3600), 'hour');
+  if (abs < 604800) return rtf.format(-Math.round(diff / 86400), 'day');
+  if (abs < 2592000) return rtf.format(-Math.round(diff / 604800), 'week');
+  if (abs < 31536000) return rtf.format(-Math.round(diff / 2592000), 'month');
+  return rtf.format(-Math.round(diff / 31536000), 'year');
+}
+
+function csvEscape(value: unknown): string {
+  if (value == null) return '';
+  const s = String(value).replace(/"/g, '""');
+  return /[",\n\r]/.test(s) ? `"${s}"` : s;
+}
+
+function downloadCsv(filename: string, rows: string[][]) {
+  const bom = '\uFEFF'; // for Arabic in Excel
+  const csv = bom + rows.map((r) => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 const DashboardMyRequests: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
