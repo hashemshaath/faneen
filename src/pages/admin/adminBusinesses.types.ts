@@ -167,6 +167,7 @@ export interface AdminEditBusinessFormState {
   contact_person?: string;
   mobile?: string;
   customer_service_phone?: string;
+  username?: string;
   is_active?: boolean;
   is_verified?: boolean;
   membership_tier?: string;
