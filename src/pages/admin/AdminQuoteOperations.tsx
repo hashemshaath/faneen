@@ -366,7 +366,7 @@ const AdminQuoteOperations: React.FC = () => {
         reason: a.reason,
         request_age_hours: ageHours,
         last_event_type: last?.type ?? '',
-        admin_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/admin/quote-requests/${a.quote.id}`,
+        admin_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/admin/quote-requests/${a.quote.ref_id ?? a.quote.id}`,
       };
     });
     const headers = [
