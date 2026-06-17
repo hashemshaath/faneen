@@ -192,35 +192,44 @@ export const TodaySummary = React.memo(function TodaySummary({
 
   return (
     <Card className="border-border/60">
-      <CardContent className="p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-2 mb-3">
+      <CardContent className="p-3 sm:p-4 space-y-3">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <CalendarDays className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
-            <h3 className="font-heading font-bold text-sm truncate">{isRTL ? 'ملخّص يومك' : "Today's summary"}</h3>
+            <div className="p-1.5 bg-muted/40 rounded-lg border border-border/60">
+              <CalendarDays className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <h3 className="font-heading font-bold text-[13px] text-foreground">{isRTL ? 'ملخّص يومك' : "Today's summary"}</h3>
           </div>
-          <span className="text-[10px] font-medium text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 shrink-0">
+          <span className="text-[10px] font-medium text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 border border-border/40 tracking-tight shrink-0">
             {isRTL ? 'آخر 24 ساعة' : 'Last 24h'}
           </span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-2.5">
           {items.map((item, i) => {
             const isEmpty = item.value === 0;
-            const toneActive = item.tone === 'warning' ? 'bg-warning/5 border-warning/25' : 'bg-accent/5 border-accent/20';
-            const toneIcon = item.tone === 'warning' ? 'text-warning' : 'text-accent';
+            const activeBg = item.tone === 'warning' ? 'bg-warning/5' : 'bg-accent/5';
+            const activeBorder = item.tone === 'warning' ? 'border-warning/25' : 'border-accent/20';
+            const activeLabel = item.tone === 'warning' ? 'text-warning' : 'text-accent';
             return (
               <div
                 key={i}
-                className={`flex items-start gap-2.5 p-3 rounded-xl border transition-colors ${isEmpty ? 'bg-muted/20 border-border/50' : toneActive}`}
+                className={`flex flex-col p-3 rounded-xl border transition-colors ${
+                  isEmpty
+                    ? 'border-dashed border-border/50 bg-muted/20'
+                    : `${activeBorder} ${activeBg}`
+                }`}
               >
-                <div className={`shrink-0 h-8 w-8 rounded-lg flex items-center justify-center ${isEmpty ? 'bg-muted/60' : (item.tone === 'warning' ? 'bg-warning/15' : 'bg-accent/15')}`}>
-                  <item.icon className={`w-4 h-4 ${isEmpty ? 'text-muted-foreground/70' : toneIcon}`} aria-hidden="true" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-1.5">
-                    <p className={`text-xl font-bold leading-none tech-content ${isEmpty ? 'text-muted-foreground' : 'text-foreground'}`}>{item.value}</p>
-                    <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.label}</p>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground/80 mt-1.5 leading-snug">
+                <span className={`text-[11px] font-medium mb-1 ${isEmpty ? 'text-muted-foreground' : activeLabel}`}>
+                  {item.label}
+                </span>
+                <span className={`text-2xl font-bold leading-none tracking-tight tech-content ${isEmpty ? 'text-muted-foreground/40' : 'text-foreground'}`}>
+                  {item.value}
+                </span>
+                <div className="mt-auto pt-2">
+                  <p className={`text-[10px] leading-tight font-normal ${isEmpty ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
                     {isEmpty ? item.emptyHint : item.hint}
                   </p>
                 </div>
