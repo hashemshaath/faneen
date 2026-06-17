@@ -214,13 +214,17 @@ Deno.serve(async (req) => {
   const submittedAt = new Date().toISOString().replace('T', ' ').slice(0, 16);
   const adminRecipient = Deno.env.get('ADMIN_CONTACT_EMAIL') || 'info@qitaat.com';
 
-  async function alreadySent(template: string, recipient: string): Promise<boolean> {
+  async function alreadySent(template: string, _recipient: string): Promise<boolean> {
+    // Scope dedup to THIS quote_request via the idempotency key embedded in metadata.
+    // A blanket (template + recipient) guard would block every future admin email,
+    // because admin notifications all share one inbox (info@qitaat.com).
     try {
+      const idempotencyKey = `quote-${refId ?? inserted.id}-${template}`;
       const { data } = await admin
         .from('email_send_log')
         .select('id')
         .eq('template_name', template)
-        .eq('recipient_email', recipient)
+        .filter('metadata->>idempotency_key', 'eq', idempotencyKey)
         .in('status', ['sent', 'pending'])
         .limit(1)
         .maybeSingle();
