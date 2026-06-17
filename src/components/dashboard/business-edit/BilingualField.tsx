@@ -33,7 +33,7 @@ interface BilingualFieldProps {
  * Side-by-side AR/EN editor with one-click reverse translation.
  * Calls the existing `blog-ai-tools` edge function (action=translate).
  */
-export const BilingualField: React.FC<BilingualFieldProps> = ({
+const BilingualFieldImpl: React.FC<BilingualFieldProps> = ({
   label, isRTL, multiline = false, rows = 3, maxLength,
   valueAr, valueEn, onChangeAr, onChangeEn,
   disableTranslate = false,
@@ -156,3 +156,10 @@ export const BilingualField: React.FC<BilingualFieldProps> = ({
     </div>
   );
 };
+
+/**
+ * PERF: Memoized so unrelated form updates (typing in other fields) don't
+ * re-render every bilingual field on the page. Parent must pass stable
+ * `onChangeAr` / `onChangeEn` callbacks (use `useCallback`).
+ */
+export const BilingualField = React.memo(BilingualFieldImpl);

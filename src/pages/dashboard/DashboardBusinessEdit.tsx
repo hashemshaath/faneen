@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, Suspense, lazy } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -41,17 +41,42 @@ import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneFie
 
 import type { BusinessRow } from '@/components/dashboard/business-edit/types';
 import { BilingualField } from '@/components/dashboard/business-edit/BilingualField';
-import { RepresentativesSection } from '@/components/dashboard/business-edit/RepresentativesSection';
-import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPanel';
-import { BusinessInternalNotesCard } from '@/components/business/BusinessInternalNotesCard';
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 import { FieldHint } from '@/components/dashboard/business-edit/FieldHint';
-import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
+import type { ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 import { ProviderGrowthCard } from '@/components/growth/ProviderGrowthCard';
-import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
-import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
+
+// PERF: Heavy off-tab components are code-split. Their bundles (Leaflet map,
+// OCR scanner, barcode renderer, charts, etc.) are not downloaded until the
+// user actually opens the relevant tab.
+const LocationPicker = lazy(() =>
+  import('@/components/dashboard/business-edit/LocationPicker').then((m) => ({ default: m.LocationPicker })),
+);
+const RepresentativesSection = lazy(() =>
+  import('@/components/dashboard/business-edit/RepresentativesSection').then((m) => ({ default: m.RepresentativesSection })),
+);
+const AuditLogPanel = lazy(() =>
+  import('@/components/dashboard/business-edit/AuditLogPanel').then((m) => ({ default: m.AuditLogPanel })),
+);
+const BusinessInternalNotesCard = lazy(() =>
+  import('@/components/business/BusinessInternalNotesCard').then((m) => ({ default: m.BusinessInternalNotesCard })),
+);
+const BusinessBarcodeCard = lazy(() =>
+  import('@/components/business-profile/BusinessBarcodeCard').then((m) => ({ default: m.BusinessBarcodeCard })),
+);
+const CrDocumentScanner = lazy(() =>
+  import('@/components/admin/CrDocumentScanner').then((m) => ({ default: m.CrDocumentScanner })),
+);
+
+/** Small fallback used while a lazy tab chunk loads. */
+const TabLoading: React.FC = () => (
+  <div className="flex items-center justify-center py-12 text-muted-foreground">
+    <Loader2 className="w-4 h-4 animate-spin me-2" />
+    <span className="text-sm">Loading…</span>
+  </div>
+);
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 
@@ -165,22 +190,25 @@ const DashboardBusinessEdit: React.FC = () => {
   });
 
   // Address state changes mark the form as dirty.
-  const handleAddressChange = (next: NationalAddressValue) => {
+  // PERF: All handlers are stable references via useCallback so memoized
+  // children (BilingualField, LocationPicker, NationalAddressForm…) don't
+  // re-render on every keystroke.
+  const handleAddressChange = useCallback((next: NationalAddressValue) => {
     setAddress(next);
     setDirty(true);
-  };
+  }, []);
 
-  const update = <K extends keyof BusinessRow>(key: K, value: BusinessRow[K]) => {
+  const update = useCallback(<K extends keyof BusinessRow,>(key: K, value: BusinessRow[K]) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
     setDirty(true);
-  };
+  }, []);
 
-  const handleMapPick = (lat: number, lng: number) => {
+  const handleMapPick = useCallback((lat: number, lng: number) => {
     setForm((prev) => (prev ? { ...prev, latitude: lat, longitude: lng } : prev));
     setDirty(true);
-  };
+  }, []);
 
-  const handleAutofillAddress = (data: ReverseGeocodeResult) => {
+  const handleAutofillAddress = useCallback((data: ReverseGeocodeResult) => {
     setAddress((prev) => ({
       ...prev,
       region: data.region_ar || prev.region,
@@ -192,7 +220,7 @@ const DashboardBusinessEdit: React.FC = () => {
       address_manual: true,
     }));
     setDirty(true);
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!form || !user) return;
@@ -842,13 +870,15 @@ const DashboardBusinessEdit: React.FC = () => {
                   <span className="text-xs text-destructive">{t(isRTL, 'مطلوب', 'Required')}</span>
                 )}
               </div>
-              <LocationPicker
-                isRTL={isRTL}
-                latitude={form.latitude ?? null}
-                longitude={form.longitude ?? null}
-                onChange={handleMapPick}
-                onAutofill={handleAutofillAddress}
-              />
+              <Suspense fallback={<TabLoading />}>
+                <LocationPicker
+                  isRTL={isRTL}
+                  latitude={form.latitude ?? null}
+                  longitude={form.longitude ?? null}
+                  onChange={handleMapPick}
+                  onAutofill={handleAutofillAddress}
+                />
+              </Suspense>
               <FieldError issue={issueMap.coordinates} isRTL={isRTL} />
             </div>
           </CardContent>
@@ -896,6 +926,7 @@ const DashboardBusinessEdit: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* 1) Document / QR scanner — writes to the same columns as the form below */}
+                <Suspense fallback={<TabLoading />}>
                 <CrDocumentScanner
                   businessId={form.id}
                   defaults={{
@@ -917,6 +948,7 @@ const DashboardBusinessEdit: React.FC = () => {
                     qc.invalidateQueries({ queryKey: ['business-edit', user?.id] });
                   }}
                 />
+                </Suspense>
 
                 <div className="border-t border-border" />
 
@@ -1024,29 +1056,33 @@ const DashboardBusinessEdit: React.FC = () => {
 
           <TabsContent value="team" className="space-y-6 mt-4">
             {/* Representatives */}
-            <RepresentativesSection
-          businessId={form.id}
-          ownerUserId={form.user_id}
-          isRTL={isRTL}
-          businessNameAr={form.name_ar}
-          businessNameEn={form.name_en}
-        />
+            <Suspense fallback={<TabLoading />}>
+              <RepresentativesSection
+                businessId={form.id}
+                ownerUserId={form.user_id}
+                isRTL={isRTL}
+                businessNameAr={form.name_ar}
+                businessNameEn={form.name_en}
+              />
+            </Suspense>
 
         {/* Audit log */}
           </TabsContent>
 
           <TabsContent value="system" className="space-y-6 mt-4">
-            {/* Audit log */}
-            <AuditLogPanel businessId={form.id} isRTL={isRTL} />
+            <Suspense fallback={<TabLoading />}>
+              {/* Audit log */}
+              <AuditLogPanel businessId={form.id} isRTL={isRTL} />
 
-            {/* BUSINESS-CORE-2 — Internal notes (RLS-gated to owner/manager/staff) */}
-            <BusinessInternalNotesCard businessId={form.id} />
+              {/* BUSINESS-CORE-2 — Internal notes (RLS-gated to owner/manager/staff) */}
+              <BusinessInternalNotesCard businessId={form.id} />
 
-        {/* Business barcode + 30x20 cm printable sticker */}
-        <BusinessBarcodeCard
-          businessId={form.id}
-          businessName={isRTL ? form.name_ar : (form.name_en || form.name_ar)}
-        />
+              {/* Business barcode + 30x20 cm printable sticker */}
+              <BusinessBarcodeCard
+                businessId={form.id}
+                businessName={isRTL ? form.name_ar : (form.name_en || form.name_ar)}
+              />
+            </Suspense>
 
         {/* System metadata */}
         <Card className="bg-muted/30">
