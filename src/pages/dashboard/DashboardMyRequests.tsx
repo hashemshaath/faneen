@@ -290,6 +290,76 @@ const DashboardMyRequests: React.FC = () => {
     });
   }, [leads, statusFilter, deferredSearch, businessMap]);
 
+  // === Sort ===
+  const sortedQuotes = useMemo(() => {
+    const arr = [...filteredQuotes];
+    arr.sort((a, b) => {
+      if (sortBy === 'status') return a.status.localeCompare(b.status);
+      const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
+      const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
+      return sortBy === 'oldest' ? aT - bT : bT - aT;
+    });
+    return arr;
+  }, [filteredQuotes, sortBy]);
+
+  const sortedLeads = useMemo(() => {
+    const arr = [...filteredLeads];
+    arr.sort((a, b) => {
+      if (sortBy === 'status') return a.status.localeCompare(b.status);
+      const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
+      const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
+      return sortBy === 'oldest' ? aT - bT : bT - aT;
+    });
+    return arr;
+  }, [filteredLeads, sortBy]);
+
+  // === Status counts (for chip badges) ===
+  const quoteStatusCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    (quoteRequests ?? []).forEach((q) => m.set(q.status, (m.get(q.status) ?? 0) + 1));
+    m.set('all', quoteRequests?.length ?? 0);
+    return m;
+  }, [quoteRequests]);
+  const leadStatusCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    (leads ?? []).forEach((l) => m.set(l.status, (m.get(l.status) ?? 0) + 1));
+    m.set('all', leads?.length ?? 0);
+    return m;
+  }, [leads]);
+
+  // === Real-time: refetch when this user's rows change ===
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`my-requests-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_requests', filter: `user_id=eq.${user.id}` },
+          () => { qc.invalidateQueries({ queryKey: ['my-service-requests', user.id] }); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quote_requests', filter: `user_id=eq.${user.id}` },
+          () => { qc.invalidateQueries({ queryKey: ['my-quote-requests', user.id] }); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, qc]);
+
+  // === Export to CSV ===
+  const handleExport = useCallback(() => {
+    if (tab === 'quotes') {
+      const header = ['ref_id', 'status', 'sector', 'city', 'district', 'contact_method', 'created_at', 'updated_at', 'description'];
+      const rows = [header, ...sortedQuotes.map((q) => [
+        q.ref_id ?? q.id, q.status, q.sector, q.city, q.district ?? '', q.preferred_contact_method,
+        q.created_at, q.updated_at, q.project_description,
+      ])];
+      downloadCsv(`quote-requests-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    } else {
+      const header = ['ref_id', 'status', 'business', 'subject', 'budget', 'contact', 'created_at', 'updated_at'];
+      const rows = [header, ...sortedLeads.map((l) => [
+        l.ref_id ?? l.id, l.status, businessMap.get(l.business_id)?.name ?? '', l.subject ?? '',
+        l.budget_range ?? '', l.contact_preference ?? '', l.created_at, l.updated_at ?? '',
+      ])];
+      downloadCsv(`service-requests-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    }
+    toast.success(isRTL ? 'تم تصدير الطلبات' : 'Requests exported');
+  }, [tab, sortedQuotes, sortedLeads, businessMap, isRTL]);
+
   // Reset status filter when switching tabs so options stay valid
   const handleTabChange = useCallback((v: string) => {
     setTab(v as 'quotes' | 'leads');
