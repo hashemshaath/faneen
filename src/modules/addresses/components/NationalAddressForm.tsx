@@ -448,7 +448,8 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         </div>
       </div>
 
-      {/* Within a complex / industrial city / commercial center */}
+      {/* Within a complex / industrial city / commercial center — businesses only */}
+      {showComplex && (
       <div className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-3">
         <Label className="text-xs font-bold text-foreground">
           {t(isRTL, 'ضمن مركز / مجمع / مدينة صناعية (اختياري)', 'Inside a center / compound / industrial city (optional)')}
