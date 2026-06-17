@@ -213,26 +213,49 @@ export const TodaySummary = React.memo(function TodaySummary({
             const activeBg = item.tone === 'warning' ? 'bg-warning/5' : 'bg-accent/5';
             const activeBorder = item.tone === 'warning' ? 'border-warning/25' : 'border-accent/20';
             const activeLabel = item.tone === 'warning' ? 'text-warning' : 'text-accent';
+            const iconWrapActive = item.tone === 'warning' ? 'bg-warning/10 text-warning' : 'bg-accent/10 text-accent';
+            const ItemIcon = item.icon;
             return (
               <div
                 key={i}
-                className={`flex flex-col p-3 rounded-xl border transition-colors ${
+                className={`flex flex-col p-3 rounded-xl border transition-colors min-h-[140px] ${
                   isEmpty
                     ? 'border-dashed border-border/50 bg-muted/20'
                     : `${activeBorder} ${activeBg}`
                 }`}
               >
-                <span className={`text-[11px] font-medium mb-1 ${isEmpty ? 'text-muted-foreground' : activeLabel}`}>
-                  {item.label}
-                </span>
-                <span className={`text-2xl font-bold leading-none tracking-tight tech-content ${isEmpty ? 'text-muted-foreground/40' : 'text-foreground'}`}>
-                  {item.value}
-                </span>
-                <div className="mt-auto pt-2">
-                  <p className={`text-[10px] leading-tight font-normal ${isEmpty ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
-                    {isEmpty ? item.emptyHint : item.hint}
-                  </p>
+                {/* Icon on top */}
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
+                    isEmpty ? 'bg-muted/40 text-muted-foreground/60' : iconWrapActive
+                  }`}
+                >
+                  <ItemIcon className="w-4 h-4" aria-hidden="true" />
                 </div>
+                {/* Label on its own line, allowed to wrap */}
+                <p
+                  className={`text-[11px] font-medium leading-snug mb-1.5 break-words ${
+                    isEmpty ? 'text-muted-foreground' : activeLabel
+                  }`}
+                >
+                  {item.label}
+                </p>
+                {/* Value */}
+                <p
+                  className={`text-2xl font-bold leading-none tracking-tight tech-content ${
+                    isEmpty ? 'text-muted-foreground/40' : 'text-foreground'
+                  }`}
+                >
+                  {item.value}
+                </p>
+                {/* Hint pinned to bottom */}
+                <p
+                  className={`mt-auto pt-2 text-[10px] leading-snug break-words ${
+                    isEmpty ? 'text-muted-foreground/60' : 'text-muted-foreground'
+                  }`}
+                >
+                  {isEmpty ? item.emptyHint : item.hint}
+                </p>
               </div>
             );
           })}
