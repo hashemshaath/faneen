@@ -247,6 +247,7 @@ Deno.serve(async (req) => {
     JSON.stringify({
       success: true,
       quote_request_id: inserted.id,
+      ref_id: (inserted as { ref_id?: string | null }).ref_id ?? null,
       message: 'تم استلام طلبك بنجاح',
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
