@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
+import { getBusinessProfileHref } from '@/lib/business/profileHref';
 import type { BusinessTableRow, TranslationCompleteness } from './BusinessTableView';
 import { TIERS } from './_shared';
 
@@ -102,6 +103,7 @@ const BusinessCardViewImpl: React.FC<BusinessCardViewProps> = ({
         const svcCount = allServices.filter((s) => s.business_id === biz.id).length;
         const tc = translationCompleteness(biz);
         const isSel = selected.has(biz.id);
+        const profileHref = getBusinessProfileHref(biz);
         return (
           <div
             key={biz.id}
@@ -210,17 +212,19 @@ const BusinessCardViewImpl: React.FC<BusinessCardViewProps> = ({
                     </div>
                   </div>
                   {/* Quick view button — always visible top-corner */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 rounded-xl shrink-0"
-                    asChild
-                    title={pickBi(isRTL, 'عرض الملف', 'View profile')}
-                  >
-                    <Link to={`/${biz.username}`}>
-                      <Eye className="w-4 h-4" />
-                    </Link>
-                  </Button>
+                  {profileHref && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 rounded-xl shrink-0"
+                      asChild
+                      title={pickBi(isRTL, 'عرض الملف', 'View profile')}
+                    >
+                      <Link to={profileHref}>
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  )}
                 </div>
 
                 {/* ── Actions row ── full-width, scrolls on mobile */}
