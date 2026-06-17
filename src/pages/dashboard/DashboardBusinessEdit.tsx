@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, Suspense, lazy } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -41,17 +41,42 @@ import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneFie
 
 import type { BusinessRow } from '@/components/dashboard/business-edit/types';
 import { BilingualField } from '@/components/dashboard/business-edit/BilingualField';
-import { RepresentativesSection } from '@/components/dashboard/business-edit/RepresentativesSection';
-import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPanel';
-import { BusinessInternalNotesCard } from '@/components/business/BusinessInternalNotesCard';
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 import { FieldHint } from '@/components/dashboard/business-edit/FieldHint';
-import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
+import type { ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 import { ProviderGrowthCard } from '@/components/growth/ProviderGrowthCard';
-import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
-import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
+
+// PERF: Heavy off-tab components are code-split. Their bundles (Leaflet map,
+// OCR scanner, barcode renderer, charts, etc.) are not downloaded until the
+// user actually opens the relevant tab.
+const LocationPicker = lazy(() =>
+  import('@/components/dashboard/business-edit/LocationPicker').then((m) => ({ default: m.LocationPicker })),
+);
+const RepresentativesSection = lazy(() =>
+  import('@/components/dashboard/business-edit/RepresentativesSection').then((m) => ({ default: m.RepresentativesSection })),
+);
+const AuditLogPanel = lazy(() =>
+  import('@/components/dashboard/business-edit/AuditLogPanel').then((m) => ({ default: m.AuditLogPanel })),
+);
+const BusinessInternalNotesCard = lazy(() =>
+  import('@/components/business/BusinessInternalNotesCard').then((m) => ({ default: m.BusinessInternalNotesCard })),
+);
+const BusinessBarcodeCard = lazy(() =>
+  import('@/components/business-profile/BusinessBarcodeCard').then((m) => ({ default: m.BusinessBarcodeCard })),
+);
+const CrDocumentScanner = lazy(() =>
+  import('@/components/admin/CrDocumentScanner').then((m) => ({ default: m.CrDocumentScanner })),
+);
+
+/** Small fallback used while a lazy tab chunk loads. */
+const TabLoading: React.FC = () => (
+  <div className="flex items-center justify-center py-12 text-muted-foreground">
+    <Loader2 className="w-4 h-4 animate-spin me-2" />
+    <span className="text-sm">Loading…</span>
+  </div>
+);
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 
