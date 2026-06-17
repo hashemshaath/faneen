@@ -63,13 +63,19 @@ export interface NationalAddressFormProps {
   isRTL: boolean;
   /** Show building / additional / postal inputs. Defaults to true. */
   showStructured?: boolean;
+  /**
+   * Show the "inside a center / compound / industrial city" block.
+   * Defaults to true. Set false for individual/customer profiles where
+   * an industrial complex is not relevant — businesses keep it on.
+   */
+  showComplex?: boolean;
   className?: string;
 }
 
 interface CityRow { id: string; name_ar: string; name_en: string }
 
 export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
-  value, onChange, isRTL, showStructured = true, className,
+  value, onChange, isRTL, showStructured = true, showComplex = true, className,
 }) => {
   const [splLoading, setSplLoading] = useState(false);
   const [cities, setCities] = useState<CityRow[]>([]);
