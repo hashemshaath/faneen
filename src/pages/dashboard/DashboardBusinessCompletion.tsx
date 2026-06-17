@@ -669,7 +669,7 @@ const DashboardBusinessCompletion: React.FC = () => {
                         : (isRTL ? 'إرسال للمراجعة' : 'Submit for review')}
                     </Button>
                   )}
-                  {(status === 'approved' || status === 'published') && business.username && (
+                  {status === 'published' && business.username && (
                     <Button asChild size="sm" variant="outline" className="h-8 text-xs gap-1.5">
                       <a href={`/${business.username}`} target="_blank" rel="noreferrer">
                         <ExternalLink className="w-3.5 h-3.5" />
