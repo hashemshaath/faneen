@@ -1258,9 +1258,14 @@ const DashboardMessages = () => {
                           <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl" aria-label="More options"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align={pickBi(isRTL, 'start', 'end')} className="rounded-xl min-w-[180px]">
-                          <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg text-xs gap-2">
-                            <Eye className="w-3.5 h-3.5" />{pickBi(isRTL, 'عرض الملف الشخصي', 'View profile')}
-                          </DropdownMenuItem>
+                          {selectedConv?.other_profile?.username && (
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/${selectedConv.other_profile.username}`)}
+                              className="rounded-lg text-xs gap-2"
+                            >
+                              <Eye className="w-3.5 h-3.5" />{pickBi(isRTL, 'عرض الملف الشخصي', 'View profile')}
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => togglePinConv(selectedConversation!)}>
                             <Pin className={`w-3.5 h-3.5 ${pinnedConvs.has(selectedConversation!) ? 'fill-current text-accent' : ''}`} />
                             {pinnedConvs.has(selectedConversation!) ? (pickBi(isRTL, 'إلغاء التثبيت', 'Unpin')) : (pickBi(isRTL, 'تثبيت', 'Pin'))}
