@@ -76,6 +76,16 @@ export const BusinessBasicInfoSection: React.FC<Props> = ({
         </div>
         <Input value={editForm.name_en} onChange={e => setField('name_en', e.target.value)} dir="ltr" />
       </div>
+      <div>
+        <Label className="text-xs">{pickBi(isRTL, 'الرابط العام للجهة', 'Public handle')}</Label>
+        <Input
+          value={editForm.username || editingBiz.username || ''}
+          onChange={e => setField('username', e.target.value)}
+          dir="ltr"
+          className="mt-1 tech-content"
+          placeholder="alefnoon"
+        />
+      </div>
       <BusinessTaxonomySection businessId={editingBiz.id} onSaved={onTaxonomySaved} />
       <Separator />
       <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
