@@ -830,10 +830,37 @@ const DashboardServices: React.FC = () => {
               </div>
             )}
             {!loading && filteredDisplayList.length > 0 && (
+              <>
+                {!!businessId && (
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                      <Checkbox
+                        checked={bulk.allSelected}
+                        onCheckedChange={(c) => { if (c) bulk.selectAll(); else bulk.clear(); }}
+                        aria-label={isRTL ? 'تحديد كل الخدمات في الصفحة' : 'Select all services on page'}
+                      />
+                      {isRTL ? 'تحديد الصفحة' : 'Select page'}
+                    </label>
+                    {bulk.count > 0 && (
+                      <span className="tech-content text-[11px] text-muted-foreground">
+                        {bulk.count} {isRTL ? 'محددة' : 'selected'}
+                      </span>
+                    )}
+                  </div>
+                )}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {filteredDisplayList.map((d) => (
-                  <ServiceTile
-                    key={d.subId}
+                  <div key={d.subId} className="relative">
+                    {!!businessId && (
+                      <div className="absolute top-2 start-2 z-10">
+                        <Checkbox
+                          checked={bulk.isSelected(d.subId)}
+                          onCheckedChange={() => bulk.toggle(d.subId)}
+                          aria-label={isRTL ? 'تحديد الخدمة' : 'Select service'}
+                        />
+                      </div>
+                    )}
+                    <ServiceTile
                     businessId={businessId!}
                     userId={user?.id ?? ''}
                     sectorId={d.sectorId}
@@ -850,13 +877,37 @@ const DashboardServices: React.FC = () => {
                     onSave={(payload) => upsertMut.mutate({ subId: d.subId, payload: { ...payload, name_ar: d.name_ar, name_en: d.name_en || d.name_ar } })}
                     onRemove={() => removeSubMut.mutate(d.subId)}
                     removing={removeSubMut.isPending}
-                  />
+                    />
+                  </div>
                 ))}
               </div>
+              </>
             )}
           </CardContent>
         </Card>
       </div>
+      {!!businessId && displayList.length > 0 && (
+        <BulkActionBar
+          count={bulk.count}
+          onClear={bulk.clear}
+          actions={[
+            {
+              id: 'export-selected-csv',
+              label: pickBi(isRTL, 'تصدير CSV', 'Export CSV'),
+              icon: Download,
+              variant: 'default',
+              onClick: bulkExportSelectedCsv,
+            },
+            {
+              id: 'export-selected-pdf',
+              label: pickBi(isRTL, 'تصدير PDF', 'Export PDF'),
+              icon: Download,
+              variant: 'outline',
+              onClick: bulkExportSelectedPdf,
+            },
+          ]}
+        />
+      )}
     </DashboardLayout>
   );
 };
