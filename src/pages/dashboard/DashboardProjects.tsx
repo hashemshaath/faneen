@@ -225,7 +225,7 @@ const DashboardProjects = () => {
     cover_image_url: '', cover_image_asset_id: '' as string | null | '',
     client_name: '', project_cost: '',
     duration_days: '', completion_date: '', status: 'published',
-    city_id: '', is_featured: false, currency_code: 'SAR',
+    city_id: '', site_id: '', is_featured: false, currency_code: 'SAR',
     taxonomy_category_id: '',
   }), []);
   const [form, setForm] = useState(emptyForm);
@@ -265,6 +265,27 @@ const DashboardProjects = () => {
   });
 
   const businessId = business?.id;
+
+  /* ─── Sites for this business (used to link a project to a saved site) ─── */
+  const { data: ownerSites = [] } = useQuery({
+    queryKey: ['projects-owner-sites', businessId, user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      let q = supabase
+        .from('client_sites')
+        .select('id, label, site_name, city_name')
+        .is('archived_at', null)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (businessId) q = q.eq('business_id', businessId);
+      else q = q.eq('client_user_id', user.id);
+      const { data, error } = await q;
+      if (error) return [];
+      return (data ?? []) as Array<{ id: string; label: string; site_name: string | null; city_name: string | null }>;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['dashboard-projects', businessId],
@@ -350,8 +371,11 @@ const DashboardProjects = () => {
   /* ─── Mutations ─── */
   const saveMut = useMutation({
     mutationFn: async () => {
+      if (!businessId) {
+        throw new Error(pickBi(isRTL, 'لا توجد منشأة. أنشئ منشأتك أولاً قبل إضافة المشاريع.', 'No business. Create your business first before adding projects.'));
+      }
       const payload = {
-        business_id: businessId!, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
+        business_id: businessId, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         cover_image_url: form.cover_image_url || null, client_name: form.client_name.trim() || null,
         cover_image_asset_id: form.cover_image_asset_id || null,
@@ -362,6 +386,7 @@ const DashboardProjects = () => {
         // `projects.category_id` from the dashboard. The legacy column is
         // preserved in DB but is no longer touched by any UI.
         city_id: form.city_id || null,
+        site_id: form.site_id || null,
         is_featured: form.is_featured, currency_code: form.currency_code,
       };
       const taxonomyId = form.taxonomy_category_id || null;
@@ -429,6 +454,7 @@ const DashboardProjects = () => {
       client_name: p.client_name || '', project_cost: p.project_cost?.toString() || '',
       duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '',
       status: p.status, city_id: p.city_id || '',
+      site_id: p.site_id || '',
       is_featured: p.is_featured || false, currency_code: p.currency_code || 'SAR',
       taxonomy_category_id: primary?.category_id || '',
     });
@@ -452,6 +478,7 @@ const DashboardProjects = () => {
       project_cost: p.project_cost?.toString() || '', duration_days: p.duration_days?.toString() || '',
       completion_date: p.completion_date || '', status: 'draft',
       city_id: p.city_id || '',
+      site_id: p.site_id || '',
       is_featured: false, currency_code: p.currency_code || 'SAR',
       taxonomy_category_id: primary?.category_id || '',
     });
