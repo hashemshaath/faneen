@@ -13886,6 +13886,7 @@ export type Database = {
           ref_id: string | null
           saves_count: number
           shares_count: number
+          site_id: string | null
           sort_order: number
           status: string
           title_ar: string
@@ -13912,6 +13913,7 @@ export type Database = {
           ref_id?: string | null
           saves_count?: number
           shares_count?: number
+          site_id?: string | null
           sort_order?: number
           status?: string
           title_ar: string
@@ -13938,6 +13940,7 @@ export type Database = {
           ref_id?: string | null
           saves_count?: number
           shares_count?: number
+          site_id?: string | null
           sort_order?: number
           status?: string
           title_ar?: string
@@ -13972,6 +13975,13 @@ export type Database = {
             columns: ["cover_image_asset_id"]
             isOneToOne: false
             referencedRelation: "image_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
         ]

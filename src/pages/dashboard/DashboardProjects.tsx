@@ -225,7 +225,7 @@ const DashboardProjects = () => {
     cover_image_url: '', cover_image_asset_id: '' as string | null | '',
     client_name: '', project_cost: '',
     duration_days: '', completion_date: '', status: 'published',
-    city_id: '', is_featured: false, currency_code: 'SAR',
+    city_id: '', site_id: '', is_featured: false, currency_code: 'SAR',
     taxonomy_category_id: '',
   }), []);
   const [form, setForm] = useState(emptyForm);
@@ -265,6 +265,27 @@ const DashboardProjects = () => {
   });
 
   const businessId = business?.id;
+
+  /* ─── Sites for this business (used to link a project to a saved site) ─── */
+  const { data: ownerSites = [] } = useQuery({
+    queryKey: ['projects-owner-sites', businessId, user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      let q = supabase
+        .from('client_sites')
+        .select('id, label, site_name, city_name')
+        .is('archived_at', null)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (businessId) q = q.eq('business_id', businessId);
+      else q = q.eq('client_user_id', user.id);
+      const { data, error } = await q;
+      if (error) return [];
+      return (data ?? []) as Array<{ id: string; label: string; site_name: string | null; city_name: string | null }>;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['dashboard-projects', businessId],
@@ -350,8 +371,11 @@ const DashboardProjects = () => {
   /* ─── Mutations ─── */
   const saveMut = useMutation({
     mutationFn: async () => {
+      if (!businessId) {
+        throw new Error(pickBi(isRTL, 'لا توجد منشأة. أنشئ منشأتك أولاً قبل إضافة المشاريع.', 'No business. Create your business first before adding projects.'));
+      }
       const payload = {
-        business_id: businessId!, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
+        business_id: businessId, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         cover_image_url: form.cover_image_url || null, client_name: form.client_name.trim() || null,
         cover_image_asset_id: form.cover_image_asset_id || null,
@@ -362,6 +386,7 @@ const DashboardProjects = () => {
         // `projects.category_id` from the dashboard. The legacy column is
         // preserved in DB but is no longer touched by any UI.
         city_id: form.city_id || null,
+        site_id: form.site_id || null,
         is_featured: form.is_featured, currency_code: form.currency_code,
       };
       const taxonomyId = form.taxonomy_category_id || null;
@@ -429,6 +454,7 @@ const DashboardProjects = () => {
       client_name: p.client_name || '', project_cost: p.project_cost?.toString() || '',
       duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '',
       status: p.status, city_id: p.city_id || '',
+      site_id: p.site_id || '',
       is_featured: p.is_featured || false, currency_code: p.currency_code || 'SAR',
       taxonomy_category_id: primary?.category_id || '',
     });
@@ -452,6 +478,7 @@ const DashboardProjects = () => {
       project_cost: p.project_cost?.toString() || '', duration_days: p.duration_days?.toString() || '',
       completion_date: p.completion_date || '', status: 'draft',
       city_id: p.city_id || '',
+      site_id: p.site_id || '',
       is_featured: false, currency_code: p.currency_code || 'SAR',
       taxonomy_category_id: primary?.category_id || '',
     });
@@ -544,12 +571,46 @@ const DashboardProjects = () => {
                   <Download className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'تصدير', 'Export')}
                 </Button>
               )}
-              <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-                <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة مشروع', 'Add Project')}
-              </Button>
+              {businessId ? (
+                <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
+                  <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة مشروع', 'Add Project')}
+                </Button>
+              ) : null}
             </>
           }
         />
+
+        {business !== undefined && !businessId && (
+          <Card className="border-dashed border-amber-500/40 bg-amber-500/[0.04]">
+            <CardContent className="p-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 mx-auto flex items-center justify-center">
+                <AlertCircle className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-base font-semibold">
+                {pickBi(isRTL, 'لا يمكن إضافة مشاريع بدون منشأة', 'Cannot add projects without a business')}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {pickBi(isRTL,
+                  'المشاريع تابعة لمنشأة. أنشئ منشأتك أولاً، ثم أضف عناوين المواقع لتربط كل مشروع بموقع تنفيذي.',
+                  'Projects belong to a business. Create your business first, then add site addresses so you can link each project to an execution site.')}
+              </p>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <Button asChild variant="hero" size="sm">
+                  <a href="/register-entity">
+                    <Plus className="w-4 h-4 me-1" />
+                    {pickBi(isRTL, 'إنشاء منشأة', 'Create business')}
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <a href="/dashboard/sites">
+                    <MapPin className="w-4 h-4 me-1" />
+                    {pickBi(isRTL, 'إدارة المواقع', 'Manage sites')}
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* ═══ Stats ═══ */}
         {projects.length > 0 && (
@@ -657,6 +718,40 @@ const DashboardProjects = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Site link — connect project to a previously-saved site address */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {pickBi(isRTL, 'الموقع التنفيذي', 'Execution site')}
+                    <span className="text-[10px] text-muted-foreground font-normal ms-1">
+                      {pickBi(isRTL, '(اختياري — اربط المشروع بأحد عناوينك)', '(optional — link to one of your saved sites)')}
+                    </span>
+                  </Label>
+                  {ownerSites.length > 0 ? (
+                    <Select value={form.site_id || 'none'} onValueChange={v => setForm(f => ({ ...f, site_id: v === 'none' ? '' : v }))}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder={pickBi(isRTL, 'بدون', 'None')} /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{pickBi(isRTL, 'بدون', 'None')}</SelectItem>
+                        {ownerSites.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.label}{s.city_name ? ` — ${s.city_name}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg border border-dashed border-border/60 bg-muted/30">
+                      <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                      <p className="text-[11px] text-muted-foreground flex-1">
+                        {pickBi(isRTL, 'لا توجد مواقع محفوظة بعد. أضف عناوين المواقع لتتمكن من ربطها بالمشاريع.', 'No saved sites yet. Add site addresses so you can link them to projects.')}
+                      </p>
+                      <Button asChild variant="outline" size="sm" className="h-7 text-[10px]">
+                        <a href="/dashboard/sites">{pickBi(isRTL, 'إدارة المواقع', 'Manage sites')}</a>
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Cover Image */}
