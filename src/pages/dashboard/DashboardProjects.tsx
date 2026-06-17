@@ -528,16 +528,52 @@ const DashboardProjects = () => {
     setSelectedIds(prev => prev.size === filteredProjects.length ? new Set() : new Set(filteredProjects.map((p) => p.id)));
   }, [filteredProjects]);
 
-  const exportCSV = useCallback(() => {
-    const rows = [['Title AR', 'Title EN', 'Client', 'Cost', 'Duration', 'Status', 'Featured', 'Date'].join(','),
-      ...projects.map((p) => [`"${p.title_ar}"`, `"${p.title_en || ''}"`, `"${p.client_name || ''}"`, p.project_cost || '', p.duration_days || '', p.status, p.is_featured, p.completion_date || ''].join(','))
-    ].join('\n');
-    const blob = new Blob(['\ufeff' + rows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    Object.assign(document.createElement('a'), { href: url, download: `projects_${new Date().toISOString().slice(0, 10)}.csv` }).click();
-    URL.revokeObjectURL(url);
-    toast.success(pickBi(isRTL, 'تم التصدير', 'Exported'));
-  }, [projects, isRTL]);
+  /* ── Phase 2 Safe Rollout — Unified export columns (no PII / no raw IDs). ── */
+  const projectExportColumns: ExportColumn<typeof projects[number]>[] = useMemo(() => ([
+    { key: 'title', header: pickBi(isRTL, 'العنوان', 'Title'), accessor: (p) => isRTL ? p.title_ar : (p.title_en || p.title_ar) },
+    { key: 'status', header: pickBi(isRTL, 'الحالة', 'Status'),
+      accessor: (p) => p.status === 'published'
+        ? pickBi(isRTL, 'منشور', 'Published')
+        : pickBi(isRTL, 'مسودة', 'Draft') },
+    { key: 'client', header: pickBi(isRTL, 'العميل', 'Client'), accessor: (p) => p.client_name ?? '' },
+    { key: 'city', header: pickBi(isRTL, 'المدينة', 'City'),
+      accessor: (p) => {
+        const c = (p as { cities?: { name_ar: string; name_en: string } | null }).cities;
+        return c ? (isRTL ? c.name_ar : c.name_en) : '';
+      } },
+    { key: 'cost', header: pickBi(isRTL, 'القيمة', 'Cost'), accessor: (p) => p.project_cost ?? '' },
+    { key: 'currency', header: pickBi(isRTL, 'العملة', 'Currency'), accessor: (p) => p.currency_code ?? '' },
+    { key: 'duration_days', header: pickBi(isRTL, 'المدة (أيام)', 'Duration (days)'), accessor: (p) => p.duration_days ?? '' },
+    { key: 'featured', header: pickBi(isRTL, 'مميز', 'Featured'),
+      accessor: (p) => p.is_featured ? pickBi(isRTL, 'نعم', 'Yes') : pickBi(isRTL, 'لا', 'No') },
+    { key: 'completion_date', header: pickBi(isRTL, 'تاريخ الإنجاز', 'Completion date'), accessor: (p) => p.completion_date ?? '' },
+    { key: 'created_at', header: pickBi(isRTL, 'تاريخ الإنشاء', 'Created'),
+      accessor: (p) => (p as { created_at?: string | null }).created_at?.slice(0, 10) ?? '' },
+    { key: 'updated_at', header: pickBi(isRTL, 'آخر تحديث', 'Updated'),
+      accessor: (p) => (p as { updated_at?: string | null }).updated_at?.slice(0, 10) ?? '' },
+  ]), [isRTL]);
+
+  const selectedProjectRows = useMemo(
+    () => filteredProjects.filter((p) => selectedIds.has(p.id)),
+    [filteredProjects, selectedIds],
+  );
+
+  const bulkExportSelectedCsv = useCallback(() => {
+    if (selectedProjectRows.length === 0) return;
+    exportToCSV(selectedProjectRows, projectExportColumns, `projects-selected-${new Date().toISOString().slice(0, 10)}`);
+    toast.success(pickBi(isRTL, `تم تصدير ${selectedProjectRows.length} مشروع`, `Exported ${selectedProjectRows.length} projects`));
+  }, [selectedProjectRows, projectExportColumns, isRTL]);
+
+  const bulkExportSelectedPdf = useCallback(async () => {
+    if (selectedProjectRows.length === 0) return;
+    await exportToPDF(selectedProjectRows, projectExportColumns, {
+      title: pickBi(isRTL, 'تقرير المشاريع', 'Projects Report'),
+      subtitle: pickBi(isRTL, `${selectedProjectRows.length} مشروع محدد`, `${selectedProjectRows.length} selected projects`),
+      filename: `projects-selected-${new Date().toISOString().slice(0, 10)}`,
+      isRTL,
+    });
+    toast.success(pickBi(isRTL, `تم تصدير ${selectedProjectRows.length} مشروع`, `Exported ${selectedProjectRows.length} projects`));
+  }, [selectedProjectRows, projectExportColumns, isRTL]);
 
   const filterOptions = useMemo(() => [
     { key: 'all' as const, label: pickBi(isRTL, 'الكل', 'All'), count: stats.total, icon: Layers },
