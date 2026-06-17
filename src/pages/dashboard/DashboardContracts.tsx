@@ -1483,6 +1483,33 @@ const DashboardContracts = () => {
     return filtered.slice(start, start + pageSize);
   }, [filtered, currentPage, pageSize]);
 
+  /* ── Phase 1 Safe Rollout — Unified ExportMenu columns (no PII / no internals). ── */
+  const contractExportColumns: ExportColumn<ContractWithRole>[] = useMemo(() => ([
+    { key: 'number', header: pickBi(isRTL, 'الرقم', 'Number'), accessor: (c) => c.contract_number ?? '' },
+    { key: 'title', header: pickBi(isRTL, 'العنوان', 'Title'), accessor: (c) => isRTL ? c.title_ar : (c.title_en || c.title_ar) },
+    { key: 'status', header: pickBi(isRTL, 'الحالة', 'Status'), accessor: (c) => {
+        const m = getContractStatusMeta(c.status);
+        return isRTL ? m.label_ar : m.label_en;
+      } },
+    { key: 'role', header: pickBi(isRTL, 'الدور', 'Role'), accessor: (c) => c._role === 'provider' ? pickBi(isRTL, 'مزوّد', 'Provider') : pickBi(isRTL, 'عميل', 'Client') },
+    { key: 'amount', header: pickBi(isRTL, 'القيمة', 'Amount'), accessor: (c) => Number(c.total_amount) },
+    { key: 'currency', header: pickBi(isRTL, 'العملة', 'Currency'), accessor: (c) => c.currency_code ?? '' },
+    { key: 'created', header: pickBi(isRTL, 'تاريخ الإنشاء', 'Created'), accessor: (c) => c.created_at?.slice(0, 10) ?? '' },
+    { key: 'updated', header: pickBi(isRTL, 'آخر تحديث', 'Updated'), accessor: (c) => c.updated_at?.slice(0, 10) ?? '' },
+  ]), [isRTL]);
+
+  /* ── Phase 1 Safe Rollout — Bulk selection (export-only; no lifecycle actions). ── */
+  const bulkContracts = useBulkSelection<{ id: string }>(filtered.map((c) => ({ id: c.id })));
+  const selectedContractRows = useMemo(
+    () => filtered.filter((c) => bulkContracts.isSelected(c.id)),
+    [filtered, bulkContracts],
+  );
+  const bulkExportSelected = useCallback(() => {
+    if (selectedContractRows.length === 0) return;
+    exportToCSV(selectedContractRows, contractExportColumns, `contracts-selected-${new Date().toISOString().slice(0, 10)}`);
+    toast.success(pickBi(isRTL, `تم تصدير ${selectedContractRows.length} عقد`, `Exported ${selectedContractRows.length} contracts`));
+  }, [selectedContractRows, contractExportColumns, isRTL]);
+
   /* ── Phase 8 — Keyboard shortcuts: "/" focus search, "n" new contract, "Esc" close form. ── */
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
