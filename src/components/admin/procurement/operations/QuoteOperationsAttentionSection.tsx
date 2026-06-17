@@ -83,7 +83,7 @@ export const QuoteOperationsAttentionSection: React.FC<QuoteOperationsAttentionS
               <span className="text-[11px] text-muted-foreground tech-content">عمر: {fmtDuration(ageMs)}</span>
               <span className="text-[10px] text-muted-foreground">{QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status}</span>
               <Button size="sm" variant="ghost" asChild className="ms-auto h-7 text-xs">
-                <Link to={`/admin/quote-requests/${a.quote.id}`}>فتح <ArrowUpRight className="h-3 w-3" /></Link>
+                <Link to={`/admin/quote-requests/${a.quote.ref_id ?? a.quote.id}`}>فتح <ArrowUpRight className="h-3 w-3" /></Link>
               </Button>
             </li>
           );
