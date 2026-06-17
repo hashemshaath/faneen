@@ -981,6 +981,48 @@ const DashboardMessages = () => {
     pinned: pinnedConvs.size,
   }), [conversations.length, totalUnread, starredConvs.size, pinnedConvs.size]);
 
+  /* ─── Lightbox source: every image attachment in current chat ─── */
+  const lightboxImages = useMemo<LightboxImage[]>(() => {
+    return messages
+      .filter(m => m.attachment_url && (m.message_type === 'image' || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(m.attachment_url)))
+      .map(m => ({
+        id: m.id,
+        url: m.attachment_url as string,
+        name: m.content?.startsWith('📎') ? m.content.slice(3) : (m.content || null),
+        createdAt: m.created_at,
+      }));
+  }, [messages]);
+
+  /* ─── Smart quick replies (contextual, language-aware) ─── */
+  const quickReplies = useMemo(() => {
+    const lastIncoming = [...messages].reverse().find(m => m.sender_id !== user?.id);
+    const text = (lastIncoming?.content || '').toLowerCase();
+    const ar = [
+      'شكراً لك! 🙏',
+      'تمام، سأرد قريباً',
+      'هل يمكنك إرسال المزيد من التفاصيل؟',
+      'موافق ✅',
+    ];
+    const en = [
+      'Thanks! 🙏',
+      "Got it, I'll get back shortly",
+      'Could you share more details?',
+      'Sounds good ✅',
+    ];
+    // Tiny contextual nudges
+    if (/(price|سعر|تكلفة)/i.test(text)) {
+      ar[2] = 'هل يمكنك إرسال عرض السعر؟';
+      en[2] = 'Could you share a price quote?';
+    } else if (/(when|متى|موعد|date)/i.test(text)) {
+      ar[2] = 'ما المواعيد المتاحة لديك؟';
+      en[2] = 'What dates work for you?';
+    } else if (/(photo|صورة|image|file|ملف)/i.test(text)) {
+      ar[2] = 'هل يمكنك إرسال الصور/الملفات؟';
+      en[2] = 'Could you send the photos/files?';
+    }
+    return isRTL ? ar : en;
+  }, [messages, user?.id, isRTL]);
+
   return (
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
