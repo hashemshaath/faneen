@@ -514,9 +514,13 @@ const DashboardPortfolio = () => {
           actions={
             <>
               {items.length > 0 && (
-                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
-                  <Download className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'تصدير', 'Export')}
-                </Button>
+                <ExportMenu
+                  rows={items}
+                  columns={portfolioExportColumns}
+                  filename={`portfolio_${new Date().toISOString().slice(0, 10)}`}
+                  title={pickBi(isRTL, 'معرض الأعمال', 'Portfolio Gallery')}
+                  subtitle={pickBi(isRTL, `${items.length} عمل`, `${items.length} works`)}
+                />
               )}
               <PermissionHint permission="documents.upload">
                 <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
