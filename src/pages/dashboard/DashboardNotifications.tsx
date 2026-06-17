@@ -28,6 +28,7 @@ import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/c
 import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { PageHeader } from '@/components/shared';
+import { resolveNotificationActionUrl } from '@/modules/notifications/resolveNotificationActionUrl';
 
 /* ── Notification Item (memo) ── */
 const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate }: {
@@ -235,7 +236,8 @@ const DashboardNotifications = () => {
 
   const handleClick = useCallback((n: any) => {
     if (!n.is_read) markRead.mutate(n.id);
-    if (n.action_url) navigate(n.action_url);
+    const actionUrl = resolveNotificationActionUrl(n);
+    if (actionUrl) navigate(actionUrl);
   }, [markRead, navigate]);
 
   const handleRead = useCallback((id: string) => markRead.mutate(id), [markRead]);

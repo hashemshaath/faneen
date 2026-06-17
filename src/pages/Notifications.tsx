@@ -30,6 +30,7 @@ import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/c
 import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { trackNotificationOpened } from '@/lib/analytics-events';
+import { resolveNotificationActionUrl } from '@/modules/notifications/resolveNotificationActionUrl';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -115,7 +116,8 @@ const Notifications = () => {
         source_page: 'notifications_page',
       });
     } catch { /* analytics never breaks navigation */ }
-    if (n.action_url) navigate(n.action_url);
+    const actionUrl = resolveNotificationActionUrl(n);
+    if (actionUrl) navigate(actionUrl);
   };
 
   const clearFilters = () => {
@@ -349,7 +351,7 @@ const Notifications = () => {
                           {n.action_url && (
                             <Button
                               variant="ghost" size="icon" className="w-7 h-7"
-                              onClick={e => { e.stopPropagation(); navigate(n.action_url); }}
+                              onClick={e => { e.stopPropagation(); const actionUrl = resolveNotificationActionUrl(n); if (actionUrl) navigate(actionUrl); }}
                               title={isRTL ? 'عرض' : 'View'}
                              aria-label="View">
                               <Eye className="w-3.5 h-3.5" />
