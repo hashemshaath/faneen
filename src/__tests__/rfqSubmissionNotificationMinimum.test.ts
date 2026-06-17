@@ -72,9 +72,16 @@ describe('RFQ submission notification minimum', () => {
   });
 
   it('does not log secrets/tokens/raw payloads in submit-quote-request email block', () => {
-    expect(edgeSrc).not.toMatch(/Authorization.*templateData/s);
+    // Edge function must not reference Resend keys directly (uses send-transactional-email)
     expect(edgeSrc).not.toMatch(/RESEND_API_KEY/);
-    expect(edgeSrc).not.toMatch(/SERVICE_ROLE.*templateData/);
+    // The email block must not pass raw auth headers or service-role keys as template data
+    const emailBlock = edgeSrc.slice(
+      edgeSrc.indexOf('Minimum email notifications'),
+      edgeSrc.indexOf('Best-effort notifications'),
+    );
+    expect(emailBlock.length).toBeGreaterThan(100);
+    expect(emailBlock).not.toMatch(/Authorization|serviceKey|SERVICE_ROLE|RESEND/);
+    expect(emailBlock).not.toMatch(/insertPayload|body\.metadata/);
   });
 
   it('no DB/RLS/RPC/migration touched for this feature (no SQL in edge)', () => {
