@@ -270,7 +270,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
 ConversationItem.displayName = 'ConversationItem';
 
 /* ─── Message Bubble (memo) ─── */
-const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar, onForward }: { msg: any; isMine: boolean; language: string; isRTL: boolean; onReply: (msg: any) => void; onCopy: (text: string) => void; onReact: (id: string, emoji: string | null) => void; onStar: (id: string) => void; onForward: (msg: any) => void }) => {
+const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar, onForward, onOpenImage }: { msg: any; isMine: boolean; language: string; isRTL: boolean; onReply: (msg: any) => void; onCopy: (text: string) => void; onReact: (id: string, emoji: string | null) => void; onStar: (id: string) => void; onForward: (msg: any) => void; onOpenImage?: (id: string) => void }) => {
   const [showReactions, setShowReactions] = useState(false);
   const isReply = msg.content?.startsWith('↩️');
   let replyPreview = '';
@@ -324,7 +324,13 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
           {/* Attachment */}
           {msg.attachment_url && (
             <div className="px-3 pt-1">
-              <AttachmentPreview url={msg.attachment_url} type={msg.message_type} name={msg.content?.startsWith('📎') ? msg.content.slice(3) : undefined} />
+              <AttachmentPreview
+                url={msg.attachment_url}
+                type={msg.message_type}
+                name={msg.content?.startsWith('📎') ? msg.content.slice(3) : undefined}
+                onOpenImage={onOpenImage}
+                imageId={msg.id}
+              />
             </div>
           )}
 
