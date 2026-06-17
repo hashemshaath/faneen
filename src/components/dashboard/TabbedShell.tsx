@@ -25,6 +25,8 @@ export type TabbedShellTab = {
   key: string;
   label: { ar: string; en: string };
   icon?: LucideIcon;
+  /** Optional one-line bilingual hint shown above the active tab content. */
+  hint?: { ar: string; en: string };
   /** Lazy import — returns a default-exported React component. */
   loader: () => Promise<{ default: React.ComponentType<unknown> }>;
 };
@@ -113,6 +115,11 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
               const Comp = lazyMap[t.key];
               return (
                 <TabsContent key={t.key} value={t.key}>
+                  {t.hint && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 px-1">
+                      {isRTL ? t.hint.ar : t.hint.en}
+                    </p>
+                  )}
                   <Suspense fallback={<PanelFallback />}>
                     <Comp />
                   </Suspense>
