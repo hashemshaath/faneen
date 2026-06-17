@@ -507,6 +507,7 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             'These fields are prepended automatically to the detailed address — e.g. "Riyadh Industrial City — Site 16".')}
         </p>
       </div>
+      )}
 
       {/* Street + structured */}
       {showStructured && (
