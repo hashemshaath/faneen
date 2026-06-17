@@ -433,16 +433,6 @@ const DashboardProjects = () => {
     onError: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); },
   });
 
-  const bulkDeleteMut = useMutation({
-    mutationFn: async () => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('projects').delete().eq('id', id))); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setSelectedIds(new Set()); toast.success(pickBi(isRTL, 'تم الحذف', 'Deleted')); },
-  });
-
-  const bulkStatusMut = useMutation({
-    mutationFn: async (status: string) => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('projects').update({ status }).eq('id', id))); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); setSelectedIds(new Set()); toast.success(pickBi(isRTL, 'تم التحديث', 'Updated')); },
-  });
-
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
