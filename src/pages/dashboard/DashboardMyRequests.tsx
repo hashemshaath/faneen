@@ -621,8 +621,15 @@ const DashboardMyRequests: React.FC = () => {
                       <div className="font-medium truncate">
                         {lead.subject || (biz?.name ?? (isRTL ? 'طلب خدمة' : 'Service request'))}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {biz?.name ?? '—'} · {new Date(lead.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+                      <div className="text-xs text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
+                        <span className="truncate">{biz?.name ?? '—'}</span>
+                        <span aria-hidden>·</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="tech-content cursor-help">{formatRelative(lead.created_at, isRTL)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>{new Date(lead.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</TooltipContent>
+                        </Tooltip>
                       </div>
                     </div>
                     {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
