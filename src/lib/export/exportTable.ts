@@ -79,11 +79,12 @@ export async function exportToPDF<T>(
     return v === null || v === undefined ? '' : String(v);
   }));
 
+  const arabicStyles = isRTL && fontLoaded ? getArabicTableStyles(true, true) : null;
   autoTable(doc, {
     startY: subtitle ? 26 : 20,
     head,
     body,
-    styles: { fontSize: 9, ...(isRTL && fontLoaded ? getArabicTableStyles(true, true).styles : {}) },
+    styles: { fontSize: 9, ...(arabicStyles ?? {}) },
     headStyles: { fillColor: [16, 185, 129] },
     margin: { left: 10, right: 10 },
   });
