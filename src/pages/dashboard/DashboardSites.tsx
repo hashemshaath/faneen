@@ -271,18 +271,29 @@ const PersonalModeBanner = memo(function PersonalModeBanner({
   isRTL, refId,
 }: { isRTL: boolean; refId: string | null }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <Info className="w-4 h-4 text-primary shrink-0" />
-        <p className="text-xs leading-relaxed">
-          {pickBi(isRTL, 'وضع شخصي: تُربط مواقعك تلقائياً بحسابك ورقم هويتك. الرقم الضريبي اختياري ويُستخدم على الفواتير والعقود.', 'Personal mode: your sites are auto-linked to your account and national ID. Tax number is optional and used on invoices/contracts.')}
-        </p>
+    <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.06]">
+      <div className="flex items-start gap-2 min-w-0 flex-1">
+        <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-xs font-semibold leading-relaxed">
+            {pickBi(isRTL, 'لا توجد منشأة مرتبطة بحسابك — وضع شخصي', 'No business linked to your account — Personal mode')}
+          </p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            {pickBi(isRTL, 'تُحفظ مواقعك باسمك ولن تظهر للعقود المرتبطة بمنشأة. أنشئ منشأتك لربط المواقع والمشاريع والفروع بها.', 'Your sites are saved under your name and will not appear under any business contracts. Create a business to link sites, projects and branches to it.')}
+          </p>
+        </div>
       </div>
       {refId && (
         <span className="text-[11px] font-mono tech-content px-2 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
           {refId}
         </span>
       )}
+      <a
+        href="/register-entity"
+        className="text-[11px] font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+      >
+        {pickBi(isRTL, 'إنشاء منشأة', 'Create business')}
+      </a>
     </div>
   );
 });
