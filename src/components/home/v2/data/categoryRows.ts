@@ -91,14 +91,26 @@ const ROW_COPY: Record<string, RowCopy> = {
     ],
   },
   'wood-kitchens': {
-    titleAr: 'الخشب والمطابخ',
-    titleEn: 'Wood & kitchens',
-    subAr: 'نجارة، مطابخ، دواليب وأبواب خشبية مفصّلة.',
-    subEn: 'Carpentry, kitchens, wardrobes and custom wood doors.',
+    titleAr: 'الخشب والنجارة',
+    titleEn: 'Wood & carpentry',
+    subAr: 'نجارة، دواليب وأبواب خشبية مفصّلة.',
+    subEn: 'Carpentry, wardrobes and custom wood doors.',
     items: [
       { ar: 'خشب ونجارة', en: 'Wood & carpentry', slug: 'wood-carpentry' },
-      { ar: 'مطابخ', en: 'Kitchens', slug: 'kitchens-works' },
       { ar: 'أبواب خشبية', en: 'Wood doors', query: 'أبواب خشبية' },
+      { ar: 'دواليب', en: 'Wardrobes', query: 'دواليب خشبية' },
+    ],
+  },
+  'kitchens': {
+    titleAr: 'المطابخ',
+    titleEn: 'Kitchens',
+    subAr: 'مطابخ خشبية، ألمنيوم، بولي لاك وتصاميم حديثة بالقياس.',
+    subEn: 'Wood, aluminum, polylac and modern made-to-measure kitchens.',
+    items: [
+      { ar: 'مطابخ', en: 'Kitchens', slug: 'kitchens-works' },
+      { ar: 'مطابخ ألمنيوم', en: 'Aluminum kitchens', query: 'مطابخ ألمنيوم' },
+      { ar: 'مطابخ خشب', en: 'Wood kitchens', query: 'مطابخ خشب' },
+      { ar: 'مطابخ بولي لاك', en: 'Polylac kitchens', query: 'مطابخ بولي لاك' },
     ],
   },
   'elevators-maintenance': {
