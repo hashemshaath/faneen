@@ -190,22 +190,25 @@ const DashboardBusinessEdit: React.FC = () => {
   });
 
   // Address state changes mark the form as dirty.
-  const handleAddressChange = (next: NationalAddressValue) => {
+  // PERF: All handlers are stable references via useCallback so memoized
+  // children (BilingualField, LocationPicker, NationalAddressForm…) don't
+  // re-render on every keystroke.
+  const handleAddressChange = useCallback((next: NationalAddressValue) => {
     setAddress(next);
     setDirty(true);
-  };
+  }, []);
 
-  const update = <K extends keyof BusinessRow>(key: K, value: BusinessRow[K]) => {
+  const update = useCallback(<K extends keyof BusinessRow>(key: K, value: BusinessRow[K]) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
     setDirty(true);
-  };
+  }, []);
 
-  const handleMapPick = (lat: number, lng: number) => {
+  const handleMapPick = useCallback((lat: number, lng: number) => {
     setForm((prev) => (prev ? { ...prev, latitude: lat, longitude: lng } : prev));
     setDirty(true);
-  };
+  }, []);
 
-  const handleAutofillAddress = (data: ReverseGeocodeResult) => {
+  const handleAutofillAddress = useCallback((data: ReverseGeocodeResult) => {
     setAddress((prev) => ({
       ...prev,
       region: data.region_ar || prev.region,
@@ -217,7 +220,7 @@ const DashboardBusinessEdit: React.FC = () => {
       address_manual: true,
     }));
     setDirty(true);
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!form || !user) return;
