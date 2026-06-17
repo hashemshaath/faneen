@@ -634,13 +634,15 @@ const DashboardMessages = () => {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<any | null>(null);
 
-  // Local state for pinned/starred/muted/labels and message reactions/stars
-  const [pinnedConvs, setPinnedConvs] = useState<Set<string>>(new Set());
-  const [starredConvs, setStarredConvs] = useState<Set<string>>(new Set());
-  const [mutedConvs, setMutedConvs] = useState<Set<string>>(new Set());
-  const [convLabels, setConvLabels] = useState<Record<string, string>>({});
-  const [messageReactions, setMessageReactions] = useState<Record<string, string>>({});
-  const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
+  // Persistent prefs (per-user, localStorage-backed). Survives reload.
+  const {
+    pinnedConvs, starredConvs, mutedConvs, convLabels, messageReactions, starredMessages,
+    togglePinConv, toggleStarConv, toggleMuteConv: toggleMuteConvBase,
+    setConvLabel: setConvLabelBase,
+    handleReactMessage, toggleStarMessage,
+  } = useChatPersistence(user?.id);
+  // Lightbox for inline image attachments.
+  const [lightboxId, setLightboxId] = useState<string | null>(null);
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduleTime, setScheduleTime] = useState('');
   const [scheduledMessages, setScheduledMessages] = useState<{ convId: string; text: string; time: string; id: string }[]>([]);
@@ -657,37 +659,15 @@ const DashboardMessages = () => {
     startTransition(() => setDeferredSearch(val));
   }, []);
 
-  const togglePinConv = useCallback((id: string) => {
-    setPinnedConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
-  const toggleStarConv = useCallback((id: string) => {
-    setStarredConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
   const toggleMuteConv = useCallback((id: string) => {
-    setMutedConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+    toggleMuteConvBase(id);
     toast.success(pickBi(isRTL, 'تم تحديث الإشعارات', 'Notifications updated'));
-  }, [isRTL]);
+  }, [toggleMuteConvBase, isRTL]);
   const setConvLabel = useCallback((id: string, label: string) => {
-    setConvLabels(prev => {
-      const next = { ...prev };
-      if (label === 'none') delete next[id];
-      else next[id] = label;
-      return next;
-    });
+    setConvLabelBase(id, label);
     const found = CONV_LABELS.find(l => l.key === label);
     if (found && label !== 'none') toast.success(isRTL ? `تم تصنيف المحادثة: ${found.label_ar}` : `Labeled: ${found.label_en}`);
-  }, [isRTL]);
-  const handleReactMessage = useCallback((msgId: string, emoji: string | null) => {
-    setMessageReactions(prev => {
-      const next = { ...prev };
-      if (emoji === null || next[msgId] === emoji) delete next[msgId];
-      else next[msgId] = emoji;
-      return next;
-    });
-  }, []);
-  const toggleStarMessage = useCallback((msgId: string) => {
-    setStarredMessages(prev => { const next = new Set(prev); if (next.has(msgId)) next.delete(msgId); else next.add(msgId); return next; });
-  }, []);
+  }, [setConvLabelBase, isRTL]);
   const handleForwardMessage = useCallback((msg: any) => {
     setForwardMsg(msg);
     toast.info(pickBi(isRTL, 'اختر محادثة لتحويل الرسالة إليها', 'Select a conversation to forward to'));
