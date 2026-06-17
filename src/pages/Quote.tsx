@@ -252,6 +252,7 @@ const Quote: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const [submittedRefId, setSubmittedRefId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const initialDraftHadSector = useRef<boolean>(!!loadDraft().sector);
@@ -508,6 +509,7 @@ const Quote: React.FC = () => {
 
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       setSubmittedId(quoteId);
+      setSubmittedRefId(result.ref_id ?? null);
       setSubmitted(true);
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
@@ -541,10 +543,12 @@ const Quote: React.FC = () => {
                 en="We received your request. It will be routed by sector and city so providers can respond clearly."
               />
             </p>
-            {submittedId && (
+            {(submittedRefId || submittedId) && (
               <p className="text-xs text-muted-foreground mb-4 tech-content">
                 <Bi ar="رقم الطلب: " en="Request ID: " />
-                <span className="font-mono">{submittedId.slice(0, 8)}</span>
+                <span className="font-mono">
+                  {submittedRefId ?? (submittedId ? submittedId.slice(0, 8) : '')}
+                </span>
               </p>
             )}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

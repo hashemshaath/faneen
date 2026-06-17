@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
   const { data: inserted, error } = await admin
     .from('quote_requests')
     .insert(insertPayload)
-    .select('id')
+    .select('id, ref_id')
     .single();
 
   if (error || !inserted) {
@@ -247,6 +247,7 @@ Deno.serve(async (req) => {
     JSON.stringify({
       success: true,
       quote_request_id: inserted.id,
+      ref_id: (inserted as { ref_id?: string | null }).ref_id ?? null,
       message: 'تم استلام طلبك بنجاح',
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
