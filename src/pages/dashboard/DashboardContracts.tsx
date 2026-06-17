@@ -3133,6 +3133,21 @@ const DashboardContracts = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {viewSection === 'list' && (
+        <BulkActionBar
+          count={bulkContracts.count}
+          onClear={bulkContracts.clear}
+          actions={[
+            {
+              id: 'export-selected',
+              label: pickBi(isRTL, 'تصدير المحدد (CSV)', 'Export selected (CSV)'),
+              icon: Download,
+              variant: 'default',
+              onClick: bulkExportSelected,
+            },
+          ]}
+        />
+      )}
     </DashboardLayout>
   );
 };
