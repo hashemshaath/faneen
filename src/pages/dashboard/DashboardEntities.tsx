@@ -15,6 +15,8 @@ import { listAdminBusinesses } from '@/modules/businesses/services/listAdminBusi
 import { listUserEntityLinks, type UserEntityLink } from '@/modules/admin/services/users/listUserEntityLinks';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { pickBi } from '@/components/common/Bilingual';
+import { useContext } from 'react';
+import { EmbeddedPageContext } from '@/contexts/AdminTabsContext';
 
 interface EntityRow {
   id: string;
@@ -50,6 +52,7 @@ const DashboardEntities: React.FC = () => {
   const { user, isAdmin } = useAuth();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const isEmbedded = useContext(EmbeddedPageContext);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -108,7 +111,7 @@ const DashboardEntities: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader
+        {!isEmbedded && <PageHeader
           icon={Building2}
           tone="primary"
           eyebrow={pickBi(isRTL, 'الكيانات', 'Entities')}
@@ -121,7 +124,7 @@ const DashboardEntities: React.FC = () => {
               {(filtered?.length ?? 0)} / {(data?.length ?? 0)}
             </Badge>
           }
-        />
+        />}
 
         <Card className="p-4">
           <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -8,6 +8,7 @@ import {
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
+import { EmbeddedPageContext } from '@/contexts/AdminTabsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -68,6 +69,7 @@ const RANK_OPTIONS: Array<{ value: AwardRank; ar: string; en: string }> = [
 const DashboardCredentials: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
+  const isEmbedded = useContext(EmbeddedPageContext);
   const { user } = useAuth();
   const qc = useQueryClient();
 
@@ -312,7 +314,7 @@ const DashboardCredentials: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader
+        {!isEmbedded && <PageHeader
           icon={ShieldCheck}
           tone="success"
           title={t(isRTL, 'الشهادات والجوائز', 'Credentials & Awards')}
@@ -329,7 +331,7 @@ const DashboardCredentials: React.FC = () => {
               <KpiPill label={t(isRTL, 'موثّقة', 'Verified')} value={kpis.verifiedAwards} icon={ShieldCheck} tone="success" />
             </div>
           }
-        />
+        />}
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'certs' | 'awards')}>
           <TabsList className="grid grid-cols-2 w-full max-w-md">
