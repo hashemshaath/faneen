@@ -42,7 +42,7 @@ describe('submitQuoteRequest', () => {
     });
     const res = await submitQuoteRequest(payload);
     expect(invokeMock).toHaveBeenCalledWith('submit-quote-request', { body: payload });
-    expect(res).toEqual({ success: true, quote_request_id: 'qr-1', message: undefined });
+    expect(res).toEqual({ success: true, quote_request_id: 'qr-1', ref_id: null, message: undefined });
   });
 
   it('throws when the edge function returns an error', async () => {
