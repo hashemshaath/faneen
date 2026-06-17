@@ -213,6 +213,14 @@ const userGroups: MenuGroup[] = [
     ],
   },
   {
+    groupLabel: { ar: 'العضوية والفوترة', en: 'Membership & Billing' },
+    icon: Crown,
+    description: { ar: 'الخطة الحالية والاستخدام والفواتير', en: 'Current plan, usage and invoices' },
+    items: [
+      { label: { ar: 'الخطة والاستخدام', en: 'Plan & Usage' }, url: '/dashboard/membership', icon: Crown },
+    ],
+  },
+  {
     groupLabel: { ar: 'التواصل', en: 'Communication' },
     icon: MessageSquare,
     items: [
