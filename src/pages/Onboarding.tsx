@@ -38,6 +38,7 @@ import {
   getOwnerBusiness, updateBusinessById,
   updateBusinessSensitiveFields,
 } from '@/modules/businesses';
+import { insertBusinessBranchesReturning } from '@/modules/catalog/services/branches/mutations';
 import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
 import {
   OnboardingTaxonomyStep,
@@ -441,10 +442,8 @@ const Onboarding = () => {
                   sort_order: idx + 1,
                 }));
               if (rows.length > 0) {
-                 
-                const sb: any = supabase;
-                const { data: inserted, error: brErr } = await sb
-                  .from('business_branches').insert(rows).select('id');
+                const { data: inserted, error: brErr } =
+                  await insertBusinessBranchesReturning(rows, 'id');
                 if (brErr) throw brErr;
                 // For "same as primary" branches, upsert a copy of the
                 // primary address under owner_type='branch'.

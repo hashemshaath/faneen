@@ -6,24 +6,29 @@ const read = (p: string) => fs.readFileSync(path.resolve(__dirname, '..', '..', 
 const exists = (p: string) => fs.existsSync(path.resolve(__dirname, '..', '..', p));
 
 describe('AUTH-14E · Provider/Business onboarding UI-only fixes guard', () => {
-  // 1. /onboarding contains explicit review-before-visibility messaging
+  // 1. Review-before-visibility messaging surfaces on both the post-registration
+  //    EntityWelcomeCard and the /onboarding completion wizard.
   it('onboarding surfaces review-before-visibility messaging', () => {
-    const src = read('src/pages/Onboarding.tsx');
-    expect(src).toMatch(/يراجع فريق قطاعات/);
-    expect(src).toMatch(/onboarding-review-note/);
+    const welcome = read('src/components/dashboard/EntityWelcomeCard.tsx');
+    expect(welcome).toMatch(/فريق قطاعات/);
+    expect(welcome).toMatch(/data-feature="entity-welcome-card"/);
+    const onboarding = read('src/pages/Onboarding.tsx');
+    expect(onboarding).toMatch(/onboarding-review-note/);
+    expect(onboarding).toMatch(/قبل الظهور العام|before public visibility/);
   });
 
-  // 2. UX warning prevents duplicate business creation
-  it('onboarding intent screen warns against duplicate entity creation', () => {
-    const src = read('src/pages/Onboarding.tsx');
+  // 2. Duplicate-entity warning lives on the new /register-entity surface
+  //    (intent selection has moved out of /onboarding).
+  it('register-entity warns against duplicate entity creation', () => {
+    const src = read('src/pages/RegisterEntity.tsx');
     expect(src).toMatch(/onboarding-duplicate-warning/);
     expect(src).toMatch(/إذا كانت منشأتك مسجلة مسبقًا في قطاعات/);
-    expect(src).toMatch(/already registered on Qitaat/);
+    expect(src).toMatch(/already (?:registered on|has a profile on) Qitaat/);
   });
 
-  // 3. request-access has clarification copy + is not presented as fully automated
+  // 3. request-access clarification copy lives on /start (context selection).
   it('request-access carries admin-approval clarification copy', () => {
-    const src = read('src/pages/Onboarding.tsx');
+    const src = read('src/pages/Start.tsx');
     expect(src).toMatch(/request-access-clarification/);
     expect(src).toMatch(/يحتاج مراجعة من مسؤول المنشأة/);
     expect(src).toMatch(/requires approval from its administrator/);

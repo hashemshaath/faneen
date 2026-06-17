@@ -317,14 +317,15 @@ const RegisterEntity: React.FC = () => {
               <div
                 className="flex items-start gap-2 rounded-xl border border-border/60 bg-muted/30 p-3"
                 role="note"
+                data-feature="onboarding-duplicate-warning"
               >
                 <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="space-y-1">
                   <p className="text-[12px] text-muted-foreground leading-relaxed">
                     {bi(
                       isRTL,
-                      'إذا كانت الجهة لديها حساب على قطاعات، اطلب الانضمام بدلًا من إنشاء جهة جديدة.',
-                      'If the entity already has an account on Qitaat, request to join instead of creating a new one.',
+                      'إذا كانت منشأتك مسجلة مسبقًا في قطاعات، اطلب الانضمام بدلًا من إنشاء جهة جديدة.',
+                      'If your business already has a profile on Qitaat, request to join instead of creating a new one.',
                     )}
                   </p>
                   <Link
