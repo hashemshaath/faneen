@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus, Lock, PauseCircle, ShieldAlert } from 'lucide-react';
+import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus, Lock, PauseCircle, ShieldAlert, Download } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -44,6 +44,12 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { exportToCSV, exportToPDF, type ExportColumn } from '@/lib/export/exportTable';
+import { pickBi } from '@/components/common/Bilingual';
 
 type ServiceRow = {
   id: string;
@@ -480,6 +486,75 @@ const DashboardServices: React.FC = () => {
 
   const loading = loadingBiz || loadingSvc;
 
+  /* ── Phase 3 Safe Rollout — Unified export columns (no PII / no raw IDs). ── */
+  type ServiceExportRow = {
+    id: string;
+    name_ar: string;
+    name_en: string;
+    sector_label: string | null;
+    effective_status: EffectiveServiceStatus | null;
+    is_active: boolean;
+    price_from: number | null;
+    price_to: number | null;
+    currency_code: string | null;
+    created_at: string | null;
+  };
+
+  const exportRows: ServiceExportRow[] = useMemo(
+    () => filteredDisplayList.map((d) => ({
+      id: d.subId,
+      name_ar: d.name_ar,
+      name_en: d.name_en || d.name_ar,
+      sector_label: d.sectorLabel,
+      effective_status: d.resolved?.effective_status ?? null,
+      is_active: d.row?.is_active ?? false,
+      price_from: d.row?.price_from ?? null,
+      price_to: d.row?.price_to ?? null,
+      currency_code: d.row?.currency_code ?? null,
+      created_at: d.row?.created_at ?? null,
+    })),
+    [filteredDisplayList],
+  );
+
+  const serviceExportColumns: ExportColumn<ServiceExportRow>[] = useMemo(() => ([
+    { key: 'name', header: pickBi(isRTL, 'اسم الخدمة', 'Service name'),
+      accessor: (s) => isRTL ? s.name_ar : (s.name_en || s.name_ar) },
+    { key: 'sector', header: pickBi(isRTL, 'القطاع', 'Sector'),
+      accessor: (s) => s.sector_label ?? '' },
+    { key: 'status', header: pickBi(isRTL, 'الحالة', 'Status'),
+      accessor: (s) => s.effective_status ? effectiveStatusLabel(s.effective_status, isRTL) : '' },
+    { key: 'is_active', header: pickBi(isRTL, 'مفعّلة', 'Active'),
+      accessor: (s) => s.is_active ? pickBi(isRTL, 'نعم', 'Yes') : pickBi(isRTL, 'لا', 'No') },
+    { key: 'price_from', header: pickBi(isRTL, 'سعر من', 'Price from'),
+      accessor: (s) => s.price_from ?? '' },
+    { key: 'price_to', header: pickBi(isRTL, 'سعر إلى', 'Price to'),
+      accessor: (s) => s.price_to ?? '' },
+    { key: 'currency', header: pickBi(isRTL, 'العملة', 'Currency'),
+      accessor: (s) => s.currency_code ?? '' },
+    { key: 'created_at', header: pickBi(isRTL, 'تاريخ الإنشاء', 'Created'),
+      accessor: (s) => s.created_at?.slice(0, 10) ?? '' },
+  ]), [isRTL]);
+
+  const bulk = useBulkSelection(exportRows);
+  const selectedServiceRows = bulk.selected;
+
+  const bulkExportSelectedCsv = () => {
+    if (selectedServiceRows.length === 0) return;
+    exportToCSV(selectedServiceRows, serviceExportColumns, `services-selected-${new Date().toISOString().slice(0, 10)}`);
+    toast.success(pickBi(isRTL, `تم تصدير ${selectedServiceRows.length} خدمة`, `Exported ${selectedServiceRows.length} services`));
+  };
+
+  const bulkExportSelectedPdf = async () => {
+    if (selectedServiceRows.length === 0) return;
+    await exportToPDF(selectedServiceRows, serviceExportColumns, {
+      title: pickBi(isRTL, 'تقرير الخدمات', 'Services Report'),
+      subtitle: pickBi(isRTL, `${selectedServiceRows.length} خدمة محددة`, `${selectedServiceRows.length} selected services`),
+      filename: `services-selected-${new Date().toISOString().slice(0, 10)}`,
+      isRTL,
+    });
+    toast.success(pickBi(isRTL, `تم تصدير ${selectedServiceRows.length} خدمة`, `Exported ${selectedServiceRows.length} services`));
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -493,6 +568,15 @@ const DashboardServices: React.FC = () => {
             : 'These services mirror what you picked in your business profile.'}
           actions={
             <>
+              {displayList.length > 0 && (
+                <ExportMenu
+                  rows={exportRows}
+                  columns={serviceExportColumns}
+                  filename={`services-${new Date().toISOString().slice(0, 10)}`}
+                  title={pickBi(isRTL, 'تقرير الخدمات', 'Services Report')}
+                  subtitle={pickBi(isRTL, `إجمالي ${exportRows.length} خدمة`, `Total ${exportRows.length} services`)}
+                />
+              )}
               <Button asChild variant="outline" className="rounded-xl">
                 <Link to="/dashboard/business-edit?tab=sectors">
                   <Pencil className="h-4 w-4 me-2" />
@@ -746,10 +830,37 @@ const DashboardServices: React.FC = () => {
               </div>
             )}
             {!loading && filteredDisplayList.length > 0 && (
+              <>
+                {!!businessId && (
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                      <Checkbox
+                        checked={bulk.allSelected}
+                        onCheckedChange={(c) => { if (c) bulk.selectAll(); else bulk.clear(); }}
+                        aria-label={isRTL ? 'تحديد كل الخدمات في الصفحة' : 'Select all services on page'}
+                      />
+                      {isRTL ? 'تحديد الصفحة' : 'Select page'}
+                    </label>
+                    {bulk.count > 0 && (
+                      <span className="tech-content text-[11px] text-muted-foreground">
+                        {bulk.count} {isRTL ? 'محددة' : 'selected'}
+                      </span>
+                    )}
+                  </div>
+                )}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {filteredDisplayList.map((d) => (
-                  <ServiceTile
-                    key={d.subId}
+                  <div key={d.subId} className="relative">
+                    {!!businessId && (
+                      <div className="absolute top-2 start-2 z-10">
+                        <Checkbox
+                          checked={bulk.isSelected(d.subId)}
+                          onCheckedChange={() => bulk.toggle(d.subId)}
+                          aria-label={isRTL ? 'تحديد الخدمة' : 'Select service'}
+                        />
+                      </div>
+                    )}
+                    <ServiceTile
                     businessId={businessId!}
                     userId={user?.id ?? ''}
                     sectorId={d.sectorId}
@@ -766,13 +877,37 @@ const DashboardServices: React.FC = () => {
                     onSave={(payload) => upsertMut.mutate({ subId: d.subId, payload: { ...payload, name_ar: d.name_ar, name_en: d.name_en || d.name_ar } })}
                     onRemove={() => removeSubMut.mutate(d.subId)}
                     removing={removeSubMut.isPending}
-                  />
+                    />
+                  </div>
                 ))}
               </div>
+              </>
             )}
           </CardContent>
         </Card>
       </div>
+      {!!businessId && displayList.length > 0 && (
+        <BulkActionBar
+          count={bulk.count}
+          onClear={bulk.clear}
+          actions={[
+            {
+              id: 'export-selected-csv',
+              label: pickBi(isRTL, 'تصدير CSV', 'Export CSV'),
+              icon: Download,
+              variant: 'default',
+              onClick: bulkExportSelectedCsv,
+            },
+            {
+              id: 'export-selected-pdf',
+              label: pickBi(isRTL, 'تصدير PDF', 'Export PDF'),
+              icon: Download,
+              variant: 'outline',
+              onClick: bulkExportSelectedPdf,
+            },
+          ]}
+        />
+      )}
     </DashboardLayout>
   );
 };
