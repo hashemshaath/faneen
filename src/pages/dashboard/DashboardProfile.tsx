@@ -663,6 +663,7 @@ const DashboardProfile: React.FC = () => {
                   value={address}
                   onChange={setAddress}
                   isRTL={isRTL}
+                  showComplex={false}
                 />
               </CardContent>
             </Card>
