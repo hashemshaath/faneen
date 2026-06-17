@@ -466,6 +466,18 @@ const DashboardPortfolio = () => {
     toast.success(pickBi(isRTL, 'تم التصدير', 'Exported'));
   }, [items, isRTL]);
 
+  const portfolioExportColumns: ExportColumn<PortfolioItem>[] = useMemo(() => ([
+    { key: 'title', header: pickBi(isRTL, 'العنوان', 'Title'), accessor: (i) => isRTL ? i.title_ar : (i.title_en || i.title_ar) },
+    { key: 'category', header: pickBi(isRTL, 'التصنيف', 'Category'), accessor: (i) => i.category },
+    { key: 'location', header: pickBi(isRTL, 'الموقع', 'Location'), accessor: (i) => i.project_location ?? '' },
+    { key: 'date', header: pickBi(isRTL, 'التاريخ', 'Date'), accessor: (i) => i.completion_date ?? '' },
+    { key: 'client', header: pickBi(isRTL, 'العميل', 'Client'), accessor: (i) => i.client_name ?? '' },
+    { key: 'value', header: pickBi(isRTL, 'القيمة', 'Value'), accessor: (i) => i.project_value ?? '' },
+    { key: 'views', header: pickBi(isRTL, 'المشاهدات', 'Views'), accessor: (i) => i.view_count ?? 0 },
+    { key: 'shares', header: pickBi(isRTL, 'المشاركات', 'Shares'), accessor: (i) => i.share_count ?? 0 },
+    { key: 'featured', header: pickBi(isRTL, 'مميز', 'Featured'), accessor: (i) => i.is_featured ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا' : 'No') },
+  ]), [isRTL]);
+
   const publicLinkFor = useCallback((_item: PortfolioItem) => {
     if (!businessRefId) return null;
     return `${window.location.origin}/r/${businessRefId}`;
