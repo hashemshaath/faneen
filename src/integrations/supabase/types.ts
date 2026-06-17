@@ -20799,6 +20799,7 @@ export type Database = {
         Args: { _owner_id: string; _owner_type: string }
         Returns: boolean
       }
+      can_access_realtime_topic: { Args: { _topic: string }; Returns: boolean }
       cancel_client_invitation: { Args: { _id: string }; Returns: Json }
       cancel_contract: {
         Args: { _contract_id: string; _reason?: string }
