@@ -53,6 +53,7 @@ const ProviderLeads = lazyRetry(() => import("./pages/dashboard/ProviderLeads"))
 const ProviderLeadDetails = lazyRetry(() => import("./pages/dashboard/ProviderLeadDetails"));
 const ProviderServiceAreas = lazyRetry(() => import("./pages/dashboard/ProviderServiceAreas"));
 const ProviderMembership = lazyRetry(() => import("./pages/dashboard/ProviderMembership"));
+const DashboardMembership = lazyRetry(() => import("./pages/dashboard/DashboardMembership"));
 const AdminProviderSubscriptions = lazyRetry(() => import("./pages/admin/AdminProviderSubscriptions"));
 const AdminServiceActivations = lazyRetry(() => import("./pages/admin/AdminServiceActivations"));
 const AdminAbExperiments = lazyRetry(() => import("./pages/admin/AdminAbExperiments"));
@@ -471,6 +472,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/provider/leads" element={<Navigate to="/dashboard/leads?tab=quote-opportunities" replace />} />
           <Route path="/dashboard/provider/leads/:id" element={<ProtectedRoute requireProvider><ProviderLeadDetails /></ProtectedRoute>} />
           <Route path="/dashboard/provider/membership" element={<ProtectedRoute requireProvider><ProviderMembership /></ProtectedRoute>} />
+          <Route path="/dashboard/membership" element={<ProtectedRoute><DashboardMembership /></ProtectedRoute>} />
           <Route path="/dashboard/provider/service-areas" element={<ProtectedRoute requireProvider><ProviderServiceAreas /></ProtectedRoute>} />
           <Route path="/admin/ai-center" element={<ProtectedRoute requireAdmin><DashboardAiCenter /></ProtectedRoute>} />
 
