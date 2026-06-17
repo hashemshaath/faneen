@@ -374,6 +374,7 @@ const DashboardMyRequests: React.FC = () => {
 
   return (
     <DashboardLayout>
+      <TooltipProvider delayDuration={200}>
       <div className="space-y-5">
         <PageHeader
           icon={Inbox}
@@ -383,6 +384,22 @@ const DashboardMyRequests: React.FC = () => {
           subtitle={isRTL ? 'تابع حالة طلبات الخدمة التي أرسلتها للمنشآت' : 'Track the status of the service requests you sent to providers'}
           actions={
             <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="min-h-[40px]"
+                    onClick={handleExport}
+                    disabled={(tab === 'quotes' ? sortedQuotes.length : sortedLeads.length) === 0}
+                    aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
+                  >
+                    <Download />
+                    <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isRTL ? 'تصدير CSV' : 'Export CSV'}</TooltipContent>
+              </Tooltip>
               <Button
                 variant="outline"
                 size="sm"
@@ -430,7 +447,7 @@ const DashboardMyRequests: React.FC = () => {
               </TabsTrigger>
             </TabsList>
 
-            <div className="relative flex-1 sm:max-w-sm sm:ms-auto">
+            <div className="relative flex-1 sm:max-w-xs sm:ms-auto">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 value={search}
@@ -441,12 +458,42 @@ const DashboardMyRequests: React.FC = () => {
                 aria-label={isRTL ? 'بحث' : 'Search'}
               />
             </div>
+
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+              <SelectTrigger className="h-10 w-[160px]" aria-label={isRTL ? 'الترتيب' : 'Sort'}>
+                <ArrowUpDown className="h-4 w-4 me-2 opacity-70" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">{isRTL ? 'الأحدث أولاً' : 'Newest first'}</SelectItem>
+                <SelectItem value="oldest">{isRTL ? 'الأقدم أولاً' : 'Oldest first'}</SelectItem>
+                <SelectItem value="updated">{isRTL ? 'آخر تحديث' : 'Last updated'}</SelectItem>
+                <SelectItem value="status">{isRTL ? 'حسب الحالة' : 'By status'}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <ToggleGroup
+              type="single"
+              value={density}
+              onValueChange={(v) => v && setDensity(v as Density)}
+              className="hidden md:inline-flex border border-border rounded-lg"
+              aria-label={isRTL ? 'كثافة العرض' : 'Density'}
+            >
+              <ToggleGroupItem value="comfortable" className="h-10 px-2.5" aria-label={isRTL ? 'مريح' : 'Comfortable'}>
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="compact" className="h-10 px-2.5" aria-label={isRTL ? 'مدمج' : 'Compact'}>
+                <Rows3 className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {/* Status filter chips */}
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
             {(tab === 'quotes' ? quoteStatuses : leadStatuses).map((s) => {
               const active = statusFilter === s;
+              const count = (tab === 'quotes' ? quoteStatusCounts : leadStatusCounts).get(s) ?? 0;
               const label = s === 'all'
                 ? (isRTL ? 'الكل' : 'All')
                 : (tab === 'quotes'
@@ -457,14 +504,15 @@ const DashboardMyRequests: React.FC = () => {
                   key={s}
                   type="button"
                   onClick={() => setStatusFilter(s)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors inline-flex items-center gap-1.5 ${
                     active
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-card hover:bg-muted/60 border-border text-muted-foreground'
                   }`}
                   aria-pressed={active}
                 >
-                  {label}
+                  <span>{label}</span>
+                  <span className={`tech-content text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>{count}</span>
                 </button>
               );
             })}
@@ -503,12 +551,13 @@ const DashboardMyRequests: React.FC = () => {
               </Card>
             )}
 
-            {filteredQuotes.map((q) => (
+            {sortedQuotes.map((q) => (
               <QuoteRequestRowCard
                 key={q.id}
                 q={q}
                 fileCount={quoteFileCounts?.get(q.id) ?? 0}
                 isRTL={isRTL}
+                density={density}
               />
             ))}
           </TabsContent>
@@ -551,7 +600,7 @@ const DashboardMyRequests: React.FC = () => {
               </Card>
             )}
 
-            {filteredLeads.map((lead) => {
+            {sortedLeads.map((lead) => {
             const open = openId === lead.id;
             const biz = businessMap.get(lead.business_id);
             const canCancel = CANCELLABLE.has(lead.status);
@@ -561,7 +610,7 @@ const DashboardMyRequests: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleToggle(lead.id)}
-                    className="w-full text-start p-4 sm:p-5 flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors min-h-[64px]"
+                    className={`w-full text-start ${density === 'compact' ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'} flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors min-h-[64px]`}
                     aria-expanded={open}
                   >
                     <div className="flex-1 min-w-0">
