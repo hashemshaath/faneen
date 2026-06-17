@@ -754,6 +754,7 @@ const DashboardMyRequests: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+      </TooltipProvider>
     </DashboardLayout>
   );
 };
