@@ -400,16 +400,18 @@ export const OverdueAlerts = React.memo(function OverdueAlerts({
 
   return (
     <Card className="border-warning/30 bg-warning/5">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-          <h3 className="font-heading font-bold text-xs text-warning dark:text-warning">{isRTL ? 'تنبيهات' : 'Alerts'}</h3>
-        </div>
+      <CardContent className={SECTION_CONTENT_CLASS}>
+        <SectionHeader
+          icon={AlertTriangle}
+          tone="warning"
+          title={isRTL ? 'تنبيهات تحتاج انتباهك' : 'Needs your attention'}
+          right={<SectionChip tone="warning">{total}</SectionChip>}
+        />
         <div className="space-y-1.5">
           {(data?.overduePayments ?? 0) > 0 && (
             <Link to="/dashboard/installments" className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 hover:bg-warning/15 transition-colors">
               <CreditCard className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-              <span className="text-xs text-warning dark:text-warning">
+              <span className="text-[11px] font-medium text-warning dark:text-warning">
                 {data!.overduePayments} {isRTL ? 'أقساط متأخرة' : 'overdue payments'}
               </span>
             </Link>
@@ -417,7 +419,7 @@ export const OverdueAlerts = React.memo(function OverdueAlerts({
           {(data?.expiringContracts ?? 0) > 0 && (
             <Link to="/dashboard/contracts" className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 hover:bg-warning/15 transition-colors">
               <Timer className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-              <span className="text-xs text-warning dark:text-warning">
+              <span className="text-[11px] font-medium text-warning dark:text-warning">
                 {data!.expiringContracts} {isRTL ? 'عقود قاربت الانتهاء' : 'contracts expiring soon'}
               </span>
             </Link>
@@ -462,36 +464,38 @@ export const MembershipWidget = React.memo(function MembershipWidget({
   const cycleDays = sub?.billing_cycle === 'yearly' ? 365 : 30;
 
   return (
-    <Card className="border-border/40">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <Crown className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-          <h3 className="font-heading font-bold text-xs">{isRTL ? 'العضوية' : 'Membership'}</h3>
-        </div>
+    <Card className={SECTION_CARD_CLASS}>
+      <CardContent className={SECTION_CONTENT_CLASS}>
+        <SectionHeader
+          icon={Crown}
+          tone="accent"
+          title={isRTL ? 'عضويتك' : 'Your Membership'}
+          right={<SectionChip tone="accent">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'مجاني' : 'Free')}</SectionChip>}
+        />
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
             <Icon className="w-4 h-4 text-accent" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'مجاني' : 'Free')}</p>
+            <p className="text-[12px] font-bold text-foreground truncate">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'الخطة المجانية' : 'Free plan')}</p>
             {daysRemaining !== null && (
               <>
-                <div className="flex items-center justify-between text-[9px] text-muted-foreground mt-0.5">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
                   <span>{isRTL ? `${daysRemaining} يوم متبقي` : `${daysRemaining} days left`}</span>
                   <span>{Math.round((daysRemaining / cycleDays) * 100)}%</span>
                 </div>
                 <Progress
                   value={Math.max(5, (daysRemaining / cycleDays) * 100)}
-                  className="h-1 mt-0.5"
+                  className="h-1.5 mt-1"
                   aria-label={isRTL ? `${daysRemaining} يوم متبقي من الاشتراك` : `${daysRemaining} days left in subscription`}
                 />
               </>
             )}
           </div>
         </div>
-        <Link to={membershipVisibility.membershipPathOrNull ?? '/contact'}>
-          <Button variant="ghost" size="sm" className="w-full mt-2 text-[10px] h-7 text-accent gap-1">
-            <Sparkles className="w-3 h-3" aria-hidden="true" />{isRTL ? 'إدارة العضوية' : 'Manage Plan'}
+        <Link to={membershipVisibility.membershipPathOrNull ?? '/contact'} className="block">
+          <Button variant="ghost" size="sm" className="w-full text-[11px] h-8 text-accent gap-1.5 font-medium">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />{isRTL ? 'إدارة العضوية' : 'Manage Plan'}
           </Button>
         </Link>
       </CardContent>
