@@ -172,29 +172,57 @@ export const TodaySummary = React.memo(function TodaySummary({
   });
 
   const items = [
-    { icon: Bell, label: isRTL ? 'إشعارات اليوم' : "Today's Alerts", value: data?.todayNotifs ?? 0 },
-    { icon: Send, label: isRTL ? 'رسائل مرسلة' : 'Sent Messages', value: data?.todayMessages ?? 0 },
+    {
+      icon: Bell,
+      label: isRTL ? 'إشعارات اليوم' : "Today's alerts",
+      hint: isRTL ? 'تنبيهات وردت خلال الـ24 ساعة الماضية' : 'Alerts received in the last 24 hours',
+      emptyHint: isRTL ? 'لا توجد تنبيهات جديدة حتى الآن' : 'No new alerts yet',
+      value: data?.todayNotifs ?? 0,
+      tone: 'warning' as const,
+    },
+    {
+      icon: Send,
+      label: isRTL ? 'رسائل أرسلتها اليوم' : 'Messages you sent today',
+      hint: isRTL ? 'إجمالي ما أرسلته خلال اليوم' : 'Total messages you sent today',
+      emptyHint: isRTL ? 'لم ترسل أي رسالة اليوم' : 'You haven\u2019t sent any messages today',
+      value: data?.todayMessages ?? 0,
+      tone: 'accent' as const,
+    },
   ];
 
   return (
     <Card className="border-border/60">
       <CardContent className="p-3 sm:p-4">
-        <div className="flex items-center gap-2 mb-2.5">
-          <CalendarDays className="w-4 h-4 text-accent" aria-hidden="true" />
-          <h3 className="font-heading font-bold text-sm">{isRTL ? 'ملخص اليوم' : "Today's Summary"}</h3>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <CalendarDays className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
+            <h3 className="font-heading font-bold text-sm truncate">{isRTL ? 'ملخّص يومك' : "Today's summary"}</h3>
+          </div>
+          <span className="text-[10px] font-medium text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 shrink-0">
+            {isRTL ? 'آخر 24 ساعة' : 'Last 24h'}
+          </span>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {items.map((item, i) => {
             const isEmpty = item.value === 0;
+            const toneActive = item.tone === 'warning' ? 'bg-warning/5 border-warning/25' : 'bg-accent/5 border-accent/20';
+            const toneIcon = item.tone === 'warning' ? 'text-warning' : 'text-accent';
             return (
               <div
                 key={i}
-                className={`flex items-center gap-2.5 p-2.5 rounded-lg border ${isEmpty ? 'bg-muted/20 border-border/40' : 'bg-accent/5 border-accent/20'}`}
+                className={`flex items-start gap-2.5 p-3 rounded-xl border transition-colors ${isEmpty ? 'bg-muted/20 border-border/50' : toneActive}`}
               >
-                <item.icon className={`w-4 h-4 shrink-0 ${isEmpty ? 'text-muted-foreground/70' : 'text-accent'}`} aria-hidden="true" />
-                <div className="min-w-0">
-                  <p className={`text-base font-bold leading-none tech-content ${isEmpty ? 'text-muted-foreground' : 'text-foreground'}`}>{item.value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1 truncate">{item.label}</p>
+                <div className={`shrink-0 h-8 w-8 rounded-lg flex items-center justify-center ${isEmpty ? 'bg-muted/60' : (item.tone === 'warning' ? 'bg-warning/15' : 'bg-accent/15')}`}>
+                  <item.icon className={`w-4 h-4 ${isEmpty ? 'text-muted-foreground/70' : toneIcon}`} aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-1.5">
+                    <p className={`text-xl font-bold leading-none tech-content ${isEmpty ? 'text-muted-foreground' : 'text-foreground'}`}>{item.value}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.label}</p>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground/80 mt-1.5 leading-snug">
+                    {isEmpty ? item.emptyHint : item.hint}
+                  </p>
                 </div>
               </div>
             );
