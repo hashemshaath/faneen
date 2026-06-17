@@ -48,7 +48,7 @@ describe('Email Infrastructure Phase 15A — Central Resend audit guards', () =>
     const offending = hits
       .split('\n')
       .filter(Boolean)
-      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx|emailInfrastructurePhase15(a|c|d|e|f).*\.test\.ts/.test(line));
+      .filter((line) => !/AdminIntegrations\.tsx|ResendIntegrationCard\.tsx|emailInfrastructurePhase15(a|c|d|e|f).*\.test\.ts|rfqSubmissionNotificationMinimum\.test\.ts/.test(line));
     expect(offending).toEqual([]);
   });
 

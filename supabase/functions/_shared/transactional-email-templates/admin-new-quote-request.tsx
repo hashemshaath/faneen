@@ -47,7 +47,7 @@ export const template = {
   displayName: 'إشعار طلب عرض سعر جديد للإدارة · Admin new quote request',
   previewData: {
     ref_id: 'REQ-1000001',
-    quote_request_id: '33d90fce-18db-47f3-ad5b-57f69f942e03',
+    quote_request_id: '00000000-0000-0000-0000-000000000000',
     customer_name: 'أحمد العتيبي',
     customer_phone: '0501234567',
     city: 'جدة',
