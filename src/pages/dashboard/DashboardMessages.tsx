@@ -1370,7 +1370,8 @@ const DashboardMessages = () => {
                               return (
                                 <div key={msg.id} id={`msg-${msg.id}`} className={isSearchMatch ? 'bg-accent/10 rounded-xl -mx-1 px-1 transition-colors' : ''}>
                                   <MessageBubble msg={msg} isMine={msg.sender_id === user?.id} language={language} isRTL={isRTL}
-                                    onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} onForward={handleForwardMessage} />
+                                    onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} onForward={handleForwardMessage}
+                                    onOpenImage={setLightboxId} />
                                 </div>
                               );
                             })}
