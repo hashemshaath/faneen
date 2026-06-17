@@ -298,20 +298,13 @@ export const TodaySummary = React.memo(function TodaySummary({
   ];
 
   return (
-    <Card className="border-border/60">
-      <CardContent className="p-3 sm:p-4 space-y-3">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="p-1.5 bg-muted/40 rounded-lg border border-border/60">
-              <CalendarDays className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <h3 className="font-heading font-bold text-[13px] text-foreground">{isRTL ? 'ملخّص يومك' : "Today's summary"}</h3>
-          </div>
-          <span className="text-[10px] font-medium text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 border border-border/40 tracking-tight shrink-0">
-            {isRTL ? 'آخر 24 ساعة' : 'Last 24h'}
-          </span>
-        </div>
+    <Card className={SECTION_CARD_CLASS}>
+      <CardContent className={SECTION_CONTENT_CLASS}>
+        <SectionHeader
+          icon={CalendarDays}
+          title={isRTL ? 'ملخّص يومك' : "Today's summary"}
+          right={<SectionChip>{isRTL ? 'آخر 24 ساعة' : 'Last 24h'}</SectionChip>}
+        />
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-2.5">
