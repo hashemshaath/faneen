@@ -338,7 +338,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
           body_en: 'Your quote request status has been updated.',
           reference_id: quote.id,
           reference_type: 'quote_request',
-          action_url: `/dashboard/my-requests/${quote.id}`,
+          action_url: `/dashboard/my-requests/${quote.ref_id ?? quote.id}`,
         });
       }
     },
