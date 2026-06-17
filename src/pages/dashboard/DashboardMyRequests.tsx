@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback, useDeferredValue } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -15,10 +15,13 @@ import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustome
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { KpiStrip } from '@/components/dashboard/KpiCard';
 import {
   Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
-  Paperclip, MapPin, Tag,
+  Paperclip, MapPin, Tag, Search, Plus, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
