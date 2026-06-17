@@ -1,0 +1,5 @@
+DELETE FROM public.quote_request_lead_events WHERE lead_id IN (SELECT id FROM public.quote_request_leads WHERE quote_request_id IN (SELECT id FROM public.quote_requests WHERE ref_id IN ('REQ-1000003','REQ-1000004','REQ-1000005','REQ-1000006')));
+DELETE FROM public.quote_request_leads WHERE quote_request_id IN (SELECT id FROM public.quote_requests WHERE ref_id IN ('REQ-1000003','REQ-1000004','REQ-1000005','REQ-1000006'));
+DELETE FROM public.quote_request_files WHERE quote_request_id IN (SELECT id FROM public.quote_requests WHERE ref_id IN ('REQ-1000003','REQ-1000004','REQ-1000005','REQ-1000006'));
+DELETE FROM public.quote_request_events WHERE quote_request_id IN (SELECT id FROM public.quote_requests WHERE ref_id IN ('REQ-1000003','REQ-1000004','REQ-1000005','REQ-1000006'));
+DELETE FROM public.quote_requests WHERE ref_id IN ('REQ-1000003','REQ-1000004','REQ-1000005','REQ-1000006');
