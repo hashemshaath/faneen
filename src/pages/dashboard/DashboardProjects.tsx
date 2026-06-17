@@ -596,9 +596,13 @@ const DashboardProjects = () => {
           actions={
             <>
               {projects.length > 0 && (
-                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
-                  <Download className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'تصدير', 'Export')}
-                </Button>
+                <ExportMenu
+                  rows={filteredProjects}
+                  columns={projectExportColumns}
+                  filename={`projects-${new Date().toISOString().slice(0, 10)}`}
+                  title={pickBi(isRTL, 'تقرير المشاريع', 'Projects Report')}
+                  subtitle={pickBi(isRTL, `إجمالي ${filteredProjects.length} مشروع`, `Total ${filteredProjects.length} projects`)}
+                />
               )}
               {businessId ? (
                 <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
@@ -944,17 +948,6 @@ const DashboardProjects = () => {
                 </button>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Bulk Actions */}
-        {selectedIds.size > 0 && (
-          <div className="flex items-center gap-2 p-2 rounded-xl bg-primary/5 border border-primary/15 animate-in fade-in-0 duration-150">
-            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{selectedIds.size} {pickBi(isRTL, 'محددة', 'selected')}</Badge>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkStatusMut.mutate('published')} disabled={bulkStatusMut.isPending}><Eye className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'نشر', 'Publish')}</Button>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => bulkStatusMut.mutate('draft')} disabled={bulkStatusMut.isPending}><EyeOff className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'مسودة', 'Draft')}</Button>
-            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive" onClick={() => bulkDeleteMut.mutate()} disabled={bulkDeleteMut.isPending}><Trash2 className="w-3 h-3 me-0.5" />{pickBi(isRTL, 'حذف', 'Del')}</Button>
-            <button className="ms-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSelectedIds(new Set())}><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
 
