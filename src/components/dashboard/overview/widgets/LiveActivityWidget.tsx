@@ -6,7 +6,7 @@ import {
   subscribeUserNotifications,
 } from '@/modules/notifications';
 import { listContractsForUserParticipant } from '@/modules/contracts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Activity, Bell, MessageSquare, FileText, Wifi, WifiOff } from 'lucide-react';
@@ -14,6 +14,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { resolveNotificationTitle } from '@/i18n/notificationLabels';
+import {
+  SectionHeader, SECTION_CARD_CLASS, SECTION_CONTENT_CLASS,
+} from '../shared';
 
 type ActivityKind = 'all' | 'notification' | 'message' | 'contract';
 
@@ -113,31 +116,37 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
   const locale = isRTL ? ar : enUS;
 
   return (
-    <Card className="border-border/40 h-full flex flex-col">
-      <CardHeader className="pb-1 px-4 pt-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xs flex items-center gap-2">
-            <Activity className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-            {isRTL ? 'النشاط المباشر' : 'Live Activity'}
-          </CardTitle>
-          <span
-            className={cn('flex items-center gap-1 text-[9px]', online ? 'text-success' : 'text-muted-foreground')}
-            title={online ? (isRTL ? 'متصل' : 'Live') : (isRTL ? 'غير متصل' : 'Offline')}
-          >
-            {online
-              ? <Wifi className="w-3 h-3" aria-hidden="true" />
-              : <WifiOff className="w-3 h-3" aria-hidden="true" />}
-            <span>{online ? (isRTL ? 'مباشر' : 'Live') : (isRTL ? 'غير متصل' : 'Off')}</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-1 mt-2 overflow-x-auto no-scrollbar">
+    <Card className={cn(SECTION_CARD_CLASS, 'h-full flex flex-col')}>
+      <CardContent className={cn(SECTION_CONTENT_CLASS, 'flex-1 flex flex-col')}>
+        <SectionHeader
+          icon={Activity}
+          tone="accent"
+          title={isRTL ? 'النشاط المباشر' : 'Live activity'}
+          right={
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 text-[10px] font-medium rounded-full px-2 py-0.5 border',
+                online
+                  ? 'text-success bg-success/10 border-success/25'
+                  : 'text-muted-foreground bg-muted/50 border-border/40'
+              )}
+              title={online ? (isRTL ? 'متصل' : 'Live') : (isRTL ? 'غير متصل' : 'Offline')}
+            >
+              {online
+                ? <Wifi className="w-3 h-3" aria-hidden="true" />
+                : <WifiOff className="w-3 h-3" aria-hidden="true" />}
+              <span>{online ? (isRTL ? 'مباشر' : 'Live') : (isRTL ? 'غير متصل' : 'Offline')}</span>
+            </span>
+          }
+        />
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar -mt-1">
           {FILTERS.map((f) => (
             <button
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
               className={cn(
-                'text-[10px] px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap',
+                'text-[11px] px-2.5 py-1 rounded-full border transition-colors whitespace-nowrap',
                 filter === f.id
                   ? 'bg-accent/10 border-accent/40 text-accent font-medium'
                   : 'border-border/40 text-muted-foreground hover:bg-muted/50'
@@ -148,8 +157,6 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
             </button>
           ))}
         </div>
-      </CardHeader>
-      <CardContent className="px-4 pb-3 flex-1">
         {isLoading ? (
           <div className="space-y-1.5">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -159,7 +166,7 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-6 text-muted-foreground">
             <Activity className="w-8 h-8 mb-2 opacity-20" aria-hidden="true" />
-            <p className="text-[10px]">{isRTL ? 'لا يوجد نشاط' : 'No activity'}</p>
+            <p className="text-[11px]">{isRTL ? 'لا يوجد نشاط' : 'No activity yet'}</p>
           </div>
         ) : (
           <ul className="space-y-1 max-h-[260px] overflow-y-auto no-scrollbar -mx-1 px-1">
@@ -179,14 +186,14 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
                       <Icon className="w-3 h-3" aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={cn('text-[10px] truncate', row.unread ? 'font-medium' : 'text-foreground')} dir="auto">
+                      <p className={cn('text-[11px] truncate', row.unread ? 'font-medium text-foreground' : 'text-foreground')} dir="auto">
                         {row.title}
                       </p>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
                         {row.body && (
-                          <p className="text-[9px] text-muted-foreground truncate flex-1" dir="auto">{row.body}</p>
+                          <p className="text-[10px] text-muted-foreground truncate flex-1" dir="auto">{row.body}</p>
                         )}
-                        <span className="text-[9px] text-muted-foreground/70 shrink-0 tech-content">
+                        <span className="text-[10px] text-muted-foreground/70 shrink-0 tech-content">
                           {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true, locale })}
                         </span>
                       </div>
@@ -198,9 +205,9 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
             })}
           </ul>
         )}
-        <div className="pt-2 mt-2 border-t border-border/40 flex justify-end">
+        <div className="pt-2 mt-auto border-t border-border/40 flex justify-end">
           <Link to="/dashboard/notifications">
-            <Button variant="ghost" size="sm" className="text-[10px] text-accent h-6 gap-1">
+            <Button variant="ghost" size="sm" className="text-[11px] text-accent h-7 gap-1 font-medium">
               {isRTL ? 'عرض الكل' : 'View all'}
             </Button>
           </Link>
