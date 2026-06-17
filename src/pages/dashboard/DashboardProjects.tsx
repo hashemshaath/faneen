@@ -720,6 +720,40 @@ const DashboardProjects = () => {
                   </div>
                 </div>
 
+                {/* Site link — connect project to a previously-saved site address */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {pickBi(isRTL, 'الموقع التنفيذي', 'Execution site')}
+                    <span className="text-[10px] text-muted-foreground font-normal ms-1">
+                      {pickBi(isRTL, '(اختياري — اربط المشروع بأحد عناوينك)', '(optional — link to one of your saved sites)')}
+                    </span>
+                  </Label>
+                  {ownerSites.length > 0 ? (
+                    <Select value={form.site_id || 'none'} onValueChange={v => setForm(f => ({ ...f, site_id: v === 'none' ? '' : v }))}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder={pickBi(isRTL, 'بدون', 'None')} /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{pickBi(isRTL, 'بدون', 'None')}</SelectItem>
+                        {ownerSites.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.label}{s.city_name ? ` — ${s.city_name}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg border border-dashed border-border/60 bg-muted/30">
+                      <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                      <p className="text-[11px] text-muted-foreground flex-1">
+                        {pickBi(isRTL, 'لا توجد مواقع محفوظة بعد. أضف عناوين المواقع لتتمكن من ربطها بالمشاريع.', 'No saved sites yet. Add site addresses so you can link them to projects.')}
+                      </p>
+                      <Button asChild variant="outline" size="sm" className="h-7 text-[10px]">
+                        <a href="/dashboard/sites">{pickBi(isRTL, 'إدارة المواقع', 'Manage sites')}</a>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Cover Image */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">{pickBi(isRTL, 'صورة الغلاف', 'Cover Image')}</Label>
