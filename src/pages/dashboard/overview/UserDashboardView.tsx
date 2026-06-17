@@ -372,6 +372,35 @@ export default function UserDashboardView({
         children={widgetChildren}
       />
 
+      {customization.editMode && (
+        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:end-6 sm:max-w-md z-50 rounded-xl border border-accent/40 bg-card/95 backdrop-blur px-4 py-3 shadow-lg flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">
+              {isRTL ? 'وضع التخصيص مفعّل' : 'Customization mode active'}
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+              {isRTL
+                ? 'اسحب البطاقات لإعادة ترتيبها، أو استخدم أيقونة العين لإظهارها/إخفائها.'
+                : 'Drag cards to reorder them, or use the eye icon to show/hide.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={customization.reset}
+            className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline shrink-0"
+          >
+            {isRTL ? 'إعادة' : 'Reset'}
+          </button>
+          <button
+            type="button"
+            onClick={() => customization.setEditMode(false)}
+            className="h-8 px-3 rounded-lg bg-accent text-accent-foreground text-xs font-medium shrink-0"
+          >
+            {isRTL ? 'تم' : 'Done'}
+          </button>
+        </div>
+      )}
+
       <KeyboardShortcuts
         isRTL={isRTL}
         onCustomize={() => customization.setEditMode(!customization.editMode)}
