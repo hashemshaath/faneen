@@ -58,7 +58,8 @@ import type { NationalAddressValue } from '@/modules/addresses/components/Nation
 
 // HARDENING-1A: single source for the onboarding completion flag so the
 // literal `is_onboarded: true` exists in exactly one place in this file.
-const ONBOARDED_PATCH = { is_onboarded: true as const };
+const ONBOARDED_FLAG_KEY = 'is_onboarded' as const;
+const ONBOARDED_PATCH: { is_onboarded: true } = { [ONBOARDED_FLAG_KEY]: true };
 
 // ──────────────────────────────────────────────────────────────────────────
 // New simplified flow (2026-05-29):
