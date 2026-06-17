@@ -314,7 +314,7 @@ const DashboardCredentials: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader
+        {!isEmbedded && <PageHeader
           icon={ShieldCheck}
           tone="success"
           title={t(isRTL, 'الشهادات والجوائز', 'Credentials & Awards')}
@@ -331,7 +331,7 @@ const DashboardCredentials: React.FC = () => {
               <KpiPill label={t(isRTL, 'موثّقة', 'Verified')} value={kpis.verifiedAwards} icon={ShieldCheck} tone="success" />
             </div>
           }
-        />
+        />}
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'certs' | 'awards')}>
           <TabsList className="grid grid-cols-2 w-full max-w-md">
