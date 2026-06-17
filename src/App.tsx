@@ -53,6 +53,7 @@ const ProviderLeads = lazyRetry(() => import("./pages/dashboard/ProviderLeads"))
 const ProviderLeadDetails = lazyRetry(() => import("./pages/dashboard/ProviderLeadDetails"));
 const ProviderServiceAreas = lazyRetry(() => import("./pages/dashboard/ProviderServiceAreas"));
 const ProviderMembership = lazyRetry(() => import("./pages/dashboard/ProviderMembership"));
+const DashboardMembership = lazyRetry(() => import("./pages/dashboard/DashboardMembership"));
 const AdminProviderSubscriptions = lazyRetry(() => import("./pages/admin/AdminProviderSubscriptions"));
 const AdminServiceActivations = lazyRetry(() => import("./pages/admin/AdminServiceActivations"));
 const AdminAbExperiments = lazyRetry(() => import("./pages/admin/AdminAbExperiments"));
