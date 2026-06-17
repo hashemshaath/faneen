@@ -2353,6 +2353,43 @@ const DashboardContracts = () => {
               />
             </div>
 
+            {filtered.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 px-1">
+                <ExportMenu
+                  rows={filtered}
+                  columns={contractExportColumns}
+                  filename={`contracts-${new Date().toISOString().slice(0, 10)}`}
+                  title={pickBi(isRTL, 'تقرير العقود', 'Contracts Report')}
+                  subtitle={pickBi(isRTL, `إجمالي ${filtered.length} عقد`, `Total ${filtered.length} contracts`)}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-xs h-8"
+                  onClick={() => {
+                    const pageIds = paginated.map((c) => c.id);
+                    const allSelected = pageIds.every((id) => bulkContracts.isSelected(id));
+                    if (allSelected) {
+                      pageIds.forEach((id) => bulkContracts.toggle(id));
+                    } else {
+                      pageIds.forEach((id) => { if (!bulkContracts.isSelected(id)) bulkContracts.toggle(id); });
+                    }
+                  }}
+                  aria-label={pickBi(isRTL, 'تحديد عقود الصفحة', 'Select contracts on page')}
+                >
+                  {paginated.length > 0 && paginated.every((c) => bulkContracts.isSelected(c.id))
+                    ? <CheckSquare className="w-3.5 h-3.5" />
+                    : <Square className="w-3.5 h-3.5" />}
+                  {pickBi(isRTL, 'تحديد عقود الصفحة', 'Select page')}
+                </Button>
+                {bulkContracts.count > 0 && (
+                  <span className="text-[11px] text-muted-foreground tech-content">
+                    {pickBi(isRTL, `${bulkContracts.count} محدد`, `${bulkContracts.count} selected`)}
+                  </span>
+                )}
+              </div>
+            )}
+
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>
             ) : filtered.length === 0 ? (
