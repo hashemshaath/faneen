@@ -262,6 +262,36 @@ const DashboardNotifications = () => {
 
   const hasFilters = typeFilter !== 'all' || readFilter !== 'all' || searchQuery.trim();
 
+  // Bulk selection — across currently filtered list
+  const bulk = useBulkSelection<{ id: string }>(filtered.map((n: any) => ({ id: n.id })));
+
+  const exportColumns: ExportColumn<any>[] = useMemo(() => ([
+    { key: 'title', header: isRTL ? 'العنوان' : 'Title', accessor: (n) => resolveNotificationTitle(n, language === 'ar' ? 'ar' : 'en') },
+    { key: 'type', header: isRTL ? 'النوع' : 'Type', accessor: (n) => {
+      const m = getNotificationMeta(n);
+      return language === 'ar' ? m.label.ar : m.label.en;
+    } },
+    { key: 'status', header: isRTL ? 'الحالة' : 'Status', accessor: (n) => n.is_read ? (isRTL ? 'مقروء' : 'Read') : (isRTL ? 'غير مقروء' : 'Unread') },
+    { key: 'created_at', header: isRTL ? 'التاريخ' : 'Date', accessor: (n) => format(new Date(n.created_at), 'yyyy-MM-dd HH:mm') },
+    { key: 'body', header: isRTL ? 'النص' : 'Body', accessor: (n) => language === 'ar' ? (n.body_ar ?? '') : (n.body_en ?? n.body_ar ?? '') },
+  ]), [isRTL, language]);
+
+  const bulkMarkRead = useCallback(async () => {
+    const ids = Array.from(bulk.selectedIds);
+    await Promise.all(ids.map((id) => markNotificationRead(id)));
+    queryClient.invalidateQueries({ queryKey: ['all-notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    bulk.clear();
+  }, [bulk, queryClient]);
+
+  const bulkDelete = useCallback(async () => {
+    const ids = Array.from(bulk.selectedIds);
+    await Promise.all(ids.map((id) => deleteNotificationSvc(id)));
+    queryClient.invalidateQueries({ queryKey: ['all-notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    bulk.clear();
+  }, [bulk, queryClient]);
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
