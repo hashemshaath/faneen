@@ -867,13 +867,15 @@ const DashboardBusinessEdit: React.FC = () => {
                   <span className="text-xs text-destructive">{t(isRTL, 'مطلوب', 'Required')}</span>
                 )}
               </div>
-              <LocationPicker
-                isRTL={isRTL}
-                latitude={form.latitude ?? null}
-                longitude={form.longitude ?? null}
-                onChange={handleMapPick}
-                onAutofill={handleAutofillAddress}
-              />
+              <Suspense fallback={<TabLoading />}>
+                <LocationPicker
+                  isRTL={isRTL}
+                  latitude={form.latitude ?? null}
+                  longitude={form.longitude ?? null}
+                  onChange={handleMapPick}
+                  onAutofill={handleAutofillAddress}
+                />
+              </Suspense>
               <FieldError issue={issueMap.coordinates} isRTL={isRTL} />
             </div>
           </CardContent>
@@ -921,6 +923,7 @@ const DashboardBusinessEdit: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* 1) Document / QR scanner — writes to the same columns as the form below */}
+                <Suspense fallback={<TabLoading />}>
                 <CrDocumentScanner
                   businessId={form.id}
                   defaults={{
@@ -942,6 +945,7 @@ const DashboardBusinessEdit: React.FC = () => {
                     qc.invalidateQueries({ queryKey: ['business-edit', user?.id] });
                   }}
                 />
+                </Suspense>
 
                 <div className="border-t border-border" />
 
@@ -1049,29 +1053,33 @@ const DashboardBusinessEdit: React.FC = () => {
 
           <TabsContent value="team" className="space-y-6 mt-4">
             {/* Representatives */}
-            <RepresentativesSection
-          businessId={form.id}
-          ownerUserId={form.user_id}
-          isRTL={isRTL}
-          businessNameAr={form.name_ar}
-          businessNameEn={form.name_en}
-        />
+            <Suspense fallback={<TabLoading />}>
+              <RepresentativesSection
+                businessId={form.id}
+                ownerUserId={form.user_id}
+                isRTL={isRTL}
+                businessNameAr={form.name_ar}
+                businessNameEn={form.name_en}
+              />
+            </Suspense>
 
         {/* Audit log */}
           </TabsContent>
 
           <TabsContent value="system" className="space-y-6 mt-4">
-            {/* Audit log */}
-            <AuditLogPanel businessId={form.id} isRTL={isRTL} />
+            <Suspense fallback={<TabLoading />}>
+              {/* Audit log */}
+              <AuditLogPanel businessId={form.id} isRTL={isRTL} />
 
-            {/* BUSINESS-CORE-2 — Internal notes (RLS-gated to owner/manager/staff) */}
-            <BusinessInternalNotesCard businessId={form.id} />
+              {/* BUSINESS-CORE-2 — Internal notes (RLS-gated to owner/manager/staff) */}
+              <BusinessInternalNotesCard businessId={form.id} />
 
-        {/* Business barcode + 30x20 cm printable sticker */}
-        <BusinessBarcodeCard
-          businessId={form.id}
-          businessName={isRTL ? form.name_ar : (form.name_en || form.name_ar)}
-        />
+              {/* Business barcode + 30x20 cm printable sticker */}
+              <BusinessBarcodeCard
+                businessId={form.id}
+                businessName={isRTL ? form.name_ar : (form.name_en || form.name_ar)}
+              />
+            </Suspense>
 
         {/* System metadata */}
         <Card className="bg-muted/30">
