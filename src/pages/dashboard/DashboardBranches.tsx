@@ -303,13 +303,49 @@ const DashboardBranches: React.FC = () => {
             'أنشئ وأدر فروع منشأتك. اختر الفرع الرئيسي، عيّن مدير مبيعات لكل فرع، واربط منتجاتك وعروضك بالفروع المناسبة.',
             'Create and manage branches of your business. Pick a main branch, assign a sales manager per branch, and link services and offers to specific branches.')}
           actions={
-            <Button onClick={() => setCreating(c => !c)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              {t(isRTL, 'إضافة فرع', 'Add branch')}
-            </Button>
+            businessId ? (
+              <Button onClick={() => setCreating(c => !c)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                {t(isRTL, 'إضافة فرع', 'Add branch')}
+              </Button>
+            ) : null
           }
         />
 
+        {businessId === null && (
+          <Card className="border-dashed border-amber-500/40 bg-amber-500/[0.04]">
+            <CardContent className="p-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 mx-auto flex items-center justify-center">
+                <ShieldAlert className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-semibold">
+                  {t(isRTL, 'لا يمكن إضافة فروع بدون منشأة', 'Cannot add branches without a business')}
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  {t(isRTL,
+                    'الفروع تابعة لمنشأة. أنشئ منشأتك أولاً ثم يمكنك إضافة فروعها وربط الخدمات والعروض بكل فرع.',
+                    'Branches belong to a business. Create your business first, then you can add its branches and link services and offers to each one.')}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <Button asChild className="gap-2">
+                  <Link to="/register-entity">
+                    <Plus className="w-4 h-4" />
+                    {t(isRTL, 'إنشاء منشأة', 'Create business')}
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/dashboard/business-completion">
+                    {t(isRTL, 'إكمال بيانات منشأة قائمة', 'Complete existing business')}
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {businessId && (<>
         {pendingMainTransfer && (() => {
           const target = (branches ?? []).find(b => b.id === pendingMainTransfer);
           const currentMain = (branches ?? []).find(b => b.is_main && b.id !== pendingMainTransfer);
@@ -470,6 +506,7 @@ const DashboardBranches: React.FC = () => {
             />
           ))}
         </div>
+        </>)}
       </div>
     </DashboardLayout>
   );
