@@ -33,6 +33,20 @@ export async function insertBusinessBranchReturning(
   return terminal === 'single' ? await base.single() : await base.maybeSingle();
 }
 
+/**
+ * Bulk variant of {@link insertBusinessBranchReturning} — inserts an array of
+ * rows and returns the inserted records via `.select(...)`. Used by the
+ * onboarding wizard to register secondary branches in one round-trip while
+ * keeping all `business_branches` access inside the catalog wrapper
+ * (CAT-4/CAT-6 isolation).
+ */
+export async function insertBusinessBranchesReturning<S extends string = 'id'>(
+  payload: BusinessBranchInsertPayload[],
+  select: S = 'id' as S,
+) {
+  return await supabase.from('business_branches').insert(payload).select(select);
+}
+
 export async function updateBusinessBranchById(
   id: string,
   values: BusinessBranchUpdatePayload,
