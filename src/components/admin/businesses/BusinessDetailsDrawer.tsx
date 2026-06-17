@@ -12,6 +12,7 @@ import {
 import { pickBi } from '@/components/common/Bilingual';
 import { BusinessStatusBadge } from './BusinessStatusBadge';
 import { TIERS } from '@/pages/admin/businesses/_shared';
+import { getBusinessProfileHref } from '@/lib/business/profileHref';
 
 /**
  * BusinessDetailsDrawer — read-only side panel for quick admin preview.
@@ -76,6 +77,7 @@ export const BusinessDetailsDrawer: React.FC<BusinessDetailsDrawerProps> = ({
   const open = !!business;
   const b = business;
   const tier = b ? TIERS.find((t) => t.value === b.membership_tier) : undefined;
+  const profileHref = getBusinessProfileHref(b);
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <SheetContent
@@ -149,12 +151,14 @@ export const BusinessDetailsDrawer: React.FC<BusinessDetailsDrawerProps> = ({
                 <Package className="w-3.5 h-3.5" />
                 {pickBi(isRTL, 'الخدمات', 'Services')}
               </Button>
-              <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl">
-                <Link to={`/@${b.username}`} target="_blank" rel="noreferrer">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  {pickBi(isRTL, 'الملف العام', 'Public profile')}
-                </Link>
-              </Button>
+              {profileHref && (
+                <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl">
+                  <Link to={profileHref} target="_blank" rel="noreferrer">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    {pickBi(isRTL, 'الملف العام', 'Public profile')}
+                  </Link>
+                </Button>
+              )}
             </div>
           </>
         )}
