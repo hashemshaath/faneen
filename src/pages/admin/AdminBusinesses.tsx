@@ -768,17 +768,13 @@ const AdminBusinesses = () => {
       const payload: Record<string, unknown> = {
         ...bizCore,
         user_id: ownerId,
-        approval_status: 'approved',
-        is_active: true,
+        approval_status: 'draft',
+        is_active: false,
+        is_demo: false,
       };
-      // Mirror admin_update_business_approval: when an admin creates an
-      // already-approved business with a username, auto-activate the
-      // public profile (username_status + is_verified) in the same insert
-      // so the /<username> page is reachable immediately.
-      if (typeof payload.username === 'string' && payload.username.trim() !== '') {
-        payload.username_status = 'approved';
-        payload.is_verified = true;
-      }
+      // Admin-created entities are explicit drafts by default. The public
+      // profile becomes reachable only after the visibility card's publish
+      // action sets published + active + not-demo together.
       const { data, error } = await insertBusiness({
         payload,
         select: BUSINESS_SAFE_COLUMNS_SELECT,
@@ -799,14 +795,14 @@ const AdminBusinesses = () => {
             ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
             : mode === 'new'
             ? 'تم إنشاء المنشأة وحساب المسؤول'
-            : 'تم إنشاء المنشأة'
+            : 'تم إنشاء المنشأة كمسودة — استخدم زر نشر الجهة لإظهارها للعامة'
           : mode === 'placeholder'
           ? 'Entity created under the placeholder account — transferable later'
           : mode === 'invite'
           ? 'Business created — invitation sent to manager'
           : mode === 'new'
           ? 'Business and manager account created'
-          : 'Business created',
+          : 'Business created as a draft — use Publish business to make it public',
       );
       setCreatingBiz(false);
       setCreateForm(emptyCreateBusinessForm());
