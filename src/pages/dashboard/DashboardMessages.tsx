@@ -1479,6 +1479,23 @@ const DashboardMessages = () => {
                     )}
                     {showEmoji && <EmojiQuickPicker onSelect={handleEmojiSelect} isRTL={isRTL} />}
 
+                    {/* Smart quick replies — show only when composer is empty and idle. */}
+                    {!messageText.trim() && !attachedFile && !replyTo && !showTemplates && !showEmoji && !showScheduler && (
+                      <div className="flex items-center gap-1.5 mb-2 overflow-x-auto no-scrollbar -mt-1">
+                        <Sparkles className="w-3 h-3 text-accent/60 shrink-0" aria-hidden="true" />
+                        {quickReplies.map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => { setMessageText(q); setTimeout(() => inputRef.current?.focus(), 0); }}
+                            className="shrink-0 text-[11px] px-2.5 py-1 rounded-full border border-border/40 bg-muted/30 hover:bg-accent/10 hover:border-accent/40 hover:text-accent text-muted-foreground transition-colors font-medium"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex gap-1.5 items-end">
                       <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" className="hidden" onChange={handleFileSelect} />
 
