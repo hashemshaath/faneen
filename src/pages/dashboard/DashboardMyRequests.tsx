@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useDeferredValue } from 'react';
+import React, { useMemo, useState, useCallback, useDeferredValue, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -17,11 +17,14 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { KpiStrip } from '@/components/dashboard/KpiCard';
 import {
   Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
-  Paperclip, MapPin, Tag, Search, Plus, RefreshCw,
+  Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -30,6 +33,7 @@ import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { PageHeader } from '@/components/shared';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MyLeadRow {
   id: string;
@@ -101,6 +105,47 @@ const QUOTE_STATUS_TONE: Record<string, string> = {
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
+type SortKey = 'newest' | 'oldest' | 'updated' | 'status';
+type Density = 'comfortable' | 'compact';
+
+const STORAGE_KEY_SORT = 'qitaat_my_requests_sort_v1';
+const STORAGE_KEY_DENSITY = 'qitaat_my_requests_density_v1';
+
+function formatRelative(iso: string | null, isRTL: boolean): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  const diff = (Date.now() - date.getTime()) / 1000;
+  const abs = Math.abs(diff);
+  const rtf = new Intl.RelativeTimeFormat(isRTL ? 'ar' : 'en', { numeric: 'auto' });
+  if (abs < 60) return rtf.format(-Math.round(diff), 'second');
+  if (abs < 3600) return rtf.format(-Math.round(diff / 60), 'minute');
+  if (abs < 86400) return rtf.format(-Math.round(diff / 3600), 'hour');
+  if (abs < 604800) return rtf.format(-Math.round(diff / 86400), 'day');
+  if (abs < 2592000) return rtf.format(-Math.round(diff / 604800), 'week');
+  if (abs < 31536000) return rtf.format(-Math.round(diff / 2592000), 'month');
+  return rtf.format(-Math.round(diff / 31536000), 'year');
+}
+
+function csvEscape(value: unknown): string {
+  if (value == null) return '';
+  const s = String(value).replace(/"/g, '""');
+  return /[",\n\r]/.test(s) ? `"${s}"` : s;
+}
+
+function downloadCsv(filename: string, rows: string[][]) {
+  const bom = '\uFEFF'; // for Arabic in Excel
+  const csv = bom + rows.map((r) => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 const DashboardMyRequests: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
@@ -112,6 +157,16 @@ const DashboardMyRequests: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
   const deferredSearch = useDeferredValue(search);
+  const [sortBy, setSortBy] = useState<SortKey>(() => {
+    if (typeof window === 'undefined') return 'newest';
+    return (localStorage.getItem(STORAGE_KEY_SORT) as SortKey | null) ?? 'newest';
+  });
+  const [density, setDensity] = useState<Density>(() => {
+    if (typeof window === 'undefined') return 'comfortable';
+    return (localStorage.getItem(STORAGE_KEY_DENSITY) as Density | null) ?? 'comfortable';
+  });
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY_SORT, sortBy); } catch { /* ignore */ } }, [sortBy]);
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY_DENSITY, density); } catch { /* ignore */ } }, [density]);
 
   const { data: leads, isLoading, isFetching: leadsFetching, refetch: refetchLeads } = useQuery({
     queryKey: ['my-service-requests', user?.id],
@@ -235,6 +290,76 @@ const DashboardMyRequests: React.FC = () => {
     });
   }, [leads, statusFilter, deferredSearch, businessMap]);
 
+  // === Sort ===
+  const sortedQuotes = useMemo(() => {
+    const arr = [...filteredQuotes];
+    arr.sort((a, b) => {
+      if (sortBy === 'status') return a.status.localeCompare(b.status);
+      const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
+      const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
+      return sortBy === 'oldest' ? aT - bT : bT - aT;
+    });
+    return arr;
+  }, [filteredQuotes, sortBy]);
+
+  const sortedLeads = useMemo(() => {
+    const arr = [...filteredLeads];
+    arr.sort((a, b) => {
+      if (sortBy === 'status') return a.status.localeCompare(b.status);
+      const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
+      const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
+      return sortBy === 'oldest' ? aT - bT : bT - aT;
+    });
+    return arr;
+  }, [filteredLeads, sortBy]);
+
+  // === Status counts (for chip badges) ===
+  const quoteStatusCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    (quoteRequests ?? []).forEach((q) => m.set(q.status, (m.get(q.status) ?? 0) + 1));
+    m.set('all', quoteRequests?.length ?? 0);
+    return m;
+  }, [quoteRequests]);
+  const leadStatusCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    (leads ?? []).forEach((l) => m.set(l.status, (m.get(l.status) ?? 0) + 1));
+    m.set('all', leads?.length ?? 0);
+    return m;
+  }, [leads]);
+
+  // === Real-time: refetch when this user's rows change ===
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`my-requests-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_requests', filter: `user_id=eq.${user.id}` },
+          () => { qc.invalidateQueries({ queryKey: ['my-service-requests', user.id] }); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quote_requests', filter: `user_id=eq.${user.id}` },
+          () => { qc.invalidateQueries({ queryKey: ['my-quote-requests', user.id] }); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, qc]);
+
+  // === Export to CSV ===
+  const handleExport = useCallback(() => {
+    if (tab === 'quotes') {
+      const header = ['ref_id', 'status', 'sector', 'city', 'district', 'contact_method', 'created_at', 'updated_at', 'description'];
+      const rows = [header, ...sortedQuotes.map((q) => [
+        q.ref_id ?? q.id, q.status, q.sector, q.city, q.district ?? '', q.preferred_contact_method,
+        q.created_at, q.updated_at, q.project_description,
+      ])];
+      downloadCsv(`quote-requests-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    } else {
+      const header = ['ref_id', 'status', 'business', 'subject', 'budget', 'contact', 'created_at', 'updated_at'];
+      const rows = [header, ...sortedLeads.map((l) => [
+        l.ref_id ?? l.id, l.status, businessMap.get(l.business_id)?.name ?? '', l.subject ?? '',
+        l.budget_range ?? '', l.contact_preference ?? '', l.created_at, l.updated_at ?? '',
+      ])];
+      downloadCsv(`service-requests-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    }
+    toast.success(isRTL ? 'تم تصدير الطلبات' : 'Requests exported');
+  }, [tab, sortedQuotes, sortedLeads, businessMap, isRTL]);
+
   // Reset status filter when switching tabs so options stay valid
   const handleTabChange = useCallback((v: string) => {
     setTab(v as 'quotes' | 'leads');
@@ -249,6 +374,7 @@ const DashboardMyRequests: React.FC = () => {
 
   return (
     <DashboardLayout>
+      <TooltipProvider delayDuration={200}>
       <div className="space-y-5">
         <PageHeader
           icon={Inbox}
@@ -258,6 +384,22 @@ const DashboardMyRequests: React.FC = () => {
           subtitle={isRTL ? 'تابع حالة طلبات الخدمة التي أرسلتها للمنشآت' : 'Track the status of the service requests you sent to providers'}
           actions={
             <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="min-h-[40px]"
+                    onClick={handleExport}
+                    disabled={(tab === 'quotes' ? sortedQuotes.length : sortedLeads.length) === 0}
+                    aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
+                  >
+                    <Download />
+                    <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isRTL ? 'تصدير CSV' : 'Export CSV'}</TooltipContent>
+              </Tooltip>
               <Button
                 variant="outline"
                 size="sm"
@@ -305,7 +447,7 @@ const DashboardMyRequests: React.FC = () => {
               </TabsTrigger>
             </TabsList>
 
-            <div className="relative flex-1 sm:max-w-sm sm:ms-auto">
+            <div className="relative flex-1 sm:max-w-xs sm:ms-auto">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 value={search}
@@ -316,12 +458,42 @@ const DashboardMyRequests: React.FC = () => {
                 aria-label={isRTL ? 'بحث' : 'Search'}
               />
             </div>
+
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+              <SelectTrigger className="h-10 w-[160px]" aria-label={isRTL ? 'الترتيب' : 'Sort'}>
+                <ArrowUpDown className="h-4 w-4 me-2 opacity-70" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">{isRTL ? 'الأحدث أولاً' : 'Newest first'}</SelectItem>
+                <SelectItem value="oldest">{isRTL ? 'الأقدم أولاً' : 'Oldest first'}</SelectItem>
+                <SelectItem value="updated">{isRTL ? 'آخر تحديث' : 'Last updated'}</SelectItem>
+                <SelectItem value="status">{isRTL ? 'حسب الحالة' : 'By status'}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <ToggleGroup
+              type="single"
+              value={density}
+              onValueChange={(v) => v && setDensity(v as Density)}
+              className="hidden md:inline-flex border border-border rounded-lg"
+              aria-label={isRTL ? 'كثافة العرض' : 'Density'}
+            >
+              <ToggleGroupItem value="comfortable" className="h-10 px-2.5" aria-label={isRTL ? 'مريح' : 'Comfortable'}>
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="compact" className="h-10 px-2.5" aria-label={isRTL ? 'مدمج' : 'Compact'}>
+                <Rows3 className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {/* Status filter chips */}
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
             {(tab === 'quotes' ? quoteStatuses : leadStatuses).map((s) => {
               const active = statusFilter === s;
+              const count = (tab === 'quotes' ? quoteStatusCounts : leadStatusCounts).get(s) ?? 0;
               const label = s === 'all'
                 ? (isRTL ? 'الكل' : 'All')
                 : (tab === 'quotes'
@@ -332,14 +504,15 @@ const DashboardMyRequests: React.FC = () => {
                   key={s}
                   type="button"
                   onClick={() => setStatusFilter(s)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors inline-flex items-center gap-1.5 ${
                     active
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-card hover:bg-muted/60 border-border text-muted-foreground'
                   }`}
                   aria-pressed={active}
                 >
-                  {label}
+                  <span>{label}</span>
+                  <span className={`tech-content text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>{count}</span>
                 </button>
               );
             })}
@@ -378,12 +551,13 @@ const DashboardMyRequests: React.FC = () => {
               </Card>
             )}
 
-            {filteredQuotes.map((q) => (
+            {sortedQuotes.map((q) => (
               <QuoteRequestRowCard
                 key={q.id}
                 q={q}
                 fileCount={quoteFileCounts?.get(q.id) ?? 0}
                 isRTL={isRTL}
+                density={density}
               />
             ))}
           </TabsContent>
@@ -426,7 +600,7 @@ const DashboardMyRequests: React.FC = () => {
               </Card>
             )}
 
-            {filteredLeads.map((lead) => {
+            {sortedLeads.map((lead) => {
             const open = openId === lead.id;
             const biz = businessMap.get(lead.business_id);
             const canCancel = CANCELLABLE.has(lead.status);
@@ -436,7 +610,7 @@ const DashboardMyRequests: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleToggle(lead.id)}
-                    className="w-full text-start p-4 sm:p-5 flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors min-h-[64px]"
+                    className={`w-full text-start ${density === 'compact' ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'} flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors min-h-[64px]`}
                     aria-expanded={open}
                   >
                     <div className="flex-1 min-w-0">
@@ -447,8 +621,15 @@ const DashboardMyRequests: React.FC = () => {
                       <div className="font-medium truncate">
                         {lead.subject || (biz?.name ?? (isRTL ? 'طلب خدمة' : 'Service request'))}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {biz?.name ?? '—'} · {new Date(lead.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+                      <div className="text-xs text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
+                        <span className="truncate">{biz?.name ?? '—'}</span>
+                        <span aria-hidden>·</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="tech-content cursor-help">{formatRelative(lead.created_at, isRTL)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>{new Date(lead.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</TooltipContent>
+                        </Tooltip>
                       </div>
                     </div>
                     {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
@@ -580,6 +761,7 @@ const DashboardMyRequests: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+      </TooltipProvider>
     </DashboardLayout>
   );
 };
@@ -623,11 +805,14 @@ const QuoteRequestRowCardImpl: React.FC<{
   q: QuoteRequestRow;
   fileCount: number;
   isRTL: boolean;
-}> = ({ q, fileCount, isRTL }) => {
+  density?: Density;
+}> = ({ q, fileCount, isRTL, density = 'comfortable' }) => {
   const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
+  const compact = density === 'compact';
+  const createdAbs = new Date(q.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
   return (
     <Card className="overflow-hidden hover-lift transition-shadow">
-      <CardContent className="p-4 sm:p-5 space-y-3">
+      <CardContent className={`${compact ? 'p-3 sm:p-3.5 space-y-2' : 'p-4 sm:p-5 space-y-3'}`}>
         <div className="flex flex-wrap items-center gap-2">
           {q.ref_id ? (
             <>
@@ -640,9 +825,14 @@ const QuoteRequestRowCardImpl: React.FC<{
           <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
             {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
           </span>
-          <span className="text-xs text-muted-foreground tech-content ms-auto">
-            {new Date(q.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-xs text-muted-foreground tech-content ms-auto cursor-help">
+                {formatRelative(q.created_at, isRTL)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{createdAbs}</TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -660,7 +850,7 @@ const QuoteRequestRowCardImpl: React.FC<{
             </span>
           )}
         </div>
-        <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>
+        {!compact && <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>}
         <div className="pt-1">
           <Button asChild size="sm" variant="outline" className="min-h-[36px]">
             <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
