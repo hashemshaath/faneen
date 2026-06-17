@@ -75,6 +75,13 @@ export const BusinessCreatePanel = React.memo(function BusinessCreatePanel({
         <BusinessCreateContactSection {...sectionProps} />
         <BusinessCreateRegistrySection {...sectionProps} />
         <BusinessCreateLocationNotice isRTL={isRTL} />
+        <div className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] leading-relaxed text-warning-foreground">
+          {pickBi(
+            isRTL,
+            'سيتم إنشاء الجهة كمسودة غير منشورة. بعد الحفظ افتح كرت حالة الظهور العام واضغط نشر الجهة عند جاهزية الرابط والبيانات.',
+            'The entity will be created as an unpublished draft. After saving, use the Public visibility status card to publish it when the handle and data are ready.',
+          )}
+        </div>
         <BusinessCreateActionsFooter
           isRTL={isRTL}
           form={form}
