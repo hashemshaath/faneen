@@ -63,13 +63,19 @@ export interface NationalAddressFormProps {
   isRTL: boolean;
   /** Show building / additional / postal inputs. Defaults to true. */
   showStructured?: boolean;
+  /**
+   * Show the "inside a center / compound / industrial city" block.
+   * Defaults to true. Set false for individual/customer profiles where
+   * an industrial complex is not relevant — businesses keep it on.
+   */
+  showComplex?: boolean;
   className?: string;
 }
 
 interface CityRow { id: string; name_ar: string; name_en: string }
 
 export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
-  value, onChange, isRTL, showStructured = true, className,
+  value, onChange, isRTL, showStructured = true, showComplex = true, className,
 }) => {
   const [splLoading, setSplLoading] = useState(false);
   const [cities, setCities] = useState<CityRow[]>([]);
@@ -442,7 +448,8 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
         </div>
       </div>
 
-      {/* Within a complex / industrial city / commercial center */}
+      {/* Within a complex / industrial city / commercial center — businesses only */}
+      {showComplex && (
       <div className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-3">
         <Label className="text-xs font-bold text-foreground">
           {t(isRTL, 'ضمن مركز / مجمع / مدينة صناعية (اختياري)', 'Inside a center / compound / industrial city (optional)')}
@@ -500,6 +507,7 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             'These fields are prepended automatically to the detailed address — e.g. "Riyadh Industrial City — Site 16".')}
         </p>
       </div>
+      )}
 
       {/* Street + structured */}
       {showStructured && (
