@@ -9,6 +9,7 @@ import {
   MoreHorizontal, Eye, Edit, Package, ExternalLink, FileText,
 } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
+import { getBusinessProfileHref } from '@/lib/business/profileHref';
 
 /**
  * BusinessRowActions — unified per-row action menu for AdminBusinesses.
@@ -35,6 +36,7 @@ interface BusinessRowActionsProps {
 export const BusinessRowActions: React.FC<BusinessRowActionsProps> = ({
   username, isRTL, onView, onEdit, onOpenServices, hasContracts, align = 'end',
 }) => {
+  const profileHref = getBusinessProfileHref({ username });
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -64,9 +66,9 @@ export const BusinessRowActions: React.FC<BusinessRowActionsProps> = ({
           {pickBi(isRTL, 'الخدمات', 'Services')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {username && (
+        {profileHref && (
           <DropdownMenuItem asChild className="gap-2">
-            <Link to={`/@${username}`} target="_blank" rel="noreferrer">
+            <Link to={profileHref} target="_blank" rel="noreferrer">
               <ExternalLink className="w-4 h-4" />
               {pickBi(isRTL, 'الملف العام', 'Public profile')}
             </Link>

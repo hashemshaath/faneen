@@ -112,6 +112,12 @@ import { BusinessFiltersBar } from '@/components/admin/businesses/BusinessFilter
 import { BusinessTableSection } from '@/components/admin/businesses/BusinessTableSection';
 import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
 import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/BusinessVerifyConfirmDialog';
+import {
+  BusinessPublicVisibilityCard,
+  createAdminPublishPayload,
+  generateBusinessUsernameCandidate,
+  type PublicVisibilityProbeRow,
+} from '@/components/admin/businesses/BusinessPublicVisibilityCard';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import { BusinessBasicInfoSection } from '@/components/admin/businesses/edit/BusinessBasicInfoSection';
@@ -139,6 +145,7 @@ import { BusinessBranchesSection } from '@/components/admin/businesses/branches/
 import type {
   BranchRow as AdminBranchRow,
 } from '@/components/admin/businesses/branches/types';
+import { getBusinessProfileHref, isReservedUsername, normalizeUsername } from '@/lib/business/profileHref';
 import {
   TIERS as tiers,
   reverseGeocode,
@@ -148,6 +155,47 @@ import { BusinessTableView, type BusinessTableRow } from './businesses/BusinessT
 import { BusinessCardView, type BusinessCardRow } from './businesses/BusinessCardView';
 import { BusinessCreatePanel } from '@/components/admin/businesses/create/BusinessCreatePanel';
 import { emptyCreateBusinessForm } from '@/components/admin/businesses/create/createFormDefaults';
+
+type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
+  id: string;
+  user_id: string;
+  username: string | null;
+  name_ar: string;
+  ref_id: string | null;
+  created_at: string;
+  is_active?: boolean | null;
+  is_verified?: boolean | null;
+  is_demo?: boolean | null;
+  approval_status?: string | null;
+  rating_avg: number | null;
+  rating_count: number | null;
+} & AdminBusinessImageColumns;
+
+type AdminBranchFormState = {
+  name_ar: string;
+  name_en: string;
+  is_main: boolean;
+  is_active: boolean;
+  branch_type: AdminBusinessBranchType;
+  contact_person: string;
+  phone: string;
+  mobile: string;
+  unified_number: string;
+  customer_service_phone: string;
+  email: string;
+  website: string;
+  country_id: string;
+  city_id: string;
+  region: string;
+  district: string;
+  street_name: string;
+  building_number: string;
+  national_id: string;
+  additional_number: string;
+  address: string;
+  latitude: string | number;
+  longitude: string | number;
+};
 
 const AdminBusinesses = () => {
   useNoIndex();
@@ -208,7 +256,7 @@ const AdminBusinesses = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
-  const [editingBiz, setEditingBiz] = useState<any | null>(null);
+  const [editingBiz, setEditingBiz] = useState<AdminBusinessRow | null>(null);
   const [editForm, setEditForm] = useState<AdminEditBusinessFormState>({});
   const [viewingBiz, setViewingBiz] = useState<BusinessDrawerRow | null>(null);
   // ── Create new business (admin) ──
@@ -221,7 +269,7 @@ const AdminBusinesses = () => {
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
-  const [branchForm, setBranchForm] = useState<any | null>(null);
+  const [branchForm, setBranchForm] = useState<AdminBranchFormState | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [branchTranslating, setBranchTranslating] = useState<'ar' | 'en' | null>(null);
   const translateBranchName = useCallback(async (from: 'ar' | 'en') => {
@@ -392,6 +440,35 @@ const AdminBusinesses = () => {
     enabled: !!editingBiz?.user_id,
   });
 
+  const normalizedEditingUsername = normalizeUsername(editingBiz?.username);
+  const { data: publicVisibilityProbe = null, refetch: refetchPublicVisibilityProbe } = useQuery({
+    queryKey: ['admin-business-public-visibility-probe', editingBiz?.id, normalizedEditingUsername],
+    queryFn: async () => {
+      if (!editingBiz?.id || !normalizedEditingUsername) return null;
+      const { data } = await supabase
+        .from('businesses_public')
+        .select('id, username')
+        .eq('username', normalizedEditingUsername)
+        .maybeSingle();
+      return (data ?? null) as PublicVisibilityProbeRow | null;
+    },
+    enabled: !!editingBiz?.id,
+  });
+
+  const { data: publicUsernameDuplicateCount = 0, refetch: refetchPublicUsernameDuplicateCount } = useQuery({
+    queryKey: ['admin-business-public-username-duplicates', editingBiz?.id, normalizedEditingUsername],
+    queryFn: async () => {
+      if (!editingBiz?.id || !normalizedEditingUsername) return 0;
+      const { count } = await supabase
+        .from('businesses')
+        .select('id', { count: 'exact', head: true })
+        .ilike('username', normalizedEditingUsername)
+        .neq('id', editingBiz.id);
+      return count ?? 0;
+    },
+    enabled: !!editingBiz?.id,
+  });
+
   const { data: contractBusinessIds = [] } = useQuery({
     queryKey: ['contract-business-ids'],
     queryFn: async () => {
@@ -430,7 +507,6 @@ const AdminBusinesses = () => {
   const approvalStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const payload: Record<string, unknown> = { approval_status: status };
-      if (status === 'published') payload.published_at = new Date().toISOString();
       const { error } = await updateBusinessById({ id, values: payload as never });
       if (error) throw error;
       await logAction(`business_approval_status_${status}`, id, { status });
@@ -440,6 +516,54 @@ const AdminBusinesses = () => {
       toast.success(pickBi(isRTL, 'تم تحديث الحالة', 'Status updated'));
     },
     onError: () => toast.error(pickBi(isRTL, 'فشل تحديث الحالة', 'Status update failed')),
+  });
+
+  const publishBusinessMutation = useMutation({
+    mutationFn: async (business: AdminBusinessRow) => {
+      const existingUsername = normalizeUsername(business.username);
+      const generatedUsername = existingUsername || generateBusinessUsernameCandidate(business);
+      if (!generatedUsername) {
+        throw new Error(pickBi(isRTL, 'أضف اسمًا إنجليزيًا أو رابطًا عامًا صالحًا قبل النشر.', 'Add an English name or a valid public handle before publishing.'));
+      }
+      if (isReservedUsername(generatedUsername)) {
+        throw new Error(pickBi(isRTL, `الرابط ${generatedUsername} محجوز للنظام. اختر رابطًا آخر.`, `The handle ${generatedUsername} is reserved. Choose another handle.`));
+      }
+      const { count } = await supabase
+        .from('businesses')
+        .select('id', { count: 'exact', head: true })
+        .ilike('username', generatedUsername)
+        .neq('id', business.id);
+      if ((count ?? 0) > 0) {
+        throw new Error(pickBi(isRTL, `الرابط ${generatedUsername} مستخدم بالفعل. اختر رابطًا آخر.`, `The handle ${generatedUsername} is already used. Choose another handle.`));
+      }
+      const payload = createAdminPublishPayload(generatedUsername);
+      const { error } = await updateBusinessById({ id: business.id, values: payload });
+      if (error) throw error;
+      await logAction('business_published_for_public_profile', business.id, {
+        username: generatedUsername,
+        route_source: 'username',
+      });
+      return { username: generatedUsername };
+    },
+    onSuccess: async (result) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      await Promise.all([refetchPublicVisibilityProbe(), refetchPublicUsernameDuplicateCount()]);
+      setEditingBiz((prev) => prev
+        ? {
+            ...prev,
+            username: result.username,
+            approval_status: 'published',
+            is_active: true,
+            is_demo: false,
+            username_status: 'approved',
+            is_verified: true,
+          }
+        : prev);
+      toast.success(pickBi(isRTL, 'تم نشر الجهة للعامة', 'Business published publicly'));
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : pickBi(isRTL, 'فشل نشر الجهة', 'Publish failed'));
+    },
   });
 
   const tierMutation = useMutation({
@@ -496,7 +620,25 @@ const AdminBusinesses = () => {
     mutationFn: async () => {
       const id = editingBiz.id;
       const efImg = editForm as AdminBusinessImageColumns;
+      const nextUsername = normalizeUsername(editForm.username ?? editingBiz.username);
+      if (!nextUsername) {
+        throw new Error(pickBi(isRTL, 'اسم الرابط العام مطلوب', 'Public handle is required'));
+      }
+      if (isReservedUsername(nextUsername)) {
+        throw new Error(pickBi(isRTL, `الرابط ${nextUsername} محجوز للنظام. اختر رابطًا آخر.`, `The handle ${nextUsername} is reserved. Choose another handle.`));
+      }
+      if (nextUsername !== normalizeUsername(editingBiz.username)) {
+        const { count } = await supabase
+          .from('businesses')
+          .select('id', { count: 'exact', head: true })
+          .ilike('username', nextUsername)
+          .neq('id', id);
+        if ((count ?? 0) > 0) {
+          throw new Error(pickBi(isRTL, `الرابط ${nextUsername} مستخدم بالفعل. اختر رابطًا آخر.`, `The handle ${nextUsername} is already used. Choose another handle.`));
+        }
+      }
       const payload: Record<string, unknown> = {
+        username: nextUsername,
         name_ar: editForm.name_ar, name_en: editForm.name_en || null,
         short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
@@ -549,10 +691,14 @@ const AdminBusinesses = () => {
       if (activeChanged) fields.push('is_active');
       if (verifiedChanged) fields.push('is_verified');
       await logAction('business_updated', id, { fields });
+      return { username: nextUsername };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
       toast.success(pickBi(isRTL, 'تم حفظ التعديلات', 'Changes saved'));
+      if (result?.username) {
+        setEditingBiz((prev) => prev ? ({ ...prev, username: result.username }) : prev);
+      }
       setEditingBiz(null);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -644,17 +790,13 @@ const AdminBusinesses = () => {
       const payload: Record<string, unknown> = {
         ...bizCore,
         user_id: ownerId,
-        approval_status: 'approved',
-        is_active: true,
+        approval_status: 'draft',
+        is_active: false,
+        is_demo: false,
       };
-      // Mirror admin_update_business_approval: when an admin creates an
-      // already-approved business with a username, auto-activate the
-      // public profile (username_status + is_verified) in the same insert
-      // so the /<username> page is reachable immediately.
-      if (typeof payload.username === 'string' && payload.username.trim() !== '') {
-        payload.username_status = 'approved';
-        payload.is_verified = true;
-      }
+      // Admin-created entities are explicit drafts by default. The public
+      // profile becomes reachable only after the visibility card's publish
+      // action sets published + active + not-demo together.
       const { data, error } = await insertBusiness({
         payload,
         select: BUSINESS_SAFE_COLUMNS_SELECT,
@@ -675,14 +817,14 @@ const AdminBusinesses = () => {
             ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
             : mode === 'new'
             ? 'تم إنشاء المنشأة وحساب المسؤول'
-            : 'تم إنشاء المنشأة'
+            : 'تم إنشاء المنشأة كمسودة — استخدم زر نشر الجهة لإظهارها للعامة'
           : mode === 'placeholder'
           ? 'Entity created under the placeholder account — transferable later'
           : mode === 'invite'
           ? 'Business created — invitation sent to manager'
           : mode === 'new'
           ? 'Business and manager account created'
-          : 'Business created',
+          : 'Business created as a draft — use Publish business to make it public',
       );
       setCreatingBiz(false);
       setCreateForm(emptyCreateBusinessForm());
@@ -1053,6 +1195,7 @@ const AdminBusinesses = () => {
     }
     const bizImg = biz as AdminBusinessImageColumns;
     setEditForm({
+      username: (biz.username as string | null) || '',
       name_ar: biz.name_ar, name_en: biz.name_en || '',
       short_description_ar: biz.short_description_ar || '', short_description_en: biz.short_description_en || '',
       description_ar: biz.description_ar || '', description_en: biz.description_en || '',
@@ -1084,7 +1227,7 @@ const AdminBusinesses = () => {
       is_active: biz.is_active, is_verified: biz.is_verified,
       membership_tier: biz.membership_tier,
     } as AdminEditBusinessFormState);
-    setEditingBiz(biz);
+    setEditingBiz(biz as AdminBusinessRow);
     scrollToTop();
   };
   useEffect(() => { openEditRef.current = openEdit; });
@@ -1370,6 +1513,14 @@ const AdminBusinesses = () => {
 
                 {/* ── Info Tab ── */}
                 <TabsContent value="info" className="space-y-4 mt-3">
+                  <BusinessPublicVisibilityCard
+                    business={editingBiz}
+                    publicProbe={publicVisibilityProbe}
+                    duplicateCount={publicUsernameDuplicateCount}
+                    isRTL={isRTL}
+                    isPublishing={publishBusinessMutation.isPending}
+                    onPublish={(business) => publishBusinessMutation.mutate(business as AdminBusinessRow)}
+                  />
                   <BusinessBasicInfoSection
                     editForm={editForm}
                     setField={setField}
