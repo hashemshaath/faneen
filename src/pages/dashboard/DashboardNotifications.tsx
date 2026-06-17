@@ -29,11 +29,17 @@ import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { PageHeader } from '@/components/shared';
 import { resolveNotificationActionUrl } from '@/modules/notifications/resolveNotificationActionUrl';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import type { ExportColumn } from '@/lib/export/exportTable';
 
 /* ── Notification Item (memo) ── */
-const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate }: {
+const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate, isSelected, onToggleSelect }: {
   notification: any; isRTL: boolean; language: string;
   onRead: (id: string) => void; onDelete: (id: string) => void; onNavigate: (n: any) => void;
+  isSelected: boolean; onToggleSelect: (id: string) => void;
 }) => {
   const meta = getNotificationMeta(notification);
   const Icon = meta.icon;
@@ -49,11 +55,22 @@ const NotificationItem = React.memo(({ notification, isRTL, language, onRead, on
       className={cn(
         'cursor-pointer transition-all duration-200 group border-border/40 hover:shadow-sm hover:border-border/60',
         !notification.is_read && isUrgent && 'border-destructive/30 bg-destructive/[0.02]',
-        !notification.is_read && !isUrgent && 'border-accent/30 bg-accent/[0.02]'
+        !notification.is_read && !isUrgent && 'border-accent/30 bg-accent/[0.02]',
+        isSelected && 'ring-2 ring-primary/40 border-primary/40'
       )}
       onClick={() => onNavigate(notification)}
     >
       <CardContent className="p-2.5 sm:p-3 flex gap-2.5">
+        <div
+          className="flex items-start pt-0.5"
+          onClick={(e) => { e.stopPropagation(); onToggleSelect(notification.id); }}
+        >
+          <Checkbox
+            checked={isSelected}
+            aria-label={isRTL ? 'تحديد الإشعار' : 'Select notification'}
+            className="h-4 w-4"
+          />
+        </div>
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${color}`}>
           <Icon className="w-3.5 h-3.5" />
         </div>
@@ -245,6 +262,36 @@ const DashboardNotifications = () => {
 
   const hasFilters = typeFilter !== 'all' || readFilter !== 'all' || searchQuery.trim();
 
+  // Bulk selection — across currently filtered list
+  const bulk = useBulkSelection<{ id: string }>(filtered.map((n: any) => ({ id: n.id })));
+
+  const exportColumns: ExportColumn<any>[] = useMemo(() => ([
+    { key: 'title', header: isRTL ? 'العنوان' : 'Title', accessor: (n) => resolveNotificationTitle(n, language === 'ar' ? 'ar' : 'en') },
+    { key: 'type', header: isRTL ? 'النوع' : 'Type', accessor: (n) => {
+      const m = getNotificationMeta(n);
+      return language === 'ar' ? m.label.ar : m.label.en;
+    } },
+    { key: 'status', header: isRTL ? 'الحالة' : 'Status', accessor: (n) => n.is_read ? (isRTL ? 'مقروء' : 'Read') : (isRTL ? 'غير مقروء' : 'Unread') },
+    { key: 'created_at', header: isRTL ? 'التاريخ' : 'Date', accessor: (n) => format(new Date(n.created_at), 'yyyy-MM-dd HH:mm') },
+    { key: 'body', header: isRTL ? 'النص' : 'Body', accessor: (n) => language === 'ar' ? (n.body_ar ?? '') : (n.body_en ?? n.body_ar ?? '') },
+  ]), [isRTL, language]);
+
+  const bulkMarkRead = useCallback(async () => {
+    const ids = Array.from(bulk.selectedIds);
+    await Promise.all(ids.map((id) => markNotificationRead(id)));
+    queryClient.invalidateQueries({ queryKey: ['all-notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    bulk.clear();
+  }, [bulk, queryClient]);
+
+  const bulkDelete = useCallback(async () => {
+    const ids = Array.from(bulk.selectedIds);
+    await Promise.all(ids.map((id) => deleteNotificationSvc(id)));
+    queryClient.invalidateQueries({ queryKey: ['all-notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    bulk.clear();
+  }, [bulk, queryClient]);
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
@@ -254,12 +301,23 @@ const DashboardNotifications = () => {
           eyebrow={isRTL ? 'التنبيهات' : 'Alerts'}
           title={isRTL ? 'الإشعارات' : 'Notifications'}
           subtitle={isRTL ? 'متابعة جميع التنبيهات والتحديثات الفورية' : 'Track all alerts and realtime updates'}
-          actions={unreadCount > 0 ? (
-            <Button variant="default" size="sm" className="gap-1.5 text-xs" onClick={() => markAllRead.mutate()}>
-              <CheckCheck className="w-3.5 h-3.5" />
-              {isRTL ? `قراءة الكل (${unreadCount})` : `Mark all read (${unreadCount})`}
-            </Button>
-          ) : undefined}
+          actions={
+            <div className="flex items-center gap-1.5">
+              <ExportMenu
+                rows={filtered}
+                columns={exportColumns}
+                filename={`notifications-${format(new Date(), 'yyyy-MM-dd')}`}
+                title={isRTL ? 'الإشعارات' : 'Notifications'}
+                subtitle={isRTL ? `إجمالي ${filtered.length} إشعار` : `Total ${filtered.length} notifications`}
+              />
+              {unreadCount > 0 && (
+                <Button variant="default" size="sm" className="gap-1.5 text-xs" onClick={() => markAllRead.mutate()}>
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  {isRTL ? `قراءة الكل (${unreadCount})` : `Mark all read (${unreadCount})`}
+                </Button>
+              )}
+            </div>
+          }
         />
 
         {/* Stats */}
@@ -373,7 +431,17 @@ const DashboardNotifications = () => {
               <div key={group.label} className="space-y-1">
                 <DateGroup label={group.label} count={group.items.length} />
                 {group.items.map((n: any) => (
-                  <NotificationItem key={n.id} notification={n} isRTL={isRTL} language={language} onRead={handleRead} onDelete={handleDelete} onNavigate={handleClick} />
+                  <NotificationItem
+                    key={n.id}
+                    notification={n}
+                    isRTL={isRTL}
+                    language={language}
+                    onRead={handleRead}
+                    onDelete={handleDelete}
+                    onNavigate={handleClick}
+                    isSelected={bulk.isSelected(n.id)}
+                    onToggleSelect={bulk.toggle}
+                  />
                 ))}
               </div>
             ))}
@@ -388,6 +456,26 @@ const DashboardNotifications = () => {
           </div>
         )}
       </div>
+      <BulkActionBar
+        count={bulk.count}
+        onClear={bulk.clear}
+        actions={[
+          {
+            id: 'mark-read',
+            label: isRTL ? 'تعليم كمقروء' : 'Mark read',
+            icon: CheckCheck,
+            variant: 'default',
+            onClick: bulkMarkRead,
+          },
+          {
+            id: 'delete',
+            label: isRTL ? 'حذف' : 'Delete',
+            icon: Trash2,
+            variant: 'destructive',
+            onClick: bulkDelete,
+          },
+        ]}
+      />
     </DashboardLayout>
   );
 };

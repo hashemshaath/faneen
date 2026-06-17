@@ -8,6 +8,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { PageHeader } from '@/components/shared';
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import type { ExportColumn } from '@/lib/export/exportTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -464,6 +466,18 @@ const DashboardPortfolio = () => {
     toast.success(pickBi(isRTL, 'تم التصدير', 'Exported'));
   }, [items, isRTL]);
 
+  const portfolioExportColumns: ExportColumn<PortfolioItem>[] = useMemo(() => ([
+    { key: 'title', header: pickBi(isRTL, 'العنوان', 'Title'), accessor: (i) => isRTL ? i.title_ar : (i.title_en || i.title_ar) },
+    { key: 'category', header: pickBi(isRTL, 'التصنيف', 'Category'), accessor: (i) => i.category },
+    { key: 'location', header: pickBi(isRTL, 'الموقع', 'Location'), accessor: (i) => i.project_location ?? '' },
+    { key: 'date', header: pickBi(isRTL, 'التاريخ', 'Date'), accessor: (i) => i.completion_date ?? '' },
+    { key: 'client', header: pickBi(isRTL, 'العميل', 'Client'), accessor: (i) => i.client_name ?? '' },
+    { key: 'value', header: pickBi(isRTL, 'القيمة', 'Value'), accessor: (i) => i.project_value ?? '' },
+    { key: 'views', header: pickBi(isRTL, 'المشاهدات', 'Views'), accessor: (i) => i.view_count ?? 0 },
+    { key: 'shares', header: pickBi(isRTL, 'المشاركات', 'Shares'), accessor: (i) => i.share_count ?? 0 },
+    { key: 'featured', header: pickBi(isRTL, 'مميز', 'Featured'), accessor: (i) => i.is_featured ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا' : 'No') },
+  ]), [isRTL]);
+
   const publicLinkFor = useCallback((_item: PortfolioItem) => {
     if (!businessRefId) return null;
     return `${window.location.origin}/r/${businessRefId}`;
@@ -512,9 +526,13 @@ const DashboardPortfolio = () => {
           actions={
             <>
               {items.length > 0 && (
-                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
-                  <Download className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'تصدير', 'Export')}
-                </Button>
+                <ExportMenu
+                  rows={items}
+                  columns={portfolioExportColumns}
+                  filename={`portfolio_${new Date().toISOString().slice(0, 10)}`}
+                  title={pickBi(isRTL, 'معرض الأعمال', 'Portfolio Gallery')}
+                  subtitle={pickBi(isRTL, `${items.length} عمل`, `${items.length} works`)}
+                />
               )}
               <PermissionHint permission="documents.upload">
                 <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
