@@ -79,6 +79,7 @@ import {
   Zap, Target, PieChart, ArrowUpRight, ArrowDownRight,
   Star, Filter, LayoutGrid, List, MoreHorizontal,
   RefreshCw, Edit3, ExternalLink, CircleCheck,
+  CheckSquare, Square,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -149,6 +150,10 @@ import type { Json } from '@/integrations/supabase/types';
 import { templateCategoryConfig } from '@/modules/contracts/constants/templateCategories';
 import { TemplateCard } from '@/modules/contracts/components/TemplateCard';
 import { emptyForm } from '@/modules/contracts/constants/contractForm';
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { exportToCSV, type ExportColumn } from '@/lib/export/exportTable';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
@@ -1478,6 +1483,33 @@ const DashboardContracts = () => {
     return filtered.slice(start, start + pageSize);
   }, [filtered, currentPage, pageSize]);
 
+  /* ── Phase 1 Safe Rollout — Unified ExportMenu columns (no PII / no internals). ── */
+  const contractExportColumns: ExportColumn<ContractWithRole>[] = useMemo(() => ([
+    { key: 'number', header: pickBi(isRTL, 'الرقم', 'Number'), accessor: (c) => c.contract_number ?? '' },
+    { key: 'title', header: pickBi(isRTL, 'العنوان', 'Title'), accessor: (c) => isRTL ? c.title_ar : (c.title_en || c.title_ar) },
+    { key: 'status', header: pickBi(isRTL, 'الحالة', 'Status'), accessor: (c) => {
+        const m = getContractStatusMeta(c.status);
+        return isRTL ? m.label_ar : m.label_en;
+      } },
+    { key: 'role', header: pickBi(isRTL, 'الدور', 'Role'), accessor: (c) => c._role === 'provider' ? pickBi(isRTL, 'مزوّد', 'Provider') : pickBi(isRTL, 'عميل', 'Client') },
+    { key: 'amount', header: pickBi(isRTL, 'القيمة', 'Amount'), accessor: (c) => Number(c.total_amount) },
+    { key: 'currency', header: pickBi(isRTL, 'العملة', 'Currency'), accessor: (c) => c.currency_code ?? '' },
+    { key: 'created', header: pickBi(isRTL, 'تاريخ الإنشاء', 'Created'), accessor: (c) => c.created_at?.slice(0, 10) ?? '' },
+    { key: 'updated', header: pickBi(isRTL, 'آخر تحديث', 'Updated'), accessor: (c) => c.updated_at?.slice(0, 10) ?? '' },
+  ]), [isRTL]);
+
+  /* ── Phase 1 Safe Rollout — Bulk selection (export-only; no lifecycle actions). ── */
+  const bulkContracts = useBulkSelection<{ id: string }>(filtered.map((c) => ({ id: c.id })));
+  const selectedContractRows = useMemo(
+    () => filtered.filter((c) => bulkContracts.isSelected(c.id)),
+    [filtered, bulkContracts],
+  );
+  const bulkExportSelected = useCallback(() => {
+    if (selectedContractRows.length === 0) return;
+    exportToCSV(selectedContractRows, contractExportColumns, `contracts-selected-${new Date().toISOString().slice(0, 10)}`);
+    toast.success(pickBi(isRTL, `تم تصدير ${selectedContractRows.length} عقد`, `Exported ${selectedContractRows.length} contracts`));
+  }, [selectedContractRows, contractExportColumns, isRTL]);
+
   /* ── Phase 8 — Keyboard shortcuts: "/" focus search, "n" new contract, "Esc" close form. ── */
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -2321,6 +2353,43 @@ const DashboardContracts = () => {
               />
             </div>
 
+            {filtered.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 px-1">
+                <ExportMenu
+                  rows={filtered}
+                  columns={contractExportColumns}
+                  filename={`contracts-${new Date().toISOString().slice(0, 10)}`}
+                  title={pickBi(isRTL, 'تقرير العقود', 'Contracts Report')}
+                  subtitle={pickBi(isRTL, `إجمالي ${filtered.length} عقد`, `Total ${filtered.length} contracts`)}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-xs h-8"
+                  onClick={() => {
+                    const pageIds = paginated.map((c) => c.id);
+                    const allSelected = pageIds.every((id) => bulkContracts.isSelected(id));
+                    if (allSelected) {
+                      pageIds.forEach((id) => bulkContracts.toggle(id));
+                    } else {
+                      pageIds.forEach((id) => { if (!bulkContracts.isSelected(id)) bulkContracts.toggle(id); });
+                    }
+                  }}
+                  aria-label={pickBi(isRTL, 'تحديد عقود الصفحة', 'Select contracts on page')}
+                >
+                  {paginated.length > 0 && paginated.every((c) => bulkContracts.isSelected(c.id))
+                    ? <CheckSquare className="w-3.5 h-3.5" />
+                    : <Square className="w-3.5 h-3.5" />}
+                  {pickBi(isRTL, 'تحديد عقود الصفحة', 'Select page')}
+                </Button>
+                {bulkContracts.count > 0 && (
+                  <span className="text-[11px] text-muted-foreground tech-content">
+                    {pickBi(isRTL, `${bulkContracts.count} محدد`, `${bulkContracts.count} selected`)}
+                  </span>
+                )}
+              </div>
+            )}
+
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>
             ) : filtered.length === 0 ? (
@@ -3101,6 +3170,21 @@ const DashboardContracts = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {viewSection === 'list' && (
+        <BulkActionBar
+          count={bulkContracts.count}
+          onClear={bulkContracts.clear}
+          actions={[
+            {
+              id: 'export-selected',
+              label: pickBi(isRTL, 'تصدير المحدد (CSV)', 'Export selected (CSV)'),
+              icon: Download,
+              variant: 'default',
+              onClick: bulkExportSelected,
+            },
+          ]}
+        />
+      )}
     </DashboardLayout>
   );
 };
