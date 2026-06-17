@@ -11,6 +11,11 @@ const ONBOARDING = fs.readFileSync(
   path.resolve(__dirname, '../pages/Onboarding.tsx'),
   'utf8',
 );
+// Intent selection moved out of Onboarding.tsx and now lives on /start.
+const START = fs.readFileSync(
+  path.resolve(__dirname, '../pages/Start.tsx'),
+  'utf8',
+);
 
 describe('Registration Intent Selection (P1)', () => {
   it('declares the "intent" step first in STEP_ORDER', () => {
@@ -19,19 +24,19 @@ describe('Registration Intent Selection (P1)', () => {
   });
 
   it('shows the remaining intent options in Arabic (join-by-link only)', () => {
-    expect(ONBOARDING).toContain('المتابعة كفرد');
-    expect(ONBOARDING).toContain('إنشاء منشأة أو شركة');
+    expect(START).toContain('المتابعة كفرد');
+    expect(START).toMatch(/إنشاء منشأة|إنشاء منشأة أو شركة/);
     // Join-by-invitation / request-access cards removed — invite link only.
-    expect(ONBOARDING).not.toContain('الانضمام بدعوة');
-    expect(ONBOARDING).not.toMatch(/id: 'request-access'/);
+    expect(START).not.toContain('الانضمام بدعوة');
+    expect(START).not.toMatch(/id:\s*'request-access'/);
   });
 
   it('shows the remaining intent options in English (join-by-link only)', () => {
-    expect(ONBOARDING).toContain('Continue as individual');
-    expect(ONBOARDING).toContain('Create a business/entity');
-    expect(ONBOARDING).not.toContain('Join by invitation');
-    expect(ONBOARDING).not.toMatch(/data-intent="join-invite"/);
-    expect(ONBOARDING).not.toMatch(/data-intent="request-access"/);
+    expect(START).toContain('Continue as individual');
+    expect(START).toMatch(/Create a business/);
+    expect(START).not.toContain('Join by invitation');
+    expect(START).not.toMatch(/data-context="join-invite"/);
+    expect(START).not.toMatch(/data-context="request-access"/);
   });
 
   it('individual path does not create an entity automatically', () => {
@@ -40,7 +45,8 @@ describe('Registration Intent Selection (P1)', () => {
   });
 
   it('create-entity intent maps to existing business onboarding flow', () => {
-    expect(ONBOARDING).toMatch(/id === 'create-entity'[\s\S]*setAccountType\('business'\)/);
+    // create-entity card on /start hands off to the basic registration page.
+    expect(START).toMatch(/id:\s*'create-entity'[\s\S]*?to:\s*'\/register-entity'/);
   });
 
   it('no in-form invitation-token paste box (link-only join)', () => {
