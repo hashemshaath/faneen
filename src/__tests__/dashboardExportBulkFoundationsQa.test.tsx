@@ -1,8 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 import { ExportMenu } from '@/components/dashboard/ExportMenu';
@@ -38,7 +37,7 @@ describe('DASHBOARD EXPORT + BULK ACTION FOUNDATIONS QA', () => {
       { key: 'name', header: 'Name', accessor: (r) => r.name },
     ];
     render(<ExportMenu rows={rows} columns={columns} filename="t" title="t" />);
-    await userEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button'));
     expect(await screen.findByText(/CSV/)).toBeInTheDocument();
     expect(screen.getByText(/PDF/)).toBeInTheDocument();
   });
