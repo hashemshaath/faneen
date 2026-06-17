@@ -11,7 +11,7 @@ import { Building2, UserCog, ArrowRight, ArrowLeft, Loader2, Info, Mail, Hash } 
 import { PhoneField, toE164 } from '@/components/forms/PhoneField';
 import { PasswordField } from '@/components/auth/PasswordField';
 import { authService } from '@/services/auth';
-import { checkPasswordStrength } from '@/lib/password-strength';
+import { checkPasswordStrength, validateEmail, validatePhone } from '@/lib/password-strength';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 import { FieldError } from '@/components/auth/FieldError';
 
@@ -93,15 +93,15 @@ const RegisterEntity: React.FC = () => {
 
   const step1Valid = useMemo(() => (
     entityNameAr.trim().length >= 2 &&
-    !!entityEmail && validateEmailField(entityEmail) && unifiedValid
-  ), [entityNameAr, entityEmail, unifiedValid, validateEmailField]);
+    !!entityEmail && validateEmail(entityEmail) && unifiedValid
+  ), [entityNameAr, entityEmail, unifiedValid]);
 
   const step2Valid = useMemo(() => (
     managerName.trim().length >= 2 &&
-    !!managerEmail && validateEmailField(managerEmail) &&
+    !!managerEmail && validateEmail(managerEmail) &&
     (isSignedIn || passwordStrength.score >= 2) &&
-    (!managerPhone.national || validatePhoneField(managerPhone.national))
-  ), [managerName, managerEmail, managerPhone, passwordStrength, isSignedIn, validateEmailField, validatePhoneField]);
+    (!managerPhone.national || validatePhone(managerPhone.national))
+  ), [managerName, managerEmail, managerPhone, passwordStrength, isSignedIn]);
 
   if (authLoading) return null;
   // Both anonymous AND signed-in visitors land here. Anonymous visitors
