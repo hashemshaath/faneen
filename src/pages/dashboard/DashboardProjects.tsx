@@ -571,12 +571,46 @@ const DashboardProjects = () => {
                   <Download className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'تصدير', 'Export')}
                 </Button>
               )}
-              <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-                <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة مشروع', 'Add Project')}
-              </Button>
+              {businessId ? (
+                <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
+                  <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة مشروع', 'Add Project')}
+                </Button>
+              ) : null}
             </>
           }
         />
+
+        {business !== undefined && !businessId && (
+          <Card className="border-dashed border-amber-500/40 bg-amber-500/[0.04]">
+            <CardContent className="p-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 mx-auto flex items-center justify-center">
+                <AlertCircle className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-base font-semibold">
+                {pickBi(isRTL, 'لا يمكن إضافة مشاريع بدون منشأة', 'Cannot add projects without a business')}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {pickBi(isRTL,
+                  'المشاريع تابعة لمنشأة. أنشئ منشأتك أولاً، ثم أضف عناوين المواقع لتربط كل مشروع بموقع تنفيذي.',
+                  'Projects belong to a business. Create your business first, then add site addresses so you can link each project to an execution site.')}
+              </p>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <Button asChild variant="hero" size="sm">
+                  <a href="/register-entity">
+                    <Plus className="w-4 h-4 me-1" />
+                    {pickBi(isRTL, 'إنشاء منشأة', 'Create business')}
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <a href="/dashboard/sites">
+                    <MapPin className="w-4 h-4 me-1" />
+                    {pickBi(isRTL, 'إدارة المواقع', 'Manage sites')}
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* ═══ Stats ═══ */}
         {projects.length > 0 && (
