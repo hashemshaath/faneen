@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useDeferredValue } from 'react';
+import React, { useMemo, useState, useCallback, useDeferredValue, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -17,11 +17,14 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { KpiStrip } from '@/components/dashboard/KpiCard';
 import {
   Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
-  Paperclip, MapPin, Tag, Search, Plus, RefreshCw,
+  Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -30,6 +33,7 @@ import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { PageHeader } from '@/components/shared';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MyLeadRow {
   id: string;
