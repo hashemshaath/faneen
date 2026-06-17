@@ -325,7 +325,7 @@ const RegisterEntity: React.FC = () => {
                     {bi(
                       isRTL,
                       'إذا كانت منشأتك مسجلة مسبقًا في قطاعات، اطلب الانضمام بدلًا من إنشاء جهة جديدة.',
-                      'If your business is already registered on Qitaat, request to join instead of creating a new one.',
+                      'If your business already has a profile on Qitaat, request to join instead of creating a new one.',
                     )}
                   </p>
                   <Link
