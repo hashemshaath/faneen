@@ -120,6 +120,14 @@ const Start: React.FC = () => {
                 ? 'يمكنك إنشاء منشأة لاحقًا من لوحة التحكم. الانضمام لمنشأة قائمة يتم فقط من خلال رابط دعوة.'
                 : 'You can create a business later from the dashboard. Joining an existing business is only possible via an invitation link.'}
             </p>
+            <p
+              className="text-[11px] text-muted-foreground/70 max-w-lg mx-auto"
+              data-feature="request-access-clarification"
+            >
+              {isRTL
+                ? 'طلب الانضمام إلى منشأة قائمة يحتاج مراجعة من مسؤول المنشأة قبل تفعيل صلاحياتك.'
+                : 'Requesting to join an existing entity requires approval from its administrator before your access is activated.'}
+            </p>
           </div>
         </div>
       </main>
