@@ -198,7 +198,7 @@ const DashboardBusinessEdit: React.FC = () => {
     setDirty(true);
   }, []);
 
-  const update = useCallback(<K extends keyof BusinessRow>(key: K, value: BusinessRow[K]) => {
+  const update = useCallback(<K extends keyof BusinessRow,>(key: K, value: BusinessRow[K]) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
     setDirty(true);
   }, []);
