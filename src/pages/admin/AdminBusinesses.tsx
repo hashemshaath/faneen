@@ -691,10 +691,14 @@ const AdminBusinesses = () => {
       if (activeChanged) fields.push('is_active');
       if (verifiedChanged) fields.push('is_verified');
       await logAction('business_updated', id, { fields });
+      return { username: nextUsername };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
       toast.success(pickBi(isRTL, 'تم حفظ التعديلات', 'Changes saved'));
+      if (result?.username) {
+        setEditingBiz((prev) => prev ? ({ ...prev, username: result.username }) : prev);
+      }
       setEditingBiz(null);
     },
     onError: (err: Error) => toast.error(err.message),
