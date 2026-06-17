@@ -40,8 +40,14 @@ function deriveStatus(b: BusinessStatusInput, isRTL: boolean): Derived {
   if (status === 'suspended') {
     return { label: pickBi(isRTL, 'معلّقة', 'Suspended'), tone: 'destructive' };
   }
-  if (status === 'pending' || status === 'in_review' || status === 'review') {
+  if (status === 'pending' || status === 'submitted' || status === 'under_review' || status === 'in_review' || status === 'review') {
     return { label: pickBi(isRTL, 'قيد المراجعة', 'Under Review'), tone: 'warning' };
+  }
+  if (status === 'approved') {
+    return { label: pickBi(isRTL, 'معتمدة غير منشورة', 'Approved · not public'), tone: 'warning' };
+  }
+  if (status === 'needs_changes') {
+    return { label: pickBi(isRTL, 'تحتاج تعديلات', 'Needs changes'), tone: 'warning' };
   }
   if (status === 'draft' || (!status && b.is_active === false && b.is_verified === false)) {
     return { label: pickBi(isRTL, 'مسودة', 'Draft'), tone: 'info' };
@@ -49,10 +55,13 @@ function deriveStatus(b: BusinessStatusInput, isRTL: boolean): Derived {
   if (b.is_active === false) {
     return { label: pickBi(isRTL, 'غير نشطة', 'Inactive'), tone: 'muted' };
   }
-  if (b.is_verified) {
+  if (status === 'published' && b.is_verified) {
     return { label: pickBi(isRTL, 'منشورة وموثّقة', 'Published · Verified'), tone: 'success' };
   }
-  return { label: pickBi(isRTL, 'منشورة', 'Published'), tone: 'success' };
+  if (status === 'published') {
+    return { label: pickBi(isRTL, 'منشورة', 'Published'), tone: 'success' };
+  }
+  return { label: pickBi(isRTL, 'غير منشورة', 'Not public'), tone: 'muted' };
 }
 
 export const BusinessStatusBadge: React.FC<BusinessStatusBadgeProps> = ({
