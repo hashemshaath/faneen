@@ -21,6 +21,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { getNotificationMeta, isUrgentNotification } from './notification-types';
 import { trackNotificationOpened } from '@/lib/analytics-events';
+import { resolveNotificationActionUrl } from '@/modules/notifications/resolveNotificationActionUrl';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
@@ -65,7 +66,10 @@ export const NotificationBell = () => {
         icon: <Icon className="w-4 h-4" />,
         action: n.action_url ? {
           label: language === 'ar' ? 'عرض' : 'View',
-          onClick: () => navigate(n.action_url),
+            onClick: () => {
+              const actionUrl = resolveNotificationActionUrl(n);
+              if (actionUrl) navigate(actionUrl);
+            },
         } : undefined,
         duration: 5000,
       });
@@ -121,7 +125,8 @@ export const NotificationBell = () => {
         source_page: 'notification_bell',
       });
     } catch { /* analytics never breaks navigation */ }
-    if (n.action_url) { navigate(n.action_url); setOpen(false); }
+    const actionUrl = resolveNotificationActionUrl(n);
+    if (actionUrl) { navigate(actionUrl); setOpen(false); }
   };
 
   if (!user) return null;
