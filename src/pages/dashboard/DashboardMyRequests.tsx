@@ -798,11 +798,14 @@ const QuoteRequestRowCardImpl: React.FC<{
   q: QuoteRequestRow;
   fileCount: number;
   isRTL: boolean;
-}> = ({ q, fileCount, isRTL }) => {
+  density?: Density;
+}> = ({ q, fileCount, isRTL, density = 'comfortable' }) => {
   const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
+  const compact = density === 'compact';
+  const createdAbs = new Date(q.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
   return (
     <Card className="overflow-hidden hover-lift transition-shadow">
-      <CardContent className="p-4 sm:p-5 space-y-3">
+      <CardContent className={`${compact ? 'p-3 sm:p-3.5 space-y-2' : 'p-4 sm:p-5 space-y-3'}`}>
         <div className="flex flex-wrap items-center gap-2">
           {q.ref_id ? (
             <>
@@ -815,9 +818,14 @@ const QuoteRequestRowCardImpl: React.FC<{
           <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
             {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
           </span>
-          <span className="text-xs text-muted-foreground tech-content ms-auto">
-            {new Date(q.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-xs text-muted-foreground tech-content ms-auto cursor-help">
+                {formatRelative(q.created_at, isRTL)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{createdAbs}</TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -835,7 +843,7 @@ const QuoteRequestRowCardImpl: React.FC<{
             </span>
           )}
         </div>
-        <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>
+        {!compact && <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>}
         <div className="pt-1">
           <Button asChild size="sm" variant="outline" className="min-h-[36px]">
             <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
