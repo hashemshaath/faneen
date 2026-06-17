@@ -620,7 +620,25 @@ const AdminBusinesses = () => {
     mutationFn: async () => {
       const id = editingBiz.id;
       const efImg = editForm as AdminBusinessImageColumns;
+      const nextUsername = normalizeUsername(editForm.username ?? editingBiz.username);
+      if (!nextUsername) {
+        throw new Error(pickBi(isRTL, 'اسم الرابط العام مطلوب', 'Public handle is required'));
+      }
+      if (isReservedUsername(nextUsername)) {
+        throw new Error(pickBi(isRTL, `الرابط ${nextUsername} محجوز للنظام. اختر رابطًا آخر.`, `The handle ${nextUsername} is reserved. Choose another handle.`));
+      }
+      if (nextUsername !== normalizeUsername(editingBiz.username)) {
+        const { count } = await supabase
+          .from('businesses')
+          .select('id', { count: 'exact', head: true })
+          .ilike('username', nextUsername)
+          .neq('id', id);
+        if ((count ?? 0) > 0) {
+          throw new Error(pickBi(isRTL, `الرابط ${nextUsername} مستخدم بالفعل. اختر رابطًا آخر.`, `The handle ${nextUsername} is already used. Choose another handle.`));
+        }
+      }
       const payload: Record<string, unknown> = {
+        username: nextUsername,
         name_ar: editForm.name_ar, name_en: editForm.name_en || null,
         short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
