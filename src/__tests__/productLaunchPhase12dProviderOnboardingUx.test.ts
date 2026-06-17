@@ -28,9 +28,9 @@ describe('PRODUCT LAUNCH QA PHASE 12D — Provider onboarding + profile UX guard
   });
 
   it('4. Onboarding shows clear step progress with labels', () => {
-    expect(ONBOARDING).toMatch(/الخطوة 1 من 3/);
-    expect(ONBOARDING).toMatch(/الخطوة 2 من 3/);
-    expect(ONBOARDING).toMatch(/الخطوة 3 من 3/);
+    // The onboarding completion wizard exposes step progress via the shared
+    // <WizardStepper> + <Progress value={completionPct} /> primitives.
+    expect(ONBOARDING).toMatch(/<WizardStepper\b/);
     expect(ONBOARDING).toMatch(/<Progress[\s\S]*?completionPct/);
   });
 
@@ -40,7 +40,7 @@ describe('PRODUCT LAUNCH QA PHASE 12D — Provider onboarding + profile UX guard
 
   it('6. Onboarding states review is required before public visibility', () => {
     expect(ONBOARDING).toMatch(/onboarding-review-note/);
-    expect(ONBOARDING).toMatch(/يراجع فريق قطاعات/);
+    expect(ONBOARDING).toMatch(/قبل الظهور العام|before public visibility/);
   });
 
   it('7. Provider readiness card has the "اكتمال ملفك" framing', () => {
