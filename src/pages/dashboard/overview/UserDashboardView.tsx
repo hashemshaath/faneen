@@ -7,13 +7,13 @@ import {
   listRecentNotificationsForUser,
 } from '@/modules/notifications';
 import { listContractsForCustomer } from '@/modules/contracts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import {
   FileText, MessageSquare, Bell, Bookmark, CreditCard, TrendingUp, DollarSign,
-  PieChart as PieChartIcon, Send, Search as SearchIcon,
+  PieChart as PieChartIcon, Send, Search as SearchIcon, Link as LinkIcon,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -21,6 +21,8 @@ import { cn } from '@/lib/utils';
 import {
   CHART_COLORS, getStatusLabel, getStatusColor,
   QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
+  SectionHeader, SectionLinkAction, SectionEmpty,
+  SECTION_CARD_CLASS, SECTION_CONTENT_CLASS,
 } from '@/components/dashboard/overview/shared';
 import {
   UnifiedDashboardHero,
@@ -155,45 +157,57 @@ export default function UserDashboardView({
     activity:  <LiveActivityWidget   isRTL={isRTL} userId={user.id} />,
     tasks:     <SmartTasksWidget     isRTL={isRTL} userId={user.id} />,
     contracts: (
-      <Card className="border-border/40 h-full">
-        <CardHeader className="pb-1 px-4 pt-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-xs flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-accent" aria-hidden="true" />{isRTL ? 'أحدث العقود' : 'Recent Contracts'}</CardTitle>
-          <Link to="/dashboard/contracts"><Button variant="ghost" size="sm" className="text-[10px] text-accent h-6">{isRTL ? 'الكل' : 'All'}</Button></Link>
-        </CardHeader>
-        <CardContent className="px-4 pb-3">
+      <Card className={cn(SECTION_CARD_CLASS, 'h-full')}>
+        <CardContent className={SECTION_CONTENT_CLASS}>
+          <SectionHeader
+            icon={FileText}
+            tone="accent"
+            title={isRTL ? 'أحدث العقود' : 'Recent Contracts'}
+            right={<SectionLinkAction to="/dashboard/contracts" label={isRTL ? 'الكل' : 'View all'} />}
+          />
           {stats?.recentContracts?.length ? (
             <div className="space-y-1.5">
               {stats.recentContracts.map((c) => (
                 <Link key={c.id} to={`/contracts/${c.id}`}>
                   <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-medium truncate">{isRTL ? c.title_ar : (c.title_en || c.title_ar)}</p>
-                      <p className="tech-content text-[9px] text-muted-foreground">{c.contract_number}</p>
+                      <p className="text-[11px] font-medium truncate text-foreground">{isRTL ? c.title_ar : (c.title_en || c.title_ar)}</p>
+                      <p className="tech-content text-[10px] text-muted-foreground mt-0.5">{c.contract_number}</p>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className={cn('text-[8px] h-4', getStatusColor(c.status))}>{getStatusLabel(c.status, isRTL)}</Badge>
-                      <span className="tech-content text-[10px] font-semibold whitespace-nowrap">{Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
+                      <Badge variant="outline" className={cn('text-[9px] h-5 px-1.5', getStatusColor(c.status))}>{getStatusLabel(c.status, isRTL)}</Badge>
+                      <span className="tech-content text-[11px] font-semibold whitespace-nowrap text-foreground">{Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center py-6 text-muted-foreground">
-              <FileText className="w-8 h-8 mb-2 opacity-20" aria-hidden="true" /><p className="text-[10px]">{isRTL ? 'لا عقود بعد' : 'No contracts'}</p>
-              <Link to="/search"><Button variant="outline" size="sm" className="mt-2 text-[10px] gap-1"><TrendingUp className="w-3 h-3" aria-hidden="true" />{isRTL ? 'ابحث عن مزود' : 'Find a provider'}</Button></Link>
-            </div>
+            <SectionEmpty
+              icon={FileText}
+              message={isRTL ? 'لا عقود بعد' : 'No contracts yet'}
+              action={
+                <Link to="/search">
+                  <Button variant="outline" size="sm" className="text-[11px] gap-1 h-8">
+                    <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+                    {isRTL ? 'ابحث عن مزود' : 'Find a provider'}
+                  </Button>
+                </Link>
+              }
+            />
           )}
         </CardContent>
       </Card>
     ),
     notifications: (
-      <Card className="border-border/40 h-full">
-        <CardHeader className="pb-1 px-4 pt-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-xs flex items-center gap-2"><Bell className="w-3.5 h-3.5 text-warning" aria-hidden="true" />{isRTL ? 'آخر الإشعارات' : 'Notifications'}</CardTitle>
-          <Link to="/dashboard/notifications"><Button variant="ghost" size="sm" className="text-[10px] text-accent h-6">{isRTL ? 'الكل' : 'All'}</Button></Link>
-        </CardHeader>
-        <CardContent className="px-4 pb-3">
+      <Card className={cn(SECTION_CARD_CLASS, 'h-full')}>
+        <CardContent className={SECTION_CONTENT_CLASS}>
+          <SectionHeader
+            icon={Bell}
+            tone="warning"
+            title={isRTL ? 'آخر الإشعارات' : 'Recent notifications'}
+            right={<SectionLinkAction to="/dashboard/notifications" label={isRTL ? 'الكل' : 'View all'} />}
+          />
           {recentNotifications?.length ? (
             <div className="space-y-1.5">
               {recentNotifications.map((n) => (
@@ -203,8 +217,8 @@ export default function UserDashboardView({
                       <Bell className={cn('w-3 h-3', !n.is_read ? 'text-accent' : 'text-muted-foreground')} aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={cn('text-[10px] truncate', !n.is_read ? 'font-medium' : 'text-muted-foreground')}>{isRTL ? n.title_ar : (n.title_en || n.title_ar)}</p>
-                      <p className="text-[9px] text-muted-foreground truncate">{isRTL ? n.body_ar : (n.body_en || n.body_ar)}</p>
+                      <p className={cn('text-[11px] truncate', !n.is_read ? 'font-medium text-foreground' : 'text-muted-foreground')}>{isRTL ? n.title_ar : (n.title_en || n.title_ar)}</p>
+                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">{isRTL ? n.body_ar : (n.body_en || n.body_ar)}</p>
                     </div>
                     {!n.is_read && <div className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-1.5" />}
                   </div>
@@ -212,17 +226,19 @@ export default function UserDashboardView({
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center py-6 text-muted-foreground">
-              <Bell className="w-8 h-8 mb-2 opacity-20" aria-hidden="true" /><p className="text-[10px]">{isRTL ? 'لا إشعارات' : 'No notifications'}</p>
-            </div>
+            <SectionEmpty icon={Bell} message={isRTL ? 'لا إشعارات بعد' : 'No notifications yet'} />
           )}
         </CardContent>
       </Card>
     ),
     status: contractStatusData.length > 0 ? (
-      <Card className="border-border/40 h-full">
-        <CardHeader className="pb-1 px-4 pt-3"><CardTitle className="text-xs flex items-center gap-2"><PieChartIcon className="w-3.5 h-3.5 text-accent" aria-hidden="true" />{isRTL ? 'حالة العقود' : 'Contract Status'}</CardTitle></CardHeader>
-        <CardContent className="px-4 pb-3">
+      <Card className={cn(SECTION_CARD_CLASS, 'h-full')}>
+        <CardContent className={SECTION_CONTENT_CLASS}>
+          <SectionHeader
+            icon={PieChartIcon}
+            tone="accent"
+            title={isRTL ? 'حالة العقود' : 'Contract status'}
+          />
           <div className="flex items-center gap-4">
             <div className="w-[100px] h-[100px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -233,10 +249,10 @@ export default function UserDashboardView({
             </div>
             <div className="flex flex-col gap-1.5 flex-1">
               {contractStatusData.map((entry, i) => (
-                <div key={i} className="flex items-center gap-2 text-[10px]">
+                <div key={i} className="flex items-center gap-2 text-[11px]">
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: entry.color }} />
                   <span className="text-muted-foreground flex-1">{entry.name}</span>
-                  <span className="font-bold">{entry.value}</span>
+                  <span className="font-bold text-foreground tech-content">{entry.value}</span>
                 </div>
               ))}
             </div>
@@ -245,9 +261,12 @@ export default function UserDashboardView({
       </Card>
     ) : null,
     links: (
-      <Card className="border-border/40 h-full">
-        <CardHeader className="pb-1 px-4 pt-3"><CardTitle className="text-xs">{isRTL ? 'روابط سريعة' : 'Quick Links'}</CardTitle></CardHeader>
-        <CardContent className="px-4 pb-3">
+      <Card className={cn(SECTION_CARD_CLASS, 'h-full')}>
+        <CardContent className={SECTION_CONTENT_CLASS}>
+          <SectionHeader
+            icon={LinkIcon}
+            title={isRTL ? 'روابط سريعة' : 'Quick links'}
+          />
           <div className="grid grid-cols-3 gap-2">
             {[
               { icon: FileText, label: isRTL ? 'العقود' : 'Contracts', to: '/dashboard/contracts' },

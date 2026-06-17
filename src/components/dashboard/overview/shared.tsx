@@ -114,6 +114,113 @@ export const RefreshButton = React.memo(function RefreshButton({
   );
 });
 
+/* ================================================================== */
+/*  Unified dashboard primitives — single source of truth for cards.  */
+/* ================================================================== */
+
+/** Standard card shell — apply to every dashboard section Card. */
+export const SECTION_CARD_CLASS = 'border-border/60 bg-card';
+
+/** Standard CardContent padding + vertical rhythm. */
+export const SECTION_CONTENT_CLASS = 'p-3 sm:p-4 space-y-3';
+
+type SectionTone = 'neutral' | 'accent' | 'warning' | 'success' | 'primary';
+
+const toneIconClasses: Record<SectionTone, string> = {
+  neutral: 'bg-muted/40 text-muted-foreground border-border/60',
+  accent:  'bg-accent/10 text-accent border-accent/20',
+  warning: 'bg-warning/10 text-warning border-warning/25',
+  success: 'bg-success/10 text-success border-success/25',
+  primary: 'bg-primary/10 text-primary border-primary/20',
+};
+
+/**
+ * Unified header for every dashboard section card.
+ * Renders an icon-in-tinted-box + heading + optional right-side slot.
+ */
+export const SectionHeader = React.memo(function SectionHeader({
+  icon: Icon,
+  title,
+  tone = 'neutral',
+  right,
+  description,
+}: {
+  icon: React.ElementType;
+  title: string;
+  tone?: SectionTone;
+  right?: React.ReactNode;
+  description?: string;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className={cn('p-1.5 rounded-lg border shrink-0', toneIconClasses[tone])}>
+          <Icon className="w-4 h-4" aria-hidden="true" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="font-heading font-bold text-[13px] leading-tight text-foreground truncate">
+            {title}
+          </h3>
+          {description && (
+            <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 truncate">
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+      {right && <div className="shrink-0 flex items-center gap-1.5">{right}</div>}
+    </div>
+  );
+});
+
+/** Small pill/chip — use for "Last 24h", counts, status tags inside SectionHeader.right. */
+export const SectionChip = React.memo(function SectionChip({
+  children,
+  tone = 'neutral',
+}: {
+  children: React.ReactNode;
+  tone?: SectionTone;
+}) {
+  const toneClass =
+    tone === 'accent'  ? 'text-accent bg-accent/10 border-accent/20'   :
+    tone === 'warning' ? 'text-warning bg-warning/10 border-warning/25' :
+    tone === 'success' ? 'text-success bg-success/10 border-success/25' :
+    tone === 'primary' ? 'text-primary bg-primary/10 border-primary/20' :
+                         'text-muted-foreground bg-muted/50 border-border/40';
+  return (
+    <span className={cn('text-[10px] font-medium rounded-full px-2 py-0.5 border tracking-tight', toneClass)}>
+      {children}
+    </span>
+  );
+});
+
+/** "View all" style link button shown in SectionHeader.right. */
+export const SectionLinkAction = React.memo(function SectionLinkAction({
+  to, label,
+}: { to: string; label: string }) {
+  return (
+    <Link to={to}>
+      <Button variant="ghost" size="sm" className="text-[11px] text-accent h-7 px-2 gap-1 font-medium">
+        {label}
+        <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
+      </Button>
+    </Link>
+  );
+});
+
+/** Empty-state body for section cards. */
+export const SectionEmpty = React.memo(function SectionEmpty({
+  icon: Icon, message, action,
+}: { icon: React.ElementType; message: string; action?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+      <Icon className="w-8 h-8 mb-2 opacity-20" aria-hidden="true" />
+      <p className="text-[11px]">{message}</p>
+      {action && <div className="mt-2">{action}</div>}
+    </div>
+  );
+});
+
 export const StatCard = React.memo(function StatCard({
   icon: Icon, label, value, sub, color, to,
 }: {
@@ -191,20 +298,13 @@ export const TodaySummary = React.memo(function TodaySummary({
   ];
 
   return (
-    <Card className="border-border/60">
-      <CardContent className="p-3 sm:p-4 space-y-3">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="p-1.5 bg-muted/40 rounded-lg border border-border/60">
-              <CalendarDays className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <h3 className="font-heading font-bold text-[13px] text-foreground">{isRTL ? 'ملخّص يومك' : "Today's summary"}</h3>
-          </div>
-          <span className="text-[10px] font-medium text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 border border-border/40 tracking-tight shrink-0">
-            {isRTL ? 'آخر 24 ساعة' : 'Last 24h'}
-          </span>
-        </div>
+    <Card className={SECTION_CARD_CLASS}>
+      <CardContent className={SECTION_CONTENT_CLASS}>
+        <SectionHeader
+          icon={CalendarDays}
+          title={isRTL ? 'ملخّص يومك' : "Today's summary"}
+          right={<SectionChip>{isRTL ? 'آخر 24 ساعة' : 'Last 24h'}</SectionChip>}
+        />
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-2.5">
@@ -293,16 +393,18 @@ export const OverdueAlerts = React.memo(function OverdueAlerts({
 
   return (
     <Card className="border-warning/30 bg-warning/5">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-          <h3 className="font-heading font-bold text-xs text-warning dark:text-warning">{isRTL ? 'تنبيهات' : 'Alerts'}</h3>
-        </div>
+      <CardContent className={SECTION_CONTENT_CLASS}>
+        <SectionHeader
+          icon={AlertTriangle}
+          tone="warning"
+          title={isRTL ? 'تنبيهات تحتاج انتباهك' : 'Needs your attention'}
+          right={<SectionChip tone="warning">{total}</SectionChip>}
+        />
         <div className="space-y-1.5">
           {(data?.overduePayments ?? 0) > 0 && (
             <Link to="/dashboard/installments" className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 hover:bg-warning/15 transition-colors">
               <CreditCard className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-              <span className="text-xs text-warning dark:text-warning">
+              <span className="text-[11px] font-medium text-warning dark:text-warning">
                 {data!.overduePayments} {isRTL ? 'أقساط متأخرة' : 'overdue payments'}
               </span>
             </Link>
@@ -310,7 +412,7 @@ export const OverdueAlerts = React.memo(function OverdueAlerts({
           {(data?.expiringContracts ?? 0) > 0 && (
             <Link to="/dashboard/contracts" className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 hover:bg-warning/15 transition-colors">
               <Timer className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-              <span className="text-xs text-warning dark:text-warning">
+              <span className="text-[11px] font-medium text-warning dark:text-warning">
                 {data!.expiringContracts} {isRTL ? 'عقود قاربت الانتهاء' : 'contracts expiring soon'}
               </span>
             </Link>
@@ -355,36 +457,38 @@ export const MembershipWidget = React.memo(function MembershipWidget({
   const cycleDays = sub?.billing_cycle === 'yearly' ? 365 : 30;
 
   return (
-    <Card className="border-border/40">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <Crown className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-          <h3 className="font-heading font-bold text-xs">{isRTL ? 'العضوية' : 'Membership'}</h3>
-        </div>
+    <Card className={SECTION_CARD_CLASS}>
+      <CardContent className={SECTION_CONTENT_CLASS}>
+        <SectionHeader
+          icon={Crown}
+          tone="accent"
+          title={isRTL ? 'عضويتك' : 'Your Membership'}
+          right={<SectionChip tone="accent">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'مجاني' : 'Free')}</SectionChip>}
+        />
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
             <Icon className="w-4 h-4 text-accent" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'مجاني' : 'Free')}</p>
+            <p className="text-[12px] font-bold text-foreground truncate">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'الخطة المجانية' : 'Free plan')}</p>
             {daysRemaining !== null && (
               <>
-                <div className="flex items-center justify-between text-[9px] text-muted-foreground mt-0.5">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
                   <span>{isRTL ? `${daysRemaining} يوم متبقي` : `${daysRemaining} days left`}</span>
                   <span>{Math.round((daysRemaining / cycleDays) * 100)}%</span>
                 </div>
                 <Progress
                   value={Math.max(5, (daysRemaining / cycleDays) * 100)}
-                  className="h-1 mt-0.5"
+                  className="h-1.5 mt-1"
                   aria-label={isRTL ? `${daysRemaining} يوم متبقي من الاشتراك` : `${daysRemaining} days left in subscription`}
                 />
               </>
             )}
           </div>
         </div>
-        <Link to={membershipVisibility.membershipPathOrNull ?? '/contact'}>
-          <Button variant="ghost" size="sm" className="w-full mt-2 text-[10px] h-7 text-accent gap-1">
-            <Sparkles className="w-3 h-3" aria-hidden="true" />{isRTL ? 'إدارة العضوية' : 'Manage Plan'}
+        <Link to={membershipVisibility.membershipPathOrNull ?? '/contact'} className="block">
+          <Button variant="ghost" size="sm" className="w-full text-[11px] h-8 text-accent gap-1.5 font-medium">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />{isRTL ? 'إدارة العضوية' : 'Manage Plan'}
           </Button>
         </Link>
       </CardContent>

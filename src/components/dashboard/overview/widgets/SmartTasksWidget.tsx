@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { CheckSquare, Plus, Trash2, Pin, PinOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  SectionHeader, SectionChip, SECTION_CARD_CLASS, SECTION_CONTENT_CLASS,
+} from '../shared';
 
 interface SmartTask {
   id: string;
@@ -71,19 +73,16 @@ export const SmartTasksWidget = React.memo(function SmartTasksWidget({
     setTasks((prev) => prev.filter((t) => t.id !== id));
 
   return (
-    <Card className="border-border/40 h-full flex flex-col">
-      <CardHeader className="pb-1 px-4 pt-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-xs flex items-center gap-2">
-          <CheckSquare className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-          {isRTL ? 'مهامي اليومية' : 'My Tasks'}
-        </CardTitle>
-        {tasks.length > 0 && (
-          <Badge variant="outline" className="text-[9px] h-5 tech-content">
-            {remaining}/{tasks.length}
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent className="px-4 pb-3 flex-1 flex flex-col gap-2">
+    <Card className={cn(SECTION_CARD_CLASS, 'h-full flex flex-col')}>
+      <CardContent className={cn(SECTION_CONTENT_CLASS, 'flex-1 flex flex-col')}>
+        <SectionHeader
+          icon={CheckSquare}
+          tone="accent"
+          title={isRTL ? 'مهامي اليومية' : 'My tasks'}
+          right={tasks.length > 0
+            ? <SectionChip tone="accent">{remaining}/{tasks.length}</SectionChip>
+            : undefined}
+        />
         <div className="flex items-center gap-1.5">
           <Input
             dir="auto"

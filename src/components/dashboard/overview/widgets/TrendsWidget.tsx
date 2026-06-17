@@ -2,10 +2,13 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listNotificationCreatedAtSeries } from '@/modules/notifications';
 import { listContractCreatedAtSeries } from '@/modules/contracts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { ChartTooltipStyle } from '../shared';
+import {
+  ChartTooltipStyle,
+  SectionHeader, SectionChip, SECTION_CARD_CLASS, SECTION_CONTENT_CLASS,
+} from '../shared';
 import { cn } from '@/lib/utils';
 
 interface DayBucket { day: string; count: number }
@@ -92,15 +95,15 @@ export const TrendsWidget = React.memo(function TrendsWidget({
   };
 
   return (
-    <Card className="border-border/40">
-      <CardHeader className="pb-1 px-4 pt-3">
-        <CardTitle className="text-xs flex items-center gap-2">
-          <TrendingUp className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-          {isRTL ? 'اتجاهات آخر 14 يومًا' : 'Last 14 Days'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-3">
-        <div className="flex items-center gap-3 mb-2">
+    <Card className={SECTION_CARD_CLASS}>
+      <CardContent className={SECTION_CONTENT_CLASS}>
+        <SectionHeader
+          icon={TrendingUp}
+          tone="accent"
+          title={isRTL ? 'الاتجاهات' : 'Trends'}
+          right={<SectionChip>{isRTL ? 'آخر 14 يومًا' : 'Last 14 days'}</SectionChip>}
+        />
+        <div className="flex items-center gap-3">
           {renderDelta(isRTL ? 'إشعارات (أسبوع)' : 'Alerts (week)', series.notifThis, series.notifLast)}
           {renderDelta(isRTL ? 'عقود (أسبوع)' : 'Contracts (week)', series.contractThis, series.contractLast)}
         </div>
