@@ -23,7 +23,7 @@ describe('AUTH-14E · Provider/Business onboarding UI-only fixes guard', () => {
     const src = read('src/pages/RegisterEntity.tsx');
     expect(src).toMatch(/onboarding-duplicate-warning/);
     expect(src).toMatch(/إذا كانت منشأتك مسجلة مسبقًا في قطاعات/);
-    expect(src).toMatch(/already registered on Qitaat/);
+    expect(src).toMatch(/already (?:registered on|has a profile on) Qitaat/);
   });
 
   // 3. request-access clarification copy lives on /start (context selection).
