@@ -36,6 +36,8 @@ import {
 import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { MessageTemplates } from '@/components/messages/MessageTemplates';
+import { ImageLightbox, type LightboxImage } from '@/components/messages/ImageLightbox';
+import { useChatPersistence } from '@/hooks/useChatPersistence';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
@@ -111,7 +113,7 @@ const TypingIndicator = React.memo(({ isRTL }: { isRTL: boolean }) => (
 TypingIndicator.displayName = 'TypingIndicator';
 
 /* ─── Attachment Preview (memo) ─── */
-const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: string; name?: string }) => {
+const AttachmentPreview = React.memo(({ url, type, name, onOpenImage, imageId }: { url: string; type: string; name?: string; onOpenImage?: (id: string) => void; imageId?: string }) => {
   const [showPdf, setShowPdf] = React.useState(false);
   const isImage = IMAGE_TYPES.some(t => url.toLowerCase().includes(t.split('/')[1]) || type === t);
   const inferredImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
@@ -119,14 +121,26 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 
   if (isImage || inferredImage) {
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-2 group/img">
+      <button
+        type="button"
+        onClick={(e) => {
+          if (onOpenImage && imageId) {
+            e.preventDefault();
+            onOpenImage(imageId);
+          } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        }}
+        className="block mt-2 group/img w-full text-start"
+        aria-label={name || 'attachment'}
+      >
         <div className="relative overflow-hidden rounded-xl border border-border/20 shadow-sm">
           <img src={url} alt={name || 'attachment'} className="max-w-[260px] max-h-[220px] object-cover transition-transform duration-300 group-hover/img:scale-105" loading="lazy" />
           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
             <Eye className="w-5 h-5 text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-lg" />
           </div>
         </div>
-      </a>
+      </button>
     );
   }
   if (isPdf) {
