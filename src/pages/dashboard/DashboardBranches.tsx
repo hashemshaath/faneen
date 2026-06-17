@@ -294,23 +294,14 @@ const DashboardBranches: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader
-          icon={Building2}
-          tone="primary"
-          eyebrow={t(isRTL, 'الفروع', 'Branches')}
-          title={t(isRTL, 'إدارة الفروع', 'Branches')}
-          subtitle={t(isRTL,
-            'أنشئ وأدر فروع منشأتك. اختر الفرع الرئيسي، عيّن مدير مبيعات لكل فرع، واربط منتجاتك وعروضك بالفروع المناسبة.',
-            'Create and manage branches of your business. Pick a main branch, assign a sales manager per branch, and link services and offers to specific branches.')}
-          actions={
-            businessId ? (
-              <Button onClick={() => setCreating(c => !c)} className="gap-2">
-                <Plus className="w-4 h-4" />
-                {t(isRTL, 'إضافة فرع', 'Add branch')}
-              </Button>
-            ) : null
-          }
-        />
+        {businessId ? (
+          <div className="flex justify-end">
+            <Button onClick={() => setCreating(c => !c)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              {t(isRTL, 'إضافة فرع', 'Add branch')}
+            </Button>
+          </div>
+        ) : null}
 
         {businessId === null && (
           <Card className="border-dashed border-amber-500/40 bg-amber-500/[0.04]">
