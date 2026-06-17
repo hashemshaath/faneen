@@ -670,9 +670,8 @@ const Onboarding = () => {
               onClick={async () => {
                 try {
                   if (user && !profile?.is_onboarded) {
-                    // HARDENING-1A: route through the single completeOnboarding
-                    // write point so we never duplicate the is_onboarded flag.
-                    await completeOnboarding();
+                    await authService.updateProfile(user.id, ONBOARDED_PATCH);
+                    await refreshProfile();
                   }
                 } catch { /* noop — still try to navigate */ }
                 navigate('/dashboard', { replace: true });
