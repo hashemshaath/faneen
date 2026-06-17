@@ -619,4 +619,60 @@ const DetailRow: React.FC<{ icon: React.ReactNode; label: string; value: string 
   </div>
 );
 
+const QuoteRequestRowCardImpl: React.FC<{
+  q: QuoteRequestRow;
+  fileCount: number;
+  isRTL: boolean;
+}> = ({ q, fileCount, isRTL }) => {
+  const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
+  return (
+    <Card className="overflow-hidden hover-lift transition-shadow">
+      <CardContent className="p-4 sm:p-5 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {q.ref_id ? (
+            <>
+              <ReferenceBadge refId={q.ref_id} />
+              <ReferenceLinkCopy refId={q.ref_id} isRTL={isRTL} />
+            </>
+          ) : (
+            <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
+          )}
+          <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
+            {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
+          </span>
+          <span className="text-xs text-muted-foreground tech-content ms-auto">
+            {new Date(q.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <Tag className="h-4 w-4" /> {q.sector}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <MapPin className="h-4 w-4" /> {q.city}{q.district ? ` · ${q.district}` : ''}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <MessageSquare className="h-4 w-4" /> {q.preferred_contact_method}
+          </span>
+          {fileCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <Paperclip className="h-4 w-4" /> {fileCount}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>
+        <div className="pt-1">
+          <Button asChild size="sm" variant="outline" className="min-h-[36px]">
+            <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
+              {isRTL ? 'عرض التفاصيل' : 'View details'}
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+const QuoteRequestRowCard = React.memo(QuoteRequestRowCardImpl);
+QuoteRequestRowCard.displayName = 'QuoteRequestRowCard';
+
 export default DashboardMyRequests;
