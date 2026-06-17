@@ -38,6 +38,7 @@ export interface SubmitQuoteRequestPayload {
 export interface SubmitQuoteRequestResult {
   success: boolean;
   quote_request_id: string;
+  ref_id?: string | null;
   message?: string;
 }
 
@@ -71,9 +72,19 @@ export async function submitQuoteRequest(
     }
     throw new Error(serverMessage || error.message || 'submit_failed');
   }
-  const result = data as { success: boolean; quote_request_id?: string; message?: string };
+  const result = data as {
+    success: boolean;
+    quote_request_id?: string;
+    ref_id?: string | null;
+    message?: string;
+  };
   if (!result?.success || !result.quote_request_id) {
     throw new Error(result?.message || 'submit_failed');
   }
-  return { success: true, quote_request_id: result.quote_request_id, message: result.message };
+  return {
+    success: true,
+    quote_request_id: result.quote_request_id,
+    ref_id: result.ref_id ?? null,
+    message: result.message,
+  };
 }
