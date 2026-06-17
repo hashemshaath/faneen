@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus, Lock, PauseCircle, ShieldAlert } from 'lucide-react';
+import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus, Lock, PauseCircle, ShieldAlert, Download } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -44,6 +44,12 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ExportMenu } from '@/components/dashboard/ExportMenu';
+import { BulkActionBar } from '@/components/dashboard/BulkActionBar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { exportToCSV, exportToPDF, type ExportColumn } from '@/lib/export/exportTable';
+import { pickBi } from '@/components/common/Bilingual';
 
 type ServiceRow = {
   id: string;
