@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { CheckSquare, Plus, Trash2, Pin, PinOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
