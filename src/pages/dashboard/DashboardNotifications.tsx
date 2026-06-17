@@ -301,12 +301,23 @@ const DashboardNotifications = () => {
           eyebrow={isRTL ? 'التنبيهات' : 'Alerts'}
           title={isRTL ? 'الإشعارات' : 'Notifications'}
           subtitle={isRTL ? 'متابعة جميع التنبيهات والتحديثات الفورية' : 'Track all alerts and realtime updates'}
-          actions={unreadCount > 0 ? (
-            <Button variant="default" size="sm" className="gap-1.5 text-xs" onClick={() => markAllRead.mutate()}>
-              <CheckCheck className="w-3.5 h-3.5" />
-              {isRTL ? `قراءة الكل (${unreadCount})` : `Mark all read (${unreadCount})`}
-            </Button>
-          ) : undefined}
+          actions={
+            <div className="flex items-center gap-1.5">
+              <ExportMenu
+                rows={filtered}
+                columns={exportColumns}
+                filename={`notifications-${format(new Date(), 'yyyy-MM-dd')}`}
+                title={isRTL ? 'الإشعارات' : 'Notifications'}
+                subtitle={isRTL ? `إجمالي ${filtered.length} إشعار` : `Total ${filtered.length} notifications`}
+              />
+              {unreadCount > 0 && (
+                <Button variant="default" size="sm" className="gap-1.5 text-xs" onClick={() => markAllRead.mutate()}>
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  {isRTL ? `قراءة الكل (${unreadCount})` : `Mark all read (${unreadCount})`}
+                </Button>
+              )}
+            </div>
+          }
         />
 
         {/* Stats */}
@@ -420,7 +431,17 @@ const DashboardNotifications = () => {
               <div key={group.label} className="space-y-1">
                 <DateGroup label={group.label} count={group.items.length} />
                 {group.items.map((n: any) => (
-                  <NotificationItem key={n.id} notification={n} isRTL={isRTL} language={language} onRead={handleRead} onDelete={handleDelete} onNavigate={handleClick} />
+                  <NotificationItem
+                    key={n.id}
+                    notification={n}
+                    isRTL={isRTL}
+                    language={language}
+                    onRead={handleRead}
+                    onDelete={handleDelete}
+                    onNavigate={handleClick}
+                    isSelected={bulk.isSelected(n.id)}
+                    onToggleSelect={bulk.toggle}
+                  />
                 ))}
               </div>
             ))}
@@ -435,6 +456,26 @@ const DashboardNotifications = () => {
           </div>
         )}
       </div>
+      <BulkActionBar
+        count={bulk.count}
+        onClear={bulk.clear}
+        actions={[
+          {
+            id: 'mark-read',
+            label: isRTL ? 'تعليم كمقروء' : 'Mark read',
+            icon: CheckCheck,
+            variant: 'default',
+            onClick: bulkMarkRead,
+          },
+          {
+            id: 'delete',
+            label: isRTL ? 'حذف' : 'Delete',
+            icon: Trash2,
+            variant: 'destructive',
+            onClick: bulkDelete,
+          },
+        ]}
+      />
     </DashboardLayout>
   );
 };
