@@ -117,6 +117,8 @@ const ANON_ALLOWED_TEMPLATES = new Set<string>([
   'lead-confirmation',
   'lead-notification',
   'booking-confirmation',
+  'quote-received',
+  'admin-new-quote-request',
 ])
 const ANON_RATE_LIMIT_PER_HOUR = 10
 

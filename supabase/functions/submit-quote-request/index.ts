@@ -205,6 +205,71 @@ Deno.serve(async (req) => {
     }
   }
 
+  // -------- Minimum email notifications (Resend via send-transactional-email) --------
+  // Customer confirmation + admin alert. No provider routing. No auto-matching.
+  // Duplicate guard: skip if a row already exists in email_send_log for
+  // (template_name + recipient) tied to this quote_request_id's lifetime.
+  const refId = (inserted as { ref_id?: string | null }).ref_id ?? null;
+  const adminUrl = 'https://qitaat.com/admin/quote-requests';
+  const submittedAt = new Date().toISOString().replace('T', ' ').slice(0, 16);
+  const adminRecipient = Deno.env.get('ADMIN_CONTACT_EMAIL') || 'info@qitaat.com';
+
+  async function alreadySent(template: string, recipient: string): Promise<boolean> {
+    try {
+      const { data } = await admin
+        .from('email_send_log')
+        .select('id')
+        .eq('template_name', template)
+        .eq('recipient_email', recipient)
+        .in('status', ['sent', 'pending'])
+        .limit(1)
+        .maybeSingle();
+      return !!data;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  async function sendEmail(template: string, recipient: string, data: Record<string, unknown>) {
+    if (await alreadySent(template, recipient)) {
+      console.log('email skipped (duplicate guard)', { template, quote_request_id: inserted.id });
+      return;
+    }
+    try {
+      await admin.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: template,
+          recipientEmail: recipient,
+          idempotencyKey: `quote-${refId ?? inserted.id}-${template}`,
+          templateData: data,
+        },
+      });
+    } catch (e) {
+      console.warn('email invoke failed (non-fatal)', { template, error: String(e) });
+    }
+  }
+
+  if (email) {
+    await sendEmail('quote-received', email, {
+      ref_id: refId,
+      customer_name: name,
+      city,
+      sector,
+      submitted_at: submittedAt,
+    });
+  }
+
+  await sendEmail('admin-new-quote-request', adminRecipient, {
+    ref_id: refId,
+    quote_request_id: inserted.id,
+    customer_name: name,
+    customer_phone: phone,
+    city,
+    sector,
+    admin_url: adminUrl,
+  });
+  // ------------------------------------------------------------------------------------
+
   // Best-effort notifications
   try {
     if (userId) {
