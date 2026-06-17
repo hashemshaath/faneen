@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
         body_en: 'We received your request and will route it by sector and city.',
         reference_id: inserted.id,
         reference_type: 'quote_request',
-        action_url: `/dashboard/my-requests`,
+        action_url: `/dashboard/my-requests/${inserted.id}`,
       });
     }
     // Notify admins
