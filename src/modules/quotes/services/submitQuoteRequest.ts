@@ -47,7 +47,30 @@ export async function submitQuoteRequest(
   const { data, error } = await supabase.functions.invoke('submit-quote-request', {
     body: payload,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    // supabase-js wraps non-2xx responses in FunctionsHttpError with a generic
+    // message ("Edge Function returned a non-2xx status code"). The real,
+    // user-facing reason is in the response body — read it so the form can
+    // display the actual validation message returned by the edge function.
+    let serverMessage = '';
+    const ctx = (error as { context?: unknown }).context;
+    if (ctx instanceof Response) {
+      try {
+        const text = await ctx.clone().text();
+        if (text) {
+          try {
+            const parsed = JSON.parse(text) as { message?: string; error?: string };
+            serverMessage = parsed.message || parsed.error || text;
+          } catch {
+            serverMessage = text;
+          }
+        }
+      } catch {
+        /* ignore body read errors */
+      }
+    }
+    throw new Error(serverMessage || error.message || 'submit_failed');
+  }
   const result = data as { success: boolean; quote_request_id?: string; message?: string };
   if (!result?.success || !result.quote_request_id) {
     throw new Error(result?.message || 'submit_failed');
