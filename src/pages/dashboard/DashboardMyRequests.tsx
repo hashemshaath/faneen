@@ -157,6 +157,16 @@ const DashboardMyRequests: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
   const deferredSearch = useDeferredValue(search);
+  const [sortBy, setSortBy] = useState<SortKey>(() => {
+    if (typeof window === 'undefined') return 'newest';
+    return (localStorage.getItem(STORAGE_KEY_SORT) as SortKey | null) ?? 'newest';
+  });
+  const [density, setDensity] = useState<Density>(() => {
+    if (typeof window === 'undefined') return 'comfortable';
+    return (localStorage.getItem(STORAGE_KEY_DENSITY) as Density | null) ?? 'comfortable';
+  });
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY_SORT, sortBy); } catch { /* ignore */ } }, [sortBy]);
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY_DENSITY, density); } catch { /* ignore */ } }, [density]);
 
   const { data: leads, isLoading, isFetching: leadsFetching, refetch: refetchLeads } = useQuery({
     queryKey: ['my-service-requests', user?.id],
