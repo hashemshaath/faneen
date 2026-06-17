@@ -655,11 +655,29 @@ const Onboarding = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button asChild className="h-11 rounded-xl px-5">
-              <a href="/register-entity">{bi('تسجيل جهة جديدة', 'Register a new entity')}</a>
+            <Button
+              className="h-11 rounded-xl px-5"
+              onClick={() => {
+                setAccountType('business');
+                setStep('business-details');
+              }}
+            >
+              {bi('إكمال البيانات', 'Complete details')}
             </Button>
-            <Button asChild variant="ghost" className="h-11 rounded-xl px-5">
-              <a href="/dashboard">{bi('الذهاب إلى لوحة التحكم', 'Go to dashboard')}</a>
+            <Button
+              variant="ghost"
+              className="h-11 rounded-xl px-5"
+              onClick={async () => {
+                try {
+                  if (user && !profile?.is_onboarded) {
+                    await authService.updateProfile(user.id, { is_onboarded: true });
+                    await refreshProfile();
+                  }
+                } catch { /* noop — still try to navigate */ }
+                navigate('/dashboard', { replace: true });
+              }}
+            >
+              {bi('الذهاب إلى لوحة التحكم', 'Go to dashboard')}
             </Button>
           </div>
         </div>
