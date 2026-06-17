@@ -1195,6 +1195,7 @@ const AdminBusinesses = () => {
     }
     const bizImg = biz as AdminBusinessImageColumns;
     setEditForm({
+      username: (biz.username as string | null) || '',
       name_ar: biz.name_ar, name_en: biz.name_en || '',
       short_description_ar: biz.short_description_ar || '', short_description_en: biz.short_description_en || '',
       description_ar: biz.description_ar || '', description_en: biz.description_en || '',
