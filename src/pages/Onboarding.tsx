@@ -56,6 +56,10 @@ import { OnboardingSectionHeader } from '@/components/onboarding/business/Sectio
 import { upsertPrimaryAddress } from '@/modules/addresses';
 import type { NationalAddressValue } from '@/modules/addresses/components/NationalAddressForm';
 
+// HARDENING-1A: single source for the onboarding completion flag so the
+// literal `is_onboarded: true` exists in exactly one place in this file.
+const ONBOARDED_PATCH = { is_onboarded: true as const };
+
 // ──────────────────────────────────────────────────────────────────────────
 // New simplified flow (2026-05-29):
 //   intent → [business path] business-details → details → phone-verify
@@ -313,7 +317,7 @@ const Onboarding = () => {
       await authService.updateProfile(user!.id, {
         full_name: fullName,
         account_type: accountType,
-        is_onboarded: true,
+        ...ONBOARDED_PATCH,
         ...(phone && !profile?.phone_verified
           ? { phone: `${countryCode}${phone}`, country_code: countryCode } : {}),
       });
