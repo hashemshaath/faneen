@@ -136,6 +136,10 @@ const AdminQuoteRequestDetails: React.FC = () => {
     },
   });
 
+  // URL `id` may be either UUID or REF (REQ-…); all downstream queries
+  // require the canonical UUID, so resolve it from the fetched row.
+  const quoteUuid = quote?.id ?? null;
+
   useEffect(() => {
     if (quote) {
       const md = (quote.metadata ?? {}) as Record<string, unknown>;
@@ -145,18 +149,18 @@ const AdminQuoteRequestDetails: React.FC = () => {
   }, [quote]);
 
   const { data: files } = useQuery({
-    queryKey: ['admin-quote-files', id],
-    enabled: !!id && !!quote,
+    queryKey: ['admin-quote-files', quoteUuid],
+    enabled: !!quoteUuid,
     queryFn: async () => {
-      return (await listAdminQuoteRequestFiles(id!)) as FileRow[];
+      return (await listAdminQuoteRequestFiles(quoteUuid!)) as FileRow[];
     },
   });
 
   const { data: leads, refetch: refetchLeads } = useQuery({
-    queryKey: ['admin-quote-leads', id],
-    enabled: !!id,
+    queryKey: ['admin-quote-leads', quoteUuid],
+    enabled: !!quoteUuid,
     queryFn: async () => {
-      return await listAdminQuoteRequestLeads<LeadSummaryRow>(id!);
+      return await listAdminQuoteRequestLeads<LeadSummaryRow>(quoteUuid!);
     },
   });
 
@@ -205,8 +209,8 @@ const AdminQuoteRequestDetails: React.FC = () => {
 
   const matchMutation = useMutation({
     mutationFn: async () => {
-      trackEvent('quote_matching_started', { quote_request_id: id });
-      const { data, error } = await matchQuoteRequest({ quote_request_id: id, limit: 10 });
+      trackEvent('quote_matching_started', { quote_request_id: quoteUuid });
+      const { data, error } = await matchQuoteRequest({ quote_request_id: quoteUuid, limit: 10 });
       if (error) throw error;
       return data as {
         success: boolean; matched_count: number; message?: string;
@@ -233,16 +237,16 @@ const AdminQuoteRequestDetails: React.FC = () => {
     provider_name?: string | null;
   };
   const eventsQuery = useQuery({
-    queryKey: ['admin-quote-events', id],
-    enabled: !!id,
+    queryKey: ['admin-quote-events', quoteUuid],
+    enabled: !!quoteUuid,
     queryFn: async (): Promise<QuoteEventRow[]> => {
       const [qe, le] = await Promise.all([
-        listAdminQuoteRequestEvents(id!),
+        listAdminQuoteRequestEvents(quoteUuid!),
         listAdminQuoteRequestLeadEvents<{
           id: string; event_type: string; actor_user_id: string | null;
           metadata: Record<string, unknown> | null; created_at: string; lead_id: string;
           lead?: { provider?: { name_ar: string | null } | null } | null;
-        }>(id!),
+        }>(quoteUuid!),
       ]);
       if (qe.error) throw qe.error;
       if (le.error) throw le.error;
