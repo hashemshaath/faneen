@@ -320,7 +320,7 @@ Deno.serve(async (req) => {
       // index (`uniq_businesses_one_draft_per_user`) allows only ONE draft per
       // user_id. Skip the draft stage for placeholder-owned businesses so the
       // admin can create multiple of them.
-      approval_status: isPlaceholderOwner ? "pending" : "draft",
+      approval_status: isPlaceholderOwner ? "submitted" : "draft",
       is_active: false,
       is_demo: false,
       placeholder_owner: isPlaceholderOwner,
