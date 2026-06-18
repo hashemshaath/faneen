@@ -19005,6 +19005,7 @@ export type Database = {
           street_name: string | null
           unified_number: string | null
           website: string | null
+          working_hours: Json | null
         }
         Insert: {
           address?: string | null
@@ -19030,6 +19031,7 @@ export type Database = {
           street_name?: string | null
           unified_number?: string | null
           website?: string | null
+          working_hours?: Json | null
         }
         Update: {
           address?: string | null
@@ -19055,6 +19057,7 @@ export type Database = {
           street_name?: string | null
           unified_number?: string | null
           website?: string | null
+          working_hours?: Json | null
         }
         Relationships: [
           {
