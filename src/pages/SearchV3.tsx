@@ -450,6 +450,13 @@ const SearchV3 = () => {
             />
           </section>
         </div>
+
+        {/* Mobile/tablet: surface the indexable popular sector×city links
+            outside the desktop-only sidebar so crawlers and mobile users
+            both reach them. Hidden on `lg` to avoid duplication. */}
+        <div className="lg:hidden mt-8 rounded-2xl border border-border/60 bg-card p-5">
+          <SearchSeoLinksV3 />
+        </div>
       </main>
 
       <Footer />
