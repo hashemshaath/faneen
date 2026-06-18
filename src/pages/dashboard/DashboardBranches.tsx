@@ -796,6 +796,11 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
 
       {/* Social */}
       <TabsContent value="social" className="space-y-4">
+        {null}
+      </TabsContent>
+      {/* Placeholder removed below */}
+      {/* Working hours */}
+      {/* @ts-expect-error tabs allow string */}
         <p className="text-xs text-muted-foreground">
           {t(isRTL,
             'حسابات السوشال ميديا الخاصة بهذا الفرع. تتجاوز حسابات الكيان الافتراضية عند الظهور في صفحة الفرع.',
