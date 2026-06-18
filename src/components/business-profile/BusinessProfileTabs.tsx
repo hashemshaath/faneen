@@ -45,6 +45,7 @@ import { Stars } from "./BusinessProfileHeader";
 import { recordBranchVisit } from "@/modules/branchTelemetry";
 import { track } from "@/lib/analytics-events";
 import { BranchAnalyticsPanel } from "./BranchAnalyticsPanel";
+import { WorkingHoursDisplay } from "@/components/businesses/working-hours/WorkingHoursDisplay";
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
