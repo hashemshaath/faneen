@@ -946,6 +946,7 @@ const AdminBusinesses = () => {
     country_id: '', city_id: '', region: '', district: '', street_name: '',
     building_number: '', national_id: '', additional_number: '', address: '',
     latitude: '', longitude: '',
+    complex_name: '', complex_name_en: '', site_number: '',
   });
 
   const saveBranchMutation = useMutation({
