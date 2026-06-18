@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/select';
 import { SA_REGIONS } from '@/data/sa-regions';
 import type { SearchFilterValues } from '@/services/search/useSearch';
-import { SearchFiltersSkeletonV3 } from './SearchFiltersSkeletonV3';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CatLite { id: string; slug: string; name_ar: string; name_en: string; parent_id: string | null }
 interface CityLite { id: string; name_ar: string; name_en: string }
@@ -28,11 +28,18 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   </label>
 );
 
+const FieldSkeleton = () => <Skeleton className="h-11 w-full rounded-xl" />;
+
 export const SearchFiltersV3 = ({
-  filters, onFilterChange, onClearFilters, categories, cities, hasActiveFilters, loading,
+  filters, onFilterChange, onClearFilters, categories, cities, hasActiveFilters,
 }: Props) => {
   const { language } = useLanguage();
   const bi = useBi();
+
+  // Progressive readiness: each section reveals as soon as its data lands,
+  // so the user never waits on the slowest query.
+  const categoriesReady = Array.isArray(categories);
+  const citiesReady = Array.isArray(cities);
 
   const parents = useMemo(
     () => (categories ?? []).filter((c) => !c.parent_id),
@@ -52,12 +59,11 @@ export const SearchFiltersV3 = ({
     [cities, language],
   );
 
-  if (loading) return <SearchFiltersSkeletonV3 />;
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" aria-busy={!categoriesReady || !citiesReady ? 'true' : 'false'}>
       <div>
         <SectionLabel>{bi('القطاع', 'Sector')}</SectionLabel>
+        {categoriesReady ? (
         <Select value={filters.categoryId} onValueChange={(v) => onFilterChange('categoryId', v)}>
           <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={bi('كل القطاعات', 'All sectors')} /></SelectTrigger>
           <SelectContent>
@@ -69,9 +75,10 @@ export const SearchFiltersV3 = ({
             ))}
           </SelectContent>
         </Select>
+        ) : <FieldSkeleton />}
       </div>
 
-      {children.length > 0 ? (
+      {categoriesReady && children.length > 0 ? (
         <div>
           <SectionLabel>{bi('التخصص', 'Specialty')}</SectionLabel>
           <Select value={filters.serviceCategoryId} onValueChange={(v) => onFilterChange('serviceCategoryId', v)}>
@@ -105,6 +112,7 @@ export const SearchFiltersV3 = ({
 
       <div>
         <SectionLabel>{bi('المدينة', 'City')}</SectionLabel>
+        {citiesReady ? (
         <Select value={filters.cityId} onValueChange={(v) => onFilterChange('cityId', v)}>
           <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={bi('كل المدن', 'All cities')} /></SelectTrigger>
           <SelectContent>
@@ -116,6 +124,7 @@ export const SearchFiltersV3 = ({
             ))}
           </SelectContent>
         </Select>
+        ) : <FieldSkeleton />}
       </div>
 
       <div>
