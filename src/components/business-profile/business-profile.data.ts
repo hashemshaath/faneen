@@ -333,14 +333,38 @@ export const useBranches = (businessId: string | undefined) =>
           "id, name_ar, name_en, slug, is_main, " +
           "address, district, region, street_name, building_number, " +
           "phone, mobile, unified_number, customer_service_phone, " +
-          "website, latitude, longitude, working_hours",
+          "website, latitude, longitude, working_hours, city_id",
         order: [
           { column: "is_main", ascending: false },
           { column: "sort_order" },
         ],
       });
 
-      return data ?? [];
+      const branches = data ?? [];
+      // City names aren't joinable through the public view, so fetch the
+      // referenced cities in one batched lookup and merge by id.
+      const cityIds = Array.from(
+        new Set(
+          branches
+            .map((b) => (b as { city_id?: string | null }).city_id)
+            .filter((v): v is string => !!v),
+        ),
+      );
+      if (cityIds.length > 0) {
+        const { data: cityRows } = await supabase
+          .from("cities")
+          .select("id, name_ar, name_en")
+          .in("id", cityIds);
+        const byId = new Map(
+          (cityRows ?? []).map((c) => [c.id, { name_ar: c.name_ar, name_en: c.name_en }]),
+        );
+        for (const b of branches) {
+          const cid = (b as { city_id?: string | null }).city_id;
+          (b as { cities: { name_ar: string | null; name_en: string | null } | null }).cities =
+            (cid ? byId.get(cid) : null) ?? null;
+        }
+      }
+      return branches;
     },
     enabled: !!businessId,
     staleTime: PROFILE_STALE_MS,
