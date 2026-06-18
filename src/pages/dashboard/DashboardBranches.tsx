@@ -44,6 +44,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { WorkingHoursEditor } from '@/components/businesses/working-hours/WorkingHoursEditor';
+import type { WorkingHours } from '@/modules/businesses/services/workingHours';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -654,6 +656,7 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
       social_facebook: form.social_facebook,
       social_snapchat: form.social_snapchat,
       social_youtube: form.social_youtube,
+      working_hours: form.working_hours,
     } as never);
     setSaving(false);
     if (error) {
@@ -687,10 +690,11 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
 
   return (
     <Tabs defaultValue="basic" className="w-full">
-      <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-4 w-full">
+      <TabsList className="grid grid-cols-2 md:grid-cols-6 mb-4 w-full">
         <TabsTrigger value="basic">{t(isRTL, 'أساسي', 'Basic')}</TabsTrigger>
         <TabsTrigger value="contact">{t(isRTL, 'التواصل', 'Contact')}</TabsTrigger>
         <TabsTrigger value="address">{t(isRTL, 'العنوان', 'Address')}</TabsTrigger>
+        <TabsTrigger value="hours">{t(isRTL, 'ساعات العمل', 'Hours')}</TabsTrigger>
         <TabsTrigger value="social">{t(isRTL, 'سوشال', 'Social')}</TabsTrigger>
         <TabsTrigger value="catalog">{t(isRTL, 'المنتجات والعروض', 'Catalog')}</TabsTrigger>
       </TabsList>
@@ -788,6 +792,20 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
             <Input value={form.unit_number ?? ''} onChange={e => set('unit_number', e.target.value)} dir="ltr" />
           </Field>
         </div>
+      </TabsContent>
+
+      {/* Working hours */}
+      <TabsContent value="hours" className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          {t(isRTL,
+            'حدّد ساعات العمل الأسبوعية لهذا الفرع، وأضف استثناءات للأعياد والمناسبات. تظهر للزوار في صفحة المنشأة العامة.',
+            'Set this branch\u2019s weekly hours and add exceptions for holidays. Displayed on the public profile.')}
+        </p>
+        <WorkingHoursEditor
+          isRTL={isRTL}
+          value={form.working_hours}
+          onChange={(next: WorkingHours) => set('working_hours', next)}
+        />
       </TabsContent>
 
       {/* Social */}
