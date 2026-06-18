@@ -427,6 +427,7 @@ export interface PublicBranchFull {
   additional_number?: string | null;
   latitude: number | null;
   longitude: number | null;
+  working_hours?: unknown;
 }
 
 export const useBranchBySlug = (
@@ -445,7 +446,7 @@ export const useBranchBySlug = (
           "phone, mobile, customer_service_phone, unified_number, " +
           "website, " +
           "address, region, district, street_name, building_number, " +
-          "latitude, longitude"
+          "latitude, longitude, working_hours"
         )
         .eq("business_id", businessId!)
         .eq("slug", branchSlug!)
