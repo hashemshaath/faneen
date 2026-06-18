@@ -15,6 +15,8 @@ import {
 import { pickBi } from '@/components/common/Bilingual';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 import { NationalAddressForm, type NationalAddressValue } from '@/modules/addresses';
+import { WorkingHoursEditor } from '@/components/businesses/working-hours/WorkingHoursEditor';
+import type { WorkingHours } from '@/modules/businesses/services/workingHours';
 import type {
   BranchCountryOption,
   BranchFormSetter,
@@ -40,6 +42,11 @@ export interface BusinessBranchFormProps {
   saving: boolean;
   /** Main-business contact values used to power the "use main" shortcuts. */
   mainContact?: BranchMainContact;
+  /** Optional: when provided, surfaces the "Apply to all branches" button
+   *  inside the working-hours editor. The parent owns the confirmation
+   *  prompt and the actual bulk write. */
+  onApplyHoursToAllBranches?: (hours: WorkingHours) => void;
+  applyingHoursToAllBranches?: boolean;
 }
 
 export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
@@ -56,6 +63,8 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
   onSave,
   saving,
   mainContact,
+  onApplyHoursToAllBranches,
+  applyingHoursToAllBranches,
 }) => {
   /** Inline "use main" pill: copies a value from the parent business
    *  into the branch form so admins don't re-type customer service /
@@ -423,6 +432,38 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
           <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
         </div>
       </div>
+
+      <Separator />
+      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {pickBi(isRTL, 'ساعات العمل', 'Working Hours')}
+      </p>
+      <WorkingHoursEditor
+        isRTL={isRTL}
+        value={branchForm.working_hours}
+        onChange={(next) =>
+          setBranchForm((f) => (f ? { ...f, working_hours: next } : f))
+        }
+        showApplyToAllBranches={
+          !!onApplyHoursToAllBranches && !!editingBranchId && branches.length > 1
+        }
+        onApplyToAllBranches={() => {
+          if (!onApplyHoursToAllBranches) return;
+          const others = branches.filter((b) => b.id !== editingBranchId).length;
+          if (others === 0) return;
+          const ok = confirm(
+            pickBi(
+              isRTL,
+              'سيتم تطبيق هذه الساعات على جميع الفروع واستبدال الساعات الحالية. هل تريد المتابعة؟',
+              'These hours will be applied to all branches, replacing existing values. Continue?',
+            ),
+          );
+          if (!ok) return;
+          onApplyHoursToAllBranches(
+            branchForm.working_hours as WorkingHours,
+          );
+        }}
+        applyingToAllBranches={applyingHoursToAllBranches}
+      />
 
       <Button
         onClick={onSave}

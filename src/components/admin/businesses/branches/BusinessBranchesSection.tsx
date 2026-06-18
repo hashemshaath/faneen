@@ -13,6 +13,7 @@ import type {
   BranchRow,
   BranchTypeId,
 } from './types';
+import type { WorkingHours } from '@/modules/businesses/services/workingHours';
 
 /** Phase 5D — composer for the branches tab. Owns no state or mutations:
  *  state, queries, and mutations remain in `AdminBusinesses.tsx`. */
@@ -36,6 +37,10 @@ export interface BusinessBranchesSectionProps {
   /** Contact values of the parent business; used to power per-field
    *  "Use main" shortcuts in the inline branch form. */
   mainContact?: BranchMainContact;
+  /** Bulk-apply working hours from the currently-edited branch to all
+   *  other branches of the same business. Optional. */
+  onApplyHoursToAllBranches?: (hours: WorkingHours) => void;
+  applyingHoursToAllBranches?: boolean;
 }
 
 export const BusinessBranchesSection: React.FC<BusinessBranchesSectionProps> = ({
@@ -56,6 +61,8 @@ export const BusinessBranchesSection: React.FC<BusinessBranchesSectionProps> = (
   saving,
   emptyBranch,
   mainContact,
+  onApplyHoursToAllBranches,
+  applyingHoursToAllBranches,
 }) => {
   return (
     <div className="space-y-4 mt-3">
@@ -89,6 +96,8 @@ export const BusinessBranchesSection: React.FC<BusinessBranchesSectionProps> = (
           onSave={onSave}
           saving={saving}
           mainContact={mainContact}
+          onApplyHoursToAllBranches={onApplyHoursToAllBranches}
+          applyingHoursToAllBranches={applyingHoursToAllBranches}
         />
       ) : (
         <Button

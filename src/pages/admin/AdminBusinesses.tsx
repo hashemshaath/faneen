@@ -198,6 +198,7 @@ type AdminBranchFormState = {
   complex_name: string;
   complex_name_en: string;
   site_number: string;
+  working_hours?: unknown;
 };
 
 const AdminBusinesses = () => {
@@ -947,6 +948,7 @@ const AdminBusinesses = () => {
     building_number: '', national_id: '', additional_number: '', address: '',
     latitude: '', longitude: '',
     complex_name: '', complex_name_en: '', site_number: '',
+    working_hours: undefined,
   });
 
   const saveBranchMutation = useMutation({
@@ -971,6 +973,7 @@ const AdminBusinesses = () => {
         complex_name: branchForm.complex_name || null,
         complex_name_en: branchForm.complex_name_en || null,
         site_number: branchForm.site_number || null,
+        working_hours: (branchForm.working_hours ?? {}) as unknown,
       };
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
@@ -1021,6 +1024,47 @@ const AdminBusinesses = () => {
       const mapped = parseMembershipLimitError(err, isRTL);
       toast.error(mapped?.message ?? err.message);
     },
+  });
+
+  /** Bulk-apply working-hours from the currently-edited branch to every
+   *  other branch of the SAME business. Scoped via the branches list we
+   *  already loaded for this business — never crosses into other tenants. */
+  const applyHoursToAllBranchesMutation = useMutation({
+    mutationFn: async (hours: unknown) => {
+      if (!editingBiz?.id) return { updated: 0, errors: [] as Error[] };
+      const targets = (branches as Array<{ id: string }>)
+        .map((b) => b.id)
+        .filter((id) => id !== editingBranchId);
+      const { applyHoursToAllBranches } = await import(
+        '@/modules/businesses/services/workingHours'
+      );
+      return applyHoursToAllBranches({
+        businessId: editingBiz.id,
+        hours: hours as never,
+        branchIds: (branches as Array<{ id: string }>).map((b) => b.id),
+        excludeBranchId: editingBranchId ?? undefined,
+      }).then((r) => ({ ...r, targetCount: targets.length }));
+    },
+    onSuccess: (result) => {
+      refetchBranches();
+      if (!result || result.updated === 0) {
+        toast.info(
+          pickBi(isRTL, 'لا توجد فروع أخرى لتطبيق الساعات عليها.', 'No other branches to apply hours to.'),
+        );
+        return;
+      }
+      toast.success(
+        pickBi(
+          isRTL,
+          `تم تطبيق الساعات على ${result.updated} فرع/فروع.`,
+          `Hours applied to ${result.updated} branch(es).`,
+        ),
+      );
+      if (result.errors.length > 0) {
+        toast.error(result.errors[0].message);
+      }
+    },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   /* ─── Realtime ─── */
@@ -1639,6 +1683,7 @@ const AdminBusinesses = () => {
                         complex_name: (br as unknown as { complex_name?: string | null }).complex_name || '',
                         complex_name_en: (br as unknown as { complex_name_en?: string | null }).complex_name_en || '',
                         site_number: (br as unknown as { site_number?: string | null }).site_number || '',
+                        working_hours: (br as unknown as { working_hours?: unknown }).working_hours,
                       });
                     }}
                     onDelete={(id) => deleteBranchMutation.mutate(id)}
@@ -1652,6 +1697,10 @@ const AdminBusinesses = () => {
                       email: editForm.email ?? editingBiz.email ?? null,
                       website: editForm.website ?? editingBiz.website ?? null,
                     }}
+                    onApplyHoursToAllBranches={(hours) =>
+                      applyHoursToAllBranchesMutation.mutate(hours as unknown)
+                    }
+                    applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
                   />
                 </TabsContent>
 
