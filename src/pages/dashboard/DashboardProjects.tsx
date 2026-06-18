@@ -16,6 +16,7 @@ import {
   setProjectTaxonomyCategories,
 } from '@/modules/taxonomy/project-services';
 import type { TaxonomyCategory } from '@/modules/taxonomy/types';
+import { ProjectCategoryTabs, type ProjectCategoryTab } from '@/components/project/ProjectCategoryTabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -356,13 +357,40 @@ const DashboardProjects = () => {
     return pickerCategories.filter((c) => ids.has(c.id));
   }, [primaryByProject, pickerCategories]);
 
+  const categoryTabs = useMemo<ProjectCategoryTab[]>(() => {
+    const counts = new Map<string, number>();
+    let uncategorized = 0;
+    for (const p of projects) {
+      const c = primaryByProject.get(p.id);
+      if (c) counts.set(c.id, (counts.get(c.id) ?? 0) + 1);
+      else uncategorized += 1;
+    }
+    const arr: ProjectCategoryTab[] = usedCategories.map((c) => ({
+      id: c.id,
+      label: language === 'ar' ? c.name_ar : (c.name_en || c.name_ar),
+      count: counts.get(c.id) ?? 0,
+    }));
+    if (uncategorized > 0) {
+      arr.push({
+        id: '__uncategorized__',
+        label: isRTL ? 'غير مصنّف' : 'Uncategorized',
+        count: uncategorized,
+      });
+    }
+    return arr.sort((a, b) => b.count - a.count);
+  }, [projects, primaryByProject, usedCategories, language, isRTL]);
+
   const filteredProjects = useMemo(() => {
     let result = [...projects];
     if (statusFilter === 'published') result = result.filter((p) => p.status === 'published');
     else if (statusFilter === 'draft') result = result.filter((p) => p.status === 'draft');
     else if (statusFilter === 'featured') result = result.filter((p) => p.is_featured);
     if (categoryFilter !== 'all') {
-      result = result.filter((p) => primaryByProject.get(p.id)?.id === categoryFilter);
+      if (categoryFilter === '__uncategorized__') {
+        result = result.filter((p) => !primaryByProject.get(p.id));
+      } else {
+        result = result.filter((p) => primaryByProject.get(p.id)?.id === categoryFilter);
+      }
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -948,6 +976,16 @@ const DashboardProjects = () => {
                 </button>
               ))}
             </div>
+
+            {/* Category tabs — group projects by their primary taxonomy category */}
+            {categoryTabs.length > 1 && (
+              <ProjectCategoryTabs
+                tabs={categoryTabs}
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                size="sm"
+              />
+            )}
           </div>
         )}
 

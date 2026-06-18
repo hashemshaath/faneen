@@ -46,6 +46,7 @@ import { recordBranchVisit } from "@/modules/branchTelemetry";
 import { track } from "@/lib/analytics-events";
 import { BranchAnalyticsPanel } from "./BranchAnalyticsPanel";
 import { WorkingHoursDisplay } from "@/components/businesses/working-hours/WorkingHoursDisplay";
+import { ProjectCategoryTabs, type ProjectCategoryTab } from "@/components/project/ProjectCategoryTabs";
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
@@ -190,6 +191,7 @@ export const ServicesTab = ({
 export const ProjectsTab = ({ businessId }: { businessId: string }) => {
   const { language, isRTL } = useLanguage();
   const { data: projects, isLoading } = useProjects(businessId);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
   if (isLoading) {
     return (
@@ -205,9 +207,36 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
     return <EmptyState icon={FolderOpen} text={language === "ar" ? "لا توجد مشاريع بعد" : "No projects yet"} />;
   }
 
+  const uncategorizedKey = "__uncategorized__";
+  const categoryKeyOf = (p: typeof projects[number]) => {
+    const name = getLocalizedValue(language, p.categories?.name_ar, p.categories?.name_en);
+    return name ? `cat:${name}` : uncategorizedKey;
+  };
+  const tabsMap = new Map<string, ProjectCategoryTab>();
+  for (const p of projects) {
+    const key = categoryKeyOf(p);
+    const label = key === uncategorizedKey
+      ? (isRTL ? "غير مصنّف" : "Uncategorized")
+      : getLocalizedValue(language, p.categories?.name_ar, p.categories?.name_en) || (isRTL ? "غير مصنّف" : "Uncategorized");
+    const existing = tabsMap.get(key);
+    if (existing) existing.count += 1;
+    else tabsMap.set(key, { id: key, label, count: 1 });
+  }
+  const tabs = Array.from(tabsMap.values()).sort((a, b) => b.count - a.count);
+  const filteredProjects = activeCategory === "all"
+    ? projects
+    : projects.filter((p) => categoryKeyOf(p) === activeCategory);
+
   return (
-    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-      {projects.map((project, index) => {
+    <div className="space-y-4">
+      <ProjectCategoryTabs
+        tabs={tabs}
+        value={activeCategory}
+        onChange={setActiveCategory}
+        size="md"
+      />
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
+      {filteredProjects.map((project, index) => {
         const title = getLocalizedValue(language, project.title_ar, project.title_en);
         const description = getLocalizedValue(language, project.description_ar, project.description_en);
         const cityName = getLocalizedValue(language, project.cities?.name_ar, project.cities?.name_en);
@@ -288,6 +317,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
           </Link>
         );
       })}
+      </div>
     </div>
   );
 };
