@@ -13,6 +13,7 @@ import {
   Sparkles,
   Star,
   TrendingUp,
+  Users,
   Wrench,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
