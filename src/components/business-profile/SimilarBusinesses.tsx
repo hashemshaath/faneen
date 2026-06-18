@@ -9,6 +9,8 @@ interface SimilarBusinessesProps {
   currentBusinessId: string;
   cityId?: string | null;
   categorySlug?: string | null;
+  /** Primary taxonomy category ids — used to surface providers in the same specialty. */
+  categoryIds?: string[];
   cityName?: string;
   categoryName?: string;
 }
@@ -33,14 +35,31 @@ interface SimilarRow {
 export const SimilarBusinesses = ({
   currentBusinessId,
   cityId,
+  categoryIds,
   cityName,
   categoryName,
 }: SimilarBusinessesProps) => {
   const { isRTL, language } = useLanguage();
 
   const { data } = useQuery({
-    queryKey: ["business:similar", currentBusinessId, cityId],
+    queryKey: ["business:similar", currentBusinessId, cityId, (categoryIds ?? []).slice().sort().join(",")],
     queryFn: async (): Promise<SimilarRow[]> => {
+      // Same-specialty first: find businesses sharing any primary taxonomy
+      // category with the current one, then hydrate from businesses_public.
+      let candidateIds: string[] | null = null;
+      if (categoryIds && categoryIds.length > 0) {
+        const { data: links } = await supabase
+          .from("business_taxonomy_categories")
+          .select("business_id")
+          .in("category_id", categoryIds)
+          .neq("business_id", currentBusinessId)
+          .limit(200);
+        candidateIds = Array.from(
+          new Set(((links ?? []) as { business_id: string }[]).map((l) => l.business_id)),
+        );
+        if (candidateIds.length === 0) return [];
+      }
+
       let query = supabase
         .from("businesses_public")
         .select(
@@ -50,13 +69,30 @@ export const SimilarBusinesses = ({
         .eq("is_active", true)
         .order("rating_avg", { ascending: false })
         .limit(6);
+      if (candidateIds) query = query.in("id", candidateIds);
       if (cityId) query = query.eq("city_id", cityId);
       const { data, error } = await query;
       if (error) return [];
+      // If filtering by city yielded nothing, fall back to same-specialty
+      // without the city constraint so the section still surfaces peers.
+      if ((data ?? []).length === 0 && candidateIds && cityId) {
+        const { data: fb } = await supabase
+          .from("businesses_public")
+          .select(
+            "id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, cities(name_ar, name_en)"
+          )
+          .neq("id", currentBusinessId)
+          .eq("is_active", true)
+          .in("id", candidateIds)
+          .order("rating_avg", { ascending: false })
+          .limit(6);
+        return (fb ?? []) as unknown as SimilarRow[];
+      }
       return (data ?? []) as unknown as SimilarRow[];
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
+    enabled: !categoryIds || categoryIds.length > 0,
   });
 
   if (!data || data.length === 0) return null;
