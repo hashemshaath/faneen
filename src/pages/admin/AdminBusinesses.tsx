@@ -195,6 +195,9 @@ type AdminBranchFormState = {
   address: string;
   latitude: string | number;
   longitude: string | number;
+  complex_name: string;
+  complex_name_en: string;
+  site_number: string;
 };
 
 const AdminBusinesses = () => {
