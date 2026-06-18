@@ -13,6 +13,7 @@ import {
 } from '@/modules/taxonomy/project-services';
 import type { TaxonomyCategory } from '@/modules/taxonomy/types';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { ProjectCategoryTabs, type ProjectCategoryTab } from '@/components/project/ProjectCategoryTabs';
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -103,6 +104,26 @@ const Projects = () => {
     }
     return m;
   }, [taxonomyLinks]);
+
+  // Count projects per category (primary or secondary link), only across
+  // categories that are actually exposed in the picker. This drives the
+  // horizontal category tab strip and only renders categories that have at
+  // least one matching project.
+  const categoryTabs = useMemo<ProjectCategoryTab[]>(() => {
+    if (allProjects.length === 0) return [];
+    const counts = new Map<string, number>();
+    for (const ids of projectCategoryIds.values()) {
+      for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return categories
+      .map((c) => ({
+        id: c.id,
+        label: language === 'ar' ? c.name_ar : c.name_en,
+        count: counts.get(c.id) ?? 0,
+      }))
+      .filter((t) => t.count > 0)
+      .sort((a, b) => b.count - a.count);
+  }, [allProjects.length, categories, projectCategoryIds, language]);
 
   const filtered = useMemo(() => {
     const result = allProjects.filter((p) => {
