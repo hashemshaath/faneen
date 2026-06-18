@@ -299,7 +299,13 @@ const SearchV3 = () => {
 
   const handlePageChange = useCallback((p: number) => {
     setCurrentPage(p);
-    window.scrollTo({ top: 280, behavior: 'smooth' });
+    const target = document.getElementById('search-main');
+    if (target) {
+      const y = target.getBoundingClientRect().top + window.scrollY - 180;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 280, behavior: 'smooth' });
+    }
   }, []);
 
   const showChips = hasActiveFilters || query.trim();
