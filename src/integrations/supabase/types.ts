@@ -19146,6 +19146,7 @@ export type Database = {
             | null
           business_number: number | null
           city_id: string | null
+          company_size: string | null
           country_id: string | null
           cover_image_asset_id: string | null
           cover_image_variants: Json | null
@@ -19154,6 +19155,7 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           district: string | null
+          founded_year: number | null
           id: string | null
           is_active: boolean | null
           is_verified: boolean | null
@@ -19183,6 +19185,7 @@ export type Database = {
             | null
           business_number?: number | null
           city_id?: string | null
+          company_size?: string | null
           country_id?: string | null
           cover_image_asset_id?: string | null
           cover_image_variants?: Json | null
@@ -19191,6 +19194,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          founded_year?: number | null
           id?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null
@@ -19222,6 +19226,7 @@ export type Database = {
             | null
           business_number?: number | null
           city_id?: string | null
+          company_size?: string | null
           country_id?: string | null
           cover_image_asset_id?: string | null
           cover_image_variants?: Json | null
@@ -19230,6 +19235,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          founded_year?: number | null
           id?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null
