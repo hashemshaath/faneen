@@ -195,6 +195,9 @@ type AdminBranchFormState = {
   address: string;
   latitude: string | number;
   longitude: string | number;
+  complex_name: string;
+  complex_name_en: string;
+  site_number: string;
 };
 
 const AdminBusinesses = () => {
@@ -943,6 +946,7 @@ const AdminBusinesses = () => {
     country_id: '', city_id: '', region: '', district: '', street_name: '',
     building_number: '', national_id: '', additional_number: '', address: '',
     latitude: '', longitude: '',
+    complex_name: '', complex_name_en: '', site_number: '',
   });
 
   const saveBranchMutation = useMutation({
@@ -964,6 +968,9 @@ const AdminBusinesses = () => {
         national_id: branchForm.national_id || null, additional_number: branchForm.additional_number || null,
         address: branchForm.address || null, latitude: branchForm.latitude || null,
         longitude: branchForm.longitude || null,
+        complex_name: branchForm.complex_name || null,
+        complex_name_en: branchForm.complex_name_en || null,
+        site_number: branchForm.site_number || null,
       };
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
@@ -1629,6 +1636,9 @@ const AdminBusinesses = () => {
                         address: br.address || '',
                         latitude: (br as unknown as { latitude?: number | string | null }).latitude || '',
                         longitude: (br as unknown as { longitude?: number | string | null }).longitude || '',
+                        complex_name: (br as unknown as { complex_name?: string | null }).complex_name || '',
+                        complex_name_en: (br as unknown as { complex_name_en?: string | null }).complex_name_en || '',
+                        site_number: (br as unknown as { site_number?: string | null }).site_number || '',
                       });
                     }}
                     onDelete={(id) => deleteBranchMutation.mutate(id)}

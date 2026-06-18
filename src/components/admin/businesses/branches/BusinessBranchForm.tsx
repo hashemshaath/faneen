@@ -303,6 +303,9 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
           address: branchForm.address ?? null,
           address_en: branchForm.address_en ?? null,
           address_manual: branchForm.address_manual ?? false,
+          complex_name: branchForm.complex_name ?? null,
+          complex_name_en: branchForm.complex_name_en ?? null,
+          site_number: branchForm.site_number ?? null,
         } as NationalAddressValue}
         onChange={(next) =>
           setBranchForm((f) =>
@@ -323,6 +326,9 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
                   address: next.address ?? '',
                   address_en: next.address_en ?? '',
                   address_manual: next.address_manual ?? false,
+                  complex_name: next.complex_name ?? '',
+                  complex_name_en: next.complex_name_en ?? '',
+                  site_number: next.site_number ?? '',
                 }
               : f,
           )
