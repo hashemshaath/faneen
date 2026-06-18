@@ -174,6 +174,7 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
     items: [
       { id: 'content-center', labelAr: 'المحتوى والدليل', labelEn: 'Content', route: '/admin/content', icon: FolderTree, keywords: ['content', 'directory', 'taxonomy', 'brands', 'محتوى'] },
       { id: 'taxonomy', labelAr: 'الشجرة التصنيفية', labelEn: 'Taxonomy', route: '/admin/taxonomy', icon: FolderTree, hiddenInSidebar: true },
+      { id: 'project-categories', labelAr: 'تصنيفات المشاريع', labelEn: 'Project Categories', route: '/admin/project-categories', icon: FolderTree, keywords: ['projects', 'categories', 'تصنيفات', 'مشاريع'] },
       { id: 'categories', labelAr: 'الفئات', labelEn: 'Categories', route: '/admin/categories', icon: Layers, hiddenInSidebar: true },
       { id: 'tags', labelAr: 'الوسوم', labelEn: 'Tags', route: '/admin/tags', icon: Tag, hiddenInSidebar: true },
       { id: 'brands', labelAr: 'العلامات التجارية', labelEn: 'Brands', route: '/admin/brands', icon: Award, hiddenInSidebar: true },
