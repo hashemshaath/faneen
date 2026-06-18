@@ -794,13 +794,22 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
         </div>
       </TabsContent>
 
+      {/* Working hours */}
+      <TabsContent value="hours" className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          {t(isRTL,
+            'حدّد ساعات العمل الأسبوعية لهذا الفرع، وأضف استثناءات للأعياد والمناسبات. تظهر للزوار في صفحة المنشأة العامة.',
+            'Set this branch\u2019s weekly hours and add exceptions for holidays. Displayed on the public profile.')}
+        </p>
+        <WorkingHoursEditor
+          isRTL={isRTL}
+          value={form.working_hours}
+          onChange={(next: WorkingHours) => set('working_hours', next)}
+        />
+      </TabsContent>
+
       {/* Social */}
       <TabsContent value="social" className="space-y-4">
-        {null}
-      </TabsContent>
-      {/* Placeholder removed below */}
-      {/* Working hours */}
-      {/* @ts-expect-error tabs allow string */}
         <p className="text-xs text-muted-foreground">
           {t(isRTL,
             'حسابات السوشال ميديا الخاصة بهذا الفرع. تتجاوز حسابات الكيان الافتراضية عند الظهور في صفحة الفرع.',
