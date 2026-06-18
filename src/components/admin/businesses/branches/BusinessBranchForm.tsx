@@ -247,7 +247,14 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs">{pickBi(isRTL, 'الرقم الموحد', 'Unified Number')}</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">{pickBi(isRTL, 'الرقم الموحد', 'Unified Number')}</Label>
+            <UseMainBtn
+              mainValue={mainContact?.unified_number}
+              currentValue={branchForm.unified_number}
+              onApply={(v) => setBranchForm((f) => (f ? { ...f, unified_number: v } : f))}
+            />
+          </div>
           <Input
             value={branchForm.unified_number}
             onChange={(e) =>
@@ -258,18 +265,37 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
             placeholder="920xxxxxxx"
           />
         </div>
-        <PhoneField
-          value={parsePhoneValue(branchForm.customer_service_phone)}
-          onChange={(v) =>
-            setBranchForm((f) => (f ? { ...f, customer_service_phone: toE164(v) } : f))
-          }
-          label={pickBi(isRTL, 'خدمة العملاء', 'Customer Service')}
-          optional
-        />
+        <div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">{pickBi(isRTL, 'خدمة العملاء', 'Customer Service')}</Label>
+            <UseMainBtn
+              mainValue={mainContact?.customer_service_phone}
+              currentValue={branchForm.customer_service_phone}
+              onApply={(v) =>
+                setBranchForm((f) => (f ? { ...f, customer_service_phone: v } : f))
+              }
+            />
+          </div>
+          <PhoneField
+            value={parsePhoneValue(branchForm.customer_service_phone)}
+            onChange={(v) =>
+              setBranchForm((f) => (f ? { ...f, customer_service_phone: toE164(v) } : f))
+            }
+            label=""
+            optional
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs">{pickBi(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">{pickBi(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
+            <UseMainBtn
+              mainValue={mainContact?.email}
+              currentValue={branchForm.email}
+              onApply={(v) => setBranchForm((f) => (f ? { ...f, email: v } : f))}
+            />
+          </div>
           <Input
             value={branchForm.email}
             onChange={(e) =>
@@ -280,7 +306,14 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
           />
         </div>
         <div>
-          <Label className="text-xs">{pickBi(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">{pickBi(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
+            <UseMainBtn
+              mainValue={mainContact?.website}
+              currentValue={branchForm.website}
+              onApply={(v) => setBranchForm((f) => (f ? { ...f, website: v } : f))}
+            />
+          </div>
           <Input
             value={branchForm.website}
             onChange={(e) =>
