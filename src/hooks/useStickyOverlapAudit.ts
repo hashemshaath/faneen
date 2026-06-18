@@ -38,7 +38,11 @@ function auditOnce(): void {
   targets.forEach((el) => {
     const rect = el.getBoundingClientRect();
     if (rect.height === 0) return;
-    if (rect.top < headerBottom - 1 && rect.bottom > headerBottom) {
+    // Only warn when the *top edge* of the element is being covered by the
+    // header (i.e. element enters from below but its top is hidden).
+    // Elements that are simply tall enough to span past the header are not
+    // an overlap — they're normal scrolling content.
+    if (rect.top >= 0 && rect.top < headerBottom - 1) {
       // eslint-disable-next-line no-console
       console.warn(
         '[overlap-audit] header (bottom=%dpx) overlaps element',
