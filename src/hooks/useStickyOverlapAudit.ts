@@ -16,17 +16,19 @@ const HEADER_SELECTOR =
   '[data-sticky-header="search"], header[role="banner"], nav.fixed, nav[class*="fixed"]';
 
 function getHeaderBottom(): number {
-  const els = Array.from(document.querySelectorAll<HTMLElement>(HEADER_SELECTOR));
   let bottom = 0;
-  for (const el of els) {
+  // Fixed navbar — always counts when visible at the top of the viewport.
+  document.querySelectorAll<HTMLElement>('nav.fixed, nav[class*="fixed"]').forEach((el) => {
     const r = el.getBoundingClientRect();
-    if (r.height > 0 && r.top <= 0 + 1) {
-      // Only stuck/fixed strips (anchored at the top of the viewport)
-      bottom = Math.max(bottom, r.bottom);
-    } else if (r.top >= 0 && r.top < 4 && r.height > 0) {
-      bottom = Math.max(bottom, r.bottom);
-    }
-  }
+    if (r.height > 0 && r.top <= 1) bottom = Math.max(bottom, r.bottom);
+  });
+  // Tagged sticky strips — count when currently stuck (top within a few px
+  // of the viewport top OR overlapping the navbar bottom).
+  document.querySelectorAll<HTMLElement>('[data-sticky-header]').forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (r.height === 0) return;
+    if (r.top <= bottom + 2) bottom = Math.max(bottom, r.bottom);
+  });
   return bottom;
 }
 
