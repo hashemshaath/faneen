@@ -35,6 +35,13 @@ function toDate(d: string | null): string {
   try { return new Date(d).toISOString().split("T")[0]; } catch { return new Date().toISOString().split("T")[0]; }
 }
 
+/** Like toDate, but returns null when no real source date is available so
+ *  callers can omit <lastmod> instead of writing today as a fake value. */
+function toDateOrNull(d: string | null | undefined): string | null {
+  if (!d) return null;
+  try { return new Date(d).toISOString().split("T")[0]; } catch { return null; }
+}
+
 function wrapUrlset(entries: string[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
