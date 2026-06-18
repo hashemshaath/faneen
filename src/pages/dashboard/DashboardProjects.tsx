@@ -774,17 +774,7 @@ const DashboardProjects = () => {
                 </div>
 
                 {/* Category, City, Status */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{pickBi(isRTL, 'التصنيف', 'Category')}</Label>
-                    <Select value={form.taxonomy_category_id || 'none'} onValueChange={v => setForm(f => ({ ...f, taxonomy_category_id: v === 'none' ? '' : v }))}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder={pickBi(isRTL, 'غير مصنّف', 'Uncategorized')} /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{pickBi(isRTL, 'غير مصنّف', 'Uncategorized')}</SelectItem>
-                        {pickerCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{pickBi(isRTL, 'المدينة', 'City')}</Label>
                     <Select value={form.city_id || 'none'} onValueChange={v => setForm(f => ({ ...f, city_id: v === 'none' ? '' : v }))}>
@@ -805,6 +795,18 @@ const DashboardProjects = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Project categories — multi-select picker (one primary + many secondaries) */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5" />
+                    {pickBi(isRTL, 'تصنيفات المشروع', 'Project categories')}
+                  </Label>
+                  <ProjectCategoryPicker
+                    value={categorySelection}
+                    onChange={setCategorySelection}
+                  />
                 </div>
 
                 {/* Site link — connect project to a previously-saved site address */}
