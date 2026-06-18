@@ -104,6 +104,8 @@ const PUBLIC_BUSINESS_SELECT =
   'rating_avg, rating_count, created_at, ' +
   // public web presence
   'website, ' +
+  // optional public meta — founding year (years of experience) + company size
+  'founded_year, company_size, ' +
   // address (Contact tab + JSON-LD PostalAddress) — safe subset only
   'address, region, district, street_name, ' +
   // geo (Contact tab map + JSON-LD GeoCoordinates)
