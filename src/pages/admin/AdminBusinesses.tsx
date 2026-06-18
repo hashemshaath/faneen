@@ -1683,6 +1683,7 @@ const AdminBusinesses = () => {
                         complex_name: (br as unknown as { complex_name?: string | null }).complex_name || '',
                         complex_name_en: (br as unknown as { complex_name_en?: string | null }).complex_name_en || '',
                         site_number: (br as unknown as { site_number?: string | null }).site_number || '',
+                        working_hours: (br as unknown as { working_hours?: unknown }).working_hours,
                       });
                     }}
                     onDelete={(id) => deleteBranchMutation.mutate(id)}
@@ -1696,6 +1697,10 @@ const AdminBusinesses = () => {
                       email: editForm.email ?? editingBiz.email ?? null,
                       website: editForm.website ?? editingBiz.website ?? null,
                     }}
+                    onApplyHoursToAllBranches={(hours) =>
+                      applyHoursToAllBranchesMutation.mutate(hours as unknown)
+                    }
+                    applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
                   />
                 </TabsContent>
 
