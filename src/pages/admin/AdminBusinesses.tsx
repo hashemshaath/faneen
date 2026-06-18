@@ -1645,6 +1645,13 @@ const AdminBusinesses = () => {
                     onSave={() => saveBranchMutation.mutate()}
                     saving={saveBranchMutation.isPending}
                     emptyBranch={emptyBranch}
+                    mainContact={{
+                      unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
+                      customer_service_phone:
+                        editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
+                      email: editForm.email ?? editingBiz.email ?? null,
+                      website: editForm.website ?? editingBiz.website ?? null,
+                    }}
                   />
                 </TabsContent>
 
