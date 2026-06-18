@@ -683,12 +683,22 @@ export const BranchesTab = ({
       )}
       {visibleBranches.map((branch, index) => {
         const name = getLocalizedValue(language, branch.name_ar, branch.name_en);
+        const cityName = branch.cities
+          ? getLocalizedValue(language, branch.cities.name_ar, branch.cities.name_en)
+          : null;
         const addressParts = [
+          cityName,
           branch.district,
           branch.region,
           branch.street_name,
           branch.building_number && (language === "ar" ? `مبنى ${branch.building_number}` : `Bldg ${branch.building_number}`),
         ].filter(Boolean);
+        const mapHrefForAddress =
+          branch.latitude && branch.longitude
+            ? `https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`
+            : addressParts.length > 0
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, ...addressParts].join(", "))}`
+              : null;
 
         // Phone/email are masked + tel:/mailto: stripped for unauthenticated
         // visitors. Authenticated users see real values and trigger a
@@ -762,7 +772,19 @@ export const BranchesTab = ({
               {addressParts.length > 0 && (
                 <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
                   <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent/50" />
-                  <span dir="auto">{addressParts.join("، ")}</span>
+                  <span dir="auto" className="flex-1">{addressParts.join("، ")}</span>
+                  {mapHrefForAddress && (
+                    <a
+                      href={mapHrefForAddress}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent transition hover:bg-accent/15"
+                      aria-label={language === "ar" ? "الوصول للموقع عبر خرائط قوقل" : "Open in Google Maps"}
+                    >
+                      <Navigation className="h-3 w-3" />
+                      {language === "ar" ? "الوصول للموقع" : "Directions"}
+                    </a>
+                  )}
                 </div>
               )}
 
