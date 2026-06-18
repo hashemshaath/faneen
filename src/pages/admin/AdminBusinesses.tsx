@@ -968,6 +968,9 @@ const AdminBusinesses = () => {
         national_id: branchForm.national_id || null, additional_number: branchForm.additional_number || null,
         address: branchForm.address || null, latitude: branchForm.latitude || null,
         longitude: branchForm.longitude || null,
+        complex_name: branchForm.complex_name || null,
+        complex_name_en: branchForm.complex_name_en || null,
+        site_number: branchForm.site_number || null,
       };
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
