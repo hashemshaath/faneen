@@ -310,6 +310,41 @@ const SearchV3 = () => {
 
   const showChips = hasActiveFilters || query.trim();
 
+  // ── Indexable SEO summary (always rendered, even while skeleton ───
+  // is showing) so crawlers see real prose instead of placeholders. ──
+  const selectedCategoryName = useMemo(() => {
+    if (!categories || filters.categoryId === 'all') return null;
+    const c = categories.find((x) => x.id === filters.categoryId);
+    return c ? (isRTL ? c.name_ar : (c.name_en || c.name_ar)) : null;
+  }, [categories, filters.categoryId, isRTL]);
+
+  const selectedRegionName = useMemo(() => {
+    if (filters.regionId === 'all') return null;
+    const r = SA_REGIONS.find((x) => x.id === filters.regionId);
+    return r ? (isRTL ? r.name_ar : r.name_en) : null;
+  }, [filters.regionId, isRTL]);
+
+  const seoHeading = useMemo(() => {
+    const subject = query.trim() || selectedCategoryName || (sectorMeta?.name)
+      || bi('مزودي خدمات التصنيع والتشطيب', 'fabrication & finishing providers');
+    const place = cityMeta?.name || selectedRegionName || bi('المملكة العربية السعودية', 'Saudi Arabia');
+    return bi(`ابحث عن ${subject} في ${place}`, `Find ${subject} in ${place}`);
+  }, [query, selectedCategoryName, sectorMeta, cityMeta, selectedRegionName, bi]);
+
+  const seoSummary = useMemo(() => {
+    const count = deferred.length;
+    if (isLoading) {
+      return bi(
+        `يتم تحميل قائمة ${selectedCategoryName || sectorMeta?.name || 'المزودين'} ${cityMeta?.name ? `في ${cityMeta.name}` : 'في المملكة'}.`,
+        `Loading ${selectedCategoryName || sectorMeta?.name || 'providers'}${cityMeta?.name ? ` in ${cityMeta.name}` : ' in Saudi Arabia'}.`,
+      );
+    }
+    return bi(
+      `${count.toLocaleString('ar-EG')} مزوّد ${selectedCategoryName ? `لـ ${selectedCategoryName}` : ''} ${cityMeta?.name ? `في ${cityMeta.name}` : ''} على منصة قِطاعات للقطاعات الصناعية.`,
+      `${count.toLocaleString('en-US')} verified ${selectedCategoryName || 'industrial'} providers${cityMeta?.name ? ` in ${cityMeta.name}` : ' across Saudi Arabia'} on the Qitaat industrial directory.`,
+    );
+  }, [isLoading, deferred.length, selectedCategoryName, sectorMeta, cityMeta, bi]);
+
   // ── Render ──────────────────────────────────────────
   return (
     <div className="min-h-dvh bg-background">
@@ -345,6 +380,8 @@ const SearchV3 = () => {
       </SearchHeaderV3>
 
       <main id="search-main" className="container-app page-shell scroll-mt-44">
+        <h1 className="sr-only">{seoHeading}</h1>
+        <p className="sr-only">{seoSummary}</p>
         <div className="flex flex-col lg:flex-row gap-6">
           <aside
             className="hidden lg:block w-64 shrink-0 scroll-mt-44"
@@ -358,7 +395,6 @@ const SearchV3 = () => {
                 categories={categories}
                 cities={cities}
                 hasActiveFilters={hasActiveFilters}
-                loading={!categories || !cities}
               />
             </div>
           </aside>
