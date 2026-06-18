@@ -32,6 +32,11 @@ Allow: /privacy
 Allow: /terms
 
 Disallow: /search?q=
+Disallow: /search?sort=
+Disallow: /search?page=
+Disallow: /search?rating=
+Disallow: /search?verified=
+Disallow: /search?price=
 Disallow: /compare?ids=
 Disallow: /compare-profiles?ids=
 
