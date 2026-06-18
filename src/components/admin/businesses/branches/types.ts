@@ -73,6 +73,9 @@ export interface BranchFormState {
   complex_name?: string | null;
   complex_name_en?: string | null;
   site_number?: string | null;
+  /** JSONB blob stored in `business_branches.working_hours`. Shape is
+   *  validated/normalised by `@/modules/businesses/services/workingHours`. */
+  working_hours?: unknown;
 }
 
 export type BranchFormSetter = Dispatch<SetStateAction<BranchFormState | null>>;
