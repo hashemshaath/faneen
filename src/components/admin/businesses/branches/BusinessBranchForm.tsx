@@ -19,6 +19,7 @@ import type {
   BranchCountryOption,
   BranchFormSetter,
   BranchFormState,
+  BranchMainContact,
   BranchRow,
   BranchTypeId,
 } from './types';
@@ -37,6 +38,8 @@ export interface BusinessBranchFormProps {
   countries: BranchCountryOption[];
   onSave: () => void;
   saving: boolean;
+  /** Main-business contact values used to power the "use main" shortcuts. */
+  mainContact?: BranchMainContact;
 }
 
 export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
