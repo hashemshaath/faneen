@@ -84,46 +84,120 @@ Deno.serve(async (req) => {
     const entries: string[] = [];
 
     if (type === "static") {
-      const staticPages = [
-        { loc: "/", priority: "1.0", changefreq: "daily" },
-        { loc: "/search", priority: "0.9", changefreq: "daily" },
-        { loc: "/categories", priority: "0.9", changefreq: "weekly" },
-        { loc: "/offers", priority: "0.8", changefreq: "daily" },
-        { loc: "/projects", priority: "0.8", changefreq: "daily" },
-        { loc: "/blog", priority: "0.8", changefreq: "daily" },
-        { loc: "/guides", priority: "0.7", changefreq: "weekly" },
-        { loc: "/guides/heavy-equipment-rental-saudi-arabia", priority: "0.75", changefreq: "monthly" },
-        { loc: "/profile-systems", priority: "0.7", changefreq: "weekly" },
-        { loc: "/brands", priority: "0.85", changefreq: "daily" },
-        { loc: "/rentals", priority: "0.85", changefreq: "daily" },
-        { loc: "/compare", priority: "0.6", changefreq: "weekly" },
-        { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly" },
-        { loc: "/membership", priority: "0.6", changefreq: "monthly" },
-        { loc: "/for-providers", priority: "0.9", changefreq: "weekly" },
-        { loc: "/join-as-provider", priority: "0.8", changefreq: "weekly" },
-        { loc: "/about", priority: "0.5", changefreq: "monthly" },
-        { loc: "/contact", priority: "0.5", changefreq: "monthly" },
-        { loc: "/help", priority: "0.6", changefreq: "weekly" },
-        { loc: "/privacy", priority: "0.3", changefreq: "yearly" },
-        { loc: "/terms", priority: "0.3", changefreq: "yearly" },
+      // Compute a real lastmod for content-driven landing pages by reading
+      // the most-recent updated_at from the underlying public dataset.
+      // Pure marketing pages keep no <lastmod> (omission is valid per the
+      // sitemap spec and preferred over a fabricated date).
+      async function maxUpdated(table: string, filter?: (q: ReturnType<typeof supabase.from>) => unknown): Promise<string | null> {
+        try {
+          let q = supabase.from(table).select("updated_at").order("updated_at", { ascending: false }).limit(1);
+          if (filter) q = filter(q) as typeof q;
+          const { data } = await q;
+          return toDateOrNull(data?.[0]?.updated_at ?? null);
+        } catch { return null; }
+      }
+      const [
+        lmBusinesses, lmCategories, lmBlog, lmProjects, lmProfiles, lmBrands, lmRentals, lmHelp,
+      ] = await Promise.all([
+        maxUpdated("businesses", (q) => (q as { eq: (k: string, v: unknown) => unknown }).eq("approval_status", "published")),
+        maxUpdated("taxonomy_categories", (q) => (q as { eq: (k: string, v: unknown) => unknown }).eq("is_public", true)),
+        maxUpdated("blog_posts", (q) => (q as { eq: (k: string, v: unknown) => unknown }).eq("status", "published")),
+        maxUpdated("projects", (q) => (q as { eq: (k: string, v: unknown) => unknown }).eq("status", "published")),
+        maxUpdated("profile_systems", (q) => (q as { eq: (k: string, v: unknown) => unknown }).eq("status", "published")),
+        maxUpdated("brands_public"),
+        maxUpdated("rental_items", (q) => (q as { eq: (k: string, v: unknown) => unknown }).eq("is_published", true)),
+        maxUpdated("help_articles", (q) => (q as { eq: (k: string, v: unknown) => unknown }).eq("status", "published")),
+      ]);
+      const staticPages: Array<{ loc: string; priority: string; changefreq: string; lastmod: string | null }> = [
+        { loc: "/", priority: "1.0", changefreq: "daily", lastmod: lmBusinesses ?? lmBlog ?? null },
+        { loc: "/search", priority: "0.9", changefreq: "daily", lastmod: lmBusinesses },
+        { loc: "/categories", priority: "0.9", changefreq: "weekly", lastmod: lmCategories },
+        { loc: "/offers", priority: "0.8", changefreq: "daily", lastmod: lmBusinesses },
+        { loc: "/projects", priority: "0.8", changefreq: "daily", lastmod: lmProjects },
+        { loc: "/blog", priority: "0.8", changefreq: "daily", lastmod: lmBlog },
+        { loc: "/guides", priority: "0.7", changefreq: "weekly", lastmod: null },
+        { loc: "/guides/heavy-equipment-rental-saudi-arabia", priority: "0.75", changefreq: "monthly", lastmod: null },
+        { loc: "/profile-systems", priority: "0.7", changefreq: "weekly", lastmod: lmProfiles },
+        { loc: "/brands", priority: "0.85", changefreq: "daily", lastmod: lmBrands },
+        { loc: "/rentals", priority: "0.85", changefreq: "daily", lastmod: lmRentals },
+        { loc: "/compare", priority: "0.6", changefreq: "weekly", lastmod: null },
+        { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly", lastmod: null },
+        { loc: "/membership", priority: "0.6", changefreq: "monthly", lastmod: null },
+        { loc: "/for-providers", priority: "0.9", changefreq: "weekly", lastmod: null },
+        { loc: "/join-as-provider", priority: "0.8", changefreq: "weekly", lastmod: null },
+        { loc: "/about", priority: "0.5", changefreq: "monthly", lastmod: null },
+        { loc: "/contact", priority: "0.5", changefreq: "monthly", lastmod: null },
+        { loc: "/help", priority: "0.6", changefreq: "weekly", lastmod: lmHelp },
+        { loc: "/privacy", priority: "0.3", changefreq: "yearly", lastmod: null },
+        { loc: "/terms", priority: "0.3", changefreq: "yearly", lastmod: null },
       ];
       for (const p of staticPages) {
-        entries.push(entry(`${BASE}${p.loc}`, { lastmod: today, changefreq: p.changefreq, priority: p.priority }));
+        entries.push(entry(`${BASE}${p.loc}`, { lastmod: p.lastmod ?? undefined, changefreq: p.changefreq, priority: p.priority }));
       }
     } else if (type === "sectors") {
       const sectors = [
         "aluminum", "iron", "glass", "wood", "cabinets",
         "steel", "stainless-steel", "fabrication-installation",
       ];
-      const saCities = [
-        "riyadh","jeddah","makkah","madinah","dammam","khobar","taif",
-        "buraidah","tabuk","abha","khamis-mushait","hail","jazan","najran","yanbu",
+      // Map of SA city URL slug → cities.name_en (mirrors src/lib/sa-cities.ts).
+      // Only the cities present in this map can ever appear as
+      // /sectors/:sector/:city, and they're emitted only when there is
+      // at least one published, non-demo, active business in that city.
+      const saCities: Array<{ slug: string; name_en: string }> = [
+        { slug: "riyadh", name_en: "Riyadh" },
+        { slug: "jeddah", name_en: "Jeddah" },
+        { slug: "makkah", name_en: "Makkah" },
+        { slug: "madinah", name_en: "Madinah" },
+        { slug: "dammam", name_en: "Dammam" },
+        { slug: "khobar", name_en: "Khobar" },
+        { slug: "taif", name_en: "Taif" },
+        { slug: "buraidah", name_en: "Buraidah" },
+        { slug: "tabuk", name_en: "Tabuk" },
+        { slug: "abha", name_en: "Abha" },
+        { slug: "khamis-mushait", name_en: "Khamis Mushait" },
+        { slug: "hail", name_en: "Hail" },
+        { slug: "jazan", name_en: "Jazan" },
+        { slug: "najran", name_en: "Najran" },
+        { slug: "yanbu", name_en: "Yanbu" },
       ];
-      entries.push(entry(`${BASE}/sectors`, { lastmod: today, changefreq: "weekly", priority: "0.8" }));
+
+      // Pull every published business with city + updated_at, then group in
+      // memory: cheaper than 15+ round-trips and avoids RPC.
+      const { data: bizRows } = await supabase
+        .from("businesses")
+        .select("updated_at, cities!inner(name_en)")
+        .eq("is_active", true)
+        .eq("approval_status", "published")
+        .eq("is_demo", false)
+        .limit(50000);
+
+      const byCity = new Map<string, string>(); // name_en → max updated_at
+      let globalMax: string | null = null;
+      for (const row of (bizRows as Array<{ updated_at: string | null; cities: { name_en?: string } | null }> | null) ?? []) {
+        const name = row?.cities?.name_en ?? null;
+        const u = row?.updated_at ?? null;
+        if (!u) continue;
+        if (!globalMax || u > globalMax) globalMax = u;
+        if (!name) continue;
+        const prev = byCity.get(name);
+        if (!prev || u > prev) byCity.set(name, u);
+      }
+
+      const sectorsLm = toDateOrNull(globalMax) ?? undefined;
+      entries.push(entry(`${BASE}/sectors`, { lastmod: sectorsLm, changefreq: "weekly", priority: "0.8" }));
       for (const s of sectors) {
-        entries.push(entry(`${BASE}/sectors/${s}`, { lastmod: today, changefreq: "weekly", priority: "0.85" }));
+        entries.push(entry(`${BASE}/sectors/${s}`, { lastmod: sectorsLm, changefreq: "weekly", priority: "0.85" }));
         for (const c of saCities) {
-          entries.push(entry(`${BASE}/sectors/${s}/${c}`, { lastmod: today, changefreq: "weekly", priority: "0.75" }));
+          const lm = byCity.get(c.name_en);
+          // SAFE GATING: emit /sectors/:sector/:city ONLY when the city has
+          // at least one published business. Cities with no live content
+          // are intentionally omitted so we don't ship thin SEO pages.
+          if (!lm) continue;
+          entries.push(entry(`${BASE}/sectors/${s}/${c.slug}`, {
+            lastmod: toDateOrNull(lm) ?? undefined,
+            changefreq: "weekly",
+            priority: "0.75",
+          }));
         }
       }
     } else if (type === "services") {
@@ -132,9 +206,9 @@ Deno.serve(async (req) => {
         "steel-canopies","iron-gates","glass-shopfronts","glass-shower-cabins",
         "wood-doors","wood-flooring","kitchen-cabinets","wardrobes",
       ];
-      entries.push(entry(`${BASE}/services`, { lastmod: today, changefreq: "weekly", priority: "0.8" }));
+      entries.push(entry(`${BASE}/services`, { changefreq: "weekly", priority: "0.8" } as { changefreq: string; priority: string }));
       for (const s of services) {
-        entries.push(entry(`${BASE}/services/${s}`, { lastmod: today, changefreq: "weekly", priority: "0.7" }));
+        entries.push(entry(`${BASE}/services/${s}`, { changefreq: "weekly", priority: "0.7" } as { changefreq: string; priority: string }));
       }
     } else if (type === "businesses") {
       // SEO-1 — align with `businesses_public` filters so pending / rejected /
@@ -238,7 +312,7 @@ Deno.serve(async (req) => {
       // Per-category SEO landing pages for /profile-systems.
       const profileCategories = ["aluminum", "kitchen", "iron", "glass", "wood", "upvc"];
       for (const c of profileCategories) {
-        entries.push(entry(`${BASE}/profile-systems/category/${c}`, { lastmod: today, changefreq: "weekly", priority: "0.75" }));
+        entries.push(entry(`${BASE}/profile-systems/category/${c}`, { changefreq: "weekly", priority: "0.75" } as { changefreq: string; priority: string }));
       }
     } else if (type === "projects") {
       const { data } = await supabase.from("projects").select("id, updated_at").eq("status", "published").order("created_at", { ascending: false }).limit(10000);
@@ -299,7 +373,7 @@ Deno.serve(async (req) => {
       // Public rental items: only published & approved entries with a real SEO slug.
       // Mirrors the filters used by RentalItems.listPublishedItems / getPublishedItemBySlug
       // so the sitemap never advertises pending / rejected / unpublished items.
-      entries.push(entry(`${BASE}/rentals`, { lastmod: today, changefreq: "daily", priority: "0.85" }));
+      entries.push(entry(`${BASE}/rentals`, { changefreq: "daily", priority: "0.85" } as { changefreq: string; priority: string }));
       const { data, error } = await supabase
         .from("rental_items")
         .select("seo_slug, updated_at")
