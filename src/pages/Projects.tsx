@@ -277,6 +277,16 @@ const Projects = () => {
             </Button>
           </div>
 
+          {/* Category tabs — quick grouping by primary taxonomy */}
+          {categoryTabs.length > 1 && (
+            <ProjectCategoryTabs
+              tabs={categoryTabs}
+              value={selectedCategory}
+              onChange={(id) => { setSelectedCategory(id); setCurrentPage(1); }}
+              size="md"
+            />
+          )}
+
           {/* Expandable filters */}
           <div className={`transition-all duration-300 overflow-hidden ${showFilters ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 sm:max-h-[500px] sm:opacity-100'}`}>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
