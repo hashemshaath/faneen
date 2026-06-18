@@ -765,6 +765,14 @@ export const BranchesTab = ({
                   <span dir="auto">{addressParts.join("، ")}</span>
                 </div>
               )}
+
+              <div className="mt-3">
+                <WorkingHoursDisplay
+                  isRTL={language === "ar"}
+                  value={(branch as { working_hours?: unknown }).working_hours}
+                  compact
+                />
+              </div>
             </div>
 
             {contactItems.length > 0 && (
