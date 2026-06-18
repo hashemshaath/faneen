@@ -690,7 +690,7 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
 
   return (
     <Tabs defaultValue="basic" className="w-full">
-      <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-4 w-full">
+      <TabsList className="grid grid-cols-2 md:grid-cols-6 mb-4 w-full">
         <TabsTrigger value="basic">{t(isRTL, 'أساسي', 'Basic')}</TabsTrigger>
         <TabsTrigger value="contact">{t(isRTL, 'التواصل', 'Contact')}</TabsTrigger>
         <TabsTrigger value="address">{t(isRTL, 'العنوان', 'Address')}</TabsTrigger>
