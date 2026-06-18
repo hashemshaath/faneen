@@ -55,7 +55,36 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
   countries,
   onSave,
   saving,
+  mainContact,
 }) => {
+  /** Inline "use main" pill: copies a value from the parent business
+   *  into the branch form so admins don't re-type customer service /
+   *  unified number / email / website per branch. Hidden when the
+   *  branch IS the main one, when no main value exists, or when the
+   *  branch already mirrors the main value. */
+  const UseMainBtn: React.FC<{
+    mainValue: string | null | undefined;
+    currentValue: string;
+    onApply: (v: string) => void;
+  }> = ({ mainValue, currentValue, onApply }) => {
+    const trimmed = (mainValue ?? '').trim();
+    if (!trimmed) return null;
+    if (branchForm.is_main) return null;
+    if (currentValue.trim() === trimmed) return null;
+    return (
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        className="h-5 px-1.5 text-[10px] gap-1 text-muted-foreground hover:text-primary"
+        onClick={() => onApply(trimmed)}
+        title={pickBi(isRTL, 'استخدام بيانات المركز الرئيسي', 'Use main location value')}
+      >
+        {pickBi(isRTL, 'استخدم الرئيسي', 'Use main')}
+      </Button>
+    );
+  };
+
   return (
     <div className="space-y-3 p-4 rounded-xl border border-primary/30 bg-primary/[0.03]">
       <div className="flex items-center justify-between">
