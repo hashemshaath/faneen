@@ -21,7 +21,7 @@ import {
 import { useSearchTaxonomyContext, useBusinessTaxonomyDisplayBatch } from '@/modules/taxonomy/search-integration';
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
 import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
-import { findRegionForCity } from '@/data/sa-regions';
+import { findRegionForCity, SA_REGIONS } from '@/data/sa-regions';
 import { track } from '@/lib/analytics-events';
 import { SearchHeaderV3, type ViewModeV3 } from '@/components/search/v3/SearchHeaderV3';
 import { SearchFiltersV3 } from '@/components/search/v3/SearchFiltersV3';
