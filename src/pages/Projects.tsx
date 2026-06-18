@@ -14,6 +14,7 @@ import {
 import type { TaxonomyCategory } from '@/modules/taxonomy/types';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ProjectCategoryTabs, type ProjectCategoryTab } from '@/components/project/ProjectCategoryTabs';
+import { useProjectSortPref, sortProjects } from '@/hooks/useProjectSortPref';
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -47,10 +48,6 @@ const ProjectSkeleton = () => (
 
 const Projects = () => {
   const { isRTL, language } = useLanguage();
-  usePageMeta({
-    title: buildSeoTitle({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en', name: language === 'ar' ? 'المشاريع - معرض أعمال الألمنيوم والحديد' : 'Projects - Aluminum & Iron Portfolio' }),
-    description: buildSeoDescription({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en', customDescription: language === 'ar' ? 'تصفح مشاريع وأعمال مصانع ومحلات الألمنيوم والحديد والزجاج والخشب.' : 'Browse aluminum, iron, glass and wood projects and portfolios.' }),
-  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
@@ -59,6 +56,7 @@ const Projects = () => {
   const [maxCost, setMaxCost] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [tabSort, setTabSort] = useProjectSortPref('public');
 
   // Phase 8: filter source is taxonomy-only. Pulls primary-activity /
   // sector categories visible in search or registration. Projects are
@@ -125,8 +123,41 @@ const Projects = () => {
       .sort((a, b) => b.count - a.count);
   }, [allProjects.length, categories, projectCategoryIds, language]);
 
+  // ─── Dynamic SEO based on selected category tab ───
+  // Title / description / canonical and JSON-LD all rebuild when the
+  // user filters by a category so each tab has its own indexable
+  // signature (CollectionPage + BreadcrumbList).
+  const selectedCategoryName = useMemo(() => {
+    if (selectedCategory === 'all') return null;
+    const c = categories.find((cat) => cat.id === selectedCategory);
+    if (!c) return null;
+    return language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
+  }, [categories, selectedCategory, language]);
+
+  usePageMeta({
+    title: selectedCategoryName
+      ? buildSeoTitle({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en',
+          name: language === 'ar'
+            ? `مشاريع ${selectedCategoryName} - معرض الأعمال`
+            : `${selectedCategoryName} Projects - Portfolio` })
+      : buildSeoTitle({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en',
+          name: language === 'ar' ? 'المشاريع - معرض أعمال الألمنيوم والحديد' : 'Projects - Aluminum & Iron Portfolio' }),
+    description: selectedCategoryName
+      ? buildSeoDescription({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en',
+          customDescription: language === 'ar'
+            ? `أمثلة على مشاريع ${selectedCategoryName} المنجزة من مزوّدين موثوقين.`
+            : `Completed ${selectedCategoryName} project examples from verified providers.` })
+      : buildSeoDescription({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en',
+          customDescription: language === 'ar'
+            ? 'تصفح مشاريع وأعمال مصانع ومحلات الألمنيوم والحديد والزجاج والخشب.'
+            : 'Browse aluminum, iron, glass and wood projects and portfolios.' }),
+    canonical: selectedCategoryName
+      ? `${SITE_URL}/projects?category=${encodeURIComponent(selectedCategory)}`
+      : `${SITE_URL}/projects`,
+  });
+
   const filtered = useMemo(() => {
-    const result = allProjects.filter((p) => {
+    let result = allProjects.filter((p) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const match = p.title_ar?.toLowerCase().includes(q) ||
@@ -154,9 +185,12 @@ const Projects = () => {
       result.sort((a, b) => (Number(a.project_cost) || 0) - (Number(b.project_cost) || 0));
     } else if (sortBy === 'oldest') {
       result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    } else {
+      // Tab sort wins when no explicit cost/oldest is chosen.
+      result = sortProjects(result, tabSort);
     }
     return result;
-  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy, projectCategoryIds]);
+  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy, projectCategoryIds, tabSort]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const projects = useMemo(() => {
@@ -164,20 +198,37 @@ const Projects = () => {
     return filtered.slice(start, start + ITEMS_PER_PAGE);
   }, [filtered, currentPage]);
 
-  // SEO-9 — ItemList JSON-LD for the visible page of projects.
-  // Source: `projects` table filtered server-side by status='published'.
-  // Only enumerates items currently rendered on this page, in the same order.
+  // SEO-9 — ItemList + (optionally) CollectionPage JSON-LD for the
+  // visible page of projects. The Breadcrumb and CollectionPage now
+  // reflect the selected category tab so each filter has its own
+  // schema signature.
   useMultiJsonLd([
     buildBreadcrumbList(
-      [{ name: isRTL ? 'المشاريع' : 'Projects', url: '/projects' }],
+      selectedCategoryName
+        ? [
+            { name: isRTL ? 'المشاريع' : 'Projects', url: '/projects' },
+            { name: selectedCategoryName, url: `/projects?category=${encodeURIComponent(selectedCategory)}` },
+          ]
+        : [{ name: isRTL ? 'المشاريع' : 'Projects', url: '/projects' }],
       { homeName: isRTL ? 'الرئيسية' : 'Home', id: `${SITE_URL}/projects#breadcrumb` },
     )!,
+    ...(selectedCategoryName
+      ? [{
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          '@id': `${SITE_URL}/projects?category=${encodeURIComponent(selectedCategory)}#collection`,
+          name: isRTL ? `مشاريع ${selectedCategoryName}` : `${selectedCategoryName} Projects`,
+          isPartOf: { '@id': `${SITE_URL}/projects` },
+        }]
+      : []),
     ...(projects.length > 0
       ? [{
           '@context': 'https://schema.org',
           '@type': 'ItemList',
           '@id': `${SITE_URL}/projects#projects`,
-          name: isRTL ? 'المشاريع المنجزة' : 'Completed Projects',
+          name: selectedCategoryName
+            ? (isRTL ? `مشاريع ${selectedCategoryName}` : `${selectedCategoryName} Projects`)
+            : (isRTL ? 'المشاريع المنجزة' : 'Completed Projects'),
           numberOfItems: projects.filter((p) => p?.id).length,
           itemListElement: projects
             .filter((p) => !!p?.id)
@@ -284,6 +335,8 @@ const Projects = () => {
               value={selectedCategory}
               onChange={(id) => { setSelectedCategory(id); setCurrentPage(1); }}
               size="md"
+              sortValue={tabSort}
+              onSortChange={(v) => { setTabSort(v); setCurrentPage(1); }}
             />
           )}
 

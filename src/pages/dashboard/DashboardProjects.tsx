@@ -17,6 +17,8 @@ import {
 } from '@/modules/taxonomy/project-services';
 import type { TaxonomyCategory } from '@/modules/taxonomy/types';
 import { ProjectCategoryTabs, type ProjectCategoryTab } from '@/components/project/ProjectCategoryTabs';
+import { ProjectCategoryPicker, type ProjectCategoryPickerValue } from '@/components/project/ProjectCategoryPicker';
+import { useProjectSortPref, sortProjects } from '@/hooks/useProjectSortPref';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -220,6 +222,7 @@ const DashboardProjects = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [tabSort, setTabSort] = useProjectSortPref('dashboard');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -233,6 +236,9 @@ const DashboardProjects = () => {
     taxonomy_category_id: '',
   }), []);
   const [form, setForm] = useState(emptyForm);
+  const [categorySelection, setCategorySelection] = useState<ProjectCategoryPickerValue>({
+    primaryId: null, secondaryIds: [],
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -396,8 +402,8 @@ const DashboardProjects = () => {
       const q = searchQuery.toLowerCase();
       result = result.filter((p) => p.title_ar.toLowerCase().includes(q) || (p.title_en || '').toLowerCase().includes(q) || (p.client_name || '').toLowerCase().includes(q));
     }
-    return result;
-  }, [projects, statusFilter, categoryFilter, searchQuery]);
+    return sortProjects(result, tabSort);
+  }, [projects, statusFilter, categoryFilter, searchQuery, tabSort]);
 
   /* ─── Mutations ─── */
   const saveMut = useMutation({
@@ -420,18 +426,25 @@ const DashboardProjects = () => {
         site_id: form.site_id || null,
         is_featured: form.is_featured, currency_code: form.currency_code,
       };
-      const taxonomyId = form.taxonomy_category_id || null;
+      const primaryId = categorySelection.primaryId || form.taxonomy_category_id || null;
+      const secondaryIds = categorySelection.secondaryIds;
       if (editId) {
         const { error } = await supabase.from('projects').update(payload).eq('id', editId);
         if (error) throw error;
-        await setProjectTaxonomyCategories(editId, { primaryCategoryId: taxonomyId });
+        await setProjectTaxonomyCategories(editId, {
+          primaryCategoryId: primaryId,
+          secondaryCategoryIds: secondaryIds,
+        });
       } else {
         (payload as any).sort_order = projects.length;
         const { data: inserted, error } = await supabase
           .from('projects').insert(payload as any).select('id').single();
         if (error) throw error;
         if (inserted?.id) {
-          await setProjectTaxonomyCategories(inserted.id, { primaryCategoryId: taxonomyId });
+          await setProjectTaxonomyCategories(inserted.id, {
+            primaryCategoryId: primaryId,
+            secondaryCategoryIds: secondaryIds,
+          });
         }
       }
     },
@@ -462,12 +475,20 @@ const DashboardProjects = () => {
   });
 
   /* ─── Callbacks ─── */
-  const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, [emptyForm]);
+  const closeForm = useCallback(() => {
+    setShowForm(false);
+    setEditId(null);
+    setForm(emptyForm);
+    setCategorySelection({ primaryId: null, secondaryIds: [] });
+  }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
   const openEdit = useCallback(async (p) => {
     const links = await getProjectTaxonomyCategories(p.id);
     const primary = links.find((l) => l.role === 'primary_activity');
+    const secondaryIds = links
+      .filter((l) => l.role !== 'primary_activity')
+      .map((l) => l.category_id);
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
@@ -479,6 +500,7 @@ const DashboardProjects = () => {
       is_featured: p.is_featured || false, currency_code: p.currency_code || 'SAR',
       taxonomy_category_id: primary?.category_id || '',
     });
+    setCategorySelection({ primaryId: primary?.category_id ?? null, secondaryIds });
     setEditId(p.id);
     setShowForm(true);
     scrollToForm();
@@ -487,6 +509,9 @@ const DashboardProjects = () => {
   const duplicateProject = useCallback(async (p) => {
     const links = await getProjectTaxonomyCategories(p.id);
     const primary = links.find((l) => l.role === 'primary_activity');
+    const secondaryIds = links
+      .filter((l) => l.role !== 'primary_activity')
+      .map((l) => l.category_id);
     setEditId(null);
     setForm({
       title_ar: p.title_ar + (pickBi(isRTL, ' (نسخة)', ' (copy)')),
@@ -503,6 +528,7 @@ const DashboardProjects = () => {
       is_featured: false, currency_code: p.currency_code || 'SAR',
       taxonomy_category_id: primary?.category_id || '',
     });
+    setCategorySelection({ primaryId: primary?.category_id ?? null, secondaryIds });
     setShowForm(true);
     scrollToForm();
   }, [isRTL, scrollToForm]);

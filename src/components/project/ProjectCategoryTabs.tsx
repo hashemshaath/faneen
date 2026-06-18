@@ -1,7 +1,11 @@
 import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, FolderOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FolderOpen, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
+import type { ProjectSortValue } from '@/hooks/useProjectSortPref';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 export interface ProjectCategoryTab {
   id: string;
@@ -19,6 +23,9 @@ interface Props {
   alwaysShowAll?: boolean;
   className?: string;
   size?: 'sm' | 'md';
+  /** Optional inline sort control rendered next to the tab strip. */
+  sortValue?: ProjectSortValue;
+  onSortChange?: (v: ProjectSortValue) => void;
 }
 
 /**
@@ -31,13 +38,17 @@ interface Props {
  */
 export const ProjectCategoryTabs = ({
   tabs, value, onChange, allId = 'all', alwaysShowAll = false, className, size = 'md',
+  sortValue, onSortChange,
 }: Props) => {
   const { isRTL } = useLanguage();
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  if (tabs.length === 0 && !alwaysShowAll) return null;
-  // No grouping value if there is only one bucket — hide entirely.
-  if (tabs.length <= 1 && !alwaysShowAll) return null;
+  const showSort = !!(sortValue && onSortChange);
+  // Hide entirely when there are no useful tabs and the sort control
+  // isn't wired. With the sort control wired, we still render so the user
+  // can change ordering even when there's a single bucket.
+  if (tabs.length === 0 && !alwaysShowAll && !showSort) return null;
+  if (tabs.length <= 1 && !alwaysShowAll && !showSort) return null;
 
   const totalCount = tabs.reduce((acc, t) => acc + t.count, 0);
   const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -122,6 +133,22 @@ export const ProjectCategoryTabs = ({
       >
         <NextIcon className="w-3.5 h-3.5" />
       </button>
+      {showSort && (
+        <Select value={sortValue} onValueChange={(v) => onSortChange?.(v as ProjectSortValue)}>
+          <SelectTrigger
+            className="h-7 w-auto gap-1 border-border/40 bg-card text-[11px] shrink-0"
+            aria-label={isRTL ? 'ترتيب المشاريع' : 'Sort projects'}
+          >
+            <ArrowUpDown className="w-3 h-3 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align={isRTL ? 'end' : 'start'}>
+            <SelectItem value="newest">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
+            <SelectItem value="top_rated">{isRTL ? 'الأعلى تقييماً' : 'Top rated'}</SelectItem>
+            <SelectItem value="most_completed">{isRTL ? 'الأكثر إنجازاً' : 'Most completed'}</SelectItem>
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 };
