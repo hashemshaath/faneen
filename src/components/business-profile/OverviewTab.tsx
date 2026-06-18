@@ -95,7 +95,6 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
     (g) => g.secondaries.length > 0 || g.services.length > 0 || g.primary,
   );
   const memberYear = new Date(business.created_at).getFullYear();
-  const yearsActive = Math.max(1, new Date().getFullYear() - memberYear + 1);
 
   // Optional public meta. `founded_year` is owner-entered (real years of
   // experience); `company_size` follows the Muqawil-style classification
