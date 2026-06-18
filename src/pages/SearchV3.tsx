@@ -360,7 +360,7 @@ const SearchV3 = () => {
     }
     return blocks;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, sectorMeta, allSectorKeywords, filtered]));
+  }, [language, sectorMeta, allSectorKeywords, filtered, categories, cities, bi]));
 
   // ── Pagination + did-you-mean + visible taxonomy ────
   const totalPages = Math.max(1, Math.ceil(deferred.length / ITEMS_PER_PAGE));
