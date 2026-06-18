@@ -27,6 +27,7 @@ import { SearchHeaderV3, type ViewModeV3 } from '@/components/search/v3/SearchHe
 import { SearchFiltersV3 } from '@/components/search/v3/SearchFiltersV3';
 import { SearchResultsV3 } from '@/components/search/v3/SearchResultsV3';
 import { ActiveFiltersBarV3 } from '@/components/search/v3/ActiveFiltersBarV3';
+import { useStickyOverlapAudit } from '@/hooks/useStickyOverlapAudit';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -35,6 +36,9 @@ const SearchV3 = () => {
   const bi = useBi();
   const isRTL = language === 'ar';
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Dev-only: warn in console if the sticky header ever overlaps tagged content.
+  useStickyOverlapAudit();
 
   // ── URL state ───────────────────────────────────────
   const initialQ = searchParams.get('q') || '';
@@ -295,7 +299,13 @@ const SearchV3 = () => {
 
   const handlePageChange = useCallback((p: number) => {
     setCurrentPage(p);
-    window.scrollTo({ top: 280, behavior: 'smooth' });
+    const target = document.getElementById('search-main');
+    if (target) {
+      const y = target.getBoundingClientRect().top + window.scrollY - 180;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 280, behavior: 'smooth' });
+    }
   }, []);
 
   const showChips = hasActiveFilters || query.trim();
@@ -334,9 +344,12 @@ const SearchV3 = () => {
         ) : null}
       </SearchHeaderV3>
 
-      <main className="container-app page-shell">
+      <main id="search-main" className="container-app page-shell scroll-mt-44">
         <div className="flex flex-col lg:flex-row gap-6">
-          <aside className="hidden lg:block w-64 shrink-0">
+          <aside
+            className="hidden lg:block w-64 shrink-0 scroll-mt-44"
+            data-overlap-audit="filters"
+          >
             <div className="sticky top-44 rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--elev-1)]">
               <SearchFiltersV3
                 filters={filters}
@@ -345,11 +358,15 @@ const SearchV3 = () => {
                 categories={categories}
                 cities={cities}
                 hasActiveFilters={hasActiveFilters}
+                loading={!categories || !cities}
               />
             </div>
           </aside>
 
-          <section className="flex-1 min-w-0">
+          <section
+            className="flex-1 min-w-0 scroll-mt-44"
+            data-overlap-audit="results"
+          >
             <SearchResultsV3
               businesses={paginated}
               isLoading={isLoading}

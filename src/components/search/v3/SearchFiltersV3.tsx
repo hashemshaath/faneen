@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/select';
 import { SA_REGIONS } from '@/data/sa-regions';
 import type { SearchFilterValues } from '@/services/search/useSearch';
+import { SearchFiltersSkeletonV3 } from './SearchFiltersSkeletonV3';
 
 interface CatLite { id: string; slug: string; name_ar: string; name_en: string; parent_id: string | null }
 interface CityLite { id: string; name_ar: string; name_en: string }
@@ -18,6 +19,7 @@ interface Props {
   categories?: CatLite[];
   cities?: CityLite[];
   hasActiveFilters: boolean;
+  loading?: boolean;
 }
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
@@ -27,7 +29,7 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 );
 
 export const SearchFiltersV3 = ({
-  filters, onFilterChange, onClearFilters, categories, cities, hasActiveFilters,
+  filters, onFilterChange, onClearFilters, categories, cities, hasActiveFilters, loading,
 }: Props) => {
   const { language } = useLanguage();
   const bi = useBi();
@@ -49,6 +51,8 @@ export const SearchFiltersV3 = ({
     ),
     [cities, language],
   );
+
+  if (loading) return <SearchFiltersSkeletonV3 />;
 
   return (
     <div className="space-y-5">
