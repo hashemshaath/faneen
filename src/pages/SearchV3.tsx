@@ -295,6 +295,51 @@ const SearchV3 = () => {
       ),
     });
 
+    // ItemList of top category filters — gives crawlers a structured
+    // view of the most-used "Sector" filter options as indexable links.
+    if (Array.isArray(categories) && categories.length > 0) {
+      const topCats = categories.filter((c) => !c.parent_id).slice(0, 12);
+      if (topCats.length > 0) {
+        blocks.push({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: bi('فلاتر القطاعات', 'Sector filters'),
+          numberOfItems: topCats.length,
+          itemListElement: topCats.map((c, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `https://qitaat.com/sectors/${c.slug}`,
+            name: language === 'ar' ? c.name_ar : (c.name_en || c.name_ar),
+          })),
+        });
+      }
+    }
+
+    // ItemList of top city filters as Place entities — surfaces the
+    // city-scoped filter options to search engines.
+    if (Array.isArray(cities) && cities.length > 0) {
+      const topCities = cities.slice(0, 15);
+      blocks.push({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: bi('فلاتر المدن', 'City filters'),
+        numberOfItems: topCities.length,
+        itemListElement: topCities.map((c, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          item: {
+            '@type': 'Place',
+            name: language === 'ar' ? c.name_ar : (c.name_en || c.name_ar),
+            address: {
+              '@type': 'PostalAddress',
+              addressCountry: 'SA',
+              addressLocality: language === 'ar' ? c.name_ar : (c.name_en || c.name_ar),
+            },
+          },
+        })),
+      });
+    }
+
     if (filtered.length > 0) {
       const top = filtered.slice(0, 10);
       blocks.push({
@@ -315,7 +360,7 @@ const SearchV3 = () => {
     }
     return blocks;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, sectorMeta, allSectorKeywords, filtered]));
+  }, [language, sectorMeta, allSectorKeywords, filtered, categories, cities, bi]));
 
   // ── Pagination + did-you-mean + visible taxonomy ────
   const totalPages = Math.max(1, Math.ceil(deferred.length / ITEMS_PER_PAGE));
