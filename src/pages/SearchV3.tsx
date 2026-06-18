@@ -28,6 +28,8 @@ import { SearchFiltersV3 } from '@/components/search/v3/SearchFiltersV3';
 import { SearchResultsV3 } from '@/components/search/v3/SearchResultsV3';
 import { ActiveFiltersBarV3 } from '@/components/search/v3/ActiveFiltersBarV3';
 import { useStickyOverlapAudit } from '@/hooks/useStickyOverlapAudit';
+import { LoadingProgressV3 } from '@/components/search/v3/LoadingProgressV3';
+import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -328,6 +330,13 @@ const SearchV3 = () => {
 
   const showChips = hasActiveFilters || query.trim();
 
+  // Progressive readiness — each step flips as soon as its query resolves.
+  const loadingSteps = useMemo(() => ([
+    { label: bi('الفئات', 'Categories'), ready: Array.isArray(categories) },
+    { label: bi('المدن', 'Cities'), ready: Array.isArray(cities) },
+    { label: bi('المزوّدون', 'Providers'), ready: !isLoading },
+  ]), [categories, cities, isLoading, bi]);
+
   // ── Indexable SEO summary (always rendered, even while skeleton ───
   // is showing) so crawlers see real prose instead of placeholders. ──
   const selectedCategoryName = useMemo(() => {
@@ -398,8 +407,9 @@ const SearchV3 = () => {
       </SearchHeaderV3>
 
       <main id="search-main" className="container-app page-shell scroll-mt-44">
-        <h1 className="sr-only">{seoHeading}</h1>
-        <p className="sr-only">{seoSummary}</p>
+        <h1 className="sr-only" data-testid="search-seo-h1">{seoHeading}</h1>
+        <p className="sr-only" data-testid="search-seo-summary">{seoSummary}</p>
+        <LoadingProgressV3 steps={loadingSteps} />
         <div className="flex flex-col lg:flex-row gap-6">
           <aside
             className="hidden lg:block w-64 shrink-0 scroll-mt-44"
@@ -414,6 +424,7 @@ const SearchV3 = () => {
                 cities={cities}
                 hasActiveFilters={hasActiveFilters}
               />
+              <SearchSeoLinksV3 />
             </div>
           </aside>
 
