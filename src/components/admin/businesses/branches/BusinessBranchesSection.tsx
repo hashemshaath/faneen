@@ -9,6 +9,7 @@ import type {
   BranchCountryOption,
   BranchFormSetter,
   BranchFormState,
+  BranchMainContact,
   BranchRow,
   BranchTypeId,
 } from './types';
@@ -32,6 +33,9 @@ export interface BusinessBranchesSectionProps {
   onSave: () => void;
   saving: boolean;
   emptyBranch: () => BranchFormState;
+  /** Contact values of the parent business; used to power per-field
+   *  "Use main" shortcuts in the inline branch form. */
+  mainContact?: BranchMainContact;
 }
 
 export const BusinessBranchesSection: React.FC<BusinessBranchesSectionProps> = ({
@@ -51,6 +55,7 @@ export const BusinessBranchesSection: React.FC<BusinessBranchesSectionProps> = (
   onSave,
   saving,
   emptyBranch,
+  mainContact,
 }) => {
   return (
     <div className="space-y-4 mt-3">
@@ -83,6 +88,7 @@ export const BusinessBranchesSection: React.FC<BusinessBranchesSectionProps> = (
           countries={countries}
           onSave={onSave}
           saving={saving}
+          mainContact={mainContact}
         />
       ) : (
         <Button

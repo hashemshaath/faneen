@@ -82,3 +82,13 @@ export interface BranchCountryOption {
   name_ar: string;
   name_en: string;
 }
+
+/** Phase 5D+ — main-business contact values used to offer "use main"
+ *  shortcuts in the branch form (avoid duplicating unified number,
+ *  customer service phone, email, and website across branches). */
+export interface BranchMainContact {
+  unified_number?: string | null;
+  customer_service_phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+}
