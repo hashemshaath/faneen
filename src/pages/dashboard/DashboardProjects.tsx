@@ -1012,6 +1012,8 @@ const DashboardProjects = () => {
                 value={categoryFilter}
                 onChange={setCategoryFilter}
                 size="sm"
+                sortValue={tabSort}
+                onSortChange={setTabSort}
               />
             )}
           </div>
