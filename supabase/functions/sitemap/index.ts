@@ -49,11 +49,10 @@ ${entries.join("\n")}
 </urlset>`;
 }
 
-function buildIndex(today: string): string {
+function buildIndex(_today: string): string {
   const sitemaps = TYPES.map(
     (t) => `  <sitemap>
     <loc>${esc(`${FUNC}?type=${t}`)}</loc>
-    <lastmod>${today}</lastmod>
   </sitemap>`,
   );
   return `<?xml version="1.0" encoding="UTF-8"?>
