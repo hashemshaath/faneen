@@ -276,6 +276,25 @@ const SearchV3 = () => {
       keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
     };
     const blocks: Record<string, unknown>[] = [breadcrumb, website];
+
+    // SiteNavigationElement: expose the indexable popular sector×city
+    // combos to crawlers as a structured navigation block, mirroring the
+    // <a href="/sectors/:sector/:city"> links rendered by SearchSeoLinksV3.
+    const SECTORS = ['aluminum', 'cabinets', 'glass', 'iron', 'wood'];
+    const CITIES = ['riyadh', 'jeddah', 'dammam', 'makkah'];
+    blocks.push({
+      '@context': 'https://schema.org',
+      '@type': 'SiteNavigationElement',
+      name: bi('روابط شائعة', 'Popular searches'),
+      hasPart: SECTORS.flatMap((s) =>
+        CITIES.map((c) => ({
+          '@type': 'SiteNavigationElement',
+          name: `${s} / ${c}`,
+          url: `https://qitaat.com/sectors/${s}/${c}`,
+        })),
+      ),
+    });
+
     if (filtered.length > 0) {
       const top = filtered.slice(0, 10);
       blocks.push({
@@ -449,6 +468,13 @@ const SearchV3 = () => {
               taxonomyDisplayMap={taxonomyDisplayMap}
             />
           </section>
+        </div>
+
+        {/* Mobile/tablet: surface the indexable popular sector×city links
+            outside the desktop-only sidebar so crawlers and mobile users
+            both reach them. Hidden on `lg` to avoid duplication. */}
+        <div className="lg:hidden mt-8 rounded-2xl border border-border/60 bg-card p-5">
+          <SearchSeoLinksV3 />
         </div>
       </main>
 
