@@ -281,7 +281,7 @@ export const BusinessBranchForm: React.FC<BusinessBranchFormProps> = ({
             onChange={(v) =>
               setBranchForm((f) => (f ? { ...f, customer_service_phone: toE164(v) } : f))
             }
-            label=""
+            hideLabel
             optional
           />
         </div>
