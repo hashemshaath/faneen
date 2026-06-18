@@ -163,6 +163,11 @@ const BusinessProfile = () => {
       additional_number: branch.additional_number ?? businessRow.additional_number ?? null,
       latitude: branch.latitude ?? businessRow.latitude ?? null,
       longitude: branch.longitude ?? businessRow.longitude ?? null,
+      // City — keep the header / SEO / map context aligned with the active
+      // branch so visitors see the branch's city (e.g. جدة / مكة) instead of
+      // the parent business HQ city.
+      city_id: (branch as { city_id?: string | null }).city_id ?? businessRow.city_id ?? null,
+      cities: (branch as { cities?: typeof businessRow.cities | null }).cities ?? businessRow.cities ?? null,
     } as typeof businessRow;
   }, [businessRow, branch]);
 
