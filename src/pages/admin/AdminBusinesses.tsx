@@ -947,6 +947,7 @@ const AdminBusinesses = () => {
     building_number: '', national_id: '', additional_number: '', address: '',
     latitude: '', longitude: '',
     complex_name: '', complex_name_en: '', site_number: '',
+    working_hours: undefined,
   });
 
   const saveBranchMutation = useMutation({
@@ -971,6 +972,7 @@ const AdminBusinesses = () => {
         complex_name: branchForm.complex_name || null,
         complex_name_en: branchForm.complex_name_en || null,
         site_number: branchForm.site_number || null,
+        working_hours: (branchForm.working_hours ?? {}) as unknown,
       };
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
