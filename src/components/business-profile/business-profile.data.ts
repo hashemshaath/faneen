@@ -333,7 +333,7 @@ export const useBranches = (businessId: string | undefined) =>
           "id, name_ar, name_en, slug, is_main, " +
           "address, district, region, street_name, building_number, " +
           "phone, mobile, unified_number, customer_service_phone, " +
-          "website, latitude, longitude",
+          "website, latitude, longitude, working_hours",
         order: [
           { column: "is_main", ascending: false },
           { column: "sort_order" },
