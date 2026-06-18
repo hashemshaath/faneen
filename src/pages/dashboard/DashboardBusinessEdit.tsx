@@ -290,6 +290,8 @@ const DashboardBusinessEdit: React.FC = () => {
         cover_image_variants: form.cover_image_variants ?? null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         short_description_ar: form.short_description_ar || null, short_description_en: form.short_description_en || null,
+        founded_year: form.founded_year ?? null,
+        company_size: form.company_size ?? null,
         phone: form.phone || null, mobile: form.mobile || null,
         customer_service_phone: form.customer_service_phone || null,
         email: form.email || null, website: form.website || null,
