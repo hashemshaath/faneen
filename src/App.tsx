@@ -495,6 +495,7 @@ const AppRoutes = () => (
           <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminLegacyTaxonomyReplaced /></ProtectedRoute>} />
           <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><AdminLegacyTaxonomyReplaced /></ProtectedRoute>} />
           <Route path="/admin/taxonomy" element={<ProtectedRoute requireAdmin><AdminTaxonomyCenter /></ProtectedRoute>} />
+          <Route path="/admin/project-categories" element={<ProtectedRoute requireAdmin><AdminProjectCategories /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/ownership-transfer-requests" element={<ProtectedRoute requireAdmin><AdminOwnershipTransferRequests /></ProtectedRoute>} />
           <Route path="/claim/:businessId" element={<ClaimBusiness />} />
