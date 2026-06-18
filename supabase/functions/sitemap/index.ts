@@ -339,7 +339,14 @@ Deno.serve(async (req) => {
       }
     } else if (type === "help") {
       // Help Center: index home, every published category, and every published article.
-      entries.push(entry(`${BASE}/help`, { lastmod: today, changefreq: "weekly", priority: "0.7" }));
+      const { data: helpLm } = await supabase
+        .from("help_articles")
+        .select("updated_at")
+        .eq("status", "published")
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      const helpHomeLm = toDateOrNull(helpLm?.[0]?.updated_at ?? null) ?? undefined;
+      entries.push(entry(`${BASE}/help`, { lastmod: helpHomeLm, changefreq: "weekly", priority: "0.7" }));
       const { data: cats, error: catErr } = await supabase
         .from("help_categories")
         .select("slug, updated_at")
