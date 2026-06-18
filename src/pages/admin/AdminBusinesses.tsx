@@ -1026,6 +1026,47 @@ const AdminBusinesses = () => {
     },
   });
 
+  /** Bulk-apply working-hours from the currently-edited branch to every
+   *  other branch of the SAME business. Scoped via the branches list we
+   *  already loaded for this business — never crosses into other tenants. */
+  const applyHoursToAllBranchesMutation = useMutation({
+    mutationFn: async (hours: unknown) => {
+      if (!editingBiz?.id) return { updated: 0, errors: [] as Error[] };
+      const targets = (branches as Array<{ id: string }>)
+        .map((b) => b.id)
+        .filter((id) => id !== editingBranchId);
+      const { applyHoursToAllBranches } = await import(
+        '@/modules/businesses/services/workingHours'
+      );
+      return applyHoursToAllBranches({
+        businessId: editingBiz.id,
+        hours: hours as never,
+        branchIds: (branches as Array<{ id: string }>).map((b) => b.id),
+        excludeBranchId: editingBranchId ?? undefined,
+      }).then((r) => ({ ...r, targetCount: targets.length }));
+    },
+    onSuccess: (result) => {
+      refetchBranches();
+      if (!result || result.updated === 0) {
+        toast.info(
+          pickBi(isRTL, 'لا توجد فروع أخرى لتطبيق الساعات عليها.', 'No other branches to apply hours to.'),
+        );
+        return;
+      }
+      toast.success(
+        pickBi(
+          isRTL,
+          `تم تطبيق الساعات على ${result.updated} فرع/فروع.`,
+          `Hours applied to ${result.updated} branch(es).`,
+        ),
+      );
+      if (result.errors.length > 0) {
+        toast.error(result.errors[0].message);
+      }
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   /* ─── Realtime ─── */
   useEffect(() => {
     const ch = supabase
