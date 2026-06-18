@@ -16,6 +16,7 @@ import {
   setProjectTaxonomyCategories,
 } from '@/modules/taxonomy/project-services';
 import type { TaxonomyCategory } from '@/modules/taxonomy/types';
+import { ProjectCategoryTabs, type ProjectCategoryTab } from '@/components/project/ProjectCategoryTabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -355,6 +356,29 @@ const DashboardProjects = () => {
     primaryByProject.forEach((c) => { if (c) ids.add(c.id); });
     return pickerCategories.filter((c) => ids.has(c.id));
   }, [primaryByProject, pickerCategories]);
+
+  const categoryTabs = useMemo<ProjectCategoryTab[]>(() => {
+    const counts = new Map<string, number>();
+    let uncategorized = 0;
+    for (const p of projects) {
+      const c = primaryByProject.get(p.id);
+      if (c) counts.set(c.id, (counts.get(c.id) ?? 0) + 1);
+      else uncategorized += 1;
+    }
+    const arr: ProjectCategoryTab[] = usedCategories.map((c) => ({
+      id: c.id,
+      label: language === 'ar' ? c.name_ar : (c.name_en || c.name_ar),
+      count: counts.get(c.id) ?? 0,
+    }));
+    if (uncategorized > 0) {
+      arr.push({
+        id: '__uncategorized__',
+        label: isRTL ? 'غير مصنّف' : 'Uncategorized',
+        count: uncategorized,
+      });
+    }
+    return arr.sort((a, b) => b.count - a.count);
+  }, [projects, primaryByProject, usedCategories, language, isRTL]);
 
   const filteredProjects = useMemo(() => {
     let result = [...projects];
