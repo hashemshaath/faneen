@@ -56,7 +56,7 @@ export const SearchHeaderV3 = ({
   return (
     <>
       <Navbar />
-      <div className="sticky top-16 z-sticky bg-background/95 backdrop-blur-md border-b border-border/50">
+      <div className="mt-16 sm:mt-[4.5rem] sticky top-16 sm:top-[4.5rem] z-sticky bg-background/95 backdrop-blur-md border-b border-border/50">
         <div className="container-app py-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex-1 min-w-0">
