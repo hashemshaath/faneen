@@ -316,7 +316,11 @@ Deno.serve(async (req) => {
       account_manager_email: ownerEmailResolved,
       account_manager_position: owner.position ?? null,
       membership_tier: business.membership_tier ?? "free",
-      approval_status: "draft",
+      // Placeholder owner is shared across many businesses, but a partial unique
+      // index (`uniq_businesses_one_draft_per_user`) allows only ONE draft per
+      // user_id. Skip the draft stage for placeholder-owned businesses so the
+      // admin can create multiple of them.
+      approval_status: isPlaceholderOwner ? "pending" : "draft",
       is_active: false,
       is_demo: false,
       placeholder_owner: isPlaceholderOwner,
