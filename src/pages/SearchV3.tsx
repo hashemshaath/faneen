@@ -110,9 +110,27 @@ const SearchV3 = () => {
   }, [selectedCity, bi]);
 
   const lang = isRTL ? 'ar' as const : 'en' as const;
+  // Prefer query > selected category > detected sector for the SEO subject,
+  // so that filter-only browsing still produces meaningful titles/descriptions.
+  const seoSubject = query
+    || (categories?.find((c) => c.id === filters.categoryId)
+      ? (isRTL
+          ? categories.find((c) => c.id === filters.categoryId)!.name_ar
+          : categories.find((c) => c.id === filters.categoryId)!.name_en
+            || categories.find((c) => c.id === filters.categoryId)!.name_ar)
+      : undefined)
+    || sectorMeta?.name
+    || undefined;
+  const seoCity = cityMeta?.name
+    || (filters.regionId !== 'all'
+      ? (() => {
+          const r = SA_REGIONS.find((x) => x.id === filters.regionId);
+          return r ? (isRTL ? r.name_ar : r.name_en) : undefined;
+        })()
+      : undefined);
   usePageMeta({
-    title: buildSeoTitle({ kind: 'search', lang, service: query || undefined, city: cityMeta?.name }),
-    description: buildSeoDescription({ kind: 'search', lang, service: query || undefined, city: cityMeta?.name }),
+    title: buildSeoTitle({ kind: 'search', lang, service: seoSubject, city: seoCity }),
+    description: buildSeoDescription({ kind: 'search', lang, service: seoSubject, city: seoCity }),
     keywords: mergeKeywords(sectorMeta ? sectorMeta.keywords : allSectorKeywords, cityMeta?.keywords),
     noindex: !!query,
     canonical: (() => {
