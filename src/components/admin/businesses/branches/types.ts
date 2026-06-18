@@ -70,6 +70,9 @@ export interface BranchFormState {
   address_en?: string | null;
   address_manual?: boolean;
   post_code?: string | null;
+  complex_name?: string | null;
+  complex_name_en?: string | null;
+  site_number?: string | null;
 }
 
 export type BranchFormSetter = Dispatch<SetStateAction<BranchFormState | null>>;
