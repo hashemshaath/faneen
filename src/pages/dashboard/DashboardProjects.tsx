@@ -976,6 +976,16 @@ const DashboardProjects = () => {
                 </button>
               ))}
             </div>
+
+            {/* Category tabs — group projects by their primary taxonomy category */}
+            {categoryTabs.length > 1 && (
+              <ProjectCategoryTabs
+                tabs={categoryTabs}
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                size="sm"
+              />
+            )}
           </div>
         )}
 
