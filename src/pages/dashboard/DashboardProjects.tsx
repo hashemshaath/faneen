@@ -386,7 +386,11 @@ const DashboardProjects = () => {
     else if (statusFilter === 'draft') result = result.filter((p) => p.status === 'draft');
     else if (statusFilter === 'featured') result = result.filter((p) => p.is_featured);
     if (categoryFilter !== 'all') {
-      result = result.filter((p) => primaryByProject.get(p.id)?.id === categoryFilter);
+      if (categoryFilter === '__uncategorized__') {
+        result = result.filter((p) => !primaryByProject.get(p.id));
+      } else {
+        result = result.filter((p) => primaryByProject.get(p.id)?.id === categoryFilter);
+      }
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
