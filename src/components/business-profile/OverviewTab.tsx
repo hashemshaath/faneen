@@ -97,6 +97,26 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
   const memberYear = new Date(business.created_at).getFullYear();
   const yearsActive = Math.max(1, new Date().getFullYear() - memberYear + 1);
 
+  // Optional public meta. `founded_year` is owner-entered (real years of
+  // experience); `company_size` follows the Muqawil-style classification
+  // (micro/small/medium/large). Both are nullable — we hide the related
+  // affordance entirely when missing instead of showing misleading defaults.
+  const foundedYear = (business as { founded_year?: number | null }).founded_year ?? null;
+  const experienceYears =
+    foundedYear && foundedYear > 1800 && foundedYear <= new Date().getFullYear()
+      ? new Date().getFullYear() - foundedYear
+      : null;
+  const companySize = (business as { company_size?: string | null }).company_size ?? null;
+  const companySizeLabel: { ar: string; en: string } | null = (() => {
+    switch (companySize) {
+      case "micro": return { ar: "منشأة ميكروية", en: "Micro" };
+      case "small": return { ar: "منشأة صغيرة", en: "Small" };
+      case "medium": return { ar: "منشأة متوسطة", en: "Medium" };
+      case "large": return { ar: "منشأة كبيرة", en: "Large" };
+      default: return null;
+    }
+  })();
+
   const ratingAvg = Number(business.rating_avg ?? 0);
   const ratingCount = Number(business.rating_count ?? 0);
 
