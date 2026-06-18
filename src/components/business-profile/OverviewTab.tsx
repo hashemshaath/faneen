@@ -582,7 +582,7 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
         <section className="rounded-2xl border border-border/40 bg-card p-4 dark:border-border/20 sm:p-5 lg:col-span-3">
           <SectionTitle
             icon={Award}
-            title={bi("من معرض الأعمال", "From the portfolio")}
+            title={bi("من معرض المشاريع", "From the portfolio")}
             action={
               <button
                 type="button"

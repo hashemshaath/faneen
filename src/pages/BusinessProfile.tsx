@@ -163,6 +163,11 @@ const BusinessProfile = () => {
       additional_number: branch.additional_number ?? businessRow.additional_number ?? null,
       latitude: branch.latitude ?? businessRow.latitude ?? null,
       longitude: branch.longitude ?? businessRow.longitude ?? null,
+      // City — keep the header / SEO / map context aligned with the active
+      // branch so visitors see the branch's city (e.g. جدة / مكة) instead of
+      // the parent business HQ city.
+      city_id: (branch as { city_id?: string | null }).city_id ?? businessRow.city_id ?? null,
+      cities: (branch as { cities?: typeof businessRow.cities | null }).cities ?? businessRow.cities ?? null,
     } as typeof businessRow;
   }, [businessRow, branch]);
 
@@ -428,7 +433,7 @@ const BusinessProfile = () => {
     { value: "overview", label: language === "ar" ? "نظرة عامة" : "Overview", icon: LayoutDashboard },
     canSee("services") && services.length > 0 && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench, count: services.length },
     canSee("projects") && projects.length > 0 && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
-    canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
+    canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "المشاريع" : "Portfolio", icon: ImageIcon },
     canSee("requests_as_beneficiary") && { value: "requests", label: language === "ar" ? "طلبات مطروحة" : "Public requests", icon: Inbox },
     canSee("branches") && branches.length > 0 && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
     { value: "brands", label: language === "ar" ? "العلامات التجارية" : "Brands", icon: Tag },

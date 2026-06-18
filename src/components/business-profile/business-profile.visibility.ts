@@ -27,7 +27,7 @@ export const SECTION_LABELS: Record<ProfileSectionKey, { ar: string; en: string 
   overview: { ar: "نظرة عامة", en: "Overview" },
   services: { ar: "الخدمات", en: "Services" },
   projects: { ar: "المشاريع", en: "Projects" },
-  portfolio: { ar: "معرض الأعمال", en: "Portfolio" },
+  portfolio: { ar: "معرض المشاريع", en: "Portfolio" },
   branches: { ar: "الفروع", en: "Branches" },
   reviews: { ar: "التقييمات", en: "Reviews" },
   contact: { ar: "التواصل", en: "Contact" },
