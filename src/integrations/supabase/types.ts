@@ -4691,6 +4691,7 @@ export type Database = {
           business_number: number
           capabilities: Json
           city_id: string | null
+          company_size: string | null
           contact_person: string | null
           country_code: string | null
           country_id: string | null
@@ -4721,6 +4722,7 @@ export type Database = {
           email: string | null
           entity_type: string | null
           floor_number: string | null
+          founded_year: number | null
           id: string
           is_active: boolean
           is_demo: boolean
@@ -4786,6 +4788,7 @@ export type Database = {
           business_number?: number
           capabilities?: Json
           city_id?: string | null
+          company_size?: string | null
           contact_person?: string | null
           country_code?: string | null
           country_id?: string | null
@@ -4816,6 +4819,7 @@ export type Database = {
           email?: string | null
           entity_type?: string | null
           floor_number?: string | null
+          founded_year?: number | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
@@ -4881,6 +4885,7 @@ export type Database = {
           business_number?: number
           capabilities?: Json
           city_id?: string | null
+          company_size?: string | null
           contact_person?: string | null
           country_code?: string | null
           country_id?: string | null
@@ -4911,6 +4916,7 @@ export type Database = {
           email?: string | null
           entity_type?: string | null
           floor_number?: string | null
+          founded_year?: number | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
@@ -19140,6 +19146,7 @@ export type Database = {
             | null
           business_number: number | null
           city_id: string | null
+          company_size: string | null
           country_id: string | null
           cover_image_asset_id: string | null
           cover_image_variants: Json | null
@@ -19148,6 +19155,7 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           district: string | null
+          founded_year: number | null
           id: string | null
           is_active: boolean | null
           is_verified: boolean | null
@@ -19177,6 +19185,7 @@ export type Database = {
             | null
           business_number?: number | null
           city_id?: string | null
+          company_size?: string | null
           country_id?: string | null
           cover_image_asset_id?: string | null
           cover_image_variants?: Json | null
@@ -19185,6 +19194,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          founded_year?: number | null
           id?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null
@@ -19216,6 +19226,7 @@ export type Database = {
             | null
           business_number?: number | null
           city_id?: string | null
+          company_size?: string | null
           country_id?: string | null
           cover_image_asset_id?: string | null
           cover_image_variants?: Json | null
@@ -19224,6 +19235,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          founded_year?: number | null
           id?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null

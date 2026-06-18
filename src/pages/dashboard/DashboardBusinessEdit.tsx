@@ -290,6 +290,8 @@ const DashboardBusinessEdit: React.FC = () => {
         cover_image_variants: form.cover_image_variants ?? null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         short_description_ar: form.short_description_ar || null, short_description_en: form.short_description_en || null,
+        founded_year: form.founded_year ?? null,
+        company_size: form.company_size ?? null,
         phone: form.phone || null, mobile: form.mobile || null,
         customer_service_phone: form.customer_service_phone || null,
         email: form.email || null, website: form.website || null,
@@ -703,6 +705,57 @@ const DashboardBusinessEdit: React.FC = () => {
                 'اشرح خبرتك وأهم المشاريع والقطاعات التي تخدمها. لا تكرّر اسم المنشأة ولا تضع روابط خارجية.',
                 'Describe your expertise, flagship projects, and sectors served. Don\'t repeat your business name or paste external links.')}
             </FieldHint>
+
+            {/* Public meta — Optional. Hidden on the public profile when blank. */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-foreground">
+                  {t(isRTL, 'سنة التأسيس (اختياري)', 'Founded year (optional)')}
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1800}
+                  max={new Date().getFullYear()}
+                  placeholder={t(isRTL, 'مثل: 2010', 'e.g. 2010')}
+                  value={form.founded_year ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    if (!v) { update('founded_year', null); return; }
+                    const n = Number(v);
+                    update('founded_year', Number.isFinite(n) ? n : null);
+                  }}
+                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm tech-content focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <FieldHint>
+                  {t(isRTL,
+                    'يُحسب منها عدد سنوات الخبرة الظاهرة للزوار. اتركها فارغة إن لم ترد عرضها.',
+                    'Used to compute the years-of-experience badge shown publicly. Leave empty to hide.')}
+                </FieldHint>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-foreground">
+                  {t(isRTL, 'حجم المنشأة (اختياري)', 'Company size (optional)')}
+                </label>
+                <select
+                  value={form.company_size ?? ''}
+                  onChange={(e) => update('company_size', e.target.value || null)}
+                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">{t(isRTL, 'بدون تحديد', 'Not specified')}</option>
+                  <option value="micro">{t(isRTL, 'منشأة ميكروية', 'Micro')}</option>
+                  <option value="small">{t(isRTL, 'منشأة صغيرة', 'Small')}</option>
+                  <option value="medium">{t(isRTL, 'منشأة متوسطة', 'Medium')}</option>
+                  <option value="large">{t(isRTL, 'منشأة كبيرة', 'Large')}</option>
+                </select>
+                <FieldHint>
+                  {t(isRTL,
+                    'وفق تصنيف موقع "مقاول" — يساعد العملاء على فهم حجم منشأتك.',
+                    'Follows the Muqawil platform classification — helps clients gauge your scale.')}
+                </FieldHint>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

@@ -13,6 +13,7 @@ import {
   Sparkles,
   Star,
   TrendingUp,
+  Users,
   Wrench,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -94,7 +95,26 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
     (g) => g.secondaries.length > 0 || g.services.length > 0 || g.primary,
   );
   const memberYear = new Date(business.created_at).getFullYear();
-  const yearsActive = Math.max(1, new Date().getFullYear() - memberYear + 1);
+
+  // Optional public meta. `founded_year` is owner-entered (real years of
+  // experience); `company_size` follows the Muqawil-style classification
+  // (micro/small/medium/large). Both are nullable — we hide the related
+  // affordance entirely when missing instead of showing misleading defaults.
+  const foundedYear = (business as { founded_year?: number | null }).founded_year ?? null;
+  const experienceYears =
+    foundedYear && foundedYear > 1800 && foundedYear <= new Date().getFullYear()
+      ? new Date().getFullYear() - foundedYear
+      : null;
+  const companySize = (business as { company_size?: string | null }).company_size ?? null;
+  const companySizeLabel: { ar: string; en: string } | null = (() => {
+    switch (companySize) {
+      case "micro": return { ar: "منشأة ميكروية", en: "Micro" };
+      case "small": return { ar: "منشأة صغيرة", en: "Small" };
+      case "medium": return { ar: "منشأة متوسطة", en: "Medium" };
+      case "large": return { ar: "منشأة كبيرة", en: "Large" };
+      default: return null;
+    }
+  })();
 
   const ratingAvg = Number(business.rating_avg ?? 0);
   const ratingCount = Number(business.rating_count ?? 0);
@@ -134,28 +154,65 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
           </p>
         )}
 
+        {/* Alibaba-style tiny tenure line — clarifies this is platform tenure
+            (not founding year / years of experience). */}
+        <p className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground/70 sm:text-[11px]">
+          <Calendar className="h-3 w-3" />
+          <span className="tech-content">
+            {bi(`نشط على قطاعات منذ ${memberYear}`, `Active on Qitaat since ${memberYear}`)}
+          </span>
+        </p>
+
         <dl className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 sm:gap-3 sm:text-sm">
-          {/* Years active — gradient + animated trending pulse */}
-          <div className="group relative overflow-hidden rounded-xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent px-3 py-2.5 transition-all hover:border-accent/40 hover:shadow-md dark:from-accent/15 dark:via-accent/5">
-            <div className="absolute -end-3 -top-3 h-12 w-12 rounded-full bg-accent/10 blur-xl transition-opacity group-hover:opacity-100" />
-            <div className="relative flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
-                  {bi("سنوات النشاط", "Years active")}
-                </dt>
-                <dd className="mt-0.5 flex items-baseline gap-1">
-                  <span className="font-heading text-lg font-black text-foreground tech-content sm:text-2xl">{yearsActive}</span>
-                  <span className="text-[10px] font-bold text-accent sm:text-xs">+</span>
-                </dd>
-                <div className="mt-0.5 text-[9px] text-muted-foreground/80 sm:text-[10px]">
-                  {bi(`منذ ${memberYear}`, `since ${memberYear}`)}
+          {/* Experience / company size card — prefers owner-entered founding
+              year (real industry experience), falls back to the Muqawil-style
+              size classification, and is omitted entirely when neither is
+              available so we never imply a misleading "years active" number. */}
+          {experienceYears !== null ? (
+            <div className="group relative overflow-hidden rounded-xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent px-3 py-2.5 transition-all hover:border-accent/40 hover:shadow-md dark:from-accent/15 dark:via-accent/5">
+              <div className="absolute -end-3 -top-3 h-12 w-12 rounded-full bg-accent/10 blur-xl transition-opacity group-hover:opacity-100" />
+              <div className="relative flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+                    {bi("سنوات الخبرة", "Years of experience")}
+                  </dt>
+                  <dd className="mt-0.5 flex items-baseline gap-1">
+                    <span className="font-heading text-lg font-black text-foreground tech-content sm:text-2xl">
+                      {experienceYears > 0 ? experienceYears : "—"}
+                    </span>
+                    {experienceYears > 0 && (
+                      <span className="text-[10px] font-bold text-accent sm:text-xs">+</span>
+                    )}
+                  </dd>
+                  <div className="mt-0.5 text-[9px] text-muted-foreground/80 sm:text-[10px] tech-content">
+                    {bi(`تأسست ${foundedYear}`, `Founded ${foundedYear}`)}
+                  </div>
+                </div>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                  <TrendingUp className="h-3.5 w-3.5" />
                 </div>
               </div>
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                <TrendingUp className="h-3.5 w-3.5" />
+            </div>
+          ) : companySizeLabel ? (
+            <div className="group relative overflow-hidden rounded-xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent px-3 py-2.5 transition-all hover:border-accent/40 hover:shadow-md dark:from-accent/15 dark:via-accent/5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
+                    {bi("حجم المنشأة", "Company size")}
+                  </dt>
+                  <dd dir="auto" className="mt-0.5 font-heading text-[13px] font-bold text-foreground sm:text-[15px]">
+                    {bi(companySizeLabel.ar, companySizeLabel.en)}
+                  </dd>
+                  <div className="mt-0.5 text-[9px] text-muted-foreground/80 sm:text-[10px]">
+                    {bi("وفق تصنيف مقاول", "Muqawil classification")}
+                  </div>
+                </div>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                  <Users className="h-3.5 w-3.5" />
+                </div>
               </div>
             </div>
-          </div>
+          ) : null}
 
           {/* Sector / classification */}
           <div className="group relative overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-primary/8 via-primary/3 to-transparent px-3 py-2.5 transition-all hover:border-primary/30 hover:shadow-md dark:from-primary/15">
@@ -203,13 +260,13 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
             <div className="relative flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <dt className="text-[10px] font-medium text-muted-foreground sm:text-[11px]">
-                  {bi("الفروع النشطة", "Active branches")}
+                  {bi("الفروع", "Branches")}
                 </dt>
                 <dd className="mt-0.5 flex items-baseline gap-1">
                   <span className="font-heading text-lg font-black text-foreground tech-content sm:text-2xl">{branches.length}</span>
                   {branches.length > 0 && (
                     <span className="text-[9px] text-emerald-600 dark:text-emerald-400 sm:text-[10px]">
-                      {bi("نشط", "live")}
+                      {bi("منشورة", "published")}
                     </span>
                   )}
                 </dd>

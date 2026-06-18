@@ -28,6 +28,11 @@ export interface BusinessRow {
   short_description_ar: string | null;
   short_description_en: string | null;
 
+  // Public meta (optional, owner-entered)
+  founded_year?: number | null;
+  /** Muqawil-style classification: micro | small | medium | large. */
+  company_size?: string | null;
+
   // Contact
   phone: string | null;
   mobile: string | null;
