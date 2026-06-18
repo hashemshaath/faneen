@@ -34,8 +34,6 @@ export const SearchFiltersV3 = ({
   const { language } = useLanguage();
   const bi = useBi();
 
-  if (loading) return <SearchFiltersSkeletonV3 />;
-
   const parents = useMemo(
     () => (categories ?? []).filter((c) => !c.parent_id),
     [categories],
@@ -53,6 +51,8 @@ export const SearchFiltersV3 = ({
     ),
     [cities, language],
   );
+
+  if (loading) return <SearchFiltersSkeletonV3 />;
 
   return (
     <div className="space-y-5">
