@@ -47,6 +47,7 @@ import { track } from "@/lib/analytics-events";
 import { BranchAnalyticsPanel } from "./BranchAnalyticsPanel";
 import { WorkingHoursDisplay } from "@/components/businesses/working-hours/WorkingHoursDisplay";
 import { ProjectCategoryTabs, type ProjectCategoryTab } from "@/components/project/ProjectCategoryTabs";
+import { useProjectSortPref, sortProjects } from "@/hooks/useProjectSortPref";
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
@@ -192,6 +193,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
   const { language, isRTL } = useLanguage();
   const { data: projects, isLoading } = useProjects(businessId);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [tabSort, setTabSort] = useProjectSortPref('profile');
 
   if (isLoading) {
     return (
@@ -226,6 +228,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
   const filteredProjects = activeCategory === "all"
     ? projects
     : projects.filter((p) => categoryKeyOf(p) === activeCategory);
+  const sortedProjects = sortProjects(filteredProjects, tabSort);
 
   return (
     <div className="space-y-4">
@@ -234,9 +237,11 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
         value={activeCategory}
         onChange={setActiveCategory}
         size="md"
+        sortValue={tabSort}
+        onSortChange={setTabSort}
       />
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-      {filteredProjects.map((project, index) => {
+      {sortedProjects.map((project, index) => {
         const title = getLocalizedValue(language, project.title_ar, project.title_en);
         const description = getLocalizedValue(language, project.description_ar, project.description_en);
         const cityName = getLocalizedValue(language, project.cities?.name_ar, project.cities?.name_en);

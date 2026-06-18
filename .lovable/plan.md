@@ -1,93 +1,69 @@
-## نطاق العمل
 
-تحسينات شاملة للداشبورد تشمل بناء مزايا احترافية مشتركة وتطبيقها على الأقسام الأربعة المحددة، مع فحص الروابط وتوحيد التصميم وتحسين الأداء والاستجابة.
+# تصنيف المشاريع — توسعة شاملة
 
-## المزايا المشتركة الجديدة (Foundations)
+سننفذ خمسة محاور مترابطة، كلها فرونت-إند بدون أي تغييرات في قاعدة البيانات أو RLS. نعتمد على البنية الموجودة: `project_taxonomy_categories` + RPC `set_project_taxonomy_categories` + جدول `taxonomy_categories` (يُدار بالفعل من `/admin/taxonomy`).
 
-سأبني هذه المكونات مرة واحدة وأعيد استخدامها عبر كل الأقسام:
+---
 
-1. **Command Palette (Cmd+K / Ctrl+K)**
-   - `src/components/dashboard/CommandPalette.tsx` فوق كل صفحات `/dashboard/*`
-   - بحث في: الصفحات، العقود، الأعمال، المشاريع، الإشعارات
-   - اختصارات سريعة: عقد جديد، مشروع جديد، رفع صورة، تبديل الثيم/اللغة
-   - تكامل مع `cmdk` (متوفر في shadcn)
+## 1) تعيين تصنيفات للمشروع داخل شاشة الإنشاء/التعديل
 
-2. **Pin & Reorder للوحة Overview**
-   - `usePinnedWidgets` hook يحفظ في `localStorage` بمفتاح `qitaat_dashboard_widgets_v1`
-   - أيقونة تثبيت/إخفاء على كل widget، مع ترتيب بالسحب الخفيف (بدون مكتبة جديدة)
+- مكوّن جديد `ProjectCategoryPicker.tsx`:
+  - يجلب التصنيفات من `getProjectTaxonomyPickerCategories()`.
+  - حقل بحث فوري (يبحث بالاسم العربي/الإنجليزي + alias).
+  - عرض كقائمة شِبس قابلة للاختيار: تصنيف أساسي واحد + ثانويات متعددة.
+  - عداد لما هو مختار + زر إلغاء الكل.
+  - RTL-aware، يلتزم بسياسة "لا منبثقات" (Inline panel فقط).
+- ندمجه في فورم إنشاء/تعديل المشروع داخل `DashboardProjects.tsx` (محل أي حقل category مفرد قديم) ويحفظ عبر `setProjectTaxonomyCategories`.
 
-3. **Export Utility (CSV + PDF)**
-   - `src/lib/export/exportTable.ts` — `exportToCSV(rows, columns, filename)` و `exportToPDF(rows, columns, { title, rtl })`
-   - يستخدم `jsPDF + Amiri font` المسجّل مسبقاً (سياسة الـ Arabic engine)
-   - زر موحد `<ExportMenu />` يظهر في رؤوس الجداول
+## 2) فرز داخل تبويبات التصنيفات + حفظ للمستخدم
 
-4. **Bulk Actions Bar**
-   - `<BulkActionBar selected={n} actions={[...]} />` شريط سفلي عائم
-   - `useBulkSelection<T>()` hook عام (selectAll/clear/toggle)
-   - دعم: حذف، أرشفة، تصدير المحدد، تغيير الحالة
+- نوسّع `ProjectCategoryTabs` ليقبل `sortValue` و `onSortChange` اختياريين، ويعرض قائمة فرز مُدمجة بجانب التبويبات (Inline Select بسيط، بدون Dialog).
+- خيارات الفرز:
+  - `newest` — الأحدث
+  - `top_rated` — الأعلى تقييماً (متوسط `profile_reviews.rating` للمشروع)
+  - `most_completed` — الأكثر إنجازاً (status = completed أولاً ثم updated_at)
+- حفظ الاختيار لكل مستخدم في `localStorage` بمفتاح `qitaat_project_sort_<scope>` (scopes: `dashboard`, `profile`, `public`). نقدّم Hook `useProjectSortPref(scope)`.
+- يُطبَّق الفرز محلياً على المصفوفة الموجودة في الصفحات الثلاث (`DashboardProjects`, `BusinessProfileTabs`, `Projects`).
 
-## التحسينات حسب القسم
+## 3) اختبارات Playwright للموبايل والتابلت
 
-### 1. العقود والمشاريع (`/dashboard/contracts`, `/dashboard/projects`)
-- إضافة Bulk Actions: تصدير CSV/PDF، أرشفة، تحديث الحالة
-- زر "تصدير الكل" في الهيدر
-- إصلاح أي روابط معطّلة في صفحة تفاصيل العقد
-- توحيد رؤوس الأقسام مع `SectionHeader` من `shared.tsx`
+- ملف جديد `e2e/project-category-tabs-responsive.spec.ts`:
+  - viewports: 390×844 (موبايل) و 820×1180 (تابلت).
+  - الانتقال بين التبويبات وتطابق العدّاد مع عدد البطاقات الظاهرة.
+  - تمرير أفقي للتبويبات عند التجاوز (assert `scrollLeft` يتغيّر).
+  - فحص اتجاه RTL: `dir="rtl"` على الحاوية والشِبس لا تتجاوز الـ viewport.
+  - فحص عدم وجود أخطاء كونسول.
 
-### 2. الأعمال والخدمات (`/dashboard/business*`, `/dashboard/services`)
-- Bulk Actions على قائمة الخدمات والفروع
-- تصدير كتالوج الخدمات
-- زر Quick Add في الـ Command Palette
-- توحيد البطاقات بنفس النظام المدمج
+## 4) SEO ديناميكي لصفحات التصنيفات
 
-### 3. المحفظة والمشاريع المنفذة (`/dashboard/portfolio`)
-- إجراءات مجمّعة (نشر/إخفاء/حذف عدة عناصر)
-- تصدير قائمة المشاريع المنفذة
-- تحسين الـ grid على الجوال (`xs:` breakpoint)
+- في `src/pages/Projects.tsx`:
+  - عند تغيّر `selectedCategory`، نُحدِّث `usePageMeta` (العنوان/الوصف/canonical يتضمن اسم التصنيف + كاش-باستر آمن) ونُحدِّث `useMultiJsonLd` ليُصدر:
+    - `BreadcrumbList` (الرئيسية ← المشاريع ← اسم التصنيف).
+    - `CollectionPage` يلفّ `ItemList` للمشاريع المرئية حالياً (حتى 20).
+  - عند `__all__` نعود إلى ميتا الصفحة العامة.
 
-### 4. الإشعارات والتقارير (`/dashboard/notifications`)
-- إجراءات مجمّعة (تعليم كمقروء، حذف، أرشفة)
-- فلتر سريع متقدم (نوع، تاريخ، حالة)
-- تصدير سجل الإشعارات
+## 5) صفحة إدارة تصنيفات المشاريع في لوحة التحكم
 
-## الفحص والتدقيق
+- مسار جديد `/dashboard/project-categories` (للمالك/المسؤول)، يُلفّ في `DashboardLayout`.
+- جدول إدارة (Inline forms حسب سياسة لا-منبثقات):
+  - إنشاء/تعديل (الاسم AR/EN، slug، sort_order).
+  - تفعيل/تعطيل الظهور (`is_active` + `show_in_search`).
+  - حذف (soft via `is_archived = true` إن متاح، وإلا حذف فعلي مع تأكيد inline).
+  - السحب لإعادة الترتيب أو حقول `sort_order` سريعة (نختار الحقول لتجنّب اعتماد إضافي على dnd-kit في هذا الجزء).
+- نقطة دخول من `DashboardSidebar` ضمن مجموعة "المشاريع".
 
-- **فحص الروابط**: مرور على روابط الـ Sidebar وأزرار CTA الرئيسية في كل صفحة (نتائج في رد قصير بعد التنفيذ)
-- **توحيد التصميم**: تطبيق `SECTION_CARD_CLASS` و `SectionHeader` بشكل متّسق
-- **الأداء**: التأكد من lazy loading للصفحات الثقيلة (Portfolio/Projects)
-- **الجوال**: مراجعة الـ touch targets (>=44px) و RTL على الـ Bulk Bar
+> ملاحظة: التصنيفات نفسها يُديرها admin مركزياً في `/admin/taxonomy`. هذه الصفحة تكميلية للمزوّد/المسؤول لإدارة الظهور/الترتيب الخاص بتصنيفات المشاريع فقط — ستستخدم نفس الـ RPC/جداول الحالية ولن تنشئ أي جدول جديد. لو الـ RLS الحالي لا يسمح للمزوّد بالكتابة، ستظهر الصفحة للمسؤول فقط (read-only للمزود) بدون أي تغيير في policies.
 
-## التغييرات التقنية
+---
 
-**ملفات جديدة:**
-- `src/components/dashboard/CommandPalette.tsx`
-- `src/components/dashboard/ExportMenu.tsx`
-- `src/components/dashboard/BulkActionBar.tsx`
-- `src/hooks/useBulkSelection.ts`
-- `src/hooks/usePinnedWidgets.ts`
-- `src/lib/export/exportTable.ts`
+## التحقق
 
-**ملفات معدّلة:**
-- `src/components/dashboard/DashboardLayout.tsx` (إضافة CommandPalette + اختصار)
-- `src/pages/dashboard/DashboardContracts.tsx`
-- `src/pages/dashboard/DashboardProjects.tsx`
-- `src/pages/dashboard/DashboardPortfolio.tsx`
-- `src/pages/dashboard/DashboardNotifications.tsx`
-- `src/pages/dashboard/DashboardServices.tsx`
-- `src/pages/dashboard/overview/UserDashboardView.tsx` (Pin/Reorder)
+- `tsc --noEmit` بدون أخطاء.
+- اختبار Playwright يمر محلياً على الفيوبورتين.
+- مراجعة JSON-LD يدوياً عبر devtools (block واحد لكل filter).
 
-**القيود المحترمة:**
-- لا popups/dialogs خارج CommandPalette (Cmd+K هو UX قياسي مقبول)
-- لا تغييرات في الـ business logic، فقط UI و UX
-- جميع المفاتيح بـ `qitaat_*` prefix
-- بدون مكتبات جديدة (نستخدم cmdk + jsPDF الموجودين)
+## ما لن نلمسه
 
-## خطة التنفيذ
-
-دفعة واحدة في مراحل متتالية:
-1. بناء الـ foundations (4 ملفات جديدة)
-2. ربط CommandPalette في DashboardLayout
-3. تطبيق Bulk + Export على كل قسم بالترتيب
-4. فحص نهائي وتقرير بالنتائج
-
-هل تريدني أبدأ التنفيذ كاملاً، أم تفضل تجزئته على دفعتين (Foundations + قسم أو قسمين أولاً، ثم الباقي)؟
+- لا تعديلات على DB، RLS، أو migrations.
+- لا تغيير على `projects.category_id` (يبقى legacy).
+- لا منبثقات/Dialogs — كل الواجهات inline.
