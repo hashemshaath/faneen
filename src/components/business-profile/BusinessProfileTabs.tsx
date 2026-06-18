@@ -45,6 +45,7 @@ import { Stars } from "./BusinessProfileHeader";
 import { recordBranchVisit } from "@/modules/branchTelemetry";
 import { track } from "@/lib/analytics-events";
 import { BranchAnalyticsPanel } from "./BranchAnalyticsPanel";
+import { WorkingHoursDisplay } from "@/components/businesses/working-hours/WorkingHoursDisplay";
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
@@ -764,6 +765,14 @@ export const BranchesTab = ({
                   <span dir="auto">{addressParts.join("، ")}</span>
                 </div>
               )}
+
+              <div className="mt-3">
+                <WorkingHoursDisplay
+                  isRTL={language === "ar"}
+                  value={(branch as { working_hours?: unknown }).working_hours}
+                  compact
+                />
+              </div>
             </div>
 
             {contactItems.length > 0 && (
