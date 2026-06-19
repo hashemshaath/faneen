@@ -17,15 +17,29 @@ import {
 
 const MARGIN = 14;
 
-export async function exportLeadPdf(lead: ProviderLeadRow): Promise<void> {
+export interface ExportLeadPdfOptions {
+  /** When true, opens a print/preview window instead of force-downloading. */
+  preview?: boolean;
+}
+
+export async function exportLeadPdf(
+  lead: ProviderLeadRow,
+  options: ExportLeadPdfOptions = {},
+): Promise<void> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const fontOk = await registerArabicFont(doc);
+  // Full RTL layout: jsPDF mirrors text alignment and the default origin
+  // when R2L is on, which keeps Arabic paragraphs reading right→left even
+  // when wrapping over multiple lines.
+  doc.setR2L(true);
   const setFont = (bold = false) => {
     if (fontOk) doc.setFont('ArabicFont', bold ? 'bold' : 'normal');
     else doc.setFont('helvetica', bold ? 'bold' : 'normal');
   };
 
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const contentW = pageW - MARGIN * 2;
   const score = computeLeadScore(lead);
   const c = computeCompleteness(lead);
   const sla = computeSlaStatus(lead);
@@ -33,19 +47,23 @@ export async function exportLeadPdf(lead: ProviderLeadRow): Promise<void> {
 
   // Header band
   doc.setFillColor(15, 76, 71); // industrial green
-  doc.rect(0, 0, pageW, 26, 'F');
-  doc.setTextColor(255, 255, 255);
+  // Long names: dynamic header height so the title never clips.
   setFont(true);
   doc.setFontSize(16);
-  const title = lead.name_ar || lead.name_en || lead.reference_code;
-  doc.text(title, pageW - MARGIN, 11, { align: 'right' });
+  const titleRaw = lead.name_ar || lead.name_en || lead.reference_code;
+  const titleLines = doc.splitTextToSize(titleRaw, contentW - 60) as string[];
+  const headerH = Math.max(26, 12 + titleLines.length * 7);
+  doc.rect(0, 0, pageW, headerH, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.text(titleLines, pageW - MARGIN, 11, { align: 'right' });
   setFont(false);
   doc.setFontSize(9);
-  doc.text(`${lead.reference_code} · ${STATUS_LABEL[lead.status].ar}`, pageW - MARGIN, 18, { align: 'right' });
-  doc.text(`Lead Score: ${score}/100 · Completeness: ${c.pct}%`, MARGIN, 18);
+  const subY = headerH - 6;
+  doc.text(`${lead.reference_code} · ${STATUS_LABEL[lead.status].ar}`, pageW - MARGIN, subY, { align: 'right' });
+  doc.text(`Lead Score: ${score}/100 · Completeness: ${c.pct}%`, MARGIN, subY);
 
   doc.setTextColor(20, 20, 20);
-  let y = 36;
+  let y = headerH + 10;
 
   const row = (labelAr: string, value: string | null | undefined) => {
     if (!value) return;
@@ -55,10 +73,10 @@ export async function exportLeadPdf(lead: ProviderLeadRow): Promise<void> {
     setFont(false);
     doc.setFontSize(10);
     const txt = String(value);
-    const wrapped = doc.splitTextToSize(txt, pageW - MARGIN * 2 - 40);
+    const wrapped = doc.splitTextToSize(txt, contentW - 40) as string[];
     doc.text(wrapped, pageW - MARGIN - 38, y, { align: 'right' });
     y += Math.max(6, wrapped.length * 5) + 1;
-    if (y > 270) {
+    if (y > pageH - 20) {
       doc.addPage();
       y = MARGIN;
     }
@@ -103,12 +121,16 @@ export async function exportLeadPdf(lead: ProviderLeadRow): Promise<void> {
   setFont(false);
   doc.setFontSize(8);
   doc.setTextColor(120);
-  doc.text(
-    `Qitaat · Provider lead · ${new Date().toLocaleString()}`,
-    MARGIN,
-    287,
-  );
+  doc.setR2L(false);
+  doc.text(`Qitaat · Provider lead · ${new Date().toLocaleString()}`, MARGIN, pageH - 8);
 
   const fname = `lead-${lead.reference_code || lead.id}.pdf`;
-  doc.save(fname);
+  if (options.preview && typeof window !== 'undefined') {
+    // Open in a new tab so the operator can preview and choose Print or Save.
+    const blobUrl = doc.output('bloburl') as unknown as string;
+    const w = window.open(blobUrl, '_blank', 'noopener,noreferrer');
+    if (!w) doc.save(fname); // popup blocked → fall back to download
+  } else {
+    doc.save(fname);
+  }
 }
