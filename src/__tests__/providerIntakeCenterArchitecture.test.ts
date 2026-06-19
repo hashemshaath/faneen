@@ -67,7 +67,7 @@ describe('Provider Intake Center — reuse-existing architecture', () => {
     const r = read('docs/provider-intake-center-audit-report.md');
     expect(r).toMatch(/Auto matching[\s\S]{0,80}AUTO_MATCH_ON_SUBMISSION = false/);
     expect(r).toMatch(/Auto provider leads[\s\S]{0,80}Manual RPC only/);
-    expect(r).toMatch(/Auto provider outreach[\s\S]{0,120}Not present/);
+    expect(r).toMatch(/Auto provider outreach[\s\S]{0,160}No provider email senders/);
     expect(r).toMatch(/AUTO_MATCH_ON_SUBMISSION = false/);
   });
 
