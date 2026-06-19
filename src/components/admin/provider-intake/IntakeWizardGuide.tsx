@@ -9,12 +9,16 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Upload,
   ListChecks,
   Sparkles,
   CheckCircle2,
   Download,
+  FileSpreadsheet,
+  AlertTriangle,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 
@@ -60,6 +64,40 @@ const TEMPLATES: Array<{ id: string; ar: string; en: string; href: string }> = [
 
 const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
+const REQUIRED_TEMPLATE_COLUMNS: Record<'providers' | 'branches', string[]> = {
+  providers: [
+    'company_name_ar','company_name_en','unified_number','commercial_registration',
+    'established_year','sector','services','phone','email','country','region','city',
+    'district','national_short_address','street_address','latitude','longitude',
+    'google_maps_url','account_manager_name','account_manager_email',
+    'account_manager_phone','contact_role','website','instagram','x_account',
+    'linkedin','source','notes',
+  ],
+  branches: [
+    'company_name_ar','unified_number','commercial_registration','branch_name_ar',
+    'branch_name_en','country','region','city','district','national_short_address',
+    'street_address','latitude','longitude','google_maps_url','branch_phone',
+    'branch_email','is_primary_branch','working_hours','branch_notes',
+  ],
+};
+
+type UploadedTemplateKind = 'providers' | 'branches' | 'unknown';
+
+interface UploadedTemplateSummary {
+  fileName: string;
+  sheetName: string;
+  rowCount: number;
+  columnCount: number;
+  kind: UploadedTemplateKind;
+  missingColumns: string[];
+}
+
+function inferTemplateKind(headers: string[]): UploadedTemplateKind {
+  if (headers.includes('branch_name_ar') || headers.includes('branch_phone')) return 'branches';
+  if (headers.includes('company_name_en') || headers.includes('account_manager_email')) return 'providers';
+  return 'unknown';
+}
+
 export interface IntakeWizardGuideProps {
   className?: string;
   testId?: string;
@@ -70,6 +108,8 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   testId = 'intake-wizard-guide',
 }) => {
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+  const [uploadSummary, setUploadSummary] = React.useState<UploadedTemplateSummary | null>(null);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   const handleDownload = React.useCallback(
     async (id: string, href: string, filename: string) => {
@@ -99,12 +139,42 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         // eslint-disable-next-line no-console
         console.warn('[intake-template] download failed for', href);
       } finally {
-        if (url) URL.revokeObjectURL(url);
+        if (url) window.setTimeout(() => URL.revokeObjectURL(url), 2000);
         setDownloadingId(null);
       }
     },
     [],
   );
+
+  const handleUpload = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploadSummary(null);
+    try {
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) throw new Error('empty workbook');
+      const sheet = workbook.Sheets[sheetName];
+      const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, blankrows: false });
+      const headers = (matrix[0] ?? []).map((v) => String(v).trim()).filter(Boolean);
+      const kind = inferTemplateKind(headers);
+      const required = kind === 'unknown' ? [] : REQUIRED_TEMPLATE_COLUMNS[kind];
+      setUploadSummary({
+        fileName: file.name,
+        sheetName,
+        rowCount: Math.max(matrix.length - 1, 0),
+        columnCount: headers.length,
+        kind,
+        missingColumns: required.filter((col) => !headers.includes(col)),
+      });
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Unable to read file');
+    } finally {
+      e.currentTarget.value = '';
+    }
+  }, []);
   return (
     <Card data-testid={testId} className={`p-4 mb-5 ${className ?? ''}`}>
       <div className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
@@ -136,29 +206,84 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         })}
       </ol>
       <div data-testid={`${testId}-templates`} className="mb-4 rounded-xl border bg-muted/20 p-3">
-        <div className="text-[11px] font-semibold mb-2 text-muted-foreground">
-          <Bi ar="قوالب الإدخال (Excel)" en="Intake templates (Excel)" />
+        <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-[11px] font-semibold text-muted-foreground">
+              <Bi ar="تحميل ورفع قوالب الإدخال" en="Download and upload intake templates" />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              <Bi ar="القوالب تُفتح هنا داخل مركز العملاء، بدون تبويب خارجي أو انتقال." en="Templates stay inside the customer center with no new tab or navigation." />
+            </p>
+          </div>
+          <Badge variant="outline" className="w-fit text-[10px] bg-primary/10 text-primary border-primary/25">
+            Excel
+          </Badge>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 md:grid-cols-2">
           {TEMPLATES.map((t) => {
             const isDownloading = downloadingId === t.id;
             return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => handleDownload(t.id, t.href, t.href.split('/').pop() ?? 'template.xlsx')}
-              disabled={isDownloading}
-              data-testid={`intake-template-${t.id}`}
-              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent disabled:cursor-wait disabled:opacity-70"
-            >
-              <Download className="h-3.5 w-3.5 text-primary" aria-hidden />
-              <Bi
-                ar={isDownloading ? 'جاري التحميل…' : t.ar}
-                en={isDownloading ? 'Downloading…' : t.en}
-              />
-            </button>
-          );
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleDownload(t.id, t.href, t.href.split('/').pop() ?? 'template.xlsx')}
+                disabled={isDownloading}
+                data-testid={`intake-template-${t.id}`}
+                className="group flex min-h-12 items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2 text-start text-xs font-medium transition-colors hover:bg-accent disabled:cursor-wait disabled:opacity-70"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileSpreadsheet className="h-4 w-4" aria-hidden />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate"><Bi ar={isDownloading ? 'جاري التحميل…' : t.ar} en={isDownloading ? 'Downloading…' : t.en} /></span>
+                    <span className="block truncate text-[10px] font-normal text-muted-foreground tech-content">{t.href.split('/').pop()}</span>
+                  </span>
+                </span>
+                <Download className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden />
+              </button>
+            );
           })}
+        </div>
+        <div className="mt-3 rounded-xl border border-dashed bg-background/70 p-3">
+          <Label htmlFor="provider-intake-template-upload" className="mb-2 flex items-center gap-2 text-xs font-semibold">
+            <Upload className="h-3.5 w-3.5 text-primary" aria-hidden />
+            <Bi ar="رفع ملف Excel للفحص قبل الإدخال" en="Upload Excel for pre-ingest check" />
+          </Label>
+          <Input
+            id="provider-intake-template-upload"
+            data-testid="intake-template-upload"
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            onChange={handleUpload}
+            className="h-11 rounded-xl text-xs"
+          />
+          {uploadSummary && (
+            <div data-testid="intake-template-upload-summary" className="mt-3 rounded-lg bg-muted/40 p-3 text-[11px]">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                  <Bi ar={uploadSummary.kind === 'branches' ? 'قالب فروع' : uploadSummary.kind === 'providers' ? 'قالب مزودين' : 'نوع غير معروف'} en={uploadSummary.kind === 'branches' ? 'Branches template' : uploadSummary.kind === 'providers' ? 'Providers template' : 'Unknown template'} />
+                </Badge>
+                <span className="font-medium tech-content">{uploadSummary.fileName}</span>
+              </div>
+              <div className="grid gap-1 sm:grid-cols-3 text-muted-foreground">
+                <span><Bi ar="الورقة" en="Sheet" />: <span className="tech-content">{uploadSummary.sheetName}</span></span>
+                <span><Bi ar="الأعمدة" en="Columns" />: <span className="tech-content">{uploadSummary.columnCount}</span></span>
+                <span><Bi ar="الصفوف" en="Rows" />: <span className="tech-content">{uploadSummary.rowCount}</span></span>
+              </div>
+              {uploadSummary.missingColumns.length > 0 && (
+                <p className="mt-2 text-warning">
+                  <Bi ar="أعمدة ناقصة" en="Missing columns" />: <span className="tech-content">{uploadSummary.missingColumns.join(', ')}</span>
+                </p>
+              )}
+            </div>
+          )}
+          {uploadError && (
+            <p data-testid="intake-template-upload-error" className="mt-2 flex items-center gap-1.5 text-[11px] text-destructive">
+              <AlertTriangle className="h-3 w-3" aria-hidden />
+              <Bi ar="تعذر قراءة الملف" en="Could not read file" />: <span className="tech-content">{uploadError}</span>
+            </p>
+          )}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
           <Bi

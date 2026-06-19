@@ -3,6 +3,7 @@ import {
   ShieldCheck,
   Bell,
   Clock,
+  CheckCircle2,
   ScrollText,
   Mail,
   ListChecks,
@@ -34,6 +35,7 @@ const AdminOperationsHub = () => (
     tabs={[
       { key: 'overview',      label: { ar: 'نظرة عامة',     en: 'Overview' },      icon: LayoutDashboard, loader: () => import('@/components/admin/centers/operations/OperationsOverviewLanding') },
       { key: 'sla',           label: { ar: 'SLA',           en: 'SLA' },           icon: ShieldCheck,     loader: () => import('./AdminOperations') },
+      { key: 'approvals',     label: { ar: 'الموافقات',     en: 'Approvals' },     icon: CheckCircle2,    loader: () => import('./AdminApprovalsCenter') },
       { key: 'notifications', label: { ar: 'التنبيهات',     en: 'Notifications' }, icon: Bell,            loader: () => import('./AdminContactNotificationLog') },
       { key: 'cron',          label: { ar: 'الجدولة',       en: 'Cron & Jobs' },   icon: Clock,           loader: () => import('./AdminCronRuns') },
       { key: 'logs',          label: { ar: 'السجلات',       en: 'Logs' },          icon: ScrollText,      loader: () => import('@/components/admin/centers/operations/OperationsLogsLanding') },

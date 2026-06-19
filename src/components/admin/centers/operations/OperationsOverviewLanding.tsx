@@ -4,6 +4,7 @@ import {
   ShieldCheck,
   Bell,
   Clock,
+  CheckCircle2,
   ScrollText,
   Mail,
   ListChecks,
@@ -21,7 +22,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
  * pages. NO queries, NO mutations, NO service or supabase imports.
  */
 
-type TileTone = 'primary' | 'sla' | 'notify' | 'cron' | 'logs' | 'email' | 'queue';
+type TileTone = 'primary' | 'sla' | 'approvals' | 'notify' | 'cron' | 'logs' | 'email' | 'queue';
 
 type Tile = {
   key: string;
@@ -45,6 +46,18 @@ const TILES: ReadonlyArray<Tile> = [
       en: 'Dry-run preview of SLA sweep and contact response dashboard. No live dispatch.',
     },
     badge: { ar: 'معاينة فقط', en: 'Preview only' },
+  },
+  {
+    key: 'approvals',
+    to: '/admin/operations?tab=approvals',
+    icon: CheckCircle2,
+    tone: 'approvals',
+    title: { ar: 'الموافقات', en: 'Approvals' },
+    description: {
+      ar: 'صندوق الموافقات والقائمة التي تحتاج مراجعة وتشغيل إجراء الموافقة.',
+      en: 'Approval inbox and queue for reviewing and approving operational items.',
+    },
+    badge: { ar: 'قائمة واضحة', en: 'Clear queue' },
   },
   {
     key: 'notifications',
@@ -105,12 +118,13 @@ const TILES: ReadonlyArray<Tile> = [
 
 const TONE_CLASSES: Record<TileTone, string> = {
   primary: 'bg-primary/10 text-primary',
-  sla:     'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  notify:  'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  cron:    'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-  logs:    'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-  email:   'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  queue:   'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+  sla:     'bg-success/10 text-success',
+  approvals: 'bg-warning/10 text-warning',
+  notify:  'bg-accent/10 text-accent',
+  cron:    'bg-info/10 text-info',
+  logs:    'bg-muted text-muted-foreground',
+  email:   'bg-primary/10 text-primary',
+  queue:   'bg-destructive/10 text-destructive',
 };
 
 const OperationsOverviewLanding = () => {
