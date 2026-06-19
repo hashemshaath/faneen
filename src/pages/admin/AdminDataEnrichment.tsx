@@ -12,7 +12,7 @@
  *  - No popups / dialogs. Inline only.
  *  - No API keys client-side. No auto-save. No auto-publish.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench, FileEdit, Save } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -180,6 +180,23 @@ export default function AdminDataEnrichment() {
     meta: string[];
   } | null>(null);
   const qc = useQueryClient();
+
+  // Inline bulk-intake bridge: when the Provider Intake wizard above
+  // dispatches a row, prefill the search input and trigger the existing
+  // enrichment flow so the operator never leaves the page.
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ name?: string; query?: string }>).detail;
+      const q = (detail?.query ?? detail?.name ?? "").trim();
+      if (!q) return;
+      setStep("search");
+      setSearchQuery(q);
+      const target = document.querySelector<HTMLElement>("[data-intake-workspace]");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    window.addEventListener("qitaat:intake:audit-row", handler as EventListener);
+    return () => window.removeEventListener("qitaat:intake:audit-row", handler as EventListener);
+  }, []);
 
   const buildExtra = (): EnrichmentExtra => ({
     category_slug: categorySlug || null,
@@ -661,7 +678,7 @@ export default function AdminDataEnrichment() {
               <Search className="me-1 inline h-3.5 w-3.5" />
               <Bi ar="ابحث عن المنشأة في خرائط Google" en="Search for the business on Google Maps" />
             </Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2" data-intake-workspace>
               <Input
                 dir="auto"
                 placeholder={bi("مثل: مصنع الزجاج العالمي الرياض", "e.g. Acme Glass Factory Riyadh")}

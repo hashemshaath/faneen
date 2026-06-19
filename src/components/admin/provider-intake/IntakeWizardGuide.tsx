@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   ArrowLeftRight,
   FileJson,
+  Search,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 
@@ -235,24 +236,37 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
     } catch {
       /* sessionStorage may be unavailable; navigation still proceeds */
     }
+    const first = uploadSummary.rows[0];
+    const name = first
+      ? (first.company_name_ar || first.company_name_en || first.branch_name_ar || first.branch_name_en || '').trim()
+      : '';
+    if (typeof window !== 'undefined' && name) {
+      window.dispatchEvent(
+        new CustomEvent('qitaat:intake:audit-row', { detail: { name, query: name, row: first } }),
+      );
+    }
     toast.success(
       `${uploadSummary.rows.length} ${uploadSummary.rows.length === 1 ? 'row' : 'rows'} ready for review`,
       {
-        description:
-          'استخدم لوحة "Data Enrichment" أدناه لمراجعة كل صف يدويًا قبل الاعتماد.',
+        description: name
+          ? `بدأ التدقيق للصف الأول: ${name}`
+          : 'استخدم زر "تدقيق" بجوار كل صف لبدء المراجعة في نفس الشاشة.',
       },
     );
-    if (typeof window !== 'undefined') {
-      const target =
-        document.querySelector<HTMLElement>('[data-intake-workspace]') ??
-        document.querySelector<HTMLElement>('main');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
-      }
-    }
   }, [uploadSummary]);
+
+  const handleAuditRow = React.useCallback((row: Record<string, string>) => {
+    const name = (row.company_name_ar || row.company_name_en || row.branch_name_ar || row.branch_name_en || '').trim();
+    if (!name) {
+      toast.error('الصف يفتقد اسم المنشأة');
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('qitaat:intake:audit-row', { detail: { name, query: name, row } }),
+      );
+    }
+  }, []);
 
   const handleExportJson = React.useCallback(() => {
     if (!uploadSummary) return;
@@ -370,33 +384,43 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                 </p>
               )}
               {uploadSummary.rows.length > 0 && (
-                <div className="mt-3 overflow-x-auto rounded-lg border bg-background">
+                <div className="mt-3 max-h-80 overflow-auto rounded-lg border bg-background">
                   <table className="w-full text-[10px]" data-testid="intake-template-upload-preview">
-                    <thead className="bg-muted/40">
+                    <thead className="sticky top-0 bg-muted/60 backdrop-blur">
                       <tr>
-                        {uploadSummary.headers.slice(0, 6).map((h) => (
+                        <th className="px-2 py-1 text-start font-medium text-muted-foreground">#</th>
+                        {uploadSummary.headers.slice(0, 5).map((h) => (
                           <th key={h} className="px-2 py-1 text-start font-medium text-muted-foreground tech-content">{h}</th>
                         ))}
+                        <th className="px-2 py-1 text-end font-medium text-muted-foreground">
+                          <Bi ar="إجراء" en="Action" />
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {uploadSummary.rows.slice(0, 5).map((row, idx) => (
+                      {uploadSummary.rows.map((row, idx) => (
                         <tr key={idx} className="border-t">
-                          {uploadSummary.headers.slice(0, 6).map((h) => (
+                          <td className="px-2 py-1 align-top tech-content text-muted-foreground">{idx + 1}</td>
+                          {uploadSummary.headers.slice(0, 5).map((h) => (
                             <td key={h} className="px-2 py-1 align-top tech-content">{row[h]}</td>
                           ))}
+                          <td className="px-2 py-1 text-end">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleAuditRow(row)}
+                              data-testid={`intake-template-audit-row-${idx}`}
+                              className="h-7 rounded-lg px-2 text-[10px]"
+                            >
+                              <Search className="me-1 h-3 w-3" aria-hidden />
+                              <Bi ar="تدقيق" en="Audit" />
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {uploadSummary.rows.length > 5 && (
-                    <p className="px-2 py-1 text-[10px] text-muted-foreground">
-                      <Bi
-                        ar={`عرض 5 من أصل ${uploadSummary.rows.length} صفًا`}
-                        en={`Showing 5 of ${uploadSummary.rows.length} rows`}
-                      />
-                    </p>
-                  )}
                 </div>
               )}
               <div className="mt-3 flex flex-wrap items-center gap-2">
