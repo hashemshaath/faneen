@@ -158,6 +158,11 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [reviewedIdx, setReviewedIdx] = React.useState<Set<number>>(new Set());
   const [activeIdx, setActiveIdx] = React.useState<number | null>(null);
+  const [columnMap, setColumnMap] = React.useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    setColumnMap({});
+  }, [uploadSummary?.fileName]);
 
   // Keep per-row badges in sync with the queue in sessionStorage so
   // refreshes and the inline review banner stay aligned.
