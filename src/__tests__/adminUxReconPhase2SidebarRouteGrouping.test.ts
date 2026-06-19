@@ -32,9 +32,12 @@ const NEW_CENTER_SOURCES = NEW_CENTER_FILES.map((p) =>
 const VISIBLE_CENTER_ROUTES = [
   '/admin',
   '/admin/operations',
+  '/admin/approvals',
   '/admin/procurement',
   '/admin/contracts',
   '/admin/businesses',
+  '/admin/lead-requests',
+  '/admin/data-enrichment',
   '/admin/identity',
   '/admin/content',
   '/admin/settings',
@@ -44,7 +47,7 @@ const VISIBLE_CENTER_ROUTES = [
 const visibleItems = ADMIN_NAV_ITEMS.filter((it) => !it.hiddenInSidebar);
 
 describe('ADMIN UX RECONSOLIDATION PHASE 2 — sidebar centers', () => {
-  it('exposes exactly the 9 canonical centers (plus the super-admin Identity Center)', () => {
+  it('exposes the canonical centers plus customer intake and approvals shortcuts', () => {
     const visibleRoutes = visibleItems
       .filter((it) => it.permission !== 'super_admin')
       .map((it) => it.route)
@@ -55,7 +58,6 @@ describe('ADMIN UX RECONSOLIDATION PHASE 2 — sidebar centers', () => {
   it('does not expose legacy single-utility items at the top of the sidebar', () => {
     const forbidden = [
       '/admin/quote-operations',
-      '/admin/lead-requests',
       '/admin/service-requests',
       '/admin/contact-messages',
       '/admin/audit-log',
