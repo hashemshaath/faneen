@@ -7,10 +7,12 @@
  * network calls.
  */
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
   Upload,
   ListChecks,
@@ -19,6 +21,8 @@ import {
   Download,
   FileSpreadsheet,
   AlertTriangle,
+  ArrowLeftRight,
+  FileJson,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 
@@ -94,6 +98,8 @@ interface UploadedTemplateSummary {
   columnCount: number;
   kind: UploadedTemplateKind;
   missingColumns: string[];
+  headers: string[];
+  rows: Record<string, string>[];
 }
 
 function inferTemplateKind(headers: string[]): UploadedTemplateKind {
@@ -139,6 +145,7 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   className,
   testId = 'intake-wizard-guide',
 }) => {
+  const navigate = useNavigate();
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
   const [uploadSummary, setUploadSummary] = React.useState<UploadedTemplateSummary | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
@@ -185,6 +192,16 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
       const headers = (matrix[0] ?? []).map((v) => String(v).trim()).filter(Boolean);
       const kind = inferTemplateKind(headers);
       const required = kind === 'unknown' ? [] : REQUIRED_TEMPLATE_COLUMNS[kind];
+      const rows: Record<string, string>[] = (matrix.slice(1) as unknown[][])
+        .map((row) => {
+          const out: Record<string, string> = {};
+          headers.forEach((h, i) => {
+            const v = row?.[i];
+            out[h] = v === undefined || v === null ? '' : String(v).trim();
+          });
+          return out;
+        })
+        .filter((r) => Object.values(r).some((v) => v !== ''));
       setUploadSummary({
         fileName: file.name,
         sheetName,
@@ -192,6 +209,8 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         columnCount: headers.length,
         kind,
         missingColumns: required.filter((col) => !headers.includes(col)),
+        headers,
+        rows,
       });
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : 'Unable to read file');
@@ -199,6 +218,40 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
       e.currentTarget.value = '';
     }
   }, []);
+
+  const handleContinue = React.useCallback(() => {
+    if (!uploadSummary) return;
+    try {
+      sessionStorage.setItem(
+        'qitaat_intake_parsed_v1',
+        JSON.stringify({
+          kind: uploadSummary.kind,
+          fileName: uploadSummary.fileName,
+          headers: uploadSummary.headers,
+          rows: uploadSummary.rows,
+          parsedAt: new Date().toISOString(),
+        }),
+      );
+    } catch {
+      /* sessionStorage may be unavailable; navigation still proceeds */
+    }
+    navigate('/admin/data-enrichment');
+  }, [navigate, uploadSummary]);
+
+  const handleDownloadJson = React.useCallback(() => {
+    if (!uploadSummary) return;
+    const blob = new Blob(
+      [JSON.stringify({ kind: uploadSummary.kind, rows: uploadSummary.rows }, null, 2)],
+      { type: 'application/json' },
+    );
+    triggerBlobDownload(blob, `${uploadSummary.fileName.replace(/\.[^.]+$/, '')}-parsed.json`);
+  }, [uploadSummary]);
+
+  const canContinue =
+    !!uploadSummary &&
+    uploadSummary.kind !== 'unknown' &&
+    uploadSummary.missingColumns.length === 0 &&
+    uploadSummary.rows.length > 0;
   return (
     <Card data-testid={testId} className={`p-4 mb-5 ${className ?? ''}`}>
       <div className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
