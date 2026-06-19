@@ -130,15 +130,70 @@ const toNullableNumber = (v: string): number | null => {
 };
 
 export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved }) => {
+  const { isRTL } = useLanguage();
   const [f, setF] = useState<FormState>(() => toForm(lead));
+  const [initialSnapshot] = useState<string>(() => JSON.stringify(toForm(lead)));
   const [saving, setSaving] = useState(false);
   const [branches, setBranches] = useState<ProviderLeadBranchRow[]>([]);
+  const [initialBranchesSnapshot, setInitialBranchesSnapshot] = useState<string>('[]');
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
-    listProviderLeadBranches(lead.id).then((r) =>
-      setBranches((r.rows as ProviderLeadBranchRow[]) ?? []),
-    );
+    listProviderLeadBranches(lead.id).then((r) => {
+      const rows = (r.rows as ProviderLeadBranchRow[]) ?? [];
+      setBranches(rows);
+      setInitialBranchesSnapshot(JSON.stringify(rows));
+    });
   }, [lead.id]);
+
+  const isDirty = useMemo(
+    () =>
+      JSON.stringify(f) !== initialSnapshot ||
+      JSON.stringify(branches) !== initialBranchesSnapshot,
+    [f, branches, initialSnapshot, initialBranchesSnapshot],
+  );
+
+  // Browser-level guard against accidental tab close while editing.
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
+
+  const handleCancel = () => {
+    if (isDirty && !confirmCancel) {
+      setConfirmCancel(true);
+      return;
+    }
+    onCancel();
+  };
+
+  const copyHeadToBranch = (idx: number) => {
+    setBranch(idx, {
+      region: f.region || null,
+      city: f.city || null,
+      district: f.district || null,
+      street_name: f.street_name || null,
+      building_number: f.building_number || null,
+      postal_code: f.postal_code || null,
+      short_national_address: f.short_national_address || null,
+      national_address: f.national_address || null,
+      address: f.full_address || null,
+      map_link: f.map_link || null,
+      phone: f.phone || null,
+      whatsapp: f.whatsapp || null,
+      email: f.email || null,
+      website: f.website || null,
+      latitude: f.latitude ? Number(f.latitude) : null,
+      longitude: f.longitude ? Number(f.longitude) : null,
+    });
+    toast.success('تم النسخ من المقر الرئيسي');
+  };
 
   const setBranch = (idx: number, patch: Partial<ProviderLeadBranchRow>) =>
     setBranches((prev) => prev.map((b, i) => (i === idx ? { ...b, ...patch } : b)));
