@@ -994,17 +994,72 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
         )}
       </div>
 
+      {showDiff && (
+        <div className="rounded-xl border border-primary/30 bg-primary/[0.03] p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-primary">
+              <GitCompareArrows className="h-4 w-4" />
+              معاينة التغييرات ({diff.length})
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDiff(false)}
+              className="h-7 rounded-lg text-[11px]"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          {diff.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">لا توجد فروق.</p>
+          ) : (
+            <ul className="space-y-1.5 text-[11px]">
+              {diff.map((d, i) => (
+                <li key={i} className="rounded-lg border bg-background p-2">
+                  <div className="mb-1 font-semibold">{d.label}</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-md bg-destructive/10 px-1.5 py-0.5 text-destructive line-through">
+                      {d.before}
+                    </span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="rounded-md bg-success/10 px-1.5 py-0.5 text-success">
+                      {d.after}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       <div className="sticky bottom-0 -mx-3 -mb-3 flex flex-wrap items-center justify-between gap-2 rounded-b-xl border-t bg-background/95 px-3 py-2.5 backdrop-blur">
         <div className="flex items-center gap-2 text-[11px]">
           {isDirty ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 font-semibold text-warning">
-              <AlertCircle className="h-3 w-3" /> تغييرات غير محفوظة
+              <AlertCircle className="h-3 w-3" /> تغييرات غير محفوظة ({diff.length})
             </span>
           ) : (
             <span className="text-muted-foreground">لا توجد تغييرات</span>
           )}
+          {draftSavedAt && (
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
+              <CheckCircle2 className="h-3 w-3 text-success" />
+              مسودة محفوظة {new Date(draftSavedAt).toLocaleTimeString()}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDiff((v) => !v)}
+            disabled={!isDirty}
+            className="h-8 rounded-lg text-[11px]"
+          >
+            <GitCompareArrows className="me-1 h-3.5 w-3.5" />
+            {showDiff ? 'إخفاء الفروق' : 'معاينة الفروق'}
+          </Button>
           {confirmCancel ? (
             <>
               <span className="text-[11px] text-destructive">تأكيد إلغاء التغييرات؟</span>
@@ -1036,19 +1091,50 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
               <X className="me-1 h-4 w-4" /> إلغاء
             </Button>
           )}
-          <Button
-            size="sm"
-            onClick={submit}
-            disabled={saving || !isDirty}
-            className="h-8 rounded-lg"
-          >
-            {saving ? (
-              <Loader2 className="me-1 h-4 w-4 animate-spin" />
-            ) : (
+          {confirmSave ? (
+            <>
+              <span className="text-[11px] text-success">تأكيد الحفظ النهائي؟</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmSave(false)}
+                disabled={saving}
+                className="h-8 rounded-lg"
+              >
+                تراجع
+              </Button>
+              <Button size="sm" onClick={submit} disabled={saving} className="h-8 rounded-lg">
+                {saving ? (
+                  <Loader2 className="me-1 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="me-1 h-4 w-4" />
+                )}
+                نعم، احفظ
+              </Button>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => {
+                setSubmitAttempted(true);
+                const v = validate();
+                if (Object.keys(v).length > 0) {
+                  setErrors(v);
+                  toast.error(`يوجد ${Object.keys(v).length} حقول بحاجة للمراجعة`);
+                  errorSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  setTimeout(() => focusField(Object.keys(v)[0]), 400);
+                  return;
+                }
+                setShowDiff(true);
+                setConfirmSave(true);
+              }}
+              disabled={saving || !isDirty}
+              className="h-8 rounded-lg"
+            >
               <Save className="me-1 h-4 w-4" />
-            )}
-            حفظ التعديلات
-          </Button>
+              حفظ التعديلات
+            </Button>
+          )}
         </div>
       </div>
     </div>
