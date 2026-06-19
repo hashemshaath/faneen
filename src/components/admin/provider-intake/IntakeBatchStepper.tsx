@@ -191,9 +191,11 @@ export const IntakeBatchStepper: React.FC<{ className?: string }> = ({ className
 
   const toggleAll = () => {
     if (!parsed) return;
-    const validIdx = parsed.rows.map((r, i) => (r.validation.length === 0 ? i : -1)).filter((i) => i >= 0);
+    const selectableIdx = parsed.rows
+      .map((r, i) => (r.status === 'created' || r.status === 'submitting' ? -1 : i))
+      .filter((i) => i >= 0);
     setSelected((prev) =>
-      prev.size === validIdx.length ? new Set() : new Set(validIdx),
+      prev.size === selectableIdx.length ? new Set() : new Set(selectableIdx),
     );
   };
 
@@ -399,10 +401,13 @@ export const IntakeBatchStepper: React.FC<{ className?: string }> = ({ className
                     <Checkbox
                       checked={
                         selected.size > 0 &&
-                        selected.size === parsed.rows.filter((r) => r.validation.length === 0).length
+                        selected.size ===
+                          parsed.rows.filter(
+                            (r) => r.status !== 'created' && r.status !== 'submitting',
+                          ).length
                       }
                       onCheckedChange={toggleAll}
-                      aria-label="Select all valid"
+                      aria-label="Select all"
                     />
                   </th>
                   <th className="px-2 py-2 text-start text-muted-foreground">#</th>
@@ -441,7 +446,7 @@ export const IntakeBatchStepper: React.FC<{ className?: string }> = ({ className
                       <td className="px-2 py-1.5 align-top">
                         <Checkbox
                           checked={checked}
-                          disabled={invalid || r.status === 'created' || r.status === 'submitting'}
+                          disabled={r.status === 'created' || r.status === 'submitting'}
                           onCheckedChange={() => toggleRow(idx)}
                           aria-label={`Select row ${idx + 1}`}
                         />
