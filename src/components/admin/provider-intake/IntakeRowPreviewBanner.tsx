@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -217,7 +218,7 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
         continue;
       }
       const { error } = await supabase.rpc('submit_provider_lead', {
-        payload: payload as unknown as Record<string, never>,
+        payload: payload as unknown as Json,
       });
       if (!error) {
         created += 1;
