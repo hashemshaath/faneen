@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
+import { useEmbeddedPage } from '@/contexts/AdminTabsContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
@@ -272,6 +273,11 @@ const AdminUsers = () => {
 
   // Auto-open create panel when navigated with ?create=provider|business|company|individual
   const [searchParams, setSearchParams] = useSearchParams();
+  // When this page is rendered inside a tabbed shell (e.g. AdminIdentityHub),
+  // the parent shell owns the `?tab=` query param. Consuming it here would
+  // strip it from the URL and bounce the shell back to its default tab,
+  // making the "Users" tile on /admin/identity look broken.
+  const isEmbedded = useEmbeddedPage();
   const openCreatePanelRef = useRef<(t: 'individual' | 'business' | 'company') => void>(() => {});
   const lastConsumedParamsRef = useRef<string>('');
   useEffect(() => { openCreatePanelRef.current = openCreatePanel; });
@@ -282,7 +288,9 @@ const AdminUsers = () => {
     const typeParam = searchParams.get('type');
     const roleParam = searchParams.get('role');
     const focusParam = searchParams.get('focus');
-    const tabParam = searchParams.get('tab');
+    // Only consume our internal `tab` param when running stand-alone.
+    // Embedded shells own this key (TabbedShell mirrors active tab to ?tab=).
+    const tabParam = isEmbedded ? null : searchParams.get('tab');
     let mutated = false;
     const next = new URLSearchParams(searchParams);
 
@@ -337,7 +345,7 @@ const AdminUsers = () => {
     } else {
       lastConsumedParamsRef.current = sig;
     }
-  }, [isAdmin, searchParams, setSearchParams]);
+  }, [isAdmin, searchParams, setSearchParams, isEmbedded]);
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
