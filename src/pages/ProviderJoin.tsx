@@ -39,26 +39,44 @@ interface FormState {
   contact_name: string;
   email: string;
   phone: string;
+  whatsapp: string;
   preferred_channel: ProviderLeadChannel;
   website: string;
   cr_number: string;
   unified_number: string;
   vat_number: string;
+  establishment_year: string;
   main_activity: string;
   specialties: string[];
   brands: string[];
   brief: string;
   map_link: string;
   national_address: string;
+  short_national_address: string;
+  full_address: string;
+  region: string;
   city: string;
+  district: string;
+  street_name: string;
+  building_number: string;
+  postal_code: string;
+  latitude: string;
+  longitude: string;
+  account_manager_name: string;
+  account_manager_phone: string;
+  account_manager_email: string;
   branches_count: number;
 }
 
 const EMPTY: FormState = {
-  name_ar: '', name_en: '', contact_name: '', email: '', phone: '',
+  name_ar: '', name_en: '', contact_name: '', email: '', phone: '', whatsapp: '',
   preferred_channel: 'phone', website: '', cr_number: '', unified_number: '',
-  vat_number: '', main_activity: '', specialties: [], brands: [], brief: '',
-  map_link: '', national_address: '', city: '', branches_count: 1,
+  vat_number: '', establishment_year: '', main_activity: '', specialties: [], brands: [], brief: '',
+  map_link: '', national_address: '', short_national_address: '', full_address: '',
+  region: '', city: '', district: '', street_name: '', building_number: '', postal_code: '',
+  latitude: '', longitude: '',
+  account_manager_name: '', account_manager_phone: '', account_manager_email: '',
+  branches_count: 1,
 };
 
 const ProviderJoin: React.FC = () => {
