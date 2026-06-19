@@ -136,7 +136,6 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
       { id: 'contracts', labelAr: 'العقود', labelEn: 'Contracts', route: '/admin/contracts', icon: FileText, keywords: ['contracts', 'عقود'] },
       { id: 'quote-operations', labelAr: 'مركز عروض الأسعار', labelEn: 'Quote Operations', route: '/admin/quote-operations', icon: FileText, hiddenInSidebar: true },
       { id: 'quote-requests', labelAr: 'طلبات عروض الأسعار', labelEn: 'Quote Requests', route: '/admin/quote-requests', icon: Inbox, hiddenInSidebar: true },
-      { id: 'lead-requests', labelAr: 'طلبات العملاء', labelEn: 'Lead Requests', route: '/admin/lead-requests', icon: Inbox, hiddenInSidebar: true },
       { id: 'service-requests', labelAr: 'طلبات الخدمات', labelEn: 'Service Requests', route: '/admin/service-requests', icon: Wrench, hiddenInSidebar: true },
       { id: 'service-activations', labelAr: 'تفعيل الخدمات', labelEn: 'Service Activations', route: '/admin/service-activations', icon: CheckCircle2, hiddenInSidebar: true },
       { id: 'approvals', labelAr: 'الموافقات', labelEn: 'Approvals', route: '/admin/approvals', icon: CheckCircle2, keywords: ['approval', 'approve', 'موافقات', 'اعتمادات'] },
@@ -148,13 +147,14 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
   },
   {
     id: 'users-entities',
-    labelAr: 'المستخدمون والكيانات',
-    labelEn: 'Users & Entities',
+    labelAr: 'العملاء والكيانات',
+    labelEn: 'Customers & Entities',
     icon: Users,
     descriptionAr: 'مركز الهوية، المنشآت، الوصول والموافقات',
     descriptionEn: 'Identity center, businesses, access and approvals',
     items: [
       { id: 'businesses', labelAr: 'المنشآت والكيانات', labelEn: 'Businesses & Entities', route: '/admin/businesses', icon: Building2, keywords: ['businesses', 'providers', 'customers', 'clients', 'منشآت', 'عملاء'] },
+      { id: 'lead-requests', labelAr: 'قائمة العملاء المحتملين', labelEn: 'Prospect Leads', route: '/admin/lead-requests', icon: Inbox, keywords: ['leads', 'prospects', 'customers', 'طلبات العملاء', 'عملاء محتملين'] },
       { id: 'identity-hub', labelAr: 'المستخدمون والوصول', labelEn: 'Users & Access', route: '/admin/identity', icon: Users, keywords: ['users', 'identity', 'access'] },
       { id: 'data-enrichment', labelAr: 'تحميل ورفع ملفات العملاء', labelEn: 'Customer Intake Files', route: '/admin/data-enrichment', icon: FileSpreadsheet, keywords: ['excel', 'xlsx', 'templates', 'upload', 'download', 'provider intake', 'customers', 'قوالب', 'رفع', 'تحميل', 'عملاء'] },
       { id: 'users', labelAr: 'المستخدمون', labelEn: 'Users', route: '/admin/users', icon: Users, hiddenInSidebar: true },
@@ -240,7 +240,6 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
       { id: 'conversion-optimization', labelAr: 'تحسين التحويلات', labelEn: 'Conversion Optimization', route: '/admin/conversion-optimization', icon: TrendingUp, hiddenInSidebar: true },
       { id: 'reports', labelAr: 'التقارير', labelEn: 'Reports', route: '/admin/reports', icon: FileBarChart, hiddenInSidebar: true },
       { id: 'ab-experiments', labelAr: 'تجارب A/B', labelEn: 'A/B Experiments', route: '/admin/ab-experiments', icon: FlaskConical, hiddenInSidebar: true },
-      { id: 'data-enrichment-governance-link', labelAr: 'إثراء البيانات', labelEn: 'Data Enrichment', route: '/admin/data-enrichment-governance', icon: Database, hiddenInSidebar: true, legacyRedirectOf: '/admin/data-enrichment' },
     ],
   },
   {
