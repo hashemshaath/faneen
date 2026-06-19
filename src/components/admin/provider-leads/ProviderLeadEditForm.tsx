@@ -138,6 +138,8 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
   const [initialBranchesSnapshot, setInitialBranchesSnapshot] = useState<string>('[]');
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const errorSummaryRef = React.useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     listProviderLeadBranches(lead.id).then((r) => {
@@ -238,48 +240,75 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
     toast.success('تم حذف الفرع');
   };
 
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
+  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
     setF((prev) => ({ ...prev, [k]: v }));
+    if (errors[k as string]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[k as string];
+        return next;
+      });
+    }
+  };
 
-  const submit = async () => {
-    // Required validations
-    if (!f.name_ar.trim() || f.name_ar.trim().length < 2) {
-      toast.error('الاسم بالعربية مطلوب (٢ أحرف فأكثر)');
-      return;
-    }
-    if (!f.contact_name.trim()) {
-      toast.error('اسم المسؤول مطلوب');
-      return;
-    }
-    if (!/^.+@.+\..+$/.test(f.email.trim())) {
-      toast.error('صيغة البريد غير صحيحة');
-      return;
-    }
-    if (f.phone.trim().length < 7) {
-      toast.error('رقم الجوال غير صحيح');
-      return;
-    }
-    if (f.postal_code && !/^[1-9]\d{4}$/.test(f.postal_code.trim())) {
-      toast.error('الرمز البريدي يجب أن يكون ٥ أرقام ولا يبدأ بصفر');
-      return;
-    }
-    if (
-      f.short_national_address &&
-      !/^[A-Za-z]{4}\d{4}$/.test(f.short_national_address.trim())
-    ) {
-      toast.error('العنوان الوطني المختصر: ٤ أحرف + ٤ أرقام');
-      return;
-    }
+  const FIELD_LABELS: Record<string, string> = {
+    name_ar: 'الاسم بالعربية',
+    contact_name: 'اسم المسؤول',
+    email: 'البريد الإلكتروني',
+    phone: 'رقم الجوال',
+    postal_code: 'الرمز البريدي',
+    short_national_address: 'العنوان الوطني المختصر',
+    latitude: 'خط العرض',
+    longitude: 'خط الطول',
+    account_manager_email: 'بريد مدير الحساب',
+  };
+
+  const validate = (): Record<string, string> => {
+    const e: Record<string, string> = {};
+    if (!f.name_ar.trim() || f.name_ar.trim().length < 2)
+      e.name_ar = 'مطلوب (٢ أحرف فأكثر)';
+    if (!f.contact_name.trim()) e.contact_name = 'اسم المسؤول مطلوب';
+    if (!/^.+@.+\..+$/.test(f.email.trim())) e.email = 'صيغة البريد غير صحيحة';
+    if (f.phone.trim().length < 7) e.phone = 'رقم الجوال غير صحيح';
+    if (f.postal_code && !/^[1-9]\d{4}$/.test(f.postal_code.trim()))
+      e.postal_code = '٥ أرقام ولا يبدأ بصفر';
+    if (f.short_national_address && !/^[A-Za-z]{4}\d{4}$/.test(f.short_national_address.trim()))
+      e.short_national_address = '٤ أحرف + ٤ أرقام (مثال: ABCD1234)';
     const lat = toNullableNumber(f.latitude);
     const lng = toNullableNumber(f.longitude);
-    if (f.latitude && (lat === null || lat < -90 || lat > 90)) {
-      toast.error('خط العرض خارج النطاق (-90 إلى 90)');
+    if (f.latitude && (lat === null || lat < -90 || lat > 90))
+      e.latitude = 'القيمة بين -90 و 90';
+    if (f.longitude && (lng === null || lng < -180 || lng > 180))
+      e.longitude = 'القيمة بين -180 و 180';
+    if (f.account_manager_email && !/^.+@.+\..+$/.test(f.account_manager_email.trim()))
+      e.account_manager_email = 'صيغة البريد غير صحيحة';
+    return e;
+  };
+
+  const focusField = (name: string) => {
+    const el = document.querySelector<HTMLElement>(`[data-field="${name}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const input = el.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+      'input, textarea, select',
+    );
+    setTimeout(() => input?.focus(), 250);
+  };
+
+  const submit = async () => {
+    const validation = validate();
+    if (Object.keys(validation).length > 0) {
+      setErrors(validation);
+      const first = Object.keys(validation)[0];
+      toast.error(`يوجد ${Object.keys(validation).length} حقول بحاجة للمراجعة`);
+      // Scroll to summary, then to first invalid field.
+      errorSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => focusField(first), 400);
       return;
     }
-    if (f.longitude && (lng === null || lng < -180 || lng > 180)) {
-      toast.error('خط الطول خارج النطاق (-180 إلى 180)');
-      return;
-    }
+    setErrors({});
+    const lat = toNullableNumber(f.latitude);
+    const lng = toNullableNumber(f.longitude);
 
     const patch: ProviderLeadEditableFields = {
       name_ar: f.name_ar.trim(),
@@ -344,8 +373,38 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
 
   return (
     <div className="space-y-4 rounded-xl border bg-muted/20 p-3">
+      <div ref={errorSummaryRef}>
+        {Object.keys(errors).length > 0 && (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/40 bg-destructive/5 p-3"
+          >
+            <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              يوجد {Object.keys(errors).length} حقل بحاجة للمراجعة قبل الحفظ
+            </div>
+            <ul className="space-y-1 text-[11px]">
+              {Object.entries(errors).map(([name, msg]) => (
+                <li key={name}>
+                  <button
+                    type="button"
+                    onClick={() => focusField(name)}
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-destructive hover:bg-destructive/10"
+                  >
+                    <span className="font-semibold">
+                      {FIELD_LABELS[name] ?? name}:
+                    </span>
+                    <span>{msg}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <Section title="بيانات المنشأة">
-        <Field label="الاسم بالعربية *">
+        <Field label="الاسم بالعربية *" name="name_ar" error={errors.name_ar}>
           <Input value={f.name_ar} onChange={(e) => set('name_ar', e.target.value)} dir="auto" />
         </Field>
         <Field label="الاسم بالإنجليزية">
@@ -374,17 +433,17 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
       </Section>
 
       <Section title="التواصل">
-        <Field label="اسم المسؤول *">
+        <Field label="اسم المسؤول *" name="contact_name" error={errors.contact_name}>
           <Input value={f.contact_name} onChange={(e) => set('contact_name', e.target.value)} />
         </Field>
-        <Field label="البريد *">
+        <Field label="البريد *" name="email" error={errors.email}>
           <Input
             value={f.email}
             onChange={(e) => set('email', e.target.value)}
             className="tech-content"
           />
         </Field>
-        <Field label="الجوال *">
+        <Field label="الجوال *" name="phone" error={errors.phone}>
           <Input
             value={f.phone}
             onChange={(e) => set('phone', e.target.value)}
@@ -464,7 +523,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             className="tech-content"
           />
         </Field>
-        <Field label="الرمز البريدي">
+        <Field label="الرمز البريدي" name="postal_code" error={errors.postal_code}>
           <Input
             value={f.postal_code}
             onChange={(e) => set('postal_code', e.target.value)}
@@ -472,7 +531,11 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             maxLength={5}
           />
         </Field>
-        <Field label="العنوان الوطني المختصر">
+        <Field
+          label="العنوان الوطني المختصر"
+          name="short_national_address"
+          error={errors.short_national_address}
+        >
           <Input
             value={f.short_national_address}
             onChange={(e) => set('short_national_address', e.target.value.toUpperCase())}
@@ -494,7 +557,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             onChange={(e) => set('full_address', e.target.value)}
           />
         </Field>
-        <Field label="خط العرض">
+        <Field label="خط العرض" name="latitude" error={errors.latitude}>
           <Input
             value={f.latitude}
             onChange={(e) => set('latitude', e.target.value)}
@@ -502,7 +565,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             inputMode="decimal"
           />
         </Field>
-        <Field label="خط الطول">
+        <Field label="خط الطول" name="longitude" error={errors.longitude}>
           <Input
             value={f.longitude}
             onChange={(e) => set('longitude', e.target.value)}
@@ -575,7 +638,11 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             className="tech-content"
           />
         </Field>
-        <Field label="البريد">
+        <Field
+          label="البريد"
+          name="account_manager_email"
+          error={errors.account_manager_email}
+        >
           <Input
             value={f.account_manager_email}
             onChange={(e) => set('account_manager_email', e.target.value)}
@@ -859,13 +926,27 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   </div>
 );
 
-const Field: React.FC<{ label: string; full?: boolean; children: React.ReactNode }> = ({
-  label,
-  full,
-  children,
-}) => (
-  <div className={full ? 'sm:col-span-2' : ''}>
-    <Label className="text-[11px] text-muted-foreground">{label}</Label>
-    <div className="mt-1">{children}</div>
+const Field: React.FC<{
+  label: string;
+  full?: boolean;
+  name?: string;
+  error?: string;
+  children: React.ReactNode;
+}> = ({ label, full, name, error, children }) => (
+  <div
+    className={full ? 'sm:col-span-2' : ''}
+    data-field={name}
+  >
+    <Label
+      className={`text-[11px] ${error ? 'text-destructive' : 'text-muted-foreground'}`}
+    >
+      {label}
+    </Label>
+    <div
+      className={`mt-1 ${error ? 'rounded-xl ring-2 ring-destructive/60' : ''}`}
+    >
+      {children}
+    </div>
+    {error && <p className="mt-1 text-[10px] text-destructive">{error}</p>}
   </div>
 );
