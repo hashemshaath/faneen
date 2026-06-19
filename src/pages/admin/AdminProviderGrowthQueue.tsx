@@ -26,6 +26,8 @@ import {
 import { ProviderInsightCard } from '@/components/admin/provider-growth/GrowthDashboardWidgets';
 import { ProviderInsightDrawer } from '@/components/admin/provider-growth/ProviderInsightDrawer';
 import { emitProviderGrowthEvent } from '@/modules/providers/growthEvents';
+import { IntakeKpiStrip, type IntakeKpiItem } from '@/components/admin/provider-intake/IntakeKpiStrip';
+import { PilotContactTemplateCard } from '@/components/admin/provider-intake/PilotContactTemplateCard';
 
 const PAGE_KEY = 'admin.provider-growth-queue';
 
@@ -73,6 +75,26 @@ const AdminProviderGrowthQueue: React.FC = () => {
     [businessesQ.data, pipelineByBiz],
   );
   const filtered = useMemo(() => filterGrowthInsights(insights, filter), [insights, filter]);
+
+  const pilotKpis = useMemo<IntakeKpiItem[]>(() => {
+    const total = insights.length;
+    const readyForPilot = insights.filter((i) => i.readiness.score >= 70 && i.quality.score >= 70).length;
+    const needsContact = insights.filter((i) => !i.business.has_address || !i.business.has_services).length;
+    const missingServices = insights.filter((i) => !i.business.has_services).length;
+    const missingCity = insights.filter((i) => !i.business.has_address).length;
+    const pendingVerification = insights.filter((i) => i.stage === 'pending_verification').length;
+    const outOfScope = insights.filter((i) => i.stage === 'rejected').length;
+    return [
+      { id: 'ready-pilot', label: t('جاهز للتجربة', 'Pilot-ready'), value: readyForPilot, tone: 'success' },
+      { id: 'needs-contact', label: t('يحتاج تواصل', 'Needs contact'), value: needsContact, tone: 'warning' },
+      { id: 'awaiting-reply', label: t('بانتظار الرد', 'Awaiting reply'), value: pendingVerification, tone: 'info' },
+      { id: 'missing-services', label: t('ناقص خدمات', 'Missing services'), value: missingServices, tone: 'warning' },
+      { id: 'missing-city', label: t('ناقص مدينة', 'Missing city'), value: missingCity, tone: 'warning' },
+      { id: 'out-of-scope', label: t('خارج النطاق', 'Out of scope'), value: outOfScope, tone: 'destructive' },
+      { id: 'total', label: t('الإجمالي', 'Total'), value: total, tone: 'neutral' },
+    ];
+  }, [insights, isRTL]);
+
   const activeInsight = useMemo(
     () => insights.find((i) => i.business.id === insightId) ?? null,
     [insights, insightId],
@@ -129,6 +151,10 @@ const AdminProviderGrowthQueue: React.FC = () => {
             </Button>
           </div>
         </header>
+
+        <IntakeKpiStrip items={pilotKpis} testId="growth-queue-pilot-kpis" />
+
+        <PilotContactTemplateCard className="mb-5" testId="growth-queue-pilot-contact-template" />
 
         {/* Filters */}
         <div data-testid="queue-filters" className="flex flex-wrap gap-2 mb-5">
