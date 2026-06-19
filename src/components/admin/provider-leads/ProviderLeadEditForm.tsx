@@ -409,6 +409,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
   };
 
   const submit = async () => {
+    setSubmitAttempted(true);
     const validation = validate();
     if (Object.keys(validation).length > 0) {
       setErrors(validation);
@@ -417,6 +418,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
       // Scroll to summary, then to first invalid field.
       errorSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setTimeout(() => focusField(first), 400);
+      setConfirmSave(false);
       return;
     }
     setErrors({});
@@ -481,6 +483,10 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
     }
     setSaving(false);
     toast.success('تم حفظ التعديلات');
+    // Clear draft after successful save.
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+    setDraftSavedAt(null);
+    setConfirmSave(false);
     onSaved();
   };
 
