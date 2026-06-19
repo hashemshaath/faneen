@@ -3,14 +3,14 @@ import { Navigate, useSearchParams } from 'react-router-dom';
 
 /**
  * UNIFIED-ACCOUNTS-APPROVALS — `/admin/approvals` is now merged into
- * the Account & Approvals Center at `/admin/identity?tab=approvals`.
+ * the Account & Approvals dashboard at `/admin/identity/dashboard?tab=workspace`.
  * Preserve query-string for any deep links.
  */
 const AdminApprovalsCenter: React.FC = () => {
   const [sp] = useSearchParams();
   const qs = new URLSearchParams(sp);
-  if (!qs.get('tab')) qs.set('tab', 'approvals');
-  return <Navigate to={`/admin/identity?${qs.toString()}`} replace />;
+  qs.set('tab', 'workspace');
+  return <Navigate to={`/admin/identity/dashboard?${qs.toString()}`} replace />;
 };
 
 export default AdminApprovalsCenter;
