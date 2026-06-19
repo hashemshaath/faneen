@@ -159,6 +159,10 @@ const AdminIdentity: React.FC = () => {
     : rawTab === 'workspace' || rawTab === 'approvals' || rawTab === 'directory' ? 'workspace'
     : 'overview';
   const [tab, setTab] = useState<TabKey>(initialTab);
+  // Auto-jump to the approvals workspace the first time we discover pending
+  // items — only when the admin hasn't explicitly picked a tab. Keeps the
+  // pending queue front-and-center without trapping users who chose Overview.
+  const autoJumpedRef = useRef(false);
   const setTabSafe = useCallback((next: TabKey) => {
     setTab(next);
     const sp = new URLSearchParams(searchParams);
@@ -171,6 +175,15 @@ const AdminIdentity: React.FC = () => {
     (approvalsCounts?.approvalsPending ?? 0) +
     (approvalsCounts?.businessesPending ?? 0) +
     (approvalsCounts?.accessPending ?? 0);
+
+  useEffect(() => {
+    if (autoJumpedRef.current) return;
+    if (rawTab) return; // respect explicit user/URL choice
+    if (pendingTotal > 0) {
+      autoJumpedRef.current = true;
+      setTab('workspace');
+    }
+  }, [pendingTotal, rawTab]);
 
   // Legacy ?view=... deep-link redirect to standalone management pages.
   const legacyView = searchParams.get('view');
