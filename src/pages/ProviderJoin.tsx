@@ -837,23 +837,74 @@ const ProviderJoin: React.FC = () => {
                                 aria-invalid={!!errors[`branch_${i}_name`]}
                               />
                             </Field>
+                            <Field label={t('المنطقة', 'Region')}>
+                              <Input dir="auto" value={b.region ?? ''} onChange={(e) => updateBranch(i, 'region', e.target.value)} className="h-12 rounded-xl" />
+                            </Field>
                             <Field label={t('المدينة', 'City')}>
                               <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-12 rounded-xl" />
                             </Field>
+                            <Field label={t('الحي', 'District')}>
+                              <Input dir="auto" value={b.district ?? ''} onChange={(e) => updateBranch(i, 'district', e.target.value)} className="h-12 rounded-xl" />
+                            </Field>
+                            <Field label={t('اسم الشارع', 'Street name')}>
+                              <Input dir="auto" value={b.street_name ?? ''} onChange={(e) => updateBranch(i, 'street_name', e.target.value)} className="h-12 rounded-xl" />
+                            </Field>
+                            <Field label={t('رقم المبنى', 'Building number')}>
+                              <Input dir="ltr" value={b.building_number ?? ''} onChange={(e) => updateBranch(i, 'building_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                            </Field>
+                            <Field label={t('الرمز البريدي', 'Postal code')}>
+                              <Input dir="ltr" inputMode="numeric" maxLength={5} value={b.postal_code ?? ''} onChange={(e) => updateBranch(i, 'postal_code', e.target.value)} className="h-12 rounded-xl tech-content" />
+                            </Field>
+                            <Field label={t('العنوان الوطني المختصر', 'Short national address')}>
+                              <Input dir="ltr" maxLength={8} value={b.short_national_address ?? ''} onChange={(e) => updateBranch(i, 'short_national_address', e.target.value.toUpperCase())} className="h-12 rounded-xl tech-content uppercase" />
+                            </Field>
                             <div className="md:col-span-2">
-                              <Field label={t('العنوان', 'Address')}>
+                              <Field label={t('العنوان التفصيلي', 'Address')}>
                                 <Input dir="auto" value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-12 rounded-xl" />
                               </Field>
                             </div>
-                            <Field label={t('رقم التواصل', 'Phone')}>
+                            <div className="md:col-span-2">
+                              <Field label={t('العنوان الوطني الكامل', 'Full national address')}>
+                                <Input dir="auto" value={b.national_address ?? ''} onChange={(e) => updateBranch(i, 'national_address', e.target.value)} className="h-12 rounded-xl" />
+                              </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_phone`}>
+                            <Field label={t('رقم التواصل', 'Phone')} error={errors[`branch_${i}_phone`]}>
                               <div className="relative">
                                 <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-12 rounded-xl ps-9 tech-content" />
+                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => { updateBranch(i, 'phone', e.target.value); clearError(`branch_${i}_phone`); }} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors[`branch_${i}_phone`])}`} aria-invalid={!!errors[`branch_${i}_phone`]} />
                               </div>
                             </Field>
-                            <Field label={t('رابط الموقع على الخريطة', 'Map link')}>
-                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-12 rounded-xl" />
+                            </div>
+                            <div data-error-key={`branch_${i}_whatsapp`}>
+                            <Field label={t('واتساب', 'WhatsApp')} error={errors[`branch_${i}_whatsapp`]}>
+                              <div className="relative">
+                                <MessageCircle className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
+                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.whatsapp ?? ''} onChange={(e) => { updateBranch(i, 'whatsapp', e.target.value); clearError(`branch_${i}_whatsapp`); }} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors[`branch_${i}_whatsapp`])}`} aria-invalid={!!errors[`branch_${i}_whatsapp`]} />
+                              </div>
                             </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_email`}>
+                            <Field label={t('البريد الإلكتروني', 'Email')} error={errors[`branch_${i}_email`]}>
+                              <div className="relative">
+                                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input type="email" dir="ltr" placeholder="branch@example.com" value={b.email ?? ''} onChange={(e) => { updateBranch(i, 'email', e.target.value); clearError(`branch_${i}_email`); }} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors[`branch_${i}_email`])}`} aria-invalid={!!errors[`branch_${i}_email`]} />
+                              </div>
+                            </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_website`}>
+                            <Field label={t('الموقع الإلكتروني', 'Website')} error={errors[`branch_${i}_website`]}>
+                              <div className="relative">
+                                <LinkIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input type="url" dir="ltr" placeholder="https://" value={b.website ?? ''} onChange={(e) => { updateBranch(i, 'website', e.target.value); clearError(`branch_${i}_website`); }} className={`h-12 rounded-xl ps-9 ${invalidInputClass(!!errors[`branch_${i}_website`])}`} aria-invalid={!!errors[`branch_${i}_website`]} />
+                              </div>
+                            </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_map`} className="md:col-span-2">
+                            <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors[`branch_${i}_map`]}>
+                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => { updateBranch(i, 'map_link', e.target.value); clearError(`branch_${i}_map`); }} className={`h-12 rounded-xl ${invalidInputClass(!!errors[`branch_${i}_map`])}`} aria-invalid={!!errors[`branch_${i}_map`]} />
+                            </Field>
+                            </div>
                           </div>
                         </div>
                       </details>
