@@ -37,6 +37,10 @@ const AdminGoogleServices = () => {
 
   const deferred = !!data?.deferred;
   const score = data?.healthScore ?? 0;
+  const probes = data?.apis ? Object.values(data.apis).filter(Boolean) as NonNullable<GoogleHealthResponse["apis"][GoogleApi]>[] : [];
+  const referrerIssue = probes.some((p) => p.authIssue === "referrer_restricted");
+  const apiDisabled = probes.some((p) => p.authIssue === "api_not_enabled");
+  const keyInvalid = probes.some((p) => p.authIssue === "key_invalid");
 
   return (
     <DashboardLayout>
@@ -96,6 +100,38 @@ const AdminGoogleServices = () => {
           ) : null}
         </Card>
 
+        {(referrerIssue || apiDisabled || keyInvalid) && (
+          <Card className="mb-6 border-amber-300 bg-amber-50 p-4 text-amber-900">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div className="space-y-1 text-sm">
+                {referrerIssue && (
+                  <p>
+                    <strong><Bi ar="قيد HTTP Referrer مفعّل على المفتاح الخادمي." en="HTTP Referrer restriction detected on the server key." /></strong>{" "}
+                    <Bi
+                      ar="افتح Google Cloud → Credentials → عدّل GOOGLE_MAPS_API_KEY → Application restrictions = None، ثم اضغط إعادة الفحص."
+                      en="Open Google Cloud → Credentials → edit GOOGLE_MAPS_API_KEY → Application restrictions = None, then re-check."
+                    />
+                  </p>
+                )}
+                {apiDisabled && (
+                  <p>
+                    <Bi
+                      ar="فعّل في GCP: Places API (New), Geocoding, Routes, Address Validation."
+                      en="Enable in GCP: Places API (New), Geocoding, Routes, Address Validation."
+                    />
+                  </p>
+                )}
+                {keyInvalid && (
+                  <p>
+                    <Bi ar="المفتاح غير صالح — أنشئ مفتاحًا جديدًا وحدّث السر GOOGLE_MAPS_API_KEY." en="Invalid key — create a new one and update the GOOGLE_MAPS_API_KEY secret." />
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {(Object.keys(API_META) as GoogleApi[]).map((k) => {
             const meta = API_META[k];
@@ -116,12 +152,12 @@ const AdminGoogleServices = () => {
                         {probe === null
                           ? <Bi ar="غير مفحوص" en="Not checked" />
                           : probe.ok
-                            ? <Bi ar="جاهز" en="Healthy" />
-                            : <span><Bi ar="فشل" en="Failed" /> · <span className="tech-content">{probe.errorCode ?? probe.status}</span></span>}
+                            ? <span><Bi ar="جاهز" en="Healthy" /> · <span className="tech-content">HTTP {probe.status}</span></span>
+                            : <span><Bi ar="فشل" en="Failed" /> · <span className="tech-content">HTTP {probe.status}</span> · <span className="tech-content">{probe.errorCode ?? probe.authIssue ?? "error"}</span></span>}
                       </div>
                     </div>
                   </div>
-                  {probe?.ok && (
+                  {probe && (
                     <span className="text-xs text-muted-foreground tech-content">{probe.latencyMs}ms</span>
                   )}
                 </div>
