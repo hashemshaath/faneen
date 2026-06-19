@@ -492,6 +492,23 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
 
   return (
     <div className="space-y-4 rounded-xl border bg-muted/20 p-3">
+      {draftAvailable && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-info/40 bg-info/5 p-3 text-[11px]">
+          <span className="font-semibold text-info">
+            توجد مسودة محفوظة محليًا بتاريخ{' '}
+            {new Date(draftAvailable.ts).toLocaleString()}
+          </span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={restoreDraft} className="h-7 rounded-lg text-[11px]">
+              <RotateCcw className="me-1 h-3.5 w-3.5" /> استعادة المسودة
+            </Button>
+            <Button size="sm" variant="ghost" onClick={discardDraft} className="h-7 rounded-lg text-[11px]">
+              تجاهل
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div ref={errorSummaryRef}>
         {Object.keys(errors).length > 0 && (
           <div
