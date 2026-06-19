@@ -28,6 +28,8 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { mapsService } from "@/modules/google";
 import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
+import { IntakeWizardGuide } from "@/components/admin/provider-intake/IntakeWizardGuide";
+import { PilotContactTemplateCard } from "@/components/admin/provider-intake/PilotContactTemplateCard";
 import {
   fetchEnrichment,
   enhanceEnrichment,
@@ -567,6 +569,10 @@ export default function AdminDataEnrichment() {
       </ol>
 
       <GoogleStatusPanel />
+
+      <IntakeWizardGuide />
+
+      <PilotContactTemplateCard className="mb-5" testId="enrichment-pilot-contact-template" />
 
       {errorMsg && (
         <Card className="mb-4 border-rose-200 bg-rose-50/60 p-3 text-sm text-rose-700">

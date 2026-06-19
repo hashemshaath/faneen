@@ -19,6 +19,8 @@ import {
 } from '@/modules/providers';
 import { createProviderLeadDocumentSignedUrl } from '@/modules/files/domain/providerLeadDocuments';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { IntakeKpiStrip, type IntakeKpiItem } from '@/components/admin/provider-intake/IntakeKpiStrip';
+import { PilotContactTemplateCard } from '@/components/admin/provider-intake/PilotContactTemplateCard';
 
 const STATUSES: ProviderLeadStatus[] = [
   'new', 'under_review', 'needs_info', 'approved', 'rejected', 'converted_to_business',
@@ -65,6 +67,22 @@ const AdminProviderLeads: React.FC = () => {
 
   const selected = useMemo(() => rows.find((r) => r.id === selectedId) ?? null, [rows, selectedId]);
 
+  const kpiItems = useMemo<IntakeKpiItem[]>(() => {
+    const counts: Record<ProviderLeadStatus | 'total', number> = {
+      total: rows.length,
+      new: 0, under_review: 0, needs_info: 0, approved: 0, rejected: 0, converted_to_business: 0,
+    };
+    for (const r of rows) counts[r.status] += 1;
+    return [
+      { id: 'total', label: t('إجمالي المرشحين', 'Total candidates'), value: counts.total, tone: 'neutral' },
+      { id: 'ready-review', label: t('جاهز للمراجعة', 'Ready to review'), value: counts.new + counts.under_review, tone: 'primary' },
+      { id: 'needs-data', label: t('يحتاج بيانات', 'Needs info'), value: counts.needs_info, tone: 'warning' },
+      { id: 'ready-convert', label: t('جاهز للتحويل', 'Ready to convert'), value: counts.approved, tone: 'success' },
+      { id: 'converted', label: t('تم التحويل', 'Converted'), value: counts.converted_to_business, tone: 'info' },
+      { id: 'rejected', label: t('مرفوض', 'Rejected'), value: counts.rejected, tone: 'destructive' },
+    ];
+  }, [rows, isRTL]);
+
   return (
     <div className="min-h-dvh bg-background flex flex-col">
       <Navbar />
@@ -89,6 +107,10 @@ const AdminProviderLeads: React.FC = () => {
             </Button>
           </div>
         </header>
+
+        <IntakeKpiStrip items={kpiItems} testId="provider-leads-kpis" />
+
+        <PilotContactTemplateCard className="mb-5" testId="provider-leads-pilot-contact-template" />
 
         {/* Status filter */}
         <div className="flex flex-wrap gap-2 mb-5">
