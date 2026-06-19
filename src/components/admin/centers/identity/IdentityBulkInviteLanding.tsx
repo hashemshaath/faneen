@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { Download, Upload, FileSpreadsheet, Users, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Download, Upload, FileSpreadsheet, Users, CheckCircle2, AlertTriangle, History } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,51 +8,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  parseBulkInviteCsv,
+  summarizeParseResult,
+  BULK_INVITE_HEADERS,
+  FIELD_ERROR_LABELS,
+  FILE_ERROR_LABELS,
+  type ParsedRow,
+  type BulkInviteHeader,
+  type FieldErrorCode,
+} from '@/lib/bulkInvite/parser';
 
 /**
  * Identity Center — Bulk Invite (CSV) landing.
  *
- * Strictly presentational. Parses + validates a CSV in the browser,
- * previews valid/invalid rows, and exports normalized + error reports.
- * No DB writes, no edge function calls, no schema changes.
+ * CSV parsing & validation live in `@/lib/bulkInvite/parser` (unit
+ * tested). This component handles file upload, preview rendering with
+ * per-field highlighting, error/template export, and writes an audit
+ * record to the existing `admin_activity_log` table when the user
+ * confirms a Send action. No DB schema changes.
  */
-
-type RoleName = 'admin' | 'moderator' | 'user' | 'business';
-const ALLOWED_ROLES: RoleName[] = ['admin', 'moderator', 'user', 'business'];
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-interface ParsedRow {
-  line: number;
-  email: string;
-  full_name: string;
-  role: string;
-  message: string;
-  errors: string[];
-}
-
-const HEADERS = ['email', 'full_name', 'role', 'message'] as const;
-
-function parseCsv(text: string): ParsedRow[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return [];
-  const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
-  const idx = Object.fromEntries(HEADERS.map((h) => [h, header.indexOf(h)])) as Record<typeof HEADERS[number], number>;
-
-  return lines.slice(1).map((raw, i) => {
-    const cells = raw.split(',').map((c) => c.trim());
-    const email = idx.email >= 0 ? (cells[idx.email] ?? '') : '';
-    const full_name = idx.full_name >= 0 ? (cells[idx.full_name] ?? '') : '';
-    const role = (idx.role >= 0 ? (cells[idx.role] ?? '') : '').toLowerCase();
-    const message = idx.message >= 0 ? (cells[idx.message] ?? '') : '';
-    const errors: string[] = [];
-    if (!email) errors.push('email_required');
-    else if (!EMAIL_RE.test(email)) errors.push('email_invalid');
-    if (!full_name) errors.push('full_name_required');
-    if (!role) errors.push('role_required');
-    else if (!ALLOWED_ROLES.includes(role as RoleName)) errors.push('role_invalid');
-    return { line: i + 2, email, full_name, role, message, errors };
-  });
-}
 
 function toCsv(rows: string[][]): string {
   return rows.map((r) => r.map((c) => (/[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c)).join(',')).join('\n');
@@ -71,7 +48,10 @@ const IdentityBulkInviteLanding = () => {
   const { language, isRTL } = useLanguage();
   const ar = language === 'ar';
   const fileRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
   const [rows, setRows] = useState<ParsedRow[]>([]);
+  const [fileErrors, setFileErrors] = useState<string[]>([]);
+  const [missingCols, setMissingCols] = useState<BulkInviteHeader[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -79,17 +59,82 @@ const IdentityBulkInviteLanding = () => {
     return { total: rows.length, valid, invalid: rows.length - valid };
   }, [rows]);
 
+  const auditQuery = useQuery({
+    queryKey: ['identity-bulk-invite-audit'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('admin_activity_log')
+        .select('id, user_id, action, details, created_at')
+        .in('action', ['identity_bulk_invite_dry_run', 'identity_bulk_invite_send'])
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const handleFile = async (file: File) => {
     setFileName(file.name);
-    const text = await file.text();
-    const parsed = parseCsv(text);
-    setRows(parsed);
-    toast.success(ar ? `تم تحليل ${parsed.length} صفًا` : `Parsed ${parsed.length} rows`);
+    try {
+      const text = await file.text();
+      const result = parseBulkInviteCsv(text);
+      setRows(result.rows);
+      setFileErrors(result.headerErrors);
+      setMissingCols(result.missingColumns);
+      if (result.headerErrors.length > 0) {
+        toast.error(
+          ar ? 'الملف غير صالح — راجع التنبيهات أعلاه' : 'Invalid file — see alerts above',
+        );
+        return;
+      }
+      toast.success(ar ? `تم تحليل ${result.rows.length} صفًا` : `Parsed ${result.rows.length} rows`);
+      // Record dry-run audit (non-blocking).
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('admin_activity_log').insert({
+          user_id: user.id,
+          action: 'identity_bulk_invite_dry_run',
+          entity_type: 'bulk_invite',
+          details: {
+            file_name: file.name,
+            total: result.rows.length,
+            ...summarizeParseResult(result),
+          },
+        });
+        queryClient.invalidateQueries({ queryKey: ['identity-bulk-invite-audit'] });
+      }
+    } catch {
+      setRows([]);
+      setFileErrors(['unparseable']);
+      toast.error(ar ? 'تعذّر قراءة الملف' : 'Could not read file');
+    }
+  };
+
+  const recordSendAttempt = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('admin_activity_log').insert({
+      user_id: user.id,
+      action: 'identity_bulk_invite_send',
+      entity_type: 'bulk_invite',
+      details: {
+        file_name: fileName,
+        attempted: stats.valid,
+        skipped_invalid: stats.invalid,
+        status: 'pending_backend_send_service',
+      },
+    });
+    queryClient.invalidateQueries({ queryKey: ['identity-bulk-invite-audit'] });
+    toast.info(
+      ar
+        ? `سُجّلت محاولة إرسال ${stats.valid} دعوة — يتطلب تفعيل خدمة الإرسال الخلفية.`
+        : `Send attempt for ${stats.valid} invites logged — requires backend send service.`,
+    );
   };
 
   const downloadTemplate = () => {
     const csv = toCsv([
-      [...HEADERS],
+      [...BULK_INVITE_HEADERS],
       ['ahmed@example.com', 'Ahmed Ali', 'user', 'Welcome to Qitaat'],
       ['admin@example.com', 'Admin Name', 'admin', ''],
     ]);
@@ -99,17 +144,32 @@ const IdentityBulkInviteLanding = () => {
   const downloadErrors = () => {
     const invalid = rows.filter((r) => r.errors.length > 0);
     const csv = toCsv([
-      ['line', ...HEADERS, 'errors'],
-      ...invalid.map((r) => [String(r.line), r.email, r.full_name, r.role, r.message, r.errors.join('|')]),
+      ['line', ...BULK_INVITE_HEADERS, 'errors'],
+      ...invalid.map((r) => [
+        String(r.line),
+        r.email,
+        r.full_name,
+        r.role,
+        r.message,
+        r.errors.map((e) => `${e.field}:${e.code}`).join('|'),
+      ]),
     ]);
     download('qitaat-bulk-invite-errors.csv', csv);
   };
 
   const reset = () => {
     setRows([]);
+    setFileErrors([]);
+    setMissingCols([]);
     setFileName(null);
     if (fileRef.current) fileRef.current.value = '';
   };
+
+  const errorFor = (row: ParsedRow, field: BulkInviteHeader): FieldErrorCode | null =>
+    row.errors.find((e) => e.field === field)?.code ?? null;
+
+  const cellClass = (row: ParsedRow, field: BulkInviteHeader) =>
+    errorFor(row, field) ? 'bg-destructive/10 text-destructive' : '';
 
   return (
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -151,6 +211,25 @@ const IdentityBulkInviteLanding = () => {
               </Button>
             )}
           </div>
+
+          {fileErrors.length > 0 && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>{ar ? 'مشكلة في الملف' : 'File issue'}</AlertTitle>
+              <AlertDescription>
+                <ul className="list-disc ms-5">
+                  {fileErrors.map((c) => (
+                    <li key={c}>{FILE_ERROR_LABELS[c as keyof typeof FILE_ERROR_LABELS]?.[ar ? 'ar' : 'en'] ?? c}</li>
+                  ))}
+                  {missingCols.length > 0 && (
+                    <li>
+                      {ar ? 'الأعمدة الناقصة:' : 'Missing columns:'} <span className="tech-content">{missingCols.join(', ')}</span>
+                    </li>
+                  )}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {fileName && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -198,13 +277,7 @@ const IdentityBulkInviteLanding = () => {
               <Button
                 size="sm"
                 disabled={stats.valid === 0}
-                onClick={() =>
-                  toast.info(
-                    ar
-                      ? `جاهز لإرسال ${stats.valid} دعوة — يتطلب تفعيل خدمة الإرسال الخلفية.`
-                      : `Ready to send ${stats.valid} invites — requires backend send service.`,
-                  )
-                }
+                onClick={() => void recordSendAttempt()}
               >
                 {ar ? `إرسال ${stats.valid} دعوة` : `Send ${stats.valid} invites`}
               </Button>
@@ -222,25 +295,38 @@ const IdentityBulkInviteLanding = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.slice(0, 200).map((r) => (
-                  <TableRow key={r.line}>
-                    <TableCell className="tech-content">{r.line}</TableCell>
-                    <TableCell className="tech-content">{r.email || '—'}</TableCell>
-                    <TableCell>{r.full_name || '—'}</TableCell>
-                    <TableCell>{r.role || '—'}</TableCell>
-                    <TableCell>
-                      {r.errors.length === 0 ? (
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
-                          {ar ? 'صالح' : 'Valid'}
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" title={r.errors.join(', ')}>
-                          {r.errors.length} {ar ? 'خطأ' : 'errors'}
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {rows.slice(0, 200).map((r) => {
+                  const invalid = r.errors.length > 0;
+                  return (
+                    <TableRow
+                      key={r.line}
+                      className={invalid ? 'bg-destructive/5 border-l-2 border-destructive' : ''}
+                    >
+                      <TableCell className="tech-content">{r.line}</TableCell>
+                      <TableCell className={`tech-content ${cellClass(r, 'email')}`}>
+                        {r.email || '—'}
+                      </TableCell>
+                      <TableCell className={cellClass(r, 'full_name')}>{r.full_name || '—'}</TableCell>
+                      <TableCell className={cellClass(r, 'role')}>{r.role || '—'}</TableCell>
+                      <TableCell>
+                        {!invalid ? (
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+                            {ar ? 'صالح' : 'Valid'}
+                          </Badge>
+                        ) : (
+                          <div className="space-y-1">
+                            {r.errors.map((e, i) => (
+                              <Badge key={i} variant="destructive" className="block w-fit">
+                                <span className="tech-content me-1">{e.field}:</span>
+                                {FIELD_ERROR_LABELS[e.code][ar ? 'ar' : 'en']}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
             {rows.length > 200 && (
@@ -256,6 +342,67 @@ const IdentityBulkInviteLanding = () => {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <History className="h-4 w-4 text-primary" />
+            {ar ? 'سجل عمليات الدعوات المجمّعة' : 'Bulk Invite Audit Log'}
+          </CardTitle>
+          <CardDescription>
+            {ar
+              ? 'آخر 10 عمليات تحليل وإرسال — مصدرها سجل تدقيق المشرفين.'
+              : 'Last 10 parse / send operations — sourced from the admin audit log.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {auditQuery.isLoading ? (
+            <div className="text-sm text-muted-foreground">{ar ? 'جاري التحميل…' : 'Loading…'}</div>
+          ) : (auditQuery.data?.length ?? 0) === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              {ar ? 'لا توجد عمليات بعد.' : 'No operations yet.'}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{ar ? 'الوقت' : 'When'}</TableHead>
+                  <TableHead>{ar ? 'النوع' : 'Type'}</TableHead>
+                  <TableHead>{ar ? 'الملف' : 'File'}</TableHead>
+                  <TableHead>{ar ? 'النتائج' : 'Results'}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {auditQuery.data!.map((row) => {
+                  const d = (row.details ?? {}) as Record<string, unknown>;
+                  return (
+                    <TableRow key={row.id}>
+                      <TableCell className="tech-content text-xs">
+                        {new Date(row.created_at).toLocaleString(ar ? 'ar-SA' : 'en-US')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {row.action === 'identity_bulk_invite_send'
+                            ? ar ? 'إرسال' : 'Send'
+                            : ar ? 'تحليل' : 'Parse'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="tech-content text-xs">
+                        {(d.file_name as string) ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {ar ? 'إجمالي' : 'Total'} {String(d.total ?? d.attempted ?? '—')} ·{' '}
+                        {ar ? 'صالح' : 'Valid'} {String(d.valid ?? d.attempted ?? '—')} ·{' '}
+                        {ar ? 'أخطاء' : 'Errors'} {String(d.invalid ?? d.skipped_invalid ?? '—')}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
