@@ -14,6 +14,7 @@ import {
   ListChecks,
   Sparkles,
   CheckCircle2,
+  Download,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 
@@ -40,6 +41,21 @@ const DUPLICATE_BADGES: Array<{
   { id: 'possible-similar', ar: 'مشابه محتمل', en: 'Possible match', cls: 'bg-warning/10 text-warning border-warning/30' },
   { id: 'needs-review', ar: 'يحتاج مراجعة', en: 'Needs review', cls: 'bg-info/10 text-info border-info/30' },
   { id: 'missing-data', ar: 'ناقص بيانات', en: 'Missing data', cls: 'bg-muted text-muted-foreground border-border' },
+];
+
+const TEMPLATES: Array<{ id: string; ar: string; en: string; href: string }> = [
+  {
+    id: 'providers',
+    ar: 'قالب المزودين الرئيسي',
+    en: 'Main providers template',
+    href: '/templates/qitaat-provider-intake-template.xlsx',
+  },
+  {
+    id: 'branches',
+    ar: 'قالب الفروع',
+    en: 'Branches template',
+    href: '/templates/qitaat-provider-branches-template.xlsx',
+  },
 ];
 
 export interface IntakeWizardGuideProps {
@@ -81,6 +97,31 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
           );
         })}
       </ol>
+      <div data-testid={`${testId}-templates`} className="mb-4 rounded-xl border bg-muted/20 p-3">
+        <div className="text-[11px] font-semibold mb-2 text-muted-foreground">
+          <Bi ar="قوالب الإدخال (Excel)" en="Intake templates (Excel)" />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {TEMPLATES.map((t) => (
+            <a
+              key={t.id}
+              href={t.href}
+              download
+              data-testid={`intake-template-${t.id}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent transition-colors"
+            >
+              <Download className="h-3.5 w-3.5 text-primary" aria-hidden />
+              <Bi ar={t.ar} en={t.en} />
+            </a>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          <Bi
+            ar="يشمل: الإحداثيات، العنوان الوطني المختصر، الدولة/المنطقة، سنة التأسيس، مدير الحساب، وملف مستقل للفروع."
+            en="Includes coordinates, short national address, country/region, establishment year, account manager, and a separate branches file."
+          />
+        </p>
+      </div>
       <div>
         <div className="text-[11px] font-semibold mb-2 text-muted-foreground">
           <Bi ar="دلالات تكرار البيانات" en="Duplicate detection badges" />
