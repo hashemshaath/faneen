@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
  CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp,
-  Store, AlertCircle, Link as LinkIcon,
+  Store, AlertCircle, Link as LinkIcon, MessageCircle, Calendar, Globe, Briefcase,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
