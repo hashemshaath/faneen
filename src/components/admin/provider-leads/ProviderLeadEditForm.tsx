@@ -433,17 +433,17 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
       </Section>
 
       <Section title="التواصل">
-        <Field label="اسم المسؤول *">
+        <Field label="اسم المسؤول *" name="contact_name" error={errors.contact_name}>
           <Input value={f.contact_name} onChange={(e) => set('contact_name', e.target.value)} />
         </Field>
-        <Field label="البريد *">
+        <Field label="البريد *" name="email" error={errors.email}>
           <Input
             value={f.email}
             onChange={(e) => set('email', e.target.value)}
             className="tech-content"
           />
         </Field>
-        <Field label="الجوال *">
+        <Field label="الجوال *" name="phone" error={errors.phone}>
           <Input
             value={f.phone}
             onChange={(e) => set('phone', e.target.value)}
