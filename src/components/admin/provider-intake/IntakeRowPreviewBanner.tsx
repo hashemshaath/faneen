@@ -8,6 +8,7 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import {
   AlertTriangle,
   ShieldCheck,
   Loader2,
+  Send,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 import {
@@ -62,6 +64,8 @@ function dispatchAudit(row: Record<string, string>, idx: number, total: number) 
 
 export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ className }) => {
   const [queue, setQueue] = React.useState<IntakeQueueState | null>(() => readIntakeQueue());
+  const [submitting, setSubmitting] = React.useState(false);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const sync = () => setQueue(readIntakeQueue());
@@ -149,6 +153,82 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
   const closeQueue = () => writeIntakeQueue(null);
 
   const fields = KEY_FIELDS.filter((f) => (row[f.key] ?? '').trim().length > 0);
+
+  // ── Finalize: turn reviewed rows into provider_leads ──────────────
+  const allReviewed = doneCount === total && total > 0;
+
+  const rowToLeadPayload = (r: Record<string, string>): Record<string, unknown> | null => {
+    const nameAr = (r.company_name_ar ?? r.branch_name_ar ?? '').trim();
+    const nameEn = (r.company_name_en ?? r.branch_name_en ?? '').trim() || null;
+    const contactName =
+      (r.account_manager_name ?? r.contact_name ?? '').trim() || nameAr || nameEn || '';
+    const email = (r.account_manager_email ?? r.email ?? r.branch_email ?? '').trim().toLowerCase();
+    const phoneRaw = (r.account_manager_phone ?? r.phone ?? r.branch_phone ?? '').trim();
+    const phoneDigits = phoneRaw.replace(/\D/g, '');
+    if (!nameAr || nameAr.length < 2) return null;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return null;
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) return null;
+    return {
+      name_ar: nameAr.slice(0, 200),
+      name_en: nameEn,
+      contact_name: (contactName || 'Admin Intake').slice(0, 200),
+      email,
+      phone: phoneRaw.slice(0, 20),
+      preferred_channel: 'phone',
+      website: (r.website ?? '').trim() || null,
+      cr_number: (r.commercial_registration ?? r.cr_number ?? '').trim() || null,
+      unified_number: (r.unified_number ?? '').trim() || null,
+      main_activity: (r.services ?? r.sector ?? '').trim() || null,
+      brief: (r.notes ?? '').trim().slice(0, 2000) || null,
+      city: (r.city ?? '').trim() || null,
+      national_address: (r.national_short_address ?? r.street_address ?? '').trim() || null,
+      map_link: (r.google_maps_url ?? '').trim() || null,
+    };
+  };
+
+  const finalizeBatch = async () => {
+    if (!queue || submitting) return;
+    setSubmitting(true);
+    const targets = queue.reviewed.length > 0 ? queue.reviewed : queue.rows.map((_, i) => i);
+    let created = 0;
+    let skipped = 0;
+    let invalid = 0;
+    let duplicates = 0;
+    for (const idx of targets) {
+      const payload = rowToLeadPayload(queue.rows[idx] ?? {});
+      if (!payload) {
+        invalid += 1;
+        continue;
+      }
+      const { error } = await supabase.rpc('submit_provider_lead', { payload });
+      if (!error) {
+        created += 1;
+      } else if (/duplicate_request/.test(error.message)) {
+        duplicates += 1;
+      } else {
+        skipped += 1;
+      }
+    }
+    setSubmitting(false);
+    if (created > 0) {
+      toast.success(
+        `تم إنشاء ${created} عميل محتمل` +
+          (duplicates ? ` · ${duplicates} مكرر` : '') +
+          (invalid ? ` · ${invalid} ناقص بيانات` : '') +
+          (skipped ? ` · ${skipped} فشل` : ''),
+      );
+      writeIntakeQueue(null);
+      navigate('/admin/provider-leads');
+    } else if (duplicates > 0 && invalid === 0 && skipped === 0) {
+      toast.message(`جميع الصفوف (${duplicates}) مكررة في القائمة بالفعل.`);
+      writeIntakeQueue(null);
+      navigate('/admin/provider-leads');
+    } else {
+      toast.error(
+        `تعذّر الإرسال — ${invalid} ناقص بيانات (الاسم/البريد/الهاتف) · ${duplicates} مكرر · ${skipped} فشل`,
+      );
+    }
+  };
 
   const leadHits = dedupeQuery.data?.leads ?? [];
   const bizHits = dedupeQuery.data?.businesses ?? [];
@@ -296,6 +376,26 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
           <Bi
             ar={index + 1 < total ? 'تم — التالي' : 'تم — إنهاء'}
             en={index + 1 < total ? 'Done — Next' : 'Done — Finish'}
+          />
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={allReviewed ? 'default' : 'outline'}
+          onClick={finalizeBatch}
+          disabled={submitting || total === 0}
+          className="h-8 rounded-lg text-[11px]"
+          data-testid="intake-row-finalize-batch"
+          title="إنشاء عملاء محتملين من الصفوف المراجَعة ثم الانتقال للقائمة"
+        >
+          {submitting ? (
+            <Loader2 className="me-1 h-3.5 w-3.5 animate-spin" aria-hidden />
+          ) : (
+            <Send className="me-1 h-3.5 w-3.5" aria-hidden />
+          )}
+          <Bi
+            ar={`إرسال إلى Provider Leads${doneCount > 0 ? ` (${doneCount})` : ''}`}
+            en={`Send to Provider Leads${doneCount > 0 ? ` (${doneCount})` : ''}`}
           />
         </Button>
         <Button
