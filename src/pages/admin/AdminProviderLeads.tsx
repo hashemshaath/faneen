@@ -45,6 +45,7 @@ import { ProviderLeadDetail } from '@/components/admin/provider-leads/ProviderLe
 import { BulkActionBar } from '@/components/admin/provider-leads/BulkActionBar';
 import { LeadMergeView } from '@/components/admin/provider-leads/LeadMergeView';
 import { exportLeadPdf } from '@/components/admin/provider-leads/exportLeadPdf';
+import { buildGoogleQuery, googleUrl } from '@/components/admin/provider-leads/GoogleSearchLog';
 import {
   STATUS_LABEL,
   computeCompleteness,
@@ -279,14 +280,15 @@ const AdminProviderLeads: React.FC = () => {
   };
 
   const googleSearch = (lead: ProviderLeadRow) => {
-    const parts = [lead.name_ar, lead.name_en, lead.city, lead.cr_number].filter(Boolean).join(' ');
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(parts)}`, '_blank', 'noopener');
+    // Auto-includes name + city + CR + specialties (see buildGoogleQuery).
+    window.open(googleUrl(buildGoogleQuery(lead)), '_blank', 'noopener,noreferrer');
   };
 
   const exportPdf = async (lead: ProviderLeadRow) => {
     try {
-      await exportLeadPdf(lead);
-      toast.success(t('تم تصدير PDF', 'PDF exported'));
+      // Preview-first: opens in a new tab so the operator can review before print/save.
+      await exportLeadPdf(lead, { preview: true });
+      toast.success(t('تم فتح المعاينة', 'Preview opened'));
     } catch {
       toast.error(t('تعذر التصدير', 'Export failed'));
     }
