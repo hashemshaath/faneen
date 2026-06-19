@@ -273,13 +273,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
     setF((prev) => ({ ...prev, [k]: v }));
-    if (errors[k as string]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[k as string];
-        return next;
-      });
-    }
+    setTouched((prev) => ({ ...prev, [k as string]: true }));
   };
 
   const FIELD_LABELS: Record<string, string> = {
@@ -315,6 +309,94 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
       e.account_manager_email = 'صيغة البريد غير صحيحة';
     return e;
   };
+
+  // Live validation — runs on every form change. Errors for a field are only
+  // surfaced after the user touches it OR after a save attempt (full mode).
+  useEffect(() => {
+    const all = validate();
+    if (submitAttempted) {
+      setErrors(all);
+      return;
+    }
+    const filtered: Record<string, string> = {};
+    for (const [k, v] of Object.entries(all)) {
+      if (touched[k]) filtered[k] = v;
+    }
+    setErrors(filtered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f, touched, submitAttempted]);
+
+  // Auto-save draft (debounced) while dirty.
+  useEffect(() => {
+    if (!isDirty) return;
+    const t = setTimeout(() => {
+      try {
+        const payload = { f, branches, ts: Date.now() };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+        setDraftSavedAt(payload.ts);
+      } catch {
+        /* ignore quota */
+      }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [f, branches, isDirty, DRAFT_KEY]);
+
+  const restoreDraft = () => {
+    if (!draftAvailable) return;
+    setF(draftAvailable.f);
+    setBranches(draftAvailable.branches);
+    setDraftAvailable(null);
+    toast.success('تم استعادة المسودة');
+  };
+
+  const discardDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setDraftAvailable(null);
+    setDraftSavedAt(null);
+    toast('تم تجاهل المسودة');
+  };
+
+  // Diff between initial snapshots and current.
+  const diff = useMemo(() => {
+    const initF = JSON.parse(initialSnapshot) as FormState;
+    const initB = JSON.parse(initialBranchesSnapshot) as ProviderLeadBranchRow[];
+    const fieldDiffs: Array<{ label: string; before: string; after: string }> = [];
+    (Object.keys(f) as Array<keyof FormState>).forEach((k) => {
+      const before = String(initF[k] ?? '');
+      const after = String(f[k] ?? '');
+      if (before !== after) {
+        fieldDiffs.push({
+          label: FIELD_LABELS[k as string] ?? (k as string),
+          before: before || '—',
+          after: after || '—',
+        });
+      }
+    });
+    const branchDiffs: Array<{ label: string; before: string; after: string }> = [];
+    const initIds = new Set(initB.map((b) => b.id));
+    const curIds = new Set(branches.map((b) => b.id).filter(Boolean));
+    branches.forEach((b, i) => {
+      if (!b.id) {
+        branchDiffs.push({ label: `فرع جديد #${i + 1}`, before: '—', after: b.branch_name });
+        return;
+      }
+      const orig = initB.find((x) => x.id === b.id);
+      if (orig && JSON.stringify(orig) !== JSON.stringify(b)) {
+        branchDiffs.push({
+          label: `فرع: ${orig.branch_name}`,
+          before: orig.branch_name,
+          after: b.branch_name + ' (مُعدّل)',
+        });
+      }
+    });
+    initB.forEach((b) => {
+      if (!curIds.has(b.id)) {
+        branchDiffs.push({ label: `حذف فرع: ${b.branch_name}`, before: b.branch_name, after: '—' });
+      }
+    });
+    void initIds;
+    return [...fieldDiffs, ...branchDiffs];
+  }, [f, branches, initialSnapshot, initialBranchesSnapshot, FIELD_LABELS]);
 
   const focusField = (name: string) => {
     const el = document.querySelector<HTMLElement>(`[data-field="${name}"]`);
