@@ -29,7 +29,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { mapsService } from "@/modules/google";
 import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
 import { IntakeWizardGuide } from "@/components/admin/provider-intake/IntakeWizardGuide";
-import { IntakeRowPreviewBanner } from "@/components/admin/provider-intake/IntakeRowPreviewBanner";
+import { IntakeBatchStepper } from "@/components/admin/provider-intake/IntakeBatchStepper";
 import { PilotContactTemplateCard } from "@/components/admin/provider-intake/PilotContactTemplateCard";
 import {
   fetchEnrichment,
@@ -588,6 +588,8 @@ export default function AdminDataEnrichment() {
 
       <GoogleStatusPanel />
 
+      <IntakeBatchStepper />
+
       <IntakeWizardGuide />
 
       <PilotContactTemplateCard className="mb-5" testId="enrichment-pilot-contact-template" />
@@ -673,7 +675,6 @@ export default function AdminDataEnrichment() {
             </Card>
           );
         })()}
-        <IntakeRowPreviewBanner />
         <Card className="p-5" data-intake-workspace>
           <div className="space-y-3">
             <Label className="text-sm">
