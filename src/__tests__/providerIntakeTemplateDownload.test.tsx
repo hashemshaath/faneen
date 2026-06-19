@@ -55,11 +55,15 @@ describe('Provider intake template download — Final QA', () => {
     expect(guideSrc).not.toMatch(/location\.href\s*=/);
   });
 
-  it('preventDefault is called on the download anchor click', () => {
-    expect(guideSrc).toMatch(/e\.preventDefault\(\)/);
+  it('uses buttons instead of navigable anchors for templates', () => {
+    const templatesBlock = guideSrc.split('TEMPLATES.map')[1] ?? '';
+    expect(templatesBlock).toMatch(/<button/);
+    expect(templatesBlock).not.toMatch(/<a\b/);
+    expect(templatesBlock).not.toMatch(/href=/);
+    expect(templatesBlock).not.toMatch(/download\b/);
   });
 
-  it('does not use target="_blank" on template anchors', () => {
+  it('does not use target="_blank" on template controls', () => {
     const templatesBlock = guideSrc.split('TEMPLATES.map')[1] ?? '';
     expect(templatesBlock).not.toMatch(/target=\s*["']_blank["']/);
   });
