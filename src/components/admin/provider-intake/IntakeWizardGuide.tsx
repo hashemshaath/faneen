@@ -58,6 +58,8 @@ const TEMPLATES: Array<{ id: string; ar: string; en: string; href: string }> = [
   },
 ];
 
+const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 export interface IntakeWizardGuideProps {
   className?: string;
   testId?: string;
@@ -67,26 +69,38 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   className,
   testId = 'intake-wizard-guide',
 }) => {
+  const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+
   const handleDownload = React.useCallback(
-    async (e: React.MouseEvent<HTMLAnchorElement>, href: string, filename: string) => {
-      e.preventDefault();
+    async (id: string, href: string, filename: string) => {
+      let url: string | null = null;
+      setDownloadingId(id);
       try {
-        const res = await fetch(href, { credentials: 'omit', cache: 'no-store' });
+        const res = await fetch(href, {
+          credentials: 'omit',
+          cache: 'reload',
+          headers: { Accept: EXCEL_MIME },
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
+        const sourceBlob = await res.blob();
+        if (sourceBlob.type.includes('text/html')) throw new Error('Template returned HTML');
+        const blob = new Blob([sourceBlob], { type: EXCEL_MIME });
+        url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
+        a.rel = 'noopener';
         document.body.appendChild(a);
         a.click();
         a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
       } catch {
         // No navigation / no new tab fallback — surface a console warning only.
         // The user can retry; we never break out of the embedded preview.
         // eslint-disable-next-line no-console
         console.warn('[intake-template] download failed for', href);
+      } finally {
+        if (url) URL.revokeObjectURL(url);
+        setDownloadingId(null);
       }
     },
     [],
@@ -126,19 +140,25 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
           <Bi ar="قوالب الإدخال (Excel)" en="Intake templates (Excel)" />
         </div>
         <div className="flex flex-wrap gap-2">
-          {TEMPLATES.map((t) => (
-            <a
+          {TEMPLATES.map((t) => {
+            const isDownloading = downloadingId === t.id;
+            return (
+            <button
               key={t.id}
-              href={t.href}
-              download
-              onClick={(e) => handleDownload(e, t.href, t.href.split('/').pop() ?? 'template.xlsx')}
+              type="button"
+              onClick={() => handleDownload(t.id, t.href, t.href.split('/').pop() ?? 'template.xlsx')}
+              disabled={isDownloading}
               data-testid={`intake-template-${t.id}`}
-              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent disabled:cursor-wait disabled:opacity-70"
             >
               <Download className="h-3.5 w-3.5 text-primary" aria-hidden />
-              <Bi ar={t.ar} en={t.en} />
-            </a>
-          ))}
+              <Bi
+                ar={isDownloading ? 'جاري التحميل…' : t.ar}
+                en={isDownloading ? 'Downloading…' : t.en}
+              />
+            </button>
+          );
+          })}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
           <Bi
