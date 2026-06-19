@@ -40,6 +40,7 @@ const VISIBLE_CENTER_ROUTES = [
   '/admin/data-enrichment',
   '/admin/identity',
   '/admin/content',
+  '/admin/project-categories',
   '/admin/settings',
   '/admin/finance',
 ] as const;
