@@ -373,8 +373,38 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
 
   return (
     <div className="space-y-4 rounded-xl border bg-muted/20 p-3">
+      <div ref={errorSummaryRef}>
+        {Object.keys(errors).length > 0 && (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/40 bg-destructive/5 p-3"
+          >
+            <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              يوجد {Object.keys(errors).length} حقل بحاجة للمراجعة قبل الحفظ
+            </div>
+            <ul className="space-y-1 text-[11px]">
+              {Object.entries(errors).map(([name, msg]) => (
+                <li key={name}>
+                  <button
+                    type="button"
+                    onClick={() => focusField(name)}
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-destructive hover:bg-destructive/10"
+                  >
+                    <span className="font-semibold">
+                      {FIELD_LABELS[name] ?? name}:
+                    </span>
+                    <span>{msg}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <Section title="بيانات المنشأة">
-        <Field label="الاسم بالعربية *">
+        <Field label="الاسم بالعربية *" name="name_ar" error={errors.name_ar}>
           <Input value={f.name_ar} onChange={(e) => set('name_ar', e.target.value)} dir="auto" />
         </Field>
         <Field label="الاسم بالإنجليزية">
