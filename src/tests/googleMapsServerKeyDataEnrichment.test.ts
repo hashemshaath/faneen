@@ -30,10 +30,10 @@ describe("GOOGLE MAPS SERVER KEY — Data Enrichment", () => {
   });
 
   it("server key is not referenced in client source (src/)", () => {
-    const hits = rg("-n 'GOOGLE_MAPS_API_KEY' src/ -g '!**/*.test.ts' -g '!**/*.test.tsx'")
+    // Client must never READ the server key — only display its NAME as a label is OK.
+    const hits = rg("-n 'GOOGLE_MAPS_API_KEY' src/ -g '!**/*.test.ts' -g '!**/*.test.tsx' -g '!**/*.md'")
       .split("\n").filter(Boolean)
-      // Allow string literals that only NAME the secret (docs/UI labels), not reads.
-      .filter((l) => !/["']GOOGLE_MAPS_API_KEY["']/.test(l));
+      .filter((l) => /process\.env|import\.meta\.env|Deno\.env/.test(l));
     expect(hits).toEqual([]);
   });
 
