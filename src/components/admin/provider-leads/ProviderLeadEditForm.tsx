@@ -3,17 +3,21 @@
  * the detail panel (no popups). Uses `updateProviderLeadFields` against
  * the admin-RLS-protected table.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, X } from 'lucide-react';
+import { Loader2, Save, X, Plus, Trash2, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   updateProviderLeadFields,
+  listProviderLeadBranches,
+  upsertProviderLeadBranch,
+  deleteProviderLeadBranch,
   type ProviderLeadEditableFields,
   type ProviderLeadRow,
+  type ProviderLeadBranchRow,
 } from '@/modules/providers';
 
 interface Props {
@@ -126,6 +130,56 @@ const toNullableNumber = (v: string): number | null => {
 export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved }) => {
   const [f, setF] = useState<FormState>(() => toForm(lead));
   const [saving, setSaving] = useState(false);
+  const [branches, setBranches] = useState<ProviderLeadBranchRow[]>([]);
+
+  useEffect(() => {
+    listProviderLeadBranches(lead.id).then((r) =>
+      setBranches((r.rows as ProviderLeadBranchRow[]) ?? []),
+    );
+  }, [lead.id]);
+
+  const setBranch = (idx: number, patch: Partial<ProviderLeadBranchRow>) =>
+    setBranches((prev) => prev.map((b, i) => (i === idx ? { ...b, ...patch } : b)));
+
+  const addBranch = () =>
+    setBranches((prev) => [
+      ...prev,
+      {
+        id: '',
+        lead_id: lead.id,
+        branch_name: `فرع ${prev.length + 1}`,
+        city: null,
+        address: null,
+        map_link: null,
+        phone: null,
+        whatsapp: null,
+        email: null,
+        website: null,
+        region: null,
+        district: null,
+        street_name: null,
+        building_number: null,
+        postal_code: null,
+        short_national_address: null,
+        national_address: null,
+        latitude: null,
+        longitude: null,
+        is_main: prev.length === 0,
+      },
+    ]);
+
+  const removeBranch = async (idx: number) => {
+    const b = branches[idx];
+    if (b.id) {
+      const { error } = await deleteProviderLeadBranch(b.id);
+      if (error) {
+        toast.error('تعذر حذف الفرع: ' + error.message);
+        return;
+      }
+    }
+    setBranches((prev) => prev.filter((_, i) => i !== idx));
+    toast.success('تم حذف الفرع');
+  };
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
@@ -207,11 +261,26 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
 
     setSaving(true);
     const { error } = await updateProviderLeadFields(lead.id, patch);
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error('تعذر حفظ التعديلات: ' + error.message);
       return;
     }
+    // Save branches
+    for (const b of branches) {
+      if (!b.branch_name.trim()) continue;
+      const { id, lead_id: _lid, ...rest } = b;
+      const { error: bErr } = await upsertProviderLeadBranch(lead.id, id || null, {
+        ...rest,
+        branch_name: b.branch_name.trim(),
+      });
+      if (bErr) {
+        setSaving(false);
+        toast.error(`تعذر حفظ "${b.branch_name}": ${bErr.message}`);
+        return;
+      }
+    }
+    setSaving(false);
     toast.success('تم حفظ التعديلات');
     onSaved();
   };
@@ -439,6 +508,177 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
           />
         </Field>
       </Section>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <Building2 className="h-3.5 w-3.5" /> الفروع ({branches.length})
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addBranch}
+            className="h-7 rounded-lg text-[11px]"
+          >
+            <Plus className="me-1 h-3.5 w-3.5" /> إضافة فرع
+          </Button>
+        </div>
+        {branches.length === 0 ? (
+          <p className="rounded-xl border border-dashed bg-muted/20 p-3 text-center text-[11px] text-muted-foreground">
+            لا توجد فروع — اضغط "إضافة فرع" للبدء
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {branches.map((b, idx) => (
+              <div key={b.id || `new-${idx}`} className="rounded-xl border bg-background p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold">
+                    {b.is_main ? 'الفرع الرئيسي' : `فرع #${idx + 1}`}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeBranch(idx)}
+                    className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                    title="حذف"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Field label="اسم الفرع *">
+                    <Input
+                      value={b.branch_name}
+                      onChange={(e) => setBranch(idx, { branch_name: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="المنطقة">
+                    <Input
+                      value={b.region ?? ''}
+                      onChange={(e) => setBranch(idx, { region: e.target.value || null })}
+                    />
+                  </Field>
+                  <Field label="المدينة">
+                    <Input
+                      value={b.city ?? ''}
+                      onChange={(e) => setBranch(idx, { city: e.target.value || null })}
+                    />
+                  </Field>
+                  <Field label="الحي">
+                    <Input
+                      value={b.district ?? ''}
+                      onChange={(e) => setBranch(idx, { district: e.target.value || null })}
+                    />
+                  </Field>
+                  <Field label="الشارع">
+                    <Input
+                      value={b.street_name ?? ''}
+                      onChange={(e) => setBranch(idx, { street_name: e.target.value || null })}
+                    />
+                  </Field>
+                  <Field label="رقم المبنى">
+                    <Input
+                      value={b.building_number ?? ''}
+                      onChange={(e) =>
+                        setBranch(idx, { building_number: e.target.value || null })
+                      }
+                      className="tech-content"
+                    />
+                  </Field>
+                  <Field label="الرمز البريدي">
+                    <Input
+                      value={b.postal_code ?? ''}
+                      onChange={(e) => setBranch(idx, { postal_code: e.target.value || null })}
+                      className="tech-content"
+                      maxLength={5}
+                    />
+                  </Field>
+                  <Field label="العنوان الوطني المختصر">
+                    <Input
+                      value={b.short_national_address ?? ''}
+                      onChange={(e) =>
+                        setBranch(idx, {
+                          short_national_address: e.target.value.toUpperCase() || null,
+                        })
+                      }
+                      className="tech-content"
+                      maxLength={8}
+                    />
+                  </Field>
+                  <Field label="الجوال">
+                    <Input
+                      value={b.phone ?? ''}
+                      onChange={(e) => setBranch(idx, { phone: e.target.value || null })}
+                      className="tech-content"
+                    />
+                  </Field>
+                  <Field label="واتساب">
+                    <Input
+                      value={b.whatsapp ?? ''}
+                      onChange={(e) => setBranch(idx, { whatsapp: e.target.value || null })}
+                      className="tech-content"
+                    />
+                  </Field>
+                  <Field label="البريد">
+                    <Input
+                      value={b.email ?? ''}
+                      onChange={(e) => setBranch(idx, { email: e.target.value || null })}
+                      className="tech-content"
+                    />
+                  </Field>
+                  <Field label="الموقع">
+                    <Input
+                      value={b.website ?? ''}
+                      onChange={(e) => setBranch(idx, { website: e.target.value || null })}
+                      className="tech-content"
+                    />
+                  </Field>
+                  <Field label="خط العرض">
+                    <Input
+                      value={b.latitude != null ? String(b.latitude) : ''}
+                      onChange={(e) =>
+                        setBranch(idx, {
+                          latitude: e.target.value ? Number(e.target.value) : null,
+                        })
+                      }
+                      className="tech-content"
+                      inputMode="decimal"
+                    />
+                  </Field>
+                  <Field label="خط الطول">
+                    <Input
+                      value={b.longitude != null ? String(b.longitude) : ''}
+                      onChange={(e) =>
+                        setBranch(idx, {
+                          longitude: e.target.value ? Number(e.target.value) : null,
+                        })
+                      }
+                      className="tech-content"
+                      inputMode="decimal"
+                    />
+                  </Field>
+                  <Field label="رابط الخريطة" full>
+                    <Input
+                      value={b.map_link ?? ''}
+                      onChange={(e) => setBranch(idx, { map_link: e.target.value || null })}
+                      className="tech-content"
+                    />
+                  </Field>
+                  <Field label="العنوان التفصيلي" full>
+                    <Textarea
+                      rows={2}
+                      value={b.address ?? ''}
+                      onChange={(e) => setBranch(idx, { address: e.target.value || null })}
+                    />
+                  </Field>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="flex items-center justify-end gap-2 border-t pt-3">
         <Button variant="outline" size="sm" onClick={onCancel} className="rounded-lg">
