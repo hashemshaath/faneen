@@ -661,7 +661,7 @@ export default function AdminDataEnrichment() {
               <Search className="me-1 inline h-3.5 w-3.5" />
               <Bi ar="ابحث عن المنشأة في خرائط Google" en="Search for the business on Google Maps" />
             </Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2" data-intake-workspace>
               <Input
                 dir="auto"
                 placeholder={bi("مثل: مصنع الزجاج العالمي الرياض", "e.g. Acme Glass Factory Riyadh")}
