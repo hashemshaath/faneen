@@ -7,7 +7,7 @@
  * network calls.
  */
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -236,8 +236,24 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
     } catch {
       /* sessionStorage may be unavailable; navigation still proceeds */
     }
-    navigate('/admin/data-enrichment');
-  }, [navigate, uploadSummary]);
+    toast.success(
+      `${uploadSummary.rows.length} ${uploadSummary.rows.length === 1 ? 'row' : 'rows'} ready for review`,
+      {
+        description:
+          'استخدم لوحة "Data Enrichment" أدناه لمراجعة كل صف يدويًا قبل الاعتماد.',
+      },
+    );
+    if (typeof window !== 'undefined') {
+      const target =
+        document.querySelector<HTMLElement>('[data-intake-workspace]') ??
+        document.querySelector<HTMLElement>('main');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+      }
+    }
+  }, [uploadSummary]);
 
   const handleExportJson = React.useCallback(() => {
     if (!uploadSummary) return;
