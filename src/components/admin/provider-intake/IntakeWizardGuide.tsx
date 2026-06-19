@@ -7,10 +7,12 @@
  * network calls.
  */
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
   Upload,
   ListChecks,
@@ -19,6 +21,8 @@ import {
   Download,
   FileSpreadsheet,
   AlertTriangle,
+  ArrowLeftRight,
+  FileJson,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 
@@ -94,6 +98,8 @@ interface UploadedTemplateSummary {
   columnCount: number;
   kind: UploadedTemplateKind;
   missingColumns: string[];
+  headers: string[];
+  rows: Record<string, string>[];
 }
 
 function inferTemplateKind(headers: string[]): UploadedTemplateKind {
@@ -139,6 +145,7 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   className,
   testId = 'intake-wizard-guide',
 }) => {
+  const navigate = useNavigate();
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
   const [uploadSummary, setUploadSummary] = React.useState<UploadedTemplateSummary | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
@@ -161,8 +168,9 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         const generatedBlob = await buildTemplateBlob(id);
         triggerBlobDownload(generatedBlob, filename);
         // No navigation / no new tab fallback — generate the workbook locally.
-        // eslint-disable-next-line no-console
-        console.warn('[intake-template] static template unavailable; generated locally', href, err instanceof Error ? err.message : 'unknown error');
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[intake-template] static template unavailable; generated locally', href, err instanceof Error ? err.message : 'unknown error');
+        }
       } finally {
         setDownloadingId(null);
       }
@@ -185,6 +193,16 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
       const headers = (matrix[0] ?? []).map((v) => String(v).trim()).filter(Boolean);
       const kind = inferTemplateKind(headers);
       const required = kind === 'unknown' ? [] : REQUIRED_TEMPLATE_COLUMNS[kind];
+      const rows: Record<string, string>[] = (matrix.slice(1) as unknown[][])
+        .map((row) => {
+          const out: Record<string, string> = {};
+          headers.forEach((h, i) => {
+            const v = row?.[i];
+            out[h] = v === undefined || v === null ? '' : String(v).trim();
+          });
+          return out;
+        })
+        .filter((r) => Object.values(r).some((v) => v !== ''));
       setUploadSummary({
         fileName: file.name,
         sheetName,
@@ -192,6 +210,8 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         columnCount: headers.length,
         kind,
         missingColumns: required.filter((col) => !headers.includes(col)),
+        headers,
+        rows,
       });
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : 'Unable to read file');
@@ -199,6 +219,40 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
       e.currentTarget.value = '';
     }
   }, []);
+
+  const handleContinue = React.useCallback(() => {
+    if (!uploadSummary) return;
+    try {
+      sessionStorage.setItem(
+        'qitaat_intake_parsed_v1',
+        JSON.stringify({
+          kind: uploadSummary.kind,
+          fileName: uploadSummary.fileName,
+          headers: uploadSummary.headers,
+          rows: uploadSummary.rows,
+          parsedAt: new Date().toISOString(),
+        }),
+      );
+    } catch {
+      /* sessionStorage may be unavailable; navigation still proceeds */
+    }
+    navigate('/admin/data-enrichment');
+  }, [navigate, uploadSummary]);
+
+  const handleExportJson = React.useCallback(() => {
+    if (!uploadSummary) return;
+    const blob = new Blob(
+      [JSON.stringify({ kind: uploadSummary.kind, rows: uploadSummary.rows }, null, 2)],
+      { type: 'application/json' },
+    );
+    triggerBlobDownload(blob, `${uploadSummary.fileName.replace(/\.[^.]+$/, '')}-parsed.json`);
+  }, [uploadSummary]);
+
+  const canContinue =
+    !!uploadSummary &&
+    uploadSummary.kind !== 'unknown' &&
+    uploadSummary.missingColumns.length === 0 &&
+    uploadSummary.rows.length > 0;
   return (
     <Card data-testid={testId} className={`p-4 mb-5 ${className ?? ''}`}>
       <div className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
@@ -300,6 +354,69 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                   <Bi ar="أعمدة ناقصة" en="Missing columns" />: <span className="tech-content">{uploadSummary.missingColumns.join(', ')}</span>
                 </p>
               )}
+              {uploadSummary.rows.length > 0 && (
+                <div className="mt-3 overflow-x-auto rounded-lg border bg-background">
+                  <table className="w-full text-[10px]" data-testid="intake-template-upload-preview">
+                    <thead className="bg-muted/40">
+                      <tr>
+                        {uploadSummary.headers.slice(0, 6).map((h) => (
+                          <th key={h} className="px-2 py-1 text-start font-medium text-muted-foreground tech-content">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uploadSummary.rows.slice(0, 5).map((row, idx) => (
+                        <tr key={idx} className="border-t">
+                          {uploadSummary.headers.slice(0, 6).map((h) => (
+                            <td key={h} className="px-2 py-1 align-top tech-content">{row[h]}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {uploadSummary.rows.length > 5 && (
+                    <p className="px-2 py-1 text-[10px] text-muted-foreground">
+                      <Bi
+                        ar={`عرض 5 من أصل ${uploadSummary.rows.length} صفًا`}
+                        en={`Showing 5 of ${uploadSummary.rows.length} rows`}
+                      />
+                    </p>
+                  )}
+                </div>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleContinue}
+                  disabled={!canContinue}
+                  data-testid="intake-template-continue"
+                  className="h-9 rounded-xl text-[11px]"
+                >
+                  <ArrowLeftRight className="me-1.5 h-3.5 w-3.5" aria-hidden />
+                  <Bi ar="متابعة إلى المراجعة والتطبيق" en="Continue to review & apply" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleExportJson}
+                  disabled={uploadSummary.rows.length === 0}
+                  data-testid="intake-template-export-json"
+                  className="h-9 rounded-xl text-[11px]"
+                >
+                  <FileJson className="me-1.5 h-3.5 w-3.5" aria-hidden />
+                  <Bi ar="تنزيل JSON المعاينة" en="Download parsed JSON" />
+                </Button>
+                {!canContinue && uploadSummary.kind !== 'unknown' && (
+                  <span className="text-[10px] text-warning">
+                    <Bi
+                      ar="أكمل الأعمدة الناقصة ثم تابع"
+                      en="Resolve missing columns to continue"
+                    />
+                  </span>
+                )}
+              </div>
             </div>
           )}
           {uploadError && (
