@@ -1510,9 +1510,6 @@ export function LegacySingleRowEnrichment() {
           )}
         </Card>
       )}
-        </div>
-      </details>
     </div>
-    </DashboardLayout>
   );
 }
