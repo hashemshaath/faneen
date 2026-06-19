@@ -117,6 +117,79 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
 
   const fields = KEY_FIELDS.filter((f) => (row[f.key] ?? '').trim().length > 0);
 
+  // ── Pre-flight dedupe check ──────────────────────────────────────
+  const nameAr = (row.company_name_ar ?? row.branch_name_ar ?? '').trim();
+  const nameEn = (row.company_name_en ?? row.branch_name_en ?? '').trim();
+  const unified = (row.unified_number ?? '').trim();
+  const cr = (row.commercial_registration ?? row.cr_number ?? '').trim();
+  const dedupeKey = `${nameAr}|${nameEn}|${unified}|${cr}`;
+
+  const dedupeQuery = useQuery({
+    queryKey: ['intake-row-dedupe', dedupeKey],
+    enabled: Boolean(nameAr || nameEn || unified || cr),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const ors: string[] = [];
+      if (unified) ors.push(`unified_number.eq.${unified}`);
+      if (nameAr) ors.push(`name_ar.ilike.%${nameAr.replace(/[%,]/g, ' ')}%`);
+      if (nameEn) ors.push(`name_en.ilike.%${nameEn.replace(/[%,]/g, ' ')}%`);
+      const leadOrs = [...ors];
+      if (cr) leadOrs.push(`cr_number.eq.${cr}`);
+      const [leadsRes, bizRes] = await Promise.all([
+        leadOrs.length
+          ? supabase.from('provider_leads').select('id,name_ar,name_en,unified_number,cr_number,status').or(leadOrs.join(',')).limit(5)
+          : Promise.resolve({ data: [], error: null }),
+        ors.length
+          ? supabase.from('businesses').select('id,name_ar,name_en,unified_number').or(ors.join(',')).limit(5)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      return {
+        leads: leadsRes.data ?? [],
+        businesses: bizRes.data ?? [],
+      };
+    },
+  });
+
+  const leadHits = dedupeQuery.data?.leads ?? [];
+  const bizHits = dedupeQuery.data?.businesses ?? [];
+  const strongHit =
+    unified &&
+    (bizHits.some((b) => b.unified_number === unified) ||
+      leadHits.some((l) => l.unified_number === unified));
+  const possibleHit = !strongHit && (leadHits.length > 0 || bizHits.length > 0);
+
+  // ── Progress report export ───────────────────────────────────────
+  const exportProgress = () => {
+    const skipped = new Set<number>();
+    for (let i = 0; i < index; i++) if (!reviewedSet.has(i)) skipped.add(i);
+    const headers = Array.from(
+      new Set(['__row_index', '__status', ...queue.rows.flatMap((r) => Object.keys(r))]),
+    );
+    const escape = (v: string) =>
+      /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    const lines = [headers.join(',')];
+    queue.rows.forEach((r, i) => {
+      const status = reviewedSet.has(i) ? 'reviewed' : skipped.has(i) ? 'skipped' : 'pending';
+      lines.push(
+        headers
+          .map((h) =>
+            h === '__row_index' ? String(i + 1) : h === '__status' ? status : escape(r[h] ?? ''),
+          )
+          .join(','),
+      );
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${queue.fileName.replace(/\.[^.]+$/, '')}-progress.csv`;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+
   return (
     <Card
       data-testid="intake-row-preview-banner"
