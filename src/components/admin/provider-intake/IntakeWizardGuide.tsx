@@ -67,6 +67,27 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   className,
   testId = 'intake-wizard-guide',
 }) => {
+  const handleDownload = React.useCallback(
+    async (e: React.MouseEvent<HTMLAnchorElement>, href: string, filename: string) => {
+      e.preventDefault();
+      try {
+        const res = await fetch(href, { credentials: 'omit', cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch {
+        window.open(href, '_blank', 'noopener,noreferrer');
+      }
+    },
+    [],
+  );
   return (
     <Card data-testid={testId} className={`p-4 mb-5 ${className ?? ''}`}>
       <div className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
@@ -107,6 +128,7 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
               key={t.id}
               href={t.href}
               download
+              onClick={(e) => handleDownload(e, t.href, t.href.split('/').pop() ?? 'template.xlsx')}
               data-testid={`intake-template-${t.id}`}
               className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent transition-colors"
             >
