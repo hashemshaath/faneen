@@ -918,13 +918,27 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   </div>
 );
 
-const Field: React.FC<{ label: string; full?: boolean; children: React.ReactNode }> = ({
-  label,
-  full,
-  children,
-}) => (
-  <div className={full ? 'sm:col-span-2' : ''}>
-    <Label className="text-[11px] text-muted-foreground">{label}</Label>
-    <div className="mt-1">{children}</div>
+const Field: React.FC<{
+  label: string;
+  full?: boolean;
+  name?: string;
+  error?: string;
+  children: React.ReactNode;
+}> = ({ label, full, name, error, children }) => (
+  <div
+    className={full ? 'sm:col-span-2' : ''}
+    data-field={name}
+  >
+    <Label
+      className={`text-[11px] ${error ? 'text-destructive' : 'text-muted-foreground'}`}
+    >
+      {label}
+    </Label>
+    <div
+      className={`mt-1 ${error ? 'rounded-xl ring-2 ring-destructive/60' : ''}`}
+    >
+      {children}
+    </div>
+    {error && <p className="mt-1 text-[10px] text-destructive">{error}</p>}
   </div>
 );
