@@ -159,6 +159,10 @@ const AdminIdentity: React.FC = () => {
     : rawTab === 'workspace' || rawTab === 'approvals' || rawTab === 'directory' ? 'workspace'
     : 'overview';
   const [tab, setTab] = useState<TabKey>(initialTab);
+  // Auto-jump to the approvals workspace the first time we discover pending
+  // items — only when the admin hasn't explicitly picked a tab. Keeps the
+  // pending queue front-and-center without trapping users who chose Overview.
+  const autoJumpedRef = useRef(false);
   const setTabSafe = useCallback((next: TabKey) => {
     setTab(next);
     const sp = new URLSearchParams(searchParams);
@@ -171,6 +175,15 @@ const AdminIdentity: React.FC = () => {
     (approvalsCounts?.approvalsPending ?? 0) +
     (approvalsCounts?.businessesPending ?? 0) +
     (approvalsCounts?.accessPending ?? 0);
+
+  useEffect(() => {
+    if (autoJumpedRef.current) return;
+    if (rawTab) return; // respect explicit user/URL choice
+    if (pendingTotal > 0) {
+      autoJumpedRef.current = true;
+      setTab('workspace');
+    }
+  }, [pendingTotal, rawTab]);
 
   // Legacy ?view=... deep-link redirect to standalone management pages.
   const legacyView = searchParams.get('view');
@@ -502,7 +515,7 @@ const AdminIdentity: React.FC = () => {
           >
             {([
               { key: 'overview',  ar: 'نظرة عامة',  en: 'Overview',  icon: LayoutDashboard },
-              { key: 'workspace', ar: 'سطح العمل', en: 'Workspace', icon: Inbox, badge: pendingTotal },
+              { key: 'workspace', ar: 'الموافقات والدليل', en: 'Approvals & directory', icon: Inbox, badge: pendingTotal },
               { key: 'audit',     ar: 'السجل',     en: 'Audit',     icon: FileText },
             ] as Array<{ key: TabKey; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
               const active = tab === t.key;
@@ -626,6 +639,105 @@ const AdminIdentity: React.FC = () => {
         )}
 
         {tab === 'overview' && (<>
+        {/* ─── Pending approvals spotlight — only shown when work is queued. ─── */}
+        {pendingTotal > 0 && (
+          <section
+            aria-labelledby="pending-approvals-heading"
+            className="relative overflow-hidden rounded-2xl border border-warning/40 bg-gradient-to-br from-warning/10 via-warning/5 to-transparent p-4 sm:p-5"
+          >
+            <div className="pointer-events-none absolute -top-12 -end-12 h-32 w-32 rounded-full bg-warning/20 blur-3xl" />
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15 text-warning ring-1 ring-warning/30 shrink-0">
+                  <Inbox className="w-5 h-5" />
+                </span>
+                <div className="min-w-0">
+                  <h2 id="pending-approvals-heading" className="font-heading font-bold text-sm md:text-base flex items-center gap-2">
+                    {isRTL ? 'طلبات بانتظار الموافقة' : 'Pending approval queue'}
+                    <Badge className="bg-warning text-warning-foreground text-[10px] tabular-nums px-1.5 py-0">
+                      {pendingTotal}
+                    </Badge>
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {isRTL
+                      ? 'افتح صندوق الموافقات لمراجعة المنشآت والطلبات والوصول.'
+                      : 'Open the approvals inbox to review businesses, requests, and access.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setTabSafe('workspace')}
+                className="shrink-0"
+              >
+                <Inbox className="w-3.5 h-3.5 me-1.5" />
+                {isRTL ? 'افتح الموافقات' : 'Open approvals'}
+              </Button>
+            </div>
+            <div className="relative mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {([
+                {
+                  key: 'biz',
+                  ar: 'منشآت بانتظار التوثيق',
+                  en: 'Businesses pending review',
+                  count: approvalsCounts?.businessesPending ?? 0,
+                  to: '/admin/provider-review',
+                  icon: Building2,
+                },
+                {
+                  key: 'approvals',
+                  ar: 'طلبات موافقة عامة',
+                  en: 'General approval requests',
+                  count: approvalsCounts?.approvalsPending ?? 0,
+                  to: '/admin/identity?tab=workspace',
+                  icon: ShieldCheck,
+                },
+                {
+                  key: 'access',
+                  ar: 'طلبات الوصول',
+                  en: 'Access requests',
+                  count: approvalsCounts?.accessPending ?? 0,
+                  to: '/admin/entity-access-requests',
+                  icon: KeyRound,
+                },
+              ] as const).map((b) => {
+                const Icon = b.icon;
+                const disabled = b.count === 0;
+                return (
+                  <Link
+                    key={b.key}
+                    to={b.to}
+                    onClick={(e) => {
+                      if (b.to.includes('tab=workspace')) {
+                        e.preventDefault();
+                        setTabSafe('workspace');
+                      }
+                    }}
+                    className={`group flex items-center gap-3 rounded-xl border bg-card/70 backdrop-blur px-3 py-2.5 transition-all ${
+                      disabled
+                        ? 'border-border/30 opacity-60'
+                        : 'border-warning/30 hover:border-warning/60 hover:-translate-y-0.5'
+                    }`}
+                  >
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10 text-warning shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-muted-foreground truncate">{isRTL ? b.ar : b.en}</p>
+                      <p className="font-heading font-bold text-lg leading-none tabular-nums tech-content text-foreground mt-1">
+                        {b.count.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+                      </p>
+                    </div>
+                    {!disabled && (
+                      <ArrowUpRight className={`w-4 h-4 text-muted-foreground/40 transition-all group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRTL ? 'rtl-flip' : ''}`} />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* ─── Hero KPIs (primary) ─── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Kpi icon={Users} label={isRTL ? 'إجمالي الحسابات' : 'Total accounts'}
