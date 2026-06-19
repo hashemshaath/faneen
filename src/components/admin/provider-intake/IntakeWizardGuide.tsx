@@ -384,33 +384,43 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                 </p>
               )}
               {uploadSummary.rows.length > 0 && (
-                <div className="mt-3 overflow-x-auto rounded-lg border bg-background">
+                <div className="mt-3 max-h-80 overflow-auto rounded-lg border bg-background">
                   <table className="w-full text-[10px]" data-testid="intake-template-upload-preview">
-                    <thead className="bg-muted/40">
+                    <thead className="sticky top-0 bg-muted/60 backdrop-blur">
                       <tr>
-                        {uploadSummary.headers.slice(0, 6).map((h) => (
+                        <th className="px-2 py-1 text-start font-medium text-muted-foreground">#</th>
+                        {uploadSummary.headers.slice(0, 5).map((h) => (
                           <th key={h} className="px-2 py-1 text-start font-medium text-muted-foreground tech-content">{h}</th>
                         ))}
+                        <th className="px-2 py-1 text-end font-medium text-muted-foreground">
+                          <Bi ar="إجراء" en="Action" />
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {uploadSummary.rows.slice(0, 5).map((row, idx) => (
+                      {uploadSummary.rows.map((row, idx) => (
                         <tr key={idx} className="border-t">
-                          {uploadSummary.headers.slice(0, 6).map((h) => (
+                          <td className="px-2 py-1 align-top tech-content text-muted-foreground">{idx + 1}</td>
+                          {uploadSummary.headers.slice(0, 5).map((h) => (
                             <td key={h} className="px-2 py-1 align-top tech-content">{row[h]}</td>
                           ))}
+                          <td className="px-2 py-1 text-end">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleAuditRow(row)}
+                              data-testid={`intake-template-audit-row-${idx}`}
+                              className="h-7 rounded-lg px-2 text-[10px]"
+                            >
+                              <Search className="me-1 h-3 w-3" aria-hidden />
+                              <Bi ar="تدقيق" en="Audit" />
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {uploadSummary.rows.length > 5 && (
-                    <p className="px-2 py-1 text-[10px] text-muted-foreground">
-                      <Bi
-                        ar={`عرض 5 من أصل ${uploadSummary.rows.length} صفًا`}
-                        en={`Showing 5 of ${uploadSummary.rows.length} rows`}
-                      />
-                    </p>
-                  )}
                 </div>
               )}
               <div className="mt-3 flex flex-wrap items-center gap-2">
