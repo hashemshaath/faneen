@@ -317,6 +317,28 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
     triggerBlobDownload(blob, `${uploadSummary.fileName.replace(/\.[^.]+$/, '')}-parsed.json`);
   }, [uploadSummary]);
 
+  const handleApplyMapping = React.useCallback(() => {
+    if (!uploadSummary) return;
+    const pairs = Object.entries(columnMap).filter(([, src]) => src && src !== '__none__');
+    if (pairs.length === 0) {
+      toast('اختر عمودًا مصدرًا لعمود ناقص واحد على الأقل');
+      return;
+    }
+    const newRows = uploadSummary.rows.map((r) => {
+      const next = { ...r };
+      for (const [target, src] of pairs) {
+        if (!next[target] && r[src] != null) next[target] = r[src];
+      }
+      return next;
+    });
+    const newHeaders = Array.from(new Set([...uploadSummary.headers, ...pairs.map(([t]) => t)]));
+    const required = REQUIRED_TEMPLATE_COLUMNS[uploadSummary.kind === 'branches' ? 'branches' : 'providers'];
+    const missing = uploadSummary.kind === 'unknown' ? [] : required.filter((c) => !newHeaders.includes(c));
+    setUploadSummary({ ...uploadSummary, headers: newHeaders, rows: newRows, missingColumns: missing });
+    setColumnMap({});
+    toast.success(`تم تعيين ${pairs.length} عمود — الأعمدة الناقصة: ${missing.length}`);
+  }, [uploadSummary, columnMap]);
+
   const canContinue =
     !!uploadSummary &&
     uploadSummary.kind !== 'unknown' &&
