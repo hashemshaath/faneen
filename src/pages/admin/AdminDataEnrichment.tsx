@@ -28,6 +28,8 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { mapsService } from "@/modules/google";
 import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
+import { IntakeWizardGuide } from "@/components/admin/provider-intake/IntakeWizardGuide";
+import { PilotContactTemplateCard } from "@/components/admin/provider-intake/PilotContactTemplateCard";
 import {
   fetchEnrichment,
   enhanceEnrichment,
