@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bi, useBi } from "@/components/common/Bilingual";
-import { CheckCircle2, XCircle, RefreshCw, KeyRound, Activity, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, RefreshCw, KeyRound, Activity, Loader2, AlertTriangle } from "lucide-react";
 import { fetchGoogleHealth, mapsService } from "@/modules/google";
 import type { GoogleApi, GoogleProbe, GoogleHealthResponse } from "@/modules/google/types";
 
@@ -39,6 +39,12 @@ export function GoogleStatusPanel() {
   const serverKeyMissing = data?.missing?.includes("GOOGLE_MAPS_API_KEY") ?? false;
   const serverKeyPresent = data ? !serverKeyMissing : false;
 
+  // Detect HTTP-Referrer / API-restriction issues across all probes.
+  const probes = data?.apis ? Object.values(data.apis).filter(Boolean) as GoogleProbe[] : [];
+  const referrerIssue = probes.some((p) => p.authIssue === "referrer_restricted");
+  const apiDisabled = probes.some((p) => p.authIssue === "api_not_enabled");
+  const keyInvalid = probes.some((p) => p.authIssue === "key_invalid");
+
   return (
     <Card className="mb-4 p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -59,6 +65,38 @@ export function GoogleStatusPanel() {
           </Button>
         </span>
       </div>
+
+      {(referrerIssue || apiDisabled || keyInvalid) && (
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="space-y-0.5">
+            {referrerIssue && (
+              <p>
+                <Bi
+                  ar="مفتاح الخادم GOOGLE_MAPS_API_KEY مقيّد بـ HTTP Referrer. أزل القيد من Google Cloud → APIs & Services → Credentials → Application restrictions = None."
+                  en="GOOGLE_MAPS_API_KEY is restricted by HTTP Referrer. Set Application restrictions = None in Google Cloud Console (server keys must not use referrer restrictions)."
+                />
+              </p>
+            )}
+            {apiDisabled && (
+              <p>
+                <Bi
+                  ar="بعض الخدمات غير مفعّلة في مشروع Google Cloud. فعّل: Places API (New), Geocoding, Routes, Address Validation."
+                  en="One or more APIs are not enabled in the GCP project. Enable: Places API (New), Geocoding, Routes, Address Validation."
+                />
+              </p>
+            )}
+            {keyInvalid && (
+              <p>
+                <Bi
+                  ar="المفتاح غير صالح أو منتهي. أعد إنشاء مفتاح خادم جديد وحدّث السر GOOGLE_MAPS_API_KEY."
+                  en="API key is invalid or expired. Rotate GOOGLE_MAPS_API_KEY in Lovable Cloud secrets."
+                />
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Keys */}
       <div className="grid gap-2 sm:grid-cols-2">
@@ -109,6 +147,11 @@ export function GoogleStatusPanel() {
                     {!ok && probe.errorCode && (
                       <Badge variant="outline" className="h-5 text-[10px]">
                         {probe.errorCode}
+                      </Badge>
+                    )}
+                    {!ok && probe.authIssue && (
+                      <Badge variant="outline" className="h-5 text-[10px] border-amber-400 text-amber-700">
+                        {probe.authIssue}
                       </Badge>
                     )}
                     <StatusDot ok={ok} />
