@@ -152,6 +152,9 @@ const ProviderJoin: React.FC = () => {
           ...prev,
           ...Array.from({ length: needed - prev.length }, () => ({
             branch_name: '', city: '', address: '', map_link: '', phone: '',
+            whatsapp: '', email: '', website: '',
+            region: '', district: '', street_name: '', building_number: '', postal_code: '',
+            short_national_address: '', national_address: '',
           })),
         ];
       }
