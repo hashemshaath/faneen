@@ -94,7 +94,10 @@ describe('Provider intake template download — Final QA', () => {
   });
 
   it('no direct businesses import, no auto-publish, no auto-match/send/lead', () => {
-    expect(guideSrc).not.toMatch(/businesses/);
+    // The component is allowed to mention "businesses table" in user-facing
+    // copy — what's forbidden is importing/writing to that table.
+    expect(guideSrc).not.toMatch(/from\s+['"][^'"]*businesses[^'"]*['"]/);
+    expect(guideSrc).not.toMatch(/\.from\(['"]businesses['"]\)/);
     expect(guideSrc).not.toMatch(/auto[_-]?publish/i);
     expect(guideSrc).not.toMatch(/auto[_-]?match/i);
     expect(guideSrc).not.toMatch(/auto[_-]?send/i);
