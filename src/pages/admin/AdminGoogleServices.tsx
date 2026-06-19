@@ -12,6 +12,7 @@ import { Bi } from "@/components/common/Bilingual";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { healthService, type GoogleHealthResponse, type GoogleApi } from "@/modules/google";
+import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
 
 const API_META: Record<GoogleApi, { ar: string; en: string; Icon: typeof MapPin }> = {
   places: { ar: "Places API", en: "Places API", Icon: MapPin },
@@ -67,6 +68,8 @@ const AdminGoogleServices = () => {
             <Bi ar="إعادة الفحص" en="Re-check" />
           </Button>
         </header>
+
+        <GoogleStatusPanel />
 
         <Card className="mb-6 p-5">
           <div className="flex items-center justify-between gap-4">
