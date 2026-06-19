@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
  CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp,
-  Store, AlertCircle, Link as LinkIcon,
+  Store, AlertCircle, Link as LinkIcon, MessageCircle, Calendar, Globe, Briefcase,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
@@ -39,26 +39,44 @@ interface FormState {
   contact_name: string;
   email: string;
   phone: string;
+  whatsapp: string;
   preferred_channel: ProviderLeadChannel;
   website: string;
   cr_number: string;
   unified_number: string;
   vat_number: string;
+  establishment_year: string;
   main_activity: string;
   specialties: string[];
   brands: string[];
   brief: string;
   map_link: string;
   national_address: string;
+  short_national_address: string;
+  full_address: string;
+  region: string;
   city: string;
+  district: string;
+  street_name: string;
+  building_number: string;
+  postal_code: string;
+  latitude: string;
+  longitude: string;
+  account_manager_name: string;
+  account_manager_phone: string;
+  account_manager_email: string;
   branches_count: number;
 }
 
 const EMPTY: FormState = {
-  name_ar: '', name_en: '', contact_name: '', email: '', phone: '',
+  name_ar: '', name_en: '', contact_name: '', email: '', phone: '', whatsapp: '',
   preferred_channel: 'phone', website: '', cr_number: '', unified_number: '',
-  vat_number: '', main_activity: '', specialties: [], brands: [], brief: '',
-  map_link: '', national_address: '', city: '', branches_count: 1,
+  vat_number: '', establishment_year: '', main_activity: '', specialties: [], brands: [], brief: '',
+  map_link: '', national_address: '', short_national_address: '', full_address: '',
+  region: '', city: '', district: '', street_name: '', building_number: '', postal_code: '',
+  latitude: '', longitude: '',
+  account_manager_name: '', account_manager_phone: '', account_manager_email: '',
+  branches_count: 1,
 };
 
 const ProviderJoin: React.FC = () => {
@@ -134,6 +152,9 @@ const ProviderJoin: React.FC = () => {
           ...prev,
           ...Array.from({ length: needed - prev.length }, () => ({
             branch_name: '', city: '', address: '', map_link: '', phone: '',
+            whatsapp: '', email: '', website: '',
+            region: '', district: '', street_name: '', building_number: '', postal_code: '',
+            short_national_address: '', national_address: '',
           })),
         ];
       }
@@ -216,6 +237,25 @@ const ProviderJoin: React.FC = () => {
     else if (!isSaudiPhone(form.phone)) er.phone = t('رقم الجوال غير صحيح. مثال: 05XXXXXXXX', 'Invalid phone. Example: 05XXXXXXXX');
     if (form.website && !isUrl(form.website)) er.website = t('رابط الموقع غير صحيح', 'Invalid website URL');
     if (form.map_link && !isUrl(form.map_link)) er.map_link = t('رابط الخريطة غير صحيح', 'Invalid map URL');
+    if (form.whatsapp && !isSaudiPhone(form.whatsapp)) er.whatsapp = t('رقم الواتساب غير صحيح', 'Invalid WhatsApp number');
+    if (form.account_manager_email && !isEmail(form.account_manager_email)) er.account_manager_email = t('بريد مدير الحساب غير صحيح', 'Invalid account manager email');
+    if (form.account_manager_phone && !isSaudiPhone(form.account_manager_phone)) er.account_manager_phone = t('جوال مدير الحساب غير صحيح', 'Invalid account manager phone');
+    if (form.short_national_address && !/^[A-Za-z]{4}\d{4}$/.test(form.short_national_address.trim())) {
+      er.short_national_address = t('العنوان الوطني يجب أن يكون 4 أحرف + 4 أرقام', 'National address must be 4 letters + 4 digits');
+    }
+    if (form.postal_code && !/^\d{5}$/.test(form.postal_code.trim())) er.postal_code = t('الرمز البريدي 5 أرقام', 'Postal code must be 5 digits');
+    if (form.establishment_year) {
+      const y = Number(form.establishment_year);
+      const cy = new Date().getFullYear();
+      if (!Number.isInteger(y) || y < 1900 || y > cy) er.establishment_year = t('سنة تأسيس غير صحيحة', 'Invalid establishment year');
+    }
+    branches.forEach((b, i) => {
+      if (b.email && !isEmail(b.email)) er[`branch_${i}_email`] = t('بريد الفرع غير صحيح', 'Invalid branch email');
+      if (b.phone && !isSaudiPhone(b.phone)) er[`branch_${i}_phone`] = t('جوال الفرع غير صحيح', 'Invalid branch phone');
+      if (b.whatsapp && !isSaudiPhone(b.whatsapp)) er[`branch_${i}_whatsapp`] = t('واتساب الفرع غير صحيح', 'Invalid branch WhatsApp');
+      if (b.website && !isUrl(b.website)) er[`branch_${i}_website`] = t('رابط موقع الفرع غير صحيح', 'Invalid branch website');
+      if (b.map_link && !isUrl(b.map_link)) er[`branch_${i}_map`] = t('رابط خريطة الفرع غير صحيح', 'Invalid branch map link');
+    });
     if (form.branches_count < 1) er.branches_count = t('عدد الفروع يجب أن يكون 1 أو أكثر', 'Branches must be 1 or more');
     // Validate extra branches: at minimum require a branch name
     branches.forEach((b, i) => {
@@ -272,18 +312,32 @@ const ProviderJoin: React.FC = () => {
           contact_name: form.contact_name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
+          whatsapp: form.whatsapp.trim() || undefined,
           preferred_channel: form.preferred_channel,
           website: form.website.trim() || undefined,
           cr_number: form.cr_number.trim() || undefined,
           unified_number: form.unified_number.trim() || undefined,
           vat_number: form.vat_number.trim() || undefined,
+          establishment_year: form.establishment_year ? Number(form.establishment_year) : undefined,
           main_activity: form.main_activity.trim() || undefined,
           specialties: form.specialties.map((s) => s.trim()).filter(Boolean),
           brands: form.brands.map((s) => s.trim()).filter(Boolean),
           brief: form.brief.trim() || undefined,
           map_link: form.map_link.trim() || undefined,
           national_address: form.national_address.trim() || undefined,
+          short_national_address: form.short_national_address.trim() || undefined,
+          full_address: form.full_address.trim() || undefined,
+          region: form.region.trim() || undefined,
           city: form.city.trim() || undefined,
+          district: form.district.trim() || undefined,
+          street_name: form.street_name.trim() || undefined,
+          building_number: form.building_number.trim() || undefined,
+          postal_code: form.postal_code.trim() || undefined,
+          latitude: form.latitude ? Number(form.latitude) : undefined,
+          longitude: form.longitude ? Number(form.longitude) : undefined,
+          account_manager_name: form.account_manager_name.trim() || undefined,
+          account_manager_phone: form.account_manager_phone.trim() || undefined,
+          account_manager_email: form.account_manager_email.trim() || undefined,
           branches_count: Math.max(1, Number(form.branches_count) || 1),
           branches: branches
             .filter((b) => b.branch_name.trim().length > 0)
@@ -293,6 +347,16 @@ const ProviderJoin: React.FC = () => {
               address: b.address?.trim() || undefined,
               map_link: b.map_link?.trim() || undefined,
               phone: b.phone?.trim() || undefined,
+              whatsapp: b.whatsapp?.trim() || undefined,
+              email: b.email?.trim() || undefined,
+              website: b.website?.trim() || undefined,
+              region: b.region?.trim() || undefined,
+              district: b.district?.trim() || undefined,
+              street_name: b.street_name?.trim() || undefined,
+              building_number: b.building_number?.trim() || undefined,
+              postal_code: b.postal_code?.trim() || undefined,
+              short_national_address: b.short_national_address?.trim() || undefined,
+              national_address: b.national_address?.trim() || undefined,
             })),
         },
         crFile,
@@ -518,6 +582,14 @@ const ProviderJoin: React.FC = () => {
                       </div>
                     </Field>
                   </div>
+                  <div data-error-key="establishment_year">
+                    <Field label={t('سنة التأسيس', 'Established year')} error={errors.establishment_year} hint={t('سنة بدء النشاط التجاري.', 'Year the business started.')}>
+                      <div className="relative">
+                        <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input type="number" inputMode="numeric" min={1900} max={new Date().getFullYear()} dir="ltr" placeholder="2015" value={form.establishment_year} onChange={(e) => setField('establishment_year', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.establishment_year)}`} aria-invalid={!!errors.establishment_year} />
+                      </div>
+                    </Field>
+                  </div>
                 </div>
                 <Field label={t('نبذة مختصرة عن المنشأة', 'Short description')}>
                   <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => setField('brief', e.target.value)} className="rounded-xl min-h-[88px] text-[14px]" />
@@ -552,6 +624,14 @@ const ProviderJoin: React.FC = () => {
                       </div>
                     </Field>
                   </div>
+                  <div data-error-key="whatsapp">
+                    <Field label={t('رقم الواتساب', 'WhatsApp')} error={errors.whatsapp} hint={t('اتركه فارغاً إن كان نفس رقم الجوال.', 'Leave blank if same as phone.')}>
+                      <div className="relative">
+                        <MessageCircle className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
+                        <Input type="tel" dir="ltr" placeholder="05xxxxxxxx" value={form.whatsapp} onChange={(e) => setField('whatsapp', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.whatsapp)}`} aria-invalid={!!errors.whatsapp} />
+                      </div>
+                    </Field>
+                  </div>
                   <Field label={t('وسيلة التواصل المفضلة', 'Preferred channel')} hint={t('سنبدأ التواصل عبر هذه القناة.', 'We will reach out through this channel first.')}>
                     <select
                       value={form.preferred_channel}
@@ -564,6 +644,29 @@ const ProviderJoin: React.FC = () => {
                     </select>
                   </Field>
                 </div>
+
+                {/* Account manager (optional) */}
+                <div className="pt-2 border-t">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                    <Briefcase className="w-3.5 h-3.5" />
+                    {t('مدير الحساب (اختياري)', 'Account manager (optional)')}
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-3 sm:gap-4">
+                    <Field label={t('الاسم', 'Name')}>
+                      <Input dir="auto" value={form.account_manager_name} onChange={(e) => setField('account_manager_name', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <div data-error-key="account_manager_phone">
+                      <Field label={t('الجوال', 'Phone')} error={errors.account_manager_phone}>
+                        <Input type="tel" dir="ltr" placeholder="05xxxxxxxx" value={form.account_manager_phone} onChange={(e) => setField('account_manager_phone', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.account_manager_phone)}`} aria-invalid={!!errors.account_manager_phone} />
+                      </Field>
+                    </div>
+                    <div data-error-key="account_manager_email">
+                      <Field label={t('البريد', 'Email')} error={errors.account_manager_email}>
+                        <Input type="email" dir="ltr" placeholder="name@example.com" value={form.account_manager_email} onChange={(e) => setField('account_manager_email', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.account_manager_email)}`} aria-invalid={!!errors.account_manager_email} />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -575,9 +678,6 @@ const ProviderJoin: React.FC = () => {
                   <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
                     <Input dir="auto" value={form.main_activity} onChange={(e) => setField('main_activity', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: ألمنيوم، زجاج، حديد', 'e.g. Aluminum, Glass, Steel')} />
                   </Field>
-                  <Field label={t('المدينة', 'City')} hint={t('مدينة المقر الرئيسي.', 'City of the main location.')}>
-                    <Input dir="auto" value={form.city} onChange={(e) => setField('city', e.target.value)} className="h-12 rounded-xl" />
-                  </Field>
                   <Field label={t('الوكالات / العلامات التجارية', 'Brands / Agencies')} hint={t('اضغط Enter بعد كل علامة.', 'Press Enter after each brand.')}>
                     <TagInput
                       values={form.brands}
@@ -586,17 +686,68 @@ const ProviderJoin: React.FC = () => {
                       dir="auto"
                     />
                   </Field>
-                  <Field label={t('العنوان الوطني', 'National Address')} hint={t('رمز العنوان الوطني المكوّن من 8 خانات.', '8-character national address code.')}>
-                    <Input dir="auto" value={form.national_address} onChange={(e) => setField('national_address', e.target.value)} className="h-12 rounded-xl tech-content" />
-                  </Field>
-                  <div data-error-key="map_link">
-                    <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors.map_link} hint={t('انسخ الرابط من Google Maps.', 'Copy the link from Google Maps.')}>
-                      <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => setField('map_link', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.map_link)}`} aria-invalid={!!errors.map_link} />
-                    </Field>
-                  </div>
                   <div data-error-key="branches_count">
                     <Field label={t('عدد الفروع', 'Branches count')} error={errors.branches_count} hint={t('شامل الفرع الرئيسي.', 'Including the main branch.')}>
                       <Input type="number" min={1} dir="ltr" value={form.branches_count} onChange={(e) => setField('branches_count', Number(e.target.value) || 1)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.branches_count)}`} aria-invalid={!!errors.branches_count} />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* Address — head office */}
+                <div className="pt-2 border-t space-y-3">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {t('عنوان المقر الرئيسي', 'Head office address')}
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-3 sm:gap-4">
+                    <Field label={t('المنطقة', 'Region')}>
+                      <Input dir="auto" value={form.region} onChange={(e) => setField('region', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: الرياض', 'e.g. Riyadh')} />
+                    </Field>
+                    <Field label={t('المدينة', 'City')}>
+                      <Input dir="auto" value={form.city} onChange={(e) => setField('city', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <Field label={t('الحي', 'District')}>
+                      <Input dir="auto" value={form.district} onChange={(e) => setField('district', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <Field label={t('اسم الشارع', 'Street name')}>
+                      <Input dir="auto" value={form.street_name} onChange={(e) => setField('street_name', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <Field label={t('رقم المبنى', 'Building number')}>
+                      <Input dir="ltr" value={form.building_number} onChange={(e) => setField('building_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    </Field>
+                    <div data-error-key="postal_code">
+                      <Field label={t('الرمز البريدي', 'Postal code')} error={errors.postal_code}>
+                        <Input dir="ltr" inputMode="numeric" maxLength={5} value={form.postal_code} onChange={(e) => setField('postal_code', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.postal_code)}`} aria-invalid={!!errors.postal_code} />
+                      </Field>
+                    </div>
+                    <div data-error-key="short_national_address" className="md:col-span-1">
+                      <Field label={t('العنوان الوطني المختصر', 'Short national address')} error={errors.short_national_address} hint={t('4 أحرف + 4 أرقام (مثل RIYD1234).', '4 letters + 4 digits (e.g. RIYD1234).')}>
+                        <Input dir="ltr" maxLength={8} value={form.short_national_address} onChange={(e) => setField('short_national_address', e.target.value.toUpperCase())} className={`h-12 rounded-xl tech-content uppercase ${invalidInputClass(!!errors.short_national_address)}`} aria-invalid={!!errors.short_national_address} />
+                      </Field>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Field label={t('العنوان الوطني الكامل', 'Full national address')} hint={t('الشارع، الحي، المدينة، الرمز البريدي.', 'Street, district, city, postal code.')}>
+                        <Input dir="auto" value={form.national_address} onChange={(e) => setField('national_address', e.target.value)} className="h-12 rounded-xl" />
+                      </Field>
+                    </div>
+                    <div className="md:col-span-3">
+                      <Field label={t('العنوان التفصيلي', 'Full address')}>
+                        <Textarea dir="auto" rows={2} value={form.full_address} onChange={(e) => setField('full_address', e.target.value)} className="rounded-xl min-h-[64px] text-[14px]" />
+                      </Field>
+                    </div>
+                    <div data-error-key="map_link" className="md:col-span-3">
+                      <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors.map_link} hint={t('انسخ الرابط من Google Maps.', 'Copy the link from Google Maps.')}>
+                        <div className="relative">
+                          <Globe className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => setField('map_link', e.target.value)} className={`h-12 rounded-xl ps-9 ${invalidInputClass(!!errors.map_link)}`} aria-invalid={!!errors.map_link} />
+                        </div>
+                      </Field>
+                    </div>
+                    <Field label={t('خط العرض (Latitude)', 'Latitude')}>
+                      <Input dir="ltr" inputMode="decimal" placeholder="24.7136" value={form.latitude} onChange={(e) => setField('latitude', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    </Field>
+                    <Field label={t('خط الطول (Longitude)', 'Longitude')}>
+                      <Input dir="ltr" inputMode="decimal" placeholder="46.6753" value={form.longitude} onChange={(e) => setField('longitude', e.target.value)} className="h-12 rounded-xl tech-content" />
                     </Field>
                   </div>
                 </div>
@@ -686,23 +837,74 @@ const ProviderJoin: React.FC = () => {
                                 aria-invalid={!!errors[`branch_${i}_name`]}
                               />
                             </Field>
+                            <Field label={t('المنطقة', 'Region')}>
+                              <Input dir="auto" value={b.region ?? ''} onChange={(e) => updateBranch(i, 'region', e.target.value)} className="h-12 rounded-xl" />
+                            </Field>
                             <Field label={t('المدينة', 'City')}>
                               <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-12 rounded-xl" />
                             </Field>
+                            <Field label={t('الحي', 'District')}>
+                              <Input dir="auto" value={b.district ?? ''} onChange={(e) => updateBranch(i, 'district', e.target.value)} className="h-12 rounded-xl" />
+                            </Field>
+                            <Field label={t('اسم الشارع', 'Street name')}>
+                              <Input dir="auto" value={b.street_name ?? ''} onChange={(e) => updateBranch(i, 'street_name', e.target.value)} className="h-12 rounded-xl" />
+                            </Field>
+                            <Field label={t('رقم المبنى', 'Building number')}>
+                              <Input dir="ltr" value={b.building_number ?? ''} onChange={(e) => updateBranch(i, 'building_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                            </Field>
+                            <Field label={t('الرمز البريدي', 'Postal code')}>
+                              <Input dir="ltr" inputMode="numeric" maxLength={5} value={b.postal_code ?? ''} onChange={(e) => updateBranch(i, 'postal_code', e.target.value)} className="h-12 rounded-xl tech-content" />
+                            </Field>
+                            <Field label={t('العنوان الوطني المختصر', 'Short national address')}>
+                              <Input dir="ltr" maxLength={8} value={b.short_national_address ?? ''} onChange={(e) => updateBranch(i, 'short_national_address', e.target.value.toUpperCase())} className="h-12 rounded-xl tech-content uppercase" />
+                            </Field>
                             <div className="md:col-span-2">
-                              <Field label={t('العنوان', 'Address')}>
+                              <Field label={t('العنوان التفصيلي', 'Address')}>
                                 <Input dir="auto" value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-12 rounded-xl" />
                               </Field>
                             </div>
-                            <Field label={t('رقم التواصل', 'Phone')}>
+                            <div className="md:col-span-2">
+                              <Field label={t('العنوان الوطني الكامل', 'Full national address')}>
+                                <Input dir="auto" value={b.national_address ?? ''} onChange={(e) => updateBranch(i, 'national_address', e.target.value)} className="h-12 rounded-xl" />
+                              </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_phone`}>
+                            <Field label={t('رقم التواصل', 'Phone')} error={errors[`branch_${i}_phone`]}>
                               <div className="relative">
                                 <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-12 rounded-xl ps-9 tech-content" />
+                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => { updateBranch(i, 'phone', e.target.value); clearError(`branch_${i}_phone`); }} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors[`branch_${i}_phone`])}`} aria-invalid={!!errors[`branch_${i}_phone`]} />
                               </div>
                             </Field>
-                            <Field label={t('رابط الموقع على الخريطة', 'Map link')}>
-                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-12 rounded-xl" />
+                            </div>
+                            <div data-error-key={`branch_${i}_whatsapp`}>
+                            <Field label={t('واتساب', 'WhatsApp')} error={errors[`branch_${i}_whatsapp`]}>
+                              <div className="relative">
+                                <MessageCircle className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
+                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.whatsapp ?? ''} onChange={(e) => { updateBranch(i, 'whatsapp', e.target.value); clearError(`branch_${i}_whatsapp`); }} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors[`branch_${i}_whatsapp`])}`} aria-invalid={!!errors[`branch_${i}_whatsapp`]} />
+                              </div>
                             </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_email`}>
+                            <Field label={t('البريد الإلكتروني', 'Email')} error={errors[`branch_${i}_email`]}>
+                              <div className="relative">
+                                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input type="email" dir="ltr" placeholder="branch@example.com" value={b.email ?? ''} onChange={(e) => { updateBranch(i, 'email', e.target.value); clearError(`branch_${i}_email`); }} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors[`branch_${i}_email`])}`} aria-invalid={!!errors[`branch_${i}_email`]} />
+                              </div>
+                            </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_website`}>
+                            <Field label={t('الموقع الإلكتروني', 'Website')} error={errors[`branch_${i}_website`]}>
+                              <div className="relative">
+                                <LinkIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input type="url" dir="ltr" placeholder="https://" value={b.website ?? ''} onChange={(e) => { updateBranch(i, 'website', e.target.value); clearError(`branch_${i}_website`); }} className={`h-12 rounded-xl ps-9 ${invalidInputClass(!!errors[`branch_${i}_website`])}`} aria-invalid={!!errors[`branch_${i}_website`]} />
+                              </div>
+                            </Field>
+                            </div>
+                            <div data-error-key={`branch_${i}_map`} className="md:col-span-2">
+                            <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors[`branch_${i}_map`]}>
+                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => { updateBranch(i, 'map_link', e.target.value); clearError(`branch_${i}_map`); }} className={`h-12 rounded-xl ${invalidInputClass(!!errors[`branch_${i}_map`])}`} aria-invalid={!!errors[`branch_${i}_map`]} />
+                            </Field>
+                            </div>
                           </div>
                         </div>
                       </details>

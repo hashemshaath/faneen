@@ -14605,32 +14605,71 @@ export type Database = {
         Row: {
           address: string | null
           branch_name: string
+          building_number: string | null
           city: string | null
           created_at: string
+          district: string | null
+          email: string | null
           id: string
+          is_main: boolean | null
+          latitude: number | null
           lead_id: string
+          longitude: number | null
           map_link: string | null
+          national_address: string | null
           phone: string | null
+          postal_code: string | null
+          region: string | null
+          short_national_address: string | null
+          street_name: string | null
+          website: string | null
+          whatsapp: string | null
         }
         Insert: {
           address?: string | null
           branch_name: string
+          building_number?: string | null
           city?: string | null
           created_at?: string
+          district?: string | null
+          email?: string | null
           id?: string
+          is_main?: boolean | null
+          latitude?: number | null
           lead_id: string
+          longitude?: number | null
           map_link?: string | null
+          national_address?: string | null
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          short_national_address?: string | null
+          street_name?: string | null
+          website?: string | null
+          whatsapp?: string | null
         }
         Update: {
           address?: string | null
           branch_name?: string
+          building_number?: string | null
           city?: string | null
           created_at?: string
+          district?: string | null
+          email?: string | null
           id?: string
+          is_main?: boolean | null
+          latitude?: number | null
           lead_id?: string
+          longitude?: number | null
           map_link?: string | null
+          national_address?: string | null
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          short_national_address?: string | null
+          street_name?: string | null
+          website?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -14711,100 +14750,142 @@ export type Database = {
       }
       provider_leads: {
         Row: {
+          account_manager_email: string | null
+          account_manager_name: string | null
+          account_manager_phone: string | null
           admin_notes: string | null
           branches_count: number
           brands: string[]
           brief: string | null
+          building_number: string | null
           city: string | null
           contact_name: string
           cr_file_path: string | null
           cr_number: string | null
           created_at: string
+          district: string | null
           email: string
+          establishment_year: number | null
+          full_address: string | null
           id: string
+          latitude: number | null
           linked_business_id: string | null
+          longitude: number | null
           main_activity: string | null
           map_link: string | null
           name_ar: string
           name_en: string | null
           national_address: string | null
           phone: string
+          postal_code: string | null
           preferred_channel: Database["public"]["Enums"]["provider_lead_channel"]
           reference_code: string | null
+          region: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          short_national_address: string | null
           specialties: string[]
           status: Database["public"]["Enums"]["provider_lead_status"]
+          street_name: string | null
           submitted_ip_hash: string | null
           unified_number: string | null
           updated_at: string
           user_agent: string | null
           vat_number: string | null
           website: string | null
+          whatsapp: string | null
         }
         Insert: {
+          account_manager_email?: string | null
+          account_manager_name?: string | null
+          account_manager_phone?: string | null
           admin_notes?: string | null
           branches_count?: number
           brands?: string[]
           brief?: string | null
+          building_number?: string | null
           city?: string | null
           contact_name: string
           cr_file_path?: string | null
           cr_number?: string | null
           created_at?: string
+          district?: string | null
           email: string
+          establishment_year?: number | null
+          full_address?: string | null
           id?: string
+          latitude?: number | null
           linked_business_id?: string | null
+          longitude?: number | null
           main_activity?: string | null
           map_link?: string | null
           name_ar: string
           name_en?: string | null
           national_address?: string | null
           phone: string
+          postal_code?: string | null
           preferred_channel?: Database["public"]["Enums"]["provider_lead_channel"]
           reference_code?: string | null
+          region?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          short_national_address?: string | null
           specialties?: string[]
           status?: Database["public"]["Enums"]["provider_lead_status"]
+          street_name?: string | null
           submitted_ip_hash?: string | null
           unified_number?: string | null
           updated_at?: string
           user_agent?: string | null
           vat_number?: string | null
           website?: string | null
+          whatsapp?: string | null
         }
         Update: {
+          account_manager_email?: string | null
+          account_manager_name?: string | null
+          account_manager_phone?: string | null
           admin_notes?: string | null
           branches_count?: number
           brands?: string[]
           brief?: string | null
+          building_number?: string | null
           city?: string | null
           contact_name?: string
           cr_file_path?: string | null
           cr_number?: string | null
           created_at?: string
+          district?: string | null
           email?: string
+          establishment_year?: number | null
+          full_address?: string | null
           id?: string
+          latitude?: number | null
           linked_business_id?: string | null
+          longitude?: number | null
           main_activity?: string | null
           map_link?: string | null
           name_ar?: string
           name_en?: string | null
           national_address?: string | null
           phone?: string
+          postal_code?: string | null
           preferred_channel?: Database["public"]["Enums"]["provider_lead_channel"]
           reference_code?: string | null
+          region?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          short_national_address?: string | null
           specialties?: string[]
           status?: Database["public"]["Enums"]["provider_lead_status"]
+          street_name?: string | null
           submitted_ip_hash?: string | null
           unified_number?: string | null
           updated_at?: string
           user_agent?: string | null
           vat_number?: string | null
           website?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -20519,36 +20600,50 @@ export type Database = {
           p_status: Database["public"]["Enums"]["provider_lead_status"]
         }
         Returns: {
+          account_manager_email: string | null
+          account_manager_name: string | null
+          account_manager_phone: string | null
           admin_notes: string | null
           branches_count: number
           brands: string[]
           brief: string | null
+          building_number: string | null
           city: string | null
           contact_name: string
           cr_file_path: string | null
           cr_number: string | null
           created_at: string
+          district: string | null
           email: string
+          establishment_year: number | null
+          full_address: string | null
           id: string
+          latitude: number | null
           linked_business_id: string | null
+          longitude: number | null
           main_activity: string | null
           map_link: string | null
           name_ar: string
           name_en: string | null
           national_address: string | null
           phone: string
+          postal_code: string | null
           preferred_channel: Database["public"]["Enums"]["provider_lead_channel"]
           reference_code: string | null
+          region: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          short_national_address: string | null
           specialties: string[]
           status: Database["public"]["Enums"]["provider_lead_status"]
+          street_name: string | null
           submitted_ip_hash: string | null
           unified_number: string | null
           updated_at: string
           user_agent: string | null
           vat_number: string | null
           website: string | null
+          whatsapp: string | null
         }
         SetofOptions: {
           from: "*"
