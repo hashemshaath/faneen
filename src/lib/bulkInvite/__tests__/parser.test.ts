@@ -65,21 +65,21 @@ describe('parseBulkInviteCsv', () => {
   it('validates each field with stable codes', () => {
     const csv = [
       header,
-      ',,,', // all required missing
       'bad-email,Foo,user,',
       'a@nodot,Foo,user,',
       'ok@example.com,Foo,wizard,',
       'ok2@example.com,,user,',
+      ' , , , x', // whitespace-only required fields, with marker so row is not filtered
     ].join('\n');
     const r = parseBulkInviteCsv(csv);
     const codes = (i: number): FieldErrorCode[] => r.rows[i].errors.map((e) => e.code);
-    expect(codes(0)).toEqual(
+    expect(codes(0)).toContain('email_invalid_format');
+    expect(codes(1)).toContain('email_invalid_format');
+    expect(codes(2)).toContain('role_invalid');
+    expect(codes(3)).toContain('full_name_required');
+    expect(codes(4)).toEqual(
       expect.arrayContaining(['email_required', 'full_name_required', 'role_required']),
     );
-    expect(codes(1)).toContain('email_invalid_format');
-    expect(codes(2)).toEqual(expect.arrayContaining(['email_invalid_format']));
-    expect(codes(3)).toContain('role_invalid');
-    expect(codes(4)).toContain('full_name_required');
   });
 
   it('detects duplicate emails across rows (case-insensitive)', () => {
