@@ -28,6 +28,7 @@ import {
   Search,
   UserCog,
   Wand2,
+  Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -56,6 +57,7 @@ import { LeadScoreBadge } from './LeadScoreBadge';
 import { SlaChip } from './SlaChip';
 import { ProviderLeadActivity } from './ProviderLeadActivity';
 import { GoogleSearchLog } from './GoogleSearchLog';
+import { ProviderLeadEditForm } from './ProviderLeadEditForm';
 
 interface Props {
   lead: ProviderLeadRow;
@@ -109,6 +111,7 @@ export const ProviderLeadDetail: React.FC<Props> = ({
   const [crUrl, setCrUrl] = useState<string | null>(null);
   const [branches, setBranches] = useState<BranchRow[]>([]);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const c = computeCompleteness(lead);
   const score = computeLeadScore(lead);
   const sla = computeSlaStatus(lead, meta.slaDays ?? 7);
@@ -183,6 +186,16 @@ export const ProviderLeadDetail: React.FC<Props> = ({
             </p>
           </div>
           <div className="flex items-center gap-1 print:hidden">
+            <Button
+              variant={editing ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setEditing((v) => !v)}
+              className="h-8 rounded-lg text-[11px]"
+              title="تعديل جميع البيانات"
+            >
+              <Pencil className="me-1 h-3.5 w-3.5" />
+              {editing ? 'إيقاف التعديل' : 'تعديل'}
+            </Button>
             {onExportPdf && (
               <Button
                 variant="ghost"
@@ -357,12 +370,18 @@ export const ProviderLeadDetail: React.FC<Props> = ({
             </TabsTrigger>
           </TabsList>
           <TabsContent value="details" className="mt-3 space-y-4">
-            <DetailsBlock
-              lead={lead}
-              branches={branches}
-              crUrl={crUrl}
-              t={t}
-            />
+            {editing ? (
+              <ProviderLeadEditForm
+                lead={lead}
+                onCancel={() => setEditing(false)}
+                onSaved={() => {
+                  setEditing(false);
+                  onSaved();
+                }}
+              />
+            ) : (
+              <DetailsBlock lead={lead} branches={branches} crUrl={crUrl} t={t} />
+            )}
           </TabsContent>
           <TabsContent value="activity" className="mt-3">
             <ProviderLeadActivity lead={lead} onSaved={onSaved} />
