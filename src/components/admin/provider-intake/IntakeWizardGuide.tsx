@@ -236,24 +236,37 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
     } catch {
       /* sessionStorage may be unavailable; navigation still proceeds */
     }
+    const first = uploadSummary.rows[0];
+    const name = first
+      ? (first.company_name_ar || first.company_name_en || first.branch_name_ar || first.branch_name_en || '').trim()
+      : '';
+    if (typeof window !== 'undefined' && name) {
+      window.dispatchEvent(
+        new CustomEvent('qitaat:intake:audit-row', { detail: { name, query: name, row: first } }),
+      );
+    }
     toast.success(
       `${uploadSummary.rows.length} ${uploadSummary.rows.length === 1 ? 'row' : 'rows'} ready for review`,
       {
-        description:
-          'استخدم لوحة "Data Enrichment" أدناه لمراجعة كل صف يدويًا قبل الاعتماد.',
+        description: name
+          ? `بدأ التدقيق للصف الأول: ${name}`
+          : 'استخدم زر "تدقيق" بجوار كل صف لبدء المراجعة في نفس الشاشة.',
       },
     );
-    if (typeof window !== 'undefined') {
-      const target =
-        document.querySelector<HTMLElement>('[data-intake-workspace]') ??
-        document.querySelector<HTMLElement>('main');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
-      }
-    }
   }, [uploadSummary]);
+
+  const handleAuditRow = React.useCallback((row: Record<string, string>) => {
+    const name = (row.company_name_ar || row.company_name_en || row.branch_name_ar || row.branch_name_en || '').trim();
+    if (!name) {
+      toast.error('الصف يفتقد اسم المنشأة');
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('qitaat:intake:audit-row', { detail: { name, query: name, row } }),
+      );
+    }
+  }, []);
 
   const handleExportJson = React.useCallback(() => {
     if (!uploadSummary) return;
