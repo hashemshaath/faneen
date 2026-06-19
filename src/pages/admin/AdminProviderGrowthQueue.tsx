@@ -79,15 +79,19 @@ const AdminProviderGrowthQueue: React.FC = () => {
   const pilotKpis = useMemo<IntakeKpiItem[]>(() => {
     const total = insights.length;
     const readyForPilot = insights.filter((i) => i.readiness.score >= 70 && i.quality.score >= 70).length;
-    const needsContact = insights.filter((i) => !i.business.has_address || !i.business.has_services).length;
-    const missingServices = insights.filter((i) => !i.business.has_services).length;
-    const missingCity = insights.filter((i) => !i.business.has_address).length;
-    const pendingVerification = insights.filter((i) => i.stage === 'pending_verification').length;
+    const hasServices = (b: typeof insights[number]['business']) =>
+      (b.taxonomy_service_count ?? b.sub_services.length) > 0;
+    const hasCity = (b: typeof insights[number]['business']) =>
+      Boolean(b.city) || Boolean(b.city_id);
+    const needsContact = insights.filter((i) => !i.business.phone && !i.business.email).length;
+    const missingServices = insights.filter((i) => !hasServices(i.business)).length;
+    const missingCity = insights.filter((i) => !hasCity(i.business)).length;
+    const awaitingReply = insights.filter((i) => i.stage === 'review_pending' || i.stage === 'enriched').length;
     const outOfScope = insights.filter((i) => i.stage === 'rejected').length;
     return [
       { id: 'ready-pilot', label: t('جاهز للتجربة', 'Pilot-ready'), value: readyForPilot, tone: 'success' },
       { id: 'needs-contact', label: t('يحتاج تواصل', 'Needs contact'), value: needsContact, tone: 'warning' },
-      { id: 'awaiting-reply', label: t('بانتظار الرد', 'Awaiting reply'), value: pendingVerification, tone: 'info' },
+      { id: 'awaiting-reply', label: t('بانتظار الرد', 'Awaiting reply'), value: awaitingReply, tone: 'info' },
       { id: 'missing-services', label: t('ناقص خدمات', 'Missing services'), value: missingServices, tone: 'warning' },
       { id: 'missing-city', label: t('ناقص مدينة', 'Missing city'), value: missingCity, tone: 'warning' },
       { id: 'out-of-scope', label: t('خارج النطاق', 'Out of scope'), value: outOfScope, tone: 'destructive' },
