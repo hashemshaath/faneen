@@ -14,8 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
  CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp,
-  Store, AlertCircle, Link as LinkIcon, MessageCircle, Calendar, Globe, Briefcase,
+  Store, AlertCircle, Link as LinkIcon, MessageCircle, Calendar, Globe, Briefcase, Copy,
 } from 'lucide-react';
+import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
 import coverImage from '@/assets/provider-join-cover.jpg';
@@ -194,8 +195,68 @@ const ProviderJoin: React.FC = () => {
     if (submitError) setSubmitError(null);
   };
 
-  const updateBranch = (i: number, k: keyof ProviderLeadBranchInput, v: string) =>
-    setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
+  const updateBranch = <K extends keyof ProviderLeadBranchInput>(
+    i: number, k: K, v: ProviderLeadBranchInput[K],
+  ) => setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
+
+  const patchBranch = (i: number, patch: Partial<ProviderLeadBranchInput>) =>
+    setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+
+  const buildMapsUrl = (lat: number, lng: number) =>
+    `https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+  // Head-office map handlers
+  const onHeadCoords = (lat: number, lng: number) => {
+    setForm((f) => ({
+      ...f,
+      latitude: String(lat.toFixed(6)),
+      longitude: String(lng.toFixed(6)),
+      map_link: f.map_link?.trim() ? f.map_link : buildMapsUrl(lat, lng),
+    }));
+    clearError('latitude'); clearError('longitude'); clearError('map_link');
+  };
+  const onHeadAutofill = (d: ReverseGeocodeResult) => {
+    setForm((f) => ({
+      ...f,
+      region: f.region || (d.region_ar ?? f.region),
+      district: f.district || (d.district_ar ?? f.district),
+      full_address: f.full_address || (d.address_ar ?? f.full_address),
+    }));
+  };
+
+  // Branch map handlers
+  const onBranchCoords = (i: number) => (lat: number, lng: number) => {
+    setBranches((b) => b.map((row, idx) => idx === i ? {
+      ...row,
+      latitude: Number(lat.toFixed(6)),
+      longitude: Number(lng.toFixed(6)),
+      map_link: row.map_link?.trim() ? row.map_link : buildMapsUrl(lat, lng),
+    } : row));
+  };
+  const onBranchAutofill = (i: number) => (d: ReverseGeocodeResult) => {
+    setBranches((b) => b.map((row, idx) => idx === i ? {
+      ...row,
+      region: row.region || (d.region_ar ?? row.region),
+      district: row.district || (d.district_ar ?? row.district),
+      address: row.address || (d.address_ar ?? row.address),
+    } : row));
+  };
+
+  // Copy head-office address fields into branch (only fields that are empty on the branch).
+  const copyHeadToBranch = (i: number) => {
+    patchBranch(i, {
+      region: branches[i].region || form.region || undefined,
+      city: branches[i].city || form.city || undefined,
+      district: branches[i].district || form.district || undefined,
+      street_name: branches[i].street_name || form.street_name || undefined,
+      building_number: branches[i].building_number || form.building_number || undefined,
+      postal_code: branches[i].postal_code || form.postal_code || undefined,
+      short_national_address: branches[i].short_national_address || form.short_national_address || undefined,
+      national_address: branches[i].national_address || form.national_address || undefined,
+      address: branches[i].address || form.full_address || undefined,
+    });
+    toast.success(t('تم نسخ بيانات المقر الرئيسي', 'Head office details copied'));
+  };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
@@ -225,6 +286,24 @@ const ProviderJoin: React.FC = () => {
     if (!v) return true;
     try { new URL(v.startsWith('http') ? v : `https://${v}`); return true; } catch { return false; }
   };
+  // Stricter address-field validators (Arabic error messages set by caller)
+  const isLat = (v: string) => {
+    if (!v) return true;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= -90 && n <= 90;
+  };
+  const isLng = (v: string) => {
+    if (!v) return true;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= -180 && n <= 180;
+  };
+  // Saudi Arabia bounds (approx): lat 16–33, lng 34–56
+  const inSaudi = (lat: string, lng: string) => {
+    if (!lat || !lng) return true;
+    const la = Number(lat), ln = Number(lng);
+    return la >= 16 && la <= 33 && ln >= 34 && ln <= 56;
+  };
+  const isSaPostal = (v: string) => /^\d{5}$/.test(v.trim()) && v.trim()[0] !== '0';
 
   const validate = (): Record<string, string> => {
     const er: Record<string, string> = {};
@@ -243,7 +322,17 @@ const ProviderJoin: React.FC = () => {
     if (form.short_national_address && !/^[A-Za-z]{4}\d{4}$/.test(form.short_national_address.trim())) {
       er.short_national_address = t('العنوان الوطني يجب أن يكون 4 أحرف + 4 أرقام', 'National address must be 4 letters + 4 digits');
     }
-    if (form.postal_code && !/^\d{5}$/.test(form.postal_code.trim())) er.postal_code = t('الرمز البريدي 5 أرقام', 'Postal code must be 5 digits');
+    if (form.postal_code && !isSaPostal(form.postal_code)) {
+      er.postal_code = t('الرمز البريدي يجب أن يكون 5 أرقام ولا يبدأ بصفر', 'Postal code must be 5 digits and not start with 0');
+    }
+    if (form.latitude && !isLat(form.latitude)) er.latitude = t('خط العرض يجب أن يكون بين -90 و 90', 'Latitude must be between -90 and 90');
+    if (form.longitude && !isLng(form.longitude)) er.longitude = t('خط الطول يجب أن يكون بين -180 و 180', 'Longitude must be between -180 and 180');
+    if ((form.latitude && !form.longitude) || (!form.latitude && form.longitude)) {
+      er.latitude = er.latitude || t('يجب إدخال خط العرض والطول معاً', 'Latitude and longitude must be set together');
+    }
+    if (form.latitude && form.longitude && isLat(form.latitude) && isLng(form.longitude) && !inSaudi(form.latitude, form.longitude)) {
+      er.latitude = t('الإحداثيات تبدو خارج المملكة العربية السعودية', 'Coordinates appear to be outside Saudi Arabia');
+    }
     if (form.establishment_year) {
       const y = Number(form.establishment_year);
       const cy = new Date().getFullYear();
@@ -255,6 +344,17 @@ const ProviderJoin: React.FC = () => {
       if (b.whatsapp && !isSaudiPhone(b.whatsapp)) er[`branch_${i}_whatsapp`] = t('واتساب الفرع غير صحيح', 'Invalid branch WhatsApp');
       if (b.website && !isUrl(b.website)) er[`branch_${i}_website`] = t('رابط موقع الفرع غير صحيح', 'Invalid branch website');
       if (b.map_link && !isUrl(b.map_link)) er[`branch_${i}_map`] = t('رابط خريطة الفرع غير صحيح', 'Invalid branch map link');
+      if (b.postal_code && !isSaPostal(b.postal_code)) er[`branch_${i}_postal`] = t('الرمز البريدي للفرع غير صحيح', 'Invalid branch postal code');
+      if (b.short_national_address && !/^[A-Za-z]{4}\d{4}$/.test(b.short_national_address.trim())) {
+        er[`branch_${i}_sna`] = t('العنوان الوطني للفرع: 4 أحرف + 4 أرقام', 'Branch national address: 4 letters + 4 digits');
+      }
+      const blat = b.latitude != null ? String(b.latitude) : '';
+      const blng = b.longitude != null ? String(b.longitude) : '';
+      if (blat && !isLat(blat)) er[`branch_${i}_lat`] = t('خط عرض الفرع خارج النطاق المسموح', 'Branch latitude out of range');
+      if (blng && !isLng(blng)) er[`branch_${i}_lng`] = t('خط طول الفرع خارج النطاق المسموح', 'Branch longitude out of range');
+      if ((blat && !blng) || (!blat && blng)) {
+        er[`branch_${i}_lat`] = er[`branch_${i}_lat`] || t('يجب تحديد إحداثيات الفرع كاملةً', 'Branch coordinates must be set together');
+      }
     });
     if (form.branches_count < 1) er.branches_count = t('عدد الفروع يجب أن يكون 1 أو أكثر', 'Branches must be 1 or more');
     // Validate extra branches: at minimum require a branch name
@@ -743,13 +843,38 @@ const ProviderJoin: React.FC = () => {
                         </div>
                       </Field>
                     </div>
-                    <Field label={t('خط العرض (Latitude)', 'Latitude')}>
-                      <Input dir="ltr" inputMode="decimal" placeholder="24.7136" value={form.latitude} onChange={(e) => setField('latitude', e.target.value)} className="h-12 rounded-xl tech-content" />
-                    </Field>
-                    <Field label={t('خط الطول (Longitude)', 'Longitude')}>
-                      <Input dir="ltr" inputMode="decimal" placeholder="46.6753" value={form.longitude} onChange={(e) => setField('longitude', e.target.value)} className="h-12 rounded-xl tech-content" />
-                    </Field>
+                    <div data-error-key="latitude">
+                      <Field label={t('خط العرض (Latitude)', 'Latitude')} error={errors.latitude}>
+                        <Input dir="ltr" inputMode="decimal" placeholder="24.7136" value={form.latitude} onChange={(e) => setField('latitude', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.latitude)}`} aria-invalid={!!errors.latitude} />
+                      </Field>
+                    </div>
+                    <div data-error-key="longitude">
+                      <Field label={t('خط الطول (Longitude)', 'Longitude')} error={errors.longitude}>
+                        <Input dir="ltr" inputMode="decimal" placeholder="46.6753" value={form.longitude} onChange={(e) => setField('longitude', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.longitude)}`} aria-invalid={!!errors.longitude} />
+                      </Field>
+                    </div>
                   </div>
+                  {/* Inline map picker — collapsible to keep the form light */}
+                  <details className="group rounded-xl border bg-card overflow-hidden">
+                    <summary className="cursor-pointer list-none flex items-center justify-between gap-3 p-3 hover:bg-muted/30">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium">
+                        <MapPin className="w-4 h-4 text-primary" />
+                        {t('تحديد الموقع على الخريطة', 'Pick location on map')}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('انقر أو اسحب الدبوس لتحديث الإحداثيات تلقائياً.', 'Click or drag the pin to auto-fill coordinates.')}
+                      </span>
+                    </summary>
+                    <div className="border-t p-3 bg-muted/10">
+                      <LocationPicker
+                        isRTL={isRTL}
+                        latitude={form.latitude ? Number(form.latitude) : null}
+                        longitude={form.longitude ? Number(form.longitude) : null}
+                        onChange={onHeadCoords}
+                        onAutofill={onHeadAutofill}
+                      />
+                    </div>
+                  </details>
                 </div>
 
                 {/* Specialties — linked to existing catalog */}
@@ -826,6 +951,21 @@ const ProviderJoin: React.FC = () => {
                           </span>
                         </summary>
                         <div className="border-t p-4 bg-muted/10 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 -mt-1">
+                            <p className="text-[11px] text-muted-foreground">
+                              {t('وفّر وقتك: انسخ بيانات العنوان من المقر الرئيسي ثم عدّل ما يلزم.', 'Save time: copy address from the head office, then tweak what differs.')}
+                            </p>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => copyHeadToBranch(i)}
+                              className="h-8 rounded-lg gap-1.5 text-xs"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              {t('نسخ من المقر الرئيسي', 'Copy from head office')}
+                            </Button>
+                          </div>
                           <div className="grid md:grid-cols-2 gap-3">
                             <Field label={t('اسم الفرع', 'Branch name')} required error={errors[`branch_${i}_name`]}>
                               <Input
@@ -906,6 +1046,34 @@ const ProviderJoin: React.FC = () => {
                             </Field>
                             </div>
                           </div>
+                          {/* Per-branch map picker */}
+                          {(errors[`branch_${i}_lat`] || errors[`branch_${i}_lng`]) && (
+                            <p className="text-xs text-destructive" data-error-key={`branch_${i}_lat`}>
+                              {errors[`branch_${i}_lat`] || errors[`branch_${i}_lng`]}
+                            </p>
+                          )}
+                          <details className="group rounded-xl border bg-card overflow-hidden">
+                            <summary className="cursor-pointer list-none flex items-center justify-between gap-3 p-3 hover:bg-muted/30">
+                              <span className="inline-flex items-center gap-2 text-sm font-medium">
+                                <MapPin className="w-4 h-4 text-primary" />
+                                {t('تحديد موقع الفرع على الخريطة', 'Pick branch location on map')}
+                              </span>
+                              <span className="text-xs text-muted-foreground tech-content">
+                                {b.latitude != null && b.longitude != null
+                                  ? `${Number(b.latitude).toFixed(4)}, ${Number(b.longitude).toFixed(4)}`
+                                  : t('غير محدد', 'Not set')}
+                              </span>
+                            </summary>
+                            <div className="border-t p-3 bg-muted/10">
+                              <LocationPicker
+                                isRTL={isRTL}
+                                latitude={b.latitude ?? null}
+                                longitude={b.longitude ?? null}
+                                onChange={onBranchCoords(i)}
+                                onAutofill={onBranchAutofill(i)}
+                              />
+                            </div>
+                          </details>
                         </div>
                       </details>
                     ))}
