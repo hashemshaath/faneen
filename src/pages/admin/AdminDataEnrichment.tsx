@@ -675,7 +675,6 @@ export default function AdminDataEnrichment() {
             </Card>
           );
         })()}
-        <IntakeRowPreviewBanner />
         <Card className="p-5" data-intake-workspace>
           <div className="space-y-3">
             <Label className="text-sm">
