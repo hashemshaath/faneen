@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   ArrowLeftRight,
   FileJson,
+  Search,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 
