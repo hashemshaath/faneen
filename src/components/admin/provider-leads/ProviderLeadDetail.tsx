@@ -380,7 +380,20 @@ export const ProviderLeadDetail: React.FC<Props> = ({
                 }}
               />
             ) : (
-              <DetailsBlock lead={lead} branches={branches} crUrl={crUrl} t={t} />
+              <>
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="hover-lift flex w-full items-center justify-between rounded-xl border border-primary/30 bg-primary/[0.04] px-3 py-2 text-[11px] text-primary hover:bg-primary/10"
+                >
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
+                    <Pencil className="h-3.5 w-3.5" />
+                    تعديل جميع الحقول (المنشأة، العنوان، الفروع، التخصصات...)
+                  </span>
+                  <span className="text-[10px] opacity-70">اضغط للتعديل</span>
+                </button>
+                <DetailsBlock lead={lead} branches={branches} crUrl={crUrl} t={t} />
+              </>
             )}
           </TabsContent>
           <TabsContent value="activity" className="mt-3">
