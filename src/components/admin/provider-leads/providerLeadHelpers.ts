@@ -202,3 +202,181 @@ export function distinctCities(rows: ProviderLeadRow[]): string[] {
   }
   return Array.from(s).sort();
 }
+
+/* ============================================================
+ *  Professional CRM extensions — pure helpers (no I/O)
+ * ============================================================ */
+
+/**
+ * Lead score 0..100 — weighted blend of completeness, source signals,
+ * recency, and verification artifacts. Higher = better candidate.
+ */
+export function computeLeadScore(r: ProviderLeadRow): number {
+  const c = computeCompleteness(r);
+  let score = c.pct * 0.55; // completeness is the dominant signal
+  if (r.cr_number) score += 8;
+  if (r.unified_number) score += 6;
+  if (r.vat_number) score += 4;
+  if (r.cr_file_path) score += 6;
+  if (r.website) score += 4;
+  if (r.map_link) score += 3;
+  if ((r.branches_count ?? 0) > 1) score += 4;
+  if (r.specialties?.length) score += Math.min(4, r.specialties.length);
+  if (r.brands?.length) score += Math.min(4, r.brands.length);
+  // Recency boost: newer leads slightly preferred when triaging.
+  const ageDays = Math.max(0, (Date.now() - new Date(r.created_at).getTime()) / 86400000);
+  if (ageDays < 7) score += 2;
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+export function leadScoreTone(score: number): { chip: string; label: { ar: string; en: string } } {
+  if (score >= 75) return { chip: 'bg-success/10 text-success border-success/30', label: { ar: 'ممتاز', en: 'Strong' } };
+  if (score >= 50) return { chip: 'bg-primary/10 text-primary border-primary/30', label: { ar: 'جيد', en: 'Good' } };
+  if (score >= 30) return { chip: 'bg-warning/10 text-warning border-warning/30', label: { ar: 'متوسط', en: 'Fair' } };
+  return { chip: 'bg-destructive/10 text-destructive border-destructive/30', label: { ar: 'ضعيف', en: 'Weak' } };
+}
+
+/** SLA — days since lead was created and a tone for visual urgency. */
+export interface SlaStatus {
+  ageDays: number;
+  overdue: boolean;
+  tone: 'success' | 'warning' | 'destructive' | 'muted';
+  label: { ar: string; en: string };
+}
+
+export function computeSlaStatus(r: ProviderLeadRow, slaDays = 7): SlaStatus {
+  const terminal = r.status === 'approved' || r.status === 'rejected' || r.status === 'converted_to_business';
+  const ageDays = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
+  if (terminal) {
+    return { ageDays, overdue: false, tone: 'muted', label: { ar: `${ageDays} يوم`, en: `${ageDays}d` } };
+  }
+  if (ageDays >= slaDays) {
+    return { ageDays, overdue: true, tone: 'destructive', label: { ar: `متأخر ${ageDays} يوم`, en: `${ageDays}d overdue` } };
+  }
+  if (ageDays >= Math.ceil(slaDays * 0.6)) {
+    return { ageDays, overdue: false, tone: 'warning', label: { ar: `${ageDays} يوم`, en: `${ageDays}d` } };
+  }
+  return { ageDays, overdue: false, tone: 'success', label: { ar: `${ageDays} يوم`, en: `${ageDays}d` } };
+}
+
+/** Rule-based AI-style suggestions for next best action on a lead. */
+export interface LeadSuggestion {
+  id: string;
+  ar: string;
+  en: string;
+  tone: 'info' | 'warning' | 'success' | 'destructive';
+}
+
+export function getAiSuggestions(r: ProviderLeadRow, dupCount = 0): LeadSuggestion[] {
+  const out: LeadSuggestion[] = [];
+  const c = computeCompleteness(r);
+  if (dupCount > 0) {
+    out.push({ id: 'dup', ar: `كشف ${dupCount} نسخة محتملة — يُنصح بالمراجعة والدمج قبل الاعتماد.`, en: `${dupCount} possible duplicate(s) — review and merge before approval.`, tone: 'warning' });
+  }
+  if (!r.cr_number && !r.unified_number) {
+    out.push({ id: 'cr', ar: 'لا يوجد رقم سجل تجاري ولا رقم موحّد — اطلب التوثيق قبل الاعتماد.', en: 'Missing CR and unified number — request verification before approval.', tone: 'destructive' });
+  } else if (!r.cr_file_path) {
+    out.push({ id: 'crf', ar: 'لم يُرفق ملف السجل التجاري — أرسل طلب رفع.', en: 'CR file not attached — request upload.', tone: 'info' });
+  }
+  if (c.pct < 50) {
+    out.push({ id: 'low', ar: 'اكتمال البيانات منخفض — استخدم إثراء Google لرفع الجودة قبل الاعتماد.', en: 'Low completeness — run Google enrichment before approval.', tone: 'info' });
+  } else if (c.pct >= 80 && r.status === 'new') {
+    out.push({ id: 'fast', ar: 'بيانات شبه مكتملة — مرشح قوي للاعتماد المباشر.', en: 'Almost complete — strong candidate for fast-track approval.', tone: 'success' });
+  }
+  const sla = computeSlaStatus(r);
+  if (sla.overdue) {
+    out.push({ id: 'sla', ar: `تجاوز SLA منذ ${sla.ageDays} يوم — أعطه أولوية اليوم.`, en: `SLA breached ${sla.ageDays}d — prioritise today.`, tone: 'destructive' });
+  }
+  return out;
+}
+
+/* ---------- Sidecar metadata stored inside admin_notes ----------
+ * We avoid migrations by embedding a small JSON sidecar on the first
+ * line of admin_notes prefixed with `<<META>>` so the field stays
+ * readable. Free-form notes follow after a blank line.
+ */
+const META_PREFIX = '<<META>>';
+
+export interface LeadMeta {
+  ownerId?: string;
+  ownerName?: string;
+  slaDays?: number;
+  pinned?: boolean;
+  internalNotes?: Array<{ at: string; by?: string; text: string }>;
+}
+
+export function parseLeadMeta(adminNotes: string | null | undefined): {
+  meta: LeadMeta;
+  body: string;
+} {
+  const raw = adminNotes ?? '';
+  if (!raw.startsWith(META_PREFIX)) return { meta: {}, body: raw };
+  const nl = raw.indexOf('\n');
+  const headerLine = nl === -1 ? raw : raw.slice(0, nl);
+  const body = nl === -1 ? '' : raw.slice(nl + 1).replace(/^\s*\n/, '');
+  try {
+    const json = headerLine.slice(META_PREFIX.length);
+    const parsed = JSON.parse(json) as LeadMeta;
+    return { meta: parsed ?? {}, body };
+  } catch {
+    return { meta: {}, body: raw };
+  }
+}
+
+export function serializeLeadMeta(meta: LeadMeta, body: string): string {
+  const hasMeta = Object.keys(meta).some((k) => {
+    const v = (meta as Record<string, unknown>)[k];
+    return v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0);
+  });
+  if (!hasMeta) return body;
+  return `${META_PREFIX}${JSON.stringify(meta)}\n${body ?? ''}`;
+}
+
+export function appendInternalNote(adminNotes: string | null | undefined, text: string, by?: string): string {
+  const { meta, body } = parseLeadMeta(adminNotes);
+  const notes = meta.internalNotes ?? [];
+  notes.push({ at: new Date().toISOString(), by, text });
+  return serializeLeadMeta({ ...meta, internalNotes: notes }, body);
+}
+
+export function setLeadOwner(adminNotes: string | null | undefined, ownerId?: string, ownerName?: string): string {
+  const { meta, body } = parseLeadMeta(adminNotes);
+  return serializeLeadMeta({ ...meta, ownerId, ownerName }, body);
+}
+
+/** Activity timeline derived from row data + internal notes. */
+export interface TimelineEvent {
+  at: string;
+  kind: 'created' | 'status' | 'note' | 'enriched';
+  ar: string;
+  en: string;
+  by?: string;
+}
+
+export function buildActivityTimeline(r: ProviderLeadRow): TimelineEvent[] {
+  const events: TimelineEvent[] = [];
+  events.push({ at: r.created_at, kind: 'created', ar: 'تم استلام الطلب', en: 'Lead received' });
+  const { meta } = parseLeadMeta(r.admin_notes);
+  for (const n of meta.internalNotes ?? []) {
+    events.push({ at: n.at, kind: 'note', ar: n.text, en: n.text, by: n.by });
+  }
+  if (r.status !== 'new') {
+    events.push({ at: r.updated_at ?? r.created_at, kind: 'status', ar: `تحديث الحالة إلى ${STATUS_LABEL[r.status].ar}`, en: `Status → ${STATUS_LABEL[r.status].en}` });
+  }
+  return events.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/** Mini time-series for KPI sparklines — counts of leads created per day, last N days. */
+export function lastNDaysSeries(rows: ProviderLeadRow[], days = 14, predicate?: (r: ProviderLeadRow) => boolean): number[] {
+  const out = new Array(days).fill(0);
+  const now = Date.now();
+  const dayMs = 86400000;
+  const startKey = Math.floor((now - (days - 1) * dayMs) / dayMs);
+  for (const r of rows) {
+    if (predicate && !predicate(r)) continue;
+    const k = Math.floor(new Date(r.created_at).getTime() / dayMs);
+    const idx = k - startKey;
+    if (idx >= 0 && idx < days) out[idx] += 1;
+  }
+  return out;
+}

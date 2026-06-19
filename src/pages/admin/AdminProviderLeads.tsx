@@ -23,7 +23,8 @@ import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, TableProperties, Kanban } from 'lucide-react';
+import { Loader2, TableProperties, Kanban, Rows3, Rows4, Keyboard } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
   listProviderLeads,
@@ -43,14 +44,15 @@ import { ProviderLeadsKanban } from '@/components/admin/provider-leads/ProviderL
 import { ProviderLeadDetail } from '@/components/admin/provider-leads/ProviderLeadDetail';
 import { BulkActionBar } from '@/components/admin/provider-leads/BulkActionBar';
 import {
-  STATUS_ORDER,
   STATUS_LABEL,
   computeCompleteness,
   distinctCities,
   downloadCsv,
   findDuplicateGroups,
+  lastNDaysSeries,
   leadsToCsv,
 } from '@/components/admin/provider-leads/providerLeadHelpers';
+import { SavedViewsBar, type ViewSnapshot } from '@/components/admin/provider-leads/SavedViewsBar';
 import { Bi } from '@/components/common/Bilingual';
 
 const AdminProviderLeads: React.FC = () => {
@@ -58,24 +60,34 @@ const AdminProviderLeads: React.FC = () => {
   const t = (ar: string, en: string) => (isRTL ? ar : en);
   useNoIndex();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const batchFilter = searchParams.get('batch');
 
   // Data state
   const [rows, setRows] = useState<ProviderLeadRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
-  const [status, setStatus] = useState<ProviderLeadStatus | 'all'>('all');
-  const [city, setCity] = useState<string | 'all'>('all');
-  const [minCompleteness, setMinCompleteness] = useState(0);
-  const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<SortKey>('newest');
+  // Filters — initial values read from URL so the page is shareable / reloadable.
+  const [status, setStatus] = useState<ProviderLeadStatus | 'all'>(
+    (searchParams.get('status') as ProviderLeadStatus | 'all' | null) ?? 'all',
+  );
+  const [city, setCity] = useState<string | 'all'>(searchParams.get('city') ?? 'all');
+  const [minCompleteness, setMinCompleteness] = useState<number>(
+    Number(searchParams.get('min') ?? '0') || 0,
+  );
+  const [search, setSearch] = useState(searchParams.get('q') ?? '');
+  const [sort, setSort] = useState<SortKey>((searchParams.get('sort') as SortKey | null) ?? 'newest');
+  const [density, setDensity] = useState<'compact' | 'comfortable'>(
+    (searchParams.get('d') as 'compact' | 'comfortable' | null) ?? 'comfortable',
+  );
+  const [showHelp, setShowHelp] = useState(false);
 
   // Selection + view
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [view, setView] = useState<'table' | 'kanban'>('table');
+  const [openId, setOpenId] = useState<string | null>(searchParams.get('open'));
+  const [view, setView] = useState<'table' | 'kanban'>(
+    (searchParams.get('view') as 'table' | 'kanban' | null) ?? 'table',
+  );
   const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = async () => {
@@ -91,6 +103,22 @@ const AdminProviderLeads: React.FC = () => {
   useEffect(() => {
     load();
   }, []);
+
+  // Sync filters → URL (shareable links + reload safety).
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const set = (k: string, v: string) => (v ? next.set(k, v) : next.delete(k));
+    set('status', status !== 'all' ? status : '');
+    set('city', city !== 'all' ? city : '');
+    set('min', minCompleteness > 0 ? String(minCompleteness) : '');
+    set('q', search);
+    set('sort', sort !== 'newest' ? sort : '');
+    set('view', view !== 'table' ? view : '');
+    set('d', density !== 'comfortable' ? density : '');
+    set('open', openId ?? '');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, city, minCompleteness, search, sort, view, density, openId]);
 
   // Counts for status pills (computed from the full unfiltered list).
   const statusCounts = useMemo(() => {
@@ -174,15 +202,18 @@ const AdminProviderLeads: React.FC = () => {
 
   // KPI strip
   const kpiItems = useMemo<IntakeKpiItem[]>(
-    () => [
-      { id: 'total', label: t('إجمالي المرشحين', 'Total candidates'), value: statusCounts.all, tone: 'neutral' },
-      { id: 'ready-review', label: t('جاهز للمراجعة', 'Ready to review'), value: statusCounts.new + statusCounts.under_review, tone: 'primary' },
-      { id: 'needs-data', label: t('يحتاج بيانات', 'Needs info'), value: statusCounts.needs_info, tone: 'warning' },
-      { id: 'ready-convert', label: t('جاهز للتحويل', 'Ready to convert'), value: statusCounts.approved, tone: 'success' },
-      { id: 'converted', label: t('تم التحويل', 'Converted'), value: statusCounts.converted_to_business, tone: 'info' },
-      { id: 'rejected', label: t('مرفوض', 'Rejected'), value: statusCounts.rejected, tone: 'destructive' },
-    ],
-    [statusCounts, isRTL],
+    () => {
+      const spark = (pred: (r: ProviderLeadRow) => boolean) => lastNDaysSeries(rows, 14, pred);
+      return [
+        { id: 'total', label: t('إجمالي المرشحين', 'Total candidates'), value: statusCounts.all, tone: 'neutral', spark: lastNDaysSeries(rows, 14) },
+        { id: 'ready-review', label: t('جاهز للمراجعة', 'Ready to review'), value: statusCounts.new + statusCounts.under_review, tone: 'primary', spark: spark((r) => r.status === 'new' || r.status === 'under_review') },
+        { id: 'needs-data', label: t('يحتاج بيانات', 'Needs info'), value: statusCounts.needs_info, tone: 'warning', spark: spark((r) => r.status === 'needs_info') },
+        { id: 'ready-convert', label: t('جاهز للتحويل', 'Ready to convert'), value: statusCounts.approved, tone: 'success', spark: spark((r) => r.status === 'approved') },
+        { id: 'converted', label: t('تم التحويل', 'Converted'), value: statusCounts.converted_to_business, tone: 'info', spark: spark((r) => r.status === 'converted_to_business') },
+        { id: 'rejected', label: t('مرفوض', 'Rejected'), value: statusCounts.rejected, tone: 'destructive', spark: spark((r) => r.status === 'rejected') },
+      ];
+    },
+    [statusCounts, isRTL, rows, t],
   );
 
   // Selection helpers
@@ -243,6 +274,74 @@ const AdminProviderLeads: React.FC = () => {
     await load();
   };
 
+  /* ---------- Keyboard shortcuts ----------
+   *  J / K   navigate between rows in the filtered list
+   *  A       approve open lead
+   *  R       reject open lead
+   *  U       under review
+   *  N       needs info
+   *  E       enrich open lead
+   *  Esc     close detail
+   *  ?       toggle help
+   */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const editing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable;
+      if (editing) return;
+      const idx = openId ? filtered.findIndex((r) => r.id === openId) : -1;
+      switch (e.key) {
+        case 'j': {
+          const n = idx < 0 ? 0 : Math.min(filtered.length - 1, idx + 1);
+          if (filtered[n]) setOpenId(filtered[n].id);
+          break;
+        }
+        case 'k': {
+          const n = idx <= 0 ? 0 : idx - 1;
+          if (filtered[n]) setOpenId(filtered[n].id);
+          break;
+        }
+        case 'Escape':
+          if (openId) setOpenId(null);
+          break;
+        case 'a':
+          if (openId) moveOne(openId, 'approved');
+          break;
+        case 'r':
+          if (openId) moveOne(openId, 'rejected');
+          break;
+        case 'u':
+          if (openId) moveOne(openId, 'under_review');
+          break;
+        case 'n':
+          if (openId) moveOne(openId, 'needs_info');
+          break;
+        case 'e': {
+          const r = openId ? rows.find((x) => x.id === openId) : null;
+          if (r) enrich(r);
+          break;
+        }
+        case '?':
+          setShowHelp((v) => !v);
+          break;
+        default:
+          return;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId, filtered, rows]);
+
+  const applyView = (v: ViewSnapshot) => {
+    setStatus(v.status);
+    setCity(v.city);
+    setMinCompleteness(v.minCompleteness);
+    setSearch(v.search);
+    setSort(v.sort);
+    toast.success(t('تم تطبيق العرض', 'View applied'));
+  };
+
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <Navbar />
@@ -260,21 +359,65 @@ const AdminProviderLeads: React.FC = () => {
                 />
               </p>
             </div>
-            {batchFilter && (
-              <button
-                onClick={() => navigate('/admin/provider-leads')}
-                className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/15"
+            <div className="flex items-center gap-1.5">
+              {batchFilter && (
+                <button
+                  onClick={() => navigate('/admin/provider-leads')}
+                  className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/15"
+                >
+                  <Bi
+                    ar={`عرض دفعة: ${batchFilter} · إزالة الفلتر`}
+                    en={`Batch: ${batchFilter} · clear filter`}
+                  />
+                </button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
+                className="h-8 rounded-lg text-[11px]"
+                title={t('كثافة العرض', 'Density')}
               >
-                <Bi
-                  ar={`عرض دفعة: ${batchFilter} · إزالة الفلتر`}
-                  en={`Batch: ${batchFilter} · clear filter`}
-                />
-              </button>
-            )}
+                {density === 'compact' ? <Rows4 className="me-1 h-3.5 w-3.5" /> : <Rows3 className="me-1 h-3.5 w-3.5" />}
+                {density === 'compact' ? t('مضغوط', 'Compact') : t('مريح', 'Comfortable')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHelp((v) => !v)}
+                className="h-8 rounded-lg text-[11px]"
+                title={t('اختصارات', 'Shortcuts')}
+              >
+                <Keyboard className="me-1 h-3.5 w-3.5" />?
+              </Button>
+            </div>
           </div>
+          {showHelp && (
+            <div className="mt-3 rounded-xl border bg-muted/40 p-3 text-[11px] text-muted-foreground">
+              <span className="me-3 font-semibold">{t('اختصارات لوحة المفاتيح:', 'Shortcuts:')}</span>
+              <kbd className="rounded border bg-background px-1">J</kbd>/<kbd className="rounded border bg-background px-1">K</kbd> {t('تنقل', 'navigate')}
+              <span className="mx-2">·</span>
+              <kbd className="rounded border bg-background px-1">A</kbd> {t('اعتماد', 'approve')}
+              <span className="mx-2">·</span>
+              <kbd className="rounded border bg-background px-1">R</kbd> {t('رفض', 'reject')}
+              <span className="mx-2">·</span>
+              <kbd className="rounded border bg-background px-1">U</kbd> {t('مراجعة', 'review')}
+              <span className="mx-2">·</span>
+              <kbd className="rounded border bg-background px-1">N</kbd> {t('يحتاج بيانات', 'needs info')}
+              <span className="mx-2">·</span>
+              <kbd className="rounded border bg-background px-1">E</kbd> {t('إثراء', 'enrich')}
+              <span className="mx-2">·</span>
+              <kbd className="rounded border bg-background px-1">Esc</kbd> {t('إغلاق', 'close')}
+            </div>
+          )}
         </header>
 
         <IntakeKpiStrip items={kpiItems} testId="provider-leads-kpis" />
+
+        <SavedViewsBar
+          current={{ status, city, minCompleteness, search, sort }}
+          onApply={applyView}
+        />
 
         <ProviderLeadsFilters
           status={status}
@@ -335,6 +478,7 @@ const AdminProviderLeads: React.FC = () => {
                     onOpen={setOpenId}
                     onEnrich={enrich}
                     duplicates={duplicates}
+                    density={density}
                   />
                 )}
               </TabsContent>

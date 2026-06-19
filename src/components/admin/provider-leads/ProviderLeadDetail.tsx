@@ -22,6 +22,9 @@ import {
   ShieldCheck,
   Sparkles,
   GitBranch,
+  Printer,
+  UserCog,
+  Wand2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -33,13 +36,22 @@ import {
 import { createProviderLeadDocumentSignedUrl } from '@/modules/files/domain/providerLeadDocuments';
 import { Bi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   STATUS_LABEL,
   STATUS_ORDER,
   STATUS_TONE,
   computeCompleteness,
+  computeLeadScore,
+  computeSlaStatus,
+  getAiSuggestions,
+  parseLeadMeta,
+  serializeLeadMeta,
 } from './providerLeadHelpers';
 import { CompletenessBar } from './CompletenessBar';
+import { LeadScoreBadge } from './LeadScoreBadge';
+import { SlaChip } from './SlaChip';
+import { ProviderLeadActivity } from './ProviderLeadActivity';
 
 interface Props {
   lead: ProviderLeadRow;
@@ -81,15 +93,22 @@ export const ProviderLeadDetail: React.FC<Props> = ({
   const { isRTL } = useLanguage();
   const t = (ar: string, en: string) => (isRTL ? ar : en);
   const [status, setStatus] = useState<ProviderLeadStatus>(lead.status);
-  const [notes, setNotes] = useState(lead.admin_notes ?? '');
+  const initialParsed = parseLeadMeta(lead.admin_notes);
+  const [meta, setMeta] = useState(initialParsed.meta);
+  const [notes, setNotes] = useState(initialParsed.body);
   const [crUrl, setCrUrl] = useState<string | null>(null);
   const [branches, setBranches] = useState<BranchRow[]>([]);
   const [saving, setSaving] = useState(false);
   const c = computeCompleteness(lead);
+  const score = computeLeadScore(lead);
+  const sla = computeSlaStatus(lead, meta.slaDays ?? 7);
+  const suggestions = getAiSuggestions(lead, duplicateIds?.length ?? 0);
 
   useEffect(() => {
     setStatus(lead.status);
-    setNotes(lead.admin_notes ?? '');
+    const p = parseLeadMeta(lead.admin_notes);
+    setMeta(p.meta);
+    setNotes(p.body);
     setCrUrl(null);
     listProviderLeadBranches(lead.id).then((r) => setBranches(r.rows as BranchRow[]));
     if (lead.cr_file_path) {
@@ -102,10 +121,11 @@ export const ProviderLeadDetail: React.FC<Props> = ({
   const save = async (overrideStatus?: ProviderLeadStatus) => {
     const target = overrideStatus ?? status;
     setSaving(true);
+    const serialized = serializeLeadMeta(meta, notes);
     const res = await updateProviderLeadStatus({
       leadId: lead.id,
       status: target,
-      adminNotes: notes,
+      adminNotes: serialized,
     });
     setSaving(false);
     if (res.error) {
@@ -114,6 +134,10 @@ export const ProviderLeadDetail: React.FC<Props> = ({
     }
     toast.success(t('تم الحفظ', 'Saved'));
     onSaved();
+  };
+
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') window.print();
   };
 
   const quickActions: Array<{
@@ -129,32 +153,69 @@ export const ProviderLeadDetail: React.FC<Props> = ({
   ];
 
   return (
-    <Card className="sticky top-2 rounded-2xl" data-testid="provider-lead-detail">
+    <Card className="sticky top-2 rounded-2xl print:static print:shadow-none" data-testid="provider-lead-detail" id="provider-lead-print-area">
       <CardContent className="space-y-5 p-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="truncate text-lg font-bold">{lead.name_ar}</h2>
               <Badge variant="outline" className={`text-[10px] ${STATUS_TONE[lead.status]}`}>
                 {STATUS_LABEL[lead.status].ar}
               </Badge>
+              <LeadScoreBadge score={score} showLabel />
+              <SlaChip sla={sla} />
             </div>
             {lead.name_en && <p className="text-xs text-muted-foreground">{lead.name_en}</p>}
             <p className="tech-content mt-1 text-[11px] text-muted-foreground">
               {lead.reference_code} · {new Date(lead.created_at).toLocaleString()}
+              {meta.ownerName && <> · <UserCog className="me-0.5 inline h-3 w-3" />{meta.ownerName}</>}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 rounded-lg"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1 print:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePrint}
+              className="h-8 w-8 rounded-lg"
+              aria-label="Print / PDF"
+              title="طباعة / PDF"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8 rounded-lg"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+
+        {/* AI Suggestions */}
+        {suggestions.length > 0 && (
+          <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-3">
+            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+              <Wand2 className="h-3.5 w-3.5" aria-hidden />
+              <Bi ar="اقتراحات ذكية" en="Smart suggestions" />
+            </div>
+            <ul className="space-y-1 text-[11px]">
+              {suggestions.map((s) => (
+                <li key={s.id} className="flex items-start gap-1.5">
+                  <span
+                    className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+                      s.tone === 'destructive' ? 'bg-destructive' : s.tone === 'warning' ? 'bg-warning' : s.tone === 'success' ? 'bg-success' : 'bg-info'
+                    }`}
+                  />
+                  <span>{isRTL ? s.ar : s.en}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Completeness */}
         <div className="rounded-xl border bg-muted/30 p-3">
@@ -184,7 +245,7 @@ export const ProviderLeadDetail: React.FC<Props> = ({
         </div>
 
         {/* Quick actions */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 print:hidden">
           {quickActions.map((a) => {
             const Icon = a.icon;
             const active = status === a.id;
@@ -215,7 +276,7 @@ export const ProviderLeadDetail: React.FC<Props> = ({
 
         {/* Duplicates */}
         {duplicateIds && duplicateIds.length > 0 && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-[11px]">
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-[11px] print:hidden">
             <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-amber-700">
               <GitBranch className="h-3.5 w-3.5" aria-hidden />
               <Bi ar="مرشّحون لتكرار محتمل" en="Possible duplicates" />
@@ -237,7 +298,109 @@ export const ProviderLeadDetail: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Contact details */}
+        {/* Tabbed: Details / Activity */}
+        <Tabs defaultValue="details" className="print:hidden">
+          <TabsList className="h-8 rounded-lg">
+            <TabsTrigger value="details" className="rounded-md text-[11px]">
+              <Bi ar="التفاصيل" en="Details" />
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="rounded-md text-[11px]">
+              <Bi ar="النشاط والملاحظات" en="Activity & notes" />
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="details" className="mt-3 space-y-4">
+            <DetailsBlock
+              lead={lead}
+              branches={branches}
+              crUrl={crUrl}
+              t={t}
+            />
+          </TabsContent>
+          <TabsContent value="activity" className="mt-3">
+            <ProviderLeadActivity lead={lead} onSaved={onSaved} />
+          </TabsContent>
+        </Tabs>
+
+        {/* Print fallback: always show details when printing */}
+        <div className="hidden print:block">
+          <DetailsBlock lead={lead} branches={branches} crUrl={crUrl} t={t} />
+        </div>
+
+        {/* Save / Owner / Status panel */}
+        <div className="space-y-3 border-t pt-4 print:hidden">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>{t('الحالة', 'Status')}</Label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as ProviderLeadStatus)}
+                className="mt-1 h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+              >
+                {STATUS_ORDER.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_LABEL[s].ar}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>{t('المسؤول', 'Owner')}</Label>
+              <Input
+                value={meta.ownerName ?? ''}
+                onChange={(e) => setMeta({ ...meta, ownerName: e.target.value, ownerId: e.target.value })}
+                placeholder={t('اسم/معرّف المسؤول', 'Owner name / id')}
+                className="mt-1 h-10 rounded-xl"
+              />
+            </div>
+            <div>
+              <Label>{t('SLA (أيام)', 'SLA (days)')}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={60}
+                value={meta.slaDays ?? 7}
+                onChange={(e) => setMeta({ ...meta, slaDays: Number(e.target.value) || 7 })}
+                className="mt-1 h-10 rounded-xl tech-content"
+              />
+            </div>
+            <div>
+              <Label>{t('المنشأة المرتبطة', 'Linked business')}</Label>
+              <Input
+                value={lead.linked_business_id ?? ''}
+                readOnly
+                placeholder="—"
+                className="mt-1 h-10 rounded-xl tech-content"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>{t('ملاحظات الإدارة', 'Admin notes')}</Label>
+            <Textarea
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="mt-1 rounded-xl"
+            />
+          </div>
+          <Button onClick={() => save()} disabled={saving} className="hover-lift rounded-xl">
+            {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
+            {t('حفظ التغييرات', 'Save changes')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface DetailsBlockProps {
+  lead: ProviderLeadRow;
+  branches: BranchRow[];
+  crUrl: string | null;
+  t: (ar: string, en: string) => string;
+}
+
+const DetailsBlock: React.FC<DetailsBlockProps> = ({ lead, branches, crUrl, t }) => (
+  <>
         <div className="grid gap-3 text-sm sm:grid-cols-2">
           <Detail label={t('المسؤول', 'Contact')} value={lead.contact_name} />
           <Detail
@@ -313,52 +476,8 @@ export const ProviderLeadDetail: React.FC<Props> = ({
             </div>
           </div>
         )}
-
-        {/* Save panel */}
-        <div className="space-y-3 border-t pt-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label>{t('الحالة', 'Status')}</Label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as ProviderLeadStatus)}
-                className="mt-1 h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
-              >
-                {STATUS_ORDER.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABEL[s].ar}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label>{t('المنشأة المرتبطة', 'Linked business')}</Label>
-              <Input
-                value={lead.linked_business_id ?? ''}
-                readOnly
-                placeholder="—"
-                className="mt-1 h-10 rounded-xl tech-content"
-              />
-            </div>
-          </div>
-          <div>
-            <Label>{t('ملاحظات الإدارة', 'Admin notes')}</Label>
-            <Textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="mt-1 rounded-xl"
-            />
-          </div>
-          <Button onClick={() => save()} disabled={saving} className="hover-lift rounded-xl">
-            {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
-            {t('حفظ التغييرات', 'Save changes')}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+  </>
+);
 
 const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div>

@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, Sparkles, GitBranch } from 'lucide-react';
 import type { ProviderLeadRow } from '@/modules/providers';
 import { Bi } from '@/components/common/Bilingual';
-import { STATUS_LABEL, STATUS_TONE, computeCompleteness } from './providerLeadHelpers';
+import { STATUS_LABEL, STATUS_TONE, computeCompleteness, computeLeadScore, computeSlaStatus } from './providerLeadHelpers';
 import { CompletenessBar } from './CompletenessBar';
+import { LeadScoreBadge } from './LeadScoreBadge';
+import { SlaChip } from './SlaChip';
 
 interface Props {
   rows: ProviderLeadRow[];
@@ -21,6 +23,7 @@ interface Props {
   onOpen: (id: string) => void;
   onEnrich: (row: ProviderLeadRow) => void;
   duplicates: Map<string, string[]>;
+  density?: 'compact' | 'comfortable';
 }
 
 export const ProviderLeadsTable: React.FC<Props> = ({
@@ -32,6 +35,7 @@ export const ProviderLeadsTable: React.FC<Props> = ({
   onOpen,
   onEnrich,
   duplicates,
+  density = 'comfortable',
 }) => {
   if (rows.length === 0) {
     return (
@@ -41,31 +45,35 @@ export const ProviderLeadsTable: React.FC<Props> = ({
     );
   }
   const allSelected = selected.size > 0 && selected.size === rows.length;
+  const cellPad = density === 'compact' ? 'px-2 py-1' : 'px-2 py-2';
   return (
     <div className="overflow-auto rounded-xl border bg-background">
       <table className="w-full text-[12px]" data-testid="provider-leads-table">
         <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur">
           <tr className="text-start">
-            <th className="w-8 px-2 py-2">
+            <th className={`w-8 ${cellPad}`}>
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={onToggleAll}
                 aria-label="Select all"
               />
             </th>
-            <th className="px-2 py-2 text-start font-medium text-muted-foreground">المرجع</th>
-            <th className="px-2 py-2 text-start font-medium text-muted-foreground">المنشأة</th>
-            <th className="px-2 py-2 text-start font-medium text-muted-foreground">الحالة</th>
-            <th className="px-2 py-2 text-start font-medium text-muted-foreground">الاكتمال</th>
-            <th className="px-2 py-2 text-start font-medium text-muted-foreground">التواصل</th>
-            <th className="px-2 py-2 text-start font-medium text-muted-foreground">المدينة</th>
-            <th className="px-2 py-2 text-start font-medium text-muted-foreground">التاريخ</th>
-            <th className="px-2 py-2 text-end font-medium text-muted-foreground">إجراءات</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>المرجع</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>المنشأة</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>الحالة</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>الدرجة</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>الاكتمال</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>SLA</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>التواصل</th>
+            <th className={`${cellPad} text-start font-medium text-muted-foreground`}>المدينة</th>
+            <th className={`${cellPad} text-end font-medium text-muted-foreground`}>إجراءات</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => {
             const c = computeCompleteness(r);
+            const score = computeLeadScore(r);
+            const sla = computeSlaStatus(r);
             const dup = duplicates.get(r.id);
             const isOpen = selectedId === r.id;
             const isSel = selected.has(r.id);
@@ -73,21 +81,22 @@ export const ProviderLeadsTable: React.FC<Props> = ({
               <tr
                 key={r.id}
                 onClick={() => onOpen(r.id)}
+                data-row-id={r.id}
                 className={`cursor-pointer border-t transition hover:bg-muted/40 ${
                   isOpen ? 'bg-primary/5' : isSel ? 'bg-primary/[0.03]' : ''
                 }`}
               >
-                <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                <td className={cellPad} onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={isSel}
                     onCheckedChange={() => onToggle(r.id)}
                     aria-label={`Select ${r.reference_code}`}
                   />
                 </td>
-                <td className="px-2 py-2 tech-content text-[11px] text-muted-foreground">
+                <td className={`${cellPad} tech-content text-[11px] text-muted-foreground`}>
                   {r.reference_code}
                 </td>
-                <td className="px-2 py-2">
+                <td className={cellPad}>
                   <div className="font-semibold">{r.name_ar || r.name_en || '—'}</div>
                   {r.name_en && r.name_ar && (
                     <div className="text-[10px] text-muted-foreground">{r.name_en}</div>
@@ -102,15 +111,21 @@ export const ProviderLeadsTable: React.FC<Props> = ({
                     </Badge>
                   )}
                 </td>
-                <td className="px-2 py-2">
+                <td className={cellPad}>
                   <Badge variant="outline" className={`text-[10px] ${STATUS_TONE[r.status]}`}>
                     {STATUS_LABEL[r.status].ar}
                   </Badge>
                 </td>
-                <td className="px-2 py-2">
+                <td className={cellPad}>
+                  <LeadScoreBadge score={score} />
+                </td>
+                <td className={cellPad}>
                   <CompletenessBar pct={c.pct} filled={c.filled} total={c.total} />
                 </td>
-                <td className="px-2 py-2">
+                <td className={cellPad}>
+                  <SlaChip sla={sla} />
+                </td>
+                <td className={cellPad}>
                   <div className="flex flex-col gap-0.5 text-[10px] tech-content">
                     {r.email && (
                       <span className="inline-flex items-center gap-1 text-muted-foreground">
@@ -126,7 +141,7 @@ export const ProviderLeadsTable: React.FC<Props> = ({
                     )}
                   </div>
                 </td>
-                <td className="px-2 py-2 text-[11px]">
+                <td className={`${cellPad} text-[11px]`}>
                   {r.city ? (
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-muted-foreground" aria-hidden />
@@ -136,10 +151,7 @@ export const ProviderLeadsTable: React.FC<Props> = ({
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
-                <td className="px-2 py-2 text-[10px] tech-content text-muted-foreground">
-                  {new Date(r.created_at).toLocaleDateString()}
-                </td>
-                <td className="px-2 py-2 text-end" onClick={(e) => e.stopPropagation()}>
+                <td className={`${cellPad} text-end`} onClick={(e) => e.stopPropagation()}>
                   <Button
                     size="sm"
                     variant="ghost"
