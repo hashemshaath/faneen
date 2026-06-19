@@ -3,9 +3,9 @@
  * Guards the no-navigation download flow + template column contracts.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import AdmZip from 'adm-zip';
+import * as XLSX from 'xlsx';
 
 const guideSrc = readFileSync(
   resolve(__dirname, '../components/admin/provider-intake/IntakeWizardGuide.tsx'),
@@ -32,25 +32,11 @@ const BRANCH_COLS = [
 ];
 
 function readHeaderRow(xlsxPath: string): string[] {
-  const zip = new AdmZip(xlsxPath);
-  const sheet = zip.readAsText('xl/worksheets/sheet1.xml');
-  const strings = zip.readAsText('xl/sharedStrings.xml');
-  const sst: string[] = [];
-  for (const m of strings.matchAll(/<si[^>]*>([\s\S]*?)<\/si>/g)) {
-    const inner = m[1];
-    const texts = [...inner.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]);
-    sst.push(texts.join(''));
-  }
-  const firstRow = sheet.match(/<row[^>]*r="1"[^>]*>([\s\S]*?)<\/row>/);
-  if (!firstRow) return [];
-  const cells = [...firstRow[1].matchAll(/<c[^>]*?(?:\st="(\w+)")?[^>]*>([\s\S]*?)<\/c>/g)];
-  return cells.map(([, t, body]) => {
-    const v = body.match(/<v>([\s\S]*?)<\/v>/)?.[1] ?? '';
-    const inline = body.match(/<is><t[^>]*>([\s\S]*?)<\/t><\/is>/)?.[1];
-    if (inline !== undefined) return inline;
-    if (t === 's') return sst[Number(v)] ?? '';
-    return v;
-  });
+  const buf = readFileSync(xlsxPath);
+  const wb = XLSX.read(buf, { type: 'buffer' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, blankrows: false });
+  return (rows[0] ?? []).map((v) => String(v));
 }
 
 describe('Provider intake template download — Final QA', () => {
