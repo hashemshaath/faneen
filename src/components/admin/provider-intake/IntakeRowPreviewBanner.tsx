@@ -157,7 +157,23 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
   // ── Finalize: turn reviewed rows into provider_leads ──────────────
   const allReviewed = doneCount === total && total > 0;
 
-  const rowToLeadPayload = (r: Record<string, string>): Record<string, unknown> | null => {
+  type LeadPayload = {
+    name_ar: string;
+    name_en: string | null;
+    contact_name: string;
+    email: string;
+    phone: string;
+    preferred_channel: string;
+    website: string | null;
+    cr_number: string | null;
+    unified_number: string | null;
+    main_activity: string | null;
+    brief: string | null;
+    city: string | null;
+    national_address: string | null;
+    map_link: string | null;
+  };
+  const rowToLeadPayload = (r: Record<string, string>): LeadPayload | null => {
     const nameAr = (r.company_name_ar ?? r.branch_name_ar ?? '').trim();
     const nameEn = (r.company_name_en ?? r.branch_name_en ?? '').trim() || null;
     const contactName =
@@ -200,7 +216,9 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
         invalid += 1;
         continue;
       }
-      const { error } = await supabase.rpc('submit_provider_lead', { payload });
+      const { error } = await supabase.rpc('submit_provider_lead', {
+        payload: payload as unknown as Record<string, never>,
+      });
       if (!error) {
         created += 1;
       } else if (/duplicate_request/.test(error.message)) {
