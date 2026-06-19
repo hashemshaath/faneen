@@ -66,7 +66,7 @@ const OperationsLogsLanding = () => {
           >
             <Card className="h-full transition-colors group-hover:border-primary/40">
               <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                   <Icon className="size-5" />
                 </div>
                 <CardTitle className="flex flex-1 items-center justify-between gap-2 text-base">
