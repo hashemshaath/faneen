@@ -145,7 +145,6 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   className,
   testId = 'intake-wizard-guide',
 }) => {
-  const navigate = useNavigate();
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
   const [uploadSummary, setUploadSummary] = React.useState<UploadedTemplateSummary | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
