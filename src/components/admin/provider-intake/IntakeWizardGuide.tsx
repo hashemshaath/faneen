@@ -9,12 +9,15 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Upload,
   ListChecks,
   Sparkles,
   CheckCircle2,
   Download,
+  FileSpreadsheet,
+  AlertTriangle,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
 
@@ -60,6 +63,40 @@ const TEMPLATES: Array<{ id: string; ar: string; en: string; href: string }> = [
 
 const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
+const REQUIRED_TEMPLATE_COLUMNS: Record<'providers' | 'branches', string[]> = {
+  providers: [
+    'company_name_ar','company_name_en','unified_number','commercial_registration',
+    'established_year','sector','services','phone','email','country','region','city',
+    'district','national_short_address','street_address','latitude','longitude',
+    'google_maps_url','account_manager_name','account_manager_email',
+    'account_manager_phone','contact_role','website','instagram','x_account',
+    'linkedin','source','notes',
+  ],
+  branches: [
+    'company_name_ar','unified_number','commercial_registration','branch_name_ar',
+    'branch_name_en','country','region','city','district','national_short_address',
+    'street_address','latitude','longitude','google_maps_url','branch_phone',
+    'branch_email','is_primary_branch','working_hours','branch_notes',
+  ],
+};
+
+type UploadedTemplateKind = 'providers' | 'branches' | 'unknown';
+
+interface UploadedTemplateSummary {
+  fileName: string;
+  sheetName: string;
+  rowCount: number;
+  columnCount: number;
+  kind: UploadedTemplateKind;
+  missingColumns: string[];
+}
+
+function inferTemplateKind(headers: string[]): UploadedTemplateKind {
+  if (headers.includes('branch_name_ar') || headers.includes('branch_phone')) return 'branches';
+  if (headers.includes('company_name_en') || headers.includes('account_manager_email')) return 'providers';
+  return 'unknown';
+}
+
 export interface IntakeWizardGuideProps {
   className?: string;
   testId?: string;
@@ -70,6 +107,8 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   testId = 'intake-wizard-guide',
 }) => {
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+  const [uploadSummary, setUploadSummary] = React.useState<UploadedTemplateSummary | null>(null);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   const handleDownload = React.useCallback(
     async (id: string, href: string, filename: string) => {
@@ -99,12 +138,42 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         // eslint-disable-next-line no-console
         console.warn('[intake-template] download failed for', href);
       } finally {
-        if (url) URL.revokeObjectURL(url);
+        if (url) window.setTimeout(() => URL.revokeObjectURL(url), 2000);
         setDownloadingId(null);
       }
     },
     [],
   );
+
+  const handleUpload = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploadSummary(null);
+    try {
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) throw new Error('empty workbook');
+      const sheet = workbook.Sheets[sheetName];
+      const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, blankrows: false });
+      const headers = (matrix[0] ?? []).map((v) => String(v).trim()).filter(Boolean);
+      const kind = inferTemplateKind(headers);
+      const required = kind === 'unknown' ? [] : REQUIRED_TEMPLATE_COLUMNS[kind];
+      setUploadSummary({
+        fileName: file.name,
+        sheetName,
+        rowCount: Math.max(matrix.length - 1, 0),
+        columnCount: headers.length,
+        kind,
+        missingColumns: required.filter((col) => !headers.includes(col)),
+      });
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Unable to read file');
+    } finally {
+      e.currentTarget.value = '';
+    }
+  }, []);
   return (
     <Card data-testid={testId} className={`p-4 mb-5 ${className ?? ''}`}>
       <div className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
