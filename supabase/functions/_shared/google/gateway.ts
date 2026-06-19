@@ -12,8 +12,19 @@ export type GoogleApi =
   | "address_validation"
   | "static_map";
 
-const GATEWAY = "https://connector-gateway.lovable.dev/google_maps";
-const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
+// Direct Google hosts. We use a manually-managed server secret
+// (GOOGLE_MAPS_API_KEY) and bypass the connector gateway entirely.
+const GOOGLE_HOSTS: Array<{ prefix: string; host: string }> = [
+  { prefix: "/places/",            host: "https://places.googleapis.com" },
+  { prefix: "/addressvalidation/", host: "https://addressvalidation.googleapis.com" },
+  { prefix: "/routes/",            host: "https://routes.googleapis.com" },
+  { prefix: "/airquality/",        host: "https://airquality.googleapis.com" },
+  { prefix: "/pollen/",            host: "https://pollen.googleapis.com" },
+  { prefix: "/weather/",           host: "https://weather.googleapis.com" },
+  { prefix: "/roads/",             host: "https://roads.googleapis.com" },
+  { prefix: "/solar/",             host: "https://solar.googleapis.com" },
+];
+const DEFAULT_HOST = "https://maps.googleapis.com";
 
 export function getGoogleSecrets(): {
   lovableKey: string | null;
@@ -23,30 +34,39 @@ export function getGoogleSecrets(): {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? null;
   const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? null;
   const missing: string[] = [];
-  if (!lovableKey) missing.push("LOVABLE_API_KEY");
   if (!googleKey) missing.push("GOOGLE_MAPS_API_KEY");
   return { lovableKey, googleKey, missing };
 }
 
 export function googleHeaders(
-  lovableKey: string,
+  _lovableKey: string | null,
   googleKey: string,
   extra: Record<string, string> = {},
 ): HeadersInit {
-  const referer = Deno.env.get("GOOGLE_MAPS_HTTP_REFERER") ?? DEFAULT_GOOGLE_REFERER;
   return {
-    Authorization: `Bearer ${lovableKey}`,
-    "X-Connection-Api-Key": googleKey,
+    "X-Goog-Api-Key": googleKey,
     "Content-Type": "application/json",
-    Referer: referer,
     ...extra,
   };
 }
 
 export function gatewayUrl(path: string): string {
-  // path examples: "/places/v1/places:searchText", "/maps/api/geocode/json?address=..."
   const p = path.startsWith("/") ? path : `/${path}`;
-  return `${GATEWAY}${p}`;
+  // For legacy `/maps/api/*` endpoints (Geocoding/StaticMaps), the API key
+  // must be passed as a `key=` query param. `X-Goog-Api-Key` only works for
+  // the modern REST APIs (Places New, Routes, Address Validation, ...).
+  if (p.startsWith("/maps/")) {
+    const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? "";
+    const sep = p.includes("?") ? "&" : "?";
+    return `${DEFAULT_HOST}${p}${sep}key=${encodeURIComponent(googleKey)}`;
+  }
+  const match = GOOGLE_HOSTS.find((h) => p.startsWith(h.prefix));
+  if (match) {
+    // Strip the connector-style prefix, keep the rest of the path.
+    const rest = p.slice(match.prefix.length - 1); // keep leading "/"
+    return `${match.host}${rest}`;
+  }
+  return `${DEFAULT_HOST}${p}`;
 }
 
 /** Map an upstream HTTP status into a safe public error code. */
