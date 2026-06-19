@@ -237,6 +237,25 @@ const ProviderJoin: React.FC = () => {
     else if (!isSaudiPhone(form.phone)) er.phone = t('رقم الجوال غير صحيح. مثال: 05XXXXXXXX', 'Invalid phone. Example: 05XXXXXXXX');
     if (form.website && !isUrl(form.website)) er.website = t('رابط الموقع غير صحيح', 'Invalid website URL');
     if (form.map_link && !isUrl(form.map_link)) er.map_link = t('رابط الخريطة غير صحيح', 'Invalid map URL');
+    if (form.whatsapp && !isSaudiPhone(form.whatsapp)) er.whatsapp = t('رقم الواتساب غير صحيح', 'Invalid WhatsApp number');
+    if (form.account_manager_email && !isEmail(form.account_manager_email)) er.account_manager_email = t('بريد مدير الحساب غير صحيح', 'Invalid account manager email');
+    if (form.account_manager_phone && !isSaudiPhone(form.account_manager_phone)) er.account_manager_phone = t('جوال مدير الحساب غير صحيح', 'Invalid account manager phone');
+    if (form.short_national_address && !/^[A-Za-z]{4}\d{4}$/.test(form.short_national_address.trim())) {
+      er.short_national_address = t('العنوان الوطني يجب أن يكون 4 أحرف + 4 أرقام', 'National address must be 4 letters + 4 digits');
+    }
+    if (form.postal_code && !/^\d{5}$/.test(form.postal_code.trim())) er.postal_code = t('الرمز البريدي 5 أرقام', 'Postal code must be 5 digits');
+    if (form.establishment_year) {
+      const y = Number(form.establishment_year);
+      const cy = new Date().getFullYear();
+      if (!Number.isInteger(y) || y < 1900 || y > cy) er.establishment_year = t('سنة تأسيس غير صحيحة', 'Invalid establishment year');
+    }
+    branches.forEach((b, i) => {
+      if (b.email && !isEmail(b.email)) er[`branch_${i}_email`] = t('بريد الفرع غير صحيح', 'Invalid branch email');
+      if (b.phone && !isSaudiPhone(b.phone)) er[`branch_${i}_phone`] = t('جوال الفرع غير صحيح', 'Invalid branch phone');
+      if (b.whatsapp && !isSaudiPhone(b.whatsapp)) er[`branch_${i}_whatsapp`] = t('واتساب الفرع غير صحيح', 'Invalid branch WhatsApp');
+      if (b.website && !isUrl(b.website)) er[`branch_${i}_website`] = t('رابط موقع الفرع غير صحيح', 'Invalid branch website');
+      if (b.map_link && !isUrl(b.map_link)) er[`branch_${i}_map`] = t('رابط خريطة الفرع غير صحيح', 'Invalid branch map link');
+    });
     if (form.branches_count < 1) er.branches_count = t('عدد الفروع يجب أن يكون 1 أو أكثر', 'Branches must be 1 or more');
     // Validate extra branches: at minimum require a branch name
     branches.forEach((b, i) => {
