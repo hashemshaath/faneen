@@ -582,6 +582,14 @@ const ProviderJoin: React.FC = () => {
                       </div>
                     </Field>
                   </div>
+                  <div data-error-key="establishment_year">
+                    <Field label={t('سنة التأسيس', 'Established year')} error={errors.establishment_year} hint={t('سنة بدء النشاط التجاري.', 'Year the business started.')}>
+                      <div className="relative">
+                        <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input type="number" inputMode="numeric" min={1900} max={new Date().getFullYear()} dir="ltr" placeholder="2015" value={form.establishment_year} onChange={(e) => setField('establishment_year', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.establishment_year)}`} aria-invalid={!!errors.establishment_year} />
+                      </div>
+                    </Field>
+                  </div>
                 </div>
                 <Field label={t('نبذة مختصرة عن المنشأة', 'Short description')}>
                   <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => setField('brief', e.target.value)} className="rounded-xl min-h-[88px] text-[14px]" />
