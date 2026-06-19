@@ -6,6 +6,8 @@ export type {
 } from './services/submitProviderLead';
 export { listProviderLeads, listProviderLeadBranches } from './services/listProviderLeads';
 export { updateProviderLeadStatus } from './services/updateProviderLeadStatus';
+export { updateProviderLeadFields } from './services/updateProviderLeadFields';
+export type { ProviderLeadEditableFields } from './services/updateProviderLeadFields';
 export { lookupProviderLead } from './services/lookupProviderLead';
 export type {
   ProviderLeadEditableData,
