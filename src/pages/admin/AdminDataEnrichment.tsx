@@ -29,6 +29,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { mapsService } from "@/modules/google";
 import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
 import { IntakeWizardGuide } from "@/components/admin/provider-intake/IntakeWizardGuide";
+import { IntakeRowPreviewBanner } from "@/components/admin/provider-intake/IntakeRowPreviewBanner";
 import { PilotContactTemplateCard } from "@/components/admin/provider-intake/PilotContactTemplateCard";
 import {
   fetchEnrichment,
