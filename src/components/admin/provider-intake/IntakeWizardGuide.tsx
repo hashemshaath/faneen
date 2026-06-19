@@ -26,6 +26,13 @@ import {
   Search,
 } from 'lucide-react';
 import { Bi } from '@/components/common/Bilingual';
+import {
+  INTAKE_AUDIT_EVENT,
+  INTAKE_QUEUE_CHANGE_EVENT,
+  intakeRowName,
+  readIntakeQueue,
+  writeIntakeQueue,
+} from '@/lib/intakeQueue';
 
 const STEPS: Array<{
   id: string;
@@ -149,6 +156,22 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
   const [uploadSummary, setUploadSummary] = React.useState<UploadedTemplateSummary | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const [reviewedIdx, setReviewedIdx] = React.useState<Set<number>>(new Set());
+  const [activeIdx, setActiveIdx] = React.useState<number | null>(null);
+
+  // Keep per-row badges in sync with the queue in sessionStorage so
+  // refreshes and the inline review banner stay aligned.
+  React.useEffect(() => {
+    const sync = () => {
+      const q = readIntakeQueue();
+      setReviewedIdx(new Set(q?.reviewed ?? []));
+      setActiveIdx(typeof q?.index === 'number' ? q.index : null);
+    };
+    sync();
+    if (typeof window === 'undefined') return;
+    window.addEventListener(INTAKE_QUEUE_CHANGE_EVENT, sync);
+    return () => window.removeEventListener(INTAKE_QUEUE_CHANGE_EVENT, sync);
+  }, []);
 
   const handleDownload = React.useCallback(
     async (id: TemplateId, href: string, filename: string) => {
@@ -222,51 +245,63 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
 
   const handleContinue = React.useCallback(() => {
     if (!uploadSummary) return;
-    try {
-      sessionStorage.setItem(
-        'qitaat_intake_parsed_v1',
-        JSON.stringify({
-          kind: uploadSummary.kind,
-          fileName: uploadSummary.fileName,
-          headers: uploadSummary.headers,
-          rows: uploadSummary.rows,
-          parsedAt: new Date().toISOString(),
-        }),
-      );
-    } catch {
-      /* sessionStorage may be unavailable; navigation still proceeds */
-    }
+    const existing = readIntakeQueue();
+    const reviewed =
+      existing && existing.fileName === uploadSummary.fileName ? existing.reviewed : [];
+    writeIntakeQueue({
+      kind: uploadSummary.kind,
+      fileName: uploadSummary.fileName,
+      rows: uploadSummary.rows,
+      index: 0,
+      reviewed,
+      updatedAt: new Date().toISOString(),
+    });
     const first = uploadSummary.rows[0];
-    const name = first
-      ? (first.company_name_ar || first.company_name_en || first.branch_name_ar || first.branch_name_en || '').trim()
-      : '';
+    const name = intakeRowName(first);
     if (typeof window !== 'undefined' && name) {
       window.dispatchEvent(
-        new CustomEvent('qitaat:intake:audit-row', { detail: { name, query: name, row: first } }),
+        new CustomEvent(INTAKE_AUDIT_EVENT, {
+          detail: { name, query: name, row: first, index: 0, total: uploadSummary.rows.length },
+        }),
       );
     }
-    toast.success(
-      `${uploadSummary.rows.length} ${uploadSummary.rows.length === 1 ? 'row' : 'rows'} ready for review`,
-      {
-        description: name
-          ? `الصفوف معروضة في جدول المعاينة أعلاه. بدأ التدقيق للصف الأول (${name}) في قسم البحث أسفل الصفحة.`
-          : 'الصفوف معروضة في جدول المعاينة أعلاه — استخدم زر "تدقيق" بجوار كل صف لبدء المراجعة في قسم البحث بالأسفل.',
-      },
-    );
+    const total = uploadSummary.rows.length;
+    const done = reviewed.length;
+    toast.success(`جاهز للمراجعة: ${total} صف${total === 1 ? '' : 'وفًا'}`, {
+      description: `تم تدقيق ${done}/${total} — تابع داخل لوحة "تدقيق الصف الحالي" أسفل بطاقة "ابحث عن المنشأة" في نفس الصفحة.`,
+    });
   }, [uploadSummary]);
 
-  const handleAuditRow = React.useCallback((row: Record<string, string>) => {
-    const name = (row.company_name_ar || row.company_name_en || row.branch_name_ar || row.branch_name_en || '').trim();
-    if (!name) {
-      toast.error('الصف يفتقد اسم المنشأة');
-      return;
-    }
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('qitaat:intake:audit-row', { detail: { name, query: name, row } }),
-      );
-    }
-  }, []);
+  const handleAuditRow = React.useCallback(
+    (row: Record<string, string>, idx: number) => {
+      const name = intakeRowName(row);
+      if (!name) {
+        toast.error('الصف يفتقد اسم المنشأة');
+        return;
+      }
+      if (uploadSummary) {
+        const existing = readIntakeQueue();
+        const reviewed =
+          existing && existing.fileName === uploadSummary.fileName ? existing.reviewed : [];
+        writeIntakeQueue({
+          kind: uploadSummary.kind,
+          fileName: uploadSummary.fileName,
+          rows: uploadSummary.rows,
+          index: idx,
+          reviewed,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent(INTAKE_AUDIT_EVENT, {
+            detail: { name, query: name, row, index: idx, total: uploadSummary?.rows.length ?? 1 },
+          }),
+        );
+      }
+    },
+    [uploadSummary],
+  );
 
   const handleExportJson = React.useCallback(() => {
     if (!uploadSummary) return;
@@ -399,8 +434,18 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                     </thead>
                     <tbody>
                       {uploadSummary.rows.map((row, idx) => (
-                        <tr key={idx} className="border-t">
-                          <td className="px-2 py-1 align-top tech-content text-muted-foreground">{idx + 1}</td>
+                        <tr
+                          key={idx}
+                          className={`border-t ${activeIdx === idx ? 'bg-primary/5' : reviewedIdx.has(idx) ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}
+                        >
+                          <td className="px-2 py-1 align-top tech-content text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              {idx + 1}
+                              {reviewedIdx.has(idx) && (
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" aria-label="reviewed" />
+                              )}
+                            </span>
+                          </td>
                           {uploadSummary.headers.slice(0, 5).map((h) => (
                             <td key={h} className="px-2 py-1 align-top tech-content">{row[h]}</td>
                           ))}
@@ -409,9 +454,9 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                               type="button"
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleAuditRow(row)}
+                              onClick={() => handleAuditRow(row, idx)}
                               data-testid={`intake-template-audit-row-${idx}`}
-                              className="h-7 rounded-lg px-2 text-[10px]"
+                              className={`h-7 rounded-lg px-2 text-[10px] ${activeIdx === idx ? 'bg-primary/10 text-primary' : ''}`}
                             >
                               <Search className="me-1 h-3 w-3" aria-hidden />
                               <Bi ar="تدقيق" en="Audit" />

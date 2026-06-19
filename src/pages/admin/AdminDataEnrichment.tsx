@@ -29,6 +29,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { mapsService } from "@/modules/google";
 import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
 import { IntakeWizardGuide } from "@/components/admin/provider-intake/IntakeWizardGuide";
+import { IntakeRowPreviewBanner } from "@/components/admin/provider-intake/IntakeRowPreviewBanner";
 import { PilotContactTemplateCard } from "@/components/admin/provider-intake/PilotContactTemplateCard";
 import {
   fetchEnrichment,
@@ -672,13 +673,14 @@ export default function AdminDataEnrichment() {
             </Card>
           );
         })()}
-        <Card className="p-5">
+        <IntakeRowPreviewBanner />
+        <Card className="p-5" data-intake-workspace>
           <div className="space-y-3">
             <Label className="text-sm">
               <Search className="me-1 inline h-3.5 w-3.5" />
               <Bi ar="ابحث عن المنشأة في خرائط Google" en="Search for the business on Google Maps" />
             </Label>
-            <div className="flex gap-2" data-intake-workspace>
+            <div className="flex gap-2">
               <Input
                 dir="auto"
                 placeholder={bi("مثل: مصنع الزجاج العالمي الرياض", "e.g. Acme Glass Factory Riyadh")}
