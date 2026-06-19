@@ -52,8 +52,9 @@ describe('PROVIDER INTAKE UX PROFESSIONALIZATION', () => {
   it('duplicate badges legend exposes the required tones', () => {
     const guide = read(SHARED.guide);
     for (const id of ['new', 'strong-duplicate', 'possible-similar', 'needs-review', 'missing-data']) {
-      expect(guide).toMatch(new RegExp(`duplicate-badge-${id}`));
+      expect(guide).toMatch(new RegExp(`id:\\s*'${id}'`));
     }
+    expect(guide).toMatch(/duplicate-badge-\$\{b\.id\}/);
   });
 
   it('original + normalized preview surfaces are still rendered on enrichment', () => {
@@ -103,7 +104,7 @@ describe('PROVIDER INTAKE UX PROFESSIONALIZATION', () => {
       /sendProviderEmail/i,
       /dispatchProvider/i,
       /autoMatch/i,
-      /auto[_-]?publish/i,
+      /autoPublish\s*\(/,
       /createProviderLeadAutomatic/i,
       /from\(['"]businesses['"]\)\s*\.\s*insert/,
     ];
