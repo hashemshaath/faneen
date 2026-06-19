@@ -635,16 +635,28 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
                   <span className="text-[11px] font-semibold">
                     {b.is_main ? 'الفرع الرئيسي' : `فرع #${idx + 1}`}
                   </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeBranch(idx)}
-                    className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
-                    title="حذف"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyHeadToBranch(idx)}
+                      className="h-7 rounded-lg text-[10px]"
+                      title="نسخ بيانات المقر الرئيسي"
+                    >
+                      <Copy className="me-1 h-3 w-3" /> نسخ من المقر
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeBranch(idx)}
+                      className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                      title="حذف"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="اسم الفرع *">
