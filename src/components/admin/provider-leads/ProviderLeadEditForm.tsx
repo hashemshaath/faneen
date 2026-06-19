@@ -3,13 +3,15 @@
  * the detail panel (no popups). Uses `updateProviderLeadFields` against
  * the admin-RLS-protected table.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, X, Plus, Trash2, Building2 } from 'lucide-react';
+import { Loader2, Save, X, Plus, Trash2, Building2, MapPin, Copy, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { LocationPicker } from '@/components/dashboard/business-edit/LocationPicker';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   updateProviderLeadFields,
   listProviderLeadBranches,
