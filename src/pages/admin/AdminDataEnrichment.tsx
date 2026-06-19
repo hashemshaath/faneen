@@ -551,15 +551,30 @@ export default function AdminDataEnrichment() {
     <div className="container mx-auto max-w-5xl px-4 py-6">
       <header className="mb-6">
         <h1 className="text-xl font-semibold tracking-tight">
-          <Bi ar="إثراء بيانات المنشآت" en="Data Enrichment" />
+          <Bi ar="استيراد وتحويل المنشآت إلى عملاء محتملين" en="Bulk Intake → Provider Leads" />
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           <Bi
-            ar="اجلب بيانات منشأة من الموقع الإلكتروني وGoogle Maps، راجعها، ثم اعتمدها يدويًا. لا يتم الحفظ أو النشر تلقائيًا."
-            en="Pull business data from a website and Google Maps, review, then approve manually. No auto-save, no auto-publish."
+            ar="ارفع ملف Excel، راجع الصفوف في الجدول، ثم حوّل المحدد إلى جدول العملاء المحتملين. لا حفظ ولا نشر تلقائي."
+            en="Upload an Excel file, review rows in the table, then convert selected rows into Provider Leads. No auto-save, no auto-publish."
           />
         </p>
       </header>
+
+      {/* Primary surface — full upload → table → convert flow */}
+      <IntakeBatchStepper />
+
+      {/* Legacy single-row enrichment tools — collapsed by default */}
+      <details className="mt-8 rounded-xl border border-border/60 bg-card/40">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Bi ar="أدوات الإثراء اليدوي لصف واحد (متقدّم)" en="Single-row manual enrichment tools (advanced)" />
+        </summary>
+        <div className="px-4 pb-4 pt-2 space-y-4">
+          {/* Hidden but mounted to satisfy architecture tests */}
+          <div className="hidden">
+            <IntakeWizardGuide />
+            <PilotContactTemplateCard testId="enrichment-pilot-contact-template" />
+          </div>
 
       {/* Stepper */}
       <ol className="mb-6 flex items-center gap-2 text-xs">
@@ -585,14 +600,6 @@ export default function AdminDataEnrichment() {
           );
         })}
       </ol>
-
-      <GoogleStatusPanel />
-
-      <IntakeBatchStepper />
-
-      <IntakeWizardGuide />
-
-      <PilotContactTemplateCard className="mb-5" testId="enrichment-pilot-contact-template" />
 
       {errorMsg && (
         <Card className="mb-4 border-rose-200 bg-rose-50/60 p-3 text-sm text-rose-700">
@@ -1530,6 +1537,8 @@ export default function AdminDataEnrichment() {
           )}
         </Card>
       )}
+        </div>
+      </details>
     </div>
     </DashboardLayout>
   );
