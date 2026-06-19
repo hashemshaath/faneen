@@ -6,6 +6,7 @@ import {
   Lock,
   LayoutDashboard,
   ShieldCheck,
+  UploadCloud,
 } from 'lucide-react';
 import { TabbedShell } from '@/components/dashboard/TabbedShell';
 
@@ -34,6 +35,7 @@ const AdminIdentityHub = () => (
       { key: 'users',       label: { ar: 'المستخدمون',         en: 'Users' },                icon: Users,           loader: () => import('./AdminUsers') },
       { key: 'roles',       label: { ar: 'الأدوار والصلاحيات', en: 'Roles & Permissions' }, icon: Shield,          loader: () => import('./AdminAccessManagement') },
       { key: 'invitations', label: { ar: 'الدعوات',            en: 'Invitations' },          icon: KeyRound,        loader: () => import('./AdminEntityAccessRequests') },
+      { key: 'bulk-invite', label: { ar: 'دعوات مجمّعة',       en: 'Bulk Invite' },          icon: UploadCloud,     loader: () => import('@/components/admin/centers/identity/IdentityBulkInviteLanding') },
       { key: 'activity',    label: { ar: 'النشاط',             en: 'Activity' },             icon: Activity,        loader: () => import('./AdminActivityLog') },
       { key: 'security',    label: { ar: 'الأمان',             en: 'Security' },             icon: Lock,            loader: () => import('./AdminSystemAccess') },
     ]}
