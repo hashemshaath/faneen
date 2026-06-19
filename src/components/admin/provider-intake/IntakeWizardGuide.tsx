@@ -156,6 +156,22 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
   const [uploadSummary, setUploadSummary] = React.useState<UploadedTemplateSummary | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const [reviewedIdx, setReviewedIdx] = React.useState<Set<number>>(new Set());
+  const [activeIdx, setActiveIdx] = React.useState<number | null>(null);
+
+  // Keep per-row badges in sync with the queue in sessionStorage so
+  // refreshes and the inline review banner stay aligned.
+  React.useEffect(() => {
+    const sync = () => {
+      const q = readIntakeQueue();
+      setReviewedIdx(new Set(q?.reviewed ?? []));
+      setActiveIdx(typeof q?.index === 'number' ? q.index : null);
+    };
+    sync();
+    if (typeof window === 'undefined') return;
+    window.addEventListener(INTAKE_QUEUE_CHANGE_EVENT, sync);
+    return () => window.removeEventListener(INTAKE_QUEUE_CHANGE_EVENT, sync);
+  }, []);
 
   const handleDownload = React.useCallback(
     async (id: TemplateId, href: string, filename: string) => {
