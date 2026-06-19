@@ -791,18 +791,62 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t pt-3">
-        <Button variant="outline" size="sm" onClick={onCancel} className="rounded-lg">
-          <X className="me-1 h-4 w-4" /> إلغاء
-        </Button>
-        <Button size="sm" onClick={submit} disabled={saving} className="rounded-lg">
-          {saving ? (
-            <Loader2 className="me-1 h-4 w-4 animate-spin" />
+      <div className="sticky bottom-0 -mx-3 -mb-3 flex flex-wrap items-center justify-between gap-2 rounded-b-xl border-t bg-background/95 px-3 py-2.5 backdrop-blur">
+        <div className="flex items-center gap-2 text-[11px]">
+          {isDirty ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 font-semibold text-warning">
+              <AlertCircle className="h-3 w-3" /> تغييرات غير محفوظة
+            </span>
           ) : (
-            <Save className="me-1 h-4 w-4" />
+            <span className="text-muted-foreground">لا توجد تغييرات</span>
           )}
-          حفظ التعديلات
-        </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          {confirmCancel ? (
+            <>
+              <span className="text-[11px] text-destructive">تأكيد إلغاء التغييرات؟</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmCancel(false)}
+                className="h-8 rounded-lg"
+              >
+                تراجع
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onCancel}
+                className="h-8 rounded-lg"
+              >
+                نعم، إلغاء
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={saving}
+              className="h-8 rounded-lg"
+            >
+              <X className="me-1 h-4 w-4" /> إلغاء
+            </Button>
+          )}
+          <Button
+            size="sm"
+            onClick={submit}
+            disabled={saving || !isDirty}
+            className="h-8 rounded-lg"
+          >
+            {saving ? (
+              <Loader2 className="me-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="me-1 h-4 w-4" />
+            )}
+            حفظ التعديلات
+          </Button>
+        </div>
       </div>
     </div>
   );
