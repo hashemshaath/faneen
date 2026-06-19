@@ -515,7 +515,7 @@ const AdminIdentity: React.FC = () => {
           >
             {([
               { key: 'overview',  ar: 'نظرة عامة',  en: 'Overview',  icon: LayoutDashboard },
-              { key: 'workspace', ar: 'سطح العمل', en: 'Workspace', icon: Inbox, badge: pendingTotal },
+              { key: 'workspace', ar: 'الموافقات والدليل', en: 'Approvals & directory', icon: Inbox, badge: pendingTotal },
               { key: 'audit',     ar: 'السجل',     en: 'Audit',     icon: FileText },
             ] as Array<{ key: TabKey; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
               const active = tab === t.key;
