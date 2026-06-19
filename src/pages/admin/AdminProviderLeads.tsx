@@ -44,10 +44,8 @@ import { ProviderLeadsKanban } from '@/components/admin/provider-leads/ProviderL
 import { ProviderLeadDetail } from '@/components/admin/provider-leads/ProviderLeadDetail';
 import { BulkActionBar } from '@/components/admin/provider-leads/BulkActionBar';
 import {
-  STATUS_ORDER,
   STATUS_LABEL,
   computeCompleteness,
-  computeLeadScore,
   distinctCities,
   downloadCsv,
   findDuplicateGroups,
