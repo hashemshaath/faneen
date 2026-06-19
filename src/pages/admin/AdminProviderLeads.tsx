@@ -43,9 +43,12 @@ import { ProviderLeadsTable } from '@/components/admin/provider-leads/ProviderLe
 import { ProviderLeadsKanban } from '@/components/admin/provider-leads/ProviderLeadsKanban';
 import { ProviderLeadDetail } from '@/components/admin/provider-leads/ProviderLeadDetail';
 import { BulkActionBar } from '@/components/admin/provider-leads/BulkActionBar';
+import { LeadMergeView } from '@/components/admin/provider-leads/LeadMergeView';
+import { exportLeadPdf } from '@/components/admin/provider-leads/exportLeadPdf';
 import {
   STATUS_LABEL,
   computeCompleteness,
+  computeSlaStatus,
   distinctCities,
   downloadCsv,
   findDuplicateGroups,
@@ -89,6 +92,8 @@ const AdminProviderLeads: React.FC = () => {
     (searchParams.get('view') as 'table' | 'kanban' | null) ?? 'table',
   );
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
+  const [onlyOverdue, setOnlyOverdue] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -145,6 +150,7 @@ const AdminProviderLeads: React.FC = () => {
       if (city !== 'all' && (r.city ?? '') !== city) return false;
       if (minCompleteness > 0 && computeCompleteness(r).pct < minCompleteness) return false;
       if (batchFilter && !(r.admin_notes ?? '').includes(batchFilter)) return false;
+      if (onlyOverdue && !computeSlaStatus(r).overdue) return false;
       if (q) {
         const hay = [
           r.name_ar,
@@ -188,6 +194,14 @@ const AdminProviderLeads: React.FC = () => {
     }
     return out;
   }, [rows, status, city, minCompleteness, search, sort, batchFilter]);
+  // re-eval when onlyOverdue toggles
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  void onlyOverdue;
+
+  const overdueCount = useMemo(
+    () => rows.filter((r) => computeSlaStatus(r).overdue).length,
+    [rows],
+  );
 
   const duplicates = useMemo(() => findDuplicateGroups(rows), [rows]);
 
@@ -262,6 +276,20 @@ const AdminProviderLeads: React.FC = () => {
   const enrich = (lead: ProviderLeadRow) => {
     const q = encodeURIComponent(lead.name_ar || lead.name_en || lead.reference_code);
     navigate(`/admin/data-enrichment?q=${q}&ref=${encodeURIComponent(lead.reference_code)}`);
+  };
+
+  const googleSearch = (lead: ProviderLeadRow) => {
+    const parts = [lead.name_ar, lead.name_en, lead.city, lead.cr_number].filter(Boolean).join(' ');
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(parts)}`, '_blank', 'noopener');
+  };
+
+  const exportPdf = async (lead: ProviderLeadRow) => {
+    try {
+      await exportLeadPdf(lead);
+      toast.success(t('تم تصدير PDF', 'PDF exported'));
+    } catch {
+      toast.error(t('تعذر التصدير', 'Export failed'));
+    }
   };
 
   const moveOne = async (id: string, target: ProviderLeadStatus) => {
@@ -508,7 +536,14 @@ const AdminProviderLeads: React.FC = () => {
 
           {/* Detail column */}
           <aside className="min-w-0">
-            {selectedLead ? (
+            {selectedLead && mergeOpen && selectedDupLeads.length > 0 ? (
+              <LeadMergeView
+                primary={selectedLead}
+                duplicates={selectedDupLeads}
+                onClose={() => setMergeOpen(false)}
+                onMerged={load}
+              />
+            ) : selectedLead ? (
               <ProviderLeadDetail
                 lead={selectedLead}
                 duplicateIds={selectedDupIds}
@@ -517,6 +552,9 @@ const AdminProviderLeads: React.FC = () => {
                 onSaved={load}
                 onEnrich={enrich}
                 onJumpTo={setOpenId}
+                onMerge={selectedDupLeads.length > 0 ? () => setMergeOpen(true) : undefined}
+                onGoogle={() => googleSearch(selectedLead)}
+                onExportPdf={() => exportPdf(selectedLead)}
               />
             ) : (
               <Card className="sticky top-2 rounded-2xl">
@@ -530,6 +568,22 @@ const AdminProviderLeads: React.FC = () => {
             )}
           </aside>
         </div>
+
+        {overdueCount > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-[12px]">
+            <span className="font-semibold text-destructive">
+              ⚠ {t(`${overdueCount} عميل متأخر عن SLA`, `${overdueCount} leads breach SLA`)}
+            </span>
+            <Button
+              size="sm"
+              variant={onlyOverdue ? 'default' : 'outline'}
+              onClick={() => setOnlyOverdue((v) => !v)}
+              className="h-7 rounded-lg text-[11px]"
+            >
+              {onlyOverdue ? t('عرض الكل', 'Show all') : t('عرض المتأخر فقط', 'Show overdue only')}
+            </Button>
+          </div>
+        )}
 
         <p className="mt-6 text-[11px] text-muted-foreground">
           <Bi
