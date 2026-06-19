@@ -434,8 +434,18 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                     </thead>
                     <tbody>
                       {uploadSummary.rows.map((row, idx) => (
-                        <tr key={idx} className="border-t">
-                          <td className="px-2 py-1 align-top tech-content text-muted-foreground">{idx + 1}</td>
+                        <tr
+                          key={idx}
+                          className={`border-t ${activeIdx === idx ? 'bg-primary/5' : reviewedIdx.has(idx) ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}
+                        >
+                          <td className="px-2 py-1 align-top tech-content text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              {idx + 1}
+                              {reviewedIdx.has(idx) && (
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" aria-label="reviewed" />
+                              )}
+                            </span>
+                          </td>
                           {uploadSummary.headers.slice(0, 5).map((h) => (
                             <td key={h} className="px-2 py-1 align-top tech-content">{row[h]}</td>
                           ))}
