@@ -76,14 +76,38 @@ function rowToPayload(r: Record<string, string>): { payload: LeadPayload | null;
   const nameEn = (r.company_name_en ?? r.branch_name_en ?? '').trim() || null;
   const contactName =
     (r.account_manager_name ?? r.contact_name ?? '').trim() || nameAr || nameEn || '';
-  const email = (r.account_manager_email ?? r.email ?? r.branch_email ?? '').trim().toLowerCase();
+  const emailRaw = (r.account_manager_email ?? r.email ?? r.branch_email ?? '').trim().toLowerCase();
   const phoneRaw = (r.account_manager_phone ?? r.phone ?? r.branch_phone ?? '').trim();
   const phoneDigits = phoneRaw.replace(/\D/g, '');
 
-  if (!nameAr || nameAr.length < 2) missing.push('name_ar');
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) missing.push('email');
-  if (phoneDigits.length < 7 || phoneDigits.length > 15) missing.push('phone');
-  if (missing.length) return { payload: null, missing };
+  // Leads are PROSPECTS — they don't get a reference ID/username and are
+  // not counted as providers until an admin completes the required data
+  // during approval. So at intake time we only require *some* identifier
+  // (Arabic name) and synthesize safe placeholders for missing contact
+  // fields so the RPC can accept the row. The `missing` list still flows
+  // through to the UI as a soft warning and into the brief for follow-up.
+  if (!nameAr || nameAr.length < 2) {
+    missing.push('name_ar');
+    return { payload: null, missing };
+  }
+
+  const emailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailRaw);
+  const phoneValid = phoneDigits.length >= 7 && phoneDigits.length <= 15;
+  if (!emailValid) missing.push('email');
+  if (!phoneValid) missing.push('phone');
+
+  const slug =
+    (nameEn ?? nameAr)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || `lead-${Date.now().toString(36)}`;
+  const email = emailValid ? emailRaw : `pending+${slug}-${Date.now().toString(36)}@leads.qitaat.local`;
+  const phone = phoneValid ? phoneRaw : '0000000000';
+
+  const noteParts: string[] = [];
+  if ((r.notes ?? '').trim()) noteParts.push(r.notes.trim());
+  if (missing.length) noteParts.push(`[intake] حقول ناقصة بانتظار الاعتماد: ${missing.join(', ')}`);
 
   return {
     payload: {
@@ -91,18 +115,18 @@ function rowToPayload(r: Record<string, string>): { payload: LeadPayload | null;
       name_en: nameEn,
       contact_name: (contactName || 'Admin Intake').slice(0, 200),
       email,
-      phone: phoneRaw.slice(0, 20),
+      phone: phone.slice(0, 20),
       preferred_channel: 'phone',
       website: (r.website ?? '').trim() || null,
       cr_number: (r.commercial_registration ?? r.cr_number ?? '').trim() || null,
       unified_number: (r.unified_number ?? '').trim() || null,
       main_activity: (r.services ?? r.sector ?? '').trim() || null,
-      brief: (r.notes ?? '').trim().slice(0, 2000) || null,
+      brief: noteParts.join('\n').slice(0, 2000) || null,
       city: (r.city ?? '').trim() || null,
       national_address: (r.national_short_address ?? r.street_address ?? '').trim() || null,
       map_link: (r.google_maps_url ?? '').trim() || null,
     },
-    missing: [],
+    missing,
   };
 }
 
