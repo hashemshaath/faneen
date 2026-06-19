@@ -8,7 +8,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, X, Plus, Trash2, Building2, MapPin, Copy, AlertCircle } from 'lucide-react';
+import {
+  Loader2,
+  Save,
+  X,
+  Plus,
+  Trash2,
+  Building2,
+  MapPin,
+  Copy,
+  AlertCircle,
+  GitCompareArrows,
+  RotateCcw,
+  CheckCircle2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { LocationPicker } from '@/components/dashboard/business-edit/LocationPicker';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -139,15 +152,33 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
+  const [confirmSave, setConfirmSave] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
+  const [draftAvailable, setDraftAvailable] = useState<{ f: FormState; branches: ProviderLeadBranchRow[]; ts: number } | null>(null);
   const errorSummaryRef = React.useRef<HTMLDivElement | null>(null);
+  const DRAFT_KEY = `qitaat_provider_lead_draft_${lead.id}`;
 
   useEffect(() => {
     listProviderLeadBranches(lead.id).then((r) => {
       const rows = (r.rows as ProviderLeadBranchRow[]) ?? [];
       setBranches(rows);
       setInitialBranchesSnapshot(JSON.stringify(rows));
+      // Restore draft if newer than lead.updated_at
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (raw) {
+          const d = JSON.parse(raw) as { f: FormState; branches: ProviderLeadBranchRow[]; ts: number };
+          const leadUpdated = new Date(lead.updated_at).getTime();
+          if (d.ts > leadUpdated) setDraftAvailable(d);
+        }
+      } catch {
+        /* ignore */
+      }
     });
-  }, [lead.id]);
+  }, [lead.id, lead.updated_at, DRAFT_KEY]);
 
   const isDirty = useMemo(
     () =>
