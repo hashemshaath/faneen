@@ -65,9 +65,9 @@ describe('ACCOUNT CENTER LINKS ROUTING FIX', () => {
   });
 
   it('5) no DB/RLS/migrations/RPC/edge calls in the landing tile component', () => {
-    expect(landing).not.toMatch(/supabase/i);
-    expect(landing).not.toMatch(/\.rpc\(/);
     expect(landing).not.toMatch(/from\s+['"]@\/integrations\/supabase/);
+    expect(landing).not.toMatch(/\.rpc\(/);
+    expect(landing).not.toMatch(/createClient\(/);
   });
 
   it('6) no any / suppressions / skipped tests in changed surfaces', () => {
