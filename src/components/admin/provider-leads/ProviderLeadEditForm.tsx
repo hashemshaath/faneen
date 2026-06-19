@@ -517,6 +517,48 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             className="tech-content"
           />
         </Field>
+        <div className="sm:col-span-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowMap((v) => !v)}
+            className="h-8 rounded-lg text-[11px]"
+          >
+            <MapPin className="me-1 h-3.5 w-3.5" />
+            {showMap ? 'إخفاء الخريطة' : 'تحديد عبر الخريطة وتعبئة العنوان تلقائيًا'}
+          </Button>
+          {showMap && (
+            <div className="mt-2">
+              <LocationPicker
+                isRTL={isRTL}
+                latitude={f.latitude ? Number(f.latitude) : null}
+                longitude={f.longitude ? Number(f.longitude) : null}
+                onChange={(lat, lng) => {
+                  setF((p) => ({
+                    ...p,
+                    latitude: String(lat),
+                    longitude: String(lng),
+                    map_link: `https://maps.google.com/?q=${lat},${lng}`,
+                  }));
+                }}
+                onAutofill={(d) => {
+                  setF((p) => ({
+                    ...p,
+                    region: isRTL ? d.region_ar ?? p.region : d.region_en ?? p.region,
+                    district: isRTL
+                      ? d.district_ar ?? p.district
+                      : d.district_en ?? p.district,
+                    full_address: isRTL
+                      ? d.address_ar ?? p.full_address
+                      : d.address_en ?? p.full_address,
+                  }));
+                  toast.success('تم تعبئة بيانات العنوان من الخريطة');
+                }}
+              />
+            </div>
+          )}
+        </div>
       </Section>
 
       <Section title="مدير الحساب">
