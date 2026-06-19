@@ -624,6 +624,14 @@ const ProviderJoin: React.FC = () => {
                       </div>
                     </Field>
                   </div>
+                  <div data-error-key="whatsapp">
+                    <Field label={t('رقم الواتساب', 'WhatsApp')} error={errors.whatsapp} hint={t('اتركه فارغاً إن كان نفس رقم الجوال.', 'Leave blank if same as phone.')}>
+                      <div className="relative">
+                        <MessageCircle className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
+                        <Input type="tel" dir="ltr" placeholder="05xxxxxxxx" value={form.whatsapp} onChange={(e) => setField('whatsapp', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.whatsapp)}`} aria-invalid={!!errors.whatsapp} />
+                      </div>
+                    </Field>
+                  </div>
                   <Field label={t('وسيلة التواصل المفضلة', 'Preferred channel')} hint={t('سنبدأ التواصل عبر هذه القناة.', 'We will reach out through this channel first.')}>
                     <select
                       value={form.preferred_channel}
@@ -635,6 +643,29 @@ const ProviderJoin: React.FC = () => {
                       <option value="email">{t('بريد إلكتروني', 'Email')}</option>
                     </select>
                   </Field>
+                </div>
+
+                {/* Account manager (optional) */}
+                <div className="pt-2 border-t">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                    <Briefcase className="w-3.5 h-3.5" />
+                    {t('مدير الحساب (اختياري)', 'Account manager (optional)')}
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-3 sm:gap-4">
+                    <Field label={t('الاسم', 'Name')}>
+                      <Input dir="auto" value={form.account_manager_name} onChange={(e) => setField('account_manager_name', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <div data-error-key="account_manager_phone">
+                      <Field label={t('الجوال', 'Phone')} error={errors.account_manager_phone}>
+                        <Input type="tel" dir="ltr" placeholder="05xxxxxxxx" value={form.account_manager_phone} onChange={(e) => setField('account_manager_phone', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.account_manager_phone)}`} aria-invalid={!!errors.account_manager_phone} />
+                      </Field>
+                    </div>
+                    <div data-error-key="account_manager_email">
+                      <Field label={t('البريد', 'Email')} error={errors.account_manager_email}>
+                        <Input type="email" dir="ltr" placeholder="name@example.com" value={form.account_manager_email} onChange={(e) => setField('account_manager_email', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.account_manager_email)}`} aria-invalid={!!errors.account_manager_email} />
+                      </Field>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
