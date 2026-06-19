@@ -8,6 +8,14 @@ export { listProviderLeads, listProviderLeadBranches } from './services/listProv
 export { updateProviderLeadStatus } from './services/updateProviderLeadStatus';
 export { updateProviderLeadFields } from './services/updateProviderLeadFields';
 export type { ProviderLeadEditableFields } from './services/updateProviderLeadFields';
+export {
+  upsertProviderLeadBranch,
+  deleteProviderLeadBranch,
+} from './services/manageProviderLeadBranches';
+export type {
+  ProviderLeadBranchRow,
+  ProviderLeadBranchPatch,
+} from './services/manageProviderLeadBranches';
 export { lookupProviderLead } from './services/lookupProviderLead';
 export type {
   ProviderLeadEditableData,
