@@ -428,10 +428,12 @@ export const IntakeBatchStepper: React.FC<{ className?: string }> = ({ className
                 {parsed.rows.map((r, idx) => {
                   const invalid = r.validation.length > 0;
                   const checked = selected.has(idx);
+                  const locked = r.status === 'created' || r.status === 'submitting';
                   return (
                     <tr
                       key={idx}
-                      className={`border-t ${
+                      onClick={() => { if (!locked) toggleRow(idx); }}
+                      className={`border-t ${locked ? '' : 'cursor-pointer hover:bg-muted/40'} ${
                         r.status === 'created'
                           ? 'bg-emerald-50/40 dark:bg-emerald-900/10'
                           : r.status === 'duplicate'
@@ -443,10 +445,10 @@ export const IntakeBatchStepper: React.FC<{ className?: string }> = ({ className
                                 : ''
                       }`}
                     >
-                      <td className="px-2 py-1.5 align-top">
+                      <td className="px-2 py-1.5 align-top" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={checked}
-                          disabled={r.status === 'created' || r.status === 'submitting'}
+                          disabled={locked}
                           onCheckedChange={() => toggleRow(idx)}
                           aria-label={`Select row ${idx + 1}`}
                         />
@@ -498,7 +500,7 @@ export const IntakeBatchStepper: React.FC<{ className?: string }> = ({ className
                           size="sm"
                           variant="ghost"
                           className="h-7 rounded-lg px-2 text-[10px]"
-                          onClick={() => auditRow(r.raw, idx)}
+                          onClick={(e) => { e.stopPropagation(); auditRow(r.raw, idx); }}
                           title="تدقيق عبر Google"
                         >
                           <Search className="me-1 h-3 w-3" aria-hidden />
