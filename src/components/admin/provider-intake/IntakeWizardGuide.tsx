@@ -14,6 +14,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Upload,
   ListChecks,
   Sparkles,
@@ -158,6 +165,11 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [reviewedIdx, setReviewedIdx] = React.useState<Set<number>>(new Set());
   const [activeIdx, setActiveIdx] = React.useState<number | null>(null);
+  const [columnMap, setColumnMap] = React.useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    setColumnMap({});
+  }, [uploadSummary?.fileName]);
 
   // Keep per-row badges in sync with the queue in sessionStorage so
   // refreshes and the inline review banner stay aligned.
@@ -312,6 +324,28 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
     triggerBlobDownload(blob, `${uploadSummary.fileName.replace(/\.[^.]+$/, '')}-parsed.json`);
   }, [uploadSummary]);
 
+  const handleApplyMapping = React.useCallback(() => {
+    if (!uploadSummary) return;
+    const pairs = Object.entries(columnMap).filter(([, src]) => src && src !== '__none__');
+    if (pairs.length === 0) {
+      toast('اختر عمودًا مصدرًا لعمود ناقص واحد على الأقل');
+      return;
+    }
+    const newRows = uploadSummary.rows.map((r) => {
+      const next = { ...r };
+      for (const [target, src] of pairs) {
+        if (!next[target] && r[src] != null) next[target] = r[src];
+      }
+      return next;
+    });
+    const newHeaders = Array.from(new Set([...uploadSummary.headers, ...pairs.map(([t]) => t)]));
+    const required = REQUIRED_TEMPLATE_COLUMNS[uploadSummary.kind === 'branches' ? 'branches' : 'providers'];
+    const missing = uploadSummary.kind === 'unknown' ? [] : required.filter((c) => !newHeaders.includes(c));
+    setUploadSummary({ ...uploadSummary, headers: newHeaders, rows: newRows, missingColumns: missing });
+    setColumnMap({});
+    toast.success(`تم تعيين ${pairs.length} عمود — الأعمدة الناقصة: ${missing.length}`);
+  }, [uploadSummary, columnMap]);
+
   const canContinue =
     !!uploadSummary &&
     uploadSummary.kind !== 'unknown' &&
@@ -417,6 +451,47 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                 <p className="mt-2 text-warning">
                   <Bi ar="أعمدة ناقصة" en="Missing columns" />: <span className="tech-content">{uploadSummary.missingColumns.join(', ')}</span>
                 </p>
+              )}
+              {uploadSummary.missingColumns.length > 0 && uploadSummary.headers.length > 0 && (
+                <div className="mt-3 rounded-lg border border-warning/40 bg-warning/5 p-3" data-testid="intake-column-mapper">
+                  <div className="mb-2 text-[11px] font-semibold">
+                    <Bi ar="تعيين الأعمدة الناقصة إلى أعمدة من ملفك" en="Map missing columns to headers from your file" />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {uploadSummary.missingColumns.slice(0, 8).map((target) => (
+                      <div key={target} className="flex items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate text-[11px] tech-content text-muted-foreground" title={target}>
+                          {target}
+                        </span>
+                        <Select
+                          value={columnMap[target] ?? '__none__'}
+                          onValueChange={(v) => setColumnMap((m) => ({ ...m, [target]: v }))}
+                        >
+                          <SelectTrigger className="h-8 w-44 text-[11px]">
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">—</SelectItem>
+                            {uploadSummary.headers.map((h) => (
+                              <SelectItem key={h} value={h} className="tech-content text-[11px]">{h}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex justify-end">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleApplyMapping}
+                      className="h-8 rounded-lg text-[11px]"
+                      data-testid="intake-column-mapper-apply"
+                    >
+                      <Bi ar="تطبيق التعيين" en="Apply mapping" />
+                    </Button>
+                  </div>
+                </div>
               )}
               {uploadSummary.rows.length > 0 && (
                 <div className="mt-3 max-h-80 overflow-auto rounded-lg border bg-background">
