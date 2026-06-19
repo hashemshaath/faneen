@@ -1,0 +1,394 @@
+/**
+ * Inline detail panel for a single provider lead — renders right of the
+ * list as a "drawer"-style column. No popups: closing the panel just
+ * clears the selected id in the parent.
+ */
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+  Loader2,
+  ExternalLink,
+  Mail,
+  Phone,
+  X,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  ShieldCheck,
+  Sparkles,
+  GitBranch,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  listProviderLeadBranches,
+  updateProviderLeadStatus,
+  type ProviderLeadRow,
+  type ProviderLeadStatus,
+} from '@/modules/providers';
+import { createProviderLeadDocumentSignedUrl } from '@/modules/files/domain/providerLeadDocuments';
+import { Bi } from '@/components/common/Bilingual';
+import { useLanguage } from '@/i18n/LanguageContext';
+import {
+  STATUS_LABEL,
+  STATUS_ORDER,
+  STATUS_TONE,
+  computeCompleteness,
+} from './providerLeadHelpers';
+import { CompletenessBar } from './CompletenessBar';
+
+interface Props {
+  lead: ProviderLeadRow;
+  duplicateIds: string[] | undefined;
+  duplicateLeads: ProviderLeadRow[];
+  onClose: () => void;
+  onSaved: () => void;
+  onEnrich: (lead: ProviderLeadRow) => void;
+  onJumpTo: (id: string) => void;
+}
+
+type BranchRow = { branch_name: string; city: string | null; phone: string | null };
+
+const MISSING_LABEL: Record<string, string> = {
+  name_ar: 'الاسم بالعربية',
+  name_en: 'الاسم بالإنجليزية',
+  contact_name: 'اسم المسؤول',
+  email: 'بريد حقيقي',
+  phone: 'جوال حقيقي',
+  city: 'المدينة',
+  main_activity: 'النشاط',
+  cr_number: 'السجل التجاري',
+  unified_number: 'الرقم الموحد',
+  vat_number: 'الرقم الضريبي',
+  website: 'الموقع الإلكتروني',
+  brief: 'نبذة',
+  map_link: 'رابط الخريطة',
+};
+
+export const ProviderLeadDetail: React.FC<Props> = ({
+  lead,
+  duplicateIds,
+  duplicateLeads,
+  onClose,
+  onSaved,
+  onEnrich,
+  onJumpTo,
+}) => {
+  const { isRTL } = useLanguage();
+  const t = (ar: string, en: string) => (isRTL ? ar : en);
+  const [status, setStatus] = useState<ProviderLeadStatus>(lead.status);
+  const [notes, setNotes] = useState(lead.admin_notes ?? '');
+  const [crUrl, setCrUrl] = useState<string | null>(null);
+  const [branches, setBranches] = useState<BranchRow[]>([]);
+  const [saving, setSaving] = useState(false);
+  const c = computeCompleteness(lead);
+
+  useEffect(() => {
+    setStatus(lead.status);
+    setNotes(lead.admin_notes ?? '');
+    setCrUrl(null);
+    listProviderLeadBranches(lead.id).then((r) => setBranches(r.rows as BranchRow[]));
+    if (lead.cr_file_path) {
+      createProviderLeadDocumentSignedUrl(lead.cr_file_path).then(({ data }) => {
+        setCrUrl(data?.signedUrl ?? null);
+      });
+    }
+  }, [lead.id, lead.status, lead.admin_notes, lead.cr_file_path]);
+
+  const save = async (overrideStatus?: ProviderLeadStatus) => {
+    const target = overrideStatus ?? status;
+    setSaving(true);
+    const res = await updateProviderLeadStatus({
+      leadId: lead.id,
+      status: target,
+      adminNotes: notes,
+    });
+    setSaving(false);
+    if (res.error) {
+      toast.error(t('تعذر الحفظ', 'Save failed'));
+      return;
+    }
+    toast.success(t('تم الحفظ', 'Saved'));
+    onSaved();
+  };
+
+  const quickActions: Array<{
+    id: ProviderLeadStatus;
+    icon: React.ComponentType<{ className?: string }>;
+    tone: string;
+    label: string;
+  }> = [
+    { id: 'under_review', icon: ShieldCheck, tone: 'border-warning/40 text-warning hover:bg-warning/10', label: 'قيد المراجعة' },
+    { id: 'needs_info', icon: AlertTriangle, tone: 'border-info/40 text-info hover:bg-info/10', label: 'يحتاج بيانات' },
+    { id: 'rejected', icon: XCircle, tone: 'border-destructive/40 text-destructive hover:bg-destructive/10', label: 'رفض' },
+    { id: 'approved', icon: CheckCircle2, tone: 'border-success/40 text-success hover:bg-success/10', label: 'اعتماد' },
+  ];
+
+  return (
+    <Card className="sticky top-2 rounded-2xl" data-testid="provider-lead-detail">
+      <CardContent className="space-y-5 p-5">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="truncate text-lg font-bold">{lead.name_ar}</h2>
+              <Badge variant="outline" className={`text-[10px] ${STATUS_TONE[lead.status]}`}>
+                {STATUS_LABEL[lead.status].ar}
+              </Badge>
+            </div>
+            {lead.name_en && <p className="text-xs text-muted-foreground">{lead.name_en}</p>}
+            <p className="tech-content mt-1 text-[11px] text-muted-foreground">
+              {lead.reference_code} · {new Date(lead.created_at).toLocaleString()}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 rounded-lg"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Completeness */}
+        <div className="rounded-xl border bg-muted/30 p-3">
+          <div className="mb-1.5 flex items-center justify-between text-xs">
+            <span className="font-semibold">
+              <Bi ar="اكتمال البيانات" en="Data completeness" />
+            </span>
+            <CompletenessBar pct={c.pct} filled={c.filled} total={c.total} />
+          </div>
+          {c.missing.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {c.missing.map((k) => (
+                <Badge
+                  key={k}
+                  variant="outline"
+                  className="border-warning/40 bg-warning/10 text-[10px] text-warning"
+                >
+                  {MISSING_LABEL[k] ?? k}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-success">
+              <Bi ar="جميع الحقول الأساسية مكتملة." en="All key fields are complete." />
+            </p>
+          )}
+        </div>
+
+        {/* Quick actions */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {quickActions.map((a) => {
+            const Icon = a.icon;
+            const active = status === a.id;
+            return (
+              <Button
+                key={a.id}
+                variant="outline"
+                size="sm"
+                onClick={() => save(a.id)}
+                disabled={saving}
+                className={`h-8 rounded-lg text-[11px] ${a.tone} ${active ? 'ring-1 ring-primary' : ''}`}
+              >
+                <Icon className="me-1 h-3.5 w-3.5" aria-hidden />
+                {a.label}
+              </Button>
+            );
+          })}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEnrich(lead)}
+            className="ms-auto h-8 rounded-lg border-primary/40 text-primary text-[11px] hover:bg-primary/10"
+          >
+            <Sparkles className="me-1 h-3.5 w-3.5" aria-hidden />
+            <Bi ar="إثراء من Google" en="Enrich from Google" />
+          </Button>
+        </div>
+
+        {/* Duplicates */}
+        {duplicateIds && duplicateIds.length > 0 && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-[11px]">
+            <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-amber-700">
+              <GitBranch className="h-3.5 w-3.5" aria-hidden />
+              <Bi ar="مرشّحون لتكرار محتمل" en="Possible duplicates" />
+              <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700">
+                {duplicateIds.length}
+              </Badge>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {duplicateLeads.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => onJumpTo(d.id)}
+                  className="rounded-md border bg-background px-2 py-0.5 text-[10px] hover:bg-muted"
+                >
+                  {d.name_ar || d.name_en} <span className="tech-content text-muted-foreground">· {d.reference_code}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Contact details */}
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
+          <Detail label={t('المسؤول', 'Contact')} value={lead.contact_name} />
+          <Detail
+            label={t('البريد', 'Email')}
+            value={
+              <a
+                className="inline-flex items-center gap-1 text-primary hover:underline tech-content"
+                href={`mailto:${lead.email}`}
+              >
+                <Mail className="h-3.5 w-3.5" /> {lead.email}
+              </a>
+            }
+          />
+          <Detail
+            label={t('الجوال', 'Phone')}
+            value={
+              <a
+                className="inline-flex items-center gap-1 text-primary hover:underline tech-content"
+                href={`tel:${lead.phone}`}
+              >
+                <Phone className="h-3.5 w-3.5" /> {lead.phone}
+              </a>
+            }
+          />
+          <Detail label={t('التواصل المفضل', 'Channel')} value={lead.preferred_channel} />
+          <Detail label={t('السجل التجاري', 'CR')} value={lead.cr_number ?? '—'} />
+          <Detail label={t('الرقم الموحد', 'Unified')} value={lead.unified_number ?? '—'} />
+          <Detail label={t('الرقم الضريبي', 'VAT')} value={lead.vat_number ?? '—'} />
+          <Detail label={t('المدينة', 'City')} value={lead.city ?? '—'} />
+          <Detail label={t('النشاط', 'Activity')} value={lead.main_activity ?? '—'} />
+          <Detail label={t('عدد الفروع', 'Branches')} value={String(lead.branches_count)} />
+        </div>
+
+        {lead.specialties.length > 0 && (
+          <Chips label={t('التخصصات', 'Specialties')} items={lead.specialties} variant="secondary" />
+        )}
+        {lead.brands.length > 0 && (
+          <Chips label={t('العلامات', 'Brands')} items={lead.brands} variant="outline" />
+        )}
+        {lead.brief && (
+          <div>
+            <Label className="text-xs">{t('نبذة', 'Description')}</Label>
+            <p className="mt-1 whitespace-pre-line text-sm">{lead.brief}</p>
+          </div>
+        )}
+
+        {(lead.website || lead.map_link || crUrl) && (
+          <div className="flex flex-wrap gap-2">
+            {lead.website && (
+              <LinkButton href={lead.website} label={t('الموقع', 'Website')} />
+            )}
+            {lead.map_link && (
+              <LinkButton href={lead.map_link} label={t('الخريطة', 'Map')} />
+            )}
+            {crUrl && (
+              <LinkButton href={crUrl} label={t('ملف السجل التجاري', 'CR file')} />
+            )}
+          </div>
+        )}
+
+        {branches.length > 0 && (
+          <div>
+            <Label className="text-xs">{t('الفروع', 'Branches')}</Label>
+            <div className="mt-2 space-y-1.5">
+              {branches.map((b, i) => (
+                <div key={i} className="rounded-xl border bg-muted/30 p-2.5 text-xs">
+                  <div className="font-semibold">{b.branch_name}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {[b.city, b.phone].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Save panel */}
+        <div className="space-y-3 border-t pt-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>{t('الحالة', 'Status')}</Label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as ProviderLeadStatus)}
+                className="mt-1 h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+              >
+                {STATUS_ORDER.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_LABEL[s].ar}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>{t('المنشأة المرتبطة', 'Linked business')}</Label>
+              <Input
+                value={lead.linked_business_id ?? ''}
+                readOnly
+                placeholder="—"
+                className="mt-1 h-10 rounded-xl tech-content"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>{t('ملاحظات الإدارة', 'Admin notes')}</Label>
+            <Textarea
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="mt-1 rounded-xl"
+            />
+          </div>
+          <Button onClick={() => save()} disabled={saving} className="hover-lift rounded-xl">
+            {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
+            {t('حفظ التغييرات', 'Save changes')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+  <div>
+    <div className="text-[11px] text-muted-foreground">{label}</div>
+    <div className="text-sm font-medium">{value}</div>
+  </div>
+);
+
+const Chips: React.FC<{ label: string; items: string[]; variant: 'secondary' | 'outline' }> = ({
+  label,
+  items,
+  variant,
+}) => (
+  <div>
+    <Label className="text-xs">{label}</Label>
+    <div className="mt-1 flex flex-wrap gap-1">
+      {items.map((s, i) => (
+        <Badge key={i} variant={variant} className="text-[10px]">
+          {s}
+        </Badge>
+      ))}
+    </div>
+  </div>
+);
+
+const LinkButton: React.FC<{ href: string; label: string }> = ({ href, label }) => (
+  <Button asChild size="sm" variant="outline" className="rounded-xl">
+    <a href={href} target="_blank" rel="noreferrer">
+      <ExternalLink className="me-1 h-3.5 w-3.5" />
+      {label}
+    </a>
+  </Button>
+);
