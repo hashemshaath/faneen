@@ -1,69 +1,78 @@
+# توحيد تدفق Provider Intake في `/admin/data-enrichment`
 
-# تصنيف المشاريع — توسعة شاملة
+## الهدف
 
-سننفذ خمسة محاور مترابطة، كلها فرونت-إند بدون أي تغييرات في قاعدة البيانات أو RLS. نعتمد على البنية الموجودة: `project_taxonomy_categories` + RPC `set_project_taxonomy_categories` + جدول `taxonomy_categories` (يُدار بالفعل من `/admin/taxonomy`).
+صفحة واحدة بـ Stepper من 4 خطوات، تنتهي بإنشاء `provider_leads` تلقائيًا وفتح `/admin/provider-leads?batch=…`.
 
----
+## الخطوات (Stepper داخل نفس الصفحة)
 
-## 1) تعيين تصنيفات للمشروع داخل شاشة الإنشاء/التعديل
+```
+1) رفع Excel  →  2) تعيين الأعمدة + معاينة الجدول  →  3) مراجعة + تدقيق صف-بصف  →  4) ملخّص + إرسال
+```
 
-- مكوّن جديد `ProjectCategoryPicker.tsx`:
-  - يجلب التصنيفات من `getProjectTaxonomyPickerCategories()`.
-  - حقل بحث فوري (يبحث بالاسم العربي/الإنجليزي + alias).
-  - عرض كقائمة شِبس قابلة للاختيار: تصنيف أساسي واحد + ثانويات متعددة.
-  - عداد لما هو مختار + زر إلغاء الكل.
-  - RTL-aware، يلتزم بسياسة "لا منبثقات" (Inline panel فقط).
-- ندمجه في فورم إنشاء/تعديل المشروع داخل `DashboardProjects.tsx` (محل أي حقل category مفرد قديم) ويحفظ عبر `setProjectTaxonomyCategories`.
+- **خطوة 1 (Upload):** يبقى `IntakeWizardGuide` كمكوّن رفع/تحليل فقط (يُجرَّد من الجدول الكبير).
+- **خطوة 2 (Map & Preview):** جدول الصفوف + Column Mapper (مستخرج من `IntakeWizardGuide` الحالي).
+- **خطوة 3 (Review):** يدمج الصف الحالي + قسم البحث/Google Places + dedupe — كل ذلك في عمود واحد بدلًا من Banner علوي + بطاقة بحث منفصلة.
+- **خطوة 4 (Submit):** بطاقة ملخّص (مراجَع/مكرّر/متخطّى) + زر "إرسال إلى Provider Leads" يستدعي RPC جديد ثم ينقل لـ `/admin/provider-leads?batch=<id>`.
 
-## 2) فرز داخل تبويبات التصنيفات + حفظ للمستخدم
+## التغييرات الملموسة
 
-- نوسّع `ProjectCategoryTabs` ليقبل `sortValue` و `onSortChange` اختياريين، ويعرض قائمة فرز مُدمجة بجانب التبويبات (Inline Select بسيط، بدون Dialog).
-- خيارات الفرز:
-  - `newest` — الأحدث
-  - `top_rated` — الأعلى تقييماً (متوسط `profile_reviews.rating` للمشروع)
-  - `most_completed` — الأكثر إنجازاً (status = completed أولاً ثم updated_at)
-- حفظ الاختيار لكل مستخدم في `localStorage` بمفتاح `qitaat_project_sort_<scope>` (scopes: `dashboard`, `profile`, `public`). نقدّم Hook `useProjectSortPref(scope)`.
-- يُطبَّق الفرز محلياً على المصفوفة الموجودة في الصفحات الثلاث (`DashboardProjects`, `BusinessProfileTabs`, `Projects`).
+### مكوّنات جديدة (صغيرة ومتخصّصة، بدون تكرار)
 
-## 3) اختبارات Playwright للموبايل والتابلت
+- `IntakeStepper.tsx` — مؤشر الخطوات + state machine بسيط (`'upload' | 'map' | 'review' | 'submit'`).
+- `IntakeStepUpload.tsx` — يستخدم `parseProviderIntakeFile` الموجود.
+- `IntakeStepMap.tsx` — يستخدم `columnMap` و`handleApplyMapping` المستخرجة من الويزرد.
+- `IntakeStepReview.tsx` — يدمج `IntakeRowPreviewBanner` + قسم البحث الحالي في `AdminDataEnrichment`.
+- `IntakeStepSubmit.tsx` — ملخّص + زر إرسال + رابط للقائمة.
 
-- ملف جديد `e2e/project-category-tabs-responsive.spec.ts`:
-  - viewports: 390×844 (موبايل) و 820×1180 (تابلت).
-  - الانتقال بين التبويبات وتطابق العدّاد مع عدد البطاقات الظاهرة.
-  - تمرير أفقي للتبويبات عند التجاوز (assert `scrollLeft` يتغيّر).
-  - فحص اتجاه RTL: `dir="rtl"` على الحاوية والشِبس لا تتجاوز الـ viewport.
-  - فحص عدم وجود أخطاء كونسول.
+### مكوّنات تُحذف/تُدمج
 
-## 4) SEO ديناميكي لصفحات التصنيفات
+- ❌ `IntakeRowPreviewBanner.tsx` — منطقه ينتقل إلى `IntakeStepReview`.
+- ❌ الجدول الضخم داخل `IntakeWizardGuide.tsx` — يتقلّص إلى زر/منطقة رفع فقط.
+- ❌ بطاقة "Google Places search" المستقلّة في `AdminDataEnrichment` — تصبح جزءًا من خطوة المراجعة.
 
-- في `src/pages/Projects.tsx`:
-  - عند تغيّر `selectedCategory`، نُحدِّث `usePageMeta` (العنوان/الوصف/canonical يتضمن اسم التصنيف + كاش-باستر آمن) ونُحدِّث `useMultiJsonLd` ليُصدر:
-    - `BreadcrumbList` (الرئيسية ← المشاريع ← اسم التصنيف).
-    - `CollectionPage` يلفّ `ItemList` للمشاريع المرئية حالياً (حتى 20).
-  - عند `__all__` نعود إلى ميتا الصفحة العامة.
+### تقليص `AdminDataEnrichment.tsx`
 
-## 5) صفحة إدارة تصنيفات المشاريع في لوحة التحكم
+من 1534 سطر → ~250 سطر:
+- يستضيف `<IntakeStepper />` فقط + `<GoogleStatusPanel />`.
+- كل المنطق التشغيلي (نتائج Google، حفظ التدقيق، dedupe) ينتقل إلى الخطوات.
 
-- مسار جديد `/dashboard/project-categories` (للمالك/المسؤول)، يُلفّ في `DashboardLayout`.
-- جدول إدارة (Inline forms حسب سياسة لا-منبثقات):
-  - إنشاء/تعديل (الاسم AR/EN، slug، sort_order).
-  - تفعيل/تعطيل الظهور (`is_active` + `show_in_search`).
-  - حذف (soft via `is_archived = true` إن متاح، وإلا حذف فعلي مع تأكيد inline).
-  - السحب لإعادة الترتيب أو حقول `sort_order` سريعة (نختار الحقول لتجنّب اعتماد إضافي على dnd-kit في هذا الجزء).
-- نقطة دخول من `DashboardSidebar` ضمن مجموعة "المشاريع".
+### إرسال إلى Provider Leads
 
-> ملاحظة: التصنيفات نفسها يُديرها admin مركزياً في `/admin/taxonomy`. هذه الصفحة تكميلية للمزوّد/المسؤول لإدارة الظهور/الترتيب الخاص بتصنيفات المشاريع فقط — ستستخدم نفس الـ RPC/جداول الحالية ولن تنشئ أي جدول جديد. لو الـ RLS الحالي لا يسمح للمزوّد بالكتابة، ستظهر الصفحة للمسؤول فقط (read-only للمزود) بدون أي تغيير في policies.
+- Edge Function جديدة `intake-finalize-batch`:
+  - تستقبل `{ rows, fileName, skipDuplicates: true }`.
+  - تنشئ صف لكل عنصر في `provider_leads` (status=`new`, source=`bulk_intake`).
+  - تتجاوز التكرار عبر `unified_number`.
+  - تُرجع `{ batchId, created, skipped }`.
+- بعد النجاح: `navigate('/admin/provider-leads?batch=<id>')`.
+- صفحة `AdminProviderLeads` تُضيف فلتر `?batch=<id>` لعرض الدفعة فقط.
 
----
+### حفظ التقدّم
 
-## التحقق
+يبقى `intakeQueue.ts` كما هو (localStorage) لكن يضاف:
+- `step: 'upload'|'map'|'review'|'submit'`
+- `batchId?: string` بعد الإرسال
 
-- `tsc --noEmit` بدون أخطاء.
-- اختبار Playwright يمر محلياً على الفيوبورتين.
-- مراجعة JSON-LD يدوياً عبر devtools (block واحد لكل filter).
+### الاختبارات
 
-## ما لن نلمسه
+- تحديث `providerIntakeCenterArchitecture.test.ts` لقبول البنية الجديدة (Stepper بدلًا من Banner+Guide منفصلين).
+- إبقاء `providerIntakeTemplateDownload.test.tsx` كما هي.
+- إضافة `intakeStepperFlow.test.tsx` يتحقّق من تنقّل الخطوات.
 
-- لا تعديلات على DB، RLS، أو migrations.
-- لا تغيير على `projects.category_id` (يبقى legacy).
-- لا منبثقات/Dialogs — كل الواجهات inline.
+## ما لن يتغيّر
+
+- `AdminProviderGrowthQueue` (لا تستخدم الويزرد، فقط import نوعي).
+- `parseProviderIntakeFile` ومنطق Excel.
+- `GoogleStatusPanel` و gateway.
+- جدول `provider_leads` ذاته (لا migrations).
+
+## المخاطر
+
+- **حجم التغيير:** ~2500 سطر يُعاد توزيعها. سأنفّذ على مرحلتين:
+  1. **Phase A:** استخراج الخطوات + Stepper + حذف الـ Banner، بدون تغيير في الإرسال.
+  2. **Phase B:** إضافة edge function والـ submit step والـ batch filter.
+- **الاختبارات الحالية:** ستحتاج تحديثًا (3 ملفات) — سأحدّثها بالتوازي.
+
+## التأكيد المطلوب
+
+هل أبدأ بـ **Phase A** الآن (إعادة هيكلة UI فقط، بدون edge function/إرسال)، ثم أتبعها بـ Phase B في رسالة منفصلة؟ أم تفضّل تنفيذ المرحلتين معًا في نفس الجولة (أكبر وأبطأ، لكن نتيجة نهائية)؟
