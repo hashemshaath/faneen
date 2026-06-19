@@ -1046,6 +1046,34 @@ const ProviderJoin: React.FC = () => {
                             </Field>
                             </div>
                           </div>
+                          {/* Per-branch map picker */}
+                          {(errors[`branch_${i}_lat`] || errors[`branch_${i}_lng`]) && (
+                            <p className="text-xs text-destructive" data-error-key={`branch_${i}_lat`}>
+                              {errors[`branch_${i}_lat`] || errors[`branch_${i}_lng`]}
+                            </p>
+                          )}
+                          <details className="group rounded-xl border bg-card overflow-hidden">
+                            <summary className="cursor-pointer list-none flex items-center justify-between gap-3 p-3 hover:bg-muted/30">
+                              <span className="inline-flex items-center gap-2 text-sm font-medium">
+                                <MapPin className="w-4 h-4 text-primary" />
+                                {t('تحديد موقع الفرع على الخريطة', 'Pick branch location on map')}
+                              </span>
+                              <span className="text-xs text-muted-foreground tech-content">
+                                {b.latitude != null && b.longitude != null
+                                  ? `${Number(b.latitude).toFixed(4)}, ${Number(b.longitude).toFixed(4)}`
+                                  : t('غير محدد', 'Not set')}
+                              </span>
+                            </summary>
+                            <div className="border-t p-3 bg-muted/10">
+                              <LocationPicker
+                                isRTL={isRTL}
+                                latitude={b.latitude ?? null}
+                                longitude={b.longitude ?? null}
+                                onChange={onBranchCoords(i)}
+                                onAutofill={onBranchAutofill(i)}
+                              />
+                            </div>
+                          </details>
                         </div>
                       </details>
                     ))}
