@@ -212,6 +212,32 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
             <Bi ar="تمت المراجعة" en="Reviewed" />
           </Badge>
         )}
+        {dedupeQuery.isFetching ? (
+          <Badge variant="outline" className="text-[10px] text-muted-foreground">
+            <Loader2 className="me-1 h-3 w-3 animate-spin" aria-hidden />
+            <Bi ar="فحص التكرار…" en="Dedupe check…" />
+          </Badge>
+        ) : strongHit ? (
+          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 text-[10px]" title={`leads:${leadHits.length} biz:${bizHits.length}`}>
+            <AlertTriangle className="me-1 h-3 w-3" aria-hidden />
+            <Bi ar="مكرر قوي" en="Strong duplicate" />
+          </Badge>
+        ) : possibleHit ? (
+          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 text-[10px]" title={`leads:${leadHits.length} biz:${bizHits.length}`}>
+            <AlertTriangle className="me-1 h-3 w-3" aria-hidden />
+            <Bi
+              ar={`مشابه محتمل (${leadHits.length + bizHits.length})`}
+              en={`Possible match (${leadHits.length + bizHits.length})`}
+            />
+          </Badge>
+        ) : (
+          dedupeQuery.isSuccess && (
+            <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-[10px]">
+              <ShieldCheck className="me-1 h-3 w-3" aria-hidden />
+              <Bi ar="جديد" en="New" />
+            </Badge>
+          )
+        )}
         <span className="ms-auto truncate text-[11px] text-muted-foreground tech-content">
           {queue.fileName}
         </span>
@@ -293,6 +319,17 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
         >
           <RefreshCw className="me-1 h-3.5 w-3.5" aria-hidden />
           <Bi ar="إعادة من الأول" en="Restart" />
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={exportProgress}
+          className="h-8 rounded-lg text-[11px]"
+          data-testid="intake-row-export-progress"
+        >
+          <Download className="me-1 h-3.5 w-3.5" aria-hidden />
+          <Bi ar="تصدير التقدم CSV" en="Export progress CSV" />
         </Button>
       </div>
     </Card>
