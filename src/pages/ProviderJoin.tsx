@@ -843,13 +843,38 @@ const ProviderJoin: React.FC = () => {
                         </div>
                       </Field>
                     </div>
-                    <Field label={t('خط العرض (Latitude)', 'Latitude')}>
-                      <Input dir="ltr" inputMode="decimal" placeholder="24.7136" value={form.latitude} onChange={(e) => setField('latitude', e.target.value)} className="h-12 rounded-xl tech-content" />
-                    </Field>
-                    <Field label={t('خط الطول (Longitude)', 'Longitude')}>
-                      <Input dir="ltr" inputMode="decimal" placeholder="46.6753" value={form.longitude} onChange={(e) => setField('longitude', e.target.value)} className="h-12 rounded-xl tech-content" />
-                    </Field>
+                    <div data-error-key="latitude">
+                      <Field label={t('خط العرض (Latitude)', 'Latitude')} error={errors.latitude}>
+                        <Input dir="ltr" inputMode="decimal" placeholder="24.7136" value={form.latitude} onChange={(e) => setField('latitude', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.latitude)}`} aria-invalid={!!errors.latitude} />
+                      </Field>
+                    </div>
+                    <div data-error-key="longitude">
+                      <Field label={t('خط الطول (Longitude)', 'Longitude')} error={errors.longitude}>
+                        <Input dir="ltr" inputMode="decimal" placeholder="46.6753" value={form.longitude} onChange={(e) => setField('longitude', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.longitude)}`} aria-invalid={!!errors.longitude} />
+                      </Field>
+                    </div>
                   </div>
+                  {/* Inline map picker — collapsible to keep the form light */}
+                  <details className="group rounded-xl border bg-card overflow-hidden">
+                    <summary className="cursor-pointer list-none flex items-center justify-between gap-3 p-3 hover:bg-muted/30">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium">
+                        <MapPin className="w-4 h-4 text-primary" />
+                        {t('تحديد الموقع على الخريطة', 'Pick location on map')}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('انقر أو اسحب الدبوس لتحديث الإحداثيات تلقائياً.', 'Click or drag the pin to auto-fill coordinates.')}
+                      </span>
+                    </summary>
+                    <div className="border-t p-3 bg-muted/10">
+                      <LocationPicker
+                        isRTL={isRTL}
+                        latitude={form.latitude ? Number(form.latitude) : null}
+                        longitude={form.longitude ? Number(form.longitude) : null}
+                        onChange={onHeadCoords}
+                        onAutofill={onHeadAutofill}
+                      />
+                    </div>
+                  </details>
                 </div>
 
                 {/* Specialties — linked to existing catalog */}
