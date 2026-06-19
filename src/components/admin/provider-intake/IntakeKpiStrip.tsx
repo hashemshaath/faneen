@@ -32,6 +32,8 @@ export interface IntakeKpiItem {
   value: number | string;
   tone?: IntakeKpiTone;
   hint?: string;
+  /** Optional mini trend series rendered as a sparkline. */
+  spark?: number[];
 }
 
 export interface IntakeKpiStripProps {
@@ -65,8 +67,13 @@ export const IntakeKpiStrip: React.FC<IntakeKpiStripProps> = ({
           <div className="text-[11px] font-medium opacity-80 leading-tight">
             {item.label}
           </div>
-          <div className="mt-1 text-lg font-bold tech-content leading-none">
-            {item.value}
+          <div className="mt-1 flex items-end justify-between gap-2">
+            <div className="text-lg font-bold tech-content leading-none">
+              {item.value}
+            </div>
+            {item.spark && item.spark.length > 0 && (
+              <Sparkline series={item.spark} />
+            )}
           </div>
           {item.hint && (
             <div className="mt-1 text-[10px] opacity-70">{item.hint}</div>
@@ -78,3 +85,18 @@ export const IntakeKpiStrip: React.FC<IntakeKpiStripProps> = ({
 };
 
 export default IntakeKpiStrip;
+
+const Sparkline: React.FC<{ series: number[] }> = ({ series }) => {
+  const w = 56;
+  const h = 18;
+  const max = Math.max(1, ...series);
+  const step = series.length > 1 ? w / (series.length - 1) : w;
+  const pts = series
+    .map((v, i) => `${(i * step).toFixed(1)},${(h - (v / max) * (h - 2) - 1).toFixed(1)}`)
+    .join(' L');
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden className="opacity-80">
+      <path d={`M${pts}`} stroke="currentColor" strokeWidth={1.3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
