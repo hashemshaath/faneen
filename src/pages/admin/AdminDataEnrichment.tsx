@@ -181,6 +181,23 @@ export default function AdminDataEnrichment() {
   } | null>(null);
   const qc = useQueryClient();
 
+  // Inline bulk-intake bridge: when the Provider Intake wizard above
+  // dispatches a row, prefill the search input and trigger the existing
+  // enrichment flow so the operator never leaves the page.
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ name?: string; query?: string }>).detail;
+      const q = (detail?.query ?? detail?.name ?? "").trim();
+      if (!q) return;
+      setStep("search");
+      setSearchQuery(q);
+      const target = document.querySelector<HTMLElement>("[data-intake-workspace]");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    window.addEventListener("qitaat:intake:audit-row", handler as EventListener);
+    return () => window.removeEventListener("qitaat:intake:audit-row", handler as EventListener);
+  }, []);
+
   const buildExtra = (): EnrichmentExtra => ({
     category_slug: categorySlug || null,
     services_ar: servicesAr || null,
