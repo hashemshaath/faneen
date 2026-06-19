@@ -69,6 +69,70 @@ export function gatewayUrl(path: string): string {
   return `${DEFAULT_HOST}${p}`;
 }
 
+/**
+ * Inspect a Google upstream error body and decide whether the 401/403
+ * is caused by an HTTP-Referrer restriction on the server key.
+ * Returns a stable machine code so the UI can render a precise hint.
+ */
+export function detectGoogleAuthIssue(status: number, bodyText: string): {
+  code: "referrer_restricted" | "api_not_enabled" | "ip_blocked" | "key_invalid" | "unauthorized" | null;
+  reason: string | null;
+} {
+  if (status !== 401 && status !== 403) return { code: null, reason: null };
+  const body = (bodyText || "").toLowerCase();
+  let reason: string | null = null;
+  try {
+    const j = JSON.parse(bodyText) as { error?: { message?: string; status?: string; details?: Array<{ reason?: string }> } };
+    reason = j.error?.details?.find((d) => d.reason)?.reason
+      ?? j.error?.status
+      ?? (j.error?.message ? j.error.message.slice(0, 140) : null);
+  } catch { /* fall through */ }
+  if (/referer|referrer|http_referrer|request is from a referer/.test(body)) {
+    return { code: "referrer_restricted", reason };
+  }
+  if (/api_key_service_blocked|api[\s_-]?not[\s_-]?enabled|service[\s_-]?disabled/.test(body)) {
+    return { code: "api_not_enabled", reason };
+  }
+  if (/ip[\s_-]?address|ip_address_blocked/.test(body)) {
+    return { code: "ip_blocked", reason };
+  }
+  if (/api[\s_-]?key.*(invalid|expired|not[\s_-]?found)|invalid[\s_-]?key/.test(body)) {
+    return { code: "key_invalid", reason };
+  }
+  return { code: "unauthorized", reason };
+}
+
+/**
+ * Sanitized server-side log for 401/403 from Google.
+ * NEVER includes the API key; truncates the body snippet.
+ */
+export function logGoogleAuthFailure(api: GoogleApi, status: number, bodyText: string): {
+  code: ReturnType<typeof detectGoogleAuthIssue>["code"];
+  reason: string | null;
+} {
+  const { code, reason } = detectGoogleAuthIssue(status, bodyText);
+  const snippet = (bodyText || "").replace(/AIza[0-9A-Za-z_\-]{20,}/g, "[REDACTED_KEY]").slice(0, 240);
+  console.warn(JSON.stringify({
+    scope: "google_gateway",
+    event: "auth_failure",
+    api,
+    status,
+    code: code ?? "unknown",
+    reason: reason ?? null,
+    bodySnippet: snippet,
+    hint: code === "referrer_restricted"
+      ? "Remove HTTP referrer restrictions from GOOGLE_MAPS_API_KEY (server key)."
+      : code === "api_not_enabled"
+      ? "Enable Places API New / Geocoding / Routes / Address Validation on the key's GCP project."
+      : code === "ip_blocked"
+      ? "Remove IP restrictions or allowlist Supabase Edge runtime egress."
+      : code === "key_invalid"
+      ? "Rotate GOOGLE_MAPS_API_KEY in Lovable Cloud secrets."
+      : "Check GCP credentials and API restrictions.",
+  }));
+  return { code, reason };
+}
+
 /** Map an upstream HTTP status into a safe public error code. */
 export function mapUpstreamError(
   status: number,

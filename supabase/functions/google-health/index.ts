@@ -7,10 +7,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   getGoogleSecrets, googleHeaders, gatewayUrl,
   googleCorsHeaders, jsonResponse, requireAdmin,
+  logGoogleAuthFailure, detectGoogleAuthIssue,
 } from "../_shared/google/gateway.ts";
 
 type ApiKey = "places" | "geocoding" | "routes" | "address_validation";
-interface ProbeResult { ok: boolean; latencyMs: number; status: number; errorCode: string | null }
+interface ProbeResult {
+  ok: boolean;
+  latencyMs: number;
+  status: number;
+  errorCode: string | null;
+  authIssue?: "referrer_restricted" | "api_not_enabled" | "ip_blocked" | "key_invalid" | "unauthorized" | null;
+  reason?: string | null;
+}
 type ProbeValidator = (bodyText: string) => string | null;
 
 function extractGoogleReason(text: string): string | null {
@@ -22,14 +30,21 @@ function extractGoogleReason(text: string): string | null {
   return text.slice(0, 60).replace(/[^a-zA-Z0-9_\- ]/g, "") || "http_error";
 }
 
-async function probe(url: string, init: RequestInit, validate?: ProbeValidator): Promise<ProbeResult> {
+async function probe(api: ApiKey, url: string, init: RequestInit, validate?: ProbeValidator): Promise<ProbeResult> {
   const t = Date.now();
   try {
     const res = await fetch(url, init);
     const latency = Date.now() - t;
     const txt = await res.text().catch(() => "");
     if (!res.ok) {
-      return { ok: false, latencyMs: latency, status: res.status, errorCode: extractGoogleReason(txt) };
+      const auth = (res.status === 401 || res.status === 403)
+        ? logGoogleAuthFailure(api, res.status, txt)
+        : detectGoogleAuthIssue(res.status, txt);
+      return {
+        ok: false, latencyMs: latency, status: res.status,
+        errorCode: extractGoogleReason(txt),
+        authIssue: auth.code, reason: auth.reason,
+      };
     }
     const validationError = validate?.(txt) ?? null;
     if (validationError) return { ok: false, latencyMs: latency, status: res.status, errorCode: validationError };
@@ -63,7 +78,7 @@ Deno.serve(async (req: Request) => {
   if (!gate.ok) return gate.res;
 
   const { lovableKey, googleKey, missing } = getGoogleSecrets();
-  if (!lovableKey || !googleKey) {
+  if (!googleKey) {
     return jsonResponse({
       deferred: true, missing,
       apis: { places: null, geocoding: null, routes: null, address_validation: null },
@@ -75,15 +90,15 @@ Deno.serve(async (req: Request) => {
   const fm = "places.id";
   const headers = googleHeaders(lovableKey, googleKey, { "X-Goog-FieldMask": fm });
   const [places, geocoding, routes, addressValidation] = await Promise.all([
-    probe(gatewayUrl("/places/v1/places:searchText"), {
+    probe("places", gatewayUrl("/places/v1/places:searchText"), {
       method: "POST", headers,
       body: JSON.stringify({ textQuery: "Riyadh", maxResultCount: 1 }),
     }),
-    probe(gatewayUrl("/maps/api/geocode/json?address=Riyadh"), {
+    probe("geocoding", gatewayUrl("/maps/api/geocode/json?address=Riyadh"), {
       method: "GET",
       headers: googleHeaders(lovableKey, googleKey),
     }, validateLegacyGoogleStatus),
-    probe(gatewayUrl("/routes/distanceMatrix/v2:computeRouteMatrix"), {
+    probe("routes", gatewayUrl("/routes/distanceMatrix/v2:computeRouteMatrix"), {
       method: "POST",
       headers: googleHeaders(lovableKey, googleKey, { "X-Goog-FieldMask": "originIndex,destinationIndex,status" }),
       body: JSON.stringify({
@@ -92,7 +107,7 @@ Deno.serve(async (req: Request) => {
         travelMode: "DRIVE",
       }),
     }, validateGoogleErrorEnvelope),
-    probe(gatewayUrl("/addressvalidation/v1:validateAddress"), {
+    probe("address_validation", gatewayUrl("/addressvalidation/v1:validateAddress"), {
       method: "POST",
       headers: googleHeaders(lovableKey, googleKey),
       body: JSON.stringify({ address: { regionCode: "SA", addressLines: ["King Fahd Rd"] } }),
