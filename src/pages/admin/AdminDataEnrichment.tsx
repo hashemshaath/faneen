@@ -588,6 +588,8 @@ export default function AdminDataEnrichment() {
 
       <GoogleStatusPanel />
 
+      <IntakeBatchStepper />
+
       <IntakeWizardGuide />
 
       <PilotContactTemplateCard className="mb-5" testId="enrichment-pilot-contact-template" />
