@@ -523,7 +523,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             className="tech-content"
           />
         </Field>
-        <Field label="الرمز البريدي">
+        <Field label="الرمز البريدي" name="postal_code" error={errors.postal_code}>
           <Input
             value={f.postal_code}
             onChange={(e) => set('postal_code', e.target.value)}
@@ -531,7 +531,11 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             maxLength={5}
           />
         </Field>
-        <Field label="العنوان الوطني المختصر">
+        <Field
+          label="العنوان الوطني المختصر"
+          name="short_national_address"
+          error={errors.short_national_address}
+        >
           <Input
             value={f.short_national_address}
             onChange={(e) => set('short_national_address', e.target.value.toUpperCase())}
@@ -553,7 +557,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             onChange={(e) => set('full_address', e.target.value)}
           />
         </Field>
-        <Field label="خط العرض">
+        <Field label="خط العرض" name="latitude" error={errors.latitude}>
           <Input
             value={f.latitude}
             onChange={(e) => set('latitude', e.target.value)}
@@ -561,7 +565,7 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             inputMode="decimal"
           />
         </Field>
-        <Field label="خط الطول">
+        <Field label="خط الطول" name="longitude" error={errors.longitude}>
           <Input
             value={f.longitude}
             onChange={(e) => set('longitude', e.target.value)}
