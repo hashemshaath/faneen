@@ -3,13 +3,15 @@
  * the detail panel (no popups). Uses `updateProviderLeadFields` against
  * the admin-RLS-protected table.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, X, Plus, Trash2, Building2 } from 'lucide-react';
+import { Loader2, Save, X, Plus, Trash2, Building2, MapPin, Copy, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { LocationPicker } from '@/components/dashboard/business-edit/LocationPicker';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   updateProviderLeadFields,
   listProviderLeadBranches,
@@ -128,15 +130,70 @@ const toNullableNumber = (v: string): number | null => {
 };
 
 export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved }) => {
+  const { isRTL } = useLanguage();
   const [f, setF] = useState<FormState>(() => toForm(lead));
+  const [initialSnapshot] = useState<string>(() => JSON.stringify(toForm(lead)));
   const [saving, setSaving] = useState(false);
   const [branches, setBranches] = useState<ProviderLeadBranchRow[]>([]);
+  const [initialBranchesSnapshot, setInitialBranchesSnapshot] = useState<string>('[]');
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
-    listProviderLeadBranches(lead.id).then((r) =>
-      setBranches((r.rows as ProviderLeadBranchRow[]) ?? []),
-    );
+    listProviderLeadBranches(lead.id).then((r) => {
+      const rows = (r.rows as ProviderLeadBranchRow[]) ?? [];
+      setBranches(rows);
+      setInitialBranchesSnapshot(JSON.stringify(rows));
+    });
   }, [lead.id]);
+
+  const isDirty = useMemo(
+    () =>
+      JSON.stringify(f) !== initialSnapshot ||
+      JSON.stringify(branches) !== initialBranchesSnapshot,
+    [f, branches, initialSnapshot, initialBranchesSnapshot],
+  );
+
+  // Browser-level guard against accidental tab close while editing.
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
+
+  const handleCancel = () => {
+    if (isDirty && !confirmCancel) {
+      setConfirmCancel(true);
+      return;
+    }
+    onCancel();
+  };
+
+  const copyHeadToBranch = (idx: number) => {
+    setBranch(idx, {
+      region: f.region || null,
+      city: f.city || null,
+      district: f.district || null,
+      street_name: f.street_name || null,
+      building_number: f.building_number || null,
+      postal_code: f.postal_code || null,
+      short_national_address: f.short_national_address || null,
+      national_address: f.national_address || null,
+      address: f.full_address || null,
+      map_link: f.map_link || null,
+      phone: f.phone || null,
+      whatsapp: f.whatsapp || null,
+      email: f.email || null,
+      website: f.website || null,
+      latitude: f.latitude ? Number(f.latitude) : null,
+      longitude: f.longitude ? Number(f.longitude) : null,
+    });
+    toast.success('تم النسخ من المقر الرئيسي');
+  };
 
   const setBranch = (idx: number, patch: Partial<ProviderLeadBranchRow>) =>
     setBranches((prev) => prev.map((b, i) => (i === idx ? { ...b, ...patch } : b)));
@@ -460,6 +517,48 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             className="tech-content"
           />
         </Field>
+        <div className="sm:col-span-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowMap((v) => !v)}
+            className="h-8 rounded-lg text-[11px]"
+          >
+            <MapPin className="me-1 h-3.5 w-3.5" />
+            {showMap ? 'إخفاء الخريطة' : 'تحديد عبر الخريطة وتعبئة العنوان تلقائيًا'}
+          </Button>
+          {showMap && (
+            <div className="mt-2">
+              <LocationPicker
+                isRTL={isRTL}
+                latitude={f.latitude ? Number(f.latitude) : null}
+                longitude={f.longitude ? Number(f.longitude) : null}
+                onChange={(lat, lng) => {
+                  setF((p) => ({
+                    ...p,
+                    latitude: String(lat),
+                    longitude: String(lng),
+                    map_link: `https://maps.google.com/?q=${lat},${lng}`,
+                  }));
+                }}
+                onAutofill={(d) => {
+                  setF((p) => ({
+                    ...p,
+                    region: isRTL ? d.region_ar ?? p.region : d.region_en ?? p.region,
+                    district: isRTL
+                      ? d.district_ar ?? p.district
+                      : d.district_en ?? p.district,
+                    full_address: isRTL
+                      ? d.address_ar ?? p.full_address
+                      : d.address_en ?? p.full_address,
+                  }));
+                  toast.success('تم تعبئة بيانات العنوان من الخريطة');
+                }}
+              />
+            </div>
+          )}
+        </div>
       </Section>
 
       <Section title="مدير الحساب">
@@ -536,16 +635,28 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
                   <span className="text-[11px] font-semibold">
                     {b.is_main ? 'الفرع الرئيسي' : `فرع #${idx + 1}`}
                   </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeBranch(idx)}
-                    className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
-                    title="حذف"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyHeadToBranch(idx)}
+                      className="h-7 rounded-lg text-[10px]"
+                      title="نسخ بيانات المقر الرئيسي"
+                    >
+                      <Copy className="me-1 h-3 w-3" /> نسخ من المقر
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeBranch(idx)}
+                      className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                      title="حذف"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="اسم الفرع *">
@@ -680,18 +791,62 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t pt-3">
-        <Button variant="outline" size="sm" onClick={onCancel} className="rounded-lg">
-          <X className="me-1 h-4 w-4" /> إلغاء
-        </Button>
-        <Button size="sm" onClick={submit} disabled={saving} className="rounded-lg">
-          {saving ? (
-            <Loader2 className="me-1 h-4 w-4 animate-spin" />
+      <div className="sticky bottom-0 -mx-3 -mb-3 flex flex-wrap items-center justify-between gap-2 rounded-b-xl border-t bg-background/95 px-3 py-2.5 backdrop-blur">
+        <div className="flex items-center gap-2 text-[11px]">
+          {isDirty ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 font-semibold text-warning">
+              <AlertCircle className="h-3 w-3" /> تغييرات غير محفوظة
+            </span>
           ) : (
-            <Save className="me-1 h-4 w-4" />
+            <span className="text-muted-foreground">لا توجد تغييرات</span>
           )}
-          حفظ التعديلات
-        </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          {confirmCancel ? (
+            <>
+              <span className="text-[11px] text-destructive">تأكيد إلغاء التغييرات؟</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmCancel(false)}
+                className="h-8 rounded-lg"
+              >
+                تراجع
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onCancel}
+                className="h-8 rounded-lg"
+              >
+                نعم، إلغاء
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={saving}
+              className="h-8 rounded-lg"
+            >
+              <X className="me-1 h-4 w-4" /> إلغاء
+            </Button>
+          )}
+          <Button
+            size="sm"
+            onClick={submit}
+            disabled={saving || !isDirty}
+            className="h-8 rounded-lg"
+          >
+            {saving ? (
+              <Loader2 className="me-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="me-1 h-4 w-4" />
+            )}
+            حفظ التعديلات
+          </Button>
+        </div>
       </div>
     </div>
   );
