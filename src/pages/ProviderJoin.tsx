@@ -678,9 +678,6 @@ const ProviderJoin: React.FC = () => {
                   <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
                     <Input dir="auto" value={form.main_activity} onChange={(e) => setField('main_activity', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: ألمنيوم، زجاج، حديد', 'e.g. Aluminum, Glass, Steel')} />
                   </Field>
-                  <Field label={t('المدينة', 'City')} hint={t('مدينة المقر الرئيسي.', 'City of the main location.')}>
-                    <Input dir="auto" value={form.city} onChange={(e) => setField('city', e.target.value)} className="h-12 rounded-xl" />
-                  </Field>
                   <Field label={t('الوكالات / العلامات التجارية', 'Brands / Agencies')} hint={t('اضغط Enter بعد كل علامة.', 'Press Enter after each brand.')}>
                     <TagInput
                       values={form.brands}
@@ -689,17 +686,68 @@ const ProviderJoin: React.FC = () => {
                       dir="auto"
                     />
                   </Field>
-                  <Field label={t('العنوان الوطني', 'National Address')} hint={t('رمز العنوان الوطني المكوّن من 8 خانات.', '8-character national address code.')}>
-                    <Input dir="auto" value={form.national_address} onChange={(e) => setField('national_address', e.target.value)} className="h-12 rounded-xl tech-content" />
-                  </Field>
-                  <div data-error-key="map_link">
-                    <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors.map_link} hint={t('انسخ الرابط من Google Maps.', 'Copy the link from Google Maps.')}>
-                      <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => setField('map_link', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.map_link)}`} aria-invalid={!!errors.map_link} />
-                    </Field>
-                  </div>
                   <div data-error-key="branches_count">
                     <Field label={t('عدد الفروع', 'Branches count')} error={errors.branches_count} hint={t('شامل الفرع الرئيسي.', 'Including the main branch.')}>
                       <Input type="number" min={1} dir="ltr" value={form.branches_count} onChange={(e) => setField('branches_count', Number(e.target.value) || 1)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.branches_count)}`} aria-invalid={!!errors.branches_count} />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* Address — head office */}
+                <div className="pt-2 border-t space-y-3">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {t('عنوان المقر الرئيسي', 'Head office address')}
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-3 sm:gap-4">
+                    <Field label={t('المنطقة', 'Region')}>
+                      <Input dir="auto" value={form.region} onChange={(e) => setField('region', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: الرياض', 'e.g. Riyadh')} />
+                    </Field>
+                    <Field label={t('المدينة', 'City')}>
+                      <Input dir="auto" value={form.city} onChange={(e) => setField('city', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <Field label={t('الحي', 'District')}>
+                      <Input dir="auto" value={form.district} onChange={(e) => setField('district', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <Field label={t('اسم الشارع', 'Street name')}>
+                      <Input dir="auto" value={form.street_name} onChange={(e) => setField('street_name', e.target.value)} className="h-12 rounded-xl" />
+                    </Field>
+                    <Field label={t('رقم المبنى', 'Building number')}>
+                      <Input dir="ltr" value={form.building_number} onChange={(e) => setField('building_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    </Field>
+                    <div data-error-key="postal_code">
+                      <Field label={t('الرمز البريدي', 'Postal code')} error={errors.postal_code}>
+                        <Input dir="ltr" inputMode="numeric" maxLength={5} value={form.postal_code} onChange={(e) => setField('postal_code', e.target.value)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.postal_code)}`} aria-invalid={!!errors.postal_code} />
+                      </Field>
+                    </div>
+                    <div data-error-key="short_national_address" className="md:col-span-1">
+                      <Field label={t('العنوان الوطني المختصر', 'Short national address')} error={errors.short_national_address} hint={t('4 أحرف + 4 أرقام (مثل RIYD1234).', '4 letters + 4 digits (e.g. RIYD1234).')}>
+                        <Input dir="ltr" maxLength={8} value={form.short_national_address} onChange={(e) => setField('short_national_address', e.target.value.toUpperCase())} className={`h-12 rounded-xl tech-content uppercase ${invalidInputClass(!!errors.short_national_address)}`} aria-invalid={!!errors.short_national_address} />
+                      </Field>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Field label={t('العنوان الوطني الكامل', 'Full national address')} hint={t('الشارع، الحي، المدينة، الرمز البريدي.', 'Street, district, city, postal code.')}>
+                        <Input dir="auto" value={form.national_address} onChange={(e) => setField('national_address', e.target.value)} className="h-12 rounded-xl" />
+                      </Field>
+                    </div>
+                    <div className="md:col-span-3">
+                      <Field label={t('العنوان التفصيلي', 'Full address')}>
+                        <Textarea dir="auto" rows={2} value={form.full_address} onChange={(e) => setField('full_address', e.target.value)} className="rounded-xl min-h-[64px] text-[14px]" />
+                      </Field>
+                    </div>
+                    <div data-error-key="map_link" className="md:col-span-3">
+                      <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors.map_link} hint={t('انسخ الرابط من Google Maps.', 'Copy the link from Google Maps.')}>
+                        <div className="relative">
+                          <Globe className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => setField('map_link', e.target.value)} className={`h-12 rounded-xl ps-9 ${invalidInputClass(!!errors.map_link)}`} aria-invalid={!!errors.map_link} />
+                        </div>
+                      </Field>
+                    </div>
+                    <Field label={t('خط العرض (Latitude)', 'Latitude')}>
+                      <Input dir="ltr" inputMode="decimal" placeholder="24.7136" value={form.latitude} onChange={(e) => setField('latitude', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    </Field>
+                    <Field label={t('خط الطول (Longitude)', 'Longitude')}>
+                      <Input dir="ltr" inputMode="decimal" placeholder="46.6753" value={form.longitude} onChange={(e) => setField('longitude', e.target.value)} className="h-12 rounded-xl tech-content" />
                     </Field>
                   </div>
                 </div>
