@@ -444,9 +444,9 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                               type="button"
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleAuditRow(row)}
+                              onClick={() => handleAuditRow(row, idx)}
                               data-testid={`intake-template-audit-row-${idx}`}
-                              className="h-7 rounded-lg px-2 text-[10px]"
+                              className={`h-7 rounded-lg px-2 text-[10px] ${activeIdx === idx ? 'bg-primary/10 text-primary' : ''}`}
                             >
                               <Search className="me-1 h-3 w-3" aria-hidden />
                               <Bi ar="تدقيق" en="Audit" />
