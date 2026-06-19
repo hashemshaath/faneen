@@ -22,7 +22,10 @@ import {
   ShieldCheck,
   Sparkles,
   GitBranch,
+  GitMerge,
   Printer,
+  FileDown,
+  Search,
   UserCog,
   Wand2,
 } from 'lucide-react';
@@ -61,6 +64,9 @@ interface Props {
   onSaved: () => void;
   onEnrich: (lead: ProviderLeadRow) => void;
   onJumpTo: (id: string) => void;
+  onMerge?: () => void;
+  onGoogle?: () => void;
+  onExportPdf?: () => void;
 }
 
 type BranchRow = { branch_name: string; city: string | null; phone: string | null };
@@ -89,6 +95,9 @@ export const ProviderLeadDetail: React.FC<Props> = ({
   onSaved,
   onEnrich,
   onJumpTo,
+  onMerge,
+  onGoogle,
+  onExportPdf,
 }) => {
   const { isRTL } = useLanguage();
   const t = (ar: string, en: string) => (isRTL ? ar : en);
@@ -173,6 +182,18 @@ export const ProviderLeadDetail: React.FC<Props> = ({
             </p>
           </div>
           <div className="flex items-center gap-1 print:hidden">
+            {onExportPdf && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onExportPdf}
+                className="h-8 w-8 rounded-lg"
+                aria-label="Export PDF"
+                title="تصدير PDF"
+              >
+                <FileDown className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -272,6 +293,18 @@ export const ProviderLeadDetail: React.FC<Props> = ({
             <Sparkles className="me-1 h-3.5 w-3.5" aria-hidden />
             <Bi ar="إثراء من Google" en="Enrich from Google" />
           </Button>
+          {onGoogle && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onGoogle}
+              className="h-8 rounded-lg text-[11px]"
+              title="بحث Google"
+            >
+              <Search className="me-1 h-3.5 w-3.5" aria-hidden />
+              <Bi ar="بحث Google" en="Google" />
+            </Button>
+          )}
         </div>
 
         {/* Duplicates */}
@@ -295,6 +328,17 @@ export const ProviderLeadDetail: React.FC<Props> = ({
                 </button>
               ))}
             </div>
+            {onMerge && (
+              <Button
+                onClick={onMerge}
+                size="sm"
+                variant="outline"
+                className="mt-2 h-8 rounded-lg border-amber-500/40 text-amber-700 text-[11px] hover:bg-amber-500/10"
+              >
+                <GitMerge className="me-1 h-3.5 w-3.5" aria-hidden />
+                <Bi ar="دمج المكررات" en="Merge duplicates" />
+              </Button>
+            )}
           </div>
         )}
 
