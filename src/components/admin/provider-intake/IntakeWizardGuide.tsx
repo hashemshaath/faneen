@@ -249,8 +249,8 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
       `${uploadSummary.rows.length} ${uploadSummary.rows.length === 1 ? 'row' : 'rows'} ready for review`,
       {
         description: name
-          ? `بدأ التدقيق للصف الأول: ${name}`
-          : 'استخدم زر "تدقيق" بجوار كل صف لبدء المراجعة في نفس الشاشة.',
+          ? `الصفوف معروضة في جدول المعاينة أعلاه. بدأ التدقيق للصف الأول (${name}) في قسم البحث أسفل الصفحة.`
+          : 'الصفوف معروضة في جدول المعاينة أعلاه — استخدم زر "تدقيق" بجوار كل صف لبدء المراجعة في قسم البحث بالأسفل.',
       },
     );
   }, [uploadSummary]);
