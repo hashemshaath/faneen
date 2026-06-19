@@ -168,8 +168,9 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         const generatedBlob = await buildTemplateBlob(id);
         triggerBlobDownload(generatedBlob, filename);
         // No navigation / no new tab fallback — generate the workbook locally.
-        // eslint-disable-next-line no-console
-        console.warn('[intake-template] static template unavailable; generated locally', href, err instanceof Error ? err.message : 'unknown error');
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[intake-template] static template unavailable; generated locally', href, err instanceof Error ? err.message : 'unknown error');
+        }
       } finally {
         setDownloadingId(null);
       }
