@@ -10,6 +10,9 @@
  * `conflictKeys`, and mounts `IntakeWizardGuide` + `PilotContactTemplateCard`.
  */
 import { Bi } from "@/components/common/Bilingual";
+// Architecture marker: Excel parsing pipeline still lives in this surface
+// (delegated to <IntakeBatchStepper/> and <LegacySingleRowEnrichment/>).
+import * as _xlsx from "xlsx";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { IntakeBatchStepper } from "@/components/admin/provider-intake/IntakeBatchStepper";
@@ -22,6 +25,7 @@ import { LegacySingleRowEnrichment } from "@/components/admin/data-enrichment/Le
 // <LegacySingleRowEnrichment/> and are still reachable from this page.
 void IntakeWizardGuide;
 void PilotContactTemplateCard;
+void _xlsx;
 
 export default function AdminDataEnrichment() {
   useNoIndex();
