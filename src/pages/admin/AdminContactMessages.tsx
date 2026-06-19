@@ -657,6 +657,8 @@ const AdminContactMessages = () => {
           </div>
         </div>
 
+        <PilotContactTemplateCard testId="contact-inbox-pilot-template" />
+
         {/* SLA / KPI strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="hover-lift">
