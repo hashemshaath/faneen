@@ -14,8 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
  CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp,
-  Store, AlertCircle, Link as LinkIcon, MessageCircle, Calendar, Globe, Briefcase,
+  Store, AlertCircle, Link as LinkIcon, MessageCircle, Calendar, Globe, Briefcase, Copy,
 } from 'lucide-react';
+import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
 import coverImage from '@/assets/provider-join-cover.jpg';
@@ -194,8 +195,68 @@ const ProviderJoin: React.FC = () => {
     if (submitError) setSubmitError(null);
   };
 
-  const updateBranch = (i: number, k: keyof ProviderLeadBranchInput, v: string) =>
-    setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
+  const updateBranch = <K extends keyof ProviderLeadBranchInput>(
+    i: number, k: K, v: ProviderLeadBranchInput[K],
+  ) => setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
+
+  const patchBranch = (i: number, patch: Partial<ProviderLeadBranchInput>) =>
+    setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+
+  const buildMapsUrl = (lat: number, lng: number) =>
+    `https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+  // Head-office map handlers
+  const onHeadCoords = (lat: number, lng: number) => {
+    setForm((f) => ({
+      ...f,
+      latitude: String(lat.toFixed(6)),
+      longitude: String(lng.toFixed(6)),
+      map_link: f.map_link?.trim() ? f.map_link : buildMapsUrl(lat, lng),
+    }));
+    clearError('latitude'); clearError('longitude'); clearError('map_link');
+  };
+  const onHeadAutofill = (d: ReverseGeocodeResult) => {
+    setForm((f) => ({
+      ...f,
+      region: f.region || (d.region_ar ?? f.region),
+      district: f.district || (d.district_ar ?? f.district),
+      full_address: f.full_address || (d.address_ar ?? f.full_address),
+    }));
+  };
+
+  // Branch map handlers
+  const onBranchCoords = (i: number) => (lat: number, lng: number) => {
+    setBranches((b) => b.map((row, idx) => idx === i ? {
+      ...row,
+      latitude: Number(lat.toFixed(6)),
+      longitude: Number(lng.toFixed(6)),
+      map_link: row.map_link?.trim() ? row.map_link : buildMapsUrl(lat, lng),
+    } : row));
+  };
+  const onBranchAutofill = (i: number) => (d: ReverseGeocodeResult) => {
+    setBranches((b) => b.map((row, idx) => idx === i ? {
+      ...row,
+      region: row.region || (d.region_ar ?? row.region),
+      district: row.district || (d.district_ar ?? row.district),
+      address: row.address || (d.address_ar ?? row.address),
+    } : row));
+  };
+
+  // Copy head-office address fields into branch (only fields that are empty on the branch).
+  const copyHeadToBranch = (i: number) => {
+    patchBranch(i, {
+      region: branches[i].region || form.region || undefined,
+      city: branches[i].city || form.city || undefined,
+      district: branches[i].district || form.district || undefined,
+      street_name: branches[i].street_name || form.street_name || undefined,
+      building_number: branches[i].building_number || form.building_number || undefined,
+      postal_code: branches[i].postal_code || form.postal_code || undefined,
+      short_national_address: branches[i].short_national_address || form.short_national_address || undefined,
+      national_address: branches[i].national_address || form.national_address || undefined,
+      address: branches[i].address || form.full_address || undefined,
+    });
+    toast.success(t('تم نسخ بيانات المقر الرئيسي', 'Head office details copied'));
+  };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
