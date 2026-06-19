@@ -286,6 +286,24 @@ const ProviderJoin: React.FC = () => {
     if (!v) return true;
     try { new URL(v.startsWith('http') ? v : `https://${v}`); return true; } catch { return false; }
   };
+  // Stricter address-field validators (Arabic error messages set by caller)
+  const isLat = (v: string) => {
+    if (!v) return true;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= -90 && n <= 90;
+  };
+  const isLng = (v: string) => {
+    if (!v) return true;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= -180 && n <= 180;
+  };
+  // Saudi Arabia bounds (approx): lat 16–33, lng 34–56
+  const inSaudi = (lat: string, lng: string) => {
+    if (!lat || !lng) return true;
+    const la = Number(lat), ln = Number(lng);
+    return la >= 16 && la <= 33 && ln >= 34 && ln <= 56;
+  };
+  const isSaPostal = (v: string) => /^\d{5}$/.test(v.trim()) && v.trim()[0] !== '0';
 
   const validate = (): Record<string, string> => {
     const er: Record<string, string> = {};
@@ -304,7 +322,17 @@ const ProviderJoin: React.FC = () => {
     if (form.short_national_address && !/^[A-Za-z]{4}\d{4}$/.test(form.short_national_address.trim())) {
       er.short_national_address = t('العنوان الوطني يجب أن يكون 4 أحرف + 4 أرقام', 'National address must be 4 letters + 4 digits');
     }
-    if (form.postal_code && !/^\d{5}$/.test(form.postal_code.trim())) er.postal_code = t('الرمز البريدي 5 أرقام', 'Postal code must be 5 digits');
+    if (form.postal_code && !isSaPostal(form.postal_code)) {
+      er.postal_code = t('الرمز البريدي يجب أن يكون 5 أرقام ولا يبدأ بصفر', 'Postal code must be 5 digits and not start with 0');
+    }
+    if (form.latitude && !isLat(form.latitude)) er.latitude = t('خط العرض يجب أن يكون بين -90 و 90', 'Latitude must be between -90 and 90');
+    if (form.longitude && !isLng(form.longitude)) er.longitude = t('خط الطول يجب أن يكون بين -180 و 180', 'Longitude must be between -180 and 180');
+    if ((form.latitude && !form.longitude) || (!form.latitude && form.longitude)) {
+      er.latitude = er.latitude || t('يجب إدخال خط العرض والطول معاً', 'Latitude and longitude must be set together');
+    }
+    if (form.latitude && form.longitude && isLat(form.latitude) && isLng(form.longitude) && !inSaudi(form.latitude, form.longitude)) {
+      er.latitude = t('الإحداثيات تبدو خارج المملكة العربية السعودية', 'Coordinates appear to be outside Saudi Arabia');
+    }
     if (form.establishment_year) {
       const y = Number(form.establishment_year);
       const cy = new Date().getFullYear();
@@ -316,6 +344,17 @@ const ProviderJoin: React.FC = () => {
       if (b.whatsapp && !isSaudiPhone(b.whatsapp)) er[`branch_${i}_whatsapp`] = t('واتساب الفرع غير صحيح', 'Invalid branch WhatsApp');
       if (b.website && !isUrl(b.website)) er[`branch_${i}_website`] = t('رابط موقع الفرع غير صحيح', 'Invalid branch website');
       if (b.map_link && !isUrl(b.map_link)) er[`branch_${i}_map`] = t('رابط خريطة الفرع غير صحيح', 'Invalid branch map link');
+      if (b.postal_code && !isSaPostal(b.postal_code)) er[`branch_${i}_postal`] = t('الرمز البريدي للفرع غير صحيح', 'Invalid branch postal code');
+      if (b.short_national_address && !/^[A-Za-z]{4}\d{4}$/.test(b.short_national_address.trim())) {
+        er[`branch_${i}_sna`] = t('العنوان الوطني للفرع: 4 أحرف + 4 أرقام', 'Branch national address: 4 letters + 4 digits');
+      }
+      const blat = b.latitude != null ? String(b.latitude) : '';
+      const blng = b.longitude != null ? String(b.longitude) : '';
+      if (blat && !isLat(blat)) er[`branch_${i}_lat`] = t('خط عرض الفرع خارج النطاق المسموح', 'Branch latitude out of range');
+      if (blng && !isLng(blng)) er[`branch_${i}_lng`] = t('خط طول الفرع خارج النطاق المسموح', 'Branch longitude out of range');
+      if ((blat && !blng) || (!blat && blng)) {
+        er[`branch_${i}_lat`] = er[`branch_${i}_lat`] || t('يجب تحديد إحداثيات الفرع كاملةً', 'Branch coordinates must be set together');
+      }
     });
     if (form.branches_count < 1) er.branches_count = t('عدد الفروع يجب أن يكون 1 أو أكثر', 'Branches must be 1 or more');
     // Validate extra branches: at minimum require a branch name
