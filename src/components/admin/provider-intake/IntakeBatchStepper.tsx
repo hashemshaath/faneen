@@ -182,23 +182,25 @@ export const IntakeBatchStepper: React.FC<{ className?: string }> = ({ className
         })
         .filter((r) => Object.values(r).some((v) => v !== ''))
         .map((raw) => {
-          const { missing } = rowToPayload(raw);
+          const { payload, missing } = rowToPayload(raw);
           return {
             raw,
             validation: missing,
-            status: 'pending' as RowStatus,
+            status: (payload ? 'pending' : 'invalid') as RowStatus,
           };
         });
       const next: ParsedFile = { fileName: file.name, kind, headers, rows };
       setParsed(next);
-      // Auto-select all valid rows.
+      // Auto-select every row that has at least a name (i.e. produces a
+      // payload). Missing email/phone become soft warnings — admin can
+      // still send them as leads and complete the data before approval.
       const initial = new Set<number>();
       rows.forEach((r, i) => {
-        if (r.validation.length === 0) initial.add(i);
+        if (r.status !== 'invalid') initial.add(i);
       });
       setSelected(initial);
       setStep('review');
-      toast.success(`تم تحميل ${rows.length} صف — ${initial.size} صالح للإرسال`);
+      toast.success(`تم تحميل ${rows.length} صف — ${initial.size} جاهز كعميل محتمل`);
     } catch (err: unknown) {
       setParseError(err instanceof Error ? err.message : 'Unable to read file');
     }
