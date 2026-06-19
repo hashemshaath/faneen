@@ -83,7 +83,10 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       } catch {
-        window.open(href, '_blank', 'noopener,noreferrer');
+        // No navigation / no new tab fallback — surface a console warning only.
+        // The user can retry; we never break out of the embedded preview.
+        // eslint-disable-next-line no-console
+        console.warn('[intake-template] download failed for', href);
       }
     },
     [],
