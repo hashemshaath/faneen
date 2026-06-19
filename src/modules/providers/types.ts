@@ -14,6 +14,19 @@ export interface ProviderLeadBranchInput {
   address?: string;
   map_link?: string;
   phone?: string;
+  whatsapp?: string;
+  email?: string;
+  website?: string;
+  region?: string;
+  district?: string;
+  street_name?: string;
+  building_number?: string;
+  postal_code?: string;
+  short_national_address?: string;
+  national_address?: string;
+  latitude?: number;
+  longitude?: number;
+  is_main?: boolean;
 }
 
 export interface ProviderLeadSubmission {
@@ -22,6 +35,7 @@ export interface ProviderLeadSubmission {
   contact_name: string;
   email: string;
   phone: string;
+  whatsapp?: string;
   preferred_channel: ProviderLeadChannel;
   website?: string;
   cr_number?: string;
@@ -34,7 +48,20 @@ export interface ProviderLeadSubmission {
   cr_file_path?: string;
   map_link?: string;
   national_address?: string;
+  short_national_address?: string;
+  full_address?: string;
+  region?: string;
   city?: string;
+  district?: string;
+  street_name?: string;
+  building_number?: string;
+  postal_code?: string;
+  latitude?: number;
+  longitude?: number;
+  establishment_year?: number;
+  account_manager_name?: string;
+  account_manager_phone?: string;
+  account_manager_email?: string;
   branches_count?: number;
   branches?: ProviderLeadBranchInput[];
   ip_hash?: string;
