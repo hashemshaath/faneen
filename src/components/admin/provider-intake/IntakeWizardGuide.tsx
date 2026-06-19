@@ -239,7 +239,7 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
     navigate('/admin/data-enrichment');
   }, [navigate, uploadSummary]);
 
-  const handleDownloadJson = React.useCallback(() => {
+  const handleExportJson = React.useCallback(() => {
     if (!uploadSummary) return;
     const blob = new Blob(
       [JSON.stringify({ kind: uploadSummary.kind, rows: uploadSummary.rows }, null, 2)],
@@ -400,9 +400,9 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={handleDownloadJson}
+                  onClick={handleExportJson}
                   disabled={uploadSummary.rows.length === 0}
-                  data-testid="intake-template-download-json"
+                  data-testid="intake-template-export-json"
                   className="h-9 rounded-xl text-[11px]"
                 >
                   <FileJson className="me-1.5 h-3.5 w-3.5" aria-hidden />
