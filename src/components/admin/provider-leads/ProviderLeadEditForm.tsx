@@ -638,7 +638,11 @@ export const ProviderLeadEditForm: React.FC<Props> = ({ lead, onCancel, onSaved 
             className="tech-content"
           />
         </Field>
-        <Field label="البريد">
+        <Field
+          label="البريد"
+          name="account_manager_email"
+          error={errors.account_manager_email}
+        >
           <Input
             value={f.account_manager_email}
             onChange={(e) => set('account_manager_email', e.target.value)}
