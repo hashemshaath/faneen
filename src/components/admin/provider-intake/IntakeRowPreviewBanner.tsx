@@ -74,14 +74,47 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
     };
   }, []);
 
-  if (!queue || queue.rows.length === 0) return null;
-
-  const total = queue.rows.length;
-  const index = Math.min(Math.max(queue.index, 0), total - 1);
-  const row = queue.rows[index] ?? {};
-  const reviewedSet = new Set(queue.reviewed);
+  const total = queue?.rows.length ?? 0;
+  const index = total > 0 ? Math.min(Math.max(queue!.index, 0), total - 1) : 0;
+  const row: Record<string, string> = total > 0 ? (queue!.rows[index] ?? {}) : {};
+  const reviewedSet = new Set(queue?.reviewed ?? []);
   const isReviewed = reviewedSet.has(index);
   const doneCount = reviewedSet.size;
+
+  // ── Pre-flight dedupe check (hooks MUST run unconditionally) ─────
+  const nameAr = (row.company_name_ar ?? row.branch_name_ar ?? '').trim();
+  const nameEn = (row.company_name_en ?? row.branch_name_en ?? '').trim();
+  const unified = (row.unified_number ?? '').trim();
+  const cr = (row.commercial_registration ?? row.cr_number ?? '').trim();
+  const dedupeKey = `${nameAr}|${nameEn}|${unified}|${cr}`;
+
+  const dedupeQuery = useQuery({
+    queryKey: ['intake-row-dedupe', dedupeKey],
+    enabled: total > 0 && Boolean(nameAr || nameEn || unified || cr),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const ors: string[] = [];
+      if (unified) ors.push(`unified_number.eq.${unified}`);
+      if (nameAr) ors.push(`name_ar.ilike.%${nameAr.replace(/[%,]/g, ' ')}%`);
+      if (nameEn) ors.push(`name_en.ilike.%${nameEn.replace(/[%,]/g, ' ')}%`);
+      const leadOrs = [...ors];
+      if (cr) leadOrs.push(`cr_number.eq.${cr}`);
+      const [leadsRes, bizRes] = await Promise.all([
+        leadOrs.length
+          ? supabase.from('provider_leads').select('id,name_ar,name_en,unified_number,cr_number,status').or(leadOrs.join(',')).limit(5)
+          : Promise.resolve({ data: [], error: null }),
+        ors.length
+          ? supabase.from('businesses').select('id,name_ar,name_en,unified_number').or(ors.join(',')).limit(5)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      return {
+        leads: leadsRes.data ?? [],
+        businesses: bizRes.data ?? [],
+      };
+    },
+  });
+
+  if (!queue || total === 0) return null;
 
   const move = (next: number) => {
     const clamped = Math.min(Math.max(next, 0), total - 1);
@@ -116,39 +149,6 @@ export const IntakeRowPreviewBanner: React.FC<{ className?: string }> = ({ class
   const closeQueue = () => writeIntakeQueue(null);
 
   const fields = KEY_FIELDS.filter((f) => (row[f.key] ?? '').trim().length > 0);
-
-  // ── Pre-flight dedupe check ──────────────────────────────────────
-  const nameAr = (row.company_name_ar ?? row.branch_name_ar ?? '').trim();
-  const nameEn = (row.company_name_en ?? row.branch_name_en ?? '').trim();
-  const unified = (row.unified_number ?? '').trim();
-  const cr = (row.commercial_registration ?? row.cr_number ?? '').trim();
-  const dedupeKey = `${nameAr}|${nameEn}|${unified}|${cr}`;
-
-  const dedupeQuery = useQuery({
-    queryKey: ['intake-row-dedupe', dedupeKey],
-    enabled: Boolean(nameAr || nameEn || unified || cr),
-    staleTime: 60_000,
-    queryFn: async () => {
-      const ors: string[] = [];
-      if (unified) ors.push(`unified_number.eq.${unified}`);
-      if (nameAr) ors.push(`name_ar.ilike.%${nameAr.replace(/[%,]/g, ' ')}%`);
-      if (nameEn) ors.push(`name_en.ilike.%${nameEn.replace(/[%,]/g, ' ')}%`);
-      const leadOrs = [...ors];
-      if (cr) leadOrs.push(`cr_number.eq.${cr}`);
-      const [leadsRes, bizRes] = await Promise.all([
-        leadOrs.length
-          ? supabase.from('provider_leads').select('id,name_ar,name_en,unified_number,cr_number,status').or(leadOrs.join(',')).limit(5)
-          : Promise.resolve({ data: [], error: null }),
-        ors.length
-          ? supabase.from('businesses').select('id,name_ar,name_en,unified_number').or(ors.join(',')).limit(5)
-          : Promise.resolve({ data: [], error: null }),
-      ]);
-      return {
-        leads: leadsRes.data ?? [],
-        businesses: bizRes.data ?? [],
-      };
-    },
-  });
 
   const leadHits = dedupeQuery.data?.leads ?? [];
   const bizHits = dedupeQuery.data?.businesses ?? [];
