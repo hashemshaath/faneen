@@ -24,12 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bi, useBi } from "@/components/common/Bilingual";
-import { useNoIndex } from "@/hooks/useNoIndex";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { mapsService } from "@/modules/google";
-import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
 import { IntakeWizardGuide } from "@/components/admin/provider-intake/IntakeWizardGuide";
-import { IntakeBatchStepper } from "@/components/admin/provider-intake/IntakeBatchStepper";
 import { PilotContactTemplateCard } from "@/components/admin/provider-intake/PilotContactTemplateCard";
 import {
   fetchEnrichment,
@@ -136,8 +132,7 @@ function SourceChip({ src }: { src: string }) {
   );
 }
 
-export default function AdminDataEnrichment() {
-  useNoIndex();
+export function LegacySingleRowEnrichment() {
   const bi = useBi();
   const [step, setStep] = useState<Step>("search");
   const [searchQuery, setSearchQuery] = useState("");
