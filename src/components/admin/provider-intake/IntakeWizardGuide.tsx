@@ -47,18 +47,22 @@ const DUPLICATE_BADGES: Array<{
   { id: 'missing-data', ar: 'ناقص بيانات', en: 'Missing data', cls: 'bg-muted text-muted-foreground border-border' },
 ];
 
-const TEMPLATES: Array<{ id: string; ar: string; en: string; href: string }> = [
+type TemplateId = 'providers' | 'branches';
+
+const TEMPLATES: Array<{ id: TemplateId; ar: string; en: string; href: string; filename: string }> = [
   {
     id: 'providers',
     ar: 'قالب المزودين الرئيسي',
     en: 'Main providers template',
     href: '/templates/qitaat-provider-intake-template.xlsx',
+    filename: 'qitaat-provider-intake-template.xlsx',
   },
   {
     id: 'branches',
     ar: 'قالب الفروع',
     en: 'Branches template',
     href: '/templates/qitaat-provider-branches-template.xlsx',
+    filename: 'qitaat-provider-branches-template.xlsx',
   },
 ];
 
@@ -98,6 +102,34 @@ function inferTemplateKind(headers: string[]): UploadedTemplateKind {
   return 'unknown';
 }
 
+async function buildTemplateBlob(id: TemplateId): Promise<Blob> {
+  const XLSX = await import('xlsx');
+  const workbook = XLSX.utils.book_new();
+  const headers = REQUIRED_TEMPLATE_COLUMNS[id];
+  const worksheet = XLSX.utils.aoa_to_sheet<string>([headers]);
+  worksheet['!cols'] = headers.map((header) => ({ wch: Math.max(header.length + 2, 14) }));
+  XLSX.utils.book_append_sheet(workbook, worksheet, id === 'providers' ? 'providers' : 'branches');
+  const guideSheet = XLSX.utils.aoa_to_sheet<string>([
+    ['template', id],
+    ['required_columns', headers.join(', ')],
+  ]);
+  XLSX.utils.book_append_sheet(workbook, guideSheet, 'readme');
+  const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
+  return new Blob([output], { type: EXCEL_MIME });
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 export interface IntakeWizardGuideProps {
   className?: string;
   testId?: string;
@@ -112,8 +144,7 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
   const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   const handleDownload = React.useCallback(
-    async (id: string, href: string, filename: string) => {
-      let url: string | null = null;
+    async (id: TemplateId, href: string, filename: string) => {
       setDownloadingId(id);
       try {
         const res = await fetch(href, {
@@ -125,21 +156,14 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
         const sourceBlob = await res.blob();
         if (sourceBlob.type.includes('text/html')) throw new Error('Template returned HTML');
         const blob = new Blob([sourceBlob], { type: EXCEL_MIME });
-        url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.rel = 'noopener';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } catch {
-        // No navigation / no new tab fallback — surface a console warning only.
-        // The user can retry; we never break out of the embedded preview.
+        triggerBlobDownload(blob, filename);
+      } catch (err: unknown) {
+        const generatedBlob = await buildTemplateBlob(id);
+        triggerBlobDownload(generatedBlob, filename);
+        // No navigation / no new tab fallback — generate the workbook locally.
         // eslint-disable-next-line no-console
-        console.warn('[intake-template] download failed for', href);
+        console.warn('[intake-template] static template unavailable; generated locally', href, err instanceof Error ? err.message : 'unknown error');
       } finally {
-        if (url) window.setTimeout(() => URL.revokeObjectURL(url), 2000);
         setDownloadingId(null);
       }
     },
@@ -226,7 +250,7 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
               <button
                 key={t.id}
                 type="button"
-                onClick={() => handleDownload(t.id, t.href, t.href.split('/').pop() ?? 'template.xlsx')}
+                onClick={() => handleDownload(t.id, t.href, t.filename)}
                 disabled={isDownloading}
                 data-testid={`intake-template-${t.id}`}
                 className="group flex min-h-12 items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2 text-start text-xs font-medium transition-colors hover:bg-accent disabled:cursor-wait disabled:opacity-70"
@@ -237,7 +261,7 @@ export const IntakeWizardGuide: React.FC<IntakeWizardGuideProps> = ({
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate"><Bi ar={isDownloading ? 'جاري التحميل…' : t.ar} en={isDownloading ? 'Downloading…' : t.en} /></span>
-                    <span className="block truncate text-[10px] font-normal text-muted-foreground tech-content">{t.href.split('/').pop()}</span>
+                    <span className="block truncate text-[10px] font-normal text-muted-foreground tech-content">{t.filename}</span>
                   </span>
                 </span>
                 <Download className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden />

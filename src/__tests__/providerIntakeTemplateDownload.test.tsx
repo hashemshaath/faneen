@@ -43,9 +43,17 @@ describe('Provider intake template download — Final QA', () => {
   it('uses fetch + Blob + temporary download link', () => {
     expect(guideSrc).toMatch(/await\s+fetch\(/);
     expect(guideSrc).toMatch(/await\s+res\.blob\(\)/);
+    expect(guideSrc).toMatch(/buildTemplateBlob/);
     expect(guideSrc).toMatch(/URL\.createObjectURL\(/);
     expect(guideSrc).toMatch(/a\.download\s*=/);
     expect(guideSrc).toMatch(/URL\.revokeObjectURL\(/);
+  });
+
+  it('generates a local workbook fallback if the preview returns HTML instead of xlsx', () => {
+    expect(guideSrc).toMatch(/sourceBlob\.type\.includes\(['"]text\/html['"]\)/);
+    expect(guideSrc).toMatch(/const generatedBlob = await buildTemplateBlob\(id\)/);
+    expect(guideSrc).toMatch(/XLSX\.utils\.aoa_to_sheet/);
+    expect(guideSrc).toMatch(/XLSX\.write\(workbook, \{ bookType: ['"]xlsx['"], type: ['"]array['"] \}\)/);
   });
 
   it('never navigates: no window.location and no window.open in download path', () => {
