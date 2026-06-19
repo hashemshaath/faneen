@@ -951,6 +951,21 @@ const ProviderJoin: React.FC = () => {
                           </span>
                         </summary>
                         <div className="border-t p-4 bg-muted/10 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 -mt-1">
+                            <p className="text-[11px] text-muted-foreground">
+                              {t('وفّر وقتك: انسخ بيانات العنوان من المقر الرئيسي ثم عدّل ما يلزم.', 'Save time: copy address from the head office, then tweak what differs.')}
+                            </p>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => copyHeadToBranch(i)}
+                              className="h-8 rounded-lg gap-1.5 text-xs"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              {t('نسخ من المقر الرئيسي', 'Copy from head office')}
+                            </Button>
+                          </div>
                           <div className="grid md:grid-cols-2 gap-3">
                             <Field label={t('اسم الفرع', 'Branch name')} required error={errors[`branch_${i}_name`]}>
                               <Input
