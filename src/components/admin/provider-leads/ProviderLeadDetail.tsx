@@ -55,6 +55,7 @@ import { CompletenessBar } from './CompletenessBar';
 import { LeadScoreBadge } from './LeadScoreBadge';
 import { SlaChip } from './SlaChip';
 import { ProviderLeadActivity } from './ProviderLeadActivity';
+import { GoogleSearchLog } from './GoogleSearchLog';
 
 interface Props {
   lead: ProviderLeadRow;
@@ -351,6 +352,9 @@ export const ProviderLeadDetail: React.FC<Props> = ({
             <TabsTrigger value="activity" className="rounded-md text-[11px]">
               <Bi ar="النشاط والملاحظات" en="Activity & notes" />
             </TabsTrigger>
+            <TabsTrigger value="google" className="rounded-md text-[11px]">
+              <Bi ar="بحث Google" en="Google log" />
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="details" className="mt-3 space-y-4">
             <DetailsBlock
@@ -362,6 +366,9 @@ export const ProviderLeadDetail: React.FC<Props> = ({
           </TabsContent>
           <TabsContent value="activity" className="mt-3">
             <ProviderLeadActivity lead={lead} onSaved={onSaved} />
+          </TabsContent>
+          <TabsContent value="google" className="mt-3">
+            <GoogleSearchLog lead={lead} />
           </TabsContent>
         </Tabs>
 
