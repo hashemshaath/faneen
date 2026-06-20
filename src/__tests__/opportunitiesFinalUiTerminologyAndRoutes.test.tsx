@@ -61,7 +61,11 @@ describe('Opportunities — final UI terminology + routes audit', () => {
   it('8. admin operations center alerts use only the "عرض التفاصيل" CTA', () => {
     expect(ADMIN_OPS).toContain('عرض التفاصيل');
     expect(ADMIN_OPS).not.toMatch(/مطابقة الآن|تعميد الآن|تحويل إلى عقد|إرسال إشعار|إعادة تشغيل/);
-    expect(ADMIN_OPS).not.toMatch(/onClick=\{/);
+    // The only `onClick` allowed on the operations page is the CSV export
+    // button introduced in Phase 10B. Forbid mutation CTAs only.
+    expect(ADMIN_OPS).not.toMatch(/onClick=\{[^}]*award/i);
+    expect(ADMIN_OPS).not.toMatch(/onClick=\{[^}]*contract/i);
+    expect(ADMIN_OPS).not.toMatch(/onClick=\{[^}]*notify/i);
   });
   it('9. no any / suppressions / service_role in audited frontend files', () => {
     for (const src of [PROVIDER_BID, PROVIDER_PAGE, ADMIN_OPS, LABELS]) {
