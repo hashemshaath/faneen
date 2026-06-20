@@ -61,6 +61,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BusinessOperationsSection } from '@/components/admin/businesses/sections/BusinessOperationsSection';
 import { BusinessControlsSection } from '@/components/admin/businesses/sections/BusinessControlsSection';
 import { BusinessOwnerSectionShell } from '@/components/admin/businesses/sections/BusinessOwnerSectionShell';
+import { BusinessEditPanel } from '@/components/admin/businesses/sections/BusinessEditPanel';
+import { BusinessServicesPanel, type AdminNewServiceFormState, type AdminServiceLite } from '@/components/admin/businesses/sections/BusinessServicesPanel';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -175,6 +177,8 @@ import {
   type BizViewFilters,
 } from './businesses/businessSavedViews';
 import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
+import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
+import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -689,157 +693,19 @@ const AdminBusinesses = () => {
   });
 
   /* ─── Create business mutation ─── */
-  const createBizMutation = useMutation({
-    mutationFn: async () => {
-      if (!createForm.username || !createForm.username_ok) {
-        throw new Error(pickBi(isRTL, 'اسم المستخدم غير صالح أو محجوز', 'Username is invalid or taken'));
-      }
-      if (!createForm.name_ar?.trim()) {
-        throw new Error(pickBi(isRTL, 'الاسم بالعربية مطلوب', 'Arabic name is required'));
-      }
-      const phoneE164 = createForm.phone_national
-        ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
-        : null;
-      const region = SA_REGIONS.find((r) => r.id === createForm.region_id);
-      const ownerMode = (createForm.owner_mode || 'placeholder') as 'placeholder' | 'existing' | 'new' | 'invite';
-
-      // Shared business payload used by both code paths
-      const bizCore: AdminCreateBusinessPayload = {
-        username: createForm.username.trim().toLowerCase(),
-        name_ar: createForm.name_ar.trim(),
-        name_en: createForm.name_en?.trim() || null,
-        phone: phoneE164 || null,
-        email: createForm.email?.trim() || null,
-        // Phase 18i: legacy `category_id` column dropped. Classification is
-        // managed taxonomy-only via BusinessTaxonomySection in edit view.
-        city_id: createForm.city_id || null,
-        region: region ? region.name_ar : null,
-        region_en: region ? region.name_en : null,
-        national_id: createForm.national_id?.trim() || null,
-        unified_number: createForm.unified_number?.trim() || null,
-        vat_number: createForm.vat_number?.trim() || null,
-        district: createForm.district?.trim() || null,
-        district_en: createForm.district_en?.trim() || null,
-        street_name: createForm.street_name?.trim() || null,
-        street_name_en: createForm.street_name_en?.trim() || null,
-        building_number: createForm.building_number?.trim() || null,
-        additional_number: createForm.additional_number?.trim() || null,
-        address: createForm.address?.trim() || null,
-        address_en: createForm.address_en?.trim() || null,
-      };
-
-      // Path A — Use the edge function for placeholder / new / invite modes.
-      // Placeholder mode links the entity to the shared com@qitaat.com account
-      // and flags it as transferable. The entity can later be claimed by its
-      // real owner via a transfer request that an admin must approve.
-      if (ownerMode === 'placeholder' || ownerMode === 'new' || ownerMode === 'invite') {
-        if (ownerMode !== 'placeholder') {
-        const email = (createForm.owner_email || '').trim().toLowerCase();
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          throw new Error(pickBi(isRTL, 'بريد المسؤول غير صالح', 'Invalid manager email'));
-        }
-        if (ownerMode === 'new' && (createForm.owner_password || '').length < 8) {
-          throw new Error(pickBi(isRTL, 'كلمة المرور يجب ألا تقل عن 8 أحرف', 'Password must be at least 8 characters'));
-        }
-        }
-        const ownerEmail = ownerMode === 'placeholder'
-          ? undefined
-          : (createForm.owner_email || '').trim().toLowerCase();
-        const res = await adminCreateBusinessWithOwner({
-          owner: {
-            mode: ownerMode,
-            email: ownerEmail,
-            password: ownerMode === 'new' ? createForm.owner_password : undefined,
-            full_name: (createForm.owner_full_name || createForm.name_ar || '').trim(),
-            phone: (createForm.owner_phone || '').trim() || undefined,
-            position: (createForm.owner_position || '').trim() || undefined,
-            auto_confirm: true,
-          },
-          business: bizCore,
-          redirect_to: `${window.location.origin}/auth/reset-password`,
-        });
-        if (!res.success || !res.business) {
-          throw new Error(res.error || (pickBi(isRTL, 'فشل الإنشاء', 'Create failed')));
-        }
-        return res.business as unknown as Record<string, unknown>;
-      }
-
-      // Path B — Existing user (default). An owner MUST be explicitly picked;
-      // we never fall back to the current admin because super_admin / admin
-      // accounts are blocked by DB trigger from owning business entities.
-      const ownerId = createForm.resolved_user_id;
-      if (!ownerId) {
-        throw new Error('owner_id_or_ref_required');
-      }
-      const payload: Record<string, unknown> = {
-        ...bizCore,
-        user_id: ownerId,
-        approval_status: 'draft',
-        is_active: false,
-        is_demo: false,
-      };
-      // Admin-created entities are explicit drafts by default. The public
-      // profile becomes reachable only after the visibility card's publish
-      // action sets published + active + not-demo together.
-      const { data, error } = await insertBusiness({
-        payload,
-        select: BUSINESS_SAFE_COLUMNS_SELECT,
-        terminal: 'single',
-      });
-      if (error) throw error;
-      await logAction('business_created', (data as { id?: string } | null)?.id ?? '', { username: payload.username });
-      return data as Record<string, unknown>;
-    },
-    onSuccess: (row) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      const mode = createForm.owner_mode;
-      toast.success(
-        isRTL
-          ? mode === 'placeholder'
-            ? 'تم إنشاء المنشأة تحت الحساب المؤقت — قابلة للتحويل لاحقاً'
-            : mode === 'invite'
-            ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
-            : mode === 'new'
-            ? 'تم إنشاء المنشأة وحساب المسؤول'
-            : 'تم إنشاء المنشأة كمسودة — استخدم زر نشر الجهة لإظهارها للعامة'
-          : mode === 'placeholder'
-          ? 'Entity created under the placeholder account — transferable later'
-          : mode === 'invite'
-          ? 'Business created — invitation sent to manager'
-          : mode === 'new'
-          ? 'Business and manager account created'
-          : 'Business created as a draft — use Publish business to make it public',
-      );
-      setCreatingBiz(false);
-      setCreateForm(emptyCreateBusinessForm());
-      if (row) openEdit(row);
-    },
-    onError: (err: unknown) => {
-      // Map stable edge-function codes → friendly localized text. We never
-      // surface raw server strings to admins; unknown codes fall back to the
-      // generic bucket inside `mapAdminCreateBizError`.
-      const raw = err instanceof Error ? err.message : '';
-      const msg = mapAdminCreateBizError(raw, pickBi(isRTL, 'ar', 'en'));
-      const isInvalidMode = raw.includes('invalid_owner_mode');
-      toast.error(
-        pickBi(isRTL, 'فشل إنشاء المنشأة', 'Failed to create business'),
-        {
-          description: msg,
-          ...(isInvalidMode
-            ? {
-                action: {
-                  label: pickBi(isRTL, 'تحويل إلى "بدون مدير"', 'Switch to "No manager"'),
-                  onClick: () => {
-                    setCreateForm((f) => ({ ...f, owner_mode: 'placeholder' }));
-                  },
-                },
-                duration: 10000,
-              }
-            : {}),
-        },
-      );
-    },
-  });
+  const createFormRef = useRef(createForm);
+  createFormRef.current = createForm;
+  const createBizMutation = useMutation(
+    buildAdminCreateBusinessMutationOptions({
+      getForm: () => createFormRef.current,
+      setForm: setCreateForm,
+      setCreating: setCreatingBiz,
+      isRTL,
+      logAction,
+      openEdit: (row) => openEditRef.current(row),
+      queryClient,
+    }),
+  );
 
   const addServiceMutation = useMutation({
     mutationFn: async () => {
@@ -1539,213 +1405,113 @@ const AdminBusinesses = () => {
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
-          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                  <Edit className="w-4 h-4 text-accent" />
-                </div>
-                <div>
-                  <h3 className="font-heading font-bold text-base">{pickBi(isRTL, 'تعديل العمل', 'Edit Business')}: {editingBiz.name_ar}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
-                    {contractBusinessIds.includes(editingBiz.id) && (
-                      <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{pickBi(isRTL, 'مرتبط بعقود', 'Has Contracts')}</Badge>
-                    )}
-                    {(() => {
-                      const tc = translationCompleteness(editForm);
-                      return (
-                        <Badge variant="outline" className={`text-[9px] gap-1 ${tc.full ? 'border-success/40 text-success' : 'border-warning/40 text-warning'}`}>
-                          <Languages className="w-2.5 h-2.5" />
-                          {tc.full ? (pickBi(isRTL, 'الترجمة مكتملة', 'Bilingual ready'))
-                            : (isRTL ? `ينقص: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}` : `Missing: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}`)}
-                        </Badge>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
-                  onClick={autoFillTranslations} disabled={autoTranslating}>
-                  {autoTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
-                  {pickBi(isRTL, 'ترجمة تلقائية للناقص', 'Auto-translate missing')}
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
-              </div>
-            </div>
-              <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-9 h-9 rounded-xl">
-                  <TabsTrigger value="info" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المعلومات', 'Info')}</TabsTrigger>
-                  <TabsTrigger value="owner" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المسؤول', 'Owner')}</TabsTrigger>
-                  <TabsTrigger value="content" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المحتوى', 'Content')}</TabsTrigger>
-                  <TabsTrigger value="media" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
-                  <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
-                  <TabsTrigger value="contact" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التواصل', 'Contact')}</TabsTrigger>
-                  <TabsTrigger value="branches" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الفروع', 'Branches')} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
-                  <TabsTrigger value="controls" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التحكم', 'Controls')}</TabsTrigger>
-                  <TabsTrigger value="ops" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العمليات', 'Ops')}</TabsTrigger>
-                </TabsList>
-
-                {/* ── Info Tab ── */}
-                <TabsContent value="info" className="space-y-4 mt-3">
-                  <BusinessPublicVisibilityCard
-                    business={editingBiz}
-                    publicProbe={publicVisibilityProbe}
-                    duplicateCount={publicUsernameDuplicateCount}
-                    isRTL={isRTL}
-                    isPublishing={publishBusinessMutation.isPending}
-                    onPublish={(business) => publishBusinessMutation.mutate(business as AdminBusinessRow)}
-                  />
-                  <BusinessBasicInfoSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    editingBiz={editingBiz}
-                    ownerRef={ownerRef}
-                    onTaxonomySaved={() => {
-                      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-                    }}
-                  />
-                </TabsContent>
-
-                {/* ── Owner Tab (ORG-RBAC-9F) ── */}
-                <TabsContent value="owner" className="space-y-4 mt-3">
-                  <BusinessOwnerSectionShell
-                    businessId={editingBiz.id}
-                    businessRef={editingBiz.ref_id ?? null}
-                    ownerUserId={editingBiz.user_id}
-                    isRTL={isRTL}
-                    onOwnerReassigned={() => setEditingBiz(null)}
-                  />
-                </TabsContent>
-
-                {/* ── Address Tab ── */}
-                {/* Address tab removed — addresses live on branches now.
-                    See the Branches tab for the per-location address editor. */}
-
-                {/* ── Content Tab ── */}
-                <TabsContent value="content" className="space-y-4 mt-3">
-                  <BusinessContentSection editForm={editForm} setField={setField} isRTL={isRTL} />
-                </TabsContent>
-
-                {/* ── Media Tab ── */}
-                <TabsContent value="media" className="space-y-4 mt-3">
-                  <BusinessMediaSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    portfolioData={portfolioData}
-                    onAddPortfolio={(url) => addPortfolioMutation.mutate(url)}
-                    onDeletePortfolio={(id) => deletePortfolioMutation.mutate(id)}
-                  />
-                </TabsContent>
-
-                {/* ── SEO Tab ── */}
-                <TabsContent value="seo" className="space-y-4 mt-3">
-                  <BusinessSeoSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    editingBiz={editingBiz}
-                    cityName={editCityName}
-                  />
-                </TabsContent>
-
-                {/* ── Contact Tab ── */}
-                <TabsContent value="contact" className="space-y-4 mt-3">
-                  <BusinessContactSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    language={language}
-                    editingBiz={editingBiz}
-                    registeredServices={allServices}
-                    onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
-                  />
-                </TabsContent>
-
-                {/* ── Branches Tab ── */}
-                <TabsContent value="branches" className="space-y-4 mt-3">
-                  <BusinessBranchesSection
-                    isRTL={isRTL}
-                    language={language as 'ar' | 'en'}
-                    branches={branches as unknown as AdminBranchRow[]}
-                    branchForm={branchForm}
-                    setBranchForm={setBranchForm}
-                    editingBranchId={editingBranchId}
-                    setEditingBranchId={setEditingBranchId}
-                    branchTranslating={branchTranslating}
-                    onTranslate={translateBranchName}
-                    countries={countries}
-                    onToggleActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
-                    onEdit={(br) => {
-                      setEditingBranchId(br.id);
-                      setBranchForm({
-                        name_ar: br.name_ar,
-                        name_en: br.name_en || '',
-                        is_main: !!br.is_main,
-                        is_active: br.is_active,
-                        branch_type: (br.branch_type as AdminBusinessBranchType) ?? (br.is_main ? 'main' : 'branch'),
-                        contact_person: br.contact_person || '',
-                        phone: br.phone || '',
-                        mobile: br.mobile || '',
-                        unified_number: br.unified_number || '',
-                        customer_service_phone: (br as unknown as { customer_service_phone?: string | null }).customer_service_phone || '',
-                        email: (br as unknown as { email?: string | null }).email || '',
-                        website: (br as unknown as { website?: string | null }).website || '',
-                        country_id: (br as unknown as { country_id?: string | null }).country_id || '',
-                        city_id: (br as unknown as { city_id?: string | null }).city_id || '',
-                        region: (br as unknown as { region?: string | null }).region || '',
-                        district: br.district || '',
-                        street_name: br.street_name || '',
-                        building_number: (br as unknown as { building_number?: string | null }).building_number || '',
-                        national_id: (br as unknown as { national_id?: string | null }).national_id || '',
-                        additional_number: (br as unknown as { additional_number?: string | null }).additional_number || '',
-                        address: br.address || '',
-                        latitude: (br as unknown as { latitude?: number | string | null }).latitude || '',
-                        longitude: (br as unknown as { longitude?: number | string | null }).longitude || '',
-                        complex_name: (br as unknown as { complex_name?: string | null }).complex_name || '',
-                        complex_name_en: (br as unknown as { complex_name_en?: string | null }).complex_name_en || '',
-                        site_number: (br as unknown as { site_number?: string | null }).site_number || '',
-                        working_hours: (br as unknown as { working_hours?: unknown }).working_hours,
-                      });
-                    }}
-                    onDelete={(id) => deleteBranchMutation.mutate(id)}
-                    onSave={() => saveBranchMutation.mutate()}
-                    saving={saveBranchMutation.isPending}
-                    emptyBranch={emptyBranch}
-                    mainContact={{
-                      unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
-                      customer_service_phone:
-                        editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
-                      email: editForm.email ?? editingBiz.email ?? null,
-                      website: editForm.website ?? editingBiz.website ?? null,
-                    }}
-                    onApplyHoursToAllBranches={(hours) =>
-                      applyHoursToAllBranchesMutation.mutate(hours as unknown)
-                    }
-                    applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
-                  />
-                </TabsContent>
-
-                {/* ── Controls Tab ── */}
-                <TabsContent value="controls" className="space-y-4 mt-3">
-                  <BusinessControlsSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    language={language as 'ar' | 'en'}
-                    tiers={tiers}
-                  />
-                </TabsContent>
-
-                {/* ── Ops Tab (BUSINESS-CORE-2): internal notes + activity timeline ── */}
-                <TabsContent value="ops" className="space-y-4 mt-3">
-                  <BusinessOperationsSection businessId={editingBiz.id} />
-                </TabsContent>
-              </Tabs>
-
+          <BusinessEditPanel
+            isRTL={isRTL}
+            editingBiz={editingBiz}
+            contractBusinessIds={contractBusinessIds}
+            translationStatus={translationCompleteness(editForm)}
+            autoFillTranslations={autoFillTranslations}
+            autoTranslating={autoTranslating}
+            branchCount={branches.length}
+            onClose={() => setEditingBiz(null)}
+            infoTab={<>
+              <BusinessPublicVisibilityCard
+                business={editingBiz}
+                publicProbe={publicVisibilityProbe}
+                duplicateCount={publicUsernameDuplicateCount}
+                isRTL={isRTL}
+                isPublishing={publishBusinessMutation.isPending}
+                onPublish={(b) => publishBusinessMutation.mutate(b as AdminBusinessRow)}
+              />
+              <BusinessBasicInfoSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                editingBiz={editingBiz}
+                ownerRef={ownerRef}
+                onTaxonomySaved={() => queryClient.invalidateQueries({ queryKey: ['admin-businesses'] })}
+              />
+            </>}
+            ownerTab={
+              <BusinessOwnerSectionShell
+                businessId={editingBiz.id}
+                businessRef={editingBiz.ref_id ?? null}
+                ownerUserId={editingBiz.user_id}
+                isRTL={isRTL}
+                onOwnerReassigned={() => setEditingBiz(null)}
+              />
+            }
+            contentTab={<BusinessContentSection editForm={editForm} setField={setField} isRTL={isRTL} />}
+            mediaTab={
+              <BusinessMediaSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                portfolioData={portfolioData}
+                onAddPortfolio={(url) => addPortfolioMutation.mutate(url)}
+                onDeletePortfolio={(id) => deletePortfolioMutation.mutate(id)}
+              />
+            }
+            seoTab={
+              <BusinessSeoSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                editingBiz={editingBiz}
+                cityName={editCityName}
+              />
+            }
+            contactTab={
+              <BusinessContactSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                language={language as 'ar' | 'en'}
+                editingBiz={editingBiz}
+                registeredServices={allServices}
+                onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
+              />
+            }
+            branchesTab={
+              <BusinessBranchesSection
+                isRTL={isRTL}
+                language={language as 'ar' | 'en'}
+                branches={branches as unknown as AdminBranchRow[]}
+                branchForm={branchForm}
+                setBranchForm={setBranchForm}
+                editingBranchId={editingBranchId}
+                setEditingBranchId={setEditingBranchId}
+                branchTranslating={branchTranslating}
+                onTranslate={translateBranchName}
+                countries={countries}
+                onToggleActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
+                onEdit={(br) => { setEditingBranchId(br.id); setBranchForm(mapBranchRowToForm(br)); }}
+                onDelete={(id) => deleteBranchMutation.mutate(id)}
+                onSave={() => saveBranchMutation.mutate()}
+                saving={saveBranchMutation.isPending}
+                emptyBranch={emptyBranch}
+                mainContact={{
+                  unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
+                  customer_service_phone:
+                    editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
+                  email: editForm.email ?? editingBiz.email ?? null,
+                  website: editForm.website ?? editingBiz.website ?? null,
+                }}
+                onApplyHoursToAllBranches={(hours) => applyHoursToAllBranchesMutation.mutate(hours as unknown)}
+                applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
+              />
+            }
+            controlsTab={
+              <BusinessControlsSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                language={language as 'ar' | 'en'}
+                tiers={tiers}
+              />
+            }
+            opsTab={<BusinessOperationsSection businessId={editingBiz.id} />}
+            footer={
               <BusinessEditActionsFooter
                 isRTL={isRTL}
                 canSave={!!editForm.name_ar}
@@ -1753,107 +1519,24 @@ const AdminBusinesses = () => {
                 onSave={() => updateBizMutation.mutate()}
                 onCancel={() => setEditingBiz(null)}
               />
-          </div>
+            }
+          />
         )}
 
         {/* ─── Inline Services Panel ─── */}
         {servicesPanel && (
-          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading font-bold text-base flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                  <Package className="w-4 h-4 text-accent" />
-                </div>
-                {pickBi(isRTL, 'إدارة الخدمات', 'Manage Services')}
-                <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
-            </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                {services.map((svc) => (
-                  <div key={svc.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!svc.is_active ? 'opacity-50' : ''}`}>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{language === 'ar' ? svc.name_ar : (svc.name_en || svc.name_ar)}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {svc.price_from && svc.price_to ? `${svc.price_from} - ${svc.price_to} ${svc.currency_code}` :
-                         svc.price_from ? `${pickBi(isRTL, 'من', 'From')} ${svc.price_from} ${svc.currency_code}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Switch checked={svc.is_active} onCheckedChange={v => toggleServiceMutation.mutate({ id: svc.id, is_active: v })} />
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
-                        onClick={() => { if (confirm(pickBi(isRTL, 'حذف هذه الخدمة؟', 'Delete this service?'))) deleteServiceMutation.mutate(svc.id); }}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                {services.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-6">{pickBi(isRTL, 'لا توجد خدمات', 'No services')}</p>
-                )}
-              </div>
-              <Separator />
-              <div className="space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <Plus className="w-3 h-3" /> {pickBi(isRTL, 'إضافة خدمة جديدة', 'Add New Service')}
-                </p>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الخدمة (عربي)', 'Service Name (AR)')} *</Label>
-                    <FieldAiActions compact value={newService.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
-                      onTranslated={(v) => setServiceField('name_en', v)} onImproved={(v) => setServiceField('name_ar', v)} />
-                  </div>
-                  <Input value={newService.name_ar} onChange={e => setServiceField('name_ar', e.target.value)} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الخدمة (إنجليزي)', 'Service Name (EN)')}</Label>
-                    <FieldAiActions compact value={newService.name_en} lang="en" isRTL={isRTL} fieldType="title"
-                      onTranslated={(v) => setServiceField('name_ar', v)} onImproved={(v) => setServiceField('name_en', v)} />
-                  </div>
-                  <Input value={newService.name_en} onChange={e => setServiceField('name_en', e.target.value)} dir="ltr" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'الوصف (عربي)', 'Description (AR)')}</Label>
-                    <FieldAiActions compact value={newService.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
-                      onTranslated={(v) => setServiceField('description_en', v)} onImproved={(v) => setServiceField('description_ar', v)} />
-                  </div>
-                  <Textarea value={newService.description_ar} onChange={e => setServiceField('description_ar', e.target.value)} rows={2} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (EN)')}</Label>
-                    <FieldAiActions compact value={newService.description_en} lang="en" isRTL={isRTL} fieldType="description"
-                      onTranslated={(v) => setServiceField('description_ar', v)} onImproved={(v) => setServiceField('description_en', v)} />
-                  </div>
-                  <Textarea value={newService.description_en} onChange={e => setServiceField('description_en', e.target.value)} rows={2} dir="ltr" />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {pickBi(isRTL, 'السعر من', 'Price From')}</Label>
-                    <Input type="number" value={newService.price_from} onChange={e => setServiceField('price_from', e.target.value)} dir="ltr" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {pickBi(isRTL, 'السعر إلى', 'Price To')}</Label>
-                    <Input type="number" value={newService.price_to} onChange={e => setServiceField('price_to', e.target.value)} dir="ltr" className="mt-1" />
-                  </div>
-                  <div className="flex items-end pb-1">
-                    <div className="flex items-center gap-2">
-                      <Switch checked={newService.is_active} onCheckedChange={v => setServiceField('is_active', v)} />
-                      <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
-                    </div>
-                  </div>
-                </div>
-                <Button onClick={() => addServiceMutation.mutate()} disabled={!newService.name_ar || addServiceMutation.isPending}
-                  className="w-full gap-1.5">
-                  <Plus className="w-3.5 h-3.5" />
-                  {addServiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (pickBi(isRTL, 'إضافة الخدمة', 'Add Service'))}
-                </Button>
-              </div>
-            </div>
-          </div>
+          <BusinessServicesPanel
+            isRTL={isRTL}
+            language={language}
+            services={services as unknown as ReadonlyArray<AdminServiceLite>}
+            newService={newService as AdminNewServiceFormState}
+            setServiceField={(key, value) => setServiceField(key as string, value)}
+            isAdding={addServiceMutation.isPending}
+            onClose={() => setServicesPanel(null)}
+            onAdd={() => addServiceMutation.mutate()}
+            onToggleActive={(id, isActive) => toggleServiceMutation.mutate({ id, is_active: isActive })}
+            onDelete={(id) => deleteServiceMutation.mutate(id)}
+          />
         )}
 
         {/* ─── Business List ─── */}
