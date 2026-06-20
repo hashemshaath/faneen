@@ -161,7 +161,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       await supabase
         .from('user_dashboard_layouts')
         .upsert(
-          { user_id: uid, dashboard_key: DASHBOARD_KEY, layout: next, updated_at: new Date().toISOString() },
+          [{ user_id: uid, dashboard_key: DASHBOARD_KEY, layout: next as unknown as Record<string, unknown>, updated_at: new Date().toISOString() }],
           { onConflict: 'user_id,dashboard_key' },
         );
     } catch { /* offline / RLS: localStorage already updated */ }
