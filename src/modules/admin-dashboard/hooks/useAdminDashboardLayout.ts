@@ -122,7 +122,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [persist]);
 
   // ── Cloud sync ─────────────────────────────────────────────────────
   // Hydrate from the user's account on mount (overrides localStorage
@@ -151,7 +151,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       }
     })().catch(() => { /* offline: keep localStorage state */ });
     return () => { cancelled = true; };
-  }, []);
+  }, [persist]);
 
   const persist = useCallback((next: StoredLayout): void => {
     writeStored(next);
@@ -173,7 +173,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
           );
       } catch { /* offline / RLS: localStorage already updated */ }
     })();
-  }, []);
+  }, [persist]);
 
   const commit = useCallback((next: StoredLayout) => {
     const cleaned: StoredLayout = {
@@ -202,7 +202,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       persist(next);
       return next;
     });
-  }, [canHide]);
+  }, [canHide, persist]);
 
   const show = useCallback((id: string) => {
     setState((prev) => {
@@ -214,7 +214,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       persist(next);
       return next;
     });
-  }, []);
+  }, [persist]);
 
   const toggleHidden = useCallback((id: string) => {
     if (!canHide(id)) return;
@@ -225,7 +225,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       persist(next);
       return next;
     });
-  }, [canHide]);
+  }, [canHide, persist]);
 
   const reset = useCallback(() => {
     commit({ order: [...ADMIN_DASHBOARD_DEFAULT_ORDER], hidden: [] });
@@ -244,7 +244,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       persist(out);
       return out;
     });
-  }, []);
+  }, [persist]);
   const moveUp = useCallback((id: string) => moveBy(id, -1), [moveBy]);
   const moveDown = useCallback((id: string) => moveBy(id, 1), [moveBy]);
 
@@ -255,7 +255,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       persist(out);
       return out;
     });
-  }, []);
+  }, [persist]);
 
   const fullOrder = useMemo(() => sanitizeOrder(state.order), [state.order]);
   const visibleOrder = useMemo(() => {
