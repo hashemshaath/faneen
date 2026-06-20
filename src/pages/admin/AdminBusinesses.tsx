@@ -1564,34 +1564,36 @@ const AdminBusinesses = () => {
             editCityName={editCityName}
             allServices={allServices}
             onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
-            branches={branches as unknown as AdminBranchRow[]}
-            branchForm={branchForm}
-            setBranchForm={setBranchForm}
-            editingBranchId={editingBranchId}
-            setEditingBranchId={setEditingBranchId}
-            branchTranslating={branchTranslating}
-            onTranslateBranch={translateBranchName}
-            countries={countries}
-            onToggleBranchActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
-            onEditBranch={(br) => {
-              setEditingBranchId(br.id);
-              setBranchForm(mapBranchRowToForm(br));
-            }}
-            onDeleteBranch={(id) => deleteBranchMutation.mutate(id)}
-            onSaveBranch={() => saveBranchMutation.mutate()}
-            savingBranch={saveBranchMutation.isPending}
-            emptyBranch={emptyBranch}
-            mainContact={{
-              unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
-              customer_service_phone:
-                editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
-              email: editForm.email ?? editingBiz.email ?? null,
-              website: editForm.website ?? editingBiz.website ?? null,
-            }}
-            onApplyHoursToAllBranches={(hours) =>
-              applyHoursToAllBranchesMutation.mutate(hours as unknown)
+            branchCount={branches.length}
+            branchesTab={
+              <BusinessBranchesSection
+                isRTL={isRTL}
+                language={language as 'ar' | 'en'}
+                branches={branches as unknown as AdminBranchRow[]}
+                branchForm={branchForm}
+                setBranchForm={setBranchForm}
+                editingBranchId={editingBranchId}
+                setEditingBranchId={setEditingBranchId}
+                branchTranslating={branchTranslating}
+                onTranslate={translateBranchName}
+                countries={countries}
+                onToggleActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
+                onEdit={(br) => { setEditingBranchId(br.id); setBranchForm(mapBranchRowToForm(br)); }}
+                onDelete={(id) => deleteBranchMutation.mutate(id)}
+                onSave={() => saveBranchMutation.mutate()}
+                saving={saveBranchMutation.isPending}
+                emptyBranch={emptyBranch}
+                mainContact={{
+                  unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
+                  customer_service_phone:
+                    editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
+                  email: editForm.email ?? editingBiz.email ?? null,
+                  website: editForm.website ?? editingBiz.website ?? null,
+                }}
+                onApplyHoursToAllBranches={(hours) => applyHoursToAllBranchesMutation.mutate(hours as unknown)}
+                applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
+              />
             }
-            applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
             ownerTab={
               <BusinessOwnerSectionShell
                 businessId={editingBiz.id}
