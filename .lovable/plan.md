@@ -1,64 +1,89 @@
-## UNIFIED DASHBOARD IA + MENU DESIGN AUDIT + ROUTE CONSOLIDATION
+## ADMIN BUSINESSES + PROVIDERS CONTROL CENTER — Professional Rebuild Plan
 
-هذا تغيير كبير يلمس Sidebar لكل الأدوار (user / business owner / provider / admin)، يوحّد المسميات، يعيد ترتيب الأقسام، يضيف اختبارات صارمة، ويُنتج تقريرًا. سأنفّذه على دفعات حتى لا أكسر شيئًا.
+### Goal
+Replace the inside of `/admin/businesses` with a new, design-first control center: "إدارة الجهات والمزودين". Route preserved. No DB/RLS/RPC/edge/migrations. No fake data. All existing actions (create, edit, publish, open public page, copy link, complete data) carried over.
 
-### نطاق التنفيذ
+### Approach
+Phase 1 already shipped `Overview` tab + tabs shell. This plan completes the rebuild over the remaining 5 tabs as a single coherent design pass, then retires the legacy single-page layout as the default view.
 
-**الملفات الرئيسية المتأثرة (تعديل):**
-- `src/components/dashboard/DashboardSidebar.tsx` — مصدر `userGroups` / `providerGroups` وتمرير `adminBaseGroups`. سأعيد بناء الأقسام بالأسماء الموحّدة فقط، نفس بنية `MenuGroup` الحالية (لا أغير الـ shell).
-- `src/components/dashboard/navigation/menuArchitecture.ts` — تحديث glossary + `recommendedGroupOrder` بالأسماء العربية الموحّدة.
-- `src/components/dashboard/sidebar/SidebarItem.tsx` و `SidebarSection` (إن وُجد) — توحيد classes للعنوان والعنصر والـ active state، حجم أيقونة ثابت `w-[18px] h-[18px]`، بدون hex.
-- `src/modules/admin-shell/navigation/adminNavigation.ts` — مزامنة عناوين قسم «الإدارة» مع المرجع الموحّد دون تغيير الـ routes.
-
-**ملفات جديدة:**
-- `src/components/dashboard/navigation/unifiedLabels.ts` — مصدر واحد لكل المسميات (ar/en) لكل عنصر قائمة، يستهلكه السايدبار والاختبارات.
-- `src/__tests__/unifiedDashboardNavigationIa.test.tsx` — الاختبارات 13 المطلوبة.
-- `src/__tests__/dashboardMenuVisualConsistency.test.tsx` — اختبارات الاتساق البصري.
-- `docs/unified-dashboard-ia-audit.md` — التقرير النهائي (المسميات قبل/بعد + جدول routes + قرار).
-
-### بنية القائمة الموحّدة (مرجع التنفيذ)
-
-```text
-لوحة التحكم      → نظرة عامة، طلباتي، المشاريع، المواقع، الفروع، الرسائل، العضوية
-المنشأة          → بيانات المنشأة، الخدمات والقطاعات، الأعمال والمعرض، الفريق والصلاحيات، التحقق والظهور
-طلبات المزود     → طلبات العملاء، الفرص الجديدة، العروض والردود، العملاء
-الإدارة (أدمن)   → الطلبات، الجهات، مزودو الخدمة، العملاء، المراجعة والاعتماد، العمليات، التقارير، الإعدادات
-الحساب           → الملف الشخصي، الإشعارات، الأمان، تسجيل الخروج
+### New IA (6 tabs, RTL-first)
 ```
+[ نظرة عامة ] [ الجهات ] [ مزودو الخدمة ] [ التصنيفات والقطاعات ] [ المراجعة والظهور ] [ جاهزية التشغيل ]
+```
+- URL state: `?tab=<id>` (already in shell).
+- Default tab: `overview`.
 
-### قواعد الإظهار الشرطي (تُطبَّق داخل `DashboardSidebar` عبر فلتر موجود)
-- بدون منشأة → يُخفى قسم «المنشأة» + «طلبات المزود» + عناصر الفروع/المشاريع المرتبطة بالمنشأة، ويظهر CTA «إنشاء منشأة» يربط إلى `/register-entity` (وليس `/onboarding`).
-- بمنشأة → كل قسم «المنشأة».
-- Provider بصلاحية → قسم «طلبات المزود».
-- Admin → قسم «الإدارة».
-- `/dashboard/membership` يظهر دائمًا، المحتوى يتكيّف.
+### Tab designs
 
-### routes inventory
-سأبني الجدول في التقرير عبر سكربت بسيط يقارن `App.tsx` بـ `unifiedLabels.ts` + admin nav registry، ويضع `Status = OK/Missing/Orphan`. أي 404 محتمل سأوثقه ولن أحذف أي route بدون redirect.
+1. **نظرة عامة** (exists, polish only)
+   - Keep KPI cards + MetricBarList.
+   - Add: "إجراءات سريعة" row → links to Review tab pre-filtered (drafts, pending, missing-contact).
 
-### ممنوعات (مُلتزَم بها)
-- لا DB/RLS/RPC/migrations/edge.
-- لا تغيير Auth/Membership/RFQ behavior.
-- لا hex، لا `any`، لا `@ts-ignore/expect-error`، لا `eslint-disable`، لا تخطّي اختبارات.
-- لا حذف routes — فقط إعادة تسمية labels وإعادة ترتيب.
+2. **الجهات** (refactor of current page body)
+   - Header strip: search + entity-type filter + status filter + region filter (real columns only).
+   - Card/grid view (default) using `MetricCard`-like business cards with: logo, name (ar/en), ref_id, status badges (verified, published, demo), city, completeness chips (contact/link/desc/media).
+   - Row actions: تعديل، عرض عام، نسخ الرابط، نشر/إلغاء نشر — wired to existing handlers extracted from `AdminBusinesses.tsx`.
+   - "إضافة جهة" button → existing inline create form (reused as-is).
 
-### خطوات التنفيذ بالتسلسل
+3. **مزودو الخدمة**
+   - Filter source rows by `entity_type` provider-like values OR `is_service_provider` if such a column exists; otherwise show empty state explaining data source.
+   - Sections (chips): مؤهلون، ناقصو تواصل، بدون تصنيف، بدون رابط عام، غير منشورين.
+   - Card explains *why* provider is ready / not ready (rule list from `businessAdminMetrics`).
 
-1. **قراءة** `DashboardSidebar.tsx` بالكامل + `adminNavigation.ts` + `SidebarItem/Section` + `App.tsx` لجمع routes.
-2. **إنشاء** `unifiedLabels.ts` كمصدر واحد.
-3. **إعادة كتابة** `userGroups` و`providerGroups` داخل `DashboardSidebar.tsx` بالاستيراد من `unifiedLabels`، مع الحفاظ على كل `url` كما هو (تغيير labels فقط + الترتيب).
-4. **مزامنة** عناوين admin groups بنفس الأسماء الموحّدة (دون تغيير routes).
-5. **توحيد** classes في `SidebarItem` / section heading (حجم أيقونة، active state، spacing) — بدون hex.
-6. **CTA «إنشاء منشأة»** للمستخدم بدون منشأة → `/register-entity`. التأكد أن أي رابط حالي إلى `/onboarding` كـ «إنشاء» يصبح إلى `/register-entity`. `/onboarding` يبقى لاستكمال البيانات فقط.
-7. **كتابة الاختبارين** بالـ 13 + 6 شروط.
-8. **توليد التقرير** `docs/unified-dashboard-ia-audit.md` بالأقسام الـ 19.
-9. **تشغيل** `vitest run` للاختبارات الجديدة + audit scripts ذات الصلة (`broken-links-audit`، `adminSidebarLinks`، `adminRouteLinkIntegrity`).
+4. **التصنيفات والقطاعات**
+   - Distribution bars by `entity_type` (already implemented helper).
+   - If a real sector/category column is missing on the row shape → empty-state card: "لا يتوفر مصدر تصنيف دقيق على مستوى الصف حاليًا" — explicit, no fake data.
+   - Reuse `MetricBarList`.
 
-### المخرجات النهائية للمستخدم
-- Sidebar موحّد بالعربية لكل الأدوار.
-- مسميات موحّدة بدون تكرار.
-- CTA «إنشاء منشأة» صحيح لمن لا يملك منشأة.
-- اختباران جديدان يحرسان الـ IA.
-- تقرير `UNIFIED DASHBOARD IA + MENU DESIGN AUDIT REPORT` مع قرار `PASS` أو `NEEDS FIX` حسب نتيجة الاختبارات.
+5. **المراجعة والظهور**
+   - Buckets: drafts، pending review، approved غير منشور، inactive، demo، بدون username، بدون تواصل.
+   - Each bucket = collapsible list of business mini-cards with quick actions: تعديل، فتح عام، نسخ الرابط.
+   - Counts derived from `businessAdminMetrics`.
 
-هل أبدأ التنفيذ بهذه الخطة؟
+6. **جاهزية التشغيل (Pilot)**
+   - "جاهز" vs "غير جاهز" using `isPilotReady`.
+   - Distribution bars: by city (`city_id`/`region`) and entity_type.
+   - List of not-ready with explicit reason chips (missing contact / missing link / pending review / rejected).
+
+### Shared building blocks (new)
+- `src/components/admin/businesses/control-center/BusinessCard.tsx` — unified card.
+- `src/components/admin/businesses/control-center/BusinessBucketList.tsx` — collapsible bucket with mini list.
+- `src/components/admin/businesses/control-center/ReadinessReasonChips.tsx` — pure render of reasons.
+- `src/components/admin/businesses/control-center/ProvidersTab.tsx`
+- `src/components/admin/businesses/control-center/TaxonomiesTab.tsx`
+- `src/components/admin/businesses/control-center/ReviewTab.tsx`
+- `src/components/admin/businesses/control-center/PilotTab.tsx`
+- `src/components/admin/businesses/control-center/BusinessesTab.tsx` — new card-grid view replacing legacy table as default.
+
+### Metric helpers (extend `businessAdminMetrics.ts`)
+- `pilotReadinessReasons(b)` → string[] (bilingual via labels file).
+- `providerSegment(b)` → 'qualified' | 'no_contact' | 'no_link' | 'no_taxonomy' | 'unpublished'.
+- `cityDistribution(rows, isRTL)` → DistributionBucket[] (using `region`/`city_id`).
+
+### Action wiring
+Extract existing handlers from `AdminBusinesses.tsx` (openEdit, publishBusiness, openPublic, copyPublicLink) into `src/modules/admin/businesses/businessAdminActions.ts` so all tabs share the same callbacks. No behavior change.
+
+### Legacy retirement
+- The legacy single-page layout (filters bar + big table) becomes opt-in via `?tab=businesses&view=legacy` for one release, default = new card grid. Document in code comment. No file deletions.
+
+### Tests
+- Extend `adminBusinessesProvidersControlCenterPhase1.test.tsx` and add:
+  - `adminBusinessesProvidersControlCenterRebuild.test.tsx` — mounts each tab with a fixed real-shape fixture, asserts:
+    - tabs render and switch via `?tab=`
+    - KPI counts match fixture
+    - provider segments correctly classified
+    - pilot readiness reasons present for not-ready rows
+    - no hex colors, no `any`, no `@ts-ignore`, no direct `supabase.from(` in new components
+    - `/admin/businesses` route still resolves
+    - action callbacks invoked on card buttons
+
+### Constraints (enforced)
+- No DB / RLS / RPC / migrations / edge.
+- No fake data; missing-source → empty state.
+- No hardcoded hex; design tokens only.
+- No `any`, `@ts-ignore`, `@ts-expect-error`, `eslint-disable`, skipped tests.
+- Route `/admin/businesses` unchanged.
+- Provider leads + data enrichment untouched.
+
+### Deliverable
+Final report titled **ADMIN BUSINESSES + PROVIDERS CONTROL CENTER PROFESSIONAL REBUILD REPORT** with tsc + test results and PASS/NEEDS FIX decision.
