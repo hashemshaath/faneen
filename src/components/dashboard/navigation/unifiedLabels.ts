@@ -15,6 +15,7 @@ export type Bi = { ar: string; en: string };
 export const UNIFIED_GROUP_LABELS = {
   dashboard:   { ar: 'لوحة التحكم',  en: 'Dashboard' },
   business:    { ar: 'أعمال',          en: 'Business' },
+  businessEntity: { ar: 'أعمال المنشأة', en: 'Business Entity' },
   providerOps: { ar: 'طلبات المزود',  en: 'Provider Requests' },
   admin:       { ar: 'الإدارة',        en: 'Administration' },
   account:     { ar: 'الحساب',         en: 'Account' },

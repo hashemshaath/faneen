@@ -34,9 +34,9 @@ const NAV_VISIBILITY = readFileSync(
 );
 
 describe('unified label registry', () => {
-  it('exposes the five canonical group labels', () => {
+  it('exposes the six canonical group labels', () => {
     const keys = Object.keys(UNIFIED_GROUP_LABELS).sort();
-    expect(keys).toEqual(['account', 'admin', 'business', 'dashboard', 'providerOps']);
+    expect(keys).toEqual(['account', 'admin', 'business', 'businessEntity', 'dashboard', 'providerOps']);
   });
 
   it('has no duplicate Arabic group labels', () => {
@@ -96,10 +96,10 @@ describe('user sidebar adopts unified labels', () => {
 });
 
 describe('sidebar visibility for users without a business', () => {
-  it('gates the «المنشأة» group behind hasBusiness', () => {
+  it('gates the «أعمال المنشأة» group + requiresBusiness items behind hasBusiness', () => {
     // The filter check moved into the visibility module.
     expect(SIDEBAR).toContain('hasBusiness');
     expect(NAV_VISIBILITY).toContain('hasBusiness');
-    expect(NAV_VISIBILITY).toContain('UNIFIED_GROUP_LABELS.business.en');
+    expect(NAV_VISIBILITY).toContain('requiresBusiness');
   });
 });

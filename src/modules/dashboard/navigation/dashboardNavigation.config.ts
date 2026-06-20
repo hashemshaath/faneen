@@ -134,9 +134,6 @@ export const userNavGroups: DashboardNavGroup[] = [
     items: [
       { label: UNIFIED_ITEM_LABELS.overview, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: UNIFIED_ITEM_LABELS.myRequests, url: '/dashboard/my-requests', icon: Inbox },
-      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
-      { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
-      { label: UNIFIED_ITEM_LABELS.branches, url: '/dashboard/branches', icon: Building2 },
       { label: UNIFIED_ITEM_LABELS.messages, url: '/dashboard/messages', icon: MessageSquare },
       { label: UNIFIED_ITEM_LABELS.membership, url: '/dashboard/membership', icon: Crown },
     ],
@@ -144,14 +141,26 @@ export const userNavGroups: DashboardNavGroup[] = [
   {
     key: 'business',
     groupLabel: UNIFIED_GROUP_LABELS.business,
-    icon: Building2,
-    description: { ar: 'إدارة بيانات منشأتك وفريقها', en: 'Manage your business profile and team' },
+    icon: Wrench,
+    description: { ar: 'مواقعك ومشاريعك وعقودك (شخصية أو مرتبطة بمنشأتك)', en: 'Your sites, projects and contracts (personal or business)' },
     items: [
-      { label: UNIFIED_ITEM_LABELS.businessProfile, url: '/dashboard/business-edit', icon: Building2 },
-      { label: UNIFIED_ITEM_LABELS.services, url: '/dashboard/services', icon: Wrench },
-      { label: UNIFIED_ITEM_LABELS.portfolio, url: '/dashboard/portfolio', icon: Image },
-      { label: UNIFIED_ITEM_LABELS.team, url: '/dashboard/settings/staff', icon: Users },
-      { label: UNIFIED_ITEM_LABELS.visibility, url: '/dashboard/badge', icon: ShieldCheck },
+      { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
+      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
+      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+    ],
+  },
+  {
+    key: 'businessEntity',
+    groupLabel: UNIFIED_GROUP_LABELS.businessEntity,
+    icon: Building2,
+    description: { ar: 'بيانات منشأتك وفروعها وفريقها', en: 'Your business profile, branches and team' },
+    items: [
+      { label: UNIFIED_ITEM_LABELS.branches, url: '/dashboard/branches', icon: Building2, requiresBusiness: true },
+      { label: UNIFIED_ITEM_LABELS.businessProfile, url: '/dashboard/business-edit', icon: Building2, requiresBusiness: true },
+      { label: UNIFIED_ITEM_LABELS.services, url: '/dashboard/services', icon: Wrench, requiresBusiness: true },
+      { label: UNIFIED_ITEM_LABELS.portfolio, url: '/dashboard/portfolio', icon: Image, requiresBusiness: true },
+      { label: UNIFIED_ITEM_LABELS.team, url: '/dashboard/settings/staff', icon: Users, requiresBusiness: true },
+      { label: UNIFIED_ITEM_LABELS.visibility, url: '/dashboard/badge', icon: ShieldCheck, requiresBusiness: true },
     ],
   },
   {

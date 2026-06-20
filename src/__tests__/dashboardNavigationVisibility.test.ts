@@ -8,20 +8,22 @@ import {
 } from '@/modules/dashboard/navigation';
 
 describe('DASHBOARD NAV VISIBILITY — audience + business gating', () => {
-  it('user WITHOUT a business does not see the «المنشأة» group', () => {
+  it('user WITHOUT a business does not see the «أعمال المنشأة» group', () => {
     const groups = getVisibleDashboardNavGroups({
       audience: 'user', hasBusiness: false, isSuperAdmin: false,
     });
     const ens = groups.map((g) => g.groupLabel.en);
-    expect(ens).not.toContain(UNIFIED_GROUP_LABELS.business.en);
+    expect(ens).not.toContain(UNIFIED_GROUP_LABELS.businessEntity.en);
+    // …but they DO still see the personal «أعمال» group.
+    expect(ens).toContain(UNIFIED_GROUP_LABELS.business.en);
   });
 
-  it('user WITH a business sees the «المنشأة» group', () => {
+  it('user WITH a business sees the «أعمال المنشأة» group', () => {
     const groups = getVisibleDashboardNavGroups({
       audience: 'user', hasBusiness: true, isSuperAdmin: false,
     });
     const ens = groups.map((g) => g.groupLabel.en);
-    expect(ens).toContain(UNIFIED_GROUP_LABELS.business.en);
+    expect(ens).toContain(UNIFIED_GROUP_LABELS.businessEntity.en);
   });
 
   it('provider always sees Business + Provider-Requests groups', () => {
