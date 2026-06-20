@@ -283,7 +283,7 @@ describe('Home Taxonomy Link Guard', () => {
 
     it('renders an empty-state branch in HomeCategoryRow', () => {
       expect(files.categoryRow).toContain('لا توجد شركات مرتبطة بهذا القطاع حاليًا');
-      expect(files.categoryRow).toMatch(/providers\.length\s*>\s*0/);
+      expect(files.categoryRow).toMatch(/filteredProviders\.length\s*>\s*0/);
     });
   });
 
