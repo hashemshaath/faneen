@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Send, Building2, Layers, MessageSquare, Compass, Wrench, Tag, FileText, ShieldCheck } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { SECTORS_SEO_LIST, type SeoSectorSlug } from '@/lib/sectors-seo';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
@@ -72,6 +73,7 @@ function useSectorCards(): SectorCard[] {
 
 const SectorsHub: React.FC = () => {
   const sectorCards = useSectorCards();
+  useImagePerfTracking('sectors_hub');
   usePageMeta({
     title: buildSeoTitle({ kind: 'category', lang: 'ar', name: 'القطاعات' }),
     description: buildSeoDescription({ kind: 'category', lang: 'ar', name: 'القطاعات', customDescription: 'استكشف قطاعات الخدمات في منصة قطاعات، وابحث عن مزودي خدمات الألمنيوم، الحديد، الخشب، الزجاج، الستانلس ستيل، والتصنيع والتركيب في السعودية.' }),
