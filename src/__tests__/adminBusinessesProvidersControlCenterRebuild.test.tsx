@@ -31,6 +31,7 @@ const REBUILD_FILES = [
   'src/components/admin/businesses/control-center/TaxonomiesTab.tsx',
   'src/components/admin/businesses/control-center/ReviewTab.tsx',
   'src/components/admin/businesses/control-center/PilotTab.tsx',
+  'src/components/admin/businesses/control-center/QualityTab.tsx',
   'src/components/admin/businesses/control-center/QuickActionsCard.tsx',
   'src/components/admin/businesses/control-center/BusinessesCommandBar.tsx',
 ];
@@ -47,12 +48,12 @@ describe('AdminBusinesses control-center — Professional Rebuild', () => {
     expect(notReady, `unready tabs: ${notReady.map((t) => t.id).join(',')}`).toHaveLength(0);
   });
 
-  it('AdminBusinesses mounts all four new tab components', () => {
+  it('AdminBusinesses mounts every control-center tab component', () => {
     const src = read('src/pages/admin/AdminBusinesses.tsx');
     expect(src).toMatch(/<ControlCenterProvidersTab\b/);
     expect(src).toMatch(/<ControlCenterTaxonomiesTab\b/);
-    expect(src).toMatch(/<ControlCenterReviewTab\b/);
-    expect(src).toMatch(/<ControlCenterPilotTab\b/);
+    // Review + Pilot now live behind the unified QualityTab.
+    expect(src).toMatch(/<ControlCenterQualityTab\b/);
     // Legacy table + filters still mounted inside the businesses tab
     expect(src).toMatch(/<BusinessFiltersBar\b/);
     expect(src).toMatch(/<BusinessTableSection\b/);
