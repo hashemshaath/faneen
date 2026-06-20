@@ -21,5 +21,6 @@ export {
 } from './hooks/useAdminDashboardLayout';
 export type { UseAdminDashboardLayoutResult } from './hooks/useAdminDashboardLayout';
 export { AdminWidgetShell } from './components/AdminWidgetShell';
+export { SortableSection } from './components/SortableSection';
 export { AdminDashboardCustomizeBar } from './components/AdminDashboardCustomizeBar';
 export { AdminQuickActionsWidget } from './components/AdminQuickActionsWidget';

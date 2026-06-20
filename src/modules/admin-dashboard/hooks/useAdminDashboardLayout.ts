@@ -40,6 +40,8 @@ export interface UseAdminDashboardLayoutResult {
   moveUp: (id: string) => void;
   /** Move a widget one slot later in the render order. No-op at bottom. */
   moveDown: (id: string) => void;
+  /** Replace the full render order in one shot (e.g. after a DnD reorder). */
+  setOrder: (next: readonly string[]) => void;
   reset: () => void;
   editMode: boolean;
   setEditMode: (next: boolean) => void;
@@ -193,6 +195,15 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
   const moveUp = useCallback((id: string) => moveBy(id, -1), [moveBy]);
   const moveDown = useCallback((id: string) => moveBy(id, 1), [moveBy]);
 
+  const setOrder = useCallback((next: readonly string[]) => {
+    setState((prev) => {
+      const cleaned = sanitizeOrder(next);
+      const out: StoredLayout = { order: cleaned, hidden: prev.hidden };
+      writeStored(out);
+      return out;
+    });
+  }, []);
+
   const fullOrder = useMemo(() => sanitizeOrder(state.order), [state.order]);
   const visibleOrder = useMemo(() => {
     const hiddenSet = new Set(state.hidden);
@@ -216,6 +227,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     hide,
     moveUp,
     moveDown,
+    setOrder,
     reset,
     editMode,
     setEditMode,
