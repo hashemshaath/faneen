@@ -3,13 +3,13 @@ import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { LayoutGrid, List, Share2, ArrowUpDown } from 'lucide-react';
+import { LayoutGrid, List, Map as MapIcon, Share2, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useBi } from '@/components/common/Bilingual';
 import type { SearchFilterValues } from '@/services/search/useSearch';
 import { MobileFiltersSheet } from './MobileFiltersSheet';
 
-export type ViewModeV3 = 'grid' | 'list';
+export type ViewModeV3 = 'grid' | 'list' | 'map';
 
 interface Props {
   query: string;
@@ -51,6 +51,7 @@ export const SearchHeaderV3 = ({
   const viewBtns: { mode: ViewModeV3; icon: typeof LayoutGrid; labelAr: string; labelEn: string }[] = [
     { mode: 'grid', icon: LayoutGrid, labelAr: 'شبكة', labelEn: 'Grid' },
     { mode: 'list', icon: List, labelAr: 'قائمة', labelEn: 'List' },
+    { mode: 'map', icon: MapIcon, labelAr: 'خريطة', labelEn: 'Map' },
   ];
 
   return (
