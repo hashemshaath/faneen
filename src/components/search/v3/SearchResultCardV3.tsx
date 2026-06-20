@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, MapPin, ArrowUpRight, MessageSquare } from 'lucide-react';
+import { Star, MapPin, ArrowUpRight, MessageSquare, Scale } from 'lucide-react';
+import { toast } from 'sonner';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { getBusinessProfileHref } from '@/lib/business/profileHref';
 import { fmtNum } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { useCompareSelection, COMPARE_MAX } from '@/services/search/useCompareSelection';
 import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
 /**
@@ -58,6 +60,8 @@ const InitialsFallback = ({ name }: { name: string }) => {
 export const SearchResultCardV3 = memo(({ business, taxonomy, view = 'grid' }: Props) => {
   const { language, isRTL } = useLanguage();
   const bi = useBi();
+  const compare = useCompareSelection();
+  const isCompared = compare.has(business.id);
 
   const href = getBusinessProfileHref(business);
   const name = language === 'ar' ? business.name_ar : (business.name_en || business.name_ar);
@@ -86,6 +90,35 @@ export const SearchResultCardV3 = memo(({ business, taxonomy, view = 'grid' }: P
         isList ? 'flex flex-row items-stretch gap-4' : 'flex flex-col',
       )}
     >
+      <button
+        type="button"
+        onClick={() => {
+          const res = compare.toggle(business.id);
+          if (!res.added && !isCompared) {
+            toast.error(bi(`الحد الأقصى ${COMPARE_MAX} مزودين للمقارنة`, `Maximum ${COMPARE_MAX} providers to compare`));
+          } else if (res.added) {
+            toast.success(bi('أُضيف للمقارنة', 'Added to compare'));
+          }
+        }}
+        aria-pressed={isCompared}
+        aria-label={bi(
+          isCompared ? 'إزالة من المقارنة' : 'إضافة للمقارنة',
+          isCompared ? 'Remove from compare' : 'Add to compare',
+        )}
+        title={bi(
+          isCompared ? 'إزالة من المقارنة' : 'إضافة للمقارنة',
+          isCompared ? 'Remove from compare' : 'Add to compare',
+        )}
+        className={cn(
+          'absolute top-2 end-2 inline-flex items-center justify-center w-8 h-8 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+          isCompared
+            ? 'bg-accent/15 border-accent/40 text-accent'
+            : 'bg-background/80 border-border/60 text-muted-foreground hover:text-accent hover:border-accent/40',
+        )}
+      >
+        <Scale className="w-3.5 h-3.5" aria-hidden="true" />
+      </button>
+
       <div className={cn('flex items-start gap-3', isList ? 'flex-1 min-w-0' : '')}>
         {business.logo_url ? (
           <img
