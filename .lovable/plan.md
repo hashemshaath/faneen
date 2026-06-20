@@ -1,60 +1,65 @@
-## Phase 5 — Bids / Offers (Opportunities System)
+# Knowledge + FAQ + Help Center Unification — Master Knowledge Service
 
-### Decision: create new `opportunity_bids` table (NOT reuse `rfq_quotes`)
+## Scope
+Frontend-only consolidation. No DB, RLS, RPC, migrations, edge functions, or message sending. Build a typed in-repo knowledge registry that FAQ, Help Center, AI assistant, and message helpers can all read from.
 
-Audit results:
-- `rfq_quotes` is **empty** (0 rows). `rfq_requests` is also empty.
-- `rfq_quotes.rfq_id` FK → `rfq_requests(id)`, a parallel/abandoned system. Repointing it to `quote_requests` would either (a) break the FK semantically or (b) require a polymorphic column — both fragile.
-- Naming collision: "rfq_quotes" reads as the old «RFQ» surface, exactly the legacy term Phase 2 renamed away from.
-- A clean `opportunity_bids` table maps 1:1 to the new domain, has zero migration cost (no rows to move), and keeps `rfq_*` untouched for legacy compatibility.
+## Phase A — Inventory
+Search the project for knowledge sources:
+- Keywords: `faq`, `help`, `support`, `knowledge`, `article`, `guide`, `docs`, `question`, `answer`, `template`, `notification`, plus Arabic equivalents (`مساعدة`, `الأسئلة الشائعة`, `مركز المساعدة`, `المعرفة`, `دليل`, `إرشادات`, `الدعم`, `كيف`).
+- Locations: `src/pages/**` (Help, FAQ, Support, About), `src/components/**` (empty states, onboarding copy), `src/modules/**`, `supabase/functions/**` (string templates only), email/notification template files.
 
-### Migration (`opportunity_bids`)
+Output: `docs/knowledge-help-faq-unification-audit.md` with the required table (Source | Type | Path | Audience | Language | Duplicate? | Assistant-usable? | Notes).
 
-Columns: `id`, `opportunity_id` → `quote_requests(id) ON DELETE CASCADE`, `assignment_id` → `quote_request_leads(id) ON DELETE SET NULL` (nullable), `provider_business_id` → `businesses(id)`, `submitted_by` → `auth.users(id)`, `price_amount numeric`, `currency text default 'SAR'`, `duration_value int`, `duration_unit text` (day/week/month), `scope_summary text`, `terms text`, `warranty text`, `status text` (constrained), `submitted_at timestamptz`, `expires_at timestamptz`, `attachments_count int default 0`, `created_at`, `updated_at`.
+## Phase B — Knowledge module
+Create `src/modules/knowledge/`:
 
-Status CHECK: `draft|submitted|under_review|shortlisted|revised|withdrawn|rejected|awarded`.
+```text
+knowledge.types.ts        KnowledgeItem + enums
+knowledge.schema.ts       Runtime validator (zod) + dev assertions
+knowledgeRegistry.ts      Seed entries migrated from inventory
+knowledgeSearch.ts        Filter by audience/type/tags/locale, simple scoring
+knowledgeAudience.ts      Audience guards (visitor/customer/provider/...)
+knowledgeTags.ts          Canonical tag list
+knowledgeHelpers.ts       getAssistantKnowledgeContext, getMessageKnowledgeSnippets
+index.ts                  Public exports
+```
 
-Indexes: `(opportunity_id)`, `(provider_business_id)`, `(submitted_by)`, `(status)`.
+`KnowledgeItem` matches the spec exactly. Strict TS, no `any`, no suppressions.
 
-GRANTS: `SELECT, INSERT, UPDATE, DELETE` to `authenticated`; `ALL` to `service_role`. No `anon`.
+## Phase C — Wire existing surfaces
+- Help Center page reads its articles from `knowledgeRegistry` (filter `type in ['help_article','guide']`, audience match).
+- FAQ page/section reads from `knowledgeRegistry` (filter `type='faq'`).
+- Where legacy hardcoded arrays exist, migrate their content into the registry and replace the array with a `useKnowledge(...)` selector. Leave a `// LEGACY: source migrated to knowledgeRegistry` comment if a full swap is risky; do not delete.
 
-RLS policies:
-- **SELECT (provider)**: `submitted_by = auth.uid()` OR provider is staff on `provider_business_id`.
-- **SELECT (client)**: `auth.uid() = (SELECT user_id FROM quote_requests WHERE id = opportunity_id)`.
-- **SELECT (admin)**: `has_role(auth.uid(),'admin')`.
-- **INSERT**: `submitted_by = auth.uid()` AND a matching `quote_request_leads` row exists for the opportunity+provider (assignment-gated).
-- **UPDATE**: `submitted_by = auth.uid()` AND `status IN ('draft','submitted','revised')` (no edits after shortlist/award); admin always.
-- **DELETE**: admin only.
+## Phase D — Assistant + messaging interfaces (no sending)
+- `getAssistantKnowledgeContext(query, audience, locale)` → ranked items with title/summary/body/source/tags/relatedRoutes. Filters by `usableByAssistant` and audience-appropriate status.
+- `getMessageKnowledgeSnippets(audience, intent, locale)` → items with `usableInMessages=true`, excludes `status='internal'`.
+- No network calls, no provider wiring.
 
-`updated_at` trigger via existing `public.update_updated_at_column()`.
+## Phase E — Tests
+- `src/__tests__/knowledgeRegistryUnification.test.ts` — 14 invariants from spec (unique ids, AR title required, audience present, body required for published, no internal leakage in message items, no duplicate titles, no `any`/suppression scan on the module).
+- `src/__tests__/assistantKnowledgeContext.test.ts` — audience filtering, visitor isolation from internal, AR support, tag filtering, source returned, no synthesized answers.
+- `src/__tests__/faqUsesKnowledgeRegistry.test.ts` + `helpCenterUsesKnowledgeRegistry.test.ts` — static file scans proving the pages import the registry.
 
-### Domain layer (`src/modules/opportunities/bids/`)
-- `types.ts` — `OpportunityBid`, `OpportunityBidStatus` (literal union matching CHECK).
-- `services.ts` — `listOpportunityBidsForClient(opportunityId)`, `listMySubmittedBidsForProvider(userId)`, `listOpportunityBidsForOpportunity(opportunityId)` (admin/server-side RLS-respecting), `submitOpportunityBid(input)`, `updateDraftOpportunityBid(id, patch)`, `withdrawOpportunityBid(id)`. All real Supabase calls — no mocks.
+## Phase F — Report
+`docs/knowledge-help-faq-unification-report.md` answering the 17 required questions, plus tsc/test results and final decision line.
 
-### UI (minimal, additive — no route changes)
-- **Provider** (`DashboardRfqDetail.tsx` / lead details surface): new `<ProviderBidSection opportunityId assignmentId />` — shows current bid or `تقديم عرض` button → inline form (price, duration, scope, terms, warranty) → submit sets status `submitted`. No popup.
-- **Client** (existing opportunity detail page): new `<ClientBidsSection opportunityId />` — list of bids (price, provider name, status, submitted_at) or empty state «لا توجد عروض بعد». No award action.
-- **Admin** (admin opportunity detail): same `<ClientBidsSection>` reused (RLS filters), no award action.
+## Constraints
+- No DB / RLS / migrations / edge changes.
+- No real message sending.
+- No deletions of public pages or routes.
+- No `any`, `as any`, `@ts-ignore`, skipped tests.
+- Bilingual primitives (`<Bi>`, `pickBi`) used in UI; raw `isRTL ? ar : en` not introduced.
 
-Bilingual labels reused from `opportunityLabels.ts` (`submitBid`, `submittedBids`).
+## Out of scope (recommended as Phase 2)
+- Admin CRUD UI for knowledge (designed in report only).
+- DB-backed persistence + RLS.
+- Real AI assistant wiring beyond the interface.
+- Email/WhatsApp/notification template migration into registry (inventoried but not moved this phase).
 
-### Notifications
-Phase 5A scope: insert a `notifications` row to the opportunity owner on bid `submitted` via `submitOpportunityBid` service. Idempotency: unique partial index on `(notifications.user_id, type, related_id)` already covers most cases; pass `related_id = bid.id` with `type='opportunity_bid_submitted'`. Full notification template UI deferred to Phase 5B (documented).
-
-### Tests
-- `opportunitiesPhase5BidModelMigration.test.ts` — static SQL guards (FKs, status CHECK, indexes, RLS enabled, no `provider_leads` reference, `rfq_quotes` untouched).
-- `opportunitiesPhase5BidServices.test.ts` — type/import guards (no `any`, services exist, use central status map).
-- `opportunitiesPhase5BidUi.test.tsx` — provider section renders «تقديم عرض», client section renders bids list / empty state, no award button rendered, canonical routes still mounted.
-
-### Out of scope (explicitly NOT touched)
-DB enums on `quote_requests`, matching, credits/reveal, awarding, contract conversion, route deletions, `rfq_quotes` table.
-
-### Execution order
-1. Create migration (this requires user approval).
-2. After approval + types regen → add domain `types.ts` + `services.ts`.
-3. Add UI sections + wire into existing detail pages.
-4. Add 3 test files.
-5. Run `tsc` + targeted vitest.
-
-Proceeding with step 1 (migration) on approval.
+## Deliverables
+- `docs/knowledge-help-faq-unification-audit.md`
+- `docs/knowledge-help-faq-unification-report.md`
+- `src/modules/knowledge/*` (8 files)
+- Edits to Help/FAQ pages to source from registry
+- 4 new test files
