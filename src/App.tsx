@@ -592,7 +592,7 @@ const AppRoutes = () => (
           <Route path="/admin/content" element={<ProtectedRoute requireAdmin><AdminContentCenter /></ProtectedRoute>} />
           <Route path="/admin/finance" element={<ProtectedRoute requireAdmin><AdminFinanceCenter /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsCenter /></ProtectedRoute>} />
-          <Route path="/admin" element={<Navigate to="/admin/operations" replace />} />
+          <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminHome /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 3 — RFQ hub. */}
           <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfqHub /></ProtectedRoute>} />
           <Route path="/dashboard/rfq/inbox" element={<Navigate to="/dashboard/rfq?tab=inbox" replace />} />
