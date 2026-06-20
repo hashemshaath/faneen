@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { listActiveCities } from '@/modules/locations';
@@ -197,6 +197,7 @@ export const useCategories = () =>
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
   });
 
 export const useCities = () =>
@@ -213,6 +214,7 @@ export const useCities = () =>
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
   });
 
 export const useBusinesses = () =>
@@ -261,6 +263,9 @@ export const useBusinesses = () =>
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
+    // Keep previous results visible while a refetch is in flight — prevents
+    // the "flash of empty state" when filters/sort change.
+    placeholderData: keepPreviousData,
   });
 
 const DIRECTORY_REALTIME_TABLES = [
