@@ -7,10 +7,9 @@ const HOME = readFileSync(resolve(ROOT, 'src/components/home/v2/HomeV2.tsx'), 'u
 const APP = readFileSync(resolve(ROOT, 'src/App.tsx'), 'utf8');
 
 describe('Opportunities Phase 12 — homepage alignment', () => {
-  it('1. homepage CTA copy mentions a quote-style call ("اطلب عرض سعر")', () => {
-    // Phase 12 keeps the /quote conversion CTA. The conversion copy
-    // remains the canonical "اطلب عرض سعر مجانًا" wording.
-    expect(HOME).toMatch(/اطلب عرض سعر/);
+  it('1. homepage primary CTA uses opportunity-aligned copy', () => {
+    // Phase 12B — primary conversion CTA must speak opportunity language.
+    expect(HOME).toMatch(/ابدأ فرصة|أنشئ فرصة|اطرح فرصتك/);
   });
   it('2. /quote CTA target is still wired', () => {
     expect(HOME).toMatch(/quote:\s*['"]\/quote['"]/);
@@ -25,5 +24,9 @@ describe('Opportunities Phase 12 — homepage alignment', () => {
   });
   it('5. no hardcoded hex colors introduced on the home component', () => {
     expect(HOME).not.toMatch(/#[0-9a-fA-F]{6}\b/);
+  });
+  it('6. homepage does NOT keep "اطلب عرض سعر مجانًا" as a primary CTA label', () => {
+    // The label may not appear as a `label={bi(...)}` argument anymore.
+    expect(HOME).not.toMatch(/label=\{bi\('اطلب عرض سعر مجانًا'/);
   });
 });
