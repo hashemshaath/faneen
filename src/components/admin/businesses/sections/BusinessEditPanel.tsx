@@ -16,16 +16,12 @@ import { BusinessSeoSection } from '@/components/admin/businesses/edit/BusinessS
 import { BusinessContactSection } from '@/components/admin/businesses/edit/BusinessContactSection';
 import { BusinessEditActionsFooter } from '@/components/admin/businesses/edit/BusinessEditActionsFooter';
 import { BusinessBranchesSection } from '@/components/admin/businesses/branches/BusinessBranchesSection';
-import { BusinessControlsSection } from '@/components/admin/businesses/sections/BusinessControlsSection';
-import { BusinessOperationsSection } from '@/components/admin/businesses/sections/BusinessOperationsSection';
-import { BusinessOwnerSectionShell } from '@/components/admin/businesses/sections/BusinessOwnerSectionShell';
 
 type BasicSectionProps = React.ComponentProps<typeof BusinessBasicInfoSection>;
 type MediaSectionProps = React.ComponentProps<typeof BusinessMediaSection>;
 type SeoSectionProps = React.ComponentProps<typeof BusinessSeoSection>;
 type ContactSectionProps = React.ComponentProps<typeof BusinessContactSection>;
 type BranchesSectionProps = React.ComponentProps<typeof BusinessBranchesSection>;
-type ControlsSectionProps = React.ComponentProps<typeof BusinessControlsSection>;
 
 type EditingBusiness = BasicSectionProps['editingBiz'];
 type EditFormState = BasicSectionProps['editForm'];
@@ -79,7 +75,9 @@ export interface BusinessEditPanelProps {
   onApplyHoursToAllBranches: BranchesSectionProps['onApplyHoursToAllBranches'];
   applyingHoursToAllBranches: BranchesSectionProps['applyingHoursToAllBranches'];
 
-  tiers: ControlsSectionProps['tiers'];
+  ownerTab: React.ReactNode;
+  controlsTab: React.ReactNode;
+  opsTab: React.ReactNode;
 
   canSave: boolean;
   savingEdit: boolean;
@@ -126,7 +124,9 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
   mainContact,
   onApplyHoursToAllBranches,
   applyingHoursToAllBranches,
-  tiers,
+  ownerTab,
+  controlsTab,
+  opsTab,
   canSave,
   savingEdit,
   onSaveEdit,
@@ -197,13 +197,7 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
         </TabsContent>
 
         <TabsContent value="owner" className="space-y-4 mt-3">
-          <BusinessOwnerSectionShell
-            businessId={editingBiz.id}
-            businessRef={editingBiz.ref_id ?? null}
-            ownerUserId={editingBiz.user_id}
-            isRTL={isRTL}
-            onOwnerReassigned={onCancelEdit}
-          />
+          {ownerTab}
         </TabsContent>
 
         <TabsContent value="content" className="space-y-4 mt-3">
@@ -268,17 +262,11 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
         </TabsContent>
 
         <TabsContent value="controls" className="space-y-4 mt-3">
-          <BusinessControlsSection
-            editForm={editForm}
-            setField={setField}
-            isRTL={isRTL}
-            language={language}
-            tiers={tiers}
-          />
+          {controlsTab}
         </TabsContent>
 
         <TabsContent value="ops" className="space-y-4 mt-3">
-          <BusinessOperationsSection businessId={editingBiz.id} />
+          {opsTab}
         </TabsContent>
       </Tabs>
 
