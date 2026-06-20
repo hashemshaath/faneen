@@ -528,6 +528,12 @@ const SearchV3 = () => {
                 onPickQuery={handleQueryChange}
                 historyVersion={historyVersion}
               />
+              <SavedSearchesV3
+                query={query}
+                filters={filters}
+                currentCount={deferred.length}
+                hasActiveFilters={hasActiveFilters}
+              />
               <SearchSeoLinksV3 />
             </div>
           </aside>
@@ -572,6 +578,12 @@ const SearchV3 = () => {
           <RecentAndShareV3
             onPickQuery={handleQueryChange}
             historyVersion={historyVersion}
+          />
+          <SavedSearchesV3
+            query={query}
+            filters={filters}
+            currentCount={deferred.length}
+            hasActiveFilters={hasActiveFilters}
           />
           <SearchSeoLinksV3 />
         </div>
