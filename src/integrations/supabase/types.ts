@@ -11597,6 +11597,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_event_templates: {
+        Row: {
+          body_ar: string
+          body_en: string
+          channel: string
+          created_at: string
+          enabled: boolean
+          event_type: string
+          id: string
+          notes: string | null
+          recipient_role: string
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_ar: string
+          body_en: string
+          channel: string
+          created_at?: string
+          enabled?: boolean
+          event_type: string
+          id?: string
+          notes?: string | null
+          recipient_role: string
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_ar?: string
+          body_en?: string
+          channel?: string
+          created_at?: string
+          enabled?: boolean
+          event_type?: string
+          id?: string
+          notes?: string | null
+          recipient_role?: string
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
