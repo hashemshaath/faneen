@@ -304,7 +304,7 @@ function useUserProjects(userId: string | undefined) {
       const { data: bizRows, error: bizErr } = await supabase
         .from('businesses')
         .select('id')
-        .eq('owner_user_id', userId);
+        .eq('user_id', userId);
       if (bizErr) return [];
       const bizIds = (bizRows ?? []).map((b: { id: string }) => b.id);
       if (!bizIds.length) return [];
