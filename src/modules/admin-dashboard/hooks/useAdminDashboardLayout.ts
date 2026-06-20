@@ -173,7 +173,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
           );
       } catch { /* offline / RLS: localStorage already updated */ }
     })();
-  }, [persist]);
+  }, []);
 
   const commit = useCallback((next: StoredLayout) => {
     const cleaned: StoredLayout = {
