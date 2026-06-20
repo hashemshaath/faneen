@@ -783,8 +783,6 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         }
       case 'system-summary':
         {
-          const contractSeries = seriesFromMonthly(stats?.monthlyContracts, 6);
-          const usersSeries = seriesFromMonthly(stats?.monthlyUsers, 6);
           const adminCount = (stats?.roleCounts?.admin ?? 0) + (stats?.roleCounts?.super_admin ?? 0);
           const sysCards = [
             {
@@ -807,16 +805,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 ? (isRTL ? 'تغطية إشرافية صحية — تقليل مخاطر النقطة الواحدة.' : 'Healthy coverage — no single point of failure.')
                 : (isRTL ? 'مشرف واحد فقط — أضف نسخة احتياطية للإدارة.' : 'Only one admin — add a backup for resilience.'),
             },
-            {
-              icon: FileText, tone: 'primary' as const,
-              label: isRTL ? 'إجمالي العقود' : 'Total contracts',
-              value: stats?.contracts ?? 0, series: contractSeries, to: '/admin/contracts',
-              insight: isRTL
-                ? `${stats?.activeContracts ?? 0} عقد نشط من إجمالي ${stats?.contracts ?? 0}.`
-                : `${stats?.activeContracts ?? 0} active out of ${stats?.contracts ?? 0} total.`,
-            },
           ];
-          void usersSeries;
           return (
             <Card className="border-border/40">
               <CardHeader className="pb-1 px-4 pt-3">
@@ -826,14 +815,13 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {sysCards.map((c) => (
                     <SmartMetricCard
                       key={c.label}
                       icon={c.icon}
                       label={c.label}
                       value={c.value}
-                      series={c.series}
                       tone={c.tone}
                       to={c.to}
                       insight={c.insight}
