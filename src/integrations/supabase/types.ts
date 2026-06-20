@@ -17677,6 +17677,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_dashboard_layouts: {
+        Row: {
+          dashboard_key: string
+          layout: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          dashboard_key?: string
+          layout?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          dashboard_key?: string
+          layout?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_favorite_businesses: {
         Row: {
           business_id: string
