@@ -10,6 +10,7 @@ import {
   Activity,
   AlertTriangle,
   ArrowRight,
+  Bell,
   CheckCircle2,
   ChevronRight,
   ClipboardList,
@@ -59,6 +60,25 @@ const AdminOpportunitiesOperations: React.FC = () => {
 
   const anyError = kpis.error || funnel.error || rows.error;
 
+  const alertCounts: Record<OpportunityOpsFlag, number> = {
+    needs_matching: 0,
+    awaiting_bids: 0,
+    awaiting_award: 0,
+    awaiting_contract: 0,
+    operationally_complete: 0,
+    cancelled: 0,
+  };
+  for (const r of rows.data ?? []) {
+    alertCounts[r.flag] = (alertCounts[r.flag] ?? 0) + 1;
+  }
+  const ALERT_FLAGS: OpportunityOpsFlag[] = [
+    'needs_matching',
+    'awaiting_bids',
+    'awaiting_award',
+    'awaiting_contract',
+  ];
+  const totalAlerts = ALERT_FLAGS.reduce((a, k) => a + alertCounts[k], 0);
+
   return (
     <DashboardLayout>
       <div className="p-4 md:p-6 space-y-6" dir="rtl">
@@ -78,6 +98,49 @@ const AdminOpportunitiesOperations: React.FC = () => {
             </CardContent>
           </Card>
         ) : null}
+
+        {/* Operational alerts */}
+        <section aria-label="Operational alerts">
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="text-base font-semibold inline-flex items-center gap-2">
+                <Bell className="h-4 w-4" /> تنبيهات تشغيلية
+              </div>
+              {rows.isLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-20 rounded-lg" />
+                  ))}
+                </div>
+              ) : totalAlerts === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  لا توجد تنبيهات تشغيلية حالية.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {ALERT_FLAGS.map((k) => {
+                    const flag = FLAG_LABEL[k];
+                    const n = alertCounts[k];
+                    return (
+                      <div
+                        key={k}
+                        className="rounded-lg border p-3 flex flex-col gap-2"
+                      >
+                        <Badge className={`text-xs w-fit ${flag.tone}`}>{flag.ar}</Badge>
+                        <div className="text-2xl font-bold tech-content">{n}</div>
+                        <Button asChild size="sm" variant="ghost" className="self-start px-0">
+                          <Link to="/admin/opportunities/list">
+                            عرض التفاصيل <ChevronRight className="h-4 w-4 ms-1" />
+                          </Link>
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
 
         {/* KPIs */}
         <section aria-label="KPIs" className="grid grid-cols-2 md:grid-cols-4 gap-3">
