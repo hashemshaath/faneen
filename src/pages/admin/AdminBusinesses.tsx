@@ -1567,7 +1567,20 @@ const AdminBusinesses = () => {
           </TabsContent>
 
           <TabsContent value="businesses" className="mt-0 space-y-4">
-            {!panelOpen && <UnifiedApprovalsCenterBanner />}
+            {!panelOpen && (
+              <BusinessesCommandBar
+                isRTL={isRTL}
+                activePreset={activeBusinessesPreset}
+                onPreset={applyBusinessesPreset}
+                onCreate={() => {
+                  setEditingBiz(null);
+                  setServicesPanel(null);
+                  setCreateForm(emptyCreateBusinessForm());
+                  setCreatingBiz(true);
+                  scrollToTop();
+                }}
+              />
+            )}
 
         {/* ─── Filters + Bulk Actions ─── */}
         {!panelOpen && (
