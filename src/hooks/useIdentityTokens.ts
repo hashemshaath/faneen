@@ -40,8 +40,10 @@ export function useIdentityTokens() {
   });
 
   useEffect(() => {
-    const channel = supabase
-      .channel('admin_identity_tokens_realtime')
+    const channel = supabase.channel(
+      `admin_identity_tokens_realtime_${Math.random().toString(36).slice(2)}`,
+    );
+    channel
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'admin_identity_tokens' },
