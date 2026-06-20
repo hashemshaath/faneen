@@ -477,7 +477,9 @@ const AppRoutes = () => (
           <Route path="/dashboard/opportunities" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
           <Route path="/dashboard/opportunities/assigned" element={<ProtectedRoute requireProvider><DashboardRequestsHub /></ProtectedRoute>} />
           <Route path="/dashboard/opportunities/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
-          <Route path="/dashboard/provider/leads" element={<Navigate to="/dashboard/leads?tab=quote-opportunities" replace />} />
+          {/* OPPORTUNITIES PHASE 4 — provider lead list collapses into the
+              canonical assigned-opportunities surface (no UI duplication). */}
+          <Route path="/dashboard/provider/leads" element={<Navigate to="/dashboard/opportunities/assigned" replace />} />
           <Route path="/dashboard/provider/leads/:id" element={<ProtectedRoute requireProvider><ProviderLeadDetails /></ProtectedRoute>} />
           <Route path="/dashboard/provider/membership" element={<ProtectedRoute requireProvider><ProviderMembership /></ProtectedRoute>} />
           <Route path="/dashboard/membership" element={<ProtectedRoute><DashboardMembership /></ProtectedRoute>} />
@@ -602,9 +604,12 @@ const AppRoutes = () => (
           <Route path="/admin/finance" element={<ProtectedRoute requireAdmin><AdminFinanceCenter /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsCenter /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminHome /></ProtectedRoute>} />
-          {/* NAVIGATION-CONSOLIDATION-1 group 3 — RFQ hub. */}
-          <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfqHub /></ProtectedRoute>} />
-          <Route path="/dashboard/rfq/inbox" element={<Navigate to="/dashboard/rfq?tab=inbox" replace />} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 3 — RFQ hub.
+              OPPORTUNITIES PHASE 4 — list surfaces redirect to the canonical
+              `/dashboard/opportunities/assigned`. The detail route stays
+              wired to `DashboardRfqDetail` (unchanged data fetching). */}
+          <Route path="/dashboard/rfq" element={<Navigate to="/dashboard/opportunities/assigned" replace />} />
+          <Route path="/dashboard/rfq/inbox" element={<Navigate to="/dashboard/opportunities/assigned" replace />} />
           <Route path="/dashboard/rfq/:id" element={<ProtectedRoute><DashboardRfqDetail /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 7 — Loyalty hub. */}
           <Route path="/dashboard/loyalty" element={<ProtectedRoute><DashboardLoyaltyHub /></ProtectedRoute>} />
