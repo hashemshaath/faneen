@@ -15,7 +15,7 @@ import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Section, SectionHead, SecondaryCTA, ROUTES } from './_shared';
 import {
-  HOME_ALLOWED_SLUGS, HOME_SECTOR_GRID_SLUGS, homeCategoryHref,
+  homeCategoryHref,
 } from '@/components/home/v2/data/homeTaxonomy';
 import { useHomeSectorTiles, type DefaultTile } from '@/modules/home';
 import sectorAluminum from '@/assets/home/sector-aluminum.webp';
