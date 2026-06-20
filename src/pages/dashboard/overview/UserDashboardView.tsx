@@ -391,6 +391,9 @@ export default function UserDashboardView({
       {/* Unified KPI grid (Phase A) */}
       <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
 
+      {/* Client health score — composite from already-fetched data */}
+      <ClientHealthScoreCard input={healthInput} isRTL={isRTL} />
+
       <CustomizableGrid
         order={customization.layout.order}
         hidden={customization.layout.hidden}
