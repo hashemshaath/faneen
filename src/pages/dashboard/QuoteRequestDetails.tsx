@@ -494,6 +494,14 @@ const QuoteRequestDetails: React.FC = () => {
         {quoteUuid && (
           <OpportunityContractSection opportunityId={quoteUuid} canConvert />
         )}
+
+        {/* OPPORTUNITIES PHASE 11 — visual lifecycle timeline (no new data) */}
+        {quoteUuid && (
+          <OpportunityTimeline
+            createdAt={quote.created_at}
+            status={quote.status}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
