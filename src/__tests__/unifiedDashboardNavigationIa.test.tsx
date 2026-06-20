@@ -24,6 +24,14 @@ const SIDEBAR = readFileSync(
   resolve(root, 'src/components/dashboard/DashboardSidebar.tsx'),
   'utf8',
 );
+const NAV_CONFIG = readFileSync(
+  resolve(root, 'src/modules/dashboard/navigation/dashboardNavigation.config.ts'),
+  'utf8',
+);
+const NAV_VISIBILITY = readFileSync(
+  resolve(root, 'src/modules/dashboard/navigation/dashboardNavigation.visibility.ts'),
+  'utf8',
+);
 
 describe('unified label registry', () => {
   it('exposes the five canonical group labels', () => {
@@ -61,19 +69,25 @@ describe('entity creation routes', () => {
 
 describe('user sidebar adopts unified labels', () => {
   it('drops the legacy «نشاطي» group label', () => {
+    expect(NAV_CONFIG).not.toMatch(/ar:\s*'نشاطي'/);
     expect(SIDEBAR).not.toMatch(/ar:\s*'نشاطي'/);
   });
 
   it('drops the legacy «الأعمال» / «شركاتي» / «جهاتي» synonyms on the user surface', () => {
     // We allow «الجهات» only inside the admin registry (separate file).
-    expect(SIDEBAR).not.toMatch(/ar:\s*'شركاتي'/);
-    expect(SIDEBAR).not.toMatch(/ar:\s*'جهاتي'/);
+    for (const src of [SIDEBAR, NAV_CONFIG]) {
+      expect(src).not.toMatch(/ar:\s*'شركاتي'/);
+      expect(src).not.toMatch(/ar:\s*'جهاتي'/);
+    }
   });
 
   it('imports the unified label registry', () => {
-    expect(SIDEBAR).toContain("from '@/components/dashboard/navigation/unifiedLabels'");
+    // After the Phase C refactor, the sidebar imports labels via the
+    // navigation module barrel; the config consumes the canonical
+    // unifiedLabels file directly.
+    expect(SIDEBAR).toContain("from '@/modules/dashboard/navigation'");
     expect(SIDEBAR).toContain('UNIFIED_GROUP_LABELS');
-    expect(SIDEBAR).toContain('UNIFIED_ITEM_LABELS');
+    expect(NAV_CONFIG).toContain('UNIFIED_ITEM_LABELS');
   });
 
   it('uses «المنشأة» as the user-facing business group label (not «الجهات»)', () => {
@@ -83,8 +97,9 @@ describe('user sidebar adopts unified labels', () => {
 
 describe('sidebar visibility for users without a business', () => {
   it('gates the «المنشأة» group behind hasBusiness', () => {
-    // The filter check lives in DashboardSidebar — ensure it remains.
+    // The filter check moved into the visibility module.
     expect(SIDEBAR).toContain('hasBusiness');
-    expect(SIDEBAR).toContain('UNIFIED_GROUP_LABELS.business.en');
+    expect(NAV_VISIBILITY).toContain('hasBusiness');
+    expect(NAV_VISIBILITY).toContain('UNIFIED_GROUP_LABELS.business.en');
   });
 });
