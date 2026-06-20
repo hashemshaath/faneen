@@ -273,7 +273,7 @@ const QuoteRequestDetails: React.FC = () => {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="font-heading font-bold text-xl sm:text-2xl">
-              تفاصيل طلب عرض السعر
+              تفاصيل الفرصة
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               راجع تفاصيل طلبك والملفات المرفقة وحالة المعالجة.
