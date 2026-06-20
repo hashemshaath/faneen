@@ -155,7 +155,10 @@ describe('Home Taxonomy Link Guard', () => {
         expect(HOME_ALLOWED_SLUGS.has(slug), `${slug} not allowed`).toBe(true);
         expect(HOME_FORBIDDEN_SLUGS.has(slug), `${slug} is forbidden`).toBe(false);
       }
-      expect(HOME_ROW_BINDINGS.length).toBe(8);
+      // Canonical count: 9 primary activity rows on the home page
+      // (aluminum/glass, steel/stainless, wood/carpentry, kitchens,
+      // elevators, energy, technology, security, equipment-rental).
+      expect(HOME_ROW_BINDINGS.length).toBe(9);
       expect(HOME_JSONLD_SLUGS.length).toBe(13);
       expect(HOME_TRENDING.length).toBeGreaterThan(0);
     });
@@ -261,12 +264,13 @@ describe('Home Taxonomy Link Guard', () => {
       expect(bad).toEqual([]);
     });
 
-    it('the eight approved rows exist (canonical primary activities)', () => {
+    it('the nine approved rows exist (canonical primary activities)', () => {
       const ids = HOME_CATEGORY_ROWS.map((r) => r.id);
       expect(ids).toEqual([
         'aluminum-glass',
         'steel-stainless',
         'wood-kitchens',
+        'kitchens',
         'elevators-maintenance',
         'energy-sustainability',
         'technology-networks',
