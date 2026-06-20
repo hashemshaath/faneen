@@ -1629,102 +1629,18 @@ const AdminBusinesses = () => {
 
         {/* ─── Inline Services Panel ─── */}
         {servicesPanel && (
-          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading font-bold text-base flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                  <Package className="w-4 h-4 text-accent" />
-                </div>
-                {pickBi(isRTL, 'إدارة الخدمات', 'Manage Services')}
-                <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
-            </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                {services.map((svc) => (
-                  <div key={svc.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!svc.is_active ? 'opacity-50' : ''}`}>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{language === 'ar' ? svc.name_ar : (svc.name_en || svc.name_ar)}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {svc.price_from && svc.price_to ? `${svc.price_from} - ${svc.price_to} ${svc.currency_code}` :
-                         svc.price_from ? `${pickBi(isRTL, 'من', 'From')} ${svc.price_from} ${svc.currency_code}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Switch checked={svc.is_active} onCheckedChange={v => toggleServiceMutation.mutate({ id: svc.id, is_active: v })} />
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
-                        onClick={() => { if (confirm(pickBi(isRTL, 'حذف هذه الخدمة؟', 'Delete this service?'))) deleteServiceMutation.mutate(svc.id); }}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                {services.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-6">{pickBi(isRTL, 'لا توجد خدمات', 'No services')}</p>
-                )}
-              </div>
-              <Separator />
-              <div className="space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <Plus className="w-3 h-3" /> {pickBi(isRTL, 'إضافة خدمة جديدة', 'Add New Service')}
-                </p>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الخدمة (عربي)', 'Service Name (AR)')} *</Label>
-                    <FieldAiActions compact value={newService.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
-                      onTranslated={(v) => setServiceField('name_en', v)} onImproved={(v) => setServiceField('name_ar', v)} />
-                  </div>
-                  <Input value={newService.name_ar} onChange={e => setServiceField('name_ar', e.target.value)} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'اسم الخدمة (إنجليزي)', 'Service Name (EN)')}</Label>
-                    <FieldAiActions compact value={newService.name_en} lang="en" isRTL={isRTL} fieldType="title"
-                      onTranslated={(v) => setServiceField('name_ar', v)} onImproved={(v) => setServiceField('name_en', v)} />
-                  </div>
-                  <Input value={newService.name_en} onChange={e => setServiceField('name_en', e.target.value)} dir="ltr" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'الوصف (عربي)', 'Description (AR)')}</Label>
-                    <FieldAiActions compact value={newService.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
-                      onTranslated={(v) => setServiceField('description_en', v)} onImproved={(v) => setServiceField('description_ar', v)} />
-                  </div>
-                  <Textarea value={newService.description_ar} onChange={e => setServiceField('description_ar', e.target.value)} rows={2} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label className="text-xs">{pickBi(isRTL, 'الوصف (إنجليزي)', 'Description (EN)')}</Label>
-                    <FieldAiActions compact value={newService.description_en} lang="en" isRTL={isRTL} fieldType="description"
-                      onTranslated={(v) => setServiceField('description_ar', v)} onImproved={(v) => setServiceField('description_en', v)} />
-                  </div>
-                  <Textarea value={newService.description_en} onChange={e => setServiceField('description_en', e.target.value)} rows={2} dir="ltr" />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {pickBi(isRTL, 'السعر من', 'Price From')}</Label>
-                    <Input type="number" value={newService.price_from} onChange={e => setServiceField('price_from', e.target.value)} dir="ltr" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> {pickBi(isRTL, 'السعر إلى', 'Price To')}</Label>
-                    <Input type="number" value={newService.price_to} onChange={e => setServiceField('price_to', e.target.value)} dir="ltr" className="mt-1" />
-                  </div>
-                  <div className="flex items-end pb-1">
-                    <div className="flex items-center gap-2">
-                      <Switch checked={newService.is_active} onCheckedChange={v => setServiceField('is_active', v)} />
-                      <span className="text-xs">{pickBi(isRTL, 'مفعّل', 'Active')}</span>
-                    </div>
-                  </div>
-                </div>
-                <Button onClick={() => addServiceMutation.mutate()} disabled={!newService.name_ar || addServiceMutation.isPending}
-                  className="w-full gap-1.5">
-                  <Plus className="w-3.5 h-3.5" />
-                  {addServiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (pickBi(isRTL, 'إضافة الخدمة', 'Add Service'))}
-                </Button>
-              </div>
-            </div>
-          </div>
+          <BusinessServicesPanel
+            isRTL={isRTL}
+            language={language}
+            services={services as unknown as ReadonlyArray<AdminServiceLite>}
+            newService={newService as AdminNewServiceFormState}
+            setServiceField={(key, value) => setServiceField(key as string, value)}
+            isAdding={addServiceMutation.isPending}
+            onClose={() => setServicesPanel(null)}
+            onAdd={() => addServiceMutation.mutate()}
+            onToggleActive={(id, isActive) => toggleServiceMutation.mutate({ id, is_active: isActive })}
+            onDelete={(id) => deleteServiceMutation.mutate(id)}
+          />
         )}
 
         {/* ─── Business List ─── */}
