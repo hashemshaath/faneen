@@ -25,7 +25,9 @@ export const UNIFIED_GROUP_LABELS = {
 export const UNIFIED_ITEM_LABELS: Record<string, Bi> = {
   // Dashboard
   overview:     { ar: 'نظرة عامة',       en: 'Overview' },
-  myRequests:   { ar: 'طلباتي',           en: 'My Requests' },
+  // OPPORTUNITIES PHASE 2 — UI rename: «طلباتي» → «الفرص».
+  // Internal DB / edge naming (`quote_requests`) is unchanged.
+  myRequests:   { ar: 'الفرص',            en: 'My Opportunities' },
   projects:     { ar: 'المشاريع',         en: 'Projects' },
   sites:        { ar: 'المواقع',           en: 'Sites' },
   branches:     { ar: 'الفروع',           en: 'Branches' },
@@ -42,6 +44,7 @@ export const UNIFIED_ITEM_LABELS: Record<string, Bi> = {
   // Provider
   clientRequests:   { ar: 'طلبات العملاء',  en: 'Client Requests' },
   opportunities:    { ar: 'الفرص الجديدة',  en: 'New Opportunities' },
+  assignedOpportunities: { ar: 'الفرص المسندة', en: 'Assigned Opportunities' },
   offers:           { ar: 'العروض والردود', en: 'Offers & Replies' },
   clients:          { ar: 'العملاء',         en: 'Clients' },
 
