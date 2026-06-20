@@ -500,7 +500,18 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           const completionRate = stats?.contracts
             ? Math.round(((stats.activeContracts ?? 0) / stats.contracts) * 100)
             : 0;
-          const kpis = [
+          const kpis: Array<{
+            icon: typeof Users;
+            label: string;
+            value: React.ReactNode;
+            series?: number[];
+            tone: 'primary' | 'accent' | 'success' | 'info';
+            to: string;
+            trendPercent?: number;
+            insight: string;
+            span?: string;
+            featured?: boolean;
+          }> = [
             {
               icon: Users,
               label: isRTL ? 'المستخدمون' : 'Users',
@@ -511,6 +522,8 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               insight: usersSeries.length >= 2
                 ? (isRTL ? 'منحنى نمو إيجابي خلال الأشهر الأخيرة.' : 'Positive growth curve in recent months.')
                 : (isRTL ? 'لا توجد بيانات كافية بعد لقراءة الاتجاه.' : 'Not enough history yet to read a trend.'),
+              span: 'bento-span-2',
+              featured: true,
             },
             {
               icon: Building2,
@@ -533,6 +546,8 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               insight: isRTL
                 ? `${stats?.activeContracts ?? 0} عقد نشط حالياً، يولّد إيراد مستمر.`
                 : `${stats?.activeContracts ?? 0} active contracts generating ongoing revenue.`,
+              span: 'bento-span-2',
+              featured: true,
             },
             {
               icon: FileText,
@@ -569,7 +584,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           ];
           return (
             <div className="space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="bento-grid">
                 {kpis.map((k) => (
                   <SmartMetricCard
                     key={k.label}
@@ -582,6 +597,8 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                     tone={k.tone}
                     to={k.to}
                     isRTL={isRTL}
+                    className={k.span}
+                    featured={k.featured}
                   />
                 ))}
               </div>
