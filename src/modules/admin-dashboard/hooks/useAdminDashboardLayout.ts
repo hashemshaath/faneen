@@ -122,7 +122,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, [persist]);
+  }, []);
 
   // ── Cloud sync ─────────────────────────────────────────────────────
   // Hydrate from the user's account on mount (overrides localStorage
@@ -151,7 +151,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       }
     })().catch(() => { /* offline: keep localStorage state */ });
     return () => { cancelled = true; };
-  }, [persist]);
+  }, []);
 
   const persist = useCallback((next: StoredLayout): void => {
     writeStored(next);
