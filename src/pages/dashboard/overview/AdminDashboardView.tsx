@@ -218,14 +218,16 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         ) : null;
       case 'todays-pulse':
         {
-          const leadsSeries = seriesFromMonthly(stats?.monthlyContracts, 6); // proxy series for activity flow
-          const usersSeries = seriesFromMonthly(stats?.monthlyUsers, 6);
+          // Only use sparklines where the underlying series genuinely matches
+          // the metric. We deliberately avoid showing a "proxy" series under
+          // a different metric — it looks professional but misleads.
+          const contractsMonthly = seriesFromMonthly(stats?.monthlyContracts, 6);
           const pulse = [
             {
               icon: MessageSquare,
               label: isRTL ? 'طلبات اليوم' : 'Leads today',
               value: stats?.leadsToday ?? 0,
-              series: leadsSeries,
+              series: undefined,
               tone: 'info' as const,
               to: '/admin/lead-requests',
               insight: (stats?.leadsToday ?? 0) === 0
@@ -236,35 +238,23 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: FileText,
               label: isRTL ? 'عقود اليوم' : 'Contracts today',
               value: stats?.contractsToday ?? 0,
-              series: leadsSeries,
+              series: contractsMonthly,
               tone: 'accent' as const,
               to: '/admin/contracts',
               insight: (stats?.contractsToday ?? 0) > 0
-                ? (isRTL ? 'تدفّق عقود إيجابي خلال آخر الفترات.' : 'Healthy contract velocity vs. recent periods.')
+                ? (isRTL ? `${stats?.contractsToday} عقد جديد اليوم — السياق: آخر 6 أشهر.` : `${stats?.contractsToday} new today — context: last 6 months.`)
                 : (isRTL ? 'لا عقود مسجّلة اليوم — راقب قناة التحويل.' : 'No contracts logged today — watch the funnel.'),
             },
             {
               icon: UserPlus,
               label: isRTL ? 'مزودون جدد' : 'New providers',
               value: stats?.providersToday ?? 0,
-              series: usersSeries,
+              series: undefined,
               tone: 'primary' as const,
               to: '/admin/businesses',
               insight: (stats?.providersToday ?? 0) > 0
                 ? (isRTL ? 'نمو في تسجيل المزودين — راجع الموافقات.' : 'Provider sign-ups trending up — review approvals.')
                 : (isRTL ? 'هدوء في التسجيل اليوم.' : 'Quiet sign-up day so far.'),
-            },
-            {
-              icon: AlertTriangle,
-              label: isRTL ? 'بريد فاشل (48س)' : 'Email DLQ (48h)',
-              value: stats?.dlqActive ?? 0,
-              series: [],
-              tone: (stats?.dlqActive ?? 0) > 0 ? ('destructive' as const) : ('success' as const),
-              to: '/admin/email-center',
-              trendPercent: (stats?.dlqActive ?? 0) > 0 ? null : 0,
-              insight: (stats?.dlqActive ?? 0) > 0
-                ? (isRTL ? 'رسائل لم تُسلَّم — افحص قائمة DLQ فوراً.' : 'Delivery failures detected — inspect the DLQ now.')
-                : (isRTL ? 'لا فشل في الإرسال خلال آخر 48 ساعة.' : 'No delivery failures in the last 48 hours.'),
             },
           ];
           const pulseTotal = pulse.reduce((s, p) => s + (typeof p.value === 'number' ? p.value : 0), 0);
@@ -303,7 +293,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 </div>
               </CardHeader>
               <CardContent className="px-4 pb-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {pulse.map((m) => (
                     <SmartMetricCard
                       key={m.label}
@@ -311,7 +301,6 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                       label={m.label}
                       value={m.value}
                       series={m.series}
-                      trendPercent={m.trendPercent}
                       insight={m.insight}
                       tone={m.tone}
                       to={m.to}
@@ -481,7 +470,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         }
       case 'kpi-bento':
         {
-          const usersSeries   = seriesFromMonthly(stats?.monthlyUsers, 6);
+          const usersSeries    = seriesFromMonthly(stats?.monthlyUsers, 6);
           const contractSeries = seriesFromMonthly(stats?.monthlyContracts, 6);
           const completionRate = stats?.contracts
             ? Math.round(((stats.activeContracts ?? 0) / stats.contracts) * 100)
@@ -502,7 +491,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: Building2,
               label: isRTL ? 'المنشآت' : 'Businesses',
               value: stats?.businesses ?? 0,
-              series: usersSeries,
+              series: undefined,
               tone: 'success' as const,
               to: '/admin/businesses',
               insight: (stats?.providersPending ?? 0) > 0
@@ -536,7 +525,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: Crown,
               label: isRTL ? 'اشتراكات نشطة' : 'Active Subs',
               value: stats?.subscriptions ?? 0,
-              series: [],
+              series: undefined,
               tone: 'accent' as const,
               to: '/admin/memberships',
               insight: (stats?.approvalsPending ?? 0) > 0
@@ -547,25 +536,14 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: MessageSquare,
               label: isRTL ? 'المحادثات' : 'Conversations',
               value: stats?.messages ?? 0,
-              series: [],
+              series: undefined,
               tone: 'info' as const,
               to: '/dashboard/messages',
               insight: isRTL ? 'حجم تواصل تراكمي بين المزودين والعملاء.' : 'Cumulative provider ↔ client conversations.',
             },
-            {
-              icon: Mail,
-              label: isRTL ? 'رسائل جديدة' : 'New Messages',
-              value: stats?.newContactMessages ?? 0,
-              series: [],
-              tone: (stats?.newContactMessages ?? 0) > 0 ? ('warning' as const) : ('success' as const),
-              to: '/admin/contact-messages',
-              insight: (stats?.newContactMessages ?? 0) > 0
-                ? (isRTL ? 'رسائل تواصل بحاجة إلى رد.' : 'Contact messages waiting for a reply.')
-                : (isRTL ? 'صندوق التواصل فارغ — أحسنت.' : 'Inbox empty — nice work.'),
-            },
           ];
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {kpis.map((k) => (
                 <SmartMetricCard
                   key={k.label}
@@ -805,8 +783,6 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         }
       case 'system-summary':
         {
-          const contractSeries = seriesFromMonthly(stats?.monthlyContracts, 6);
-          const usersSeries = seriesFromMonthly(stats?.monthlyUsers, 6);
           const adminCount = (stats?.roleCounts?.admin ?? 0) + (stats?.roleCounts?.super_admin ?? 0);
           const sysCards = [
             {
@@ -829,16 +805,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 ? (isRTL ? 'تغطية إشرافية صحية — تقليل مخاطر النقطة الواحدة.' : 'Healthy coverage — no single point of failure.')
                 : (isRTL ? 'مشرف واحد فقط — أضف نسخة احتياطية للإدارة.' : 'Only one admin — add a backup for resilience.'),
             },
-            {
-              icon: FileText, tone: 'primary' as const,
-              label: isRTL ? 'إجمالي العقود' : 'Total contracts',
-              value: stats?.contracts ?? 0, series: contractSeries, to: '/admin/contracts',
-              insight: isRTL
-                ? `${stats?.activeContracts ?? 0} عقد نشط من إجمالي ${stats?.contracts ?? 0}.`
-                : `${stats?.activeContracts ?? 0} active out of ${stats?.contracts ?? 0} total.`,
-            },
           ];
-          void usersSeries;
           return (
             <Card className="border-border/40">
               <CardHeader className="pb-1 px-4 pt-3">
@@ -848,14 +815,13 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {sysCards.map((c) => (
                     <SmartMetricCard
                       key={c.label}
                       icon={c.icon}
                       label={c.label}
                       value={c.value}
-                      series={c.series}
                       tone={c.tone}
                       to={c.to}
                       insight={c.insight}
