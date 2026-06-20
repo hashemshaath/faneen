@@ -57,6 +57,11 @@ import {
   PinOff,
 } from 'lucide-react';
 import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
+import {
+  UNIFIED_GROUP_LABELS,
+  UNIFIED_ITEM_LABELS,
+  CREATE_ENTITY_ROUTE,
+} from '@/components/dashboard/navigation/unifiedLabels';
 
 // ══════════════════════════════════════════
 //  ADMIN-REDESIGN PHASE 3 — Registry-driven admin sidebar
@@ -103,39 +108,41 @@ interface MenuGroup {
 // ══════════════════════════════════════════
 const providerGroups: MenuGroup[] = [
   {
-    groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
+    groupLabel: UNIFIED_GROUP_LABELS.dashboard,
     icon: LayoutDashboard,
     items: [
-      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: UNIFIED_ITEM_LABELS.overview, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'التحليلات', en: 'Analytics' }, url: '/dashboard/analytics', icon: BarChart3 },
       { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {
-    groupLabel: { ar: 'ملف المنشأة', en: 'Business Profile' },
+    groupLabel: UNIFIED_GROUP_LABELS.business,
     icon: Wrench,
     items: [
-      { label: { ar: 'بيانات المنشأة', en: 'Business Profile' }, url: '/dashboard/business-edit', icon: Building2 },
-      { label: { ar: 'الخدمات', en: 'Services' }, url: '/dashboard/services', icon: Wrench },
+      { label: UNIFIED_ITEM_LABELS.businessProfile, url: '/dashboard/business-edit', icon: Building2 },
+      { label: UNIFIED_ITEM_LABELS.services, url: '/dashboard/services', icon: Wrench },
       { label: { ar: 'العلامات التجارية', en: 'Brands' }, url: '/dashboard/brands', icon: Award },
-      { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
-      { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
+      { label: UNIFIED_ITEM_LABELS.portfolio, url: '/dashboard/portfolio', icon: Image },
+      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
+      { label: UNIFIED_ITEM_LABELS.branches, url: '/dashboard/branches', icon: Building2 },
       { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
       { label: { ar: 'مناطق الخدمة', en: 'Service Areas' }, url: '/dashboard/provider/service-areas', icon: MapPin },
-      { label: { ar: 'عناوين المواقع', en: 'Site Addresses' }, url: '/dashboard/sites', icon: MapPin, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/dashboard/private-sectors', icon: Layers },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
-      { label: { ar: 'شارة التوثيق', en: 'Verification Badge' }, url: '/dashboard/badge', icon: ShieldCheck },
+      { label: UNIFIED_ITEM_LABELS.visibility, url: '/dashboard/badge', icon: ShieldCheck },
     ],
   },
   {
-    groupLabel: { ar: 'المبيعات والطلبات', en: 'Sales & Requests' },
+    groupLabel: UNIFIED_GROUP_LABELS.providerOps,
     icon: Inbox,
     items: [
-      { label: { ar: 'الطلبات والفرص', en: 'Requests & Opportunities' }, url: '/dashboard/leads', icon: Inbox },
+      { label: UNIFIED_ITEM_LABELS.clientRequests, url: '/dashboard/leads', icon: Inbox },
+      { label: UNIFIED_ITEM_LABELS.opportunities, url: '/dashboard/rfq/inbox', icon: Sparkles, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: UNIFIED_ITEM_LABELS.offers, url: '/dashboard/rfq', icon: FileText },
+      { label: UNIFIED_ITEM_LABELS.clients, url: '/dashboard/clients', icon: Users },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
-      { label: { ar: 'العملاء', en: 'Clients' }, url: '/dashboard/clients', icon: Users },
-      { label: { ar: 'عروض الأسعار RFQ', en: 'RFQ' }, url: '/dashboard/rfq', icon: FileText, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {
@@ -164,7 +171,7 @@ const providerGroups: MenuGroup[] = [
     icon: Crown,
     description: { ar: 'الاشتراكات والرصيد والأقساط', en: 'Subscriptions, credits, and installments' },
     items: [
-      { label: { ar: 'العضوية', en: 'Membership' }, url: '/dashboard/provider/membership', icon: Crown },
+      { label: UNIFIED_ITEM_LABELS.membership, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
       { label: { ar: 'الولاء', en: 'Loyalty' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
@@ -173,73 +180,64 @@ const providerGroups: MenuGroup[] = [
     groupLabel: { ar: 'التواصل', en: 'Communication' },
     icon: MessageSquare,
     items: [
-      { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
+      { label: UNIFIED_ITEM_LABELS.messages, url: '/dashboard/messages', icon: MessageSquare },
+      { label: UNIFIED_ITEM_LABELS.notifications, url: '/dashboard/notifications', icon: Bell },
     ],
   },
   {
-    groupLabel: { ar: 'الإعدادات', en: 'Settings' },
+    groupLabel: UNIFIED_GROUP_LABELS.account,
     icon: Settings,
     items: [
-      { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
+      { label: UNIFIED_ITEM_LABELS.profile, url: '/dashboard/profile', icon: User },
       { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
-      { label: { ar: 'الموظفون والفرق', en: 'Staff & Teams' }, url: '/dashboard/settings/staff', icon: Users },
+      { label: UNIFIED_ITEM_LABELS.team, url: '/dashboard/settings/staff', icon: Users },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
 ];
 
 // ══════════════════════════════════════════
-//  المستخدم العادي — User Menu
+//  المستخدم العادي — User Menu (UNIFIED IA)
+//
+//  هيكل واحد يطابق المرجع الموحّد:
+//    لوحة التحكم → المنشأة → العضوية → التواصل → الحساب
+//
+//  العناصر المرتبطة بالمنشأة (الفروع/الخدمات/الفريق/الظهور)
+//  تُخفى تلقائيًا للمستخدم الذي لا يملك منشأة عبر بطاقة الـ CTA
+//  «إنشاء منشأة» → /register-entity (وليس /onboarding).
 // ══════════════════════════════════════════
 const userGroups: MenuGroup[] = [
   {
-    groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
+    groupLabel: UNIFIED_GROUP_LABELS.dashboard,
     icon: LayoutDashboard,
     items: [
-      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: UNIFIED_ITEM_LABELS.overview, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: UNIFIED_ITEM_LABELS.myRequests, url: '/dashboard/my-requests', icon: Inbox },
+      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
+      { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
+      { label: UNIFIED_ITEM_LABELS.branches, url: '/dashboard/branches', icon: Building2 },
+      { label: UNIFIED_ITEM_LABELS.messages, url: '/dashboard/messages', icon: MessageSquare },
+      { label: UNIFIED_ITEM_LABELS.membership, url: '/dashboard/membership', icon: Crown },
     ],
   },
   {
-    groupLabel: { ar: 'نشاطي', en: 'My Activity' },
-    icon: FileText,
+    groupLabel: UNIFIED_GROUP_LABELS.business,
+    icon: Building2,
+    description: { ar: 'إدارة بيانات منشأتك وفريقها', en: 'Manage your business profile and team' },
     items: [
-      { label: { ar: 'الأعمال', en: 'Businesses' }, url: '/dashboard/entities', icon: Building2 },
-      { label: { ar: 'طلباتي', en: 'My Requests' }, url: '/dashboard/my-requests', icon: Inbox },
-      { label: { ar: 'عناوين المواقع', en: 'Site Addresses' }, url: '/dashboard/sites', icon: MapPin, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
-      { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
-      { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
+      { label: UNIFIED_ITEM_LABELS.businessProfile, url: '/dashboard/business-edit', icon: Building2 },
+      { label: UNIFIED_ITEM_LABELS.services, url: '/dashboard/services', icon: Wrench },
+      { label: UNIFIED_ITEM_LABELS.portfolio, url: '/dashboard/portfolio', icon: Image },
+      { label: UNIFIED_ITEM_LABELS.team, url: '/dashboard/settings/staff', icon: Users },
+      { label: UNIFIED_ITEM_LABELS.visibility, url: '/dashboard/badge', icon: ShieldCheck },
     ],
   },
   {
-    groupLabel: { ar: 'العضوية والفوترة', en: 'Membership & Billing' },
-    icon: Crown,
-    description: { ar: 'الخطة الحالية والاستخدام والفواتير', en: 'Current plan, usage and invoices' },
+    groupLabel: UNIFIED_GROUP_LABELS.account,
+    icon: User,
     items: [
-      { label: { ar: 'الخطة والاستخدام', en: 'Plan & Usage' }, url: '/dashboard/membership', icon: Crown },
-    ],
-  },
-  {
-    groupLabel: { ar: 'التواصل', en: 'Communication' },
-    icon: MessageSquare,
-    items: [
-      { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-    ],
-  },
-  {
-    groupLabel: { ar: 'المزيد', en: 'More' },
-    icon: Bookmark,
-    items: [
-      { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
-    ],
-  },
-  {
-    groupLabel: { ar: 'الإعدادات', en: 'Settings' },
-    icon: Settings,
-    items: [
-      { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
+      { label: UNIFIED_ITEM_LABELS.profile, url: '/dashboard/profile', icon: User },
+      { label: UNIFIED_ITEM_LABELS.notifications, url: '/dashboard/notifications', icon: Bell },
       { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
@@ -563,7 +561,16 @@ export const DashboardSidebar: React.FC = () => {
   const handleLogout = async () => { await signOut(); navigate('/'); };
 
   // Admin gets admin-specific base menu, not user/provider menu
-  const baseGroups = isAdmin ? adminBaseGroups : (isProvider ? providerGroups : userGroups);
+  const hasBusiness = (workspace.entities?.length ?? 0) > 0;
+  // For non-admin / non-provider users without a business, hide the
+  // «المنشأة» group entirely — they get a CTA card instead.
+  const baseGroups = isAdmin
+    ? adminBaseGroups
+    : isProvider
+      ? providerGroups
+      : hasBusiness
+        ? userGroups
+        : userGroups.filter((g) => g.groupLabel.en !== UNIFIED_GROUP_LABELS.business.en);
 
   // Build a url → label lookup once per render. Favorites and Recent
   // resolve their display label from this so renames stay in sync and
@@ -679,6 +686,28 @@ export const DashboardSidebar: React.FC = () => {
           isRouteHidden={isRouteHidden}
           pinControl={adminPinControl}
         />
+
+        {/* CTA: «إنشاء منشأة» for users without any business. */}
+        {!isAdmin && !isProvider && !hasBusiness && !collapsed && (
+          <div className="mx-3 mt-3 mb-2 p-3 rounded-xl border border-primary/25 bg-primary/5">
+            <p className="text-[11px] font-semibold text-sidebar-foreground mb-1">
+              {isRTL ? 'لديك منشأة؟' : 'Have a business?'}
+            </p>
+            <p className="text-[10.5px] text-sidebar-foreground/70 leading-snug mb-2">
+              {isRTL
+                ? 'سجّل منشأتك للوصول إلى أدوات الفريق والخدمات والظهور العام.'
+                : 'Register your business to unlock team, services, and public visibility tools.'}
+            </p>
+            <NavLink
+              to={CREATE_ENTITY_ROUTE}
+              onClick={closeMobile}
+              className="inline-flex items-center justify-center gap-1.5 w-full h-9 rounded-lg bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition-colors"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              {isRTL ? 'إنشاء منشأة' : 'Create business'}
+            </NavLink>
+          </div>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">
