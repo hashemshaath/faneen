@@ -52,7 +52,7 @@ describe('Phase 4 — useAdminDashboardLayout', () => {
   beforeEach(() => window.localStorage.clear());
 
   it('uses the namespaced localStorage key', () => {
-    expect(ADMIN_DASHBOARD_LAYOUT_KEY).toBe('qitaat_admin_dashboard_layout_v1');
+    expect(ADMIN_DASHBOARD_LAYOUT_KEY).toBe('qitaat_admin_dashboard_layout_v2');
   });
 
   it('returns default visible order when nothing is stored', () => {
