@@ -529,7 +529,7 @@ const Quote: React.FC = () => {
     return (
       <div className="min-h-dvh bg-background">
         <Navbar />
-        <main className="container-app py-16 sm:py-24">
+        <main className="container-app pt-24 sm:pt-32 pb-16 sm:pb-24">
           <Card className="max-w-2xl mx-auto p-8 sm:p-12 text-center">
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-5">
               <CheckCircle2 className="w-9 h-9 text-emerald-500" />
@@ -588,7 +588,7 @@ const Quote: React.FC = () => {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <main>
+      <main className="pt-16 sm:pt-[4.5rem]">
         {/* Hero */}
         <section className="bg-gradient-to-b from-muted/40 to-background border-b border-border/40">
           <div className="container-app py-10 sm:py-14 text-center max-w-3xl">
