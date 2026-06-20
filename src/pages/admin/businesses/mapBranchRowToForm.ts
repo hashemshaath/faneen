@@ -1,6 +1,6 @@
 import type { AdminBusinessBranchType } from '@/pages/admin/adminBusinesses.types';
 
-type LooseBranch = {
+export type LooseBranch = {
   id: string;
   name_ar: string;
   name_en?: string | null;
@@ -14,7 +14,7 @@ type LooseBranch = {
   district?: string | null;
   street_name?: string | null;
   address?: string | null;
-} & Record<string, unknown>;
+};
 
 type BranchFormState = {
   name_ar: string;
