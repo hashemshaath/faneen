@@ -727,63 +727,146 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           </Card>
         );
       case 'service-ops':
-        return (
-          <Card className="border-border/40">
-            <CardHeader className="pb-1 px-4 pt-3">
-              <CardTitle className="text-xs flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                {isRTL ? 'تشغيل الخدمات' : 'Service Operations'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-3">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {[
-                  { label_ar: 'قيد المراجعة', label_en: 'Pending review', value: svcCounters?.pendingReview ?? 0, to: '/admin/service-activations?requires_admin_review=true', icon: ShieldAlert, tone: 'text-warning bg-warning/10' },
-                  { label_ar: 'موقوفة', label_en: 'Suspended', value: svcCounters?.suspended ?? 0, to: '/admin/service-activations?admin_status=suspended', icon: AlertTriangle, tone: 'text-destructive bg-destructive/10' },
-                  { label_ar: 'تتطلب ترقية', label_en: 'Requires upgrade', value: svcCounters?.requiresUpgrade ?? 0, to: '/admin/service-activations?required_plan_tier=not_null', icon: Crown, tone: 'text-accent bg-accent/10' },
-                  { label_ar: 'مميزة', label_en: 'Featured', value: svcCounters?.featured ?? 0, to: '/admin/service-activations?is_featured=true', icon: Activity, tone: 'text-info bg-info/10' },
-                  { label_ar: 'Premium', label_en: 'Premium', value: svcCounters?.premium ?? 0, to: '/admin/service-activations?is_premium_service=true', icon: Crown, tone: 'text-primary bg-primary/10' },
-                ].map((c) => (
-                  <Link
-                    key={c.to}
-                    to={c.to}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-border/40 px-3 py-2 hover:border-primary/40 transition-colors"
-                    data-testid="service-ops-counter"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={cn('w-6 h-6 rounded-md flex items-center justify-center', c.tone)}>
-                        <c.icon className="w-3 h-3" aria-hidden="true" />
-                      </span>
-                      <span className="text-[11px] truncate">{isRTL ? c.label_ar : c.label_en}</span>
-                    </div>
-                    <span className="tech-content text-sm font-bold">{c.value}</span>
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
+        {
+          const svcCards = [
+            {
+              icon: ShieldAlert, tone: 'warning' as const,
+              label: isRTL ? 'قيد المراجعة' : 'Pending review',
+              value: svcCounters?.pendingReview ?? 0,
+              to: '/admin/service-activations?requires_admin_review=true',
+              insight: (svcCounters?.pendingReview ?? 0) > 0
+                ? (isRTL ? 'خدمات بانتظار اعتماد المسؤول — راجعها لتسريع التفعيل.' : 'Services awaiting admin sign-off — review to unblock activation.')
+                : (isRTL ? 'لا خدمات بانتظار المراجعة الآن.' : 'No services awaiting review right now.'),
+            },
+            {
+              icon: AlertTriangle, tone: 'destructive' as const,
+              label: isRTL ? 'موقوفة' : 'Suspended',
+              value: svcCounters?.suspended ?? 0,
+              to: '/admin/service-activations?admin_status=suspended',
+              insight: (svcCounters?.suspended ?? 0) > 0
+                ? (isRTL ? 'خدمات موقوفة قد تؤثر على ظهور المزوّد — راجع السبب.' : 'Suspended services may hurt provider visibility — investigate.')
+                : (isRTL ? 'لا توجد خدمات موقوفة.' : 'No suspended services.'),
+            },
+            {
+              icon: Crown, tone: 'accent' as const,
+              label: isRTL ? 'تتطلب ترقية' : 'Requires upgrade',
+              value: svcCounters?.requiresUpgrade ?? 0,
+              to: '/admin/service-activations?required_plan_tier=not_null',
+              insight: (svcCounters?.requiresUpgrade ?? 0) > 0
+                ? (isRTL ? 'فرصة بيع: مزودون بحاجة لخطة أعلى لتفعيل خدماتهم.' : 'Upsell opportunity: providers need a higher plan to activate.')
+                : (isRTL ? 'لا خدمات تتطلب ترقية حالياً.' : 'No services need an upgrade.'),
+            },
+            {
+              icon: Activity, tone: 'info' as const,
+              label: isRTL ? 'مميزة' : 'Featured',
+              value: svcCounters?.featured ?? 0,
+              to: '/admin/service-activations?is_featured=true',
+              insight: isRTL
+                ? `${svcCounters?.featured ?? 0} خدمة مُبرزة حالياً في الواجهة العامة.`
+                : `${svcCounters?.featured ?? 0} services currently spotlighted in public surfaces.`,
+            },
+            {
+              icon: Crown, tone: 'primary' as const,
+              label: isRTL ? 'بريميوم' : 'Premium',
+              value: svcCounters?.premium ?? 0,
+              to: '/admin/service-activations?is_premium_service=true',
+              insight: isRTL
+                ? 'خدمات بريميوم تساهم في رفع متوسط قيمة الاشتراك.'
+                : 'Premium services lift average subscription value.',
+            },
+          ];
+          return (
+            <Card className="border-border/40">
+              <CardHeader className="pb-1 px-4 pt-3">
+                <CardTitle className="text-xs flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                  {isRTL ? 'تشغيل الخدمات — قراءة ذكية' : 'Service Operations — smart read'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" data-testid="service-ops-counter">
+                  {svcCards.map((c) => (
+                    <SmartMetricCard
+                      key={c.label}
+                      icon={c.icon}
+                      label={c.label}
+                      value={c.value}
+                      tone={c.tone}
+                      to={c.to}
+                      insight={c.insight}
+                      isRTL={isRTL}
+                      chart="bars"
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
       case 'system-summary':
-        return (
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { icon: Activity, label: isRTL ? 'تصنيفات' : 'Categories', value: stats?.categories ?? 0 },
-              { icon: Newspaper, label: isRTL ? 'مقالات' : 'Posts', value: stats?.blogPosts ?? 0 },
-              { icon: ShieldAlert, label: isRTL ? 'مشرفين' : 'Admins', value: (stats?.roleCounts?.admin ?? 0) + (stats?.roleCounts?.super_admin ?? 0) },
-              { icon: FileText, label: isRTL ? 'إجمالي العقود' : 'Contracts', value: stats?.contracts ?? 0 },
-            ].map((card) => (
-              <Card key={card.label} className="border-border/40">
-                <CardContent className="p-2.5 flex flex-col items-center text-center gap-1">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <card.icon className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-                  </div>
-                  <span className="tech-content text-base font-bold">{card.value}</span>
-                  <span className="text-[9px] text-muted-foreground">{card.label}</span>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        );
+        {
+          const contractSeries = seriesFromMonthly(stats?.monthlyContracts, 6);
+          const usersSeries = seriesFromMonthly(stats?.monthlyUsers, 6);
+          const adminCount = (stats?.roleCounts?.admin ?? 0) + (stats?.roleCounts?.super_admin ?? 0);
+          const sysCards = [
+            {
+              icon: Activity, tone: 'info' as const,
+              label: isRTL ? 'تصنيفات نشطة' : 'Active categories',
+              value: stats?.categories ?? 0, to: '/admin/taxonomy',
+              insight: isRTL ? 'العمود الفقري للبحث والتوجيه — تأكد من التغطية.' : 'Backbone of search & routing — keep coverage healthy.',
+            },
+            {
+              icon: Newspaper, tone: 'accent' as const,
+              label: isRTL ? 'مقالات المدوّنة' : 'Blog posts',
+              value: stats?.blogPosts ?? 0, to: '/admin/blog',
+              insight: isRTL ? 'محتوى يدعم الـ SEO وزيارات العضوية المجانية.' : 'Content fuels SEO and organic membership traffic.',
+            },
+            {
+              icon: ShieldAlert, tone: adminCount > 1 ? ('success' as const) : ('warning' as const),
+              label: isRTL ? 'فريق الإشراف' : 'Admin team',
+              value: adminCount, to: '/admin/identity',
+              insight: adminCount > 1
+                ? (isRTL ? 'تغطية إشرافية صحية — تقليل مخاطر النقطة الواحدة.' : 'Healthy coverage — no single point of failure.')
+                : (isRTL ? 'مشرف واحد فقط — أضف نسخة احتياطية للإدارة.' : 'Only one admin — add a backup for resilience.'),
+            },
+            {
+              icon: FileText, tone: 'primary' as const,
+              label: isRTL ? 'إجمالي العقود' : 'Total contracts',
+              value: stats?.contracts ?? 0, series: contractSeries, to: '/admin/contracts',
+              insight: isRTL
+                ? `${stats?.activeContracts ?? 0} عقد نشط من إجمالي ${stats?.contracts ?? 0}.`
+                : `${stats?.activeContracts ?? 0} active out of ${stats?.contracts ?? 0} total.`,
+            },
+          ];
+          void usersSeries;
+          return (
+            <Card className="border-border/40">
+              <CardHeader className="pb-1 px-4 pt-3">
+                <CardTitle className="text-xs flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-accent" />
+                  {isRTL ? 'ملخص النظام — قراءة ذكية' : 'System Summary — smart read'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {sysCards.map((c) => (
+                    <SmartMetricCard
+                      key={c.label}
+                      icon={c.icon}
+                      label={c.label}
+                      value={c.value}
+                      series={c.series}
+                      tone={c.tone}
+                      to={c.to}
+                      insight={c.insight}
+                      isRTL={isRTL}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
       default:
         return null;
     }
