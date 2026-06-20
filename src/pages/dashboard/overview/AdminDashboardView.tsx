@@ -307,7 +307,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="px-4 pb-3">
+              <CardContent className="px-4 pb-3 space-y-2">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {pulse.map((m) => (
                     <SmartMetricCard
@@ -323,6 +323,11 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                     />
                   ))}
                 </div>
+                <DataFreshness
+                  lastUpdated={dataUpdatedAt}
+                  isRTL={isRTL}
+                  source="lead_requests, contracts, businesses"
+                />
               </CardContent>
             </Card>
           );
@@ -479,6 +484,11 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                     </div>
                   </div>
                 ))}
+                <DataFreshness
+                  lastUpdated={dataUpdatedAt}
+                  isRTL={isRTL}
+                  source="email_send_log, contracts, businesses, quote_requests, service_addition_requests, membership_subscriptions"
+                />
               </CardContent>
             </Card>
           );
@@ -558,21 +568,28 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
             },
           ];
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {kpis.map((k) => (
-                <SmartMetricCard
-                  key={k.label}
-                  icon={k.icon}
-                  label={k.label}
-                  value={k.value}
-                  series={k.series}
-                  trendPercent={k.trendPercent}
-                  insight={k.insight}
-                  tone={k.tone}
-                  to={k.to}
-                  isRTL={isRTL}
-                />
-              ))}
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {kpis.map((k) => (
+                  <SmartMetricCard
+                    key={k.label}
+                    icon={k.icon}
+                    label={k.label}
+                    value={k.value}
+                    series={k.series}
+                    trendPercent={k.trendPercent}
+                    insight={k.insight}
+                    tone={k.tone}
+                    to={k.to}
+                    isRTL={isRTL}
+                  />
+                ))}
+              </div>
+              <DataFreshness
+                lastUpdated={dataUpdatedAt}
+                isRTL={isRTL}
+                source="profiles, businesses, contracts, membership_subscriptions, conversations"
+              />
             </div>
           );
         }
