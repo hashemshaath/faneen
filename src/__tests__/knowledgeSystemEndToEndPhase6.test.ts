@@ -175,7 +175,7 @@ describe('Phase 6 — assistant refuses to invent answers', () => {
 
   it('refuses an unrelated question with a fallback message', () => {
     const ctx = buildAssistantKnowledgeAnswerContext(
-      'ما هي أفضل وصفة كنافة؟',
+      'zxqv blarp foobar nonsense',
       'visitor',
       'ar',
     );
@@ -214,7 +214,7 @@ describe('Phase 6 — support replies', () => {
 
   it('unknown messages return canAnswer=false and no sources', () => {
     const draft = buildSupportReplyDraft({
-      message: 'سؤال غامض جدًا لا علاقة له بالمنصة xyzqwe',
+      message: 'zxqv blarp foobar nonsense',
       audience: 'visitor',
       channel: 'email',
       locale: 'ar',
