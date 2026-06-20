@@ -18,6 +18,10 @@ const root = resolve(__dirname, '..', '..');
 const APP = readFileSync(resolve(root, 'src/App.tsx'), 'utf8');
 const SIDEBAR_PATH = resolve(root, 'src/components/dashboard/DashboardSidebar.tsx');
 const SIDEBAR = readFileSync(SIDEBAR_PATH, 'utf8');
+const NAV_CONFIG = readFileSync(
+  resolve(root, 'src/modules/dashboard/navigation/dashboardNavigation.config.ts'),
+  'utf8',
+);
 const UNIFIED_LABELS = readFileSync(
   resolve(root, 'src/components/dashboard/navigation/unifiedLabels.ts'),
   'utf8',
@@ -36,8 +40,8 @@ function routeRegistered(link: string): boolean {
 
 function extractSidebarUrls(): string[] {
   const urls = new Set<string>();
-  for (const m of SIDEBAR.matchAll(/url:\s*'([^']+)'/g)) {
-    urls.add(m[1]);
+  for (const src of [SIDEBAR, NAV_CONFIG]) {
+    for (const m of src.matchAll(/url:\s*'([^']+)'/g)) urls.add(m[1]);
   }
   return [...urls].sort();
 }
