@@ -101,7 +101,10 @@ const cases: HubCase[] = [
     name: 'BusinessProfileHub',
     Component: DashboardBusinessProfileHub,
     titleAr: 'بيانات المنشأة',
-    tabKeys: ['business', 'branches', 'entities', 'credentials', 'visibility'],
+    // `entities` was merged into the `business` tab
+    // (see DashboardBusinessProfileMerged), so the canonical hub now
+    // exposes 4 tabs, not 5.
+    tabKeys: ['business', 'branches', 'credentials', 'visibility'],
     firstTabLabelAr: 'بيانات المنشأة',
     secondTabLabelAr: 'الفروع',
     secondTabKey: 'branches',
