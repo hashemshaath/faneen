@@ -96,12 +96,19 @@ export const ProviderBidSection: React.FC<Props> = ({
   if (existing) {
     const statusLabel = getAssignmentStatusLabel(existing.status).ar;
     const canWithdraw = ['submitted', 'draft', 'revised'].includes(existing.status);
+    const isAwarded = existing.status === 'awarded';
     return (
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="text-base font-semibold">{OPPORTUNITY_LABELS.submitBid.ar}</div>
-            <Badge variant="outline">{statusLabel}</Badge>
+            {isAwarded ? (
+              <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white">
+                تم تعميد عرضك
+              </Badge>
+            ) : (
+              <Badge variant="outline">{statusLabel}</Badge>
+            )}
           </div>
           <div className="text-2xl font-bold tech-content">
             {Number(existing.price_amount ?? 0).toLocaleString()}{' '}
