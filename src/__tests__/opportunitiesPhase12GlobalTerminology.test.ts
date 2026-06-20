@@ -11,6 +11,13 @@ const PROVIDER_BID = read('src/modules/opportunities/bids/ProviderBidSection.tsx
 const PROVIDER_PAGE = read('src/pages/dashboard/ProviderLeadDetails.tsx');
 const QUOTE_DETAILS = read('src/pages/dashboard/QuoteRequestDetails.tsx');
 const ADMIN_OPS = read('src/pages/admin/AdminOpportunitiesOperations.tsx');
+const MY_REQUESTS = read('src/pages/dashboard/DashboardMyRequests.tsx');
+const HOME = read('src/components/home/v2/HomeV2.tsx');
+const NAVBAR = read('src/components/layout/Navbar.tsx');
+
+/** Strip JS/TS comments so legacy strings inside comments don't fail the audit. */
+const stripComments = (src: string) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 
 describe('Opportunities Phase 12 — global terminology', () => {
   it('1. central registry exposes canonical Phase 12 labels', () => {
@@ -42,9 +49,22 @@ describe('Opportunities Phase 12 — global terminology', () => {
   });
 
   it('5. new opportunity surfaces do not display "طلبات عروض الأسعار"', () => {
-    for (const src of [QUOTE_DETAILS, ADMIN_OPS, PROVIDER_BID]) {
-      expect(src).not.toContain('طلبات عروض الأسعار');
+    for (const src of [QUOTE_DETAILS, ADMIN_OPS, PROVIDER_BID, MY_REQUESTS]) {
+      expect(stripComments(src)).not.toContain('طلبات عروض الأسعار');
     }
+  });
+
+  it('5b. visible "طلب عرض سعر" copy removed from client opportunity surfaces', () => {
+    for (const src of [MY_REQUESTS, HOME]) {
+      expect(stripComments(src)).not.toMatch(/طلب عرض سعر/);
+    }
+  });
+
+  it('5c. navbar primary CTA copy is opportunity-aligned (comments allowed)', () => {
+    const code = stripComments(NAVBAR);
+    expect(code).not.toMatch(/'اطلب عرض سعر'/);
+    expect(code).not.toMatch(/'اطلب عرض سعر مجانًا'/);
+    expect(code).toMatch(/ابدأ فرصة/);
   });
 
   it('6. internal table/service names remain unchanged (UI-only rename)', () => {
