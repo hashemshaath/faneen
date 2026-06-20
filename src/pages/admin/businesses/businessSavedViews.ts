@@ -5,7 +5,7 @@
  * Pure URL helpers — no React, no I/O.
  */
 
-export interface BizViewFilters {
+export interface BizViewFilters extends Record<string, unknown> {
   q: string;
   status: string;
   tier: string;
