@@ -22,6 +22,7 @@ import { BrandFaviconApplier } from "@/components/BrandFaviconApplier";
 import { lazyRetry } from "@/lib/lazyRetry";
 const Index = lazyRetry(() => import("./pages/Index"));
 const DeferredAppOverlays = lazyRetry(() => import("./components/DeferredAppOverlays"));
+const AdminHome = lazyRetry(() => import("./pages/admin/AdminHome"));
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const AuthVerified = lazyRetry(() => import("./pages/AuthVerified"));
@@ -591,7 +592,7 @@ const AppRoutes = () => (
           <Route path="/admin/content" element={<ProtectedRoute requireAdmin><AdminContentCenter /></ProtectedRoute>} />
           <Route path="/admin/finance" element={<ProtectedRoute requireAdmin><AdminFinanceCenter /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsCenter /></ProtectedRoute>} />
-          <Route path="/admin" element={<Navigate to="/admin/operations" replace />} />
+          <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminHome /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 3 — RFQ hub. */}
           <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfqHub /></ProtectedRoute>} />
           <Route path="/dashboard/rfq/inbox" element={<Navigate to="/dashboard/rfq?tab=inbox" replace />} />
