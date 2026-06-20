@@ -264,12 +264,13 @@ describe('Home Taxonomy Link Guard', () => {
       expect(bad).toEqual([]);
     });
 
-    it('the eight approved rows exist (canonical primary activities)', () => {
+    it('the nine approved rows exist (canonical primary activities)', () => {
       const ids = HOME_CATEGORY_ROWS.map((r) => r.id);
       expect(ids).toEqual([
         'aluminum-glass',
         'steel-stainless',
         'wood-kitchens',
+        'kitchens',
         'elevators-maintenance',
         'energy-sustainability',
         'technology-networks',
