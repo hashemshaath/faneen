@@ -105,7 +105,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         // Phase: Requests Inbox — live pending counters for every request channel.
         supabase.from('quote_requests').select('id', { count: 'exact', head: true }).in('status', ['new', 'pending', 'submitted']),
         supabase.from('service_addition_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('admin_status', 'pending_review'),
+        countBusinesses({ select: 'id', filters: [{ column: 'approval_status', op: 'in', value: ['submitted', 'under_review'] }] }),
         supabase.from('business_ownership_transfer_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('entity_access_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
