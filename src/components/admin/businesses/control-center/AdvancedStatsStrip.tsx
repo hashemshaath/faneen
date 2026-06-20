@@ -17,7 +17,7 @@ interface Tile {
   value: string;
   hint?: string;
   icon: React.ElementType;
-  tone: 'primary' | 'success' | 'warning' | 'accent' | 'info' | 'destructive';
+  tone: 'primary' | 'success' | 'warning' | 'accent' | 'info' | 'destructive' | 'muted';
   trendUp?: boolean;
 }
 
@@ -28,6 +28,7 @@ const TONE_BG: Record<Tile['tone'], string> = {
   accent:     'from-accent/20 to-accent/0 text-accent-foreground',
   info:       'from-info/15 to-info/0 text-info-foreground',
   destructive:'from-destructive/15 to-destructive/0 text-destructive',
+  muted:      'from-muted/40 to-muted/0 text-muted-foreground',
 };
 
 /**
@@ -73,7 +74,7 @@ export const AdvancedStatsStrip: React.FC<Props> = ({ rows, isRTL }) => {
       label: pickBi(isRTL, 'نسبة التجريبية', 'Demo ratio'),
       value: `${a.demoRatio}%`,
       hint: pickBi(isRTL, 'بيانات اختبار يجب تقليلها', 'test data to minimize'),
-      icon: Beaker, tone: a.demoRatio > 10 ? 'destructive' : 'muted' as Tile['tone'],
+      icon: Beaker, tone: a.demoRatio > 10 ? 'destructive' : 'muted',
     },
   ];
 
