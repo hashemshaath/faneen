@@ -389,10 +389,17 @@ const SearchV3 = () => {
 
   // ── Pagination + did-you-mean + visible taxonomy ────
   const totalPages = Math.max(1, Math.ceil(deferred.length / ITEMS_PER_PAGE));
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return deferred.slice(start, start + ITEMS_PER_PAGE);
-  }, [deferred, currentPage]);
+  // Cumulative slice → enables infinite-scroll (each page increment keeps
+  // the previously rendered rows visible). The "Load more" sentinel in
+  // SearchResultsV3 advances `currentPage` automatically on viewport entry.
+  const paginated = useMemo(
+    () => deferred.slice(0, currentPage * ITEMS_PER_PAGE),
+    [deferred, currentPage],
+  );
+  const hasMore = paginated.length < deferred.length;
+  const handleLoadMore = useCallback(() => {
+    setCurrentPage((p) => Math.min(p + 1, totalPages));
+  }, [totalPages]);
 
   const didYouMean = useMemo(() => {
     if (!debouncedQuery.trim() || filtered.length > 0 || !businesses) return null;
