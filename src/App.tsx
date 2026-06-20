@@ -171,6 +171,7 @@ const AdminMembershipPayments = lazyRetry(() => import("./pages/admin/AdminMembe
 const AdminContactCenter = lazyRetry(() => import("./pages/admin/AdminContactCenter"));
 const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
 const AdminQuoteRequests = lazyRetry(() => import("./pages/admin/AdminQuoteRequests"));
+const AdminOpportunitiesOperations = lazyRetry(() => import("./pages/admin/AdminOpportunitiesOperations"));
 const AdminQuoteRequestDetails = lazyRetry(() => import("./pages/admin/AdminQuoteRequestDetails"));
 const AdminQuoteOperations = lazyRetry(() => import("./pages/admin/AdminQuoteOperations"));
 const QuoteRequestDetails = lazyRetry(() => import("./pages/dashboard/QuoteRequestDetails"));
