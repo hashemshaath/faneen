@@ -179,3 +179,141 @@ export function completenessDistribution(
     { key: 'media',       label: isRTL ? 'بدون صور' : 'Missing media',        count: rows.filter(isMissingMedia).length },
   ];
 }
+
+/**
+ * Rebuild — Phase 2 helpers.
+ *
+ * Heuristic for "provider-like" rows: entity_type values that signal
+ * a service provider in the current data model (`company`,
+ * `establishment`). Individuals/government/nonprofit are excluded.
+ * If `entity_type` is missing we conservatively include the row so
+ * the Providers tab still surfaces it for completion.
+ */
+const PROVIDER_ENTITY_TYPES = new Set(['company', 'establishment']);
+
+export const isProviderLike = (b: BusinessMetricsRow): boolean => {
+  const t = (b.entity_type || '').trim().toLowerCase();
+  if (!t) return true;
+  return PROVIDER_ENTITY_TYPES.has(t);
+};
+
+export type ProviderSegment =
+  | 'qualified'
+  | 'noContact'
+  | 'noPublicLink'
+  | 'unpublished'
+  | 'pendingOrRejected';
+
+/**
+ * Single-segment classifier for a provider row. Priority order is
+ * deterministic so each provider appears in exactly one segment.
+ */
+export function providerSegment(b: BusinessMetricsRow): ProviderSegment {
+  if (isPendingReview(b) || isRejected(b)) return 'pendingOrRejected';
+  if (!b.is_active || b.is_demo) return 'unpublished';
+  if (isMissingPublicLink(b)) return 'noPublicLink';
+  if (isMissingContact(b)) return 'noContact';
+  return 'qualified';
+}
+
+export function providerSegmentLabel(
+  seg: ProviderSegment,
+  isRTL: boolean,
+): string {
+  const ar: Record<ProviderSegment, string> = {
+    qualified: 'مؤهلون',
+    noContact: 'بدون تواصل',
+    noPublicLink: 'بدون رابط عام',
+    unpublished: 'غير منشورين',
+    pendingOrRejected: 'بانتظار المراجعة / مرفوض',
+  };
+  const en: Record<ProviderSegment, string> = {
+    qualified: 'Qualified',
+    noContact: 'Missing contact',
+    noPublicLink: 'Missing public link',
+    unpublished: 'Unpublished',
+    pendingOrRejected: 'Pending / rejected',
+  };
+  return isRTL ? ar[seg] : en[seg];
+}
+
+/**
+ * Bilingual list of reasons why a row is NOT pilot-ready. Empty list
+ * means the row passes every check (i.e. `isPilotReady` is true).
+ */
+export function pilotReadinessReasons(
+  b: BusinessMetricsRow,
+  isRTL: boolean,
+): string[] {
+  const out: string[] = [];
+  if (!b.is_active) out.push(isRTL ? 'غير نشطة' : 'Inactive');
+  if (b.is_demo) out.push(isRTL ? 'بيانات تجريبية' : 'Demo data');
+  if (isMissingPublicLink(b)) out.push(isRTL ? 'بدون رابط عام' : 'Missing public link');
+  if (isMissingContact(b)) out.push(isRTL ? 'بدون تواصل' : 'Missing contact');
+  if (isPendingReview(b)) out.push(isRTL ? 'بانتظار المراجعة' : 'Pending review');
+  if (isRejected(b)) out.push(isRTL ? 'مرفوضة/موقوفة' : 'Rejected/Suspended');
+  return out;
+}
+
+/**
+ * City/region distribution — uses the available `region` label.
+ * Falls back to `region_en`, then `city_id`. Empty when no row has
+ * any of these.
+ */
+export function cityDistribution(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+  isRTL: boolean,
+): DistributionBucket[] {
+  const counts = new Map<string, { label: string; count: number }>();
+  for (const r of rows) {
+    const raw = (isRTL ? r.region : r.region_en) || r.region || r.region_en || r.city_id || '';
+    const key = raw.trim();
+    if (!key) continue;
+    const bucket = counts.get(key);
+    if (bucket) bucket.count += 1;
+    else counts.set(key, { label: key, count: 1 });
+  }
+  return [...counts.entries()]
+    .map(([key, v]) => ({ key, label: v.label, count: v.count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 12);
+}
+
+export type ReviewBucketKey =
+  | 'drafts'
+  | 'pending'
+  | 'inactive'
+  | 'demo'
+  | 'noUsername'
+  | 'noContact';
+
+export interface ReviewBucket {
+  key: ReviewBucketKey;
+  label: string;
+  rows: BusinessMetricsRow[];
+}
+
+/**
+ * Review buckets — partition the rows into actionable review groups.
+ * A row can appear in multiple buckets on purpose (e.g. a draft can
+ * also be missing contact); the Review tab uses these counts to
+ * drive the operations workflow.
+ */
+export function reviewBuckets(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+  isRTL: boolean,
+): ReviewBucket[] {
+  const mk = (key: ReviewBucketKey, ar: string, en: string, pred: (b: BusinessMetricsRow) => boolean): ReviewBucket => ({
+    key,
+    label: isRTL ? ar : en,
+    rows: rows.filter(pred),
+  });
+  return [
+    mk('drafts',     'مسودات',                'Drafts',                isDraft),
+    mk('pending',    'بانتظار المراجعة',      'Pending review',        isPendingReview),
+    mk('inactive',   'غير نشطة',              'Inactive',              isInactive),
+    mk('demo',       'بيانات تجريبية',        'Demo',                  (b) => !!b.is_demo),
+    mk('noUsername', 'بدون اسم مستخدم',       'No username',           isMissingPublicLink),
+    mk('noContact',  'بدون تواصل',            'No contact',            isMissingContact),
+  ];
+}
