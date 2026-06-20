@@ -307,6 +307,8 @@ const AdminBusinesses = () => {
   }, [branchForm, isRTL]);
   const [isPending, startTransition] = useTransition();
   const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
+  // Control-center tabs (Phase 1: overview + businesses are real; rest are coming-next).
+  const [activeTab, setActiveTab] = useState<BusinessAdminTabId>(DEFAULT_BUSINESS_ADMIN_TAB);
 
   const setField = useCallback((key: string, value: unknown) => {
     setEditForm((f) => ({ ...f, [key]: value }) as AdminEditBusinessFormState);
