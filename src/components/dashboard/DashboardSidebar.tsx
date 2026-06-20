@@ -561,7 +561,16 @@ export const DashboardSidebar: React.FC = () => {
   const handleLogout = async () => { await signOut(); navigate('/'); };
 
   // Admin gets admin-specific base menu, not user/provider menu
-  const baseGroups = isAdmin ? adminBaseGroups : (isProvider ? providerGroups : userGroups);
+  const hasBusiness = (workspace.entities?.length ?? 0) > 0;
+  // For non-admin / non-provider users without a business, hide the
+  // «المنشأة» group entirely — they get a CTA card instead.
+  const baseGroups = isAdmin
+    ? adminBaseGroups
+    : isProvider
+      ? providerGroups
+      : hasBusiness
+        ? userGroups
+        : userGroups.filter((g) => g.groupLabel.en !== UNIFIED_GROUP_LABELS.business.en);
 
   // Build a url → label lookup once per render. Favorites and Recent
   // resolve their display label from this so renames stay in sync and
@@ -677,6 +686,28 @@ export const DashboardSidebar: React.FC = () => {
           isRouteHidden={isRouteHidden}
           pinControl={adminPinControl}
         />
+
+        {/* CTA: «إنشاء منشأة» for users without any business. */}
+        {!isAdmin && !isProvider && !hasBusiness && !collapsed && (
+          <div className="mx-3 mt-3 mb-2 p-3 rounded-xl border border-primary/25 bg-primary/5">
+            <p className="text-[11px] font-semibold text-sidebar-foreground mb-1">
+              {isRTL ? 'لديك منشأة؟' : 'Have a business?'}
+            </p>
+            <p className="text-[10.5px] text-sidebar-foreground/70 leading-snug mb-2">
+              {isRTL
+                ? 'سجّل منشأتك للوصول إلى أدوات الفريق والخدمات والظهور العام.'
+                : 'Register your business to unlock team, services, and public visibility tools.'}
+            </p>
+            <NavLink
+              to={CREATE_ENTITY_ROUTE}
+              onClick={closeMobile}
+              className="inline-flex items-center justify-center gap-1.5 w-full h-9 rounded-lg bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition-colors"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              {isRTL ? 'إنشاء منشأة' : 'Create business'}
+            </NavLink>
+          </div>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">
