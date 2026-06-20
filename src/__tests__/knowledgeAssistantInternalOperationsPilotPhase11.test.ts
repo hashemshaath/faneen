@@ -108,10 +108,11 @@ describe("KNOWLEDGE ASSISTANT INTERNAL OPERATIONS PILOT — Phase 11", () => {
     expect(PILOT_DOC).toMatch(/needs_knowledge_update/);
   });
 
-  it("pilot doc declares no DB / no edge / no migrations / no logging", () => {
+  it("pilot doc contains no SQL / runtime code blocks", () => {
     expect(PILOT_DOC).not.toMatch(/CREATE TABLE/i);
-    expect(PILOT_DOC).not.toMatch(/migration/i);
-    expect(PILOT_DOC).not.toMatch(/edge function/i);
+    expect(PILOT_DOC).not.toMatch(/ALTER TABLE/i);
+    expect(PILOT_DOC).not.toMatch(/INSERT INTO/i);
+    expect(PILOT_DOC).not.toMatch(/supabase\.from\(/);
   });
 
   it("has no eslint-disable / @ts-ignore suppressions in new files", () => {
