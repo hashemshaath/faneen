@@ -29,6 +29,7 @@ import {
   type AssistantAnswerContext,
 } from '@/modules/knowledge/assistant/assistantKnowledgeContext';
 import type { KnowledgeAudience, KnowledgeLocale } from '@/modules/knowledge';
+import { KNOWLEDGE_ASSISTANT_RELEASE_GATE } from '@/modules/knowledge/release/knowledgeAssistantReleaseGate';
 
 const AUDIENCE_OPTIONS: ReadonlyArray<{ value: KnowledgeAudience; label: string }> = [
   { value: 'visitor', label: 'زائر' },
@@ -77,6 +78,27 @@ const AssistantPreviewPanel: React.FC = () => {
 
   return (
     <div className="space-y-4" data-testid="knowledge-assistant-preview">
+      <Card
+        className="border-warning/40 bg-warning/5"
+        data-testid="assistant-preview-internal-only-notice"
+      >
+        <CardContent className="p-3 sm:p-4 space-y-1 text-xs">
+          <div className="flex items-center gap-2 font-semibold text-warning">
+            <ShieldAlert className="h-4 w-4" />
+            <span>
+              وضع التشغيل الحالي: داخلي فقط ({KNOWLEDGE_ASSISTANT_RELEASE_GATE.releaseLevel})
+            </span>
+          </div>
+          <ul className="ms-6 list-disc space-y-0.5 text-muted-foreground">
+            <li>لا إرسال رسائل.</li>
+            <li>لا حفظ محادثات.</li>
+            <li>لا إطلاق عام أو داخل داشبورد المستخدمين/المزودين.</li>
+            <li>يعتمد على مركز المعرفة فقط — لا API خارجي ولا embeddings.</li>
+            <li>يجب مراجعة الرد بشريًا قبل استخدامه مع أي عميل.</li>
+          </ul>
+        </CardContent>
+      </Card>
+
       <Card className="border-border/60">
         <CardContent className="p-3 sm:p-4 space-y-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
