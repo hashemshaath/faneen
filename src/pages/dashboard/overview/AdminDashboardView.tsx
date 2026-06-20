@@ -45,8 +45,16 @@ import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
   AdminQuickActionsWidget,
   AdminWidgetShell,
+  SortableSection,
   useAdminDashboardLayout,
 } from '@/modules/admin-dashboard';
+import {
+  DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   const { user, profile } = useAuth();
