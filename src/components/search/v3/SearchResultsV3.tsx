@@ -1,10 +1,11 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
-import { useLanguage } from '@/i18n/LanguageContext';
 import { SearchResultCardV3, type SearchResultCardV3Business } from './SearchResultCardV3';
 import { SearchSkeletonV3 } from './SearchSkeletonV3';
 import { SearchEmptyStateV3 } from './SearchEmptyStateV3';
 import { SearchErrorStateV3 } from './SearchErrorStateV3';
+import { Button } from '@/components/ui/button';
 import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 import type { ViewModeV3 } from './SearchHeaderV3';
 
@@ -22,16 +23,18 @@ interface Props {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
   taxonomyDisplayMap?: Map<string, BusinessTaxonomyDisplay>;
 }
 
 export const SearchResultsV3 = ({
   businesses, isLoading, isError, onRetry, viewMode, totalCount, hasFilters,
-  onClearFilters, didYouMean, onDidYouMeanClick, currentPage, totalPages, onPageChange,
+  onClearFilters, didYouMean, onDidYouMeanClick, currentPage, totalPages,
+  hasMore, onLoadMore,
   taxonomyDisplayMap,
 }: Props) => {
   const bi = useBi();
-  const { isRTL } = useLanguage();
 
   // SearchResultsV3 only renders card layouts; the 'map' view is handled
   // upstream by SearchMapV3, so normalize any non-card value to 'grid'
@@ -55,8 +58,19 @@ export const SearchResultsV3 = ({
     ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'
     : 'flex flex-col gap-3';
 
-  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
-  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
+  // Infinite-scroll sentinel — auto-advances the page when it enters the
+  // viewport. Keyboard/no-JS users still get the explicit button.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasMore || !onLoadMore || !sentinelRef.current) return;
+    const el = sentinelRef.current;
+    const io = new IntersectionObserver(
+      (entries) => { if (entries.some((e) => e.isIntersecting)) onLoadMore(); },
+      { rootMargin: '400px 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, onLoadMore, businesses.length]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,6 +78,7 @@ export const SearchResultsV3 = ({
         {businesses.map((b, i) => (
           <div
             key={b.id}
+            className="animate-fade-in"
             // First 6 stay fully visible for fast LCP; cards below get
             // `content-visibility: auto` so the browser skips off-screen
             // layout/paint until they enter the viewport.
@@ -78,32 +93,35 @@ export const SearchResultsV3 = ({
         ))}
       </div>
 
-      {totalPages > 1 ? (
-        <nav className="flex items-center justify-center gap-2 pt-2" aria-label={bi('التنقل بين الصفحات', 'Pagination')}>
-          <button
+      {hasMore ? (
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <Button
             type="button"
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-xl border border-border/60 bg-card disabled:opacity-40 hover:border-accent/40"
-            aria-label={bi('السابق', 'Previous')}
+            variant="outline"
+            size="lg"
+            onClick={onLoadMore}
+            className="gap-2"
           >
-            <PrevIcon className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-body text-foreground px-3">
-            <span className="tech-content">{currentPage}</span>
-            <span className="mx-1 text-muted-foreground">/</span>
-            <span className="tech-content text-muted-foreground">{totalPages}</span>
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            {bi('عرض المزيد', 'Load more')}
+          </Button>
+          <div
+            ref={sentinelRef}
+            aria-hidden="true"
+            className="h-1 w-full"
+          />
+          <span className="sr-only" aria-live="polite">
+            {bi(
+              `عرض ${businesses.length.toLocaleString('ar-EG')} من ${totalCount.toLocaleString('ar-EG')}`,
+              `Showing ${businesses.length.toLocaleString('en-US')} of ${totalCount.toLocaleString('en-US')}`,
+            )}
           </span>
-          <button
-            type="button"
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage >= totalPages}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-xl border border-border/60 bg-card disabled:opacity-40 hover:border-accent/40"
-            aria-label={bi('التالي', 'Next')}
-          >
-            <NextIcon className="w-4 h-4" />
-          </button>
-        </nav>
+        </div>
+      ) : totalCount > 0 && totalPages > 1 ? (
+        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-2">
+          <Loader2 className="w-3 h-3" aria-hidden="true" />
+          {bi('عرضت كل النتائج', 'All results shown')}
+        </div>
       ) : null}
     </div>
   );

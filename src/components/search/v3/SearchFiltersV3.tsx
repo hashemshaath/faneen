@@ -20,6 +20,8 @@ interface Props {
   cities?: CityLite[];
   hasActiveFilters: boolean;
   loading?: boolean;
+  /** Facet counts: total providers per city id (computed upstream). */
+  cityCounts?: Map<string, number>;
 }
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
@@ -31,7 +33,7 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 const FieldSkeleton = () => <Skeleton className="h-11 w-full rounded-xl" />;
 
 export const SearchFiltersV3 = ({
-  filters, onFilterChange, onClearFilters, categories, cities, hasActiveFilters,
+  filters, onFilterChange, onClearFilters, categories, cities, hasActiveFilters, cityCounts,
 }: Props) => {
   const { language } = useLanguage();
   const bi = useBi();
@@ -117,11 +119,21 @@ export const SearchFiltersV3 = ({
           <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder={bi('كل المدن', 'All cities')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{bi('كل المدن', 'All cities')}</SelectItem>
-            {sortedCities.map((c) => (
-              <SelectItem key={c.id} value={c.id} dir="auto">
-                {language === 'ar' ? c.name_ar : c.name_en}
-              </SelectItem>
-            ))}
+            {sortedCities.map((c) => {
+              const n = cityCounts?.get(c.id) ?? 0;
+              return (
+                <SelectItem key={c.id} value={c.id} dir="auto">
+                  <span className="inline-flex items-center gap-2 w-full">
+                    <span className="flex-1 truncate">{language === 'ar' ? c.name_ar : c.name_en}</span>
+                    {n > 0 ? (
+                      <span className="tech-content text-[10px] text-muted-foreground font-semibold">
+                        {n.toLocaleString('en-US')}
+                      </span>
+                    ) : null}
+                  </span>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
         ) : <FieldSkeleton />}

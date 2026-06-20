@@ -389,10 +389,17 @@ const SearchV3 = () => {
 
   // ── Pagination + did-you-mean + visible taxonomy ────
   const totalPages = Math.max(1, Math.ceil(deferred.length / ITEMS_PER_PAGE));
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return deferred.slice(start, start + ITEMS_PER_PAGE);
-  }, [deferred, currentPage]);
+  // Cumulative slice → enables infinite-scroll (each page increment keeps
+  // the previously rendered rows visible). The "Load more" sentinel in
+  // SearchResultsV3 advances `currentPage` automatically on viewport entry.
+  const paginated = useMemo(
+    () => deferred.slice(0, currentPage * ITEMS_PER_PAGE),
+    [deferred, currentPage],
+  );
+  const hasMore = paginated.length < deferred.length;
+  const handleLoadMore = useCallback(() => {
+    setCurrentPage((p) => Math.min(p + 1, totalPages));
+  }, [totalPages]);
 
   const didYouMean = useMemo(() => {
     if (!debouncedQuery.trim() || filtered.length > 0 || !businesses) return null;
@@ -409,6 +416,18 @@ const SearchV3 = () => {
     const m = new Map<string, { name_ar: string; name_en?: string | null; logo_url?: string | null }>();
     for (const b of (businesses ?? []) as Array<{ id: string; name_ar: string; name_en?: string | null; logo_url?: string | null }>) {
       m.set(b.id, { name_ar: b.name_ar, name_en: b.name_en, logo_url: b.logo_url });
+    }
+    return m;
+  }, [businesses]);
+
+  // Facet counts — total providers per city, computed from the full
+  // unfiltered set so users see how big each option is before applying.
+  const cityCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const b of (businesses ?? []) as Array<{ city_id?: string | null }>) {
+      const id = b.city_id;
+      if (!id) continue;
+      m.set(id, (m.get(id) ?? 0) + 1);
     }
     return m;
   }, [businesses]);
@@ -523,6 +542,7 @@ const SearchV3 = () => {
                 categories={categories}
                 cities={cities}
                 hasActiveFilters={hasActiveFilters}
+                cityCounts={cityCounts}
               />
               <RecentAndShareV3
                 onPickQuery={handleQueryChange}
@@ -565,6 +585,8 @@ const SearchV3 = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
+              hasMore={hasMore}
+              onLoadMore={handleLoadMore}
                 taxonomyDisplayMap={taxonomyDisplayMap}
               />
             )}
