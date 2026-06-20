@@ -1418,13 +1418,13 @@ const AdminBusinesses = () => {
           eyebrow={pickBi(isRTL, 'لوحة الإدارة', 'Admin Console')}
           breadcrumbs={[
             { label: pickBi(isRTL, 'الإدارة', 'Admin'), href: '/admin' },
-            { label: pickBi(isRTL, 'إدارة الأعمال', 'Business Management') },
+            { label: pickBi(isRTL, 'إدارة الجهات والمزودين', 'Businesses & Providers') },
           ]}
-          title={pickBi(isRTL, 'إدارة الأعمال والمنشآت', 'Business Management')}
-          subtitle={panelOpen ? undefined : (
-            isRTL
-              ? `${stats.total} منشأة مسجلة • تحكم كامل في الملفات والخدمات والفروع والعضويات`
-              : `${stats.total} registered businesses • Full control of profiles, services, branches & memberships`
+          title={pickBi(isRTL, 'إدارة الجهات والمزودين', 'Businesses & Providers Control Center')}
+          subtitle={panelOpen ? undefined : pickBi(
+            isRTL,
+            'مركز موحد لمراجعة الجهات، إدارة المزودين، متابعة الظهور العام، وجاهزية التشغيل.',
+            'Unified center to review businesses, manage providers, track public visibility & pilot readiness.',
           )}
           actions={
             <BusinessHeaderActions
