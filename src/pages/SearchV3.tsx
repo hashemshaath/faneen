@@ -191,6 +191,9 @@ const SearchV3 = () => {
       const k = map[key];
       if (value === defaults[key]) p.delete(k); else p.set(k, String(value));
       setSearchParams(p, { replace: true });
+      if (key === 'sortBy' && typeof window !== 'undefined') {
+        try { window.localStorage.setItem(SORT_STORAGE_KEY, String(value)); } catch { /* ignore quota */ }
+      }
     },
     [searchParams, setSearchParams],
   );
