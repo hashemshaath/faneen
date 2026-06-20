@@ -32,9 +32,8 @@ describe('Opportunities — final lifecycle audit', () => {
     expect(ALL_SQL).toMatch(/opportunity_id\s+uuid[\s\S]{0,200}REFERENCES\s+public\.quote_requests/i);
   });
   it('3. contracts have opportunity_id and opportunity_bid_id linked to FKs', () => {
-    expect(ALL_SQL).toMatch(/ALTER TABLE public\.contracts[\s\S]{0,200}ADD COLUMN[\s\S]{0,200}opportunity_id\s+uuid/);
-    expect(ALL_SQL).toMatch(/ADD CONSTRAINT contracts_opportunity_id_fkey[\s\S]{0,200}REFERENCES public\.quote_requests/);
-    expect(ALL_SQL).toMatch(/ADD CONSTRAINT contracts_opportunity_bid_id_fkey[\s\S]{0,200}REFERENCES public\.opportunity_bids/);
+    expect(ALL_SQL).toMatch(/ALTER TABLE public\.contracts[\s\S]{0,400}opportunity_id\s+uuid\s+REFERENCES\s+public\.quote_requests/);
+    expect(ALL_SQL).toMatch(/opportunity_bid_id\s+uuid\s+REFERENCES\s+public\.opportunity_bids/);
   });
   it('4. no duplicate contract per bid (DB-level unique index)', () => {
     expect(ALL_SQL).toMatch(/CREATE UNIQUE INDEX IF NOT EXISTS contracts_opportunity_bid_id_unique/);
