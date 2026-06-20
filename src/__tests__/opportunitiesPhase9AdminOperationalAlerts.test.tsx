@@ -18,9 +18,13 @@ describe('Opportunities Phase 9 — admin operational alerts section', () => {
       expect(PAGE).toContain(flag);
     }
   });
-  it('3. only CTA is "عرض التفاصيل"', () => {
+  it('3. only CTA is "عرض التفاصيل" (no mutation handlers)', () => {
     expect(PAGE).toContain('عرض التفاصيل');
-    expect(PAGE).not.toMatch(/onClick=\{/);
+    // The CSV export button (Phase 10B) is the only allowed onClick.
+    expect(PAGE).not.toMatch(/onClick=\{[^}]*award/i);
+    expect(PAGE).not.toMatch(/onClick=\{[^}]*contract/i);
+    expect(PAGE).not.toMatch(/onClick=\{[^}]*notify/i);
+    expect(PAGE).not.toMatch(/onClick=\{[^}]*match/i);
   });
   it('4. no executive action buttons in the page', () => {
     expect(PAGE).not.toMatch(/awardOpportunityBid|convertAwardedBidToContract|submitOpportunityBid|rematch/i);
