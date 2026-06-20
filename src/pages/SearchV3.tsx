@@ -577,15 +577,7 @@ const SearchV3 = () => {
       </main>
 
       <Footer />
-      <CompareTrayV3
-        lookup={useMemo(() => {
-          const m = new Map<string, { name_ar: string; name_en?: string | null; logo_url?: string | null }>();
-          for (const b of (businesses ?? []) as Array<{ id: string; name_ar: string; name_en?: string | null; logo_url?: string | null }>) {
-            m.set(b.id, { name_ar: b.name_ar, name_en: b.name_en, logo_url: b.logo_url });
-          }
-          return m;
-        }, [businesses])}
-      />
+      <CompareTrayV3 lookup={compareLookup} />
     </div>
   );
 };
