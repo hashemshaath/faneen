@@ -452,7 +452,40 @@ const Quote: React.FC = () => {
       e.sector = bi('اختر القطاع الأقرب لطلبك للمتابعة.', 'Pick the closest sector to continue.');
     }
     if (s === 2) {
-      if (!form.city.trim()) e.city = bi('أضف المدينة حتى نتمكن من توجيه الطلب بشكل أفضل.', 'Add the city so we can route your request.');
+      // Location-first validation:
+      //  - saved site → siteId required
+      //  - project    → projectId required AND (project has site OR location filled OR no_location)
+      //  - new address→ region + city required (district recommended but optional)
+      //  - no-location→ city OR region required
+      if (!form.locationMode) {
+        e.locationMode = bi(
+          'اختر طريقة تحديد موقع تنفيذ العمل.',
+          'Pick how you want to specify the work location.',
+        );
+      } else if (form.locationMode === 'saved') {
+        if (!form.siteId) {
+          e.siteId = bi('اختر موقعًا محفوظًا.', 'Pick a saved site.');
+        }
+      } else if (form.locationMode === 'project') {
+        if (!form.projectId) {
+          e.projectId = bi('اختر مشروعًا.', 'Pick a project.');
+        } else if (!form.siteId && !form.noLocationSelected && !(form.region.trim() && form.city.trim())) {
+          e.city = bi(
+            'هذا المشروع بدون موقع محفوظ — أضف موقعًا أو اختر بدون عنوان محدد.',
+            'This project has no saved site — add a location or pick "no address".',
+          );
+        }
+      } else if (form.locationMode === 'new') {
+        if (!form.region.trim()) e.region = bi('اختر المنطقة.', 'Pick the region.');
+        if (!form.city.trim()) e.city = bi('أضف المدينة.', 'Add the city.');
+      } else if (form.locationMode === 'none') {
+        if (!form.city.trim() && !form.region.trim()) {
+          e.city = bi(
+            'أدخل على الأقل المدينة أو المنطقة لتقريب التوجيه.',
+            'Enter at least a city or region so we can route the request.',
+          );
+        }
+      }
       if (!form.serviceLocation) e.serviceLocation = bi('اختر مكان تنفيذ الخدمة.', 'Choose where the service will be delivered.');
     }
     if (s === 3 && form.description.trim().length < 10) {
