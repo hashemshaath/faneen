@@ -352,6 +352,34 @@ const RenderGroups: React.FC<{
         (item) => (!item.superAdminOnly || isSuperAdmin) && canView(item.url),
       );
       if (visibleItems.length === 0) return null;
+      // Flatten single-item groups (e.g. Admin → Overview): render as a
+      // top-level menu entry without a collapsible header — keeps the
+      // sidebar uncluttered when a "group" only contains one route.
+      if (visibleItems.length === 1) {
+        const only = visibleItems[0];
+        const flatItem: MenuItem = {
+          ...only,
+          label: group.groupLabel,
+          icon: group.icon,
+        };
+        return (
+          <SidebarGroup
+            key={group.groupLabel.en}
+            className={gi > 0 && !collapsed ? 'mt-1.5 pt-1.5 border-t border-sidebar-border/60' : ''}
+          >
+            <SidebarGroupContent>
+              <RenderMenu
+                items={[flatItem]}
+                collapsed={collapsed}
+                isRTL={isRTL}
+                closeMobile={closeMobile}
+                bestActiveUrl={bestActiveUrl}
+                pinControl={pinControl}
+              />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        );
+      }
       const groupKey = group.groupLabel.en;
       // Auto-expand the group that contains the active route. Otherwise
       // use the user's persisted preference; default open for the first
