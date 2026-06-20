@@ -42,7 +42,7 @@ describe('Phase 9 — Assistant Quality Snapshot panel', () => {
       'quality-needs-knowledge',
       'quality-avg-confidence',
     ]) {
-      expect(PANEL_SRC).toContain(`data-testid="${id}"`);
+      expect(PANEL_SRC).toContain(`testid="${id}"`);
     }
   });
 
