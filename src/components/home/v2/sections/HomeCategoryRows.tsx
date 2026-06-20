@@ -87,6 +87,7 @@ const HomeCategoryRows = () => {
           key={row.id}
           row={row}
           providers={providersByRow.get(row.id) ?? []}
+          providersBySlug={businessesBySlug}
           providersLoading={isLoading}
         />
       ))}
