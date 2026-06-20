@@ -66,13 +66,12 @@ describe('opportunities phase 2 — route aliases', () => {
 });
 
 describe('opportunities phase 2 — no DB / edge / migration changes', () => {
-  it('opportunityLabels module does not import supabase or migrations', () => {
+  it('opportunityLabels module is UI-only (no supabase / RPC imports)', () => {
     const src = readFileSync(
       resolve(root, 'src/modules/opportunities/opportunityLabels.ts'),
       'utf8',
     );
     expect(src).not.toMatch(/from\s+['"]@\/integrations\/supabase/);
-    expect(src).not.toMatch(/migrations?/i);
-    expect(src).not.toMatch(/edge|rpc/i);
+    expect(src).not.toMatch(/createClient|\.rpc\(|\.from\(/);
   });
 });
