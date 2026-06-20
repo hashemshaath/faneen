@@ -184,6 +184,44 @@ export function completenessDistribution(
 }
 
 /**
+ * Verification distribution — verified vs. unverified split.
+ */
+export function verificationDistribution(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+  isRTL: boolean,
+): DistributionBucket[] {
+  const verified = rows.filter((r) => !!r.is_verified).length;
+  return [
+    { key: 'verified',   label: isRTL ? 'موثّقة'      : 'Verified',   count: verified },
+    { key: 'unverified', label: isRTL ? 'غير موثّقة' : 'Unverified', count: rows.length - verified },
+  ].filter((b) => b.count > 0);
+}
+
+/**
+ * Completeness-tier distribution — groups every row by its
+ * completeness score into Excellent/Good/Fair/Poor tiers.
+ */
+export function completenessTierDistribution(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+  isRTL: boolean,
+): DistributionBucket[] {
+  const tiers = { excellent: 0, good: 0, fair: 0, poor: 0 };
+  for (const r of rows) {
+    const pct = Math.round(completenessScore(r) * 100);
+    if (pct >= 90) tiers.excellent += 1;
+    else if (pct >= 70) tiers.good += 1;
+    else if (pct >= 40) tiers.fair += 1;
+    else tiers.poor += 1;
+  }
+  return [
+    { key: 'excellent', label: isRTL ? 'ممتاز (≥90٪)' : 'Excellent (≥90%)', count: tiers.excellent },
+    { key: 'good',      label: isRTL ? 'جيد (70-89٪)' : 'Good (70-89%)',    count: tiers.good },
+    { key: 'fair',      label: isRTL ? 'مقبول (40-69٪)' : 'Fair (40-69%)',  count: tiers.fair },
+    { key: 'poor',      label: isRTL ? 'ضعيف (<40٪)'  : 'Poor (<40%)',      count: tiers.poor },
+  ].filter((b) => b.count > 0);
+}
+
+/**
  * Rebuild — Phase 2 helpers.
  *
  * Heuristic for "provider-like" rows: entity_type values that signal

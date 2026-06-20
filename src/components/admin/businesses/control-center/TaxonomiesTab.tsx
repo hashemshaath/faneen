@@ -3,13 +3,18 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Layers, Info, Building2 } from 'lucide-react';
+import { Layers, Info, Building2, MapPin, ShieldCheck, Gauge, ListChecks } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { MetricBarList } from './MetricBarList';
 import {
   entityTypeDistribution,
+  statusDistribution,
+  cityDistribution,
+  verificationDistribution,
+  completenessTierDistribution,
   type BusinessMetricsRow,
+  type DistributionBucket,
 } from '@/modules/admin/businesses/businessAdminMetrics';
 
 const PALETTE = [
@@ -47,14 +52,22 @@ export const TaxonomiesTab: React.FC<TaxonomiesTabProps> = ({ businesses, isRTL 
     () => entityTypeDistribution(businesses, isRTL),
     [businesses, isRTL],
   );
+  const regionBuckets = useMemo(() => cityDistribution(businesses, isRTL), [businesses, isRTL]);
+  const statusBuckets = useMemo(() => statusDistribution(businesses, isRTL), [businesses, isRTL]);
+  const verifyBuckets = useMemo(() => verificationDistribution(businesses, isRTL), [businesses, isRTL]);
+  const tierBuckets = useMemo(() => completenessTierDistribution(businesses, isRTL), [businesses, isRTL]);
+
   const total = businesses.length;
   const dominant = entityBuckets[0];
   const dominantPct = dominant && total
     ? Math.round((dominant.count / total) * 100) : 0;
+  const typedTotal = entityBuckets.reduce((s, b) => s + b.count, 0);
+  const geoTotal = regionBuckets.reduce((s, b) => s + b.count, 0);
+  const dominantRegion = regionBuckets[0];
 
   return (
     <div className="space-y-4" data-testid="business-control-center-taxonomies">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         <AdminKpiCard
           label={pickBi(isRTL, 'إجمالي الجهات', 'Total entities')}
           value={total} icon={Building2} tone="primary"
@@ -62,6 +75,7 @@ export const TaxonomiesTab: React.FC<TaxonomiesTabProps> = ({ businesses, isRTL 
         <AdminKpiCard
           label={pickBi(isRTL, 'أنواع مميّزة', 'Distinct types')}
           value={entityBuckets.length} icon={Layers} tone="accent"
+          hint={pickBi(isRTL, 'حسب entity_type', 'by entity_type')}
         />
         <AdminKpiCard
           label={pickBi(isRTL, 'النوع السائد', 'Dominant type')}
@@ -69,9 +83,15 @@ export const TaxonomiesTab: React.FC<TaxonomiesTabProps> = ({ businesses, isRTL 
           trend={dominant ? `${dominantPct}%` : undefined}
         />
         <AdminKpiCard
-          label={pickBi(isRTL, 'بدون نوع مصنّف', 'Untyped')}
-          value={total - entityBuckets.reduce((s, b) => s + b.count, 0)}
+          label={pickBi(isRTL, 'مناطق جغرافية', 'Regions covered')}
+          value={regionBuckets.length} icon={MapPin} tone="info"
+          hint={dominantRegion ? `${pickBi(isRTL, 'الأكثر', 'Top')}: ${dominantRegion.label}` : undefined}
+        />
+        <AdminKpiCard
+          label={pickBi(isRTL, 'بدون تصنيف', 'Unclassified')}
+          value={(total - typedTotal) + (total - geoTotal)}
           icon={Info} tone="warning"
+          hint={pickBi(isRTL, 'بدون نوع أو منطقة', 'no type or region')}
         />
       </div>
 
@@ -81,58 +101,50 @@ export const TaxonomiesTab: React.FC<TaxonomiesTabProps> = ({ businesses, isRTL 
           <p className="text-muted-foreground">
             {pickBi(
               isRTL,
-              'لا يتوفر مصدر تصنيف مفصّل (قطاع/خدمة) على مستوى صف الجهة في البيانات الحالية. نعرض هنا توزيع أنواع الجهات كأقرب مؤشر حقيقي بدون اختراع بيانات.',
-              'No detailed sector/service taxonomy exists on the business row in the current data. We show entity-type distribution as the closest real signal, without inventing data.',
+              'لا يتوفر عمود قطاع/خدمة على صف الجهة في الاستعلام الحالي. لذلك نُصنّف الجهات وفق الإشارات المتاحة فعلًا في البيانات: النوع، المنطقة، حالة الاعتماد، التوثيق، وجودة الاكتمال — دون اختراع تصنيفات.',
+              'No sector/service column exists on the business row in the current query. Instead we classify entities by every real signal in the data: type, region, approval status, verification, and completeness — without inventing taxonomies.',
             )}
           </p>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="surface-1 hover-lift">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Layers className="h-4 w-4 text-accent" />
-              {pickBi(isRTL, 'النسب البصرية', 'Visual share')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {entityBuckets.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-10 text-center">
-                {pickBi(isRTL, 'لا توجد بيانات كافية بعد.', 'Not enough data yet.')}
-              </p>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={entityBuckets} dataKey="count" nameKey="label"
-                    innerRadius={60} outerRadius={95} paddingAngle={2}
-                    stroke="hsl(var(--background))" strokeWidth={2}
-                  >
-                    {entityBuckets.map((_, i) => (
-                      <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(v: number, n: string) => [
-                      `${v} · ${total ? Math.round((v / total) * 100) : 0}%`, n,
-                    ]}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <MetricBarList
-          title={pickBi(isRTL, 'توزيع أنواع الجهات', 'Entity-type distribution')}
+        <TaxonomyDonut
+          title={pickBi(isRTL, 'حسب النوع', 'By entity type')}
           icon={Layers}
           buckets={entityBuckets}
           total={total}
           isRTL={isRTL}
-          tone="accent"
+        />
+        <MetricBarList
+          title={pickBi(isRTL, 'حسب المنطقة', 'By region')}
+          icon={MapPin}
+          buckets={regionBuckets}
+          total={total}
+          isRTL={isRTL}
+          tone="info"
+        />
+        <TaxonomyDonut
+          title={pickBi(isRTL, 'حسب حالة الاعتماد', 'By approval status')}
+          icon={ListChecks}
+          buckets={statusBuckets}
+          total={total}
+          isRTL={isRTL}
+        />
+        <TaxonomyDonut
+          title={pickBi(isRTL, 'حسب التوثيق', 'By verification')}
+          icon={ShieldCheck}
+          buckets={verifyBuckets}
+          total={total}
+          isRTL={isRTL}
+        />
+        <MetricBarList
+          title={pickBi(isRTL, 'حسب مستوى الاكتمال', 'By completeness tier')}
+          icon={Gauge}
+          buckets={tierBuckets}
+          total={total}
+          isRTL={isRTL}
+          tone="success"
         />
       </div>
     </div>
@@ -140,3 +152,50 @@ export const TaxonomiesTab: React.FC<TaxonomiesTabProps> = ({ businesses, isRTL 
 };
 
 export default TaxonomiesTab;
+
+interface DonutProps {
+  title: string;
+  icon: React.ElementType;
+  buckets: ReadonlyArray<DistributionBucket>;
+  total: number;
+  isRTL: boolean;
+}
+
+const TaxonomyDonut: React.FC<DonutProps> = ({ title, icon: Icon, buckets, total, isRTL }) => (
+  <Card className="surface-1 hover-lift">
+    <CardHeader className="pb-2">
+      <CardTitle className="text-sm flex items-center gap-2">
+        <Icon className="h-4 w-4 text-accent" />
+        {title}
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      {buckets.length === 0 ? (
+        <p className="text-xs text-muted-foreground py-10 text-center">
+          {pickBi(isRTL, 'لا توجد بيانات كافية بعد.', 'Not enough data yet.')}
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <PieChart>
+            <Pie
+              data={[...buckets]} dataKey="count" nameKey="label"
+              innerRadius={55} outerRadius={88} paddingAngle={2}
+              stroke="hsl(var(--background))" strokeWidth={2}
+            >
+              {buckets.map((_, i) => (
+                <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={tooltipStyle}
+              formatter={(v: number, n: string) => [
+                `${v} · ${total ? Math.round((v / total) * 100) : 0}%`, n,
+              ]}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+    </CardContent>
+  </Card>
+);
