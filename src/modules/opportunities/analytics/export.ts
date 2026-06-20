@@ -82,6 +82,6 @@ export function buildOpportunityReportCsv(
 }
 
 export function buildOpportunityReportFilename(now: Date = new Date()): string {
-  const iso = now.toISOString().slice(0, 19).replace(/[:T]/g, '-');
-  return `opportunities-report-${iso}.csv`;
+  const ymd = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  return `qitaat-opportunities-report-${ymd}.csv`;
 }
