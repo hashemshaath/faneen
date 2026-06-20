@@ -16,7 +16,7 @@ import {
   Users, Building2, DollarSign, FileText, Crown, MessageSquare, Mail,
   ShieldAlert, Zap, AlertTriangle, UserPlus, ShieldCheck, Inbox,
   TrendingUp, BarChart3, PieChart as PieChartIcon, Activity, Newspaper,
-  ArrowUpRight, ClipboardList, Sliders,
+  ArrowUpRight, ClipboardList, Sliders, RefreshCw, SlidersHorizontal, LayoutDashboard,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -36,15 +36,10 @@ import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   OverdueAlerts, TodaySummary, MembershipWidget,
 } from '@/components/dashboard/overview/shared';
-import {
-  UnifiedDashboardHero,
-  formatLastUpdated,
-} from '@/components/dashboard/overview/UnifiedDashboardHero';
+import { formatLastUpdated } from '@/components/dashboard/overview/UnifiedDashboardHero';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { Button } from '@/components/ui/button';
 import { SmartMetricCard, seriesFromMonthly } from '@/components/dashboard/admin/SmartMetricCard';
-import {
-  DashboardActionCenter,
-  type DashboardAction,
-} from '@/components/dashboard/overview/DashboardActionCenter';
 import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
   AdminQuickActionsWidget,
@@ -171,57 +166,48 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
     switch (id) {
       case 'welcome-hero':
         return (
-          <div className="space-y-5">
-            <UnifiedDashboardHero
-              isRTL={isRTL}
-              roleLabel={{ ar: 'لوحة المسؤول', en: 'Admin Console' }}
-              fullName={profile?.full_name ?? null}
-              refId={null}
-              lastUpdated={formatLastUpdated(lastRefresh, isRTL)}
-              onRefresh={handleRefresh}
-              isRefreshing={isFetching}
-              onCustomize={() => layout.setEditMode(!layout.editMode)}
-              customizeActive={layout.editMode}
-              subline={isRTL ? 'نظرة شاملة على أداء النظام' : 'System-wide performance overview'}
-              rightSlot={
-                <Badge className="text-[10px] gap-1 h-6 px-2 bg-success/10 text-success border border-success/20">
-                  <Zap className="w-3 h-3" aria-hidden="true" />{isRTL ? 'مباشر' : 'Live'}
+          <AdminPageHeader
+            icon={LayoutDashboard}
+            tone="primary"
+            eyebrow={isRTL ? 'لوحة المسؤول' : 'Admin Console'}
+            title={isRTL ? 'نظرة عامة على المنصة' : 'Platform Overview'}
+            subtitle={
+              isRTL
+                ? `قراءة شاملة لأداء المنصة · ${formatLastUpdated(lastRefresh, isRTL) ?? ''}`
+                : `System-wide performance read · ${formatLastUpdated(lastRefresh, isRTL) ?? ''}`
+            }
+            actions={
+              <>
+                <Badge className="text-[10px] gap-1 h-7 px-2 bg-success/10 text-success border border-success/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" aria-hidden="true" />
+                  {isRTL ? 'مباشر' : 'Live'}
                 </Badge>
-              }
-            />
-            {/* Action Center — role-aware admin CTAs (Phase B2) */}
-            <DashboardActionCenter
-              isRTL={isRTL}
-              role="admin"
-              actions={[
-                {
-                  id: 'review-todays-leads',
-                  label: { ar: 'راجع طلبات اليوم', en: "Review today's requests" },
-                  to: '/admin/leads',
-                  icon: ClipboardList,
-                  primary: true,
-                },
-                {
-                  id: 'provider-approvals',
-                  label: { ar: 'مراجعة المزودين', en: 'Provider approvals' },
-                  to: '/admin/businesses',
-                  icon: ShieldCheck,
-                },
-                {
-                  id: 'monitor-ops',
-                  label: { ar: 'راقب التشغيل', en: 'Monitor operations' },
-                  to: '/dashboard/operations',
-                  icon: Activity,
-                },
-                {
-                  id: 'admin-centers',
-                  label: { ar: 'افتح مراكز الإدارة', en: 'Open admin centers' },
-                  to: '/admin',
-                  icon: Sliders,
-                },
-              ] satisfies DashboardAction[]}
-            />
-          </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isFetching}
+                  aria-label={isRTL ? 'تحديث' : 'Refresh'}
+                  className="h-8 gap-1.5"
+                >
+                  <RefreshCw className={cn('w-3.5 h-3.5', isFetching && 'animate-spin')} aria-hidden="true" />
+                  <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
+                </Button>
+                <Button
+                  variant={layout.editMode ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => layout.setEditMode(!layout.editMode)}
+                  aria-pressed={layout.editMode}
+                  className="h-8 gap-1.5"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">
+                    {layout.editMode ? (isRTL ? 'إنهاء' : 'Done') : (isRTL ? 'تخصيص' : 'Customize')}
+                  </span>
+                </Button>
+              </>
+            }
+          />
         );
       case 'alerts-row':
         return user ? (
