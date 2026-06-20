@@ -1954,6 +1954,8 @@ const AdminBusinesses = () => {
             onPageChange={setPage}
           />
         )}
+          </TabsContent>
+        </Tabs>
 
         <BusinessVerifyConfirmDialog
           isRTL={isRTL}
