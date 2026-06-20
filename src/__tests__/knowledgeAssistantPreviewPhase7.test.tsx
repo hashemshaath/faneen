@@ -13,6 +13,7 @@ import path from 'node:path';
 import {
   buildAssistantKnowledgeAnswerContext,
 } from '@/modules/knowledge/assistant/assistantKnowledgeContext';
+import { filterKnowledge } from '@/modules/knowledge';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const PANEL_SRC = fs.readFileSync(
@@ -106,12 +107,9 @@ describe('Phase 7 — assistant context behaviour through the panel pipeline', (
   it('admin retains internal item visibility through the lower-level filter', () => {
     // Internal `internal_note` items are not flagged usableByAssistant by
     // design, so the assistant pipeline correctly never returns them. The
-    // admin filter on the underlying registry still exposes them for
-    // operator workflows.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { filterKnowledge } = require('@/modules/knowledge');
+    // admin filter on the underlying registry still exposes them.
     const internal = filterKnowledge({ audience: 'admin' }).filter(
-      (i: { categoryId?: string }) => i.categoryId === 'internal-ops',
+      (i) => i.categoryId === 'internal-ops',
     );
     expect(internal.length).toBeGreaterThan(0);
   });
