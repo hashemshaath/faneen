@@ -34,7 +34,7 @@ import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
 const ITEMS_PER_PAGE = 12;
 const SORT_STORAGE_KEY = 'qitaat_search_sort';
 type SortValue = SearchFilterValues['sortBy'];
-const ALLOWED_SORTS: ReadonlyArray<SortValue> = ['rating', 'name', 'newest', 'distance'];
+const ALLOWED_SORTS: ReadonlyArray<SortValue> = ['rating', 'name', 'newest', 'relevance'];
 const readPersistedSort = (): SortValue | null => {
   if (typeof window === 'undefined') return null;
   try {
