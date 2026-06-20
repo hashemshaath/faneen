@@ -9,9 +9,9 @@ const ALL_SQL = readdirSync(MIG_DIR)
   .map((f) => readFileSync(resolve(MIG_DIR, f), 'utf8'))
   .join('\n');
 
-const AWARD_FN = ALL_SQL.split(
-  'CREATE OR REPLACE FUNCTION public.award_opportunity_bid(',
-)[1] ?? '';
+const AWARD_FN = (
+  ALL_SQL.split('CREATE OR REPLACE FUNCTION public.award_opportunity_bid(')[1] ?? ''
+).split('CREATE OR REPLACE FUNCTION')[0];
 
 describe('Opportunities Phase 6B — awarding audit + notifications closeout', () => {
   it('1. RPC logs an event on award', () => {
