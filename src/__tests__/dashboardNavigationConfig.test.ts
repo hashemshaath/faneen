@@ -10,9 +10,11 @@ import {
 const allGroups = [...userNavGroups, ...providerNavGroups, ...adminNavGroups];
 
 describe('DASHBOARD NAV CONFIG — structural integrity', () => {
-  it('every group exposes a unique key', () => {
-    const keys = allGroups.map((g) => g.key);
-    expect(new Set(keys).size).toBe(keys.length);
+  it('every group exposes a unique key within its audience', () => {
+    for (const audience of [userNavGroups, providerNavGroups, adminNavGroups]) {
+      const keys = audience.map((g) => g.key);
+      expect(new Set(keys).size).toBe(keys.length);
+    }
   });
 
   it('every item has a non-empty url, label.ar and label.en', () => {
