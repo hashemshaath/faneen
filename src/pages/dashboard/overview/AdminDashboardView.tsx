@@ -316,7 +316,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           const inbox = [
             { icon: MessageSquare, label: isRTL ? 'طلبات عروض الأسعار' : 'Quote requests',     value: stats?.quoteRequestsPending,        to: '/admin/quote-requests',                 tone: 'text-info' },
             { icon: FileText,      label: isRTL ? 'طلبات الخدمات'      : 'Service requests',    value: stats?.serviceRequestsPending,      to: '/admin/service-requests',               tone: 'text-accent' },
-            { icon: ShieldCheck,   label: isRTL ? 'تفعيل الخدمات'      : 'Service activations', value: svcCounters?.pending ?? null,       to: '/admin/service-activations',            tone: 'text-warning' },
+            { icon: ShieldCheck,   label: isRTL ? 'تفعيل الخدمات'      : 'Service activations', value: svcCounters?.pendingReview ?? null, to: '/admin/service-activations',            tone: 'text-warning' },
             { icon: ShieldCheck,   label: isRTL ? 'مراجعة مزودين'      : 'Provider review',     value: stats?.providersPending,            to: '/admin/provider-review',                tone: 'text-warning' },
             { icon: Crown,         label: isRTL ? 'موافقات العضوية'    : 'Membership approvals',value: stats?.approvalsPending,            to: '/admin/approvals',                      tone: 'text-accent' },
             { icon: UserPlus,      label: isRTL ? 'نقل ملكية'          : 'Ownership transfers', value: stats?.ownershipTransfersPending,   to: '/admin/ownership-transfer-requests',    tone: 'text-primary' },
