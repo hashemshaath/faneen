@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   Building2, CheckCircle2, FileEdit, Clock, ShieldCheck,
-  Rocket, Phone, Link2, Activity, BarChart3, Layers, ListChecks,
+  Rocket, Phone, Link2, Activity, Layers, ListChecks,
 } from 'lucide-react';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { pickBi } from '@/components/common/Bilingual';
