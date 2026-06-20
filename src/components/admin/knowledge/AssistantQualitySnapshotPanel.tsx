@@ -4,7 +4,7 @@
  * Read-only quality view inside `/admin/knowledge`. All numbers come from
  * the static Phase 8 pilot fixture (`assistantInternalPilot.ts`) replayed
  * through `buildAssistantKnowledgeAnswerContext`. No DB, no logging, no
- * time-series, no persistence, no question saving, no transport.
+ * temporal tracking, no persistence, no question saving, no transport.
  *
  * If real-time tracking is ever needed it should be Phase 10.
  */
