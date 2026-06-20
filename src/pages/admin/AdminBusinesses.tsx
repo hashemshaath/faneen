@@ -177,6 +177,7 @@ import {
   type BizViewFilters,
 } from './businesses/businessSavedViews';
 import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
+import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
