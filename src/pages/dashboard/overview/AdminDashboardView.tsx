@@ -16,7 +16,7 @@ import {
   Users, Building2, DollarSign, FileText, Crown, MessageSquare, Mail,
   ShieldAlert, Zap, AlertTriangle, UserPlus, ShieldCheck, Inbox,
   TrendingUp, BarChart3, PieChart as PieChartIcon, Activity, Newspaper,
-  ArrowUpRight, RefreshCw, SlidersHorizontal, LayoutDashboard,
+  ArrowUpRight, RefreshCw, SlidersHorizontal, LayoutDashboard, RotateCcw,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -227,6 +227,24 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                     {layout.editMode ? (isRTL ? 'إنهاء' : 'Done') : (isRTL ? 'تخصيص' : 'Customize')}
                   </span>
                 </Button>
+                {layout.editMode && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (typeof window !== 'undefined' &&
+                          !window.confirm(isRTL ? 'إعادة ضبط ترتيب الويدجتس إلى الافتراضي؟' : 'Reset widget layout to default?')) {
+                        return;
+                      }
+                      layout.reset();
+                    }}
+                    aria-label={isRTL ? 'إعادة الضبط' : 'Reset layout'}
+                    className="h-8 gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span className="hidden sm:inline">{isRTL ? 'إعادة الضبط' : 'Reset'}</span>
+                  </Button>
+                )}
               </>
             }
           />
