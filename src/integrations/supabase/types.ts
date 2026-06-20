@@ -11876,6 +11876,33 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunity_admin_notification_log: {
+        Row: {
+          bid_id: string | null
+          contract_id: string | null
+          created_at: string
+          event_type: string
+          idempotency_key: string
+          opportunity_id: string | null
+        }
+        Insert: {
+          bid_id?: string | null
+          contract_id?: string | null
+          created_at?: string
+          event_type: string
+          idempotency_key: string
+          opportunity_id?: string | null
+        }
+        Update: {
+          bid_id?: string | null
+          contract_id?: string | null
+          created_at?: string
+          event_type?: string
+          idempotency_key?: string
+          opportunity_id?: string | null
+        }
+        Relationships: []
+      }
       opportunity_bids: {
         Row: {
           assignment_id: string | null
@@ -22478,6 +22505,16 @@ export type Database = {
         Returns: number
       }
       normalize_barcode_code: { Args: { _code: string }; Returns: string }
+      notify_admins_opportunity_event: {
+        Args: {
+          p_bid_id?: string
+          p_contract_id?: string
+          p_event_type: string
+          p_opportunity_id: string
+          p_provider_business_id?: string
+        }
+        Returns: undefined
+      }
       notify_expiring_memberships: { Args: never; Returns: number }
       owner_clear_module_override: {
         Args: { _module_key: string; _scope_type: string; _scope_value: string }
