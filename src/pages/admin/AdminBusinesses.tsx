@@ -1575,35 +1575,7 @@ const AdminBusinesses = () => {
             onToggleBranchActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
             onEditBranch={(br) => {
               setEditingBranchId(br.id);
-              setBranchForm({
-                name_ar: br.name_ar,
-                name_en: br.name_en || '',
-                is_main: !!br.is_main,
-                is_active: br.is_active,
-                branch_type: (br.branch_type as AdminBusinessBranchType) ?? (br.is_main ? 'main' : 'branch'),
-                contact_person: br.contact_person || '',
-                phone: br.phone || '',
-                mobile: br.mobile || '',
-                unified_number: br.unified_number || '',
-                customer_service_phone: (br as unknown as { customer_service_phone?: string | null }).customer_service_phone || '',
-                email: (br as unknown as { email?: string | null }).email || '',
-                website: (br as unknown as { website?: string | null }).website || '',
-                country_id: (br as unknown as { country_id?: string | null }).country_id || '',
-                city_id: (br as unknown as { city_id?: string | null }).city_id || '',
-                region: (br as unknown as { region?: string | null }).region || '',
-                district: br.district || '',
-                street_name: br.street_name || '',
-                building_number: (br as unknown as { building_number?: string | null }).building_number || '',
-                national_id: (br as unknown as { national_id?: string | null }).national_id || '',
-                additional_number: (br as unknown as { additional_number?: string | null }).additional_number || '',
-                address: br.address || '',
-                latitude: (br as unknown as { latitude?: number | string | null }).latitude || '',
-                longitude: (br as unknown as { longitude?: number | string | null }).longitude || '',
-                complex_name: (br as unknown as { complex_name?: string | null }).complex_name || '',
-                complex_name_en: (br as unknown as { complex_name_en?: string | null }).complex_name_en || '',
-                site_number: (br as unknown as { site_number?: string | null }).site_number || '',
-                working_hours: (br as unknown as { working_hours?: unknown }).working_hours,
-              });
+              setBranchForm(mapBranchRowToForm(br));
             }}
             onDeleteBranch={(id) => deleteBranchMutation.mutate(id)}
             onSaveBranch={() => saveBranchMutation.mutate()}
