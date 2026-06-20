@@ -23,6 +23,7 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
+import { ProviderHealthScoreCard } from '@/components/dashboard/ProviderHealthScoreCard';
 import { ProviderVisibilityStatusCard } from '@/components/dashboard/ProviderVisibilityStatusCard';
 import { ProviderMembershipCard } from '@/components/dashboard/ProviderMembershipCard';
 import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngagementPreviews';
@@ -199,6 +200,28 @@ export default function ProviderDashboardView({
   const membershipTier = (business?.membership_tier ?? profile?.membership_tier ?? 'free') as string;
   const isFreePlan = membershipTier === 'free';
 
+  /**
+   * Profile completion — five required fields scored equally. Pure
+   * derivation from the already-loaded `business` row; no extra reads.
+   */
+  const profileCompletion = React.useMemo(() => {
+    if (!business) return 0;
+    const b = business as Record<string, unknown>;
+    const has = (k: string) => {
+      const v = b[k];
+      return typeof v === 'string' ? v.trim().length > 0 : !!v;
+    };
+    const checks = [
+      has('name_ar') || has('name_en'),
+      has('logo_url'),
+      has('description_ar') || has('description_en'),
+      has('phone') || has('email'),
+      has('region') || has('city_id'),
+    ];
+    const done = checks.filter(Boolean).length;
+    return Math.round((done / checks.length) * 100);
+  }, [business]);
+
   const handleRefresh = () => {
     qc.invalidateQueries({ queryKey: ['provider-overview-stats'] });
     qc.invalidateQueries({ queryKey: ['provider-recent-contracts'] });
@@ -335,6 +358,21 @@ export default function ProviderDashboardView({
 
       {/* B3 — Public visibility status (presentational, reads existing state) */}
       <ProviderVisibilityStatusCard />
+
+      {/* B0 — Provider health score (executive composite, live data) */}
+      <ProviderHealthScoreCard
+        isRTL={isRTL}
+        input={{
+          isVerified: isPublished,
+          profileCompletion,
+          totalContracts: stats?.contracts ?? 0,
+          completedContracts: stats?.completedContracts ?? 0,
+          services: stats?.services ?? 0,
+          portfolio: stats?.portfolio ?? 0,
+          avgRating: Number(stats?.avgRating ?? 0),
+          reviews: stats?.reviews ?? 0,
+        }}
+      />
 
       {/* B — Performance overview (KPIs + secondary metrics, professional B2B) */}
       <ProviderStatsOverview
