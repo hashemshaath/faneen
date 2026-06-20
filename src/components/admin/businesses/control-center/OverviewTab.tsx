@@ -150,6 +150,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQ
             tone={adv.weeklyDelta >= 0 ? 'info' : 'warning'}
             delta={adv.prevWeeklyCreated ? adv.weeklyDeltaPct : undefined}
             hint={velocityHint}
+            spark={velocitySpark}
           />
           <StatTile isRTL={isRTL}
             label={pickBi(isRTL, 'تراكم المراجعة', 'Review backlog')}
