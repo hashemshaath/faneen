@@ -170,6 +170,10 @@ import {
   computeTranslationCompleteness,
   filterAndSortBusinesses,
 } from './businesses/businessListDerivations';
+import {
+  toSavedViewParams,
+  type BizViewFilters,
+} from './businesses/businessSavedViews';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -1346,9 +1350,6 @@ const AdminBusinesses = () => {
   const editCityName = cities.find((c) => c.id === editForm.city_id);
 
   /* ─── Saved Views (per-admin localStorage) ─── */
-  type BizViewFilters = {
-    q: string; status: string; tier: string; translation: string; origin: string; sort: string;
-  };
   const savedViews = useAdminSavedViews<BizViewFilters>('admin.businesses');
 
   if (!isAdmin) return null;
@@ -1362,13 +1363,7 @@ const AdminBusinesses = () => {
     sort: sortBy,
   };
   const applySavedView = (f: BizViewFilters) => {
-    const sp = new URLSearchParams();
-    if (f.q) sp.set('q', f.q);
-    if (f.status && f.status !== 'all') sp.set('status', f.status);
-    if (f.tier && f.tier !== 'all') sp.set('tier', f.tier);
-    if (f.translation && f.translation !== 'all') sp.set('translation', f.translation);
-    if (f.origin && f.origin !== 'all') sp.set('origin', f.origin);
-    if (f.sort && f.sort !== 'recent') sp.set('sort', f.sort);
+    const sp = toSavedViewParams(f);
     setSearchInput(f.q || '');
     setSearchParams(sp, { replace: false });
   };
