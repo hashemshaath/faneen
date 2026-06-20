@@ -18,6 +18,8 @@ import {
   Gavel,
   Inbox,
   Users,
+  Download,
+  Timer,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -25,6 +27,14 @@ import {
   getOpportunityKpis,
   listOpportunityOpsRows,
   type OpportunityOpsFlag,
+  type OpportunityOpsRow,
+  computeOpportunitySla,
+  aggregateOpportunitySla,
+  buildOpportunityReportCsv,
+  buildOpportunityReportFilename,
+  OPPORTUNITY_EXPORT_LIMIT,
+  SLA_THRESHOLDS_HOURS,
+  type SlaStatus,
 } from '@/modules/opportunities/analytics';
 
 const FLAG_LABEL: Record<OpportunityOpsFlag, { ar: string; tone: string }> = {
@@ -35,6 +45,25 @@ const FLAG_LABEL: Record<OpportunityOpsFlag, { ar: string; tone: string }> = {
   operationally_complete: { ar: 'مكتملة تشغيليًا', tone: 'bg-emerald-100 text-emerald-800' },
   cancelled: { ar: 'ملغاة', tone: 'bg-slate-100 text-slate-700' },
 };
+
+const SLA_LABEL: Record<SlaStatus, { ar: string; tone: string }> = {
+  on_time: { ar: 'ضمن الوقت', tone: 'bg-emerald-100 text-emerald-800' },
+  at_risk: { ar: 'قريب من التأخير', tone: 'bg-amber-100 text-amber-800' },
+  breached: { ar: 'متأخر', tone: 'bg-rose-100 text-rose-800' },
+  completed: { ar: 'مكتمل', tone: 'bg-slate-100 text-slate-700' },
+};
+
+function downloadCsv(filename: string, csv: string): void {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 const Kpi: React.FC<{ icon: React.ReactNode; label: string; value: number | string }> = ({ icon, label, value }) => (
   <Card>
@@ -79,17 +108,44 @@ const AdminOpportunitiesOperations: React.FC = () => {
   ];
   const totalAlerts = ALERT_FLAGS.reduce((a, k) => a + alertCounts[k], 0);
 
+  const slaAggregate = React.useMemo(
+    () => aggregateOpportunitySla(rows.data ?? []),
+    [rows.data],
+  );
+
+  const handleExport = React.useCallback((): void => {
+    const data: OpportunityOpsRow[] = rows.data ?? [];
+    if (data.length === 0) return;
+    const csv = buildOpportunityReportCsv(data);
+    downloadCsv(buildOpportunityReportFilename(), csv);
+  }, [rows.data]);
+
   return (
     <DashboardLayout>
       <div className="p-4 md:p-6 space-y-6" dir="rtl">
-        <header className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-bold inline-flex items-center gap-2">
-            <Activity className="h-5 w-5" /> مركز عمليات الفرص
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            متابعة دورة حياة الفرصة من الاستلام حتى العقد المبدئي.
-          </p>
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-xl md:text-2xl font-bold inline-flex items-center gap-2">
+              <Activity className="h-5 w-5" /> مركز عمليات الفرص
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              متابعة دورة حياة الفرصة من الاستلام حتى العقد المبدئي.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleExport}
+            disabled={!rows.data || rows.data.length === 0}
+            aria-label="تصدير التقرير"
+          >
+            <Download className="h-4 w-4 ms-1" /> تصدير التقرير (CSV)
+          </Button>
         </header>
+        <p className="text-xs text-muted-foreground">
+          سقف التصدير: {OPPORTUNITY_EXPORT_LIMIT} صف كحد أقصى لكل تقرير.
+        </p>
 
         {anyError ? (
           <Card>
@@ -204,6 +260,81 @@ const AdminOpportunitiesOperations: React.FC = () => {
           </Card>
         </section>
 
+        {/* SLA aggregate */}
+        <section aria-label="SLA metrics">
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="text-base font-semibold inline-flex items-center gap-2">
+                <Timer className="h-4 w-4" /> مؤشرات SLA
+              </div>
+              {rows.isLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">متوسط وقت أول عرض</div>
+                    <div className="tech-content font-semibold">
+                      {slaAggregate.avg_time_to_first_bid_h === null
+                        ? '—'
+                        : `${slaAggregate.avg_time_to_first_bid_h.toFixed(1)} س`}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">متوسط وقت التعميد</div>
+                    <div className="tech-content font-semibold">
+                      {slaAggregate.avg_time_to_award_h === null
+                        ? '—'
+                        : `${slaAggregate.avg_time_to_award_h.toFixed(1)} س`}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">متوسط وقت العقد بعد التعميد</div>
+                    <div className="tech-content font-semibold">
+                      {slaAggregate.avg_time_to_contract_after_award_h === null
+                        ? '—'
+                        : `${slaAggregate.avg_time_to_contract_after_award_h.toFixed(1)} س`}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">عدد الفرص المتأخرة</div>
+                    <div className="tech-content font-semibold text-rose-700">
+                      {slaAggregate.breached_count}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">
+                      بلا إسناد &gt; {SLA_THRESHOLDS_HOURS.needs_assignment_after_hours} س
+                    </div>
+                    <div className="tech-content font-semibold">
+                      {slaAggregate.no_assignment_after_threshold}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">
+                      بلا عروض &gt; {SLA_THRESHOLDS_HOURS.awaiting_bids_after_hours} س
+                    </div>
+                    <div className="tech-content font-semibold">
+                      {slaAggregate.no_bids_after_threshold}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-muted-foreground">
+                      معمّدة بلا عقد &gt; {SLA_THRESHOLDS_HOURS.awaiting_contract_after_hours} س
+                    </div>
+                    <div className="tech-content font-semibold">
+                      {slaAggregate.awarded_without_contract_after_threshold}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Ops table */}
         <section aria-label="Opportunities table">
           <Card>
@@ -228,12 +359,15 @@ const AdminOpportunitiesOperations: React.FC = () => {
                 <ul className="divide-y">
                   {rows.data.map((r) => {
                     const flag = FLAG_LABEL[r.flag];
+                    const sla = computeOpportunitySla(r);
+                    const slaTone = SLA_LABEL[sla.status];
                     return (
                       <li key={r.id} className="p-4 flex flex-wrap items-center gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold inline-flex items-center gap-2">
                             <span className="tech-content">{r.ref_id ?? r.id.slice(0, 8)}</span>
                             <Badge className={`text-xs ${flag.tone}`}>{flag.ar}</Badge>
+                            <Badge className={`text-xs ${slaTone.tone}`}>{slaTone.ar}</Badge>
                           </div>
                           <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1">
                             <span>{r.customer_name ?? '—'}</span>
@@ -244,6 +378,9 @@ const AdminOpportunitiesOperations: React.FC = () => {
                             <span>{r.sector ?? '—'}</span>
                             <span className="tech-content">
                               مسندين: {r.assigned_count} · عروض: {r.bid_count}
+                            </span>
+                            <span className="tech-content">
+                              خمول: {sla.idle_time_since_last_action_h.toFixed(1)} س
                             </span>
                             {r.contract_status && (
                               <span className="text-emerald-700">عقد: {r.contract_status}</span>

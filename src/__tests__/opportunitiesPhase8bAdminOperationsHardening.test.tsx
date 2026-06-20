@@ -22,10 +22,14 @@ describe('Opportunities Phase 8B — admin operations hardening', () => {
     }
     expect(aliases.length).toBeGreaterThan(0);
   });
-  it('3. the only row CTA is "عرض التفاصيل"', () => {
+  it('3. the only row CTA is "عرض التفاصيل" (export action allowed in header)', () => {
     expect(PAGE).toContain('عرض التفاصيل');
-    // The page must not wire any onClick handlers — only <Link> navigation is allowed.
-    expect(PAGE).not.toMatch(/onClick=\{/);
+    // Only the export-report onClick is allowed (Phase 10). No other handlers.
+    const onClicks = PAGE.match(/onClick=\{[^}]+\}/g) ?? [];
+    expect(onClicks.length).toBeLessThanOrEqual(1);
+    if (onClicks.length === 1) {
+      expect(onClicks[0]).toMatch(/handleExport/);
+    }
     // And it must not import any mutation helper from the bids/contracts services.
     expect(PAGE).not.toMatch(/from\s+['"]@\/modules\/opportunities\/(bids|contracts)/);
   });
