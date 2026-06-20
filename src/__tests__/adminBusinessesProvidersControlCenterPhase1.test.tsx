@@ -85,7 +85,7 @@ describe('AdminBusinesses control-center — Phase 1 (tabs shell + overview)', (
     expect(sd.reduce((s, b) => s + b.count, 0)).toBeGreaterThan(0);
 
     const cd = completenessDistribution(rows, false);
-    expect(cd.find((b) => b.key === 'publicLink')?.count).toBe(1); // row 2 + 4 lack username → 2
+    expect(cd.find((b) => b.key === 'publicLink')?.count).toBe(2); // rows 2 + 4 lack username
 
     const ed = entityTypeDistribution(rows, false);
     expect(ed.find((b) => b.key === 'company')?.count).toBe(2);
