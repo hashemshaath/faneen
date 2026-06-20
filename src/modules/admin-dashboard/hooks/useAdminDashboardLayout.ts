@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ADMIN_DASHBOARD_DEFAULT_ORDER,
   ADMIN_DASHBOARD_WIDGETS,
@@ -19,6 +20,7 @@ import {
  *    custom order on the next render (no migration step needed).
  */
 export const ADMIN_DASHBOARD_LAYOUT_KEY = 'qitaat_admin_dashboard_layout_v4';
+const DASHBOARD_KEY = 'admin';
 
 interface StoredLayout {
   order: string[];
@@ -122,13 +124,61 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
+  // ── Cloud sync ─────────────────────────────────────────────────────
+  // Hydrate from the user's account on mount (overrides localStorage
+  // cache when the row exists), then mirror every change up.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return;
+      const { data } = await supabase
+        .from('user_dashboard_layouts')
+        .select('layout')
+        .eq('user_id', uid)
+        .eq('dashboard_key', DASHBOARD_KEY)
+        .maybeSingle();
+      if (cancelled) return;
+      const layout = (data?.layout ?? null) as Partial<StoredLayout> | null;
+      if (layout && (Array.isArray(layout.order) || Array.isArray(layout.hidden))) {
+        const cleaned: StoredLayout = {
+          order: sanitizeOrder(layout.order),
+          hidden: sanitizeHidden(layout.hidden),
+        };
+        setState(cleaned);
+        writeStored(cleaned);
+      }
+    })().catch(() => { /* offline: keep localStorage state */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function pushRemote(next: StoredLayout): Promise<void> {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return;
+      await supabase
+        .from('user_dashboard_layouts')
+        .upsert(
+          { user_id: uid, dashboard_key: DASHBOARD_KEY, layout: next, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,dashboard_key' },
+        );
+    } catch { /* offline / RLS: localStorage already updated */ }
+  }
+
+  function persist(next: StoredLayout): void {
+    writeStored(next);
+    void pushRemote(next);
+  }
+
   const commit = useCallback((next: StoredLayout) => {
     const cleaned: StoredLayout = {
       order: sanitizeOrder(next.order),
       hidden: sanitizeHidden(next.hidden),
     };
     setState(cleaned);
-    writeStored(cleaned);
+    persist(cleaned);
   }, []);
 
   const isHidden = useCallback(
@@ -146,7 +196,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     setState((prev) => {
       if (prev.hidden.includes(id)) return prev;
       const next: StoredLayout = { order: prev.order, hidden: [...prev.hidden, id] };
-      writeStored(next);
+      persist(next);
       return next;
     });
   }, [canHide]);
@@ -158,7 +208,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
         order: prev.order,
         hidden: prev.hidden.filter((x) => x !== id),
       };
-      writeStored(next);
+      persist(next);
       return next;
     });
   }, []);
@@ -169,7 +219,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       const isOff = prev.hidden.includes(id);
       const hidden = isOff ? prev.hidden.filter((x) => x !== id) : [...prev.hidden, id];
       const next: StoredLayout = { order: prev.order, hidden };
-      writeStored(next);
+      persist(next);
       return next;
     });
   }, [canHide]);
@@ -188,7 +238,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
       const next = order.slice();
       [next[i], next[j]] = [next[j], next[i]];
       const out: StoredLayout = { order: next, hidden: prev.hidden };
-      writeStored(out);
+      persist(out);
       return out;
     });
   }, []);
@@ -199,7 +249,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     setState((prev) => {
       const cleaned = sanitizeOrder(next);
       const out: StoredLayout = { order: cleaned, hidden: prev.hidden };
-      writeStored(out);
+      persist(out);
       return out;
     });
   }, []);
