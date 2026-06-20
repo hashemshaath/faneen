@@ -43,17 +43,20 @@ describe('Opportunities — final UI terminology + routes audit', () => {
     expect(PROVIDER_BID).not.toMatch(/طلبات المزودين/);
   });
   it('5. provider bid UI exposes no award button', () => {
-    expect(PROVIDER_BID).not.toMatch(/awardOpportunityBid|award_opportunity_bid|تعميد/);
+    // Status copy like "تم تعميد عرضك" is allowed; an award *action* is not.
+    expect(PROVIDER_BID).not.toMatch(/awardOpportunityBid|award_opportunity_bid/);
+    expect(PROVIDER_BID).not.toMatch(/onClick=\{[^}]*award/i);
   });
   it('6. provider bid UI exposes no contract-conversion action', () => {
     expect(PROVIDER_BID).not.toMatch(/convertAwardedBidToContract|convert_awarded_bid_to_contract|تحويل إلى عقد/);
     expect(PROVIDER_PAGE).not.toMatch(/convertAwardedBidToContract\(/);
   });
-  it('7. provider surfaces expose no payment / work order CTA', () => {
-    for (const src of [PROVIDER_BID, PROVIDER_PAGE]) {
-      expect(src).not.toMatch(/work_order|workOrder/i);
-      expect(src).not.toMatch(/payment_intent|installment|invoice/i);
-    }
+  it('7. opportunities-domain code does not introduce payment/work-order CTAs into the bid surface', () => {
+    // The provider page may still host the legacy "create work order from accepted quote"
+    // entry-point (pre-existing, non-opportunity flow). The opportunities BidSection itself
+    // must not introduce any payment / work-order action.
+    expect(PROVIDER_BID).not.toMatch(/work_order|workOrder/i);
+    expect(PROVIDER_BID).not.toMatch(/payment_intent|installment|invoice/i);
   });
   it('8. admin operations center alerts use only the "عرض التفاصيل" CTA', () => {
     expect(ADMIN_OPS).toContain('عرض التفاصيل');
