@@ -16,6 +16,7 @@ import { MetricBarList } from './MetricBarList';
 import { QuickActionsCard, type QuickActionKey } from './QuickActionsCard';
 import { OverviewChartsSection } from './OverviewChartsSection';
 import { OverviewTrendSection } from './OverviewTrendSection';
+import { AdvancedStatsStrip } from './AdvancedStatsStrip';
 
 interface OverviewTabProps {
   businesses: ReadonlyArray<BusinessMetricsRow>;
@@ -79,6 +80,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQ
           value={m.pilotReady} icon={Rocket} tone="accent" trend={pct(m.pilotReady)}
         />
       </div>
+
+      <AdvancedStatsStrip rows={businesses} isRTL={isRTL} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <MetricBarList

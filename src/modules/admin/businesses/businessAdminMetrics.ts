@@ -384,3 +384,66 @@ export function buildBusinessesCsv(
   }
   return lines.join('\n');
 }
+
+/**
+ * Per-row completeness score (0..1): contact, public link, description,
+ * media. Used to power the average-completeness KPI.
+ */
+export function completenessScore(b: BusinessMetricsRow): number {
+  let s = 0;
+  if (!isMissingContact(b)) s += 0.25;
+  if (!isMissingPublicLink(b)) s += 0.25;
+  if (!isMissingDescription(b)) s += 0.25;
+  if (!isMissingMedia(b)) s += 0.25;
+  return s;
+}
+
+export interface AdvancedMetrics {
+  verificationRate: number;       // 0..100
+  publishRate: number;            // 0..100
+  pilotReadyRate: number;         // 0..100
+  avgCompleteness: number;        // 0..100
+  demoRatio: number;              // 0..100
+  weeklyCreated: number;          // last 7d count
+  prevWeeklyCreated: number;      // previous 7d count
+  weeklyDelta: number;            // signed delta
+  weeklyDeltaPct: number;         // signed %, 0 if prev=0
+  reviewBacklog: number;          // pending review count
+}
+
+export function computeAdvancedMetrics(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+): AdvancedMetrics {
+  const total = rows.length;
+  const safePct = (n: number, d: number) => (d ? Math.round((n / d) * 100) : 0);
+
+  const now = Date.now();
+  const DAY = 24 * 60 * 60 * 1000;
+  let weekly = 0;
+  let prevWeekly = 0;
+  for (const r of rows) {
+    if (!r.created_at) continue;
+    const t = new Date(r.created_at).getTime();
+    if (Number.isNaN(t)) continue;
+    const ageDays = (now - t) / DAY;
+    if (ageDays < 7) weekly += 1;
+    else if (ageDays < 14) prevWeekly += 1;
+  }
+  const delta = weekly - prevWeekly;
+  const avg = total
+    ? Math.round((rows.reduce((s, r) => s + completenessScore(r), 0) / total) * 100)
+    : 0;
+
+  return {
+    verificationRate: safePct(rows.filter((r) => !!r.is_verified).length, total),
+    publishRate: safePct(rows.filter(isPublished).length, total),
+    pilotReadyRate: safePct(rows.filter(isPilotReady).length, total),
+    avgCompleteness: avg,
+    demoRatio: safePct(rows.filter((r) => !!r.is_demo).length, total),
+    weeklyCreated: weekly,
+    prevWeeklyCreated: prevWeekly,
+    weeklyDelta: delta,
+    weeklyDeltaPct: prevWeekly ? Math.round((delta / prevWeekly) * 100) : 0,
+    reviewBacklog: rows.filter(isPendingReview).length,
+  };
+}

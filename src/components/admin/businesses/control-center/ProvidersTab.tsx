@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Briefcase, Filter } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
@@ -13,6 +12,7 @@ import {
   type ProviderSegment,
 } from '@/modules/admin/businesses/businessAdminMetrics';
 import { BusinessMiniCard } from './BusinessMiniCard';
+import { ControlChip, type ChipTone } from './ControlChip';
 
 interface ProvidersTabProps {
   businesses: ReadonlyArray<BusinessMetricsRow & {
@@ -89,26 +89,22 @@ export const ProvidersTab: React.FC<ProvidersTabProps> = ({
             {SEGMENTS.map((seg) => {
               const isActive = active === seg;
               const count = segmented.get(seg)?.length ?? 0;
+              const tone: ChipTone =
+                seg === 'qualified' ? 'success'
+                : seg === 'pendingOrRejected' ? 'destructive'
+                : seg === 'unpublished' ? 'muted'
+                : seg === 'noPublicLink' ? 'info'
+                : 'warning';
               return (
-                <button
+                <ControlChip
                   key={seg}
-                  type="button"
+                  label={providerSegmentLabel(seg, isRTL)}
+                  count={count}
+                  tone={tone}
+                  active={isActive}
                   onClick={() => setActive(seg)}
-                  className={`text-xs px-2.5 h-7 rounded-full border transition-colors ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-card text-foreground border-border hover:bg-muted/60'
-                  }`}
-                  data-testid={`providers-seg-${seg}`}
-                >
-                  {providerSegmentLabel(seg, isRTL)}
-                  <Badge
-                    variant="outline"
-                    className={`ms-1.5 h-4 px-1 text-[10px] ${isActive ? 'bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30' : ''}`}
-                  >
-                    {count}
-                  </Badge>
-                </button>
+                  testId={`providers-seg-${seg}`}
+                />
               );
             })}
           </div>
