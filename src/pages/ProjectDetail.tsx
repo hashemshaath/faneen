@@ -490,6 +490,7 @@ const ProjectDetail = () => {
             </ul>
           </div>
         </nav>
+        </main>
       </div>
 
       <Footer />
