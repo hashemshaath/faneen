@@ -31,10 +31,10 @@ export interface BusinessAdminTabSpec {
 export const BUSINESS_ADMIN_TABS: ReadonlyArray<BusinessAdminTabSpec> = [
   { id: 'overview',   icon: BarChart3,   labelAr: 'نظرة عامة',           labelEn: 'Overview',           ready: true },
   { id: 'businesses', icon: Building2,   labelAr: 'الجهات',              labelEn: 'Businesses',         ready: true },
-  { id: 'providers',  icon: Briefcase,   labelAr: 'مزودو الخدمة',        labelEn: 'Service Providers',  ready: false },
-  { id: 'taxonomies', icon: Layers,      labelAr: 'التصنيفات والقطاعات', labelEn: 'Taxonomies & Sectors', ready: false },
-  { id: 'review',     icon: ShieldCheck, labelAr: 'المراجعة والظهور',    labelEn: 'Review & Visibility', ready: false },
-  { id: 'pilot',      icon: Rocket,      labelAr: 'جاهزية التشغيل',      labelEn: 'Pilot Readiness',    ready: false },
+  { id: 'providers',  icon: Briefcase,   labelAr: 'مزودو الخدمة',        labelEn: 'Service Providers',  ready: true },
+  { id: 'taxonomies', icon: Layers,      labelAr: 'التصنيفات والقطاعات', labelEn: 'Taxonomies & Sectors', ready: true },
+  { id: 'review',     icon: ShieldCheck, labelAr: 'المراجعة والظهور',    labelEn: 'Review & Visibility', ready: true },
+  { id: 'pilot',      icon: Rocket,      labelAr: 'جاهزية التشغيل',      labelEn: 'Pilot Readiness',    ready: true },
 ] as const;
 
 export const DEFAULT_BUSINESS_ADMIN_TAB: BusinessAdminTabId = 'overview';
