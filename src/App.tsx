@@ -577,6 +577,7 @@ const AppRoutes = () => (
           {/* NAVIGATION-CONSOLIDATION-1 group 17 — System Settings hub.
               Gated by requireAdmin; the System tab's content enforces super-admin internally. */}
           <Route path="/admin/system-settings" element={<ProtectedRoute requireAdmin><AdminSystemSettingsHub /></ProtectedRoute>} />
+          <Route path="/admin/notifications-config" element={<ProtectedRoute requireAdmin><AdminNotificationsConfig /></ProtectedRoute>} />
           <Route path="/admin/cron-runs" element={<ProtectedRoute requireAdmin><AdminCronRuns /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 9 — Operations hub. */}
           <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperationsHub /></ProtectedRoute>} />
