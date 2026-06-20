@@ -324,6 +324,15 @@ const ProviderLeadDetails: React.FC = () => {
             quoteRefId={q.ref_id}
           />
         )}
+
+        {/* OPPORTUNITIES PHASE 5 — provider bid surface */}
+        {q.id && (
+          <ProviderBidSection
+            opportunityId={q.id}
+            assignmentId={lead.id}
+            providerBusinessId={lead.provider_id}
+          />
+        )}
       </div>
 
       <Dialog open={contactOpen} onOpenChange={setContactOpen}>
