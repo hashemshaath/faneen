@@ -113,8 +113,7 @@ import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/Busin
 import { OverviewTab as ControlCenterOverviewTab } from '@/components/admin/businesses/control-center/OverviewTab';
 import { ProvidersTab as ControlCenterProvidersTab } from '@/components/admin/businesses/control-center/ProvidersTab';
 import { TaxonomiesTab as ControlCenterTaxonomiesTab } from '@/components/admin/businesses/control-center/TaxonomiesTab';
-import { ReviewTab as ControlCenterReviewTab } from '@/components/admin/businesses/control-center/ReviewTab';
-import { PilotTab as ControlCenterPilotTab } from '@/components/admin/businesses/control-center/PilotTab';
+import { QualityTab as ControlCenterQualityTab } from '@/components/admin/businesses/control-center/QualityTab';
 import { BusinessesCommandBar, type BusinessesCommandPreset } from '@/components/admin/businesses/control-center/BusinessesCommandBar';
 import type { QuickActionKey } from '@/components/admin/businesses/control-center/QuickActionsCard';
 import {
@@ -1540,20 +1539,8 @@ const AdminBusinesses = () => {
             <ControlCenterTaxonomiesTab businesses={businesses} isRTL={isRTL} />
           </TabsContent>
 
-          <TabsContent value="review" className="mt-0">
-            <ControlCenterReviewTab
-              businesses={businesses}
-              isRTL={isRTL}
-              onJumpToBusiness={(b) => {
-                setActiveTab('businesses');
-                const q = b.ref_id || b.username || '';
-                if (q) { setSearchInput(q); updateParam({ q, page: null }); }
-              }}
-            />
-          </TabsContent>
-
-          <TabsContent value="pilot" className="mt-0">
-            <ControlCenterPilotTab
+          <TabsContent value="quality" className="mt-0">
+            <ControlCenterQualityTab
               businesses={businesses}
               isRTL={isRTL}
               onJumpToBusiness={(b) => {
