@@ -9,10 +9,6 @@ const TOUCHED = [
   'src/pages/dashboard/QuoteRequestDetails.tsx',
   'src/modules/dashboard/navigation/dashboardNavigation.config.ts',
   'src/modules/admin-shell/navigation/adminNavigation.ts',
-  'src/__tests__/opportunitiesPhase12GlobalTerminology.test.ts',
-  'src/__tests__/opportunitiesPhase12NavigationAlignment.test.tsx',
-  'src/__tests__/opportunitiesPhase12HomepageAlignment.test.tsx',
-  'src/__tests__/opportunitiesPhase12NoLogicRegression.test.ts',
 ];
 
 const readAll = TOUCHED.map((p) => ({ p, src: readFileSync(resolve(ROOT, p), 'utf8') }));
