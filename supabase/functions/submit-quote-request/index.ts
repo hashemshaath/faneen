@@ -164,6 +164,51 @@ Deno.serve(async (req) => {
 
   const admin = createClient(url, serviceKey);
 
+  // Resolve location from saved site / project when provided (server is source of truth)
+  let resolvedRegion = region;
+  let resolvedCity = city || null;
+  let resolvedDistrict = district;
+  let resolvedSiteId = siteId;
+  if (siteId) {
+    const { data: siteRow } = await admin
+      .from('client_sites')
+      .select('id, region, city, district')
+      .eq('id', siteId)
+      .maybeSingle();
+    if (siteRow) {
+      resolvedRegion = (siteRow as { region?: string | null }).region ?? resolvedRegion;
+      resolvedCity = (siteRow as { city?: string | null }).city ?? resolvedCity;
+      resolvedDistrict = (siteRow as { district?: string | null }).district ?? resolvedDistrict;
+    }
+  } else if (projectId) {
+    const { data: projRow } = await admin
+      .from('projects')
+      .select('id, site_id')
+      .eq('id', projectId)
+      .maybeSingle();
+    const projSiteId = (projRow as { site_id?: string | null } | null)?.site_id ?? null;
+    if (projSiteId) {
+      const { data: siteRow } = await admin
+        .from('client_sites')
+        .select('id, region, city, district')
+        .eq('id', projSiteId)
+        .maybeSingle();
+      if (siteRow) {
+        resolvedSiteId = projSiteId;
+        resolvedRegion = (siteRow as { region?: string | null }).region ?? resolvedRegion;
+        resolvedCity = (siteRow as { city?: string | null }).city ?? resolvedCity;
+        resolvedDistrict = (siteRow as { district?: string | null }).district ?? resolvedDistrict;
+      }
+    }
+  }
+  // Recompute precision after resolution
+  let resolvedPrecision: 'district' | 'city' | 'region' | 'unspecified' = locationPrecision;
+  if (!noLocation) {
+    if (resolvedDistrict) resolvedPrecision = 'district';
+    else if (resolvedCity) resolvedPrecision = 'city';
+    else if (resolvedRegion) resolvedPrecision = 'region';
+  }
+
   const insertPayload = {
     user_id: userId,
     customer_name: name,
@@ -172,13 +217,13 @@ Deno.serve(async (req) => {
     customer_type: customerType,
     preferred_contact_method: contactMethod,
     sector,
-    city: city || null,
-    district,
-    region,
-    site_id: siteId,
+    city: resolvedCity,
+    district: resolvedDistrict,
+    region: resolvedRegion,
+    site_id: resolvedSiteId,
     project_id: projectId,
     no_location_selected: noLocation,
-    location_precision: locationPrecision,
+    location_precision: resolvedPrecision,
     service_location_type: serviceLoc,
     project_description: desc,
     approx_dimensions: body.approx_dimensions?.toString().trim() || null,
