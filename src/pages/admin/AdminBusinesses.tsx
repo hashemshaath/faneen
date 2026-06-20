@@ -1481,10 +1481,9 @@ const AdminBusinesses = () => {
               }
             />
           }
-          /* Header KPI strip removed (Hard-Fix): the same counts now
+          /* Header KPI strip removed (Hard-Fix): identical counts now
              live in a single place — the Overview tab — so they no
-             longer duplicate. The BusinessStatsStrip component is
-             retained in the codebase for potential reuse. */
+             longer duplicate the header. */
         />
 
         <Tabs
