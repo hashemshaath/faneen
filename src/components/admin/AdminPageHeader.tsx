@@ -28,19 +28,25 @@ interface AdminPageHeaderProps {
   tone?: 'primary' | 'accent' | 'success' | 'info' | 'warning' | 'destructive';
 }
 
-const TONE_MAP: Record<NonNullable<AdminPageHeaderProps['tone']>, string> = {
-  primary: 'from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/20',
-  accent: 'from-accent to-accent/80 text-accent-foreground shadow-lg shadow-accent/20',
-  success: 'from-success to-success/80 text-success-foreground shadow-lg shadow-success/20',
-  info: 'from-info to-info/80 text-info-foreground shadow-lg shadow-info/20',
-  warning: 'from-warning to-warning/80 text-warning-foreground shadow-lg shadow-warning/20',
-  destructive: 'from-destructive to-destructive/80 text-destructive-foreground shadow-lg shadow-destructive/20',
+const TONE_ICON: Record<NonNullable<AdminPageHeaderProps['tone']>, string> = {
+  primary: 'text-primary',
+  accent: 'text-accent',
+  success: 'text-success',
+  info: 'text-info',
+  warning: 'text-warning',
+  destructive: 'text-destructive',
 };
 
 /**
- * AdminPageHeader — shared admin page hero shell.
- * Provides a consistent gradient header card with breadcrumbs, title,
- * subtitle, action buttons and an optional KPI/extras slot. RTL-aware.
+ * AdminPageHeader — shared **compact** page header used across every
+ * dashboard (admin / provider / user). Centralized so visual tweaks
+ * propagate everywhere via this one file.
+ *
+ * Design: matches the inline header used by `AdminQuoteRequestDetails`
+ * (REQ-XXXXXXX page) — no gradient hero card, just a small icon next
+ * to a title plus an optional subtitle, with right-aligned actions.
+ * Preserves spacing/margins (`space-y-*` from parent) and the same
+ * public API so no caller needs to change.
  */
 const AdminPageHeaderImpl: React.FC<AdminPageHeaderProps> = ({
   title,
@@ -52,40 +58,27 @@ const AdminPageHeaderImpl: React.FC<AdminPageHeaderProps> = ({
   tone = 'accent',
 }) => {
   return (
-    <section
-      aria-label={title}
-      className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 md:p-5 shadow-sm"
-    >
-      <div className="relative flex flex-col gap-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="flex items-start gap-3 min-w-0">
-            <div
-              className={`shrink-0 h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-gradient-to-br ${TONE_MAP[tone]} flex items-center justify-center`}
-            >
-              <Icon className="h-6 w-6 md:h-7 md:w-7" />
-            </div>
-            <div className="min-w-0">
-              {eyebrow && (
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 mb-1">
-                  {eyebrow}
-                </p>
-              )}
-              <h1 className="font-heading font-bold text-lg md:text-2xl leading-tight text-foreground">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="mt-1 text-xs md:text-sm text-muted-foreground font-body">
-                  {subtitle}
-                </p>
-              )}
-            </div>
-          </div>
-          {actions && (
-            <div className="flex flex-wrap items-center gap-2 md:justify-end">{actions}</div>
+    <section aria-label={title} className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          {eyebrow && (
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 mb-1">
+              {eyebrow}
+            </p>
+          )}
+          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2 leading-tight text-foreground">
+            <Icon className={`h-5 w-5 shrink-0 ${TONE_ICON[tone]}`} aria-hidden="true" />
+            <span className="min-w-0">{title}</span>
+          </h1>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-1 font-body">{subtitle}</p>
           )}
         </div>
-        {kpiSlot && <div className="mt-1">{kpiSlot}</div>}
+        {actions && (
+          <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>
+        )}
       </div>
+      {kpiSlot && <div>{kpiSlot}</div>}
     </section>
   );
 };
