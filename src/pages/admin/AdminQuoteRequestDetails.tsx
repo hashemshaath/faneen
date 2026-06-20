@@ -43,6 +43,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+import { ClientBidsSection } from '@/modules/opportunities/bids';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
