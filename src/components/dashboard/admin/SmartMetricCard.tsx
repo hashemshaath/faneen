@@ -47,7 +47,7 @@ function computeTrend(series: readonly number[]): number | null {
 }
 
 export function SmartMetricCard({
-  icon: Icon, label, value, series, trendPercent, insight, to, tone = 'primary', chart = 'area', isRTL,
+  icon: Icon, label, value, series, trendPercent, insight, to, tone = 'primary', chart = 'area', isRTL: _isRTL,
   className, featured = false,
 }: SmartMetricCardProps) {
   const t = TONE_MAP[tone];
