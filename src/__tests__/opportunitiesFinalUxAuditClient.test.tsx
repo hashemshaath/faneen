@@ -47,8 +47,12 @@ describe('Opportunities Final UX Audit — client', () => {
   });
 
   it('7. messages are user-friendly (no raw technical jargon)', () => {
-    expect(PAGE).not.toMatch(/quote_requests|provider_leads|rfq_quotes/);
-    expect(CLIENT_BIDS).not.toMatch(/quote_requests|provider_leads|rfq_quotes/);
-    expect(CONTRACT).not.toMatch(/quote_requests|provider_leads|rfq_quotes/);
+    // user-visible strings must avoid raw DB / domain jargon. We only
+    // scan JSX text nodes (between > and <), never source identifiers.
+    const visible = (src: string) =>
+      Array.from(src.matchAll(/>([^<>{}\n]+)</g)).map((m) => m[1]).join('\n');
+    expect(visible(PAGE)).not.toMatch(/quote_requests|provider_leads|rfq_quotes|RFQ/);
+    expect(visible(CLIENT_BIDS)).not.toMatch(/quote_requests|provider_leads|rfq_quotes|RFQ/);
+    expect(visible(CONTRACT)).not.toMatch(/quote_requests|provider_leads|rfq_quotes|RFQ/);
   });
 });
