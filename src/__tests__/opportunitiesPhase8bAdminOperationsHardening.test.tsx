@@ -16,7 +16,7 @@ describe('Opportunities Phase 8B — admin operations hardening', () => {
     );
   });
   it('2. non-admin users cannot reach the page (no public/non-admin route alias)', () => {
-    const aliases = APP.match(/path="[^"]*"[^>]*<AdminOpportunitiesOperations/g) ?? [];
+    const aliases = APP.match(/path="[^"]*"[\s\S]{0,400}?<AdminOpportunitiesOperations/g) ?? [];
     for (const line of aliases) {
       expect(line).toMatch(/requireAdmin/);
     }
