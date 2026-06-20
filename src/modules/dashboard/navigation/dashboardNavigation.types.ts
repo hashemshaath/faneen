@@ -7,6 +7,7 @@ export type DashboardNavBadge = { ar: string; en: string; tone?: 'new' | 'suppor
 export type DashboardNavSectionKey =
   | 'dashboard'
   | 'business'
+  | 'businessEntity'
   | 'providerOps'
   | 'operations'
   | 'rentals'
@@ -21,6 +22,14 @@ export interface DashboardNavItem {
   icon: React.ElementType;
   end?: boolean;
   superAdminOnly?: boolean;
+  /**
+   * When true, the item is hidden for users who do not yet own/manage
+   * a business entity. Use only for items that genuinely require an
+   * entity context (branches, business profile, team, visibility, etc.).
+   * Personal-work items (sites, projects, contracts, my-requests) must
+   * NOT set this flag.
+   */
+  requiresBusiness?: boolean;
   badge?: DashboardNavBadge;
 }
 
