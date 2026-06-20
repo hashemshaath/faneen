@@ -290,6 +290,8 @@ const AdminProcurementCenter = lazyRetry(() => import("./pages/admin/AdminProcur
 const AdminContentCenter = lazyRetry(() => import("./pages/admin/AdminContentCenter"));
 const AdminFinanceCenter = lazyRetry(() => import("./pages/admin/AdminFinanceCenter"));
 const AdminSettingsCenter = lazyRetry(() => import("./pages/admin/AdminSettingsCenter"));
+// KNOWLEDGE ADMIN MANAGEMENT — Phase 3 (read-only).
+const AdminKnowledgeCenter = lazyRetry(() => import("./pages/admin/AdminKnowledgeCenter"));
 
 const PageLoader = () => (
   <div className="flex min-h-dvh items-center justify-center bg-background">
@@ -609,6 +611,8 @@ const AppRoutes = () => (
               entry points without moving any queries or mutations. */}
           <Route path="/admin/procurement" element={<ProtectedRoute requireAdmin><AdminProcurementCenter /></ProtectedRoute>} />
           <Route path="/admin/content" element={<ProtectedRoute requireAdmin><AdminContentCenter /></ProtectedRoute>} />
+          {/* KNOWLEDGE ADMIN MANAGEMENT — Phase 3 (read-only). */}
+          <Route path="/admin/knowledge" element={<ProtectedRoute requireAdmin><AdminKnowledgeCenter /></ProtectedRoute>} />
           <Route path="/admin/finance" element={<ProtectedRoute requireAdmin><AdminFinanceCenter /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsCenter /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminHome /></ProtectedRoute>} />

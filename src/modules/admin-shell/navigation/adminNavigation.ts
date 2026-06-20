@@ -185,6 +185,7 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
       { id: 'home-sectors', labelAr: 'قطاعات الواجهة', labelEn: 'Home Sectors', route: '/admin/home-sectors', icon: Layers, hiddenInSidebar: true },
       { id: 'home-faq', labelAr: 'أسئلة الواجهة', labelEn: 'Home FAQ', route: '/admin/home-faq', icon: HelpCircle, hiddenInSidebar: true },
       { id: 'help', labelAr: 'مركز المساعدة', labelEn: 'Help Center', route: '/admin/help', icon: HelpCircle, hiddenInSidebar: true },
+      { id: 'knowledge', labelAr: 'مكتبة المعرفة', labelEn: 'Knowledge Library', route: '/admin/knowledge', icon: BookOpen, keywords: ['knowledge','faq','help','assistant','messages','معرفة','أسئلة','مساعدة'] },
       { id: 'partner-showcase', labelAr: 'معرض الشركاء', labelEn: 'Partner Showcase', route: '/admin/partner-showcase', icon: ImageIcon, hiddenInSidebar: true },
       { id: 'showcase', labelAr: 'المعرض', labelEn: 'Showcase', route: '/admin/showcase', icon: ImageIcon, hiddenInSidebar: true },
       { id: 'sector-seo', labelAr: 'SEO القطاعات', labelEn: 'Sector SEO', route: '/admin/sector-seo', icon: Search, hiddenInSidebar: true },
