@@ -43,6 +43,7 @@ import {
   type DashboardAction,
 } from '@/components/dashboard/overview/DashboardActionCenter';
 import { countConversationsForUser } from '@/modules/messaging';
+import { ClientHealthScoreCard, type ClientHealthInput } from '@/components/dashboard/ClientHealthScoreCard';
 
 const WIDGET_DEFAULTS = ['trends', 'activity', 'tasks', 'contracts', 'notifications', 'status', 'links'];
 
@@ -142,6 +143,17 @@ export default function UserDashboardView({
   };
 
   const customization = useDashboardCustomization('user', WIDGET_DEFAULTS);
+
+  const healthInput: ClientHealthInput = {
+    hasFullName: !!profile?.full_name,
+    hasRefId: !!profile?.ref_id,
+    totalContracts: stats?.totalContracts ?? 0,
+    activeContracts: stats?.activeContracts ?? 0,
+    completedContracts: stats?.completedContracts ?? 0,
+    conversations: stats?.messages ?? 0,
+    unreadNotifications: stats?.unreadNotifications ?? 0,
+  };
+
   const widgetLabels: Record<string, string> = {
     trends:        isRTL ? 'الاتجاهات'      : 'Trends',
     activity:      isRTL ? 'النشاط المباشر' : 'Live Activity',
@@ -378,6 +390,9 @@ export default function UserDashboardView({
 
       {/* Unified KPI grid (Phase A) */}
       <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
+
+      {/* Client health score — composite from already-fetched data */}
+      <ClientHealthScoreCard input={healthInput} isRTL={isRTL} />
 
       <CustomizableGrid
         order={customization.layout.order}
