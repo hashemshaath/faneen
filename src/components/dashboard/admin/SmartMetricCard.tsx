@@ -30,6 +30,10 @@ export interface SmartMetricCardProps {
   tone?: SmartTone;
   chart?: 'area' | 'bars';
   isRTL: boolean;
+  /** Extra grid classes (e.g. bento spans). */
+  className?: string;
+  /** Mark this tile as a hero of the bento — adds emerald→gold ribbon and larger figure. */
+  featured?: boolean;
 }
 
 function computeTrend(series: readonly number[]): number | null {
@@ -44,6 +48,7 @@ function computeTrend(series: readonly number[]): number | null {
 
 export function SmartMetricCard({
   icon: Icon, label, value, series, trendPercent, insight, to, tone = 'primary', chart = 'area', isRTL,
+  className, featured = false,
 }: SmartMetricCardProps) {
   const t = TONE_MAP[tone];
   const hasSeries = !!series && series.length > 0 && series.some((v) => v > 0);
@@ -63,7 +68,17 @@ export function SmartMetricCard({
         : 'bg-muted/60 text-muted-foreground';
 
   const body = (
-    <Card className={cn('relative overflow-hidden border-border/40 transition-colors p-4 flex flex-col gap-3 h-full', t.ring)}>
+    <Card
+      className={cn(
+        'relative overflow-hidden border-border/40 transition-all duration-300 p-4 flex flex-col gap-3 h-full',
+        'hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-[1px]',
+        t.ring,
+        featured && 'bento-featured',
+      )}
+    >
+      {featured && (
+        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,hsl(var(--primary)),hsl(var(--brand-gold,42_72%_55%)),hsl(var(--primary)))]" />
+      )}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', t.iconBg, t.iconFg)}>
@@ -76,7 +91,7 @@ export function SmartMetricCard({
           {trendLabel}
         </span>
       </div>
-      <div className="tech-content text-2xl font-bold leading-none">{value}</div>
+      <div className={cn('tech-content font-bold leading-none', featured ? 'text-3xl md:text-4xl' : 'text-2xl')}>{value}</div>
       {hasSeries && (
         <div className="h-[42px] -mx-1" aria-hidden="true">
           <ResponsiveContainer width="100%" height="100%">
@@ -115,7 +130,7 @@ export function SmartMetricCard({
 
   if (!to) return body;
   return (
-    <Link to={to} className="group block" aria-label={label}>
+    <Link to={to} className={cn('group block h-full', className)} aria-label={label}>
       {body}
     </Link>
   );
