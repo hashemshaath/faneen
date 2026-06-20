@@ -1,9 +1,8 @@
 /**
  * HomeCategoryRow — reusable horizontal row for a category cluster.
- * Marketplace pattern: H2 + subtitle + "View all" + provider cards + filter chips.
- * Chips scroll horizontally on mobile, wrap on desktop.
- * Data is injected from the parent row loader; each chip links to
- * `/search?category=<slug>` or `/search?q=<term>`.
+ * Marketplace pattern: H2 + subtitle + inline filter chips + provider cards.
+ * Chips are local <button> filters (no navigation). A separate
+ * "Browse all results" CTA navigates to the full search page.
  */
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
