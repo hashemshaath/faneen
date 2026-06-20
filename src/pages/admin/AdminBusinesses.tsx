@@ -1454,7 +1454,78 @@ const AdminBusinesses = () => {
           )}
         />
 
-        {!panelOpen && <UnifiedApprovalsCenterBanner />}
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as BusinessAdminTabId)}
+          className="space-y-4"
+        >
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1 rounded-2xl bg-muted/60">
+            {BUSINESS_ADMIN_TABS.map((t) => {
+              const Icon = t.icon;
+              return (
+                <TabsTrigger
+                  key={t.id}
+                  value={t.id}
+                  className="gap-1.5 rounded-xl text-xs md:text-sm data-[state=active]:bg-card"
+                  data-testid={`business-control-center-tab-${t.id}`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {pickBi(isRTL, t.labelAr, t.labelEn)}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-0">
+            <ControlCenterOverviewTab businesses={businesses} isRTL={isRTL} />
+          </TabsContent>
+
+          <TabsContent value="providers" className="mt-0">
+            <ComingNextTab
+              icon={BUSINESS_ADMIN_TABS[2].icon}
+              titleAr="مزودو الخدمة"
+              titleEn="Service Providers"
+              descriptionAr="قائمة موحدة للمزودين النشطين، غير المكتملين، والمؤهلين للتشغيل، مع فلاتر وإجراءات تشغيلية."
+              descriptionEn="A unified view of active, incomplete, and pilot-ready providers with operational filters and actions."
+              isRTL={isRTL}
+            />
+          </TabsContent>
+
+          <TabsContent value="taxonomies" className="mt-0">
+            <ComingNextTab
+              icon={BUSINESS_ADMIN_TABS[3].icon}
+              titleAr="التصنيفات والقطاعات"
+              titleEn="Taxonomies & Sectors"
+              descriptionAr="توزيع المزودين حسب القطاع، القطاعات الفارغة، والأكثر جاهزية للتوسع."
+              descriptionEn="Provider distribution by sector, empty sectors, and the most launch-ready categories."
+              isRTL={isRTL}
+            />
+          </TabsContent>
+
+          <TabsContent value="review" className="mt-0">
+            <ComingNextTab
+              icon={BUSINESS_ADMIN_TABS[4].icon}
+              titleAr="المراجعة والظهور"
+              titleEn="Review & Visibility"
+              descriptionAr="الجهات التي تحتاج إجراء قبل الظهور العام: مسودات، بدون اسم مستخدم، أو غير منشورة."
+              descriptionEn="Businesses that need action before going public: drafts, missing username, or unpublished."
+              isRTL={isRTL}
+            />
+          </TabsContent>
+
+          <TabsContent value="pilot" className="mt-0">
+            <ComingNextTab
+              icon={BUSINESS_ADMIN_TABS[5].icon}
+              titleAr="جاهزية التشغيل"
+              titleEn="Pilot Readiness"
+              descriptionAr="جاهزية المزودين للتشغيل التجريبي حسب المدينة والقطاع وحالة التواصل."
+              descriptionEn="Provider pilot readiness by city, sector, and contact status."
+              isRTL={isRTL}
+            />
+          </TabsContent>
+
+          <TabsContent value="businesses" className="mt-0 space-y-4">
+            {!panelOpen && <UnifiedApprovalsCenterBanner />}
 
         {/* ─── Filters + Bulk Actions ─── */}
         {!panelOpen && (
