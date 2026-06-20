@@ -268,6 +268,39 @@ const AdminBusinesses = () => {
   const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
   const setSearch = (v: string) => { setSearchInput(v); };
   const setPage = (n: number) => updateParam({ page: n <= 1 ? null : String(n) });
+  /**
+   * Hard-Fix preset mapper — single source of truth for the new
+   * command-bar / quick-action chips. Maps a preset key to the
+   * legacy URL params (status / origin), so the chips compose with
+   * the existing data engine without duplicating its filter UI.
+   */
+  const applyBusinessesPreset = useCallback((key: BusinessesCommandPreset) => {
+    const patch: Record<string, string | null> = { page: null };
+    if (key === 'all') {
+      patch.status = null; patch.origin = null;
+    } else if (key === 'pilotReady') {
+      patch.status = 'active'; patch.origin = 'production';
+    } else if (key === 'pendingReview') {
+      patch.status = 'pending';
+    } else if (key === 'missingContact') {
+      patch.status = 'missing_contact';
+    } else if (key === 'missingPublicLink') {
+      patch.status = 'missing_username';
+    } else if (key === 'inactive') {
+      patch.status = 'inactive';
+    } else if (key === 'demo') {
+      patch.origin = 'demo';
+    }
+    updateParam(patch);
+  }, [updateParam]);
+  const activeBusinessesPreset: BusinessesCommandPreset =
+    filterOrigin === 'demo' ? 'demo'
+    : filterStatus === 'pending' ? 'pendingReview'
+    : filterStatus === 'missing_contact' ? 'missingContact'
+    : filterStatus === 'missing_username' ? 'missingPublicLink'
+    : filterStatus === 'inactive' ? 'inactive'
+    : (filterStatus === 'active' && filterOrigin === 'production') ? 'pilotReady'
+    : 'all';
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
