@@ -1544,27 +1544,71 @@ const AdminBusinesses = () => {
         {editingBiz && (
           <BusinessEditPanel
             isRTL={isRTL}
-            language={language as 'ar' | 'en'}
             editingBiz={editingBiz}
-            editForm={editForm}
-            setField={setField}
             contractBusinessIds={contractBusinessIds}
-            translationCompleteness={translationCompleteness}
+            translationStatus={translationCompleteness(editForm)}
             autoFillTranslations={autoFillTranslations}
             autoTranslating={autoTranslating}
-            publicVisibilityProbe={publicVisibilityProbe}
-            publicUsernameDuplicateCount={publicUsernameDuplicateCount}
-            isPublishing={publishBusinessMutation.isPending}
-            onPublish={(business) => publishBusinessMutation.mutate(business as AdminBusinessRow)}
-            ownerRef={ownerRef}
-            onTaxonomySaved={() => { queryClient.invalidateQueries({ queryKey: ['admin-businesses'] }); }}
-            portfolioData={portfolioData}
-            onAddPortfolio={(url) => addPortfolioMutation.mutate(url)}
-            onDeletePortfolio={(id) => deletePortfolioMutation.mutate(id)}
-            editCityName={editCityName}
-            allServices={allServices}
-            onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
             branchCount={branches.length}
+            onClose={() => setEditingBiz(null)}
+            infoTab={<>
+              <BusinessPublicVisibilityCard
+                business={editingBiz}
+                publicProbe={publicVisibilityProbe}
+                duplicateCount={publicUsernameDuplicateCount}
+                isRTL={isRTL}
+                isPublishing={publishBusinessMutation.isPending}
+                onPublish={(b) => publishBusinessMutation.mutate(b as AdminBusinessRow)}
+              />
+              <BusinessBasicInfoSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                editingBiz={editingBiz}
+                ownerRef={ownerRef}
+                onTaxonomySaved={() => queryClient.invalidateQueries({ queryKey: ['admin-businesses'] })}
+              />
+            </>}
+            ownerTab={
+              <BusinessOwnerSectionShell
+                businessId={editingBiz.id}
+                businessRef={editingBiz.ref_id ?? null}
+                ownerUserId={editingBiz.user_id}
+                isRTL={isRTL}
+                onOwnerReassigned={() => setEditingBiz(null)}
+              />
+            }
+            contentTab={<BusinessContentSection editForm={editForm} setField={setField} isRTL={isRTL} />}
+            mediaTab={
+              <BusinessMediaSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                portfolioData={portfolioData}
+                onAddPortfolio={(url) => addPortfolioMutation.mutate(url)}
+                onDeletePortfolio={(id) => deletePortfolioMutation.mutate(id)}
+              />
+            }
+            seoTab={
+              <BusinessSeoSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                editingBiz={editingBiz}
+                cityName={editCityName}
+              />
+            }
+            contactTab={
+              <BusinessContactSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                language={language as 'ar' | 'en'}
+                editingBiz={editingBiz}
+                registeredServices={allServices}
+                onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
+              />
+            }
             branchesTab={
               <BusinessBranchesSection
                 isRTL={isRTL}
@@ -1594,15 +1638,6 @@ const AdminBusinesses = () => {
                 applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
               />
             }
-            ownerTab={
-              <BusinessOwnerSectionShell
-                businessId={editingBiz.id}
-                businessRef={editingBiz.ref_id ?? null}
-                ownerUserId={editingBiz.user_id}
-                isRTL={isRTL}
-                onOwnerReassigned={() => setEditingBiz(null)}
-              />
-            }
             controlsTab={
               <BusinessControlsSection
                 editForm={editForm}
@@ -1613,10 +1648,15 @@ const AdminBusinesses = () => {
               />
             }
             opsTab={<BusinessOperationsSection businessId={editingBiz.id} />}
-            canSave={!!editForm.name_ar}
-            savingEdit={updateBizMutation.isPending}
-            onSaveEdit={() => updateBizMutation.mutate()}
-            onCancelEdit={() => setEditingBiz(null)}
+            footer={
+              <BusinessEditActionsFooter
+                isRTL={isRTL}
+                canSave={!!editForm.name_ar}
+                saving={updateBizMutation.isPending}
+                onSave={() => updateBizMutation.mutate()}
+                onCancel={() => setEditingBiz(null)}
+              />
+            }
           />
         )}
 
