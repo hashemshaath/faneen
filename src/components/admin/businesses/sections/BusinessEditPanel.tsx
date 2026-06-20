@@ -15,13 +15,11 @@ import { BusinessMediaSection } from '@/components/admin/businesses/edit/Busines
 import { BusinessSeoSection } from '@/components/admin/businesses/edit/BusinessSeoSection';
 import { BusinessContactSection } from '@/components/admin/businesses/edit/BusinessContactSection';
 import { BusinessEditActionsFooter } from '@/components/admin/businesses/edit/BusinessEditActionsFooter';
-import { BusinessBranchesSection } from '@/components/admin/businesses/branches/BusinessBranchesSection';
 
 type BasicSectionProps = React.ComponentProps<typeof BusinessBasicInfoSection>;
 type MediaSectionProps = React.ComponentProps<typeof BusinessMediaSection>;
 type SeoSectionProps = React.ComponentProps<typeof BusinessSeoSection>;
 type ContactSectionProps = React.ComponentProps<typeof BusinessContactSection>;
-type BranchesSectionProps = React.ComponentProps<typeof BusinessBranchesSection>;
 
 type EditingBusiness = BasicSectionProps['editingBiz'];
 type EditFormState = BasicSectionProps['editForm'];
@@ -57,23 +55,8 @@ export interface BusinessEditPanelProps {
   allServices: ContactSectionProps['registeredServices'];
   onManageServices: () => void;
 
-  branches: BranchesSectionProps['branches'];
-  branchForm: BranchesSectionProps['branchForm'];
-  setBranchForm: BranchesSectionProps['setBranchForm'];
-  editingBranchId: BranchesSectionProps['editingBranchId'];
-  setEditingBranchId: BranchesSectionProps['setEditingBranchId'];
-  branchTranslating: BranchesSectionProps['branchTranslating'];
-  onTranslateBranch: BranchesSectionProps['onTranslate'];
-  countries: BranchesSectionProps['countries'];
-  onToggleBranchActive: BranchesSectionProps['onToggleActive'];
-  onEditBranch: BranchesSectionProps['onEdit'];
-  onDeleteBranch: BranchesSectionProps['onDelete'];
-  onSaveBranch: BranchesSectionProps['onSave'];
-  savingBranch: BranchesSectionProps['saving'];
-  emptyBranch: BranchesSectionProps['emptyBranch'];
-  mainContact: BranchesSectionProps['mainContact'];
-  onApplyHoursToAllBranches: BranchesSectionProps['onApplyHoursToAllBranches'];
-  applyingHoursToAllBranches: BranchesSectionProps['applyingHoursToAllBranches'];
+  branchCount: number;
+  branchesTab: React.ReactNode;
 
   ownerTab: React.ReactNode;
   controlsTab: React.ReactNode;
@@ -107,23 +90,8 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
   editCityName,
   allServices,
   onManageServices,
-  branches,
-  branchForm,
-  setBranchForm,
-  editingBranchId,
-  setEditingBranchId,
-  branchTranslating,
-  onTranslateBranch,
-  countries,
-  onToggleBranchActive,
-  onEditBranch,
-  onDeleteBranch,
-  onSaveBranch,
-  savingBranch,
-  emptyBranch,
-  mainContact,
-  onApplyHoursToAllBranches,
-  applyingHoursToAllBranches,
+  branchCount,
+  branchesTab,
   ownerTab,
   controlsTab,
   opsTab,
@@ -172,7 +140,7 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
           <TabsTrigger value="media" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
           <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
           <TabsTrigger value="contact" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التواصل', 'Contact')}</TabsTrigger>
-          <TabsTrigger value="branches" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الفروع', 'Branches')} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
+          <TabsTrigger value="branches" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الفروع', 'Branches')} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branchCount}</Badge></TabsTrigger>
           <TabsTrigger value="controls" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التحكم', 'Controls')}</TabsTrigger>
           <TabsTrigger value="ops" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العمليات', 'Ops')}</TabsTrigger>
         </TabsList>
@@ -238,27 +206,7 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
         </TabsContent>
 
         <TabsContent value="branches" className="space-y-4 mt-3">
-          <BusinessBranchesSection
-            isRTL={isRTL}
-            language={language}
-            branches={branches}
-            branchForm={branchForm}
-            setBranchForm={setBranchForm}
-            editingBranchId={editingBranchId}
-            setEditingBranchId={setEditingBranchId}
-            branchTranslating={branchTranslating}
-            onTranslate={onTranslateBranch}
-            countries={countries}
-            onToggleActive={onToggleBranchActive}
-            onEdit={onEditBranch}
-            onDelete={onDeleteBranch}
-            onSave={onSaveBranch}
-            saving={savingBranch}
-            emptyBranch={emptyBranch}
-            mainContact={mainContact}
-            onApplyHoursToAllBranches={onApplyHoursToAllBranches}
-            applyingHoursToAllBranches={applyingHoursToAllBranches}
-          />
+          {branchesTab}
         </TabsContent>
 
         <TabsContent value="controls" className="space-y-4 mt-3">
