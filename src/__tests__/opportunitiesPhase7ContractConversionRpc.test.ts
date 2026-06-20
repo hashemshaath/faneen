@@ -9,9 +9,10 @@ const ALL_SQL = readdirSync(MIG_DIR)
   .map((f) => readFileSync(resolve(MIG_DIR, f), 'utf8'))
   .join('\n');
 
-const FN = ALL_SQL.split(
+const FN_RAW = ALL_SQL.split(
   'CREATE OR REPLACE FUNCTION public.convert_awarded_bid_to_contract(',
 )[1] ?? '';
+const FN = FN_RAW.split(/CREATE OR REPLACE FUNCTION\b/)[0] ?? FN_RAW;
 
 const SERVICE = readFileSync(
   resolve(ROOT, 'src/modules/opportunities/contracts/services.ts'),
