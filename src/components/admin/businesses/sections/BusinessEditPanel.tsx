@@ -5,103 +5,55 @@ import { Button } from '@/components/ui/button';
 import { Edit, FileText, Languages, Loader2, X } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 
-import {
-  BusinessPublicVisibilityCard,
-  type PublicVisibilityProbeRow,
-} from '@/components/admin/businesses/BusinessPublicVisibilityCard';
-import { BusinessBasicInfoSection } from '@/components/admin/businesses/edit/BusinessBasicInfoSection';
-import { BusinessContentSection } from '@/components/admin/businesses/edit/BusinessContentSection';
-import { BusinessMediaSection } from '@/components/admin/businesses/edit/BusinessMediaSection';
-import { BusinessSeoSection } from '@/components/admin/businesses/edit/BusinessSeoSection';
-import { BusinessContactSection } from '@/components/admin/businesses/edit/BusinessContactSection';
-import { BusinessEditActionsFooter } from '@/components/admin/businesses/edit/BusinessEditActionsFooter';
-
-type BasicSectionProps = React.ComponentProps<typeof BusinessBasicInfoSection>;
-type MediaSectionProps = React.ComponentProps<typeof BusinessMediaSection>;
-type SeoSectionProps = React.ComponentProps<typeof BusinessSeoSection>;
-type ContactSectionProps = React.ComponentProps<typeof BusinessContactSection>;
-
-type EditingBusiness = BasicSectionProps['editingBiz'];
-type EditFormState = BasicSectionProps['editForm'];
-type SetField = BasicSectionProps['setField'];
+type MinimalBusiness = {
+  id: string;
+  name_ar: string;
+  ref_id?: string | null;
+  username?: string | null;
+};
 
 export interface BusinessEditPanelProps {
   isRTL: boolean;
-  language: 'ar' | 'en';
-  editingBiz: EditingBusiness;
-  editForm: EditFormState;
-  setField: SetField;
-
+  editingBiz: MinimalBusiness;
   contractBusinessIds: ReadonlyArray<string>;
-  translationCompleteness: (b: EditFormState) => { ar: boolean; en: boolean; full: boolean };
-
+  translationStatus: { ar: boolean; en: boolean; full: boolean };
   autoFillTranslations: () => void | Promise<void>;
   autoTranslating: boolean;
-
-  publicVisibilityProbe: PublicVisibilityProbeRow | null;
-  publicUsernameDuplicateCount: number;
-  isPublishing: boolean;
-  onPublish: React.ComponentProps<typeof BusinessPublicVisibilityCard>['onPublish'];
-
-  ownerRef: BasicSectionProps['ownerRef'];
-  onTaxonomySaved: () => void;
-
-  portfolioData: MediaSectionProps['portfolioData'];
-  onAddPortfolio: MediaSectionProps['onAddPortfolio'];
-  onDeletePortfolio: MediaSectionProps['onDeletePortfolio'];
-
-  editCityName: SeoSectionProps['cityName'];
-
-  allServices: ContactSectionProps['registeredServices'];
-  onManageServices: () => void;
-
   branchCount: number;
-  branchesTab: React.ReactNode;
+  onClose: () => void;
 
+  infoTab: React.ReactNode;
   ownerTab: React.ReactNode;
+  contentTab: React.ReactNode;
+  mediaTab: React.ReactNode;
+  seoTab: React.ReactNode;
+  contactTab: React.ReactNode;
+  branchesTab: React.ReactNode;
   controlsTab: React.ReactNode;
   opsTab: React.ReactNode;
-
-  canSave: boolean;
-  savingEdit: boolean;
-  onSaveEdit: () => void;
-  onCancelEdit: () => void;
+  footer: React.ReactNode;
 }
 
 export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
   isRTL,
-  language,
   editingBiz,
-  editForm,
-  setField,
   contractBusinessIds,
-  translationCompleteness,
+  translationStatus: tc,
   autoFillTranslations,
   autoTranslating,
-  publicVisibilityProbe,
-  publicUsernameDuplicateCount,
-  isPublishing,
-  onPublish,
-  ownerRef,
-  onTaxonomySaved,
-  portfolioData,
-  onAddPortfolio,
-  onDeletePortfolio,
-  editCityName,
-  allServices,
-  onManageServices,
   branchCount,
-  branchesTab,
+  onClose,
+  infoTab,
   ownerTab,
+  contentTab,
+  mediaTab,
+  seoTab,
+  contactTab,
+  branchesTab,
   controlsTab,
   opsTab,
-  canSave,
-  savingEdit,
-  onSaveEdit,
-  onCancelEdit,
-}) => {
-  const tc = translationCompleteness(editForm);
-  return (
+  footer,
+}) => (
     <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -129,7 +81,7 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
             {autoTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
             {pickBi(isRTL, 'ترجمة تلقائية للناقص', 'Auto-translate missing')}
           </Button>
-          <Button variant="ghost" size="icon" onClick={onCancelEdit} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
         </div>
       </div>
       <Tabs defaultValue="info" className="w-full">
@@ -145,86 +97,17 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
           <TabsTrigger value="ops" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العمليات', 'Ops')}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="info" className="space-y-4 mt-3">
-          <BusinessPublicVisibilityCard
-            business={editingBiz}
-            publicProbe={publicVisibilityProbe}
-            duplicateCount={publicUsernameDuplicateCount}
-            isRTL={isRTL}
-            isPublishing={isPublishing}
-            onPublish={onPublish}
-          />
-          <BusinessBasicInfoSection
-            editForm={editForm}
-            setField={setField}
-            isRTL={isRTL}
-            editingBiz={editingBiz}
-            ownerRef={ownerRef}
-            onTaxonomySaved={onTaxonomySaved}
-          />
-        </TabsContent>
-
-        <TabsContent value="owner" className="space-y-4 mt-3">
-          {ownerTab}
-        </TabsContent>
-
-        <TabsContent value="content" className="space-y-4 mt-3">
-          <BusinessContentSection editForm={editForm} setField={setField} isRTL={isRTL} />
-        </TabsContent>
-
-        <TabsContent value="media" className="space-y-4 mt-3">
-          <BusinessMediaSection
-            editForm={editForm}
-            setField={setField}
-            isRTL={isRTL}
-            portfolioData={portfolioData}
-            onAddPortfolio={onAddPortfolio}
-            onDeletePortfolio={onDeletePortfolio}
-          />
-        </TabsContent>
-
-        <TabsContent value="seo" className="space-y-4 mt-3">
-          <BusinessSeoSection
-            editForm={editForm}
-            setField={setField}
-            isRTL={isRTL}
-            editingBiz={editingBiz}
-            cityName={editCityName}
-          />
-        </TabsContent>
-
-        <TabsContent value="contact" className="space-y-4 mt-3">
-          <BusinessContactSection
-            editForm={editForm}
-            setField={setField}
-            isRTL={isRTL}
-            language={language}
-            editingBiz={editingBiz}
-            registeredServices={allServices}
-            onManageServices={onManageServices}
-          />
-        </TabsContent>
-
-        <TabsContent value="branches" className="space-y-4 mt-3">
-          {branchesTab}
-        </TabsContent>
-
-        <TabsContent value="controls" className="space-y-4 mt-3">
-          {controlsTab}
-        </TabsContent>
-
-        <TabsContent value="ops" className="space-y-4 mt-3">
-          {opsTab}
-        </TabsContent>
+        <TabsContent value="info" className="space-y-4 mt-3">{infoTab}</TabsContent>
+        <TabsContent value="owner" className="space-y-4 mt-3">{ownerTab}</TabsContent>
+        <TabsContent value="content" className="space-y-4 mt-3">{contentTab}</TabsContent>
+        <TabsContent value="media" className="space-y-4 mt-3">{mediaTab}</TabsContent>
+        <TabsContent value="seo" className="space-y-4 mt-3">{seoTab}</TabsContent>
+        <TabsContent value="contact" className="space-y-4 mt-3">{contactTab}</TabsContent>
+        <TabsContent value="branches" className="space-y-4 mt-3">{branchesTab}</TabsContent>
+        <TabsContent value="controls" className="space-y-4 mt-3">{controlsTab}</TabsContent>
+        <TabsContent value="ops" className="space-y-4 mt-3">{opsTab}</TabsContent>
       </Tabs>
 
-      <BusinessEditActionsFooter
-        isRTL={isRTL}
-        canSave={canSave}
-        saving={savingEdit}
-        onSave={onSaveEdit}
-        onCancel={onCancelEdit}
-      />
+      {footer}
     </div>
-  );
-};
+);
