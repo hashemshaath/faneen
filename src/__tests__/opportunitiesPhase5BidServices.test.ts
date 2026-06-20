@@ -45,6 +45,6 @@ describe('opportunity bids — domain surface', () => {
 
   it('types are derived from the generated Database schema', () => {
     expect(TYPES).toContain("from '@/integrations/supabase/types'");
-    expect(TYPES).toContain("Tables['opportunity_bids']");
+    expect(TYPES).toContain("['opportunity_bids']");
   });
 });
