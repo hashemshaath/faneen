@@ -39,15 +39,15 @@ describe('AdminBusinesses control-center — Phase 1 (tabs shell + overview)', (
     }
   });
 
-  it('declares the full six-tab control-center contract', () => {
+  it('declares the unified five-tab control-center contract', () => {
     const ids = BUSINESS_ADMIN_TABS.map((t) => t.id).sort();
     expect(ids).toEqual(
-      ['businesses', 'overview', 'pilot', 'providers', 'review', 'taxonomies'].sort(),
+      ['businesses', 'overview', 'providers', 'quality', 'taxonomies'].sort(),
     );
-    // Phase 2 (rebuild) ships every tab; all are marked ready.
+    // Every shipped tab renders real content (no coming-soon placeholders).
     const ready = BUSINESS_ADMIN_TABS.filter((t) => t.ready).map((t) => t.id).sort();
     expect(ready).toEqual(
-      ['businesses', 'overview', 'pilot', 'providers', 'review', 'taxonomies'].sort(),
+      ['businesses', 'overview', 'providers', 'quality', 'taxonomies'].sort(),
     );
   });
 

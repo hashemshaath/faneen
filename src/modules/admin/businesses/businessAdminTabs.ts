@@ -7,7 +7,7 @@
  * renders a "coming next" empty state (no fake data).
  */
 import {
-  BarChart3, Building2, Briefcase, Layers, ShieldCheck, Rocket,
+  BarChart3, Building2, Briefcase, Layers, ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -16,8 +16,7 @@ export type BusinessAdminTabId =
   | 'businesses'
   | 'providers'
   | 'taxonomies'
-  | 'review'
-  | 'pilot';
+  | 'quality';
 
 export interface BusinessAdminTabSpec {
   id: BusinessAdminTabId;
@@ -33,8 +32,7 @@ export const BUSINESS_ADMIN_TABS: ReadonlyArray<BusinessAdminTabSpec> = [
   { id: 'businesses', icon: Building2,   labelAr: 'الجهات',              labelEn: 'Businesses',         ready: true },
   { id: 'providers',  icon: Briefcase,   labelAr: 'مزودو الخدمة',        labelEn: 'Service Providers',  ready: true },
   { id: 'taxonomies', icon: Layers,      labelAr: 'التصنيفات والقطاعات', labelEn: 'Taxonomies & Sectors', ready: true },
-  { id: 'review',     icon: ShieldCheck, labelAr: 'المراجعة والظهور',    labelEn: 'Review & Visibility', ready: true },
-  { id: 'pilot',      icon: Rocket,      labelAr: 'جاهزية التشغيل',      labelEn: 'Pilot Readiness',    ready: true },
+  { id: 'quality',    icon: ShieldCheck, labelAr: 'الجودة والجاهزية',    labelEn: 'Quality & Readiness', ready: true },
 ] as const;
 
 export const DEFAULT_BUSINESS_ADMIN_TAB: BusinessAdminTabId = 'overview';
