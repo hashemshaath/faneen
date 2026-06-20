@@ -10,12 +10,60 @@
  * by `<IdentityTokensApplier />` and `AdminIdentityCenter`.
  */
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export type IdentityTokenMap = Record<string, string>;
 
 const QUERY_KEY = ['admin-identity-tokens', 'global'] as const;
+
+type IdentityRealtimeChannel = ReturnType<typeof supabase.channel>;
+
+let identityRealtimeChannel: IdentityRealtimeChannel | null = null;
+let identityRealtimeSubscribers = 0;
+const identityQueryClients = new Map<QueryClient, number>();
+
+const createIdentityChannelName = () => {
+  const suffix = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  return `qitaat_identity_tokens_${suffix}`;
+};
+
+const invalidateIdentityTokens = () => {
+  identityQueryClients.forEach((_count, client) => {
+    void client.invalidateQueries({ queryKey: QUERY_KEY });
+  });
+};
+
+const subscribeToIdentityTokens = (client: QueryClient) => {
+  identityRealtimeSubscribers += 1;
+  identityQueryClients.set(client, (identityQueryClients.get(client) ?? 0) + 1);
+
+  if (!identityRealtimeChannel) {
+    identityRealtimeChannel = supabase
+      .channel(createIdentityChannelName())
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'admin_identity_tokens' },
+        invalidateIdentityTokens,
+      );
+    identityRealtimeChannel.subscribe();
+  }
+
+  return () => {
+    const currentClientCount = identityQueryClients.get(client) ?? 0;
+    if (currentClientCount <= 1) identityQueryClients.delete(client);
+    else identityQueryClients.set(client, currentClientCount - 1);
+
+    identityRealtimeSubscribers = Math.max(0, identityRealtimeSubscribers - 1);
+    if (identityRealtimeSubscribers === 0 && identityRealtimeChannel) {
+      const channel = identityRealtimeChannel;
+      identityRealtimeChannel = null;
+      void supabase.removeChannel(channel);
+    }
+  };
+};
 
 export function useIdentityTokens() {
   const qc = useQueryClient();
@@ -40,21 +88,7 @@ export function useIdentityTokens() {
   });
 
   useEffect(() => {
-    const channel = supabase.channel(
-      `admin_identity_tokens_realtime_${Math.random().toString(36).slice(2)}`,
-    );
-    channel
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'admin_identity_tokens' },
-        () => {
-          qc.invalidateQueries({ queryKey: QUERY_KEY });
-        },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+    return subscribeToIdentityTokens(qc);
   }, [qc]);
 
   return {
