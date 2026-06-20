@@ -247,7 +247,7 @@ const RenderMenu: React.FC<{
             asChild
             tooltip={collapsed ? label : undefined}
             isActive={isActive}
-            className="group/qit-nav h-11 min-h-[44px] rounded-xl px-3 gap-2.5"
+            className="group/qit-nav h-10 min-h-[40px] rounded-xl px-3 gap-3"
           >
             <NavLink
               to={item.url}
@@ -267,10 +267,10 @@ const RenderMenu: React.FC<{
               onClick={closeMobile}
             >
               <item.icon className={
-                'h-4 w-4 shrink-0 transition-transform duration-200 group-hover/qit-nav:scale-110 ' +
+                'h-5 w-5 shrink-0 transition-transform duration-200 group-hover/qit-nav:scale-110 ' +
                 (isActive ? 'text-primary' : 'text-muted-foreground group-hover/qit-nav:text-foreground')
               } />
-              {!collapsed && <span className="ms-2 truncate text-[13px]">{label}</span>}
+              {!collapsed && <span className="ms-2 truncate text-sm font-medium">{label}</span>}
               {!collapsed && badgeLabel ? <BadgePill tone={item.badge?.tone}>{badgeLabel}</BadgePill> : null}
               {pinnable ? (
                 <button
