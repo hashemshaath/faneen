@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   Building2, CheckCircle2, FileEdit, Clock, ShieldCheck,
-  Rocket, Phone, Link2, Activity, BarChart3, Layers, ListChecks,
+  Rocket, Phone, Link2, Activity, Layers, ListChecks,
 } from 'lucide-react';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { pickBi } from '@/components/common/Bilingual';
@@ -13,10 +13,12 @@ import {
   type BusinessMetricsRow,
 } from '@/modules/admin/businesses/businessAdminMetrics';
 import { MetricBarList } from './MetricBarList';
+import { QuickActionsCard, type QuickActionKey } from './QuickActionsCard';
 
 interface OverviewTabProps {
   businesses: ReadonlyArray<BusinessMetricsRow>;
   isRTL: boolean;
+  onQuickAction?: (key: QuickActionKey) => void;
 }
 
 /**
@@ -24,7 +26,7 @@ interface OverviewTabProps {
  * three visual-bar groups, all derived from `businesses` (no extra
  * Supabase calls, no fake data, semantic tokens only).
  */
-export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL }) => {
+export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQuickAction }) => {
   const m = useMemo(() => computeOverviewMetrics(businesses), [businesses]);
   const statusBuckets = useMemo(() => statusDistribution(businesses, isRTL), [businesses, isRTL]);
   const entityBuckets = useMemo(() => entityTypeDistribution(businesses, isRTL), [businesses, isRTL]);
@@ -37,6 +39,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL }) =
 
   return (
     <div className="space-y-6" data-testid="business-control-center-overview">
+      {onQuickAction ? (
+        <QuickActionsCard metrics={m} isRTL={isRTL} onAction={onQuickAction} />
+      ) : null}
+
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
         <AdminKpiCard
           label={pickBi(isRTL, 'الإجمالي', 'Total')}
@@ -99,19 +105,6 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL }) =
         />
       </div>
 
-      <div className="rounded-3xl border border-border/60 bg-card/60 p-4 md:p-5">
-        <div className="flex items-center gap-2 text-sm font-heading">
-          <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          {pickBi(isRTL, 'ملخص الإجراءات', 'Action summary')}
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          {pickBi(
-            isRTL,
-            `يوجد ${m.pendingReview} جهة بانتظار المراجعة، ${m.missingContact} بدون تواصل، و ${m.missingPublicLink} بدون رابط عام. الجهات المؤهلة للتشغيل: ${m.pilotReady}.`,
-            `${m.pendingReview} pending review, ${m.missingContact} missing contact, ${m.missingPublicLink} missing public link. Pilot-ready: ${m.pilotReady}.`,
-          )}
-        </p>
-      </div>
     </div>
   );
 };

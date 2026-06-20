@@ -95,13 +95,11 @@ import { parseMembershipLimitError } from '@/lib/membership-errors';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
-import { UnifiedApprovalsCenterBanner } from '@/components/admin/UnifiedApprovalsCenterBanner';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
-import { BusinessStatsStrip } from '@/components/admin/businesses/BusinessStatsStrip';
 import {
   BusinessDetailsDrawer,
   type BusinessDrawerRow,
@@ -117,6 +115,8 @@ import { ProvidersTab as ControlCenterProvidersTab } from '@/components/admin/bu
 import { TaxonomiesTab as ControlCenterTaxonomiesTab } from '@/components/admin/businesses/control-center/TaxonomiesTab';
 import { ReviewTab as ControlCenterReviewTab } from '@/components/admin/businesses/control-center/ReviewTab';
 import { PilotTab as ControlCenterPilotTab } from '@/components/admin/businesses/control-center/PilotTab';
+import { BusinessesCommandBar, type BusinessesCommandPreset } from '@/components/admin/businesses/control-center/BusinessesCommandBar';
+import type { QuickActionKey } from '@/components/admin/businesses/control-center/QuickActionsCard';
 import {
   BUSINESS_ADMIN_TABS,
   DEFAULT_BUSINESS_ADMIN_TAB,
@@ -267,6 +267,39 @@ const AdminBusinesses = () => {
   const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
   const setSearch = (v: string) => { setSearchInput(v); };
   const setPage = (n: number) => updateParam({ page: n <= 1 ? null : String(n) });
+  /**
+   * Hard-Fix preset mapper — single source of truth for the new
+   * command-bar / quick-action chips. Maps a preset key to the
+   * legacy URL params (status / origin), so the chips compose with
+   * the existing data engine without duplicating its filter UI.
+   */
+  const applyBusinessesPreset = useCallback((key: BusinessesCommandPreset) => {
+    const patch: Record<string, string | null> = { page: null };
+    if (key === 'all') {
+      patch.status = null; patch.origin = null;
+    } else if (key === 'pilotReady') {
+      patch.status = 'active'; patch.origin = 'production';
+    } else if (key === 'pendingReview') {
+      patch.status = 'pending';
+    } else if (key === 'missingContact') {
+      patch.status = 'missing_contact';
+    } else if (key === 'missingPublicLink') {
+      patch.status = 'missing_username';
+    } else if (key === 'inactive') {
+      patch.status = 'inactive';
+    } else if (key === 'demo') {
+      patch.origin = 'demo';
+    }
+    updateParam(patch);
+  }, [updateParam]);
+  const activeBusinessesPreset: BusinessesCommandPreset =
+    filterOrigin === 'demo' ? 'demo'
+    : filterStatus === 'pending' ? 'pendingReview'
+    : filterStatus === 'missing_contact' ? 'missingContact'
+    : filterStatus === 'missing_username' ? 'missingPublicLink'
+    : filterStatus === 'inactive' ? 'inactive'
+    : (filterStatus === 'active' && filterOrigin === 'production') ? 'pilotReady'
+    : 'all';
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
@@ -1448,13 +1481,9 @@ const AdminBusinesses = () => {
               }
             />
           }
-          kpiSlot={panelOpen ? undefined : (
-            <BusinessStatsStrip
-              businesses={businesses}
-              contractBusinessIds={contractBusinessIds}
-              isRTL={isRTL}
-            />
-          )}
+          /* Header KPI strip removed (Hard-Fix): identical counts now
+             live in a single place — the Overview tab — so they no
+             longer duplicate the header. */
         />
 
         <Tabs
@@ -1480,7 +1509,19 @@ const AdminBusinesses = () => {
           </TabsList>
 
           <TabsContent value="overview" className="mt-0">
-            <ControlCenterOverviewTab businesses={businesses} isRTL={isRTL} />
+            <ControlCenterOverviewTab
+              businesses={businesses}
+              isRTL={isRTL}
+              onQuickAction={(key: QuickActionKey) => {
+                setActiveTab('businesses');
+                applyBusinessesPreset(
+                  key === 'pilotReady' ? 'pilotReady'
+                  : key === 'pendingReview' ? 'pendingReview'
+                  : key === 'missingContact' ? 'missingContact'
+                  : 'missingPublicLink',
+                );
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="providers" className="mt-0">
@@ -1524,7 +1565,20 @@ const AdminBusinesses = () => {
           </TabsContent>
 
           <TabsContent value="businesses" className="mt-0 space-y-4">
-            {!panelOpen && <UnifiedApprovalsCenterBanner />}
+            {!panelOpen && (
+              <BusinessesCommandBar
+                isRTL={isRTL}
+                activePreset={activeBusinessesPreset}
+                onPreset={applyBusinessesPreset}
+                onCreate={() => {
+                  setEditingBiz(null);
+                  setServicesPanel(null);
+                  setCreateForm(emptyCreateBusinessForm());
+                  setCreatingBiz(true);
+                  scrollToTop();
+                }}
+              />
+            )}
 
         {/* ─── Filters + Bulk Actions ─── */}
         {!panelOpen && (

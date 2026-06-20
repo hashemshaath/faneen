@@ -31,6 +31,8 @@ const REBUILD_FILES = [
   'src/components/admin/businesses/control-center/TaxonomiesTab.tsx',
   'src/components/admin/businesses/control-center/ReviewTab.tsx',
   'src/components/admin/businesses/control-center/PilotTab.tsx',
+  'src/components/admin/businesses/control-center/QuickActionsCard.tsx',
+  'src/components/admin/businesses/control-center/BusinessesCommandBar.tsx',
 ];
 
 describe('AdminBusinesses control-center — Professional Rebuild', () => {
@@ -56,6 +58,27 @@ describe('AdminBusinesses control-center — Professional Rebuild', () => {
     expect(src).toMatch(/<BusinessTableSection\b/);
     // Coming-next placeholders are no longer referenced
     expect(/<ComingNextTab\b/.test(src), 'ComingNextTab still rendered').toBe(false);
+  });
+
+  it('Hard-Fix: legacy header KPI strip and approvals banner are no longer the first experience', () => {
+    const src = read('src/pages/admin/AdminBusinesses.tsx');
+    // BusinessStatsStrip (duplicated overview KPIs) is removed from the page entirely.
+    expect(/<BusinessStatsStrip\b/.test(src), 'BusinessStatsStrip should not be rendered').toBe(false);
+    expect(/from\s+['"]@\/components\/admin\/businesses\/BusinessStatsStrip['"]/.test(src), 'BusinessStatsStrip import should be removed').toBe(false);
+    // Approvals banner no longer dominates the Businesses tab top.
+    expect(/<UnifiedApprovalsCenterBanner\b/.test(src), 'UnifiedApprovalsCenterBanner should not render').toBe(false);
+    // New command bar replaces it as the first thing inside the tab.
+    expect(src).toMatch(/<BusinessesCommandBar\b/);
+    // Overview quick-action wiring is in place.
+    expect(src).toMatch(/onQuickAction=/);
+    expect(src).toMatch(/applyBusinessesPreset/);
+  });
+
+  it('Hard-Fix: no duplicate KPI labels between Overview and any header strip', () => {
+    const page = read('src/pages/admin/AdminBusinesses.tsx');
+    // The BusinessStatsStrip import (the legacy duplicate) is gone, so the
+    // page does not pull in a second strip displaying the same labels.
+    expect(page.includes('BusinessStatsStrip')).toBe(false);
   });
 
   it('provider segmentation is deterministic and covers every provider exactly once', () => {
