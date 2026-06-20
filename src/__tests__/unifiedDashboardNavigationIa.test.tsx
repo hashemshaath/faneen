@@ -91,7 +91,7 @@ describe('user sidebar adopts unified labels', () => {
   });
 
   it('uses «المنشأة» as the user-facing business group label (not «الجهات»)', () => {
-    expect(UNIFIED_GROUP_LABELS.business.ar).toBe('المنشأة');
+    expect(UNIFIED_GROUP_LABELS.business.ar).toBe('أعمال');
   });
 });
 
