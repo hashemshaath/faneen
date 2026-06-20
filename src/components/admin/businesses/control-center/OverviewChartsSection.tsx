@@ -1,9 +1,9 @@
 import React from 'react';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, RadialBarChart, RadialBar, PolarAngleAxis,
+  RadialBarChart, RadialBar, PolarAngleAxis,
 } from 'recharts';
-import { PieChart as PieIcon, BarChart3, Gauge } from 'lucide-react';
+import { PieChart as PieIcon, Layers, Gauge } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { pickBi } from '@/components/common/Bilingual';
 import type { DistributionBucket, BusinessOverviewMetrics } from '@/modules/admin/businesses/businessAdminMetrics';
@@ -13,7 +13,6 @@ interface Props {
   metrics: BusinessOverviewMetrics;
   status: DistributionBucket[];
   entityType: DistributionBucket[];
-  completeness: DistributionBucket[];
 }
 
 const PALETTE = [
@@ -40,7 +39,7 @@ const EmptyState: React.FC<{ isRTL: boolean }> = ({ isRTL }) => (
 );
 
 export const OverviewChartsSection: React.FC<Props> = ({
-  isRTL, metrics, status, entityType, completeness,
+  isRTL, metrics, status, entityType,
 }) => {
   const total = metrics.total || 1;
   const healthScore = Math.round(
@@ -52,82 +51,6 @@ export const OverviewChartsSection: React.FC<Props> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" data-testid="business-control-center-charts">
-      <Card className="surface-1 hover-lift">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <PieIcon className="h-4 w-4 text-primary" />
-            {pickBi(isRTL, 'توزيع الحالات', 'Status mix')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {status.length === 0 ? <EmptyState isRTL={isRTL} /> : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie
-                  data={status}
-                  dataKey="count"
-                  nameKey="label"
-                  innerRadius={55}
-                  outerRadius={85}
-                  paddingAngle={2}
-                  stroke="hsl(var(--background))"
-                  strokeWidth={2}
-                >
-                  {status.map((_, i) => (
-                    <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(v: number, n: string) => [`${v} · ${Math.round((v / total) * 100)}%`, n]}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="surface-1 hover-lift">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-accent" />
-            {pickBi(isRTL, 'اكتمال البيانات', 'Data completeness')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {completeness.every((b) => b.count === 0) ? <EmptyState isRTL={isRTL} /> : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart
-                data={completeness}
-                layout="vertical"
-                margin={{ top: 4, right: 16, left: isRTL ? 8 : 80, bottom: 0 }}
-              >
-                <CartesianGrid horizontal={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
-                <YAxis
-                  dataKey="label"
-                  type="category"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={11}
-                  width={isRTL ? 0 : 100}
-                  orientation={isRTL ? 'right' : 'left'}
-                />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(v: number) => [`${v} · ${Math.round((v / total) * 100)}%`, pickBi(isRTL, 'ناقص', 'Missing')]}
-                />
-                <Bar dataKey="count" radius={[6, 6, 6, 6]}>
-                  {completeness.map((_, i) => (
-                    <Cell key={i} fill={PALETTE[(i + 2) % PALETTE.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-
       <Card className="surface-1 hover-lift">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -169,6 +92,78 @@ export const OverviewChartsSection: React.FC<Props> = ({
               <div className="font-semibold">{metrics.pilotReady}</div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="surface-1 hover-lift">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <PieIcon className="h-4 w-4 text-primary" />
+            {pickBi(isRTL, 'توزيع الحالات', 'Status mix')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {status.length === 0 ? <EmptyState isRTL={isRTL} /> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie
+                  data={status}
+                  dataKey="count"
+                  nameKey="label"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={2}
+                  stroke="hsl(var(--background))"
+                  strokeWidth={2}
+                >
+                  {status.map((_, i) => (
+                    <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(v: number, n: string) => [`${v} · ${Math.round((v / total) * 100)}%`, n]}
+                />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="surface-1 hover-lift">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Layers className="h-4 w-4 text-accent" />
+            {pickBi(isRTL, 'توزيع نوع الجهة', 'Entity mix')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {entityType.length === 0 ? <EmptyState isRTL={isRTL} /> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie
+                  data={entityType}
+                  dataKey="count"
+                  nameKey="label"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={2}
+                  stroke="hsl(var(--background))"
+                  strokeWidth={2}
+                >
+                  {entityType.map((_, i) => (
+                    <Cell key={i} fill={PALETTE[(i + 1) % PALETTE.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(v: number, n: string) => [`${v} · ${Math.round((v / total) * 100)}%`, n]}
+                />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
     </div>
