@@ -1449,13 +1449,10 @@ const AdminBusinesses = () => {
               }
             />
           }
-          kpiSlot={panelOpen ? undefined : (
-            <BusinessStatsStrip
-              businesses={businesses}
-              contractBusinessIds={contractBusinessIds}
-              isRTL={isRTL}
-            />
-          )}
+          /* Header KPI strip removed (Hard-Fix): the same counts now
+             live in a single place — the Overview tab — so they no
+             longer duplicate. The BusinessStatsStrip component is
+             retained in the codebase for potential reuse. */
         />
 
         <Tabs
