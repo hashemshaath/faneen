@@ -112,6 +112,13 @@ import { BusinessFiltersBar } from '@/components/admin/businesses/BusinessFilter
 import { BusinessTableSection } from '@/components/admin/businesses/BusinessTableSection';
 import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
 import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/BusinessVerifyConfirmDialog';
+import { OverviewTab as ControlCenterOverviewTab } from '@/components/admin/businesses/control-center/OverviewTab';
+import { ComingNextTab } from '@/components/admin/businesses/control-center/ComingNextTab';
+import {
+  BUSINESS_ADMIN_TABS,
+  DEFAULT_BUSINESS_ADMIN_TAB,
+  type BusinessAdminTabId,
+} from '@/modules/admin/businesses/businessAdminTabs';
 import {
   BusinessPublicVisibilityCard,
   createAdminPublishPayload,
