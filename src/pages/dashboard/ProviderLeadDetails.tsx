@@ -34,6 +34,7 @@ import {
 import { CreateWorkOrderFromQuoteButton } from '@/components/workOrders/CreateWorkOrderFromQuoteButton';
 import { ProviderBidSection } from '@/modules/opportunities/bids';
 import { OpportunityContractSection } from '@/modules/opportunities/contracts';
+import { OpportunityTimeline } from '@/modules/opportunities/timeline';
 
 interface LeadDetailRow {
   id: string;
@@ -338,6 +339,15 @@ const ProviderLeadDetails: React.FC = () => {
         {/* OPPORTUNITIES PHASE 7 — provider read-only contract status */}
         {q.id && (
           <OpportunityContractSection opportunityId={q.id} canConvert={false} />
+        )}
+
+        {/* OPPORTUNITIES PHASE 11 — visual lifecycle timeline (read-only) */}
+        {q.id && (
+          <OpportunityTimeline
+            createdAt={lead.created_at}
+            status={lead.status}
+            hasAssignments
+          />
         )}
       </div>
 

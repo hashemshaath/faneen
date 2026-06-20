@@ -33,6 +33,7 @@ import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { ClientBidsSection } from '@/modules/opportunities/bids';
 import { OpportunityContractSection } from '@/modules/opportunities/contracts';
+import { OpportunityTimeline } from '@/modules/opportunities/timeline';
 
 interface QuoteRow {
   id: string;
@@ -492,6 +493,14 @@ const QuoteRequestDetails: React.FC = () => {
         {/* OPPORTUNITIES PHASE 7 — contract conversion from awarded bid */}
         {quoteUuid && (
           <OpportunityContractSection opportunityId={quoteUuid} canConvert />
+        )}
+
+        {/* OPPORTUNITIES PHASE 11 — visual lifecycle timeline (no new data) */}
+        {quoteUuid && (
+          <OpportunityTimeline
+            createdAt={quote.created_at}
+            status={quote.status}
+          />
         )}
       </div>
     </DashboardLayout>
