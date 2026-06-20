@@ -6,7 +6,7 @@
  * - No create/edit/delete in this phase. CRUD buttons are disabled
  *   stubs labelled "ستضاف لاحقًا".
  */
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { BookOpen, Search, ExternalLink, Bot, MessageSquare, ShieldAlert, Languages, Eye, X } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -45,6 +45,23 @@ const AdminKnowledgeCenter: React.FC = () => {
   >('library');
   const [tab, setTab] = useState<KnowledgeAdminTabId>('all');
   const [filters, setFilters] = useState(DEFAULT_KNOWLEDGE_ADMIN_FILTERS);
+  /**
+   * Functional updater so each onChange does not capture the latest
+   * `filters` reference and re-create new closures on every render.
+   */
+  const updateFilter = useCallback(
+    <K extends keyof typeof DEFAULT_KNOWLEDGE_ADMIN_FILTERS>(
+      key: K,
+      value: (typeof DEFAULT_KNOWLEDGE_ADMIN_FILTERS)[K],
+    ) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
+  const resetFilters = useCallback(
+    () => setFilters(DEFAULT_KNOWLEDGE_ADMIN_FILTERS),
+    [],
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const metrics = useMemo(() => computeKnowledgeAdminMetrics(knowledgeRegistry), []);
@@ -124,41 +141,42 @@ const AdminKnowledgeCenter: React.FC = () => {
                     <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       value={filters.search}
-                      onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                      onChange={(e) => updateFilter('search', e.target.value)}
                       placeholder="ابحث في العنوان، الملخص، الوسوم، المعرف…"
                       className="ps-9 h-10"
                       dir="auto"
+                      aria-label="بحث في مكتبة المعرفة"
                     />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <FilterSelect
                       label="القسم"
                       value={filters.categoryId}
-                      onChange={(v) => setFilters({ ...filters, categoryId: v as typeof filters.categoryId })}
+                      onChange={(v) => updateFilter('categoryId', v as typeof filters.categoryId)}
                       options={[{ value: 'all', label: 'كل الأقسام' }, ...KNOWLEDGE_CATEGORIES.map((c) => ({ value: c.id, label: c.title.ar }))]}
                     />
                     <FilterSelect
                       label="الجمهور"
                       value={filters.audience}
-                      onChange={(v) => setFilters({ ...filters, audience: v as typeof filters.audience })}
+                      onChange={(v) => updateFilter('audience', v as typeof filters.audience)}
                       options={[{ value: 'all', label: 'الكل' }, ...KNOWLEDGE_AUDIENCE_OPTIONS.map((o) => ({ value: o.value, label: o.ar }))]}
                     />
                     <FilterSelect
                       label="النوع"
                       value={filters.type}
-                      onChange={(v) => setFilters({ ...filters, type: v as typeof filters.type })}
+                      onChange={(v) => updateFilter('type', v as typeof filters.type)}
                       options={[{ value: 'all', label: 'الكل' }, ...KNOWLEDGE_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.ar }))]}
                     />
                     <FilterSelect
                       label="الحالة"
                       value={filters.status}
-                      onChange={(v) => setFilters({ ...filters, status: v as typeof filters.status })}
+                      onChange={(v) => updateFilter('status', v as typeof filters.status)}
                       options={[{ value: 'all', label: 'الكل' }, ...KNOWLEDGE_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.ar }))]}
                     />
                     <FilterSelect
                       label="المساعد"
                       value={filters.usableByAssistant}
-                      onChange={(v) => setFilters({ ...filters, usableByAssistant: v as typeof filters.usableByAssistant })}
+                      onChange={(v) => updateFilter('usableByAssistant', v as typeof filters.usableByAssistant)}
                       options={[
                         { value: 'any', label: 'الكل' },
                         { value: 'yes', label: 'قابل للاستخدام' },
@@ -168,7 +186,7 @@ const AdminKnowledgeCenter: React.FC = () => {
                     <FilterSelect
                       label="الرسائل"
                       value={filters.usableInMessages}
-                      onChange={(v) => setFilters({ ...filters, usableInMessages: v as typeof filters.usableInMessages })}
+                      onChange={(v) => updateFilter('usableInMessages', v as typeof filters.usableInMessages)}
                       options={[
                         { value: 'any', label: 'الكل' },
                         { value: 'yes', label: 'قابل للاستخدام' },
@@ -178,7 +196,7 @@ const AdminKnowledgeCenter: React.FC = () => {
                     <FilterSelect
                       label="الظهور"
                       value={filters.visibility}
-                      onChange={(v) => setFilters({ ...filters, visibility: v as typeof filters.visibility })}
+                      onChange={(v) => updateFilter('visibility', v as typeof filters.visibility)}
                       options={[
                         { value: 'any', label: 'الكل' },
                         { value: 'public', label: 'عام' },
@@ -188,7 +206,7 @@ const AdminKnowledgeCenter: React.FC = () => {
                     <div className="flex items-end">
                       <Button
                         variant="ghost" size="sm"
-                        onClick={() => setFilters(DEFAULT_KNOWLEDGE_ADMIN_FILTERS)}
+                        onClick={resetFilters}
                         className="h-9 w-full"
                       >
                         مسح الفلاتر
