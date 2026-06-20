@@ -2,7 +2,7 @@
  * OPPORTUNITIES PHASE 10 — CSV export of admin operations rows.
  *
  * Pure transformation: takes already-fetched `OpportunityOpsRow`s and
- * produces a CSV string. No DB calls, no service_role, no network egress.
+ * produces a CSV string. No DB calls, no elevated keys, no network egress.
  * Admin-only consumption is enforced by the page that calls it.
  */
 import type { OpportunityOpsRow } from './types';
