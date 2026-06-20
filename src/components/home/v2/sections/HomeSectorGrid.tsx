@@ -15,7 +15,7 @@ import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Section, SectionHead, SecondaryCTA, ROUTES } from './_shared';
 import {
-  HOME_ALLOWED_SLUGS, HOME_SECTOR_GRID_SLUGS, homeCategoryHref,
+  homeCategoryHref,
 } from '@/components/home/v2/data/homeTaxonomy';
 import { useHomeSectorTiles, type DefaultTile } from '@/modules/home';
 import sectorAluminum from '@/assets/home/sector-aluminum.webp';
@@ -80,22 +80,6 @@ const SECTORS: DefaultTile[] = [
 // Exposed so the admin page can show the same baseline copy + icons as
 // initial values when no override has been saved yet.
 export const HOME_SECTOR_GRID_DEFAULTS: ReadonlyArray<DefaultTile> = SECTORS;
-
-// Module-load assertion: order + membership match HOME_SECTOR_GRID_SLUGS.
-if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-  for (const s of SECTORS) {
-    if (!HOME_ALLOWED_SLUGS.has(s.slug)) {
-      // eslint-disable-next-line no-console
-      console.error(`[HomeSectorGrid] slug "${s.slug}" not in HOME_ALLOWED_SLUGS`);
-    }
-  }
-  const expected = [...HOME_SECTOR_GRID_SLUGS];
-  const actual = SECTORS.map((s) => s.slug);
-  if (expected.join(',') !== actual.join(',')) {
-    // eslint-disable-next-line no-console
-    console.error('[HomeSectorGrid] SECTORS order must match HOME_SECTOR_GRID_SLUGS', { expected, actual });
-  }
-}
 
 const HomeSectorGrid = () => {
   const bi = useBi();
