@@ -76,6 +76,10 @@ const Categories = () => {
 
   const { byId: countsById, bySlug: countsBySlug } = useCategoryCounts();
 
+  // RUM: route_key = "categories" so the /admin/performance dashboard can
+  // surface LCP / CLS / IMG aggregates separately from the home page.
+  useImagePerfTracking('categories');
+
   const selectedCategory = slug ? categories.find(c => c.slug === slug) : null;
   const catName = selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : '';
   const selectedCounts = selectedCategory ? countsById.get(selectedCategory.id) : undefined;
