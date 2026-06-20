@@ -17,7 +17,7 @@
  *    builder: visitor/customer/provider/business_owner can never see
  *    internal-ops items here.
  */
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Bot, Send, ShieldAlert, ExternalLink, FileText, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -57,7 +57,7 @@ const AssistantPreviewPanel: React.FC = () => {
   const [locale, setLocale] = useState<KnowledgeLocale>('ar');
   const [result, setResult] = useState<AssistantAnswerContext | null>(null);
 
-  const handleTest = (): void => {
+  const handleTest = useCallback((): void => {
     const trimmed = question.trim();
     if (trimmed.length === 0) {
       setResult(null);
@@ -66,15 +66,26 @@ const AssistantPreviewPanel: React.FC = () => {
     // Pure in-process read — no network, no persistence.
     const ctx = buildAssistantKnowledgeAnswerContext(trimmed, audience, locale);
     setResult(ctx);
-  };
+  }, [question, audience, locale]);
 
-  const topBody = result?.matchedItems[0]
-    ? locale === 'en' && result.matchedItems[0].item.body.en
-      ? result.matchedItems[0].item.body.en
-      : result.matchedItems[0].item.body.ar
-    : '';
-  const lowConfidence =
-    result?.allowedToAnswer && result.confidence < LOW_CONFIDENCE_THRESHOLD;
+  const topBody = useMemo(() => {
+    const top = result?.matchedItems[0]?.item;
+    if (!top) return '';
+    return locale === 'en' && top.body.en ? top.body.en : top.body.ar;
+  }, [result, locale]);
+  const lowConfidence = Boolean(
+    result?.allowedToAnswer && result.confidence < LOW_CONFIDENCE_THRESHOLD,
+  );
+  const matchedCategoryIds = useMemo(() => {
+    if (!result) return [] as string[];
+    return Array.from(
+      new Set(
+        result.matchedItems
+          .map((m) => m.item.categoryId)
+          .filter((c): c is string => Boolean(c)),
+      ),
+    );
+  }, [result]);
 
   return (
     <div className="space-y-4" data-testid="knowledge-assistant-preview">
@@ -125,9 +136,19 @@ const AssistantPreviewPanel: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-[11px] text-muted-foreground">الجمهور</label>
+              <label
+                className="text-[11px] text-muted-foreground"
+                htmlFor="assistant-preview-audience"
+              >
+                الجمهور
+              </label>
               <Select value={audience} onValueChange={(v) => setAudience(v as KnowledgeAudience)}>
-                <SelectTrigger className="h-9 text-xs" data-testid="assistant-preview-audience">
+                <SelectTrigger
+                  id="assistant-preview-audience"
+                  className="h-9 text-xs"
+                  data-testid="assistant-preview-audience"
+                  aria-label="الجمهور"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -140,9 +161,19 @@ const AssistantPreviewPanel: React.FC = () => {
               </Select>
             </div>
             <div>
-              <label className="text-[11px] text-muted-foreground">اللغة</label>
+              <label
+                className="text-[11px] text-muted-foreground"
+                htmlFor="assistant-preview-locale"
+              >
+                اللغة
+              </label>
               <Select value={locale} onValueChange={(v) => setLocale(v as KnowledgeLocale)}>
-                <SelectTrigger className="h-9 text-xs" data-testid="assistant-preview-locale">
+                <SelectTrigger
+                  id="assistant-preview-locale"
+                  className="h-9 text-xs"
+                  data-testid="assistant-preview-locale"
+                  aria-label="اللغة"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -232,19 +263,13 @@ const AssistantPreviewPanel: React.FC = () => {
               </div>
             )}
 
-            {result.matchedItems.length > 0 && (
+            {matchedCategoryIds.length > 0 && (
               <div data-testid="assistant-preview-categories">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
                   الأقسام
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {Array.from(
-                    new Set(
-                      result.matchedItems
-                        .map((m) => m.item.categoryId)
-                        .filter((c): c is string => Boolean(c)),
-                    ),
-                  ).map((c) => (
+                  {matchedCategoryIds.map((c) => (
                     <Badge key={c} variant="secondary" className="text-[10px]">
                       {c}
                     </Badge>
