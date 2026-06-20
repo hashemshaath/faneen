@@ -101,7 +101,6 @@ describe('Home page performance + cleanup invariants', () => {
       'HomeCategoryRows.tsx',
       'HomeSectorGrid.tsx',
       '_shared.tsx',
-      'faqItems.ts',
-    ].filter((n) => n.endsWith('.tsx')).sort());
+    ].sort());
   });
 });
