@@ -65,6 +65,6 @@ describe('Opportunities Phase 10 — admin UI', () => {
 
   it('9. documents the export limit cap in the UI', () => {
     expect(PAGE).toMatch(/OPPORTUNITY_EXPORT_LIMIT/);
-    expect(PAGE).toContain('سقف التصدير');
+    expect(PAGE).toContain('النافذة المحمّلة');
   });
 });
