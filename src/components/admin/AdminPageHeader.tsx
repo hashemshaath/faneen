@@ -58,7 +58,7 @@ const AdminPageHeaderImpl: React.FC<AdminPageHeaderProps> = ({
   tone = 'accent',
 }) => {
   return (
-    <header aria-label={title} className="space-y-3">
+    <section aria-label={title} className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           {eyebrow && (
@@ -79,7 +79,7 @@ const AdminPageHeaderImpl: React.FC<AdminPageHeaderProps> = ({
         )}
       </div>
       {kpiSlot && <div>{kpiSlot}</div>}
-    </header>
+    </section>
   );
 };
 
