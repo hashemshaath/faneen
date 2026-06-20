@@ -42,6 +42,13 @@ export const KNOWLEDGE_SYNONYMS: Record<string, string[]> = {
   'نشر': ['ظهور', 'publish', 'visibility'],
   'رابط عام': ['ظهور', 'نشر', 'visibility', 'public'],
   'visibility': ['ظهور', 'نشر'],
+
+  // Pricing language — Phase 9 gap closure.
+  'تسعير': ['سعر', 'تسعيرة', 'rfq', 'quote', 'pricing'],
+  'pricing': ['سعر', 'تسعير', 'rfq', 'quote'],
+  'شركتي': ['منشأة', 'شركة', 'business'],
+  'بياناتي': ['الحساب', 'profile', 'account'],
+  'أرفع طلب': ['rfq', 'طلب', 'quote', 'تسعيرة'],
 };
 
 function normalize(input: string): string {

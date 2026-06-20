@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SupportRepliesPanel from '@/components/admin/knowledge/SupportRepliesPanel';
 import AssistantPreviewPanel from '@/components/admin/knowledge/AssistantPreviewPanel';
+import AssistantQualitySnapshotPanel from '@/components/admin/knowledge/AssistantQualitySnapshotPanel';
 import {
   knowledgeRegistry,
   KNOWLEDGE_CATEGORIES,
@@ -39,7 +40,9 @@ const FUTURE_HINT = 'إدارة التحرير ستضاف في مرحلة لاح
 
 const AdminKnowledgeCenter: React.FC = () => {
   useNoIndex();
-  const [section, setSection] = useState<'library' | 'support_replies' | 'assistant_preview'>('library');
+  const [section, setSection] = useState<
+    'library' | 'support_replies' | 'assistant_preview' | 'assistant_quality'
+  >('library');
   const [tab, setTab] = useState<KnowledgeAdminTabId>('all');
   const [filters, setFilters] = useState(DEFAULT_KNOWLEDGE_ADMIN_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -79,12 +82,16 @@ const AdminKnowledgeCenter: React.FC = () => {
             <TabsTrigger value="library" data-testid="knowledge-admin-section-library">مكتبة المعرفة</TabsTrigger>
             <TabsTrigger value="support_replies" data-testid="knowledge-admin-section-support-replies">ردود الدعم</TabsTrigger>
               <TabsTrigger value="assistant_preview" data-testid="knowledge-admin-section-assistant-preview">اختبار المساعد</TabsTrigger>
+              <TabsTrigger value="assistant_quality" data-testid="knowledge-admin-section-assistant-quality">جودة المساعد</TabsTrigger>
           </TabsList>
           <TabsContent value="support_replies" className="mt-4">
             <SupportRepliesPanel />
           </TabsContent>
             <TabsContent value="assistant_preview" className="mt-4">
               <AssistantPreviewPanel />
+            </TabsContent>
+            <TabsContent value="assistant_quality" className="mt-4">
+              <AssistantQualitySnapshotPanel />
             </TabsContent>
           <TabsContent value="library" className="mt-4 space-y-4">
 
