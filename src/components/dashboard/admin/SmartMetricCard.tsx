@@ -70,7 +70,7 @@ export function SmartMetricCard({
   const body = (
     <Card
       className={cn(
-        'relative overflow-hidden border-border/40 transition-all duration-300 p-4 flex flex-col gap-3 h-full',
+        'relative overflow-hidden border-border/40 transition-all duration-300 p-3 sm:p-4 flex flex-col gap-2.5 sm:gap-3 h-full min-h-[112px]',
         'hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-[1px]',
         t.ring,
         featured && 'bento-featured',
@@ -91,7 +91,16 @@ export function SmartMetricCard({
           {trendLabel}
         </span>
       </div>
-      <div className={cn('tech-content font-bold leading-none', featured ? 'text-3xl md:text-4xl' : 'text-2xl')}>{value}</div>
+      <div
+        className={cn(
+          'tech-content font-bold leading-none break-words',
+          featured
+            ? 'text-[clamp(1.5rem,4.5vw,2.25rem)]'
+            : 'text-[clamp(1.125rem,3.5vw,1.5rem)]',
+        )}
+      >
+        {value}
+      </div>
       {hasSeries && (
         <div className="h-[42px] -mx-1" aria-hidden="true">
           <ResponsiveContainer width="100%" height="100%">
