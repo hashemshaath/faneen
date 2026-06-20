@@ -24,8 +24,10 @@ describe('Opportunities Phase 8B — admin operations hardening', () => {
   });
   it('3. the only row CTA is "عرض التفاصيل"', () => {
     expect(PAGE).toContain('عرض التفاصيل');
-    // No award / convert / match / edit CTA copy
-    expect(PAGE).not.toMatch(/تعميد|تحويل إلى عقد|إعادة مطابقة|تعديل/);
+    // The page must not wire any onClick handlers — only <Link> navigation is allowed.
+    expect(PAGE).not.toMatch(/onClick=\{/);
+    // And it must not import any mutation helper from the bids/contracts services.
+    expect(PAGE).not.toMatch(/from\s+['"]@\/modules\/opportunities\/(bids|contracts)/);
   });
   it('4. no edit/award/convert/match buttons in the ops center', () => {
     expect(PAGE).not.toMatch(/awardOpportunityBid|convertAwardedBidToContract|submitOpportunityBid|rematch/i);
