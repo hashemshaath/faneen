@@ -815,6 +815,9 @@ const AdminQuoteRequestDetails: React.FC = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* OPPORTUNITIES PHASE 5 — bids on this opportunity (admin view) */}
+        {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} />}
       </div>
     </DashboardLayout>
   );
