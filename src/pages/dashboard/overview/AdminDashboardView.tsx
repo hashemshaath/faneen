@@ -312,6 +312,65 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           </Card>
         );
       case 'needs-attention':
+        {
+          const inbox = [
+            { icon: MessageSquare, label: isRTL ? 'طلبات عروض الأسعار' : 'Quote requests',     value: stats?.quoteRequestsPending,        to: '/admin/quote-requests',                 tone: 'text-info' },
+            { icon: FileText,      label: isRTL ? 'طلبات الخدمات'      : 'Service requests',    value: stats?.serviceRequestsPending,      to: '/admin/service-requests',               tone: 'text-accent' },
+            { icon: ShieldCheck,   label: isRTL ? 'تفعيل الخدمات'      : 'Service activations', value: svcCounters?.pending ?? null,       to: '/admin/service-activations',            tone: 'text-warning' },
+            { icon: ShieldCheck,   label: isRTL ? 'مراجعة مزودين'      : 'Provider review',     value: stats?.providersPending,            to: '/admin/provider-review',                tone: 'text-warning' },
+            { icon: Crown,         label: isRTL ? 'موافقات العضوية'    : 'Membership approvals',value: stats?.approvalsPending,            to: '/admin/approvals',                      tone: 'text-accent' },
+            { icon: UserPlus,      label: isRTL ? 'نقل ملكية'          : 'Ownership transfers', value: stats?.ownershipTransfersPending,   to: '/admin/ownership-transfer-requests',    tone: 'text-primary' },
+            { icon: ShieldCheck,   label: isRTL ? 'طلبات وصول'         : 'Access requests',     value: stats?.accessRequestsPending,       to: '/admin/entity-access-requests',         tone: 'text-info' },
+            { icon: Mail,          label: isRTL ? 'رسائل تواصل'        : 'Contact messages',    value: stats?.newContactMessages,          to: '/admin/contact-messages',               tone: 'text-info' },
+            { icon: FileText,      label: isRTL ? 'عقود معلّقة'        : 'Contracts pending',   value: stats?.contractsPending,            to: '/admin/contracts',                      tone: 'text-warning' },
+            { icon: AlertTriangle, label: isRTL ? 'بريد فاشل (DLQ)'    : 'Email DLQ',           value: stats?.dlqActive,                   to: '/admin/email-center',                   tone: 'text-destructive' },
+          ] as const;
+          const totalPending = inbox.reduce((s, c) => s + (typeof c.value === 'number' ? c.value : 0), 0);
+          return (
+            <Card className="border-border/40">
+              <CardHeader className="pb-1 px-4 pt-3 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs flex items-center gap-2">
+                  <Inbox className="w-3.5 h-3.5 text-urgent" aria-hidden="true" />
+                  {isRTL ? 'صناديق الوارد — بحاجة إلى إجراء' : 'Requests inbox — needs attention'}
+                </CardTitle>
+                <Badge variant="outline" className="text-[10px] h-5 gap-1 px-1.5 tech-content">
+                  <span className="tech-content">{totalPending}</span>
+                  <span className="text-muted-foreground">{isRTL ? 'بانتظار' : 'pending'}</span>
+                </Badge>
+              </CardHeader>
+              <CardContent className="px-4 pb-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                  {inbox.map((m) => {
+                    const v = m.value;
+                    const empty = v === null || v === undefined;
+                    const zero = v === 0;
+                    return (
+                      <Link
+                        key={m.label}
+                        to={m.to}
+                        className="group rounded-xl border border-border/40 p-3 flex items-center justify-between gap-2 hover:border-accent/40 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/40', m.tone)}>
+                            <m.icon className="w-3.5 h-3.5" aria-hidden="true" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className={cn('text-lg font-bold leading-none tech-content', empty || zero ? 'text-muted-foreground' : m.tone)}>
+                              {empty ? '—' : v}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
+                          </div>
+                        </div>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors" aria-hidden="true" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+      case 'needs-attention-legacy':
         return (
           <Card className="border-border/40">
             <CardHeader className="pb-1 px-4 pt-3">
