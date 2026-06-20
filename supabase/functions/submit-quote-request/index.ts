@@ -172,12 +172,18 @@ Deno.serve(async (req) => {
   if (siteId) {
     const { data: siteRow } = await admin
       .from('client_sites')
-      .select('id, region, city, district')
+      .select('id, region, city_id, district')
       .eq('id', siteId)
       .maybeSingle();
     if (siteRow) {
       resolvedRegion = (siteRow as { region?: string | null }).region ?? resolvedRegion;
-      resolvedCity = (siteRow as { city?: string | null }).city ?? resolvedCity;
+      const sCityId = (siteRow as { city_id?: string | null }).city_id ?? null;
+      if (sCityId) {
+        const { data: cityRow } = await admin
+          .from('cities').select('name_ar, name_en').eq('id', sCityId).maybeSingle();
+        const cn = (cityRow as { name_ar?: string | null; name_en?: string | null } | null);
+        resolvedCity = cn?.name_ar ?? cn?.name_en ?? resolvedCity;
+      }
       resolvedDistrict = (siteRow as { district?: string | null }).district ?? resolvedDistrict;
     }
   } else if (projectId) {
@@ -190,13 +196,19 @@ Deno.serve(async (req) => {
     if (projSiteId) {
       const { data: siteRow } = await admin
         .from('client_sites')
-        .select('id, region, city, district')
+        .select('id, region, city_id, district')
         .eq('id', projSiteId)
         .maybeSingle();
       if (siteRow) {
         resolvedSiteId = projSiteId;
         resolvedRegion = (siteRow as { region?: string | null }).region ?? resolvedRegion;
-        resolvedCity = (siteRow as { city?: string | null }).city ?? resolvedCity;
+        const sCityId = (siteRow as { city_id?: string | null }).city_id ?? null;
+        if (sCityId) {
+          const { data: cityRow } = await admin
+            .from('cities').select('name_ar, name_en').eq('id', sCityId).maybeSingle();
+          const cn = (cityRow as { name_ar?: string | null; name_en?: string | null } | null);
+          resolvedCity = cn?.name_ar ?? cn?.name_en ?? resolvedCity;
+        }
         resolvedDistrict = (siteRow as { district?: string | null }).district ?? resolvedDistrict;
       }
     }
