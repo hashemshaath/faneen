@@ -539,6 +539,9 @@ const AppRoutes = () => (
           <Route path="/admin/provider-leads" element={<ProtectedRoute requireAdmin><AdminProviderLeads /></ProtectedRoute>} />
           <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
           <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
+          {/* OPPORTUNITIES PHASE 2 — admin alias. */}
+          <Route path="/admin/opportunities" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
+          <Route path="/admin/opportunities/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/admin/quote-operations" element={<ProtectedRoute requireAdmin><AdminQuoteOperations /></ProtectedRoute>} />
           <Route path="/admin/provider-subscriptions" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=providers" replace /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 14 — Email hub. */}
