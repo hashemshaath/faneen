@@ -282,13 +282,40 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 : (isRTL ? 'لا فشل في الإرسال خلال آخر 48 ساعة.' : 'No delivery failures in the last 48 hours.'),
             },
           ];
+          const pulseTotal = pulse.reduce((s, p) => s + (typeof p.value === 'number' ? p.value : 0), 0);
+          const hasIncidents = (stats?.dlqActive ?? 0) > 0;
           return (
             <Card className="border-border/40">
-              <CardHeader className="pb-1 px-4 pt-3">
-                <CardTitle className="text-xs flex items-center gap-2">
-                  <Zap className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-                  {isRTL ? 'نبض اليوم — قراءة ذكية' : "Today's Pulse — smart read"}
-                </CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3 flex flex-row items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <CardTitle className="text-xs flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
+                    {isRTL ? 'مهام اليوم — قراءة ذكية' : "Today's Tasks — smart read"}
+                  </CardTitle>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {isRTL
+                      ? 'مؤشرات حية لنشاط المنصة خلال آخر 24 ساعة.'
+                      : 'Live indicators of platform activity in the last 24 hours.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Badge variant="outline" className="text-[10px] h-5 gap-1 px-1.5">
+                    <span className="tech-content font-bold">{pulseTotal}</span>
+                    <span className="text-muted-foreground">{isRTL ? 'حدث اليوم' : 'events today'}</span>
+                  </Badge>
+                  <Badge
+                    className={cn(
+                      'text-[10px] h-5 gap-1 px-1.5 border',
+                      hasIncidents
+                        ? 'bg-destructive/10 text-destructive border-destructive/20'
+                        : 'bg-success/10 text-success border-success/20',
+                    )}
+                  >
+                    {hasIncidents
+                      ? (isRTL ? 'حوادث نشطة' : 'incidents')
+                      : (isRTL ? 'مستقر' : 'stable')}
+                  </Badge>
+                </div>
               </CardHeader>
               <CardContent className="px-4 pb-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -313,109 +340,160 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         }
       case 'needs-attention':
         {
-          const inbox = [
-            { icon: MessageSquare, label: isRTL ? 'طلبات عروض الأسعار' : 'Quote requests',     value: stats?.quoteRequestsPending,        to: '/admin/quote-requests',                 tone: 'text-info' },
-            { icon: FileText,      label: isRTL ? 'طلبات الخدمات'      : 'Service requests',    value: stats?.serviceRequestsPending,      to: '/admin/service-requests',               tone: 'text-accent' },
-            { icon: ShieldCheck,   label: isRTL ? 'تفعيل الخدمات'      : 'Service activations', value: svcCounters?.pendingReview ?? null, to: '/admin/service-activations',            tone: 'text-warning' },
-            { icon: ShieldCheck,   label: isRTL ? 'مراجعة مزودين'      : 'Provider review',     value: stats?.providersPending,            to: '/admin/provider-review',                tone: 'text-warning' },
-            { icon: Crown,         label: isRTL ? 'موافقات العضوية'    : 'Membership approvals',value: stats?.approvalsPending,            to: '/admin/approvals',                      tone: 'text-accent' },
-            { icon: UserPlus,      label: isRTL ? 'نقل ملكية'          : 'Ownership transfers', value: stats?.ownershipTransfersPending,   to: '/admin/ownership-transfer-requests',    tone: 'text-primary' },
-            { icon: ShieldCheck,   label: isRTL ? 'طلبات وصول'         : 'Access requests',     value: stats?.accessRequestsPending,       to: '/admin/entity-access-requests',         tone: 'text-info' },
-            { icon: Mail,          label: isRTL ? 'رسائل تواصل'        : 'Contact messages',    value: stats?.newContactMessages,          to: '/admin/contact-messages',               tone: 'text-info' },
-            { icon: FileText,      label: isRTL ? 'عقود معلّقة'        : 'Contracts pending',   value: stats?.contractsPending,            to: '/admin/contracts',                      tone: 'text-warning' },
-            { icon: AlertTriangle, label: isRTL ? 'بريد فاشل (DLQ)'    : 'Email DLQ',           value: stats?.dlqActive,                   to: '/admin/email-center',                   tone: 'text-destructive' },
-          ] as const;
-          const totalPending = inbox.reduce((s, c) => s + (typeof c.value === 'number' ? c.value : 0), 0);
+          type InboxItem = {
+            icon: typeof MessageSquare;
+            label: string;
+            value: number | null | undefined;
+            to: string;
+            tone: 'info' | 'accent' | 'warning' | 'primary' | 'destructive';
+          };
+          type InboxGroup = {
+            key: 'urgent' | 'approvals' | 'communication';
+            title: string;
+            tone: 'destructive' | 'warning' | 'info';
+            items: InboxItem[];
+          };
+          const groups: InboxGroup[] = [
+            {
+              key: 'urgent',
+              title: isRTL ? 'عاجل' : 'Urgent',
+              tone: 'destructive',
+              items: [
+                { icon: AlertTriangle, label: isRTL ? 'بريد فاشل (DLQ)' : 'Email DLQ',         value: stats?.dlqActive,         to: '/admin/email-center', tone: 'destructive' },
+                { icon: FileText,      label: isRTL ? 'عقود معلّقة'     : 'Contracts pending', value: stats?.contractsPending,  to: '/admin/contracts',    tone: 'warning' },
+              ],
+            },
+            {
+              key: 'approvals',
+              title: isRTL ? 'موافقات' : 'Approvals',
+              tone: 'warning',
+              items: [
+                { icon: ShieldCheck, label: isRTL ? 'مراجعة مزودين'  : 'Provider review',      value: stats?.providersPending,            to: '/admin/provider-review',             tone: 'warning' },
+                { icon: ShieldCheck, label: isRTL ? 'تفعيل الخدمات'  : 'Service activations',  value: svcCounters?.pendingReview ?? null, to: '/admin/service-activations',         tone: 'warning' },
+                { icon: Crown,       label: isRTL ? 'موافقات العضوية' : 'Membership approvals', value: stats?.approvalsPending,            to: '/admin/approvals',                   tone: 'accent' },
+                { icon: UserPlus,    label: isRTL ? 'نقل ملكية'      : 'Ownership transfers',  value: stats?.ownershipTransfersPending,   to: '/admin/ownership-transfer-requests', tone: 'primary' },
+                { icon: ShieldCheck, label: isRTL ? 'طلبات وصول'     : 'Access requests',      value: stats?.accessRequestsPending,       to: '/admin/entity-access-requests',      tone: 'info' },
+              ],
+            },
+            {
+              key: 'communication',
+              title: isRTL ? 'تواصل وطلبات' : 'Communication & requests',
+              tone: 'info',
+              items: [
+                { icon: MessageSquare, label: isRTL ? 'طلبات عروض الأسعار' : 'Quote requests',   value: stats?.quoteRequestsPending,   to: '/admin/quote-requests',   tone: 'info' },
+                { icon: FileText,      label: isRTL ? 'طلبات الخدمات'      : 'Service requests', value: stats?.serviceRequestsPending, to: '/admin/service-requests', tone: 'accent' },
+                { icon: Mail,          label: isRTL ? 'رسائل تواصل'        : 'Contact messages', value: stats?.newContactMessages,     to: '/admin/contact-messages', tone: 'info' },
+              ],
+            },
+          ];
+          const sumOf = (items: InboxItem[]) =>
+            items.reduce((s, c) => s + (typeof c.value === 'number' ? c.value : 0), 0);
+          const groupTotals: Record<InboxGroup['key'], number> = {
+            urgent: sumOf(groups[0].items),
+            approvals: sumOf(groups[1].items),
+            communication: sumOf(groups[2].items),
+          };
+          const totalPending = groupTotals.urgent + groupTotals.approvals + groupTotals.communication;
+          const TONE_TEXT: Record<InboxItem['tone'], string> = {
+            info: 'text-info', accent: 'text-accent', warning: 'text-warning',
+            primary: 'text-primary', destructive: 'text-destructive',
+          };
+          const TONE_RING: Record<InboxGroup['tone'], string> = {
+            destructive: 'border-destructive/30 bg-destructive/5',
+            warning: 'border-warning/30 bg-warning/5',
+            info: 'border-info/30 bg-info/5',
+          };
+          const TONE_TXT: Record<InboxGroup['tone'], string> = {
+            destructive: 'text-destructive',
+            warning: 'text-warning',
+            info: 'text-info',
+          };
           return (
             <Card className="border-border/40">
-              <CardHeader className="pb-1 px-4 pt-3 flex flex-row items-center justify-between">
-                <CardTitle className="text-xs flex items-center gap-2">
-                  <Inbox className="w-3.5 h-3.5 text-urgent" aria-hidden="true" />
-                  {isRTL ? 'صناديق الوارد — بحاجة إلى إجراء' : 'Requests inbox — needs attention'}
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] h-5 gap-1 px-1.5 tech-content">
-                  <span className="tech-content">{totalPending}</span>
+              <CardHeader className="pb-2 px-4 pt-3 flex flex-row items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <CardTitle className="text-xs flex items-center gap-2">
+                    <Inbox className="w-3.5 h-3.5 text-urgent" aria-hidden="true" />
+                    {isRTL ? 'صناديق الوارد — بحاجة إلى إجراء' : 'Requests inbox — needs attention'}
+                  </CardTitle>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {isRTL
+                      ? 'كل الطلبات المعلّقة مصنّفة حسب الأولوية والقناة.'
+                      : 'All pending items grouped by priority and channel.'}
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-[10px] h-5 gap-1 px-1.5">
+                  <span className="tech-content font-bold">{totalPending}</span>
                   <span className="text-muted-foreground">{isRTL ? 'بانتظار' : 'pending'}</span>
                 </Badge>
               </CardHeader>
-              <CardContent className="px-4 pb-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                  {inbox.map((m) => {
-                    const v = m.value;
-                    const empty = v === null || v === undefined;
-                    const zero = v === 0;
-                    return (
-                      <Link
-                        key={m.label}
-                        to={m.to}
-                        className="group rounded-xl border border-border/40 p-3 flex items-center justify-between gap-2 hover:border-accent/40 hover:bg-muted/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/40', m.tone)}>
-                            <m.icon className="w-3.5 h-3.5" aria-hidden="true" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className={cn('text-lg font-bold leading-none tech-content', empty || zero ? 'text-muted-foreground' : m.tone)}>
-                              {empty ? '—' : v}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
-                          </div>
-                        </div>
-                        <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors" aria-hidden="true" />
-                      </Link>
-                    );
-                  })}
+              <CardContent className="px-4 pb-3 space-y-3">
+                {/* Group summary strip */}
+                <div className="grid grid-cols-3 gap-2">
+                  {groups.map((g) => (
+                    <div
+                      key={g.key}
+                      className={cn(
+                        'rounded-xl border p-2.5 flex items-center justify-between gap-2',
+                        TONE_RING[g.tone],
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground truncate">{g.title}</p>
+                        <p className={cn('text-xl font-bold leading-none tech-content mt-1', TONE_TXT[g.tone])}>
+                          {groupTotals[g.key]}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground tech-content">
+                        {g.items.length} {isRTL ? 'قناة' : 'channels'}
+                      </span>
+                    </div>
+                  ))}
                 </div>
+                {/* Grouped item grids */}
+                {groups.map((g) => (
+                  <div key={g.key} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className={cn('h-1.5 w-1.5 rounded-full', TONE_TXT[g.tone].replace('text-', 'bg-'))} />
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                        {g.title}
+                      </p>
+                      <div className="h-px flex-1 bg-border/40" />
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                      {g.items.map((m) => {
+                        const v = m.value;
+                        const empty = v === null || v === undefined;
+                        const zero = v === 0;
+                        const toneClass = TONE_TEXT[m.tone];
+                        return (
+                          <Link
+                            key={m.label}
+                            to={m.to}
+                            className="group rounded-xl border border-border/40 p-3 flex items-center justify-between gap-2 hover:border-accent/40 hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/40', toneClass)}>
+                                <m.icon className="w-3.5 h-3.5" aria-hidden="true" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className={cn('text-lg font-bold leading-none tech-content', empty || zero ? 'text-muted-foreground' : toneClass)}>
+                                  {empty ? '—' : v}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
+                              </div>
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors" aria-hidden="true" />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           );
         }
-      case 'needs-attention-legacy':
-        return (
-          <Card className="border-border/40">
-            <CardHeader className="pb-1 px-4 pt-3">
-              <CardTitle className="text-xs flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5 text-urgent" aria-hidden="true" />
-                {isRTL ? 'بحاجة إلى إجراء' : 'Needs attention'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-                {([
-                  { icon: MessageSquare, label: isRTL ? 'طلبات جديدة' : 'New leads',           value: stats?.leadsPending,       to: '/admin/lead-requests',   tone: 'text-info' },
-                  { icon: ShieldCheck,   label: isRTL ? 'مراجعة مزودين' : 'Provider review',   value: stats?.providersPending,   to: '/admin/provider-review', tone: 'text-warning' },
-                  { icon: AlertTriangle, label: isRTL ? 'بريد DLQ نشط' : 'Email DLQ',          value: stats?.dlqActive,          to: '/admin/email-center',    tone: 'text-destructive' },
-                  { icon: Inbox,         label: isRTL ? 'رسائل تواصل' : 'Contact messages',    value: stats?.newContactMessages, to: '/admin/contact-messages',tone: 'text-info' },
-                  { icon: FileText,      label: isRTL ? 'عقود بانتظار الموافقة' : 'Contracts pending', value: stats?.contractsPending, to: '/dashboard/contracts', tone: 'text-warning' },
-                ] as const).map((m) => {
-                  const v = m.value;
-                  const empty = v === null || v === undefined;
-                  const zero = v === 0;
-                  return (
-                    <Link
-                      key={m.label}
-                      to={m.to}
-                      className="group rounded-xl border border-border/40 p-3 flex items-center justify-between gap-2 hover:border-accent/40 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/40', m.tone)}>
-                          <m.icon className="w-3.5 h-3.5" aria-hidden="true" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className={cn('text-lg font-bold leading-none tech-content', empty || zero ? 'text-muted-foreground' : m.tone)}>
-                            {empty ? '—' : v}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
-                        </div>
-                      </div>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors" aria-hidden="true" />
-                    </Link>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        );
       case 'kpi-bento':
         {
           const usersSeries   = seriesFromMonthly(stats?.monthlyUsers, 6);
