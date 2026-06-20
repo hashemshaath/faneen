@@ -245,11 +245,97 @@ const TOTAL_STEPS = 5;
 
 const STEP_LABELS = [
   { ar: 'القطاع',     en: 'Sector' },
-  { ar: 'الموقع',     en: 'Location' },
+  { ar: 'موقع تنفيذ العمل', en: 'Work location' },
   { ar: 'التفاصيل',   en: 'Details' },
   { ar: 'الموعد',     en: 'Timeline' },
   { ar: 'التواصل',    en: 'Contact' },
 ];
+
+/* ---------------- Location-first hooks ---------------- */
+
+interface SavedSiteOption {
+  id: string;
+  label: string;
+  region: string | null;
+  city: string | null;
+  district: string | null;
+  short_address: string | null;
+}
+
+interface UserProjectOption {
+  id: string;
+  title: string;
+  site_id: string | null;
+}
+
+function useUserSavedSites(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['quote', 'user-saved-sites', userId ?? null],
+    enabled: !!userId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<SavedSiteOption[]> => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('client_sites')
+        .select('id,label,region,city_name,district,short_address,owner_user_id,client_user_id,created_by,archived_at')
+        .or(`owner_user_id.eq.${userId},client_user_id.eq.${userId},created_by.eq.${userId}`)
+        .is('archived_at', null)
+        .limit(20);
+      if (error) return [];
+      return (data ?? []).map((r) => ({
+        id: r.id,
+        label: r.label || r.short_address || '—',
+        region: r.region,
+        city: r.city_name,
+        district: r.district,
+        short_address: r.short_address,
+      }));
+    },
+  });
+}
+
+function useUserProjects(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['quote', 'user-projects', userId ?? null],
+    enabled: !!userId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<UserProjectOption[]> => {
+      if (!userId) return [];
+      const { data: bizRows, error: bizErr } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_user_id', userId);
+      if (bizErr) return [];
+      const bizIds = (bizRows ?? []).map((b: { id: string }) => b.id);
+      if (!bizIds.length) return [];
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id,title_ar,title_en,site_id')
+        .in('business_id', bizIds)
+        .limit(20);
+      if (error) return [];
+      return (data ?? []).map((p) => ({
+        id: p.id,
+        title: p.title_ar || p.title_en || '—',
+        site_id: p.site_id,
+      }));
+    },
+  });
+}
+
+function deriveLocationPrecision(form: {
+  noLocationSelected: boolean;
+  district: string;
+  city: string;
+  region: string;
+  siteId: string;
+}): 'district' | 'city' | 'region' | 'unspecified' {
+  if (form.noLocationSelected) return 'unspecified';
+  if (form.district.trim()) return 'district';
+  if (form.city.trim()) return 'city';
+  if (form.region.trim()) return 'region';
+  return 'unspecified';
+}
 
 const Quote: React.FC = () => {
   const { isRTL } = useLanguage();
