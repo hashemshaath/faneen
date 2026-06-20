@@ -656,6 +656,16 @@ const ITEMS: KnowledgeItem[] = [
     tags: ['support','rfq'], source: 'knowledge-seed-phase-2', status: 'internal',
     usableByAssistant: false, usableInMessages: false,
   },
+  // Placeholder — real entry continues below.
+  {
+    id: 'ops-review-new-rfq-DUPLICATE_SENTINEL_DO_NOT_USE',
+    type: 'internal_note', categoryId: 'internal-ops',
+    title: { ar: 'sentinel' },
+    body: { ar: 'تحقق من اكتمال البيانات، صحة المدينة، نوع القطاع، ووجود المرفقات إن لزم. وضّح للمزودين أي معلومة ناقصة قبل توجيه الطلب.' },
+    audience: ['admin','operations'],
+    tags: ['support','rfq'], source: 'knowledge-seed-phase-2', status: 'internal',
+    usableByAssistant: false, usableInMessages: false,
+  },
   {
     id: 'ops-review-provider-readiness',
     type: 'internal_note', categoryId: 'internal-ops',
