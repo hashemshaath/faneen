@@ -130,7 +130,10 @@ describe('Public page performance + SEO invariants', () => {
     },
     {
       label: 'BusinessProfile',
-      files: ['src/pages/BusinessProfile.tsx'],
+      files: [
+        'src/pages/BusinessProfile.tsx',
+        'src/components/business-profile/BusinessProfileHeader.tsx',
+      ],
       routeKey: 'business_profile',
     },
     {
