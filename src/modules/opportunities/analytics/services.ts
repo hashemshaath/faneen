@@ -157,7 +157,7 @@ export async function listOpportunityOpsRows(
   const { data: rows, error } = await supabase
     .from('quote_requests')
     .select(
-      'id, ref_id, customer_name, city, district, sector, status, award_status, awarded_bid_id, created_at, updated_at',
+      'id, ref_id, customer_name, city, district, sector, status, award_status, awarded_bid_id, awarded_at, created_at, updated_at',
     )
     .order('updated_at', { ascending: false })
     .limit(safeLimit);
@@ -170,15 +170,15 @@ export async function listOpportunityOpsRows(
     await Promise.all([
       supabase
         .from('quote_request_leads')
-        .select('quote_request_id')
+        .select('quote_request_id, created_at')
         .in('quote_request_id', ids),
       supabase
         .from('opportunity_bids')
-        .select('opportunity_id')
+        .select('opportunity_id, created_at, submitted_at')
         .in('opportunity_id', ids),
       supabase
         .from('contracts')
-        .select('id, status, opportunity_id')
+        .select('id, status, opportunity_id, created_at')
         .in('opportunity_id', ids),
     ]);
   if (lerr) throw lerr;
@@ -186,27 +186,39 @@ export async function listOpportunityOpsRows(
   if (cerr) throw cerr;
 
   const assignedCount = new Map<string, number>();
-  for (const r of (leads ?? []) as Array<{ quote_request_id: string | null }>) {
+  const firstAssignedAt = new Map<string, string>();
+  for (const r of (leads ?? []) as Array<{ quote_request_id: string | null; created_at: string | null }>) {
     if (!r.quote_request_id) continue;
     assignedCount.set(
       r.quote_request_id,
       (assignedCount.get(r.quote_request_id) ?? 0) + 1,
     );
+    if (r.created_at) {
+      const prev = firstAssignedAt.get(r.quote_request_id);
+      if (!prev || r.created_at < prev) firstAssignedAt.set(r.quote_request_id, r.created_at);
+    }
   }
   const bidCount = new Map<string, number>();
-  for (const r of (bids ?? []) as Array<{ opportunity_id: string | null }>) {
+  const firstBidAt = new Map<string, string>();
+  for (const r of (bids ?? []) as Array<{ opportunity_id: string | null; created_at: string | null; submitted_at: string | null }>) {
     if (!r.opportunity_id) continue;
     bidCount.set(r.opportunity_id, (bidCount.get(r.opportunity_id) ?? 0) + 1);
+    const ts = r.submitted_at ?? r.created_at;
+    if (ts) {
+      const prev = firstBidAt.get(r.opportunity_id);
+      if (!prev || ts < prev) firstBidAt.set(r.opportunity_id, ts);
+    }
   }
-  const contractByOpp = new Map<string, { id: string; status: string }>();
+  const contractByOpp = new Map<string, { id: string; status: string; created_at: string }>();
   for (const c of (contracts ?? []) as Array<{
     id: string;
     status: string;
     opportunity_id: string | null;
+    created_at: string;
   }>) {
     if (!c.opportunity_id) continue;
     if (!contractByOpp.has(c.opportunity_id)) {
-      contractByOpp.set(c.opportunity_id, { id: c.id, status: c.status });
+      contractByOpp.set(c.opportunity_id, { id: c.id, status: c.status, created_at: c.created_at });
     }
   }
 
@@ -237,6 +249,10 @@ export async function listOpportunityOpsRows(
         award_status: r.award_status ?? null,
         contract_id: contract?.id ?? null,
       }),
+      first_assigned_at: firstAssignedAt.get(r.id) ?? null,
+      first_bid_at: firstBidAt.get(r.id) ?? null,
+      awarded_at: r.awarded_at ?? null,
+      contract_created_at: contract?.created_at ?? null,
     };
   });
 }
