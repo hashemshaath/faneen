@@ -1484,46 +1484,42 @@ const AdminBusinesses = () => {
           </TabsContent>
 
           <TabsContent value="providers" className="mt-0">
-            <ComingNextTab
-              icon={BUSINESS_ADMIN_TABS[2].icon}
-              titleAr="مزودو الخدمة"
-              titleEn="Service Providers"
-              descriptionAr="قائمة موحدة للمزودين النشطين، غير المكتملين، والمؤهلين للتشغيل، مع فلاتر وإجراءات تشغيلية."
-              descriptionEn="A unified view of active, incomplete, and pilot-ready providers with operational filters and actions."
+            <ControlCenterProvidersTab
+              businesses={businesses}
               isRTL={isRTL}
+              onJumpToBusiness={(b) => {
+                setActiveTab('businesses');
+                const q = b.ref_id || b.username || '';
+                if (q) { setSearchInput(q); updateParam({ q, page: null }); }
+              }}
             />
           </TabsContent>
 
           <TabsContent value="taxonomies" className="mt-0">
-            <ComingNextTab
-              icon={BUSINESS_ADMIN_TABS[3].icon}
-              titleAr="التصنيفات والقطاعات"
-              titleEn="Taxonomies & Sectors"
-              descriptionAr="توزيع المزودين حسب القطاع، القطاعات الفارغة، والأكثر جاهزية للتوسع."
-              descriptionEn="Provider distribution by sector, empty sectors, and the most launch-ready categories."
-              isRTL={isRTL}
-            />
+            <ControlCenterTaxonomiesTab businesses={businesses} isRTL={isRTL} />
           </TabsContent>
 
           <TabsContent value="review" className="mt-0">
-            <ComingNextTab
-              icon={BUSINESS_ADMIN_TABS[4].icon}
-              titleAr="المراجعة والظهور"
-              titleEn="Review & Visibility"
-              descriptionAr="الجهات التي تحتاج إجراء قبل الظهور العام: مسودات، بدون اسم مستخدم، أو غير منشورة."
-              descriptionEn="Businesses that need action before going public: drafts, missing username, or unpublished."
+            <ControlCenterReviewTab
+              businesses={businesses}
               isRTL={isRTL}
+              onJumpToBusiness={(b) => {
+                setActiveTab('businesses');
+                const q = b.ref_id || b.username || '';
+                if (q) { setSearchInput(q); updateParam({ q, page: null }); }
+              }}
             />
           </TabsContent>
 
           <TabsContent value="pilot" className="mt-0">
-            <ComingNextTab
-              icon={BUSINESS_ADMIN_TABS[5].icon}
-              titleAr="جاهزية التشغيل"
-              titleEn="Pilot Readiness"
-              descriptionAr="جاهزية المزودين للتشغيل التجريبي حسب المدينة والقطاع وحالة التواصل."
-              descriptionEn="Provider pilot readiness by city, sector, and contact status."
+            <ControlCenterPilotTab
+              businesses={businesses}
               isRTL={isRTL}
+              onJumpToBusiness={(b) => {
+                setActiveTab('businesses');
+                const q = b.ref_id || b.username || '';
+                if (q) { setSearchInput(q); updateParam({ q, page: null }); }
+              }}
             />
           </TabsContent>
 
