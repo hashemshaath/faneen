@@ -928,91 +928,102 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   ]);
   const ACTIVITY_PAIR_IDS = new Set(['recent-activity', 'recent-users']);
 
+  // ── DnD setup ────────────────────────────────────────────────────────
+  // Group the visible order into "blocks" (chart row, activity pair, or
+  // single widget) so DnD reorders coherent units, never breaks a row.
+  const blocks = useMemo<string[][]>(() => {
+    const out: string[][] = [];
+    for (let i = 0; i < layout.visibleOrder.length; ) {
+      const id = layout.visibleOrder[i];
+      if (CHART_IDS.has(id)) {
+        const run: string[] = [];
+        while (i < layout.visibleOrder.length && CHART_IDS.has(layout.visibleOrder[i])) {
+          run.push(layout.visibleOrder[i]); i++;
+        }
+        out.push(run);
+      } else if (ACTIVITY_PAIR_IDS.has(id)) {
+        const run: string[] = [];
+        while (i < layout.visibleOrder.length && ACTIVITY_PAIR_IDS.has(layout.visibleOrder[i])) {
+          run.push(layout.visibleOrder[i]); i++;
+        }
+        out.push(run);
+      } else {
+        out.push([id]); i++;
+      }
+    }
+    return out;
+  }, [layout.visibleOrder]);
+  const blockIds = useMemo(() => blocks.map((b) => b[0]), [blocks]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleDragEnd = useCallback((e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = blockIds.indexOf(String(active.id));
+    const to = blockIds.indexOf(String(over.id));
+    if (from === -1 || to === -1) return;
+    const nextBlocks = arrayMove(blocks, from, to);
+    // Merge hidden ids back at the end so they survive the round-trip.
+    const hiddenIds = layout.fullOrder.filter((id) => layout.isHidden(id));
+    layout.setOrder([...nextBlocks.flat(), ...hiddenIds]);
+  }, [blocks, blockIds, layout]);
+
   return (
     <div className="space-y-5" ref={ref} data-admin-dashboard-edit={layout.editMode ? 'true' : 'false'}>
-      {layout.visibleOrder.map((id, idx) => {
-        const isFirst = idx === 0;
-        const isLast = idx === layout.visibleOrder.length - 1;
-        // Group adjacent charts into the lg:grid-cols-3 row (legacy layout parity).
-        if (CHART_IDS.has(id)) {
-          const prevId = layout.visibleOrder[idx - 1];
-          if (prevId && CHART_IDS.has(prevId)) return null; // already rendered by group head
-          const groupIds = layout.visibleOrder.slice(idx).filter((g, i, arr) => CHART_IDS.has(g) && (i === 0 || CHART_IDS.has(arr[i - 1])));
-          // collect the contiguous run starting at idx
-          const run: string[] = [];
-          for (let k = idx; k < layout.visibleOrder.length; k++) {
-            if (CHART_IDS.has(layout.visibleOrder[k])) run.push(layout.visibleOrder[k]);
-            else break;
-          }
-          void groupIds;
-          return (
-            <div key={`charts-${idx}`} className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {run.map((rid, rIdx) => (
-                <AdminWidgetShell
-                  key={rid}
-                  widgetId={rid}
-                  editMode={layout.editMode}
-                  isHidden={layout.isHidden(rid)}
-                  onToggle={() => layout.toggleHidden(rid)}
-                  onMoveUp={() => layout.moveUp(rid)}
-                  onMoveDown={() => layout.moveDown(rid)}
-                  canMoveUp={!(idx === 0 && rIdx === 0)}
-                  canMoveDown={!(idx + run.length >= layout.visibleOrder.length && rIdx === run.length - 1)}
-                  isRTL={isRTL}
-                >
-                  {renderWidget(rid)}
-                </AdminWidgetShell>
-              ))}
-            </div>
-          );
-        }
-        // Group adjacent recent-activity + recent-users into lg:grid-cols-2 row.
-        if (ACTIVITY_PAIR_IDS.has(id)) {
-          const prevId = layout.visibleOrder[idx - 1];
-          if (prevId && ACTIVITY_PAIR_IDS.has(prevId)) return null;
-          const run: string[] = [];
-          for (let k = idx; k < layout.visibleOrder.length; k++) {
-            if (ACTIVITY_PAIR_IDS.has(layout.visibleOrder[k])) run.push(layout.visibleOrder[k]);
-            else break;
-          }
-          return (
-            <div key={`activity-${idx}`} className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {run.map((rid, rIdx) => (
-                <AdminWidgetShell
-                  key={rid}
-                  widgetId={rid}
-                  editMode={layout.editMode}
-                  isHidden={layout.isHidden(rid)}
-                  onToggle={() => layout.toggleHidden(rid)}
-                  onMoveUp={() => layout.moveUp(rid)}
-                  onMoveDown={() => layout.moveDown(rid)}
-                  canMoveUp={!(idx === 0 && rIdx === 0)}
-                  canMoveDown={!(idx + run.length >= layout.visibleOrder.length && rIdx === run.length - 1)}
-                  isRTL={isRTL}
-                >
-                  {renderWidget(rid)}
-                </AdminWidgetShell>
-              ))}
-            </div>
-          );
-        }
-        return (
-          <AdminWidgetShell
-            key={id}
-            widgetId={id}
-            editMode={layout.editMode}
-            isHidden={layout.isHidden(id)}
-            onToggle={() => layout.toggleHidden(id)}
-            onMoveUp={() => layout.moveUp(id)}
-            onMoveDown={() => layout.moveDown(id)}
-            canMoveUp={!isFirst}
-            canMoveDown={!isLast}
-            isRTL={isRTL}
-          >
-            {renderWidget(id)}
-          </AdminWidgetShell>
-        );
-      })}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
+          {blocks.map((run, bIdx) => {
+            const headId = run[0];
+            const isFirstBlock = bIdx === 0;
+            const isLastBlock = bIdx === blocks.length - 1;
+            const body = run.length > 1 ? (
+              <div className={cn(
+                'grid grid-cols-1 gap-3',
+                CHART_IDS.has(headId) ? 'lg:grid-cols-3' : 'lg:grid-cols-2',
+              )}>
+                {run.map((rid, rIdx) => (
+                  <AdminWidgetShell
+                    key={rid}
+                    widgetId={rid}
+                    editMode={layout.editMode}
+                    isHidden={layout.isHidden(rid)}
+                    onToggle={() => layout.toggleHidden(rid)}
+                    onMoveUp={() => layout.moveUp(rid)}
+                    onMoveDown={() => layout.moveDown(rid)}
+                    canMoveUp={!(isFirstBlock && rIdx === 0)}
+                    canMoveDown={!(isLastBlock && rIdx === run.length - 1)}
+                    isRTL={isRTL}
+                  >
+                    {renderWidget(rid)}
+                  </AdminWidgetShell>
+                ))}
+              </div>
+            ) : (
+              <AdminWidgetShell
+                widgetId={headId}
+                editMode={layout.editMode}
+                isHidden={layout.isHidden(headId)}
+                onToggle={() => layout.toggleHidden(headId)}
+                onMoveUp={() => layout.moveUp(headId)}
+                onMoveDown={() => layout.moveDown(headId)}
+                canMoveUp={!isFirstBlock}
+                canMoveDown={!isLastBlock}
+                isRTL={isRTL}
+              >
+                {renderWidget(headId)}
+              </AdminWidgetShell>
+            );
+            return (
+              <SortableSection key={headId} id={headId} editMode={layout.editMode} isRTL={isRTL}>
+                {body}
+              </SortableSection>
+            );
+          })}
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
