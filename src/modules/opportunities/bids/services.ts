@@ -143,3 +143,21 @@ export async function withdrawOpportunityBid(
   if (error) throw error;
   return data;
 }
+
+/**
+ * PHASE 6 — Award a winning bid on an opportunity.
+ * Runs transactionally inside the `award_opportunity_bid` RPC.
+ * Only the opportunity owner or an admin may execute it; providers
+ * are rejected by the function itself.
+ */
+export async function awardOpportunityBid(
+  opportunityId: string,
+  bidId: string,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('award_opportunity_bid', {
+    p_opportunity_id: opportunityId,
+    p_bid_id: bidId,
+  });
+  if (error) throw error;
+  return (data as string) ?? bidId;
+}
