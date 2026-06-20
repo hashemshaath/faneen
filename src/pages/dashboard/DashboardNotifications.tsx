@@ -402,6 +402,29 @@ const DashboardNotifications = () => {
           )}
         </div>
 
+        {/* Lifecycle quick chips (opportunity events) */}
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="text-[9px] text-muted-foreground me-1">{isRTL ? 'دورة حياة الفرصة:' : 'Lifecycle:'}</span>
+          {[
+            { v: 'all', ar: 'الكل', en: 'All' },
+            { v: 'opportunity_created', ar: 'فرصة جديدة', en: 'New' },
+            { v: 'opportunity_bid', ar: 'عروض', en: 'Bids' },
+            { v: 'opportunity_awarded', ar: 'تعميد', en: 'Awarded' },
+            { v: 'contract_created', ar: 'عقد', en: 'Contract' },
+            { v: 'opportunity_expired', ar: 'منتهي', en: 'Expired' },
+          ].map((c) => (
+            <Button
+              key={c.v}
+              size="sm"
+              variant={typeFilter === c.v ? 'default' : 'outline'}
+              className="h-6 px-2 text-[9px] gap-1"
+              onClick={() => setTypeFilter(c.v)}
+            >
+              {isRTL ? c.ar : c.en}
+            </Button>
+          ))}
+        </div>
+
         {/* Count */}
         {!isLoading && filtered.length > 0 && (
           <p className="text-[9px] text-muted-foreground">

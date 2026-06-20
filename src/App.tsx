@@ -280,6 +280,7 @@ const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershi
 // backward-compatibility notice. TODO(legacy-sunset): see TODO-C1-02 in
 // `docs/pilot-launch-backlog.md` — delete the file once verified.
 const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
+const AdminNotificationsConfig = lazyRetry(() => import("./pages/admin/AdminNotificationsConfig"));
 // Taxonomy & Reference Data Center — Phase 2.
 const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
 const AdminProjectCategories = lazyRetry(() => import("./pages/admin/AdminProjectCategories"));
@@ -576,6 +577,7 @@ const AppRoutes = () => (
           {/* NAVIGATION-CONSOLIDATION-1 group 17 — System Settings hub.
               Gated by requireAdmin; the System tab's content enforces super-admin internally. */}
           <Route path="/admin/system-settings" element={<ProtectedRoute requireAdmin><AdminSystemSettingsHub /></ProtectedRoute>} />
+          <Route path="/admin/notifications-config" element={<ProtectedRoute requireAdmin><AdminNotificationsConfig /></ProtectedRoute>} />
           <Route path="/admin/cron-runs" element={<ProtectedRoute requireAdmin><AdminCronRuns /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 9 — Operations hub. */}
           <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperationsHub /></ProtectedRoute>} />
