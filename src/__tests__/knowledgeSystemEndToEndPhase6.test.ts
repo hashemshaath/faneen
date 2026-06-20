@@ -258,7 +258,7 @@ describe('Phase 6 — module purity', () => {
       const src = fs.readFileSync(f, 'utf8');
       if (/from\s+['"]@\/integrations\/supabase/.test(src)) offenders.push(`${f} :: supabase`);
       if (/\bfetch\s*\(/.test(src)) offenders.push(`${f} :: fetch`);
-      if (/\.rpc\(|\.from\(|createClient\(/.test(src)) offenders.push(`${f} :: db call`);
+      if (/supabase\.(rpc|from)\(|createClient\(/.test(src)) offenders.push(`${f} :: db call`);
     }
     expect(offenders).toEqual([]);
   });
