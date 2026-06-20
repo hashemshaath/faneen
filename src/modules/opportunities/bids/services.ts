@@ -93,11 +93,13 @@ export async function submitOpportunityBid(
     if (opp?.user_id) {
       await supabase.from('notifications').insert({
         user_id: opp.user_id,
-        type: 'opportunity_bid_submitted',
-        title: 'تم تقديم عرض جديد على فرصتك',
-        message: opp.ref_id ? `الفرصة ${opp.ref_id}` : 'تم استلام عرض جديد.',
-        related_id: data.id,
-        related_type: 'opportunity_bid',
+        notification_type: 'opportunity_bid_submitted',
+        title_ar: 'تم تقديم عرض جديد على فرصتك',
+        title_en: 'A new bid was submitted on your opportunity',
+        body_ar: opp.ref_id ? `الفرصة ${opp.ref_id}` : 'تم استلام عرض جديد.',
+        body_en: opp.ref_id ? `Opportunity ${opp.ref_id}` : 'A new bid has been received.',
+        reference_id: data.id,
+        reference_type: 'opportunity_bid',
       });
     }
   } catch {
