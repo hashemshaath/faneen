@@ -15,6 +15,7 @@ import type {
   KnowledgeLocale,
 } from '../knowledge.types';
 import { getAssistantKnowledgeContext } from '../knowledgeHelpers';
+import { scoreKnowledge } from '../knowledgeSearch';
 import { expandQueryWithSynonyms } from './assistantKnowledgeSynonyms';
 import { rankAssistantResults } from './assistantKnowledgeRanking';
 import {
@@ -32,8 +33,13 @@ export interface AssistantAnswerContext {
 }
 
 export const ASSISTANT_DEFAULT_LIMIT = 5;
-/** Minimum top-result score before we let the assistant answer. */
-export const ASSISTANT_SCORE_THRESHOLD = 10;
+/**
+ * Minimum number of real token hits on the top item before the assistant
+ * is allowed to answer. `scoreKnowledge` awards 10 per matched token, so
+ * a threshold of 10 means "at least one query token actually appeared in
+ * the item's title/body/tags". Priority alone never crosses this line.
+ */
+export const ASSISTANT_TOKEN_HIT_THRESHOLD = 10;
 
 export function buildAssistantKnowledgeAnswerContext(
   query: string,
@@ -57,9 +63,15 @@ export function buildAssistantKnowledgeAnswerContext(
 
   const ranked = rankAssistantResults(guarded, audience, expanded).slice(0, safeLimit);
 
-  const top = ranked[0]?.score ?? 0;
-  const confidence = Math.max(0, Math.min(1, top / 30));
-  const allowedToAnswer = ranked.length > 0 && top >= ASSISTANT_SCORE_THRESHOLD;
+  const topItem = ranked[0]?.item;
+  // Recompute the *pure* keyword score (no audience/category bonuses, no
+  // priority floor) so a high-priority but off-topic item cannot trick the
+  // assistant into answering an unrelated question.
+  const rawScore = topItem ? scoreKnowledge(topItem, expanded, locale) : 0;
+  const priorityFloor = topItem ? (topItem.priority ?? 0) / 10 : 0;
+  const tokenHits = Math.max(0, rawScore - priorityFloor);
+  const confidence = Math.max(0, Math.min(1, tokenHits / 30));
+  const allowedToAnswer = ranked.length > 0 && tokenHits >= ASSISTANT_TOKEN_HIT_THRESHOLD;
 
   return {
     matchedItems: ranked,
