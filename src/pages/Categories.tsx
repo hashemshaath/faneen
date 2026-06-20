@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
