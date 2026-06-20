@@ -9,6 +9,7 @@ import {
   Send, ShieldCheck, Building2, ArrowLeft, Hammer,
 } from 'lucide-react';
 import { useSeoPage } from '@/modules/seo/useSeoPage';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import {
   SECTORS_SEO, SECTORS_SEO_LIST, type SeoSectorSlug,
 } from '@/lib/sectors-seo';
@@ -31,6 +32,7 @@ const HOW_QITAAT_HELPS = [
 
 const SectorSeoLanding: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  useImagePerfTracking('sector_seo_landing');
   const sector = slug && SECTORS_SEO[slug as SeoSectorSlug] ? SECTORS_SEO[slug as SeoSectorSlug] : null;
 
   const quoteHref = sector ? `/quote?sector=${sector.slug}` : '/quote';
