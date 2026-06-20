@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { listPublicBusinessesForSector } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, buildFaqPage, ogImageFor } from '@/lib/seo/structured-data';
 import { Navbar } from '@/components/layout/Navbar';
@@ -211,6 +212,7 @@ const SectorLanding: React.FC = () => {
     };
   }, [baseMeta, taxonomyCategory, isRTL]);
   const lang = isRTL ? 'ar' as const : 'en' as const;
+  useImagePerfTracking('sector_landing');
   usePageMeta({
     title: buildSeoTitle({ kind: 'category', lang, name: meta?.name, city: selectedCityName || undefined }),
     description: buildSeoDescription({
