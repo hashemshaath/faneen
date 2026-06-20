@@ -110,8 +110,19 @@ describe('PHASE B — no duplicate labels per concept', () => {
       set.add(url);
       byLabel.set(labelKey, set);
     }
+    // Legitimate cross-role pairs that map the same concept to a
+    // role-scoped route. Both surfaces are correct — never both
+    // visible to the same user at the same time.
+    const ALLOWED_CROSS_ROLE_PAIRS: Record<string, ReadonlyArray<string>> = {
+      membership: ['/dashboard/membership', '/dashboard/provider/membership'],
+    };
     const dupes = [...byLabel.entries()]
       .filter(([, urls]) => urls.size > 1)
+      .filter(([label, urls]) => {
+        const allowed = ALLOWED_CROSS_ROLE_PAIRS[label];
+        if (!allowed) return true;
+        return [...urls].some((u) => !allowed.includes(u));
+      })
       .map(([label, urls]) => `${label} → ${[...urls].join(', ')}`);
     expect(dupes, `duplicate labels:\n${dupes.join('\n')}`).toEqual([]);
   });
