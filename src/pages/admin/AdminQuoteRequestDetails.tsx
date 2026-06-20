@@ -63,6 +63,11 @@ interface AdminQuoteRow {
   sector: string;
   city: string;
   district: string | null;
+  region: string | null;
+  site_id: string | null;
+  project_id: string | null;
+  no_location_selected: boolean | null;
+  location_precision: string | null;
   service_location_type: string;
   project_description: string;
   approx_dimensions: string | null;
