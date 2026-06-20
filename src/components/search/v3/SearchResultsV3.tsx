@@ -33,8 +33,13 @@ export const SearchResultsV3 = ({
   const bi = useBi();
   const { isRTL } = useLanguage();
 
+  // SearchResultsV3 only renders card layouts; the 'map' view is handled
+  // upstream by SearchMapV3, so normalize any non-card value to 'grid'
+  // for the child components that expect 'grid' | 'list' only.
+  const cardView: 'grid' | 'list' = viewMode === 'list' ? 'list' : 'grid';
+
   if (isError) return <SearchErrorStateV3 onRetry={onRetry} />;
-  if (isLoading) return <SearchSkeletonV3 view={viewMode} count={8} />;
+  if (isLoading) return <SearchSkeletonV3 view={cardView} count={8} />;
   if (totalCount === 0) {
     return (
       <SearchEmptyStateV3
@@ -46,7 +51,7 @@ export const SearchResultsV3 = ({
     );
   }
 
-  const containerCls = viewMode === 'grid'
+  const containerCls = cardView === 'grid'
     ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'
     : 'flex flex-col gap-3';
 
@@ -67,7 +72,7 @@ export const SearchResultsV3 = ({
             <SearchResultCardV3
               business={b}
               taxonomy={taxonomyDisplayMap?.get(b.id)}
-              view={viewMode}
+              view={cardView}
             />
           </div>
         ))}

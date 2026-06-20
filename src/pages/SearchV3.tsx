@@ -31,6 +31,9 @@ import { useStickyOverlapAudit } from '@/hooks/useStickyOverlapAudit';
 import { LoadingProgressV3 } from '@/components/search/v3/LoadingProgressV3';
 import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
 import { RecentAndShareV3 } from '@/components/search/v3/RecentAndShareV3';
+const SearchMapV3 = React.lazy(() =>
+  import('@/components/search/v3/SearchMapV3').then((m) => ({ default: m.SearchMapV3 })),
+);
 
 const ITEMS_PER_PAGE = 12;
 const SORT_STORAGE_KEY = 'qitaat_search_sort';
@@ -66,7 +69,8 @@ const SearchV3 = () => {
 
   const debouncedQuery = useDebouncedValue(query, 300);
 
-  const normalizeView = (v: string | null): ViewModeV3 => (v === 'list' ? 'list' : 'grid');
+  const normalizeView = (v: string | null): ViewModeV3 =>
+    v === 'list' ? 'list' : v === 'map' ? 'map' : 'grid';
   const [viewMode, setViewMode] = useState<ViewModeV3>(normalizeView(searchParams.get('view')));
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -522,22 +526,32 @@ const SearchV3 = () => {
             className="flex-1 min-w-0 scroll-mt-44"
             data-overlap-audit="results"
           >
-            <SearchResultsV3
-              businesses={paginated}
-              isLoading={isLoading}
-              isError={!!isError}
-              onRetry={() => refetch()}
-              viewMode={viewMode}
-              totalCount={deferred.length}
-              hasFilters={!!hasActiveFilters || !!query.trim()}
-              onClearFilters={clearFilters}
-              didYouMean={didYouMean}
-              onDidYouMeanClick={handleQueryChange}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              taxonomyDisplayMap={taxonomyDisplayMap}
-            />
+            {viewMode === 'map' ? (
+              <React.Suspense
+                fallback={
+                  <div className="h-[70vh] min-h-[420px] rounded-2xl border border-border/60 bg-muted/30 animate-pulse" />
+                }
+              >
+                <SearchMapV3 businesses={deferred} isLoading={isLoading} />
+              </React.Suspense>
+            ) : (
+              <SearchResultsV3
+                businesses={paginated}
+                isLoading={isLoading}
+                isError={!!isError}
+                onRetry={() => refetch()}
+                viewMode={viewMode}
+                totalCount={deferred.length}
+                hasFilters={!!hasActiveFilters || !!query.trim()}
+                onClearFilters={clearFilters}
+                didYouMean={didYouMean}
+                onDidYouMeanClick={handleQueryChange}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                taxonomyDisplayMap={taxonomyDisplayMap}
+              />
+            )}
           </section>
         </div>
 
