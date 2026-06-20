@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, FilePlus2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   convertAwardedBidToContract,
   getContractForOpportunity,
@@ -13,9 +14,13 @@ import {
 
 interface Props {
   opportunityId: string;
-  awardedBidId: string | null;
   /** Owner of the opportunity or admin. Providers must pass false. */
   canConvert: boolean;
+}
+
+interface AwardSnapshot {
+  awarded_bid_id: string | null;
+  award_status: string | null;
 }
 
 /**
@@ -24,10 +29,26 @@ interface Props {
  */
 export const OpportunityContractSection: React.FC<Props> = ({
   opportunityId,
-  awardedBidId,
   canConvert,
 }) => {
   const qc = useQueryClient();
+
+  const { data: award } = useQuery<AwardSnapshot | null>({
+    queryKey: ['opportunity-award-snapshot', opportunityId],
+    enabled: !!opportunityId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quote_requests')
+        .select('awarded_bid_id, award_status')
+        .eq('id', opportunityId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as AwardSnapshot | null) ?? null;
+    },
+  });
+
+  const awardedBidId = award?.awarded_bid_id ?? null;
+
   const { data: contract, isLoading } = useQuery({
     queryKey: ['opportunity-contract', opportunityId],
     enabled: !!opportunityId,
@@ -48,7 +69,6 @@ export const OpportunityContractSection: React.FC<Props> = ({
     },
   });
 
-  // Hide the section entirely until a winner exists and there is something to show.
   if (!awardedBidId && !contract) return null;
 
   return (
