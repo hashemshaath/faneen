@@ -32,6 +32,7 @@ import { LoadingProgressV3 } from '@/components/search/v3/LoadingProgressV3';
 import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
 import { RecentAndShareV3 } from '@/components/search/v3/RecentAndShareV3';
 import { CompareTrayV3 } from '@/components/search/v3/CompareTrayV3';
+import { SavedSearchesV3 } from '@/components/search/v3/SavedSearchesV3';
 const SearchMapV3 = React.lazy(() =>
   import('@/components/search/v3/SearchMapV3').then((m) => ({ default: m.SearchMapV3 })),
 );
@@ -527,6 +528,12 @@ const SearchV3 = () => {
                 onPickQuery={handleQueryChange}
                 historyVersion={historyVersion}
               />
+              <SavedSearchesV3
+                query={query}
+                filters={filters}
+                currentCount={deferred.length}
+                hasActiveFilters={hasActiveFilters}
+              />
               <SearchSeoLinksV3 />
             </div>
           </aside>
@@ -571,6 +578,12 @@ const SearchV3 = () => {
           <RecentAndShareV3
             onPickQuery={handleQueryChange}
             historyVersion={historyVersion}
+          />
+          <SavedSearchesV3
+            query={query}
+            filters={filters}
+            currentCount={deferred.length}
+            hasActiveFilters={hasActiveFilters}
           />
           <SearchSeoLinksV3 />
         </div>
