@@ -128,7 +128,7 @@ export function SmartMetricCard({
     </Card>
   );
 
-  if (!to) return body;
+  if (!to) return <div className={cn('h-full', className)}>{body}</div>;
   return (
     <Link to={to} className={cn('group block h-full', className)} aria-label={label}>
       {body}
