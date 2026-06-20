@@ -588,7 +588,7 @@ const Quote: React.FC = () => {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <main className="pt-16 sm:pt-[4.5rem]">
+      <main className="pt-20 sm:pt-24">
         {/* Hero */}
         <section className="bg-gradient-to-b from-muted/40 to-background border-b border-border/40">
           <div className="container-app py-10 sm:py-14 text-center max-w-3xl">
