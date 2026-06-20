@@ -25,6 +25,8 @@ export async function listAssignedOpportunities(limit = 100): Promise<Opportunit
   return listProviderLeads(limit);
 }
 
-export async function countOpportunityFiles(opportunityId: string): Promise<number> {
-  return countQuoteRequestFiles(opportunityId);
+export async function countOpportunityFiles(
+  opportunityIds: string[],
+): Promise<Map<string, number>> {
+  return countQuoteRequestFiles(opportunityIds);
 }
