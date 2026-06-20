@@ -384,11 +384,14 @@ const SearchV3 = () => {
   const handlePageChange = useCallback((p: number) => {
     setCurrentPage(p);
     const target = document.getElementById('search-main');
+    const prefersReduced = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = prefersReduced ? 'auto' : 'smooth';
     if (target) {
       const y = target.getBoundingClientRect().top + window.scrollY - 180;
-      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, y), behavior });
     } else {
-      window.scrollTo({ top: 280, behavior: 'smooth' });
+      window.scrollTo({ top: 280, behavior });
     }
   }, []);
 
