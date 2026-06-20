@@ -31,6 +31,7 @@ import { useStickyOverlapAudit } from '@/hooks/useStickyOverlapAudit';
 import { LoadingProgressV3 } from '@/components/search/v3/LoadingProgressV3';
 import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
 import { RecentAndShareV3 } from '@/components/search/v3/RecentAndShareV3';
+import { CompareTrayV3 } from '@/components/search/v3/CompareTrayV3';
 const SearchMapV3 = React.lazy(() =>
   import('@/components/search/v3/SearchMapV3').then((m) => ({ default: m.SearchMapV3 })),
 );
@@ -402,6 +403,14 @@ const SearchV3 = () => {
     () => paginated.map((b: { id: string }) => b.id),
     [paginated],
   );
+
+  const compareLookup = useMemo(() => {
+    const m = new Map<string, { name_ar: string; name_en?: string | null; logo_url?: string | null }>();
+    for (const b of (businesses ?? []) as Array<{ id: string; name_ar: string; name_en?: string | null; logo_url?: string | null }>) {
+      m.set(b.id, { name_ar: b.name_ar, name_en: b.name_en, logo_url: b.logo_url });
+    }
+    return m;
+  }, [businesses]);
   const { data: taxonomyDisplayMap } = useBusinessTaxonomyDisplayBatch(visibleIds, lang);
 
   const handlePageChange = useCallback((p: number) => {
@@ -568,6 +577,7 @@ const SearchV3 = () => {
       </main>
 
       <Footer />
+      <CompareTrayV3 lookup={compareLookup} />
     </div>
   );
 };
