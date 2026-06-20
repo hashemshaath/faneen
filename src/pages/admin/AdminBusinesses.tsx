@@ -164,6 +164,12 @@ import { BusinessTableView, type BusinessTableRow } from './businesses/BusinessT
 import { BusinessCardView, type BusinessCardRow } from './businesses/BusinessCardView';
 import { BusinessCreatePanel } from '@/components/admin/businesses/create/BusinessCreatePanel';
 import { emptyCreateBusinessForm } from '@/components/admin/businesses/create/createFormDefaults';
+import {
+  computeBusinessStats,
+  computeTierDistribution,
+  computeTranslationCompleteness,
+  filterAndSortBusinesses,
+} from './businesses/businessListDerivations';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -1277,55 +1283,37 @@ const AdminBusinesses = () => {
     scrollToTop();
   };
 
-  /* ─── Filters ─── */
-  const translationCompleteness = useCallback((b: {
-    name_ar?: unknown; name_en?: unknown;
-    short_description_ar?: unknown; short_description_en?: unknown;
-    description_ar?: unknown; description_en?: unknown;
-  }) => {
-    const ar = !!(b.name_ar && b.short_description_ar && b.description_ar);
-    const en = !!(b.name_en && b.short_description_en && b.description_en);
-    return { ar, en, full: ar && en };
-  }, []);
+  /* ─── Filters / derivations (pure helpers in businessListDerivations) ─── */
+  const translationCompleteness = useCallback(
+    (b: Parameters<typeof computeTranslationCompleteness>[0]) =>
+      computeTranslationCompleteness(b),
+    [],
+  );
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const arr = businesses.filter((b) => {
-      const matchSearch = !q ||
-        b.name_ar?.toLowerCase().includes(q) || b.name_en?.toLowerCase().includes(q) ||
-        b.username?.toLowerCase().includes(q) || b.ref_id?.toLowerCase().includes(q) ||
-        b.email?.toLowerCase().includes(q) || b.phone?.toLowerCase().includes(q);
-      const matchStatus = filterStatus === 'all' ||
-        (filterStatus === 'verified' && b.is_verified) ||
-        (filterStatus === 'unverified' && !b.is_verified) ||
-        (filterStatus === 'inactive' && !b.is_active) ||
-        (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
-      const matchTier = selectedTiers.length === 0 || selectedTiers.includes(b.membership_tier);
-      const matchOrigin = filterOrigin === 'all'
-        || (filterOrigin === 'demo' && b.is_demo === true)
-        || (filterOrigin === 'production' && !b.is_demo);
-      const tc = translationCompleteness(b);
-      const matchTrans = filterTranslation === 'all'
-        || (filterTranslation === 'missing_en' && !tc.en)
-        || (filterTranslation === 'missing_ar' && !tc.ar)
-        || (filterTranslation === 'complete' && tc.full);
-      return matchSearch && matchStatus && matchTier && matchTrans && matchOrigin;
-    });
-    const tierRank: Record<string, number> = { enterprise: 0, premium: 1, basic: 2, free: 3 };
-    arr.sort((a, b) => {
-      switch (sortBy) {
-        case 'rating': return (b.rating_avg || 0) - (a.rating_avg || 0);
-        case 'name': {
-          const an = (language === 'ar' ? a.name_ar : (a.name_en || a.name_ar)) || '';
-          const bn = (language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)) || '';
-          return an.localeCompare(bn, language === 'ar' ? 'ar' : 'en');
-        }
-        case 'tier': return (tierRank[a.membership_tier] ?? 9) - (tierRank[b.membership_tier] ?? 9);
-        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-    });
-    return arr;
-  }, [businesses, search, filterStatus, selectedTiers, filterTranslation, filterOrigin, sortBy, language, contractBusinessIds, translationCompleteness]);
+  const filtered = useMemo(
+    () =>
+      filterAndSortBusinesses(businesses, {
+        search,
+        filterStatus,
+        selectedTiers,
+        filterTranslation,
+        filterOrigin,
+        sortBy,
+        language: language === 'ar' ? 'ar' : 'en',
+        contractBusinessIds,
+      }),
+    [
+      businesses,
+      search,
+      filterStatus,
+      selectedTiers,
+      filterTranslation,
+      filterOrigin,
+      sortBy,
+      language,
+      contractBusinessIds,
+    ],
+  );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // Keep the keyboard-export ref pointed at the latest filtered list.
@@ -1342,19 +1330,15 @@ const AdminBusinesses = () => {
     });
   };
 
-  const stats = useMemo(() => ({
-    total: businesses.length,
-    verified: businesses.filter((b) => b.is_verified).length,
-    active: businesses.filter((b) => b.is_active).length,
-    contracts: contractBusinessIds.length,
-    premium: businesses.filter((b) => b.membership_tier === 'premium' || b.membership_tier === 'enterprise').length,
-  }), [businesses, contractBusinessIds]);
+  const stats = useMemo(
+    () => computeBusinessStats(businesses, contractBusinessIds),
+    [businesses, contractBusinessIds],
+  );
 
-  const tierDistribution = useMemo(() => {
-    const dist: Record<string, number> = {};
-    tiers.forEach(t => { dist[t.value] = businesses.filter((b) => b.membership_tier === t.value).length; });
-    return dist;
-  }, [businesses]);
+  const tierDistribution = useMemo(
+    () => computeTierDistribution(businesses, tiers),
+    [businesses],
+  );
 
   const filteredCities = editForm.country_id
     ? cities.filter((c) => c.country_id === editForm.country_id)
