@@ -57,7 +57,7 @@ describe('SEARCH V3 — no-legacy invariants', () => {
     }
     // Guard: SearchV3 page must only reference SearchMapV3 via React.lazy
     // so leaflet stays out of the eager bundle.
-    expect(/React\.lazy\([^)]*SearchMapV3/.test(page), 'SearchV3 must lazy-load SearchMapV3').toBe(true);
+    expect(/React\.lazy\([\s\S]*?SearchMapV3/.test(page), 'SearchV3 must lazy-load SearchMapV3').toBe(true);
     expect(/from\s+['"]leaflet['"]/.test(page), 'SearchV3 page must not import leaflet directly').toBe(false);
   });
 });
