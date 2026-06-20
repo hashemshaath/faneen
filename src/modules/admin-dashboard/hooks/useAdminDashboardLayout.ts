@@ -18,7 +18,7 @@ import {
  *  - newly-added registry widgets appear at the end of the user's
  *    custom order on the next render (no migration step needed).
  */
-export const ADMIN_DASHBOARD_LAYOUT_KEY = 'qitaat_admin_dashboard_layout_v2';
+export const ADMIN_DASHBOARD_LAYOUT_KEY = 'qitaat_admin_dashboard_layout_v3';
 
 interface StoredLayout {
   order: string[];
