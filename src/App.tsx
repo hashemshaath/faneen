@@ -471,6 +471,12 @@ const AppRoutes = () => (
           <Route path="/dashboard/badge" element={<ProtectedRoute requireProvider><DashboardBadge /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
+          {/* OPPORTUNITIES PHASE 2 — UI-only route aliases. Internal naming
+              (`quote_requests`, `provider_leads`) is preserved; old routes
+              remain registered above. No DB / edge / RPC changes. */}
+          <Route path="/dashboard/opportunities" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
+          <Route path="/dashboard/opportunities/assigned" element={<ProtectedRoute requireProvider><DashboardRequestsHub /></ProtectedRoute>} />
+          <Route path="/dashboard/opportunities/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/dashboard/provider/leads" element={<Navigate to="/dashboard/leads?tab=quote-opportunities" replace />} />
           <Route path="/dashboard/provider/leads/:id" element={<ProtectedRoute requireProvider><ProviderLeadDetails /></ProtectedRoute>} />
           <Route path="/dashboard/provider/membership" element={<ProtectedRoute requireProvider><ProviderMembership /></ProtectedRoute>} />
@@ -533,6 +539,9 @@ const AppRoutes = () => (
           <Route path="/admin/provider-leads" element={<ProtectedRoute requireAdmin><AdminProviderLeads /></ProtectedRoute>} />
           <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
           <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
+          {/* OPPORTUNITIES PHASE 2 — admin alias. */}
+          <Route path="/admin/opportunities" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
+          <Route path="/admin/opportunities/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/admin/quote-operations" element={<ProtectedRoute requireAdmin><AdminQuoteOperations /></ProtectedRoute>} />
           <Route path="/admin/provider-subscriptions" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=providers" replace /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 14 — Email hub. */}
