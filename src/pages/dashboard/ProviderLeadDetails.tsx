@@ -32,6 +32,7 @@ import {
   insertProviderLeadEvent,
 } from '@/modules/leads/services/mutations';
 import { CreateWorkOrderFromQuoteButton } from '@/components/workOrders/CreateWorkOrderFromQuoteButton';
+import { ProviderBidSection } from '@/modules/opportunities/bids';
 
 interface LeadDetailRow {
   id: string;
