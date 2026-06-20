@@ -40,7 +40,6 @@ import {
   UnifiedDashboardHero,
   formatLastUpdated,
 } from '@/components/dashboard/overview/UnifiedDashboardHero';
-import { BentoTile } from '@/components/dashboard/overview/BentoTile';
 import { SmartMetricCard, seriesFromMonthly } from '@/components/dashboard/admin/SmartMetricCard';
 import {
   DashboardActionCenter,
@@ -155,16 +154,6 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
       : [],
     [stats?.statusCounts, isRTL]
   );
-
-  const adminCards = useMemo(() => [
-    { icon: Users, label: isRTL ? 'المستخدمين' : 'Users', value: animatedUsers, color: 'bg-primary/10 text-primary', to: '/admin/users' },
-    { icon: Building2, label: isRTL ? 'المنشآت' : 'Businesses', value: stats?.businesses ?? 0, color: 'bg-success/10 text-success', to: '/admin/businesses' },
-    { icon: DollarSign, label: isRTL ? 'إجمالي الإيرادات' : 'Revenue', value: `${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`, color: 'bg-success/10 text-success', to: '/dashboard/contracts' },
-    { icon: FileText, label: isRTL ? 'العقود النشطة' : 'Active Contracts', value: stats?.activeContracts ?? 0, sub: `${isRTL ? 'من' : 'of'} ${animatedContracts}`, color: 'bg-accent/10 text-accent', to: '/dashboard/contracts' },
-    { icon: Crown, label: isRTL ? 'اشتراكات نشطة' : 'Active Subs', value: stats?.subscriptions ?? 0, color: 'bg-accent/10 text-accent', to: '/admin/memberships' },
-    { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Conversations', value: stats?.messages ?? 0, color: 'bg-primary/10 text-primary', to: '/dashboard/messages' },
-    { icon: Mail, label: isRTL ? 'رسائل جديدة' : 'New Messages', value: stats?.newContactMessages ?? 0, color: 'bg-info/10 text-info', to: '/admin/contact-messages' },
-  ], [isRTL, animatedUsers, animatedRevenue, animatedContracts, stats]);
 
   const handleRefresh = () => {
     qc.invalidateQueries({ queryKey: ['admin-overview-stats'] });
@@ -773,7 +762,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         return null;
     }
   }, [
-    isRTL, profile, user, stats, contractStatusData, adminCards, svcCounters,
+    isRTL, profile, user, stats, contractStatusData, animatedUsers, animatedRevenue, animatedContracts, svcCounters,
     isFetching, layout,
   ]);
 
