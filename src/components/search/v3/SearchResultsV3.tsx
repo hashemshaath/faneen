@@ -41,6 +41,19 @@ export const SearchResultsV3 = ({
   // for the child components that expect 'grid' | 'list' only.
   const cardView: 'grid' | 'list' = viewMode === 'list' ? 'list' : 'grid';
 
+  // Hooks MUST run before any early returns below to keep call order stable.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasMore || !onLoadMore || !sentinelRef.current) return;
+    const el = sentinelRef.current;
+    const io = new IntersectionObserver(
+      (entries) => { if (entries.some((e) => e.isIntersecting)) onLoadMore(); },
+      { rootMargin: '400px 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, onLoadMore, businesses.length]);
+
   if (isError) return <SearchErrorStateV3 onRetry={onRetry} />;
   if (isLoading) return <SearchSkeletonV3 view={cardView} count={8} />;
   if (totalCount === 0) {
@@ -57,20 +70,6 @@ export const SearchResultsV3 = ({
   const containerCls = cardView === 'grid'
     ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'
     : 'flex flex-col gap-3';
-
-  // Infinite-scroll sentinel — auto-advances the page when it enters the
-  // viewport. Keyboard/no-JS users still get the explicit button.
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!hasMore || !onLoadMore || !sentinelRef.current) return;
-    const el = sentinelRef.current;
-    const io = new IntersectionObserver(
-      (entries) => { if (entries.some((e) => e.isIntersecting)) onLoadMore(); },
-      { rootMargin: '400px 0px' },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [hasMore, onLoadMore, businesses.length]);
 
   return (
     <div className="flex flex-col gap-6">
