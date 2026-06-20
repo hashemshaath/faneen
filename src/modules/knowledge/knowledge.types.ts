@@ -34,6 +34,8 @@ export interface KnowledgeBilingual {
 export interface KnowledgeItem {
   id: string;
   type: KnowledgeType;
+  /** Canonical category slug. See `knowledgeCategories.ts`. */
+  categoryId?: string;
   title: KnowledgeBilingual;
   summary?: KnowledgeBilingual;
   body: KnowledgeBilingual;
@@ -53,6 +55,7 @@ export type KnowledgeLocale = 'ar' | 'en';
 export interface KnowledgeQueryFilter {
   audience?: KnowledgeAudience;
   type?: KnowledgeType | KnowledgeType[];
+  categoryId?: string;
   tags?: string[];
   status?: KnowledgeStatus | KnowledgeStatus[];
   usableByAssistant?: boolean;

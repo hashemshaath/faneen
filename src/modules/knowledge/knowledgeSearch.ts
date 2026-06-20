@@ -35,6 +35,7 @@ export function filterKnowledge(
     if (!matchesType(item, filter.type)) return false;
     if (!matchesStatus(item, filter.status)) return false;
     if (!matchesTags(item, filter.tags)) return false;
+    if (filter.categoryId && item.categoryId !== filter.categoryId) return false;
     if (filter.usableByAssistant !== undefined && item.usableByAssistant !== filter.usableByAssistant) {
       return false;
     }
