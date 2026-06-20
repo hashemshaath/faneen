@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useMemo, useRef, useTransition } from 'react';
+import { useAdminBusinessesUrlState } from './businesses/useAdminBusinessesUrlState';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
@@ -215,90 +215,34 @@ const AdminBusinesses = () => {
   const { isRTL, language } = useLanguage();
   const { isAdmin, user } = useAuth();
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const search = searchParams.get('q') || '';
-  const filterStatus = searchParams.get('status') || 'all';
-  const filterTier = searchParams.get('tier') || 'all';
-  const filterTranslation = searchParams.get('translation') || 'all'; // all|missing_en|missing_ar|complete
-  const filterOrigin = searchParams.get('origin') || 'all'; // all|demo|production
-  const sortBy = (searchParams.get('sort') || 'recent') as 'recent' | 'rating' | 'name' | 'tier';
-  const page = parseInt(searchParams.get('page') || '1', 10) || 1;
-  const viewMode = (searchParams.get('view') || 'cards') as 'cards' | 'table';
-  const PAGE_SIZE = 20;
-  const updateParam = useCallback((updates: Record<string, string | null>) => {
-    const sp = new URLSearchParams(searchParams);
-    Object.entries(updates).forEach(([k, v]) => {
-      if (v === null || v === '' || v === 'all') sp.delete(k);
-      else sp.set(k, v);
-    });
-    setSearchParams(sp, { replace: false });
-  }, [searchParams, setSearchParams]);
-  const [searchInput, setSearchInput] = useState(search);
-  useEffect(() => { setSearchInput(search); }, [search]);
-  // Latest refs so the 300ms debounce reschedules ONLY on input change,
-  // matching prior behavior without an exhaustive-deps suppression.
-  const latestSearchRef = useRef(search);
-  const updateParamRef = useRef(updateParam);
-  useEffect(() => { latestSearchRef.current = search; }, [search]);
-  useEffect(() => { updateParamRef.current = updateParam; }, [updateParam]);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (searchInput !== latestSearchRef.current) updateParamRef.current({ q: searchInput || null, page: null });
-    }, 300);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-  const setFilterStatus = (v: string) => updateParam({ status: v === 'all' ? null : v, page: null });
-  const setFilterTier = (v: string) => updateParam({ tier: v === 'all' ? null : v, page: null });
-  // Multi-tier: URL `tier` may be comma-separated (e.g. tier=basic,premium).
-  const selectedTiers = React.useMemo(
-    () => (filterTier === 'all' ? [] : filterTier.split(',').filter(Boolean)),
-    [filterTier],
-  );
-  const toggleTier = (value: string) => {
-    const next = new Set(selectedTiers);
-    if (next.has(value)) next.delete(value); else next.add(value);
-    const arr = Array.from(next);
-    updateParam({ tier: arr.length === 0 ? null : arr.join(','), page: null });
-  };
-  const clearTiers = () => updateParam({ tier: null, page: null });
-  const setFilterOrigin = (v: string) => updateParam({ origin: v === 'all' ? null : v, page: null });
-  const setSortBy = (v: string) => updateParam({ sort: v === 'recent' ? null : v });
-  const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
-  const setSearch = (v: string) => { setSearchInput(v); };
-  const setPage = (n: number) => updateParam({ page: n <= 1 ? null : String(n) });
-  /**
-   * Hard-Fix preset mapper — single source of truth for the new
-   * command-bar / quick-action chips. Maps a preset key to the
-   * legacy URL params (status / origin), so the chips compose with
-   * the existing data engine without duplicating its filter UI.
-   */
-  const applyBusinessesPreset = useCallback((key: BusinessesCommandPreset) => {
-    const patch: Record<string, string | null> = { page: null };
-    if (key === 'all') {
-      patch.status = null; patch.origin = null;
-    } else if (key === 'pilotReady') {
-      patch.status = 'active'; patch.origin = 'production';
-    } else if (key === 'pendingReview') {
-      patch.status = 'pending';
-    } else if (key === 'missingContact') {
-      patch.status = 'missing_contact';
-    } else if (key === 'missingPublicLink') {
-      patch.status = 'missing_username';
-    } else if (key === 'inactive') {
-      patch.status = 'inactive';
-    } else if (key === 'demo') {
-      patch.origin = 'demo';
-    }
-    updateParam(patch);
-  }, [updateParam]);
-  const activeBusinessesPreset: BusinessesCommandPreset =
-    filterOrigin === 'demo' ? 'demo'
-    : filterStatus === 'pending' ? 'pendingReview'
-    : filterStatus === 'missing_contact' ? 'missingContact'
-    : filterStatus === 'missing_username' ? 'missingPublicLink'
-    : filterStatus === 'inactive' ? 'inactive'
-    : (filterStatus === 'active' && filterOrigin === 'production') ? 'pilotReady'
-    : 'all';
+  const {
+    searchParams,
+    setSearchParams,
+    search,
+    searchInput,
+    setSearchInput,
+    filterStatus,
+    filterTier,
+    selectedTiers,
+    filterTranslation,
+    filterOrigin,
+    sortBy,
+    page,
+    viewMode,
+    updateParam,
+    setSearch,
+    setFilterStatus,
+    setFilterTier,
+    toggleTier,
+    clearTiers,
+    setFilterOrigin,
+    setSortBy,
+    setViewMode,
+    setPage,
+    applyBusinessesPreset,
+    activeBusinessesPreset,
+    PAGE_SIZE,
+  } = useAdminBusinessesUrlState();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
