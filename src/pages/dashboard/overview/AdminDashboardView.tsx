@@ -45,7 +45,6 @@ import {
   DashboardActionCenter,
   type DashboardAction,
 } from '@/components/dashboard/overview/DashboardActionCenter';
-import { AdminSoftLaunchKpiStrip } from '@/components/dashboard/overview/AdminSoftLaunchKpiStrip';
 import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
   AdminQuickActionsWidget,
