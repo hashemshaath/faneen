@@ -33,6 +33,7 @@ import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { ClientBidsSection } from '@/modules/opportunities/bids';
 import { OpportunityContractSection } from '@/modules/opportunities/contracts';
+import { OpportunityTimeline } from '@/modules/opportunities/timeline';
 
 interface QuoteRow {
   id: string;
