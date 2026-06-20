@@ -11856,6 +11856,98 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunity_bids: {
+        Row: {
+          assignment_id: string | null
+          attachments_count: number
+          created_at: string
+          currency: string
+          duration_unit: string | null
+          duration_value: number | null
+          expires_at: string | null
+          id: string
+          opportunity_id: string
+          price_amount: number | null
+          provider_business_id: string | null
+          scope_summary: string | null
+          status: string
+          submitted_at: string | null
+          submitted_by: string
+          terms: string | null
+          updated_at: string
+          warranty: string | null
+        }
+        Insert: {
+          assignment_id?: string | null
+          attachments_count?: number
+          created_at?: string
+          currency?: string
+          duration_unit?: string | null
+          duration_value?: number | null
+          expires_at?: string | null
+          id?: string
+          opportunity_id: string
+          price_amount?: number | null
+          provider_business_id?: string | null
+          scope_summary?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by: string
+          terms?: string | null
+          updated_at?: string
+          warranty?: string | null
+        }
+        Update: {
+          assignment_id?: string | null
+          attachments_count?: number
+          created_at?: string
+          currency?: string
+          duration_unit?: string | null
+          duration_value?: number | null
+          expires_at?: string | null
+          id?: string
+          opportunity_id?: string
+          price_amount?: number | null
+          provider_business_id?: string | null
+          scope_summary?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string
+          terms?: string | null
+          updated_at?: string
+          warranty?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_bids_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "quote_request_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_bids_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_bids_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_bids_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_showcase_items: {
         Row: {
           business_id: string | null

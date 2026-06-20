@@ -31,6 +31,7 @@ import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteReq
 import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+import { ClientBidsSection } from '@/modules/opportunities/bids';
 
 interface QuoteRow {
   id: string;
@@ -483,6 +484,9 @@ const QuoteRequestDetails: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* OPPORTUNITIES PHASE 5 — bids on this opportunity (client view) */}
+        {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} />}
       </div>
     </DashboardLayout>
   );

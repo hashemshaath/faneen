@@ -32,6 +32,7 @@ import {
   insertProviderLeadEvent,
 } from '@/modules/leads/services/mutations';
 import { CreateWorkOrderFromQuoteButton } from '@/components/workOrders/CreateWorkOrderFromQuoteButton';
+import { ProviderBidSection } from '@/modules/opportunities/bids';
 
 interface LeadDetailRow {
   id: string;
@@ -321,6 +322,15 @@ const ProviderLeadDetails: React.FC = () => {
             businessId={lead.provider_id}
             defaultTitle={q.project_description}
             quoteRefId={q.ref_id}
+          />
+        )}
+
+        {/* OPPORTUNITIES PHASE 5 — provider bid surface */}
+        {q.id && (
+          <ProviderBidSection
+            opportunityId={q.id}
+            assignmentId={lead.id}
+            providerBusinessId={lead.provider_id}
           />
         )}
       </div>

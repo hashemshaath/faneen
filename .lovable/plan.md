@@ -1,50 +1,60 @@
-## خطة تحسين صفحة البحث `/search`
+## Phase 5 — Bids / Offers (Opportunities System)
 
-صفحة البحث الحالية مغطاة بحراس اختبارات قوية (`searchV3.noLegacy`, `cwv-optimizations`, `publicFrontendPerformance`, `search-v3-perf` e2e, `search-header-no-overlap`, إلخ). أي تغيير واسع يكسر الحراس. الخطة أدناه مركّزة، منخفضة المخاطر، ومحترمة لكل الحراس.
+### Decision: create new `opportunity_bids` table (NOT reuse `rfq_quotes`)
 
-### 1. الأداء والسرعة
-- إضافة `keepPreviousData` على `useBusinesses` / `useCategories` / `useCities` لمنع الوميض عند تغيير الفلاتر.
-- استبدال `window.scrollTo({ behavior: 'smooth' })` بـ `prefers-reduced-motion`-aware scroll (يحترم سياسة CWV).
-- إضافة `content-visibility: auto` و `contain-intrinsic-size` لبطاقات النتائج أسفل أول 6 → تقليل CLS/LCP على الجوال.
-- `requestIdleCallback` لتأخير حساب JSON-LD `ItemList` الكبير حتى بعد التفاعل الأول.
+Audit results:
+- `rfq_quotes` is **empty** (0 rows). `rfq_requests` is also empty.
+- `rfq_quotes.rfq_id` FK → `rfq_requests(id)`, a parallel/abandoned system. Repointing it to `quote_requests` would either (a) break the FK semantically or (b) require a polymorphic column — both fragile.
+- Naming collision: "rfq_quotes" reads as the old «RFQ» surface, exactly the legacy term Phase 2 renamed away from.
+- A clean `opportunity_bids` table maps 1:1 to the new domain, has zero migration cost (no rows to move), and keeps `rfq_*` untouched for legacy compatibility.
 
-### 2. تجربة الجوال
-- زيادة hit area لأزرار الفلتر/الفرز إلى 44px (سياسة a11y).
-- جعل `ActiveFiltersBarV3` chips قابلة للسحب أفقيًا بدون scrollbar (`.no-scrollbar`).
-- إظهار عدد النتائج Sticky في أعلى الصفحة على الجوال عند التمرير.
-- تكبير `MobileFiltersSheet` CTA بـ "تطبيق (N)" مع عدّاد فلاتر مباشر.
+### Migration (`opportunity_bids`)
 
-### 3. الفلاتر و UX
-- إبراز الفلاتر النشطة بـ `aria-pressed` و حلقة بصرية واضحة (token-based، لا hex).
-- إضافة زر "إعادة تعيين هذا الفلتر" داخل كل قسم في `SearchFiltersV3`.
-- "Did you mean" يظهر inline بدلاً من تحت النتائج عند 0 نتيجة.
-- حفظ آخر فرز مستخدم في `localStorage` (مفتاح `qitaat_search_sort`) لاسترجاعه عند الزيارة التالية.
+Columns: `id`, `opportunity_id` → `quote_requests(id) ON DELETE CASCADE`, `assignment_id` → `quote_request_leads(id) ON DELETE SET NULL` (nullable), `provider_business_id` → `businesses(id)`, `submitted_by` → `auth.users(id)`, `price_amount numeric`, `currency text default 'SAR'`, `duration_value int`, `duration_unit text` (day/week/month), `scope_summary text`, `terms text`, `warranty text`, `status text` (constrained), `submitted_at timestamptz`, `expires_at timestamptz`, `attachments_count int default 0`, `created_at`, `updated_at`.
 
-### 4. التصميم البصري
-- `SearchResultCardV3`: تحسين ratio الصورة (16:11)، رفع تباين الشارة "موثّق"، استخدام `<VerifiedBadge>` الموحّد.
-- skeleton أكثر دقة (يطابق ارتفاع البطاقة الفعلي → 0 CLS).
-- تحسين `SearchEmptyStateV3` بأيقونة كبيرة + CTA لمسح الفلاتر.
+Status CHECK: `draft|submitted|under_review|shortlisted|revised|withdrawn|rejected|awarded`.
 
-### ضمانات
-- لا تغيير في DB / RLS / RPC / migrations / edge.
-- لا تغيير في search backend أو matching logic (`filterAndSort` يبقى كما هو).
-- لا hex hardcoded، لا `any`، لا suppressions جديدة.
-- كل حراس الصفحة الحالية تبقى خضراء + اختبار جديد لكل تحسين.
+Indexes: `(opportunity_id)`, `(provider_business_id)`, `(submitted_by)`, `(status)`.
 
-### الملفات المتوقّع تعديلها
-- `src/pages/SearchV3.tsx` (scroll + idle JSON-LD + persisted sort)
-- `src/components/search/v3/SearchResultCardV3.tsx` (visual)
-- `src/components/search/v3/SearchResultsV3.tsx` (content-visibility)
-- `src/components/search/v3/ActiveFiltersBarV3.tsx` (mobile UX)
-- `src/components/search/v3/MobileFiltersSheet.tsx` (CTA counter)
-- `src/components/search/v3/SearchFiltersV3.tsx` (per-section reset)
-- `src/components/search/v3/SearchSkeletonV3.tsx` (CLS)
-- `src/services/search/useBusinesses.ts` (keepPreviousData)
-- اختبارات جديدة في `src/__tests__/searchV3PageImprovements.test.tsx`
+GRANTS: `SELECT, INSERT, UPDATE, DELETE` to `authenticated`; `ALL` to `service_role`. No `anon`.
 
-### القرار المطلوب منك
-هل تريد:
-- (أ) تنفيذ الـ4 محاور كلها (تغيير متوسط الحجم، عدة ملفات).
-- (ب) تنفيذ المحاور 1+3 فقط (الأداء + UX، أقل مخاطرة بصرية).
-- (ج) تنفيذ المحاور 2+4 فقط (جوال + تصميم بصري).
-- (د) محور واحد محدد — حدّد أيًّا.
+RLS policies:
+- **SELECT (provider)**: `submitted_by = auth.uid()` OR provider is staff on `provider_business_id`.
+- **SELECT (client)**: `auth.uid() = (SELECT user_id FROM quote_requests WHERE id = opportunity_id)`.
+- **SELECT (admin)**: `has_role(auth.uid(),'admin')`.
+- **INSERT**: `submitted_by = auth.uid()` AND a matching `quote_request_leads` row exists for the opportunity+provider (assignment-gated).
+- **UPDATE**: `submitted_by = auth.uid()` AND `status IN ('draft','submitted','revised')` (no edits after shortlist/award); admin always.
+- **DELETE**: admin only.
+
+`updated_at` trigger via existing `public.update_updated_at_column()`.
+
+### Domain layer (`src/modules/opportunities/bids/`)
+- `types.ts` — `OpportunityBid`, `OpportunityBidStatus` (literal union matching CHECK).
+- `services.ts` — `listOpportunityBidsForClient(opportunityId)`, `listMySubmittedBidsForProvider(userId)`, `listOpportunityBidsForOpportunity(opportunityId)` (admin/server-side RLS-respecting), `submitOpportunityBid(input)`, `updateDraftOpportunityBid(id, patch)`, `withdrawOpportunityBid(id)`. All real Supabase calls — no mocks.
+
+### UI (minimal, additive — no route changes)
+- **Provider** (`DashboardRfqDetail.tsx` / lead details surface): new `<ProviderBidSection opportunityId assignmentId />` — shows current bid or `تقديم عرض` button → inline form (price, duration, scope, terms, warranty) → submit sets status `submitted`. No popup.
+- **Client** (existing opportunity detail page): new `<ClientBidsSection opportunityId />` — list of bids (price, provider name, status, submitted_at) or empty state «لا توجد عروض بعد». No award action.
+- **Admin** (admin opportunity detail): same `<ClientBidsSection>` reused (RLS filters), no award action.
+
+Bilingual labels reused from `opportunityLabels.ts` (`submitBid`, `submittedBids`).
+
+### Notifications
+Phase 5A scope: insert a `notifications` row to the opportunity owner on bid `submitted` via `submitOpportunityBid` service. Idempotency: unique partial index on `(notifications.user_id, type, related_id)` already covers most cases; pass `related_id = bid.id` with `type='opportunity_bid_submitted'`. Full notification template UI deferred to Phase 5B (documented).
+
+### Tests
+- `opportunitiesPhase5BidModelMigration.test.ts` — static SQL guards (FKs, status CHECK, indexes, RLS enabled, no `provider_leads` reference, `rfq_quotes` untouched).
+- `opportunitiesPhase5BidServices.test.ts` — type/import guards (no `any`, services exist, use central status map).
+- `opportunitiesPhase5BidUi.test.tsx` — provider section renders «تقديم عرض», client section renders bids list / empty state, no award button rendered, canonical routes still mounted.
+
+### Out of scope (explicitly NOT touched)
+DB enums on `quote_requests`, matching, credits/reveal, awarding, contract conversion, route deletions, `rfq_quotes` table.
+
+### Execution order
+1. Create migration (this requires user approval).
+2. After approval + types regen → add domain `types.ts` + `services.ts`.
+3. Add UI sections + wire into existing detail pages.
+4. Add 3 test files.
+5. Run `tsc` + targeted vitest.
+
+Proceeding with step 1 (migration) on approval.
