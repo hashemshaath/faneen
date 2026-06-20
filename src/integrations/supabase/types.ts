@@ -15237,20 +15237,15 @@ export type Database = {
           has_budget: boolean
           id: string
           location_id: string | null
-          location_precision: string | null
           metadata: Json
-          no_location_selected: boolean
           preferred_brand_ids: string[] | null
           preferred_contact_method: string
           project_description: string
-          project_id: string | null
           quantity: string | null
           ref_id: string | null
-          region: string | null
           requester_entity_id: string | null
           sector: string
           service_location_type: string
-          site_id: string | null
           source: string
           status: string
           target_entity_id: string | null
@@ -15274,20 +15269,15 @@ export type Database = {
           has_budget?: boolean
           id?: string
           location_id?: string | null
-          location_precision?: string | null
           metadata?: Json
-          no_location_selected?: boolean
           preferred_brand_ids?: string[] | null
           preferred_contact_method: string
           project_description: string
-          project_id?: string | null
           quantity?: string | null
           ref_id?: string | null
-          region?: string | null
           requester_entity_id?: string | null
           sector: string
           service_location_type: string
-          site_id?: string | null
           source?: string
           status?: string
           target_entity_id?: string | null
@@ -15311,42 +15301,22 @@ export type Database = {
           has_budget?: boolean
           id?: string
           location_id?: string | null
-          location_precision?: string | null
           metadata?: Json
-          no_location_selected?: boolean
           preferred_brand_ids?: string[] | null
           preferred_contact_method?: string
           project_description?: string
-          project_id?: string | null
           quantity?: string | null
           ref_id?: string | null
-          region?: string | null
           requester_entity_id?: string | null
           sector?: string
           service_location_type?: string
-          site_id?: string | null
           source?: string
           status?: string
           target_entity_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "quote_requests_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quote_requests_site_id_fkey"
-            columns: ["site_id"]
-            isOneToOne: false
-            referencedRelation: "client_sites"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       rental_catalog_addition_requests: {
         Row: {

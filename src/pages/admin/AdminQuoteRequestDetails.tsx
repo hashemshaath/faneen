@@ -63,11 +63,6 @@ interface AdminQuoteRow {
   sector: string;
   city: string;
   district: string | null;
-  region: string | null;
-  site_id: string | null;
-  project_id: string | null;
-  no_location_selected: boolean | null;
-  location_precision: string | null;
   service_location_type: string;
   project_description: string;
   approx_dimensions: string | null;
@@ -462,32 +457,6 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 <Info label="طريقة التواصل" value={CONTACT_METHOD_LABEL_AR[quote.preferred_contact_method] ?? quote.preferred_contact_method} />
                 <Info icon={<Tag className="h-4 w-4" />} label="القطاع" value={SECTOR_LABEL_AR[quote.sector] ?? quote.sector} />
                 <Info icon={<MapPin className="h-4 w-4" />} label="المدينة" value={quote.city + (quote.district ? ` · ${quote.district}` : '')} />
-                {quote.region && (
-                  <Info icon={<MapPin className="h-4 w-4" />} label="المنطقة" value={quote.region} />
-                )}
-                {quote.site_id && (
-                  <Info label="موقع محفوظ" value={<span className="tech-content text-xs">{quote.site_id}</span>} />
-                )}
-                {quote.project_id && (
-                  <Info label="مشروع مرتبط" value={<span className="tech-content text-xs">{quote.project_id}</span>} />
-                )}
-                {quote.location_precision && (
-                  <Info
-                    label="دقة الموقع"
-                    value={
-                      quote.location_precision === 'district' ? 'حي'
-                      : quote.location_precision === 'city' ? 'مدينة'
-                      : quote.location_precision === 'region' ? 'منطقة'
-                      : 'غير محدد'
-                    }
-                  />
-                )}
-                {quote.no_location_selected && (
-                  <Info
-                    label="حالة الموقع"
-                    value={<span className="text-amber-700 dark:text-amber-400">يحتاج مراجعة — لم يحدد العميل عنوانًا</span>}
-                  />
-                )}
                 <Info label="مكان الخدمة" value={SERVICE_LOCATION_LABEL_AR[quote.service_location_type] ?? quote.service_location_type} />
                 <Info icon={<Calendar className="h-4 w-4" />} label="موعد التنفيذ" value={TIMELINE_LABEL_AR[quote.execution_timeline] ?? quote.execution_timeline} />
                 {quote.approx_dimensions && <Info label="المقاسات" value={quote.approx_dimensions} />}

@@ -293,15 +293,7 @@ Deno.serve(async (req) => {
     if (p.description_ar || p.logo_url) { score += 5; }
 
     // Must have at least sector AND (city or service area)
-    if (!areaCityMatch && !bizCityMatch) {
-      // Region-only fallback: keep candidate when quote has region but no city,
-      // or when quote is marked no_location_selected (admin-review tier).
-      const quoteRegion = (quote as { region?: string | null }).region ?? null;
-      const noLoc = (quote as { no_location_selected?: boolean }).no_location_selected === true;
-      if (!quoteRegion && !noLoc) continue;
-      if (quoteRegion) { score += 5; reasons.push('نفس المنطقة'); }
-      else { reasons.push('بدون عنوان محدد — مراجعة'); }
-    }
+    if (!areaCityMatch && !bizCityMatch) continue;
 
     scored.push({ id: p.id, user_id: p.user_id, score, reasons });
   }
@@ -398,12 +390,7 @@ Deno.serve(async (req) => {
       reference_type: 'quote_request_lead',
       action_url: `/dashboard/provider/leads/${l.id}`,
     }));
-  // Suppress provider notifications when quote has no clear location;
-  // those leads still exist for admin review but aren't broadcast.
-  const suppressProviderNotif =
-    (quote as { no_location_selected?: boolean }).no_location_selected === true ||
-    (quote as { location_precision?: string | null }).location_precision === 'unspecified';
-  if (notifs.length > 0 && !suppressProviderNotif) {
+  if (notifs.length > 0) {
     await admin.from('notifications').insert(notifs);
   }
 

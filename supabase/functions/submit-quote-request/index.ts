@@ -49,10 +49,6 @@ interface Body {
   sector?: string;
   city?: string;
   district?: string | null;
-  region?: string | null;
-  site_id?: string | null;
-  project_id?: string | null;
-  no_location_selected?: boolean;
   service_location_type?: string;
   project_description?: string;
   approx_dimensions?: string | null;
@@ -95,35 +91,12 @@ Deno.serve(async (req) => {
   if (name.length < 2 || name.length > 120) return err('اسم العميل غير صالح');
   if (!SAUDI_PHONE.test(phone)) return err('رقم الجوال غير صحيح');
   if (!ALLOWED_SECTORS.has(sector)) return err('القطاع غير صالح');
+  if (city.length < 2 || city.length > 80) return err('المدينة غير صالحة');
   if (desc.length < 10 || desc.length > 4000) return err('وصف المشروع غير صالح');
   if (!ALLOWED_CUSTOMER_TYPE.has(customerType)) return err('نوع العميل غير صالح');
   if (!ALLOWED_CONTACT.has(contactMethod)) return err('طريقة التواصل غير صالحة');
   if (!ALLOWED_SERVICE_LOC.has(serviceLoc)) return err('مكان الخدمة غير صالح');
   if (!ALLOWED_TIMELINE.has(timeline)) return err('الموعد غير صالح');
-
-  // ---- Location-first governance --------------------------------------
-  const district = body.district?.toString().trim() || null;
-  const region = body.region?.toString().trim() || null;
-  const siteId = body.site_id && UUID_RE.test(String(body.site_id)) ? String(body.site_id) : null;
-  const projectId = body.project_id && UUID_RE.test(String(body.project_id)) ? String(body.project_id) : null;
-  const noLocation = body.no_location_selected === true;
-
-  // Validation: one of (site_id) OR (region+city+district) OR (no_location_selected with city or region)
-  const hasSavedSite = !!siteId;
-  const hasFullAddress = !!region && city.length >= 2 && !!district;
-  const hasNoLocChoice = noLocation && (!!region || city.length >= 2);
-  if (!hasSavedSite && !hasFullAddress && !hasNoLocChoice) {
-    return err('يرجى تحديد موقع تنفيذ العمل أو اختيار "بدون عنوان محدد"');
-  }
-  if (!noLocation && city.length < 2) return err('المدينة غير صالحة');
-
-  // Compute precision tier
-  let locationPrecision: 'district' | 'city' | 'region' | 'unspecified';
-  if (noLocation) locationPrecision = 'unspecified';
-  else if (district) locationPrecision = 'district';
-  else if (city) locationPrecision = 'city';
-  else locationPrecision = 'region';
-  // ---------------------------------------------------------------------
 
   const email = body.customer_email?.toString().trim() || null;
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err('البريد الإلكتروني غير صالح');
@@ -164,63 +137,6 @@ Deno.serve(async (req) => {
 
   const admin = createClient(url, serviceKey);
 
-  // Resolve location from saved site / project when provided (server is source of truth)
-  let resolvedRegion = region;
-  let resolvedCity = city || null;
-  let resolvedDistrict = district;
-  let resolvedSiteId = siteId;
-  if (siteId) {
-    const { data: siteRow } = await admin
-      .from('client_sites')
-      .select('id, region, city_id, district')
-      .eq('id', siteId)
-      .maybeSingle();
-    if (siteRow) {
-      resolvedRegion = (siteRow as { region?: string | null }).region ?? resolvedRegion;
-      const sCityId = (siteRow as { city_id?: string | null }).city_id ?? null;
-      if (sCityId) {
-        const { data: cityRow } = await admin
-          .from('cities').select('name_ar, name_en').eq('id', sCityId).maybeSingle();
-        const cn = (cityRow as { name_ar?: string | null; name_en?: string | null } | null);
-        resolvedCity = cn?.name_ar ?? cn?.name_en ?? resolvedCity;
-      }
-      resolvedDistrict = (siteRow as { district?: string | null }).district ?? resolvedDistrict;
-    }
-  } else if (projectId) {
-    const { data: projRow } = await admin
-      .from('projects')
-      .select('id, site_id')
-      .eq('id', projectId)
-      .maybeSingle();
-    const projSiteId = (projRow as { site_id?: string | null } | null)?.site_id ?? null;
-    if (projSiteId) {
-      const { data: siteRow } = await admin
-        .from('client_sites')
-        .select('id, region, city_id, district')
-        .eq('id', projSiteId)
-        .maybeSingle();
-      if (siteRow) {
-        resolvedSiteId = projSiteId;
-        resolvedRegion = (siteRow as { region?: string | null }).region ?? resolvedRegion;
-        const sCityId = (siteRow as { city_id?: string | null }).city_id ?? null;
-        if (sCityId) {
-          const { data: cityRow } = await admin
-            .from('cities').select('name_ar, name_en').eq('id', sCityId).maybeSingle();
-          const cn = (cityRow as { name_ar?: string | null; name_en?: string | null } | null);
-          resolvedCity = cn?.name_ar ?? cn?.name_en ?? resolvedCity;
-        }
-        resolvedDistrict = (siteRow as { district?: string | null }).district ?? resolvedDistrict;
-      }
-    }
-  }
-  // Recompute precision after resolution
-  let resolvedPrecision: 'district' | 'city' | 'region' | 'unspecified' = locationPrecision;
-  if (!noLocation) {
-    if (resolvedDistrict) resolvedPrecision = 'district';
-    else if (resolvedCity) resolvedPrecision = 'city';
-    else if (resolvedRegion) resolvedPrecision = 'region';
-  }
-
   const insertPayload = {
     user_id: userId,
     customer_name: name,
@@ -229,13 +145,8 @@ Deno.serve(async (req) => {
     customer_type: customerType,
     preferred_contact_method: contactMethod,
     sector,
-    city: resolvedCity,
-    district: resolvedDistrict,
-    region: resolvedRegion,
-    site_id: resolvedSiteId,
-    project_id: projectId,
-    no_location_selected: noLocation,
-    location_precision: resolvedPrecision,
+    city,
+    district: body.district?.toString().trim() || null,
     service_location_type: serviceLoc,
     project_description: desc,
     approx_dimensions: body.approx_dimensions?.toString().trim() || null,

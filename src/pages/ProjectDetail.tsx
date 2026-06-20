@@ -341,7 +341,6 @@ const ProjectDetail = () => {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 py-5 sm:py-8 max-w-6xl">
-        <main>
         {/* Image Gallery */}
         <ProjectImageGallery images={allImages} title={title} />
 
@@ -490,7 +489,6 @@ const ProjectDetail = () => {
             </ul>
           </div>
         </nav>
-        </main>
       </div>
 
       <Footer />

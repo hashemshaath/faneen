@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
-import { useImagePerfTracking } from "@/hooks/useImagePerfTracking";
 import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilder";
 import {
   CalendarClock,
@@ -247,7 +246,6 @@ const BusinessProfile = () => {
       })
     : undefined;
 
-  useImagePerfTracking('business_profile');
   usePageMeta({
     title: seoTitle,
     description: seoDesc,

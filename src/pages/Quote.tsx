@@ -16,8 +16,6 @@ import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteReq
 import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
 import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
 import {
@@ -29,7 +27,6 @@ import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integ
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
   ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle, Save,
-  Building2, FolderOpen, PlusCircle, HelpCircle,
 } from 'lucide-react';
 
 /**
@@ -45,20 +42,13 @@ type Timeline = 'week' | 'two-weeks' | 'month' | 'flexible' | 'ask-provider';
 type BudgetMode = 'yes' | 'no' | 'after-quotes';
 type ClientType = 'individual' | 'contractor' | 'engineering' | 'company' | 'gov' | 'other';
 type ContactPref = 'whatsapp' | 'call' | 'email';
-type LocationMode = 'saved' | 'project' | 'new' | 'none' | '';
 
 interface QuoteForm {
   sector: Sector;
   /** Optional canonical sub-specialty slug (child of `sector`). */
   specialty: string;
-  /** RFQ Location-First — site/project/region selection. */
-  locationMode: LocationMode;
-  siteId: string;
-  projectId: string;
-  region: string;
   city: string;
   district: string;
-  noLocationSelected: boolean;
   serviceLocation: ServiceLocation | '';
   description: string;
   measurements: string;
@@ -81,9 +71,7 @@ interface QuoteForm {
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
 
 const emptyForm: QuoteForm = {
-  sector: '', specialty: '',
-  locationMode: '', siteId: '', projectId: '', region: '',
-  city: '', district: '', noLocationSelected: false, serviceLocation: '',
+  sector: '', specialty: '', city: '', district: '', serviceLocation: '',
   description: '', measurements: '', quantity: '', files: [],
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
@@ -245,97 +233,11 @@ const TOTAL_STEPS = 5;
 
 const STEP_LABELS = [
   { ar: 'القطاع',     en: 'Sector' },
-  { ar: 'موقع تنفيذ العمل', en: 'Work location' },
+  { ar: 'الموقع',     en: 'Location' },
   { ar: 'التفاصيل',   en: 'Details' },
   { ar: 'الموعد',     en: 'Timeline' },
   { ar: 'التواصل',    en: 'Contact' },
 ];
-
-/* ---------------- Location-first hooks ---------------- */
-
-interface SavedSiteOption {
-  id: string;
-  label: string;
-  region: string | null;
-  city: string | null;
-  district: string | null;
-  short_address: string | null;
-}
-
-interface UserProjectOption {
-  id: string;
-  title: string;
-  site_id: string | null;
-}
-
-function useUserSavedSites(userId: string | undefined) {
-  return useQuery({
-    queryKey: ['quote', 'user-saved-sites', userId ?? null],
-    enabled: !!userId,
-    staleTime: 60_000,
-    queryFn: async (): Promise<SavedSiteOption[]> => {
-      if (!userId) return [];
-      const { data, error } = await supabase
-        .from('client_sites')
-        .select('id,label,region,city_name,district,short_address,owner_user_id,client_user_id,created_by,archived_at')
-        .or(`owner_user_id.eq.${userId},client_user_id.eq.${userId},created_by.eq.${userId}`)
-        .is('archived_at', null)
-        .limit(20);
-      if (error) return [];
-      return (data ?? []).map((r) => ({
-        id: r.id,
-        label: r.label || r.short_address || '—',
-        region: r.region,
-        city: r.city_name,
-        district: r.district,
-        short_address: r.short_address,
-      }));
-    },
-  });
-}
-
-function useUserProjects(userId: string | undefined) {
-  return useQuery({
-    queryKey: ['quote', 'user-projects', userId ?? null],
-    enabled: !!userId,
-    staleTime: 60_000,
-    queryFn: async (): Promise<UserProjectOption[]> => {
-      if (!userId) return [];
-      const { data: bizRows, error: bizErr } = await supabase
-        .from('businesses')
-        .select('id')
-        .eq('user_id', userId);
-      if (bizErr) return [];
-      const bizIds = (bizRows ?? []).map((b: { id: string }) => b.id);
-      if (!bizIds.length) return [];
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id,title_ar,title_en,site_id')
-        .in('business_id', bizIds)
-        .limit(20);
-      if (error) return [];
-      return (data ?? []).map((p) => ({
-        id: p.id,
-        title: p.title_ar || p.title_en || '—',
-        site_id: p.site_id,
-      }));
-    },
-  });
-}
-
-function deriveLocationPrecision(form: {
-  noLocationSelected: boolean;
-  district: string;
-  city: string;
-  region: string;
-  siteId: string;
-}): 'district' | 'city' | 'region' | 'unspecified' {
-  if (form.noLocationSelected) return 'unspecified';
-  if (form.district.trim()) return 'district';
-  if (form.city.trim()) return 'city';
-  if (form.region.trim()) return 'region';
-  return 'unspecified';
-}
 
 const Quote: React.FC = () => {
   const { isRTL } = useLanguage();
@@ -356,11 +258,6 @@ const Quote: React.FC = () => {
   const initialDraftHadSector = useRef<boolean>(!!loadDraft().sector);
   const [draftNotice, setDraftNotice] = useState<boolean>(false);
   const [autosaveTick, setAutosaveTick] = useState<number>(0);
-
-  const savedSitesQuery = useUserSavedSites(user?.id);
-  const userProjectsQuery = useUserProjects(user?.id);
-  const savedSites = savedSitesQuery.data ?? [];
-  const userProjects = userProjectsQuery.data ?? [];
 
   // Prefill sector from ?sector= (e.g. /quote?sector=aluminum). Runs once.
   // If a different sector was already saved as a draft, prefer the URL value
@@ -452,40 +349,7 @@ const Quote: React.FC = () => {
       e.sector = bi('اختر القطاع الأقرب لطلبك للمتابعة.', 'Pick the closest sector to continue.');
     }
     if (s === 2) {
-      // Location-first validation:
-      //  - saved site → siteId required
-      //  - project    → projectId required AND (project has site OR location filled OR no_location)
-      //  - new address→ region + city required (district recommended but optional)
-      //  - no-location→ city OR region required
-      if (!form.locationMode) {
-        e.locationMode = bi(
-          'اختر طريقة تحديد موقع تنفيذ العمل.',
-          'Pick how you want to specify the work location.',
-        );
-      } else if (form.locationMode === 'saved') {
-        if (!form.siteId) {
-          e.siteId = bi('اختر موقعًا محفوظًا.', 'Pick a saved site.');
-        }
-      } else if (form.locationMode === 'project') {
-        if (!form.projectId) {
-          e.projectId = bi('اختر مشروعًا.', 'Pick a project.');
-        } else if (!form.siteId && !form.noLocationSelected && !(form.region.trim() && form.city.trim())) {
-          e.city = bi(
-            'هذا المشروع بدون موقع محفوظ — أضف موقعًا أو اختر بدون عنوان محدد.',
-            'This project has no saved site — add a location or pick "no address".',
-          );
-        }
-      } else if (form.locationMode === 'new') {
-        if (!form.region.trim()) e.region = bi('اختر المنطقة.', 'Pick the region.');
-        if (!form.city.trim()) e.city = bi('أضف المدينة.', 'Add the city.');
-      } else if (form.locationMode === 'none') {
-        if (!form.city.trim() && !form.region.trim()) {
-          e.city = bi(
-            'أدخل على الأقل المدينة أو المنطقة لتقريب التوجيه.',
-            'Enter at least a city or region so we can route the request.',
-          );
-        }
-      }
+      if (!form.city.trim()) e.city = bi('أضف المدينة حتى نتمكن من توجيه الطلب بشكل أفضل.', 'Add the city so we can route your request.');
       if (!form.serviceLocation) e.serviceLocation = bi('اختر مكان تنفيذ الخدمة.', 'Choose where the service will be delivered.');
     }
     if (s === 3 && form.description.trim().length < 10) {
@@ -564,17 +428,6 @@ const Quote: React.FC = () => {
       sector: form.sector,
       city: form.city.trim(),
       district: form.district.trim() || null,
-      region: form.region.trim() || null,
-      site_id: form.siteId || null,
-      project_id: form.projectId || null,
-      no_location_selected: form.noLocationSelected,
-      location_precision: deriveLocationPrecision({
-        noLocationSelected: form.noLocationSelected,
-        district: form.district,
-        city: form.city,
-        region: form.region,
-        siteId: form.siteId,
-      }),
       service_location_type: serviceLocationMap[form.serviceLocation as string] ?? 'not_sure',
       project_description: form.description.trim(),
       approx_dimensions: form.measurements.trim() || null,
@@ -849,215 +702,38 @@ const Quote: React.FC = () => {
                 {step === 2 && (
                   <div className="space-y-5">
                     <StepHeading
-                      ar="موقع تنفيذ العمل"
-                      en="Work location"
+                      ar="أين يقع المشروع؟"
+                      en="Where is the project located?"
                       help={{
-                        ar: 'كلما كان الموقع أدق، وصل طلبك لمزودين أقرب وأنسب لخدمة منطقتك.',
-                        en: 'The more precise the location, the better we can route to nearby providers.',
+                        ar: 'الموقع يساعد على توجيه الطلب لمزودين أقرب أو أنسب.',
+                        en: 'Location helps route the request to nearer providers.',
                       }}
                     />
-                    <div data-testid="quote-location-section">
-                      <div className="mb-3 text-sm font-semibold text-foreground">
-                        <Bi ar="كيف تريد تحديد الموقع؟" en="How do you want to specify the location?" />
-                      </div>
-                      <ChoiceGrid
-                        name={bi('وضع الموقع', 'Location mode')}
-                        cols="sm:grid-cols-2"
-                        options={[
-                          ...(savedSites.length
-                            ? [{ value: 'saved', ar: 'موقع محفوظ', en: 'Saved site' }]
-                            : []),
-                          ...(userProjects.length
-                            ? [{ value: 'project', ar: 'مشروع لدي', en: 'My project' }]
-                            : []),
-                          { value: 'new',  ar: 'إضافة عنوان جديد', en: 'Add new address' },
-                          { value: 'none', ar: 'لا أملك عنوانًا محددًا الآن', en: 'I have no address yet' },
-                        ]}
-                        value={form.locationMode}
-                        onChange={(v) => {
-                          const next = v as LocationMode;
-                          setForm((p) => ({
-                            ...p,
-                            locationMode: next,
-                            noLocationSelected: next === 'none',
-                            // Reset linkage when switching modes
-                            siteId: next === 'saved' || next === 'project' ? p.siteId : '',
-                            projectId: next === 'project' ? p.projectId : '',
-                          }));
-                          setErrors((p) => ({ ...p, locationMode: undefined, siteId: undefined, projectId: undefined, region: undefined, city: undefined }));
-                        }}
+                    <div>
+                      <Label htmlFor="q-city"><Bi ar="المدينة" en="City" /></Label>
+                      <Input
+                        id="q-city"
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        className="h-12 mt-1.5"
+                        placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
+                        value={form.city}
+                        onChange={(e) => update('city', e.target.value)}
                       />
-                      <FieldError message={errors.locationMode} />
+                      <FieldError message={errors.city} />
                     </div>
-
-                    {form.locationMode === 'saved' && (
-                      <div data-testid="quote-saved-sites">
-                        <div className="mb-2 text-sm font-semibold text-foreground">
-                          <Bi ar="اختر موقعًا محفوظًا" en="Pick a saved site" />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {savedSites.map((s) => {
-                            const active = form.siteId === s.id;
-                            return (
-                              <button
-                                key={s.id}
-                                type="button"
-                                data-testid="quote-saved-site-option"
-                                onClick={() => setForm((p) => ({
-                                  ...p,
-                                  siteId: s.id,
-                                  region: s.region ?? '',
-                                  city: s.city ?? '',
-                                  district: s.district ?? '',
-                                  noLocationSelected: false,
-                                }))}
-                                className={`text-start rounded-xl border p-3 transition hover-lift ${
-                                  active
-                                    ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
-                                    : 'border-border bg-card hover:border-primary/40'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                  <Building2 className="w-4 h-4 text-primary" />
-                                  <span className="truncate" dir="auto">{s.label}</span>
-                                </div>
-                                <div className="mt-1 text-xs text-muted-foreground truncate" dir="auto">
-                                  {[s.region, s.city, s.district].filter(Boolean).join(' · ') || s.short_address || ''}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <FieldError message={errors.siteId} />
-                      </div>
-                    )}
-
-                    {form.locationMode === 'project' && (
-                      <div data-testid="quote-projects">
-                        <div className="mb-2 text-sm font-semibold text-foreground">
-                          <Bi ar="اختر مشروعًا" en="Pick a project" />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {userProjects.map((p) => {
-                            const active = form.projectId === p.id;
-                            return (
-                              <button
-                                key={p.id}
-                                type="button"
-                                data-testid="quote-project-option"
-                                onClick={() => {
-                                  const matchedSite = p.site_id
-                                    ? savedSites.find((s) => s.id === p.site_id)
-                                    : undefined;
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    projectId: p.id,
-                                    siteId: p.site_id ?? '',
-                                    region: matchedSite?.region ?? prev.region,
-                                    city: matchedSite?.city ?? prev.city,
-                                    district: matchedSite?.district ?? prev.district,
-                                  }));
-                                }}
-                                className={`text-start rounded-xl border p-3 transition hover-lift ${
-                                  active
-                                    ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
-                                    : 'border-border bg-card hover:border-primary/40'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                  <FolderOpen className="w-4 h-4 text-primary" />
-                                  <span className="truncate" dir="auto">{p.title}</span>
-                                </div>
-                                <div className="mt-1 text-xs text-muted-foreground">
-                                  {p.site_id
-                                    ? <Bi ar="مرتبط بموقع محفوظ" en="Linked to a saved site" />
-                                    : <Bi ar="بدون موقع — أضف موقعًا" en="No site — add a location" />}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <FieldError message={errors.projectId} />
-                        {form.projectId && !form.siteId && (
-                          <p className="mt-3 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                            <Bi
-                              ar="هذا المشروع بدون موقع. أدخل المنطقة والمدينة أدناه، أو اختر بدون عنوان محدد."
-                              en="This project has no site. Add a region/city below or pick no address."
-                            />
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {(form.locationMode === 'new'
-                      || (form.locationMode === 'project' && !form.siteId)
-                      || form.locationMode === 'none') && (
-                      <div data-testid="quote-location-fields" className="space-y-4">
-                        <div>
-                          <Label htmlFor="q-region"><Bi ar="المنطقة" en="Region" /></Label>
-                          <Input
-                            id="q-region"
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                            className="h-12 mt-1.5"
-                            placeholder={bi('مثال: منطقة الرياض', 'e.g. Riyadh region')}
-                            value={form.region}
-                            onChange={(e) => update('region', e.target.value)}
-                          />
-                          <FieldError message={errors.region} />
-                        </div>
-                        <div>
-                          <Label htmlFor="q-city"><Bi ar="المدينة" en="City" /></Label>
-                          <Input
-                            id="q-city"
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                            className="h-12 mt-1.5"
-                            placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
-                            value={form.city}
-                            onChange={(e) => update('city', e.target.value)}
-                          />
-                          <FieldError message={errors.city} />
-                        </div>
-                        <div>
-                          <Label htmlFor="q-district">
-                            <Bi ar="الحي (اختياري)" en="District (optional)" />
-                          </Label>
-                          <Input
-                            id="q-district"
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                            className="h-12 mt-1.5"
-                            placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
-                            value={form.district}
-                            onChange={(e) => update('district', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {form.locationMode === 'none' && (
-                      <div
-                        data-testid="quote-no-location-warning"
-                        role="status"
-                        className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2"
-                      >
-                        <HelpCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                        <Bi
-                          ar="سيتم استقبال الطلب، لكن قد يحتاج فريق قطاعات لتوضيح الموقع قبل توجيهه للمزودين."
-                          en="Your request will be received, but the Qitaat team may need to clarify the location before routing to providers."
-                        />
-                      </div>
-                    )}
-
-                    {form.locationMode === 'new' && user && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <PlusCircle className="w-3.5 h-3.5" />
-                        <Bi
-                          ar="حفظ هذا العنوان في مركز العناوين متاح قريبًا."
-                          en="Saving this address to your address book is coming soon."
-                        />
-                      </p>
-                    )}
-
+                    <div>
+                      <Label htmlFor="q-district">
+                        <Bi ar="الحي (اختياري)" en="District (optional)" />
+                      </Label>
+                      <Input
+                        id="q-district"
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        className="h-12 mt-1.5"
+                        placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
+                        value={form.district}
+                        onChange={(e) => update('district', e.target.value)}
+                      />
+                    </div>
                     <div>
                       <div className="mb-2 text-sm font-semibold text-foreground">
                         <Bi ar="هل الخدمة مطلوبة في موقع العميل أم لدى المزود؟" en="On client site or at provider?" />

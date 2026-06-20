@@ -18,9 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { Gauge, Image as ImageIcon, RefreshCw } from 'lucide-react';
 
 type Row = {
@@ -64,7 +61,6 @@ export default function AdminPerformance() {
   const { isRTL } = useLanguage();
   useNoIndex();
   const [windowKey, setWindowKey] = useState<'24h' | '7d' | '30d'>('7d');
-  const [routeFilter, setRouteFilter] = useState<string>('all');
   const win = WINDOWS.find((w) => w.key === windowKey)!;
 
   const { data, isLoading, refetch, isFetching } = useQuery({
@@ -106,21 +102,8 @@ export default function AdminPerformance() {
     }).sort((a, b) => b.samples - a.samples);
   }, [data]);
 
-  const routeOptions = useMemo(
-    () => Array.from(new Set(aggregates.map((r) => r.route))).sort(),
-    [aggregates],
-  );
-  const filteredAggregates = useMemo(
-    () => (routeFilter === 'all' ? aggregates : aggregates.filter((r) => r.route === routeFilter)),
-    [aggregates, routeFilter],
-  );
-
   const recentLcpImages = useMemo(() => {
-    const rows = (data ?? []).filter((r) => {
-      if (r.metric_name !== 'LCP' || !r.lcp_url) return false;
-      if (routeFilter === 'all') return true;
-      return (r.route_key || r.page_path) === routeFilter;
-    });
+    const rows = (data ?? []).filter((r) => r.metric_name === 'LCP' && r.lcp_url);
     const seen = new Map<string, { url: string; route: string; value: number; at: string }>();
     for (const r of rows.slice(0, 200)) {
       if (!r.lcp_url || seen.has(r.lcp_url)) continue;
@@ -132,7 +115,7 @@ export default function AdminPerformance() {
       });
     }
     return Array.from(seen.values()).slice(0, 12);
-  }, [data, routeFilter]);
+  }, [data]);
 
   return (
     <DashboardLayout>
@@ -150,17 +133,6 @@ export default function AdminPerformance() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Select value={routeFilter} onValueChange={setRouteFilter}>
-              <SelectTrigger className="h-9 w-[180px]" aria-label={isRTL ? 'تصفية حسب الصفحة' : 'Filter by route'}>
-                <SelectValue placeholder={isRTL ? 'كل الصفحات' : 'All routes'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'كل الصفحات' : 'All routes'}</SelectItem>
-                {routeOptions.map((r) => (
-                  <SelectItem key={r} value={r} className="tech-content">{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             {WINDOWS.map((w) => (
               <Button
                 key={w.key}
@@ -186,7 +158,7 @@ export default function AdminPerformance() {
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-40 w-full" />
-            ) : filteredAggregates.length === 0 ? (
+            ) : aggregates.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">
                 {isRTL ? 'لا توجد عينات في هذه النافذة الزمنية بعد.' : 'No samples in this window yet.'}
               </p>
@@ -203,7 +175,7 @@ export default function AdminPerformance() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAggregates.map((row) => (
+                    {aggregates.map((row) => (
                       <tr key={row.route} className="border-b last:border-0">
                         <td className="py-2 px-2 font-medium tech-content">{row.route}</td>
                         {METRICS.map((m) => {
