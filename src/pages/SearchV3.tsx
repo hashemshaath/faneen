@@ -131,6 +131,7 @@ const SearchV3 = () => {
           return r ? (isRTL ? r.name_ar : r.name_en) : undefined;
         })()
       : undefined);
+  useImagePerfTracking('search');
   usePageMeta({
     title: buildSeoTitle({ kind: 'search', lang, service: seoSubject, city: seoCity }),
     description: buildSeoDescription({ kind: 'search', lang, service: seoSubject, city: seoCity }),
