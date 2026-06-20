@@ -20,8 +20,15 @@ export function getSafeMessageKnowledgeSnippets(
   locale: KnowledgeLocale,
   limit = 3,
 ): KnowledgeContextResult[] {
-  const items = baseSnippets(audience, intent, locale, Math.max(limit, 5));
-  return items
-    .filter((r) => isItemAllowedForAudience(r.item, audience))
-    .slice(0, limit);
+  // Pull a wider pool so we can re-prioritise pure message templates above
+  // generic guides that happen to share the same tag.
+  const pool = baseSnippets(audience, intent, locale, Math.max(limit * 8, 20));
+  const guarded = pool.filter((r) => isItemAllowedForAudience(r.item, audience));
+  const sorted = [...guarded].sort((a, b) => {
+    const aTpl = a.item.type === 'message_template' ? 1 : 0;
+    const bTpl = b.item.type === 'message_template' ? 1 : 0;
+    if (aTpl !== bTpl) return bTpl - aTpl;
+    return (b.item.priority ?? 0) - (a.item.priority ?? 0);
+  });
+  return sorted.slice(0, limit);
 }
