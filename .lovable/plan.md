@@ -1,89 +1,118 @@
-## ADMIN BUSINESSES + PROVIDERS CONTROL CENTER — Professional Rebuild Plan
+# HOME PAGE FULL PERFORMANCE + CODE QUALITY AUDIT
 
-### Goal
-Replace the inside of `/admin/businesses` with a new, design-first control center: "إدارة الجهات والمزودين". Route preserved. No DB/RLS/RPC/edge/migrations. No fake data. All existing actions (create, edit, publish, open public page, copy link, complete data) carried over.
+## النطاق
 
-### Approach
-Phase 1 already shipped `Overview` tab + tabs shell. This plan completes the rebuild over the remaining 5 tabs as a single coherent design pass, then retires the legacy single-page layout as the default view.
+الصفحة الرئيسية `/` ‏(`src/pages/Index.tsx`) وكل ما تعتمد عليه:
 
-### New IA (6 tabs, RTL-first)
-```
-[ نظرة عامة ] [ الجهات ] [ مزودو الخدمة ] [ التصنيفات والقطاعات ] [ المراجعة والظهور ] [ جاهزية التشغيل ]
-```
-- URL state: `?tab=<id>` (already in shell).
-- Default tab: `overview`.
+- `src/components/home/v2/HomeV2.tsx` (Hero LCP)
+- `src/components/home/v2/sections/*` (HomeSectorGrid, HomeAudienceSplit, HomeCategoryRows, FAQSection)
+- `src/components/home/v2/data/homeTaxonomy.ts`
+- `src/components/layout/{Navbar,Footer}.tsx` + ScrollToTop
+- `src/hooks/{usePageMeta,useImagePerfTracking}.ts`, `src/components/{LazyOnView,ErrorBoundary}.tsx`, `src/lib/lazyRetry.ts`
+- `src/modules/home/*` (FAQ loader)
+- أي أصول/صور مرتبطة (hero, sector tiles)
 
-### Tab designs
+## مرحلة 1 — Audit فقط (لا تعديل)
 
-1. **نظرة عامة** (exists, polish only)
-   - Keep KPI cards + MetricBarList.
-   - Add: "إجراءات سريعة" row → links to Review tab pre-filtered (drafts, pending, missing-contact).
+تقرير داخلي يجيب عن الـ15 سؤال المطلوبة:
 
-2. **الجهات** (refactor of current page body)
-   - Header strip: search + entity-type filter + status filter + region filter (real columns only).
-   - Card/grid view (default) using `MetricCard`-like business cards with: logo, name (ar/en), ref_id, status badges (verified, published, demo), city, completeness chips (contact/link/desc/media).
-   - Row actions: تعديل، عرض عام، نسخ الرابط، نشر/إلغاء نشر — wired to existing handlers extracted from `AdminBusinesses.tsx`.
-   - "إضافة جهة" button → existing inline create form (reused as-is).
+1. خريطة الملفات المرتبطة (أعلاه).
+2. أكبر المكونات (سطور/تعقيد) — HeroV2, HomeCategoryRows.
+3. تكرار sections/cards/CTA helpers بين Sectors↔CategoryRows↔Audience.
+4. Fetching: `useHomeFaq` فقط (DB-first + static fallback) — هل يتم في eager أم lazy؟
+5. N+1: فحص استعلامات homeFaq.
+6. Lazy loading: تحقق من صحة `LazyOnView` + `Suspense` لكل قسم تحت الطية.
+7. صور بدون أبعاد (width/height/aspect-ratio).
+8. صور كبيرة/غير محسّنة (hero + sector tiles).
+9. Animations ثقيلة (HeroParticles, framer-motion على mount).
+10. CLS محتمل (skeleton/reserved heights).
+11. LCP bottleneck (hero image preload, fetchpriority).
+12. Re-renders زائدة (useMemo deps في Index).
+13. Hardcoded hex / ألوان خارج tokens.
+14. مسميات/روابط قديمة (Faneen, روابط مكسورة).
+15. Dead code / imports غير مستخدمة.
 
-3. **مزودو الخدمة**
-   - Filter source rows by `entity_type` provider-like values OR `is_service_provider` if such a column exists; otherwise show empty state explaining data source.
-   - Sections (chips): مؤهلون، ناقصو تواصل، بدون تصنيف، بدون رابط عام، غير منشورين.
-   - Card explains *why* provider is ready / not ready (rule list from `businessAdminMetrics`).
+## مرحلة 2 — تنظيف الكود
 
-4. **التصنيفات والقطاعات**
-   - Distribution bars by `entity_type` (already implemented helper).
-   - If a real sector/category column is missing on the row shape → empty-state card: "لا يتوفر مصدر تصنيف دقيق على مستوى الصف حاليًا" — explicit, no fake data.
-   - Reuse `MetricBarList`.
+- إزالة imports/مكونات/helpers غير مستخدمة في نطاق home فقط.
+- توحيد أي card/CTA مكرر داخل `home/v2/sections/` في primitive مشترك إن وُجد تكرار حقيقي.
+- توحيد loading/empty states (SectionFallback موجود — تحقق من استخدامه الكامل).
+- لا إعادة هيكلة كبيرة إذا الهيكل الحالي نظيف.
 
-5. **المراجعة والظهور**
-   - Buckets: drafts، pending review، approved غير منشور، inactive، demo، بدون username، بدون تواصل.
-   - Each bucket = collapsible list of business mini-cards with quick actions: تعديل، فتح عام، نسخ الرابط.
-   - Counts derived from `businessAdminMetrics`.
+## مرحلة 3 — تحسينات الأداء
 
-6. **جاهزية التشغيل (Pilot)**
-   - "جاهز" vs "غير جاهز" using `isPilotReady`.
-   - Distribution bars: by city (`city_id`/`region`) and entity_type.
-   - List of not-ready with explicit reason chips (missing contact / missing link / pending review / rejected).
+- التحقق من `<link rel="preload" as="image">` لصورة hero LCP في `index.html` أو الاكتفاء بـ `fetchpriority="high"` على `<img>`.
+- إضافة `width`/`height` (أو `aspect-ratio`) لكل صورة hero/sector لا تملكها.
+- ضمان `loading="lazy"` + `decoding="async"` لكل صورة خارج الطية، و `loading="eager"` + `fetchpriority="high"` لـ LCP فقط.
+- التحقق من `content-visibility: auto` (موجودة عبر `cv-auto`).
+- منع overflow أفقي على الموبايل في `HomeCategoryRows` (horizontal scroll rows).
+- تقليل re-renders: useMemo على JSON-LD موجود — التحقق من ثبات `faqItems` reference.
 
-### Shared building blocks (new)
-- `src/components/admin/businesses/control-center/BusinessCard.tsx` — unified card.
-- `src/components/admin/businesses/control-center/BusinessBucketList.tsx` — collapsible bucket with mini list.
-- `src/components/admin/businesses/control-center/ReadinessReasonChips.tsx` — pure render of reasons.
-- `src/components/admin/businesses/control-center/ProvidersTab.tsx`
-- `src/components/admin/businesses/control-center/TaxonomiesTab.tsx`
-- `src/components/admin/businesses/control-center/ReviewTab.tsx`
-- `src/components/admin/businesses/control-center/PilotTab.tsx`
-- `src/components/admin/businesses/control-center/BusinessesTab.tsx` — new card-grid view replacing legacy table as default.
+## مرحلة 4 — SEO
 
-### Metric helpers (extend `businessAdminMetrics.ts`)
-- `pilotReadinessReasons(b)` → string[] (bilingual via labels file).
-- `providerSegment(b)` → 'qualified' | 'no_contact' | 'no_link' | 'no_taxonomy' | 'unpublished'.
-- `cityDistribution(rows, isRTL)` → DistributionBucket[] (using `region`/`city_id`).
+- تأكيد H1 واحد (داخل HeroV2).
+- title/description/canonical/og:* موجودة عبر `usePageMeta`.
+- 5 كتل JSON-LD موجودة (WebSite, ItemList sectors, SiteNav, BreadcrumbList, FAQPage) — تحقق من صحة الـURLs والروابط.
+- روابط القطاعات إلى `/search?category=<slug>` — تحقق من عدم وجود slugs ميتة.
 
-### Action wiring
-Extract existing handlers from `AdminBusinesses.tsx` (openEdit, publishBusiness, openPublic, copyPublicLink) into `src/modules/admin/businesses/businessAdminActions.ts` so all tabs share the same callbacks. No behavior change.
+## مرحلة 5 — Accessibility
 
-### Legacy retirement
-- The legacy single-page layout (filters bar + big table) becomes opt-in via `?tab=businesses&view=legacy` for one release, default = new card grid. Document in code comment. No file deletions.
+- alt على كل صورة، aria-label للأزرار icon-only.
+- Heading hierarchy (h1 → h2 → h3).
+- Focus-visible على CTAs.
+- contrast باستخدام semantic tokens فقط.
+- `<main>` واحد (موجود في Index).
 
-### Tests
-- Extend `adminBusinessesProvidersControlCenterPhase1.test.tsx` and add:
-  - `adminBusinessesProvidersControlCenterRebuild.test.tsx` — mounts each tab with a fixed real-shape fixture, asserts:
-    - tabs render and switch via `?tab=`
-    - KPI counts match fixture
-    - provider segments correctly classified
-    - pilot readiness reasons present for not-ready rows
-    - no hex colors, no `any`, no `@ts-ignore`, no direct `supabase.from(` in new components
-    - `/admin/businesses` route still resolves
-    - action callbacks invoked on card buttons
+## مرحلة 6 — Mobile
 
-### Constraints (enforced)
-- No DB / RLS / RPC / migrations / edge.
-- No fake data; missing-source → empty state.
-- No hardcoded hex; design tokens only.
-- No `any`, `@ts-ignore`, `@ts-expect-error`, `eslint-disable`, skipped tests.
-- Route `/admin/businesses` unchanged.
-- Provider leads + data enrichment untouched.
+- hero لا يأخذ `100dvh` كامل بلا داعٍ.
+- search/CTA tappable ≥44px.
+- بدون نصوص <12px.
+- لا overflow.
 
-### Deliverable
-Final report titled **ADMIN BUSINESSES + PROVIDERS CONTROL CENTER PROFESSIONAL REBUILD REPORT** with tsc + test results and PASS/NEEDS FIX decision.
+## مرحلة 7 — Tests
+
+ملف جديد: `src/__tests__/homePagePerformanceCleanup.test.tsx`
+
+يثبت (بقراءة source string، نمط الاختبارات الحالية في المشروع):
+
+1. `Index.tsx` يحتوي على `<main>` واحد فقط.
+2. كل صورة في hero/sections لها `width` أو `aspect-` class.
+3. hero image ليست `loading="lazy"`.
+4. أقسام تحت الطية ملفوفة بـ `LazyOnView` + `Suspense`.
+5. روابط slugs القطاعات موجودة في `homeTaxonomy.ts`.
+6. لا hex literals (`#[0-9a-f]{3,8}`) في ملفات home/v2/.
+7. لا duplicate `Section`/`CTA` JSX patterns بنفس النص.
+8. لا `is_demo`/`demo`/`fake` data references في ملفات home.
+9. لا `@ts-ignore` / `@ts-expect-error` / `eslint-disable` في home scope.
+10. JSON-LD يحتوي على WebSite + FAQPage + BreadcrumbList.
+11. `usePageMeta` يُستدعى مرة واحدة فقط.
+
+## ممنوعات (التزام صارم)
+
+- لا DB / migrations / RLS / RPC / edge functions.
+- لا تغيير Auth / RFQ / membership / provider matching.
+- لا حذف routes / كسر redirects.
+- لا dependencies جديدة.
+- لا `any` / `@ts-ignore` / `eslint-disable` / skipped tests.
+- لا hardcoded hex.
+- لا تغيير منطق تجاري.
+
+## التقرير النهائي
+
+سأقدم تقرير `HOME PAGE FULL PERFORMANCE + CODE QUALITY AUDIT REPORT` بالـ22 بند المطلوب، مع قرار `PASS` أو `NEEDS FIX`.
+
+## خطة التنفيذ المتسلسلة
+
+1. قراءة كل ملفات home في batch واحد (HeroV2, sections, hooks).
+2. كتابة Audit findings.
+3. تطبيق التنظيف + التحسينات في حدود frontend home فقط.
+4. كتابة + تشغيل الاختبار الجديد.
+5. تشغيل `tsc --noEmit` + اختبارات home + suite كامل إن أمكن.
+6. تسليم التقرير النهائي.
+
+---
+
+**ملاحظة**: نظرة سريعة على `Index.tsx` تُظهر أنه **محسّن جيداً مسبقاً** (lazyRetry, LazyOnView, Suspense fallbacks, useMemo JSON-LD, tokens, semantic). أتوقع أن معظم التحسينات ستكون داخل الـsections وليس في Index نفسه، وأن النتيجة الأرجح `PASS` مع تعديلات نقطية صغيرة.
+
+هل أبدأ التنفيذ؟
