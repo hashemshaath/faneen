@@ -35,11 +35,12 @@ const INTERNAL_PROBE_QUERIES = [
   'لا تشارك المعلومات',
 ];
 
-function assertNoInternal<T extends { item?: { status: string; categoryId: string } }>(rows: T[]): void {
+import type { KnowledgeContextResult } from '@/modules/knowledge';
+
+function assertNoInternal(rows: readonly KnowledgeContextResult[]): void {
   for (const r of rows) {
-    const item = r.item ?? (r as unknown as { status: string; categoryId: string });
-    expect(item.status).not.toBe('internal');
-    expect(item.categoryId).not.toBe('internal-ops');
+    expect(r.item.status).not.toBe('internal');
+    expect(r.item.categoryId).not.toBe('internal-ops');
   }
 }
 
