@@ -31,6 +31,7 @@ import { useStickyOverlapAudit } from '@/hooks/useStickyOverlapAudit';
 import { LoadingProgressV3 } from '@/components/search/v3/LoadingProgressV3';
 import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
 import { RecentAndShareV3 } from '@/components/search/v3/RecentAndShareV3';
+import { CompareTrayV3 } from '@/components/search/v3/CompareTrayV3';
 const SearchMapV3 = React.lazy(() =>
   import('@/components/search/v3/SearchMapV3').then((m) => ({ default: m.SearchMapV3 })),
 );
