@@ -693,157 +693,19 @@ const AdminBusinesses = () => {
   });
 
   /* ─── Create business mutation ─── */
-  const createBizMutation = useMutation({
-    mutationFn: async () => {
-      if (!createForm.username || !createForm.username_ok) {
-        throw new Error(pickBi(isRTL, 'اسم المستخدم غير صالح أو محجوز', 'Username is invalid or taken'));
-      }
-      if (!createForm.name_ar?.trim()) {
-        throw new Error(pickBi(isRTL, 'الاسم بالعربية مطلوب', 'Arabic name is required'));
-      }
-      const phoneE164 = createForm.phone_national
-        ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
-        : null;
-      const region = SA_REGIONS.find((r) => r.id === createForm.region_id);
-      const ownerMode = (createForm.owner_mode || 'placeholder') as 'placeholder' | 'existing' | 'new' | 'invite';
-
-      // Shared business payload used by both code paths
-      const bizCore: AdminCreateBusinessPayload = {
-        username: createForm.username.trim().toLowerCase(),
-        name_ar: createForm.name_ar.trim(),
-        name_en: createForm.name_en?.trim() || null,
-        phone: phoneE164 || null,
-        email: createForm.email?.trim() || null,
-        // Phase 18i: legacy `category_id` column dropped. Classification is
-        // managed taxonomy-only via BusinessTaxonomySection in edit view.
-        city_id: createForm.city_id || null,
-        region: region ? region.name_ar : null,
-        region_en: region ? region.name_en : null,
-        national_id: createForm.national_id?.trim() || null,
-        unified_number: createForm.unified_number?.trim() || null,
-        vat_number: createForm.vat_number?.trim() || null,
-        district: createForm.district?.trim() || null,
-        district_en: createForm.district_en?.trim() || null,
-        street_name: createForm.street_name?.trim() || null,
-        street_name_en: createForm.street_name_en?.trim() || null,
-        building_number: createForm.building_number?.trim() || null,
-        additional_number: createForm.additional_number?.trim() || null,
-        address: createForm.address?.trim() || null,
-        address_en: createForm.address_en?.trim() || null,
-      };
-
-      // Path A — Use the edge function for placeholder / new / invite modes.
-      // Placeholder mode links the entity to the shared com@qitaat.com account
-      // and flags it as transferable. The entity can later be claimed by its
-      // real owner via a transfer request that an admin must approve.
-      if (ownerMode === 'placeholder' || ownerMode === 'new' || ownerMode === 'invite') {
-        if (ownerMode !== 'placeholder') {
-        const email = (createForm.owner_email || '').trim().toLowerCase();
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          throw new Error(pickBi(isRTL, 'بريد المسؤول غير صالح', 'Invalid manager email'));
-        }
-        if (ownerMode === 'new' && (createForm.owner_password || '').length < 8) {
-          throw new Error(pickBi(isRTL, 'كلمة المرور يجب ألا تقل عن 8 أحرف', 'Password must be at least 8 characters'));
-        }
-        }
-        const ownerEmail = ownerMode === 'placeholder'
-          ? undefined
-          : (createForm.owner_email || '').trim().toLowerCase();
-        const res = await adminCreateBusinessWithOwner({
-          owner: {
-            mode: ownerMode,
-            email: ownerEmail,
-            password: ownerMode === 'new' ? createForm.owner_password : undefined,
-            full_name: (createForm.owner_full_name || createForm.name_ar || '').trim(),
-            phone: (createForm.owner_phone || '').trim() || undefined,
-            position: (createForm.owner_position || '').trim() || undefined,
-            auto_confirm: true,
-          },
-          business: bizCore,
-          redirect_to: `${window.location.origin}/auth/reset-password`,
-        });
-        if (!res.success || !res.business) {
-          throw new Error(res.error || (pickBi(isRTL, 'فشل الإنشاء', 'Create failed')));
-        }
-        return res.business as unknown as Record<string, unknown>;
-      }
-
-      // Path B — Existing user (default). An owner MUST be explicitly picked;
-      // we never fall back to the current admin because super_admin / admin
-      // accounts are blocked by DB trigger from owning business entities.
-      const ownerId = createForm.resolved_user_id;
-      if (!ownerId) {
-        throw new Error('owner_id_or_ref_required');
-      }
-      const payload: Record<string, unknown> = {
-        ...bizCore,
-        user_id: ownerId,
-        approval_status: 'draft',
-        is_active: false,
-        is_demo: false,
-      };
-      // Admin-created entities are explicit drafts by default. The public
-      // profile becomes reachable only after the visibility card's publish
-      // action sets published + active + not-demo together.
-      const { data, error } = await insertBusiness({
-        payload,
-        select: BUSINESS_SAFE_COLUMNS_SELECT,
-        terminal: 'single',
-      });
-      if (error) throw error;
-      await logAction('business_created', (data as { id?: string } | null)?.id ?? '', { username: payload.username });
-      return data as Record<string, unknown>;
-    },
-    onSuccess: (row) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      const mode = createForm.owner_mode;
-      toast.success(
-        isRTL
-          ? mode === 'placeholder'
-            ? 'تم إنشاء المنشأة تحت الحساب المؤقت — قابلة للتحويل لاحقاً'
-            : mode === 'invite'
-            ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
-            : mode === 'new'
-            ? 'تم إنشاء المنشأة وحساب المسؤول'
-            : 'تم إنشاء المنشأة كمسودة — استخدم زر نشر الجهة لإظهارها للعامة'
-          : mode === 'placeholder'
-          ? 'Entity created under the placeholder account — transferable later'
-          : mode === 'invite'
-          ? 'Business created — invitation sent to manager'
-          : mode === 'new'
-          ? 'Business and manager account created'
-          : 'Business created as a draft — use Publish business to make it public',
-      );
-      setCreatingBiz(false);
-      setCreateForm(emptyCreateBusinessForm());
-      if (row) openEdit(row);
-    },
-    onError: (err: unknown) => {
-      // Map stable edge-function codes → friendly localized text. We never
-      // surface raw server strings to admins; unknown codes fall back to the
-      // generic bucket inside `mapAdminCreateBizError`.
-      const raw = err instanceof Error ? err.message : '';
-      const msg = mapAdminCreateBizError(raw, pickBi(isRTL, 'ar', 'en'));
-      const isInvalidMode = raw.includes('invalid_owner_mode');
-      toast.error(
-        pickBi(isRTL, 'فشل إنشاء المنشأة', 'Failed to create business'),
-        {
-          description: msg,
-          ...(isInvalidMode
-            ? {
-                action: {
-                  label: pickBi(isRTL, 'تحويل إلى "بدون مدير"', 'Switch to "No manager"'),
-                  onClick: () => {
-                    setCreateForm((f) => ({ ...f, owner_mode: 'placeholder' }));
-                  },
-                },
-                duration: 10000,
-              }
-            : {}),
-        },
-      );
-    },
-  });
+  const createFormRef = useRef(createForm);
+  createFormRef.current = createForm;
+  const createBizMutation = useMutation(
+    buildAdminCreateBusinessMutationOptions({
+      getForm: () => createFormRef.current,
+      setForm: setCreateForm,
+      setCreating: setCreatingBiz,
+      isRTL,
+      logAction,
+      openEdit: (row) => openEditRef.current(row),
+      queryClient,
+    }),
+  );
 
   const addServiceMutation = useMutation({
     mutationFn: async () => {
