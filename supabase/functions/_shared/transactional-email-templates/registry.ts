@@ -71,6 +71,15 @@ import { template as customerThankYouFeedback } from './customer-thank-you-feedb
 import { template as providerLeadConfirmation } from './provider-lead-confirmation.tsx'
 import { template as quoteReceived } from './quote-received.tsx'
 import { template as adminNewQuoteRequest } from './admin-new-quote-request.tsx'
+import { template as opportunityCreatedClient } from './opportunity-created-client.tsx'
+import { template as opportunityNewMatchProvider } from './opportunity-new-match-provider.tsx'
+import { template as opportunityBidSubmittedClient } from './opportunity-bid-submitted-client.tsx'
+import { template as opportunityBidAwardedProvider } from './opportunity-bid-awarded-provider.tsx'
+import { template as opportunityBidNotAwardedProvider } from './opportunity-bid-not-awarded-provider.tsx'
+import { template as opportunityContractCreatedClient } from './opportunity-contract-created-client.tsx'
+import { template as opportunityContractCreatedProvider } from './opportunity-contract-created-provider.tsx'
+import { template as opportunityExpiredClient } from './opportunity-expired-client.tsx'
+import { template as opportunityCancelledProvider } from './opportunity-cancelled-provider.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -135,4 +144,13 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'provider-lead-confirmation': providerLeadConfirmation,
   'quote-received': quoteReceived,
   'admin-new-quote-request': adminNewQuoteRequest,
+  'opportunity-created-client': opportunityCreatedClient,
+  'opportunity-new-match-provider': opportunityNewMatchProvider,
+  'opportunity-bid-submitted-client': opportunityBidSubmittedClient,
+  'opportunity-bid-awarded-provider': opportunityBidAwardedProvider,
+  'opportunity-bid-not-awarded-provider': opportunityBidNotAwardedProvider,
+  'opportunity-contract-created-client': opportunityContractCreatedClient,
+  'opportunity-contract-created-provider': opportunityContractCreatedProvider,
+  'opportunity-expired-client': opportunityExpiredClient,
+  'opportunity-cancelled-provider': opportunityCancelledProvider,
 }
