@@ -515,9 +515,17 @@ export interface HealthScore {
     key: 'publish' | 'verify' | 'completeness' | 'contact' | 'pilot';
     score: number;
     weight: number; // 0..1
+    /** Raw numerator from the rows (e.g. verified count). */
+    numerator: number;
+    /** Denominator (total rows considered). */
+    denominator: number;
+    /** Source columns / predicate, for auditing. */
+    source: string;
   }>;
   /** Human grade for quick reading. */
   grade: 'A' | 'B' | 'C' | 'D';
+  /** Total rows considered — proves the score is wired to live data. */
+  total: number;
 }
 
 /**
@@ -530,21 +538,36 @@ export function computeHealthScore(
 ): HealthScore {
   const a = computeAdvancedMetrics(rows);
   const total = rows.length;
-  const contactCoverage = total
-    ? Math.round(((total - rows.filter(isMissingContact).length) / total) * 100)
-    : 0;
+  const publishedN = rows.filter(isPublished).length;
+  const verifiedN  = rows.filter((r) => !!r.is_verified).length;
+  const contactN   = total - rows.filter(isMissingContact).length;
+  const pilotN     = rows.filter(isPilotReady).length;
+  const completeN  = Math.round(
+    rows.reduce((s, r) => s + completenessScore(r), 0),
+  );
+  const contactCoverage = total ? Math.round((contactN / total) * 100) : 0;
 
   const dims = [
-    { key: 'publish' as const,      score: a.publishRate,       weight: 0.20 },
-    { key: 'verify' as const,       score: a.verificationRate,  weight: 0.25 },
-    { key: 'completeness' as const, score: a.avgCompleteness,   weight: 0.25 },
-    { key: 'contact' as const,      score: contactCoverage,     weight: 0.15 },
-    { key: 'pilot' as const,        score: a.pilotReadyRate,    weight: 0.15 },
+    { key: 'publish' as const,      score: a.publishRate,       weight: 0.20,
+      numerator: publishedN, denominator: total,
+      source: 'is_active && !is_demo' },
+    { key: 'verify' as const,       score: a.verificationRate,  weight: 0.25,
+      numerator: verifiedN,  denominator: total,
+      source: 'is_verified = true' },
+    { key: 'completeness' as const, score: a.avgCompleteness,   weight: 0.25,
+      numerator: completeN,  denominator: total,
+      source: 'contact · username · description · media' },
+    { key: 'contact' as const,      score: contactCoverage,     weight: 0.15,
+      numerator: contactN,   denominator: total,
+      source: 'phone || email' },
+    { key: 'pilot' as const,        score: a.pilotReadyRate,    weight: 0.15,
+      numerator: pilotN,     denominator: total,
+      source: 'active · username · contact · approved' },
   ];
 
   const score = Math.round(dims.reduce((s, d) => s + d.score * d.weight, 0));
   const grade: HealthScore['grade'] =
     score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : 'D';
 
-  return { score, grade, dimensions: dims };
+  return { score, grade, dimensions: dims, total };
 }
