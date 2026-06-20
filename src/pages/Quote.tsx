@@ -357,6 +357,11 @@ const Quote: React.FC = () => {
   const [draftNotice, setDraftNotice] = useState<boolean>(false);
   const [autosaveTick, setAutosaveTick] = useState<number>(0);
 
+  const savedSitesQuery = useUserSavedSites(user?.id);
+  const userProjectsQuery = useUserProjects(user?.id);
+  const savedSites = savedSitesQuery.data ?? [];
+  const userProjects = userProjectsQuery.data ?? [];
+
   // Prefill sector from ?sector= (e.g. /quote?sector=aluminum). Runs once.
   // If a different sector was already saved as a draft, prefer the URL value
   // and surface a small notice so the user can keep or reset their draft.
