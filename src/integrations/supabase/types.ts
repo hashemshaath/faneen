@@ -15314,6 +15314,11 @@ export type Database = {
       quote_requests: {
         Row: {
           approx_dimensions: string | null
+          award_status: string
+          awarded_at: string | null
+          awarded_bid_id: string | null
+          awarded_by: string | null
+          awarded_provider_business_id: string | null
           brand_notes: string | null
           brand_preference_mode: string | null
           budget_amount: number | null
@@ -15351,6 +15356,11 @@ export type Database = {
         }
         Insert: {
           approx_dimensions?: string | null
+          award_status?: string
+          awarded_at?: string | null
+          awarded_bid_id?: string | null
+          awarded_by?: string | null
+          awarded_provider_business_id?: string | null
           brand_notes?: string | null
           brand_preference_mode?: string | null
           budget_amount?: number | null
@@ -15388,6 +15398,11 @@ export type Database = {
         }
         Update: {
           approx_dimensions?: string | null
+          award_status?: string
+          awarded_at?: string | null
+          awarded_bid_id?: string | null
+          awarded_by?: string | null
+          awarded_provider_business_id?: string | null
           brand_notes?: string | null
           brand_preference_mode?: string | null
           budget_amount?: number | null
@@ -15424,6 +15439,27 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quote_requests_awarded_bid_id_fkey"
+            columns: ["awarded_bid_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_bids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_awarded_provider_business_id_fkey"
+            columns: ["awarded_provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_awarded_provider_business_id_fkey"
+            columns: ["awarded_provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quote_requests_project_id_fkey"
             columns: ["project_id"]
@@ -21028,6 +21064,10 @@ export type Database = {
       }
       assets_ops_counts: { Args: never; Returns: Json }
       assets_roll_status: { Args: never; Returns: Json }
+      award_opportunity_bid: {
+        Args: { p_bid_id: string; p_opportunity_id: string }
+        Returns: string
+      }
       barcode_entity_prefix: { Args: { _entity_type: string }; Returns: string }
       build_execution_address_snapshot: {
         Args: { _site_id: string }
