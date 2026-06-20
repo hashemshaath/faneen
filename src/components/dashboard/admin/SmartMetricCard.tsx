@@ -46,11 +46,12 @@ export function SmartMetricCard({
   icon: Icon, label, value, series, trendPercent, insight, to, tone = 'primary', chart = 'area', isRTL,
 }: SmartMetricCardProps) {
   const t = TONE_MAP[tone];
+  const hasSeries = !!series && series.length > 0 && series.some((v) => v > 0);
   const data = useMemo(
-    () => (series && series.length > 0 ? series : [0, 0, 0, 0, 0, 0]).map((v, i) => ({ i, v })),
-    [series],
+    () => (hasSeries ? series! : []).map((v, i) => ({ i, v })),
+    [series, hasSeries],
   );
-  const trend = trendPercent ?? (series ? computeTrend(series) : null);
+  const trend = trendPercent ?? (hasSeries ? computeTrend(series!) : null);
   const TrendIcon = trend === null || trend === 0 ? Minus : trend > 0 ? ArrowUpRight : ArrowDownRight;
   const trendLabel = trend === null ? '—' : `${trend > 0 ? '+' : ''}${trend}%`;
   const trendChip = trend === null
@@ -76,32 +77,34 @@ export function SmartMetricCard({
         </span>
       </div>
       <div className="tech-content text-2xl font-bold leading-none">{value}</div>
-      <div className="h-[42px] -mx-1">
-        <ResponsiveContainer width="100%" height="100%">
-          {chart === 'bars' ? (
-            <BarChart data={data}>
-              <Bar dataKey="v" fill={t.stroke} radius={[3, 3, 0, 0]} />
-            </BarChart>
-          ) : (
-            <AreaChart data={data}>
-              <defs>
-                <linearGradient id={`smart-grad-${tone}-${label}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={t.stroke} stopOpacity={0.35} />
-                  <stop offset="100%" stopColor={t.stroke} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="v"
-                stroke={t.stroke}
-                strokeWidth={1.75}
-                fill={`url(#smart-grad-${tone}-${label})`}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          )}
-        </ResponsiveContainer>
-      </div>
+      {hasSeries && (
+        <div className="h-[42px] -mx-1" aria-hidden="true">
+          <ResponsiveContainer width="100%" height="100%">
+            {chart === 'bars' ? (
+              <BarChart data={data}>
+                <Bar dataKey="v" fill={t.stroke} radius={[3, 3, 0, 0]} />
+              </BarChart>
+            ) : (
+              <AreaChart data={data}>
+                <defs>
+                  <linearGradient id={`smart-grad-${tone}-${label}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={t.stroke} stopOpacity={0.35} />
+                    <stop offset="100%" stopColor={t.stroke} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="v"
+                  stroke={t.stroke}
+                  strokeWidth={1.75}
+                  fill={`url(#smart-grad-${tone}-${label})`}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+      )}
       {insight && (
         <p className="text-[10px] leading-snug text-muted-foreground line-clamp-2">
           {insight}

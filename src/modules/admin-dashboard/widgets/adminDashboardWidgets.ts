@@ -178,6 +178,14 @@ export const ADMIN_DASHBOARD_WIDGETS: readonly AdminWidgetDefinition[] = [
     group: 'overview', order: 5, size: 'full',
     permission: 'admin', defaultVisible: true, hideable: true, icon: Sparkles,
   },
+  {
+    id: 'smart-brief',
+    titleAr: 'موجز ذكي للمسؤول', titleEn: 'Admin Smart Brief',
+    descriptionAr: 'أولويات اليوم مستخلصة من بيانات حقيقية.',
+    descriptionEn: 'Today\'s priorities derived from live signals.',
+    group: 'overview', order: 7, size: 'full',
+    permission: 'admin', defaultVisible: true, hideable: true, icon: Sparkles,
+  },
 ];
 
 /**
