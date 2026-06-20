@@ -7600,6 +7600,8 @@ export type Database = {
           location_id: string | null
           locked_at: string | null
           official_version_number: number
+          opportunity_bid_id: string | null
+          opportunity_id: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -7651,6 +7653,8 @@ export type Database = {
           location_id?: string | null
           locked_at?: string | null
           official_version_number?: number
+          opportunity_bid_id?: string | null
+          opportunity_id?: string | null
           pricing_method?: string | null
           provider_accepted_at?: string | null
           provider_entity_id?: string | null
@@ -7702,6 +7706,8 @@ export type Database = {
           location_id?: string | null
           locked_at?: string | null
           official_version_number?: number
+          opportunity_bid_id?: string | null
+          opportunity_id?: string | null
           pricing_method?: string | null
           provider_accepted_at?: string | null
           provider_entity_id?: string | null
@@ -7759,6 +7765,20 @@ export type Database = {
             columns: ["last_pdf_snapshot_id"]
             isOneToOne: false
             referencedRelation: "contract_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_opportunity_bid_id_fkey"
+            columns: ["opportunity_bid_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_bids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
             referencedColumns: ["id"]
           },
           {
@@ -20082,6 +20102,8 @@ export type Database = {
           location_id: string | null
           locked_at: string | null
           official_version_number: number
+          opportunity_bid_id: string | null
+          opportunity_id: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -21124,6 +21146,8 @@ export type Database = {
           location_id: string | null
           locked_at: string | null
           official_version_number: number
+          opportunity_bid_id: string | null
+          opportunity_id: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -21296,6 +21320,8 @@ export type Database = {
           location_id: string | null
           locked_at: string | null
           official_version_number: number
+          opportunity_bid_id: string | null
+          opportunity_id: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -21362,6 +21388,10 @@ export type Database = {
         Returns: Json
       }
       contract_snapshot_hash: { Args: { _snapshot: Json }; Returns: string }
+      convert_awarded_bid_to_contract: {
+        Args: { p_bid_id: string; p_opportunity_id: string }
+        Returns: string
+      }
       create_access_key: {
         Args: { _business_id?: string; _name: string; _scopes?: Json }
         Returns: {
@@ -22921,6 +22951,8 @@ export type Database = {
           location_id: string | null
           locked_at: string | null
           official_version_number: number
+          opportunity_bid_id: string | null
+          opportunity_id: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
