@@ -56,6 +56,15 @@ import {
   SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
+// Sections that participate in the customizable grid (charts). They keep
+// their lg:grid-cols-3 / lg:grid-cols-2 layout when shown together, but
+// remain individually hideable. Module-level constants so memoization
+// dependencies stay stable across renders.
+const CHART_IDS = new Set([
+  'monthly-contracts-chart', 'contract-status-chart', 'user-growth-chart',
+]);
+const ACTIVITY_PAIR_IDS = new Set(['recent-activity', 'recent-users']);
+
 export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   const { user, profile } = useAuth();
   const qc = useQueryClient();
@@ -937,14 +946,6 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
     isRTL, profile, user, stats, contractStatusData, animatedUsers, animatedRevenue, animatedContracts, svcCounters,
     isFetching, layout,
   ]);
-
-  // Sections that participate in the customizable grid (charts).
-  // They keep their lg:grid-cols-3 / lg:grid-cols-2 layout when shown
-  // together, but are still individually hideable.
-  const CHART_IDS = new Set([
-    'monthly-contracts-chart', 'contract-status-chart', 'user-growth-chart',
-  ]);
-  const ACTIVITY_PAIR_IDS = new Set(['recent-activity', 'recent-users']);
 
   // ── DnD setup ────────────────────────────────────────────────────────
   // Group the visible order into "blocks" (chart row, activity pair, or
