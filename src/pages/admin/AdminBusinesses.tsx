@@ -1541,221 +1541,90 @@ const AdminBusinesses = () => {
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
-          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                  <Edit className="w-4 h-4 text-accent" />
-                </div>
-                <div>
-                  <h3 className="font-heading font-bold text-base">{pickBi(isRTL, 'تعديل العمل', 'Edit Business')}: {editingBiz.name_ar}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
-                    {contractBusinessIds.includes(editingBiz.id) && (
-                      <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{pickBi(isRTL, 'مرتبط بعقود', 'Has Contracts')}</Badge>
-                    )}
-                    {(() => {
-                      const tc = translationCompleteness(editForm);
-                      return (
-                        <Badge variant="outline" className={`text-[9px] gap-1 ${tc.full ? 'border-success/40 text-success' : 'border-warning/40 text-warning'}`}>
-                          <Languages className="w-2.5 h-2.5" />
-                          {tc.full ? (pickBi(isRTL, 'الترجمة مكتملة', 'Bilingual ready'))
-                            : (isRTL ? `ينقص: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}` : `Missing: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}`)}
-                        </Badge>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
-                  onClick={autoFillTranslations} disabled={autoTranslating}>
-                  {autoTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
-                  {pickBi(isRTL, 'ترجمة تلقائية للناقص', 'Auto-translate missing')}
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl" aria-label="Action"><X className="w-4 h-4" /></Button>
-              </div>
-            </div>
-              <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-9 h-9 rounded-xl">
-                  <TabsTrigger value="info" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المعلومات', 'Info')}</TabsTrigger>
-                  <TabsTrigger value="owner" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المسؤول', 'Owner')}</TabsTrigger>
-                  <TabsTrigger value="content" className="text-[10px] rounded-lg">{pickBi(isRTL, 'المحتوى', 'Content')}</TabsTrigger>
-                  <TabsTrigger value="media" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الوسائط', 'Media')}</TabsTrigger>
-                  <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
-                  <TabsTrigger value="contact" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التواصل', 'Contact')}</TabsTrigger>
-                  <TabsTrigger value="branches" className="text-[10px] rounded-lg">{pickBi(isRTL, 'الفروع', 'Branches')} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
-                  <TabsTrigger value="controls" className="text-[10px] rounded-lg">{pickBi(isRTL, 'التحكم', 'Controls')}</TabsTrigger>
-                  <TabsTrigger value="ops" className="text-[10px] rounded-lg">{pickBi(isRTL, 'العمليات', 'Ops')}</TabsTrigger>
-                </TabsList>
-
-                {/* ── Info Tab ── */}
-                <TabsContent value="info" className="space-y-4 mt-3">
-                  <BusinessPublicVisibilityCard
-                    business={editingBiz}
-                    publicProbe={publicVisibilityProbe}
-                    duplicateCount={publicUsernameDuplicateCount}
-                    isRTL={isRTL}
-                    isPublishing={publishBusinessMutation.isPending}
-                    onPublish={(business) => publishBusinessMutation.mutate(business as AdminBusinessRow)}
-                  />
-                  <BusinessBasicInfoSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    editingBiz={editingBiz}
-                    ownerRef={ownerRef}
-                    onTaxonomySaved={() => {
-                      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-                    }}
-                  />
-                </TabsContent>
-
-                {/* ── Owner Tab (ORG-RBAC-9F) ── */}
-                <TabsContent value="owner" className="space-y-4 mt-3">
-                  <BusinessOwnerSectionShell
-                    businessId={editingBiz.id}
-                    businessRef={editingBiz.ref_id ?? null}
-                    ownerUserId={editingBiz.user_id}
-                    isRTL={isRTL}
-                    onOwnerReassigned={() => setEditingBiz(null)}
-                  />
-                </TabsContent>
-
-                {/* ── Address Tab ── */}
-                {/* Address tab removed — addresses live on branches now.
-                    See the Branches tab for the per-location address editor. */}
-
-                {/* ── Content Tab ── */}
-                <TabsContent value="content" className="space-y-4 mt-3">
-                  <BusinessContentSection editForm={editForm} setField={setField} isRTL={isRTL} />
-                </TabsContent>
-
-                {/* ── Media Tab ── */}
-                <TabsContent value="media" className="space-y-4 mt-3">
-                  <BusinessMediaSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    portfolioData={portfolioData}
-                    onAddPortfolio={(url) => addPortfolioMutation.mutate(url)}
-                    onDeletePortfolio={(id) => deletePortfolioMutation.mutate(id)}
-                  />
-                </TabsContent>
-
-                {/* ── SEO Tab ── */}
-                <TabsContent value="seo" className="space-y-4 mt-3">
-                  <BusinessSeoSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    editingBiz={editingBiz}
-                    cityName={editCityName}
-                  />
-                </TabsContent>
-
-                {/* ── Contact Tab ── */}
-                <TabsContent value="contact" className="space-y-4 mt-3">
-                  <BusinessContactSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    language={language}
-                    editingBiz={editingBiz}
-                    registeredServices={allServices}
-                    onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
-                  />
-                </TabsContent>
-
-                {/* ── Branches Tab ── */}
-                <TabsContent value="branches" className="space-y-4 mt-3">
-                  <BusinessBranchesSection
-                    isRTL={isRTL}
-                    language={language as 'ar' | 'en'}
-                    branches={branches as unknown as AdminBranchRow[]}
-                    branchForm={branchForm}
-                    setBranchForm={setBranchForm}
-                    editingBranchId={editingBranchId}
-                    setEditingBranchId={setEditingBranchId}
-                    branchTranslating={branchTranslating}
-                    onTranslate={translateBranchName}
-                    countries={countries}
-                    onToggleActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
-                    onEdit={(br) => {
-                      setEditingBranchId(br.id);
-                      setBranchForm({
-                        name_ar: br.name_ar,
-                        name_en: br.name_en || '',
-                        is_main: !!br.is_main,
-                        is_active: br.is_active,
-                        branch_type: (br.branch_type as AdminBusinessBranchType) ?? (br.is_main ? 'main' : 'branch'),
-                        contact_person: br.contact_person || '',
-                        phone: br.phone || '',
-                        mobile: br.mobile || '',
-                        unified_number: br.unified_number || '',
-                        customer_service_phone: (br as unknown as { customer_service_phone?: string | null }).customer_service_phone || '',
-                        email: (br as unknown as { email?: string | null }).email || '',
-                        website: (br as unknown as { website?: string | null }).website || '',
-                        country_id: (br as unknown as { country_id?: string | null }).country_id || '',
-                        city_id: (br as unknown as { city_id?: string | null }).city_id || '',
-                        region: (br as unknown as { region?: string | null }).region || '',
-                        district: br.district || '',
-                        street_name: br.street_name || '',
-                        building_number: (br as unknown as { building_number?: string | null }).building_number || '',
-                        national_id: (br as unknown as { national_id?: string | null }).national_id || '',
-                        additional_number: (br as unknown as { additional_number?: string | null }).additional_number || '',
-                        address: br.address || '',
-                        latitude: (br as unknown as { latitude?: number | string | null }).latitude || '',
-                        longitude: (br as unknown as { longitude?: number | string | null }).longitude || '',
-                        complex_name: (br as unknown as { complex_name?: string | null }).complex_name || '',
-                        complex_name_en: (br as unknown as { complex_name_en?: string | null }).complex_name_en || '',
-                        site_number: (br as unknown as { site_number?: string | null }).site_number || '',
-                        working_hours: (br as unknown as { working_hours?: unknown }).working_hours,
-                      });
-                    }}
-                    onDelete={(id) => deleteBranchMutation.mutate(id)}
-                    onSave={() => saveBranchMutation.mutate()}
-                    saving={saveBranchMutation.isPending}
-                    emptyBranch={emptyBranch}
-                    mainContact={{
-                      unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
-                      customer_service_phone:
-                        editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
-                      email: editForm.email ?? editingBiz.email ?? null,
-                      website: editForm.website ?? editingBiz.website ?? null,
-                    }}
-                    onApplyHoursToAllBranches={(hours) =>
-                      applyHoursToAllBranchesMutation.mutate(hours as unknown)
-                    }
-                    applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
-                  />
-                </TabsContent>
-
-                {/* ── Controls Tab ── */}
-                <TabsContent value="controls" className="space-y-4 mt-3">
-                  <BusinessControlsSection
-                    editForm={editForm}
-                    setField={setField}
-                    isRTL={isRTL}
-                    language={language as 'ar' | 'en'}
-                    tiers={tiers}
-                  />
-                </TabsContent>
-
-                {/* ── Ops Tab (BUSINESS-CORE-2): internal notes + activity timeline ── */}
-                <TabsContent value="ops" className="space-y-4 mt-3">
-                  <BusinessOperationsSection businessId={editingBiz.id} />
-                </TabsContent>
-              </Tabs>
-
-              <BusinessEditActionsFooter
-                isRTL={isRTL}
-                canSave={!!editForm.name_ar}
-                saving={updateBizMutation.isPending}
-                onSave={() => updateBizMutation.mutate()}
-                onCancel={() => setEditingBiz(null)}
-              />
-          </div>
+          <BusinessEditPanel
+            isRTL={isRTL}
+            language={language as 'ar' | 'en'}
+            editingBiz={editingBiz}
+            editForm={editForm}
+            setField={setField}
+            contractBusinessIds={contractBusinessIds}
+            translationCompleteness={translationCompleteness}
+            autoFillTranslations={autoFillTranslations}
+            autoTranslating={autoTranslating}
+            publicVisibilityProbe={publicVisibilityProbe}
+            publicUsernameDuplicateCount={publicUsernameDuplicateCount}
+            isPublishing={publishBusinessMutation.isPending}
+            onPublish={(business) => publishBusinessMutation.mutate(business as AdminBusinessRow)}
+            ownerRef={ownerRef}
+            onTaxonomySaved={() => { queryClient.invalidateQueries({ queryKey: ['admin-businesses'] }); }}
+            portfolioData={portfolioData}
+            onAddPortfolio={(url) => addPortfolioMutation.mutate(url)}
+            onDeletePortfolio={(id) => deletePortfolioMutation.mutate(id)}
+            editCityName={editCityName}
+            allServices={allServices}
+            onManageServices={() => { setEditingBiz(null); openServices(editingBiz.id); }}
+            branches={branches as unknown as AdminBranchRow[]}
+            branchForm={branchForm}
+            setBranchForm={setBranchForm}
+            editingBranchId={editingBranchId}
+            setEditingBranchId={setEditingBranchId}
+            branchTranslating={branchTranslating}
+            onTranslateBranch={translateBranchName}
+            countries={countries}
+            onToggleBranchActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
+            onEditBranch={(br) => {
+              setEditingBranchId(br.id);
+              setBranchForm({
+                name_ar: br.name_ar,
+                name_en: br.name_en || '',
+                is_main: !!br.is_main,
+                is_active: br.is_active,
+                branch_type: (br.branch_type as AdminBusinessBranchType) ?? (br.is_main ? 'main' : 'branch'),
+                contact_person: br.contact_person || '',
+                phone: br.phone || '',
+                mobile: br.mobile || '',
+                unified_number: br.unified_number || '',
+                customer_service_phone: (br as unknown as { customer_service_phone?: string | null }).customer_service_phone || '',
+                email: (br as unknown as { email?: string | null }).email || '',
+                website: (br as unknown as { website?: string | null }).website || '',
+                country_id: (br as unknown as { country_id?: string | null }).country_id || '',
+                city_id: (br as unknown as { city_id?: string | null }).city_id || '',
+                region: (br as unknown as { region?: string | null }).region || '',
+                district: br.district || '',
+                street_name: br.street_name || '',
+                building_number: (br as unknown as { building_number?: string | null }).building_number || '',
+                national_id: (br as unknown as { national_id?: string | null }).national_id || '',
+                additional_number: (br as unknown as { additional_number?: string | null }).additional_number || '',
+                address: br.address || '',
+                latitude: (br as unknown as { latitude?: number | string | null }).latitude || '',
+                longitude: (br as unknown as { longitude?: number | string | null }).longitude || '',
+                complex_name: (br as unknown as { complex_name?: string | null }).complex_name || '',
+                complex_name_en: (br as unknown as { complex_name_en?: string | null }).complex_name_en || '',
+                site_number: (br as unknown as { site_number?: string | null }).site_number || '',
+                working_hours: (br as unknown as { working_hours?: unknown }).working_hours,
+              });
+            }}
+            onDeleteBranch={(id) => deleteBranchMutation.mutate(id)}
+            onSaveBranch={() => saveBranchMutation.mutate()}
+            savingBranch={saveBranchMutation.isPending}
+            emptyBranch={emptyBranch}
+            mainContact={{
+              unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
+              customer_service_phone:
+                editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
+              email: editForm.email ?? editingBiz.email ?? null,
+              website: editForm.website ?? editingBiz.website ?? null,
+            }}
+            onApplyHoursToAllBranches={(hours) =>
+              applyHoursToAllBranchesMutation.mutate(hours as unknown)
+            }
+            applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
+            tiers={tiers}
+            canSave={!!editForm.name_ar}
+            savingEdit={updateBizMutation.isPending}
+            onSaveEdit={() => updateBizMutation.mutate()}
+            onCancelEdit={() => setEditingBiz(null)}
+          />
         )}
 
         {/* ─── Inline Services Panel ─── */}
