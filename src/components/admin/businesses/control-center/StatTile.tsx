@@ -26,6 +26,8 @@ export interface StatTileProps {
   hint?: string;
   /** Optional delta vs previous period, signed. */
   delta?: number;
+  /** Optional sparkline series (oldest -> newest). Replaces the ratio bar. */
+  spark?: ReadonlyArray<number>;
   isRTL: boolean;
   onClick?: () => void;
 }
@@ -37,10 +39,20 @@ export interface StatTileProps {
  * top strip.
  */
 export const StatTile: React.FC<StatTileProps> = React.memo(
-  ({ label, value, icon: Icon, tone = 'primary', ratio, ofTotal, hint, delta, isRTL, onClick }) => {
+  ({ label, value, icon: Icon, tone = 'primary', ratio, ofTotal, hint, delta, spark, isRTL, onClick }) => {
     const t = TONE[tone];
     const Comp = onClick ? 'button' : 'div';
     const pct = ratio !== undefined ? Math.max(0, Math.min(100, Math.round(ratio))) : undefined;
+    const sparkPath = React.useMemo(() => {
+      if (!spark || spark.length < 2) return null;
+      const max = Math.max(1, ...spark);
+      const w = 100;
+      const h = 24;
+      const step = w / (spark.length - 1);
+      return spark
+        .map((v, i) => `${i === 0 ? 'M' : 'L'}${(i * step).toFixed(2)},${(h - (v / max) * h).toFixed(2)}`)
+        .join(' ');
+    }, [spark]);
     return (
       <Comp
         type={onClick ? 'button' : undefined}
@@ -87,7 +99,17 @@ export const StatTile: React.FC<StatTileProps> = React.memo(
           <p className="mt-1.5 text-[10.5px] text-muted-foreground/80 truncate">{hint}</p>
         ) : null}
 
-        {pct !== undefined ? (
+        {sparkPath ? (
+          <svg
+            viewBox="0 0 100 24"
+            preserveAspectRatio="none"
+            className="mt-3 h-6 w-full"
+            aria-hidden="true"
+          >
+            <path d={sparkPath} fill="none" stroke="currentColor" strokeWidth={1.5}
+              className={t.accent} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : pct !== undefined ? (
           <div
             className="mt-3 h-1 w-full rounded-full bg-muted/60 overflow-hidden"
             role="progressbar"
