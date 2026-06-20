@@ -16,6 +16,8 @@ import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteReq
 import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
 import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
 import {
@@ -27,6 +29,7 @@ import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integ
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
   ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle, Save,
+  Building2, FolderOpen, PlusCircle, HelpCircle,
 } from 'lucide-react';
 
 /**
@@ -42,13 +45,20 @@ type Timeline = 'week' | 'two-weeks' | 'month' | 'flexible' | 'ask-provider';
 type BudgetMode = 'yes' | 'no' | 'after-quotes';
 type ClientType = 'individual' | 'contractor' | 'engineering' | 'company' | 'gov' | 'other';
 type ContactPref = 'whatsapp' | 'call' | 'email';
+type LocationMode = 'saved' | 'project' | 'new' | 'none' | '';
 
 interface QuoteForm {
   sector: Sector;
   /** Optional canonical sub-specialty slug (child of `sector`). */
   specialty: string;
+  /** RFQ Location-First — site/project/region selection. */
+  locationMode: LocationMode;
+  siteId: string;
+  projectId: string;
+  region: string;
   city: string;
   district: string;
+  noLocationSelected: boolean;
   serviceLocation: ServiceLocation | '';
   description: string;
   measurements: string;
@@ -71,7 +81,9 @@ interface QuoteForm {
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
 
 const emptyForm: QuoteForm = {
-  sector: '', specialty: '', city: '', district: '', serviceLocation: '',
+  sector: '', specialty: '',
+  locationMode: '', siteId: '', projectId: '', region: '',
+  city: '', district: '', noLocationSelected: false, serviceLocation: '',
   description: '', measurements: '', quantity: '', files: [],
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
