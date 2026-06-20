@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, ShieldCheck, Phone, Link2, Rocket } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 import type { BusinessOverviewMetrics } from '@/modules/admin/businesses/businessAdminMetrics';
+import { ControlChip, type ChipTone } from './ControlChip';
 
 export type QuickActionKey =
   | 'pilotReady'
@@ -23,30 +24,26 @@ interface QuickActionsCardProps {
  * where these ops counts are framed as actions.
  */
 export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({ metrics, isRTL, onAction }) => {
-  const chips: ReadonlyArray<{ key: QuickActionKey; label: string; count: number; icon: React.ElementType; tone: string }> = [
+  const chips: ReadonlyArray<{ key: QuickActionKey; label: string; count: number; icon: React.ElementType; tone: ChipTone }> = [
     {
       key: 'pilotReady',
       label: pickBi(isRTL, 'عرض الجاهزين للتشغيل', 'Show pilot-ready'),
-      count: metrics.pilotReady, icon: Rocket,
-      tone: 'bg-success/10 text-success-foreground border-success/30 hover:bg-success/20',
+      count: metrics.pilotReady, icon: Rocket, tone: 'success',
     },
     {
       key: 'pendingReview',
       label: pickBi(isRTL, 'بحاجة للمراجعة', 'Needs review'),
-      count: metrics.pendingReview, icon: ShieldCheck,
-      tone: 'bg-warning/10 text-warning-foreground border-warning/30 hover:bg-warning/20',
+      count: metrics.pendingReview, icon: ShieldCheck, tone: 'warning',
     },
     {
       key: 'missingContact',
       label: pickBi(isRTL, 'بدون تواصل', 'No contact'),
-      count: metrics.missingContact, icon: Phone,
-      tone: 'bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20',
+      count: metrics.missingContact, icon: Phone, tone: 'destructive',
     },
     {
       key: 'missingPublicLink',
       label: pickBi(isRTL, 'بدون رابط عام', 'No public link'),
-      count: metrics.missingPublicLink, icon: Link2,
-      tone: 'bg-info/10 text-info-foreground border-info/30 hover:bg-info/20',
+      count: metrics.missingPublicLink, icon: Link2, tone: 'info',
     },
   ];
 
@@ -59,22 +56,17 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({ metrics, isR
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
-        {chips.map((c) => {
-          const Icon = c.icon;
-          return (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => onAction(c.key)}
-              className={`inline-flex items-center gap-2 px-3 h-9 rounded-full border text-xs font-medium transition-colors ${c.tone}`}
-              data-testid={`quick-action-${c.key}`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{c.label}</span>
-              <span className="tabular-nums text-[11px] opacity-80">· {c.count}</span>
-            </button>
-          );
-        })}
+        {chips.map((c) => (
+          <ControlChip
+            key={c.key}
+            label={c.label}
+            icon={c.icon as never}
+            count={c.count}
+            tone={c.tone}
+            onClick={() => onAction(c.key)}
+            testId={`quick-action-${c.key}`}
+          />
+        ))}
       </CardContent>
     </Card>
   );
