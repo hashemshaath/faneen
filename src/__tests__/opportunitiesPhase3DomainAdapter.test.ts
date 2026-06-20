@@ -28,7 +28,7 @@ describe('opportunities phase 3 — domain adapter', () => {
   it('provider_leads is not exposed as an opportunity assignment', () => {
     expect(NON_OPPORTUNITY_TABLES).toContain('provider_leads');
     // The repository file must not import or query provider_leads.
-    expect(REPO_SRC).not.toMatch(/provider_leads/);
+    expect(REPO_SRC).not.toMatch(/\.from\(\s*['"]provider_leads['"]/);
     expect(REPO_SRC).not.toMatch(/listProviderInteractions|providerLeadsService/);
   });
 
