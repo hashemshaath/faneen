@@ -30,6 +30,7 @@ import { ActiveFiltersBarV3 } from '@/components/search/v3/ActiveFiltersBarV3';
 import { useStickyOverlapAudit } from '@/hooks/useStickyOverlapAudit';
 import { LoadingProgressV3 } from '@/components/search/v3/LoadingProgressV3';
 import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
+import { RecentAndShareV3 } from '@/components/search/v3/RecentAndShareV3';
 
 const ITEMS_PER_PAGE = 12;
 const SORT_STORAGE_KEY = 'qitaat_search_sort';
@@ -168,7 +169,10 @@ const SearchV3 = () => {
 
   const handleSearch = useCallback((q: string) => {
     if (q.trim()) addToSearchHistory(q.trim());
+    setHistoryVersion((v) => v + 1);
   }, []);
+
+  const [historyVersion, setHistoryVersion] = useState(0);
 
   const handleFilterChange = useCallback(
     <K extends keyof SearchFilterValues>(key: K, value: SearchFilterValues[K]) => {
@@ -506,6 +510,10 @@ const SearchV3 = () => {
                 cities={cities}
                 hasActiveFilters={hasActiveFilters}
               />
+              <RecentAndShareV3
+                onPickQuery={handleQueryChange}
+                historyVersion={historyVersion}
+              />
               <SearchSeoLinksV3 />
             </div>
           </aside>
@@ -537,6 +545,10 @@ const SearchV3 = () => {
             outside the desktop-only sidebar so crawlers and mobile users
             both reach them. Hidden on `lg` to avoid duplication. */}
         <div className="lg:hidden mt-8 rounded-2xl border border-border/60 bg-card p-5">
+          <RecentAndShareV3
+            onPickQuery={handleQueryChange}
+            historyVersion={historyVersion}
+          />
           <SearchSeoLinksV3 />
         </div>
       </main>
