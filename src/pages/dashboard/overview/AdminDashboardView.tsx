@@ -465,22 +465,109 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           </Card>
         );
       case 'kpi-bento':
-        return (
-          <div className="dash-bento">
-            {adminCards.map((card, i) => (
-              <BentoTile
-                key={card.label}
-                variant={i === 0 ? 'feature' : (i === 1 || i === 2 ? 'wide' : 'tile')}
-                accent={i === 0 ? 'gold' : 'emerald'}
-                icon={card.icon}
-                label={card.label}
-                value={card.value}
-                sub={'sub' in card ? card.sub : undefined}
-                to={card.to}
-              />
-            ))}
-          </div>
-        );
+        {
+          const usersSeries   = seriesFromMonthly(stats?.monthlyUsers, 6);
+          const contractSeries = seriesFromMonthly(stats?.monthlyContracts, 6);
+          const completionRate = stats?.contracts
+            ? Math.round(((stats.activeContracts ?? 0) / stats.contracts) * 100)
+            : 0;
+          const kpis = [
+            {
+              icon: Users,
+              label: isRTL ? 'المستخدمون' : 'Users',
+              value: animatedUsers,
+              series: usersSeries,
+              tone: 'primary' as const,
+              to: '/admin/users',
+              insight: usersSeries.length >= 2
+                ? (isRTL ? 'منحنى نمو إيجابي خلال الأشهر الأخيرة.' : 'Positive growth curve in recent months.')
+                : (isRTL ? 'لا توجد بيانات كافية بعد لقراءة الاتجاه.' : 'Not enough history yet to read a trend.'),
+            },
+            {
+              icon: Building2,
+              label: isRTL ? 'المنشآت' : 'Businesses',
+              value: stats?.businesses ?? 0,
+              series: usersSeries,
+              tone: 'success' as const,
+              to: '/admin/businesses',
+              insight: (stats?.providersPending ?? 0) > 0
+                ? (isRTL ? `${stats?.providersPending} منشأة بانتظار المراجعة.` : `${stats?.providersPending} businesses awaiting review.`)
+                : (isRTL ? 'كل المنشآت تمت مراجعتها.' : 'All businesses are reviewed.'),
+            },
+            {
+              icon: DollarSign,
+              label: isRTL ? 'الإيرادات' : 'Revenue',
+              value: `${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`,
+              series: contractSeries,
+              tone: 'success' as const,
+              to: '/dashboard/contracts',
+              insight: isRTL
+                ? `${stats?.activeContracts ?? 0} عقد نشط حالياً، يولّد إيراد مستمر.`
+                : `${stats?.activeContracts ?? 0} active contracts generating ongoing revenue.`,
+            },
+            {
+              icon: FileText,
+              label: isRTL ? 'العقود النشطة' : 'Active Contracts',
+              value: stats?.activeContracts ?? 0,
+              series: contractSeries,
+              tone: 'accent' as const,
+              to: '/dashboard/contracts',
+              trendPercent: completionRate,
+              insight: isRTL
+                ? `${completionRate}% من إجمالي ${animatedContracts} عقد قيد التنفيذ.`
+                : `${completionRate}% of ${animatedContracts} total contracts are active.`,
+            },
+            {
+              icon: Crown,
+              label: isRTL ? 'اشتراكات نشطة' : 'Active Subs',
+              value: stats?.subscriptions ?? 0,
+              series: [],
+              tone: 'accent' as const,
+              to: '/admin/memberships',
+              insight: (stats?.approvalsPending ?? 0) > 0
+                ? (isRTL ? `${stats?.approvalsPending} طلب عضوية بانتظار الموافقة.` : `${stats?.approvalsPending} membership requests pending.`)
+                : (isRTL ? 'لا طلبات عضوية معلّقة حالياً.' : 'No pending membership requests.'),
+            },
+            {
+              icon: MessageSquare,
+              label: isRTL ? 'المحادثات' : 'Conversations',
+              value: stats?.messages ?? 0,
+              series: [],
+              tone: 'info' as const,
+              to: '/dashboard/messages',
+              insight: isRTL ? 'حجم تواصل تراكمي بين المزودين والعملاء.' : 'Cumulative provider ↔ client conversations.',
+            },
+            {
+              icon: Mail,
+              label: isRTL ? 'رسائل جديدة' : 'New Messages',
+              value: stats?.newContactMessages ?? 0,
+              series: [],
+              tone: (stats?.newContactMessages ?? 0) > 0 ? ('warning' as const) : ('success' as const),
+              to: '/admin/contact-messages',
+              insight: (stats?.newContactMessages ?? 0) > 0
+                ? (isRTL ? 'رسائل تواصل بحاجة إلى رد.' : 'Contact messages waiting for a reply.')
+                : (isRTL ? 'صندوق التواصل فارغ — أحسنت.' : 'Inbox empty — nice work.'),
+            },
+          ];
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {kpis.map((k) => (
+                <SmartMetricCard
+                  key={k.label}
+                  icon={k.icon}
+                  label={k.label}
+                  value={k.value}
+                  series={k.series}
+                  trendPercent={k.trendPercent}
+                  insight={k.insight}
+                  tone={k.tone}
+                  to={k.to}
+                  isRTL={isRTL}
+                />
+              ))}
+            </div>
+          );
+        }
       case 'quick-actions':
         return <AdminQuickActionsWidget isRTL={isRTL} />;
       case 'monthly-contracts-chart':
