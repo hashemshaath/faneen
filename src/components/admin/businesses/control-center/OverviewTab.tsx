@@ -1,22 +1,23 @@
 import React, { useMemo } from 'react';
 import {
   Building2, CheckCircle2, FileEdit, Clock, ShieldCheck,
-  Rocket, Phone, Link2, Activity, Layers, ListChecks,
+  Rocket, Phone, Link2,
 } from 'lucide-react';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { pickBi } from '@/components/common/Bilingual';
 import {
   computeOverviewMetrics,
+  computeAdvancedMetrics,
   statusDistribution,
   entityTypeDistribution,
   completenessDistribution,
   type BusinessMetricsRow,
 } from '@/modules/admin/businesses/businessAdminMetrics';
-import { MetricBarList } from './MetricBarList';
 import { QuickActionsCard, type QuickActionKey } from './QuickActionsCard';
 import { OverviewChartsSection } from './OverviewChartsSection';
 import { OverviewTrendSection } from './OverviewTrendSection';
 import { AdvancedStatsStrip } from './AdvancedStatsStrip';
+import { CompletenessSection } from './CompletenessSection';
 
 interface OverviewTabProps {
   businesses: ReadonlyArray<BusinessMetricsRow>;
@@ -31,6 +32,7 @@ interface OverviewTabProps {
  */
 export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQuickAction }) => {
   const m = useMemo(() => computeOverviewMetrics(businesses), [businesses]);
+  const adv = useMemo(() => computeAdvancedMetrics(businesses), [businesses]);
   const statusBuckets = useMemo(() => statusDistribution(businesses, isRTL), [businesses, isRTL]);
   const entityBuckets = useMemo(() => entityTypeDistribution(businesses, isRTL), [businesses, isRTL]);
   const completenessBuckets = useMemo(
@@ -42,10 +44,12 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQ
 
   return (
     <div className="space-y-6" data-testid="business-control-center-overview">
+      {/* 1. Operational quick actions — always first */}
       {onQuickAction ? (
         <QuickActionsCard metrics={m} isRTL={isRTL} onAction={onQuickAction} />
       ) : null}
 
+      {/* 2. Primary KPI counts */}
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
         <AdminKpiCard
           label={pickBi(isRTL, 'الإجمالي', 'Total')}
@@ -81,45 +85,27 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQ
         />
       </div>
 
+      {/* 3. Derived rates & velocity */}
       <AdvancedStatsStrip rows={businesses} isRTL={isRTL} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <MetricBarList
-          title={pickBi(isRTL, 'توزيع الحالات', 'Status distribution')}
-          icon={Activity}
-          buckets={statusBuckets}
-          total={m.total}
-          isRTL={isRTL}
-          tone="primary"
-        />
-        <MetricBarList
-          title={pickBi(isRTL, 'توزيع نوع الجهة', 'Entity-type distribution')}
-          icon={Layers}
-          buckets={entityBuckets}
-          total={m.total}
-          isRTL={isRTL}
-          tone="accent"
-        />
-        <MetricBarList
-          title={pickBi(isRTL, 'اكتمال البيانات', 'Data completeness')}
-          icon={ListChecks}
-          buckets={completenessBuckets}
-          total={m.total}
-          isRTL={isRTL}
-          tone="warning"
-        />
-      </div>
-
+      {/* 4. Composition: readiness gauge + status & entity donuts */}
       <OverviewChartsSection
         isRTL={isRTL}
         metrics={m}
         status={statusBuckets}
         entityType={entityBuckets}
-        completeness={completenessBuckets}
       />
 
+      {/* 5. Growth trend + geographic distribution */}
       <OverviewTrendSection isRTL={isRTL} rows={businesses} />
 
+      {/* 6. Completeness gaps — single unified panel */}
+      <CompletenessSection
+        buckets={completenessBuckets}
+        total={m.total}
+        isRTL={isRTL}
+        avgCompleteness={adv.avgCompleteness}
+      />
     </div>
   );
 };
