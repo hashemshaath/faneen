@@ -10,7 +10,7 @@ const SAUDI_PHONE = /^(?:\+?966|0)?5\d{8}$/;
 
 // Auto-trigger matching the moment a quote is submitted.
 // Keep `false` while admin review is the default operating mode.
-const AUTO_MATCH_ON_SUBMISSION = false;
+const AUTO_MATCH_ON_SUBMISSION = true;
 
 // Must stay in sync with src/modules/taxonomy/canonical-primaries.ts
 // (the 13 canonical primary slugs the public RFQ form is allowed to submit).
