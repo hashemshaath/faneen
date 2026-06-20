@@ -40,6 +40,7 @@ import { formatLastUpdated } from '@/components/dashboard/overview/UnifiedDashbo
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { SmartMetricCard, seriesFromMonthly } from '@/components/dashboard/admin/SmartMetricCard';
 import { AdminSmartBrief } from '@/components/dashboard/admin/AdminSmartBrief';
+import { DataFreshness } from '@/components/dashboard/admin/DataFreshness';
 import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
   AdminQuickActionsWidget,
@@ -52,6 +53,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   const qc = useQueryClient();
   const layout = useAdminDashboardLayout();
   const [lastRefresh, setLastRefresh] = React.useState<Date>(() => new Date());
+  const [dataUpdatedAt, setDataUpdatedAt] = React.useState<Date>(() => new Date());
 
   const { data: svcCounters } = useQuery({
     queryKey: ['admin-service-activation-counters'],
@@ -135,6 +137,12 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
     staleTime: 30000,
   });
 
+  // Keep "last updated" in sync with the actual query completion time
+  // so the badge reflects DB reality, not just the user clicking refresh.
+  React.useEffect(() => {
+    if (!isFetching) setDataUpdatedAt(new Date());
+  }, [isFetching, stats]);
+
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedUsers = useCountUp(stats?.users ?? 0, isVisible, 1200);
   const animatedRevenue = useCountUp(stats?.totalRevenue ?? 0, isVisible, 1500);
@@ -178,6 +186,12 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
             }
             actions={
               <>
+                <DataFreshness
+                  lastUpdated={dataUpdatedAt}
+                  isRTL={isRTL}
+                  source="Supabase (live)"
+                  className="hidden md:inline-flex"
+                />
                 <Badge className="text-[10px] gap-1 h-7 px-2 bg-success/10 text-success border border-success/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" aria-hidden="true" />
                   {isRTL ? 'مباشر' : 'Live'}
@@ -293,7 +307,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="px-4 pb-3">
+              <CardContent className="px-4 pb-3 space-y-2">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {pulse.map((m) => (
                     <SmartMetricCard
@@ -309,6 +323,11 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                     />
                   ))}
                 </div>
+                <DataFreshness
+                  lastUpdated={dataUpdatedAt}
+                  isRTL={isRTL}
+                  source="lead_requests, contracts, businesses"
+                />
               </CardContent>
             </Card>
           );
@@ -465,6 +484,11 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                     </div>
                   </div>
                 ))}
+                <DataFreshness
+                  lastUpdated={dataUpdatedAt}
+                  isRTL={isRTL}
+                  source="email_send_log, contracts, businesses, quote_requests, service_addition_requests, membership_subscriptions"
+                />
               </CardContent>
             </Card>
           );
@@ -544,21 +568,28 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
             },
           ];
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {kpis.map((k) => (
-                <SmartMetricCard
-                  key={k.label}
-                  icon={k.icon}
-                  label={k.label}
-                  value={k.value}
-                  series={k.series}
-                  trendPercent={k.trendPercent}
-                  insight={k.insight}
-                  tone={k.tone}
-                  to={k.to}
-                  isRTL={isRTL}
-                />
-              ))}
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {kpis.map((k) => (
+                  <SmartMetricCard
+                    key={k.label}
+                    icon={k.icon}
+                    label={k.label}
+                    value={k.value}
+                    series={k.series}
+                    trendPercent={k.trendPercent}
+                    insight={k.insight}
+                    tone={k.tone}
+                    to={k.to}
+                    isRTL={isRTL}
+                  />
+                ))}
+              </div>
+              <DataFreshness
+                lastUpdated={dataUpdatedAt}
+                isRTL={isRTL}
+                source="profiles, businesses, contracts, membership_subscriptions, conversations"
+              />
             </div>
           );
         }
