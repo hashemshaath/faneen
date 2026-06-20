@@ -237,7 +237,7 @@ const Categories = () => {
             </p>
           </div>
         </div>
-        <div className="container-app page-shell">
+        <main className="container-app page-shell">
           {bizLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
           ) : businesses.length === 0 ? (
@@ -270,7 +270,7 @@ const Categories = () => {
               ))}
             </div>
           )}
-        </div>
+        </main>
         <Footer />
       </div>
     );
@@ -285,7 +285,7 @@ const Categories = () => {
           <p className="mt-2 text-primary-foreground/70 text-sm">{bi('اختر القسم المناسب لتجد مزودي الخدمات', 'Choose a category to find service providers')}</p>
         </div>
       </div>
-      <div className="container-app page-shell">
+      <main className="container-app page-shell">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
         ) : (
@@ -318,7 +318,7 @@ const Categories = () => {
             ))}
           </div>
         )}
-      </div>
+      </main>
       <Footer />
     </div>
   );
