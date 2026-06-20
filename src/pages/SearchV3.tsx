@@ -542,6 +542,7 @@ const SearchV3 = () => {
                 categories={categories}
                 cities={cities}
                 hasActiveFilters={hasActiveFilters}
+                cityCounts={cityCounts}
               />
               <RecentAndShareV3
                 onPickQuery={handleQueryChange}
