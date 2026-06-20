@@ -31,6 +31,9 @@ export const OPPORTUNITY_LABELS = {
   awardBid:              { ar: 'ترسية العرض',         en: 'Award Bid' },
   convertToContract:     { ar: 'تحويل إلى عقد',       en: 'Convert to Contract' },
   manageOpportunities:   { ar: 'إدارة الفرص',         en: 'Manage Opportunities' },
+  winningBid:            { ar: 'العرض الفائز',        en: 'Winning Bid' },
+  draftContract:         { ar: 'العقد المبدئي',       en: 'Draft Contract' },
+  operationsCenter:      { ar: 'مركز عمليات الفرص',   en: 'Opportunities Operations Center' },
 } as const satisfies Record<string, BiLabel>;
 
 export type OpportunityLabelKey = keyof typeof OPPORTUNITY_LABELS;

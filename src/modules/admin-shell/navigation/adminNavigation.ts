@@ -132,6 +132,7 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
     descriptionEn: 'Operations center, requests, contracts and approvals',
     items: [
       { id: 'operations-center', labelAr: 'مركز العمليات', labelEn: 'Operations Center', route: '/admin/operations', icon: Activity, keywords: ['operations', 'عمليات', 'sla', 'logs'] },
+      { id: 'opportunities-ops', labelAr: 'مركز عمليات الفرص', labelEn: 'Opportunities Operations Center', route: '/admin/opportunities', icon: Activity, keywords: ['opportunities', 'فرص'] },
       { id: 'procurement-center', labelAr: 'المشتريات', labelEn: 'Procurement', route: '/admin/procurement', icon: FileText, keywords: ['procurement', 'quotes', 'leads', 'مشتريات'] },
       { id: 'contracts', labelAr: 'العقود', labelEn: 'Contracts', route: '/admin/contracts', icon: FileText, keywords: ['contracts', 'عقود'] },
       { id: 'quote-operations', labelAr: 'مركز عروض الأسعار', labelEn: 'Quote Operations', route: '/admin/quote-operations', icon: FileText, hiddenInSidebar: true },

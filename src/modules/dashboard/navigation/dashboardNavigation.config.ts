@@ -63,7 +63,7 @@ export const providerNavGroups: DashboardNavGroup[] = [
     icon: Inbox,
     items: [
       { label: UNIFIED_ITEM_LABELS.clientRequests, url: '/dashboard/leads', icon: Inbox },
-      { label: UNIFIED_ITEM_LABELS.opportunities, url: '/dashboard/rfq/inbox', icon: Sparkles, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: UNIFIED_ITEM_LABELS.assignedOpportunities, url: '/dashboard/rfq/inbox', icon: Sparkles, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: UNIFIED_ITEM_LABELS.offers, url: '/dashboard/rfq', icon: FileText },
       { label: UNIFIED_ITEM_LABELS.clients, url: '/dashboard/clients', icon: Users },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
