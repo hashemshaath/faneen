@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
@@ -130,6 +131,7 @@ const SearchV3 = () => {
           return r ? (isRTL ? r.name_ar : r.name_en) : undefined;
         })()
       : undefined);
+  useImagePerfTracking('search');
   usePageMeta({
     title: buildSeoTitle({ kind: 'search', lang, service: seoSubject, city: seoCity }),
     description: buildSeoDescription({ kind: 'search', lang, service: seoSubject, city: seoCity }),

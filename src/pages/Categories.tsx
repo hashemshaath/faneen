@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
@@ -74,6 +75,10 @@ const Categories = () => {
   });
 
   const { byId: countsById, bySlug: countsBySlug } = useCategoryCounts();
+
+  // RUM: route_key = "categories" so the /admin/performance dashboard can
+  // surface LCP / CLS / IMG aggregates separately from the home page.
+  useImagePerfTracking('categories');
 
   const selectedCategory = slug ? categories.find(c => c.slug === slug) : null;
   const catName = selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : '';
@@ -232,7 +237,7 @@ const Categories = () => {
             </p>
           </div>
         </div>
-        <div className="container-app page-shell">
+        <main className="container-app page-shell">
           {bizLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
           ) : businesses.length === 0 ? (
@@ -265,7 +270,7 @@ const Categories = () => {
               ))}
             </div>
           )}
-        </div>
+        </main>
         <Footer />
       </div>
     );
@@ -280,7 +285,7 @@ const Categories = () => {
           <p className="mt-2 text-primary-foreground/70 text-sm">{bi('اختر القسم المناسب لتجد مزودي الخدمات', 'Choose a category to find service providers')}</p>
         </div>
       </div>
-      <div className="container-app page-shell">
+      <main className="container-app page-shell">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
         ) : (
@@ -313,7 +318,7 @@ const Categories = () => {
             ))}
           </div>
         )}
-      </div>
+      </main>
       <Footer />
     </div>
   );
