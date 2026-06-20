@@ -1592,7 +1592,25 @@ const AdminBusinesses = () => {
               applyHoursToAllBranchesMutation.mutate(hours as unknown)
             }
             applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
-            tiers={tiers}
+            ownerTab={
+              <BusinessOwnerSectionShell
+                businessId={editingBiz.id}
+                businessRef={editingBiz.ref_id ?? null}
+                ownerUserId={editingBiz.user_id}
+                isRTL={isRTL}
+                onOwnerReassigned={() => setEditingBiz(null)}
+              />
+            }
+            controlsTab={
+              <BusinessControlsSection
+                editForm={editForm}
+                setField={setField}
+                isRTL={isRTL}
+                language={language as 'ar' | 'en'}
+                tiers={tiers}
+              />
+            }
+            opsTab={<BusinessOperationsSection businessId={editingBiz.id} />}
             canSave={!!editForm.name_ar}
             savingEdit={updateBizMutation.isPending}
             onSaveEdit={() => updateBizMutation.mutate()}
