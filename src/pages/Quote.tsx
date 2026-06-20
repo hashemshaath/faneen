@@ -849,38 +849,215 @@ const Quote: React.FC = () => {
                 {step === 2 && (
                   <div className="space-y-5">
                     <StepHeading
-                      ar="أين يقع المشروع؟"
-                      en="Where is the project located?"
+                      ar="موقع تنفيذ العمل"
+                      en="Work location"
                       help={{
-                        ar: 'الموقع يساعد على توجيه الطلب لمزودين أقرب أو أنسب.',
-                        en: 'Location helps route the request to nearer providers.',
+                        ar: 'كلما كان الموقع أدق، وصل طلبك لمزودين أقرب وأنسب لخدمة منطقتك.',
+                        en: 'The more precise the location, the better we can route to nearby providers.',
                       }}
                     />
-                    <div>
-                      <Label htmlFor="q-city"><Bi ar="المدينة" en="City" /></Label>
-                      <Input
-                        id="q-city"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        className="h-12 mt-1.5"
-                        placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
-                        value={form.city}
-                        onChange={(e) => update('city', e.target.value)}
+                    <div data-testid="quote-location-section">
+                      <div className="mb-3 text-sm font-semibold text-foreground">
+                        <Bi ar="كيف تريد تحديد الموقع؟" en="How do you want to specify the location?" />
+                      </div>
+                      <ChoiceGrid
+                        name={bi('وضع الموقع', 'Location mode')}
+                        cols="sm:grid-cols-2"
+                        options={[
+                          ...(savedSites.length
+                            ? [{ value: 'saved', ar: 'موقع محفوظ', en: 'Saved site' }]
+                            : []),
+                          ...(userProjects.length
+                            ? [{ value: 'project', ar: 'مشروع لدي', en: 'My project' }]
+                            : []),
+                          { value: 'new',  ar: 'إضافة عنوان جديد', en: 'Add new address' },
+                          { value: 'none', ar: 'لا أملك عنوانًا محددًا الآن', en: 'I have no address yet' },
+                        ]}
+                        value={form.locationMode}
+                        onChange={(v) => {
+                          const next = v as LocationMode;
+                          setForm((p) => ({
+                            ...p,
+                            locationMode: next,
+                            noLocationSelected: next === 'none',
+                            // Reset linkage when switching modes
+                            siteId: next === 'saved' || next === 'project' ? p.siteId : '',
+                            projectId: next === 'project' ? p.projectId : '',
+                          }));
+                          setErrors((p) => ({ ...p, locationMode: undefined, siteId: undefined, projectId: undefined, region: undefined, city: undefined }));
+                        }}
                       />
-                      <FieldError message={errors.city} />
+                      <FieldError message={errors.locationMode} />
                     </div>
-                    <div>
-                      <Label htmlFor="q-district">
-                        <Bi ar="الحي (اختياري)" en="District (optional)" />
-                      </Label>
-                      <Input
-                        id="q-district"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        className="h-12 mt-1.5"
-                        placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
-                        value={form.district}
-                        onChange={(e) => update('district', e.target.value)}
-                      />
-                    </div>
+
+                    {form.locationMode === 'saved' && (
+                      <div data-testid="quote-saved-sites">
+                        <div className="mb-2 text-sm font-semibold text-foreground">
+                          <Bi ar="اختر موقعًا محفوظًا" en="Pick a saved site" />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {savedSites.map((s) => {
+                            const active = form.siteId === s.id;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                data-testid="quote-saved-site-option"
+                                onClick={() => setForm((p) => ({
+                                  ...p,
+                                  siteId: s.id,
+                                  region: s.region ?? '',
+                                  city: s.city ?? '',
+                                  district: s.district ?? '',
+                                  noLocationSelected: false,
+                                }))}
+                                className={`text-start rounded-xl border p-3 transition hover-lift ${
+                                  active
+                                    ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
+                                    : 'border-border bg-card hover:border-primary/40'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                  <Building2 className="w-4 h-4 text-primary" />
+                                  <span className="truncate" dir="auto">{s.label}</span>
+                                </div>
+                                <div className="mt-1 text-xs text-muted-foreground truncate" dir="auto">
+                                  {[s.region, s.city, s.district].filter(Boolean).join(' · ') || s.short_address || ''}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <FieldError message={errors.siteId} />
+                      </div>
+                    )}
+
+                    {form.locationMode === 'project' && (
+                      <div data-testid="quote-projects">
+                        <div className="mb-2 text-sm font-semibold text-foreground">
+                          <Bi ar="اختر مشروعًا" en="Pick a project" />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {userProjects.map((p) => {
+                            const active = form.projectId === p.id;
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                data-testid="quote-project-option"
+                                onClick={() => {
+                                  const matchedSite = p.site_id
+                                    ? savedSites.find((s) => s.id === p.site_id)
+                                    : undefined;
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    projectId: p.id,
+                                    siteId: p.site_id ?? '',
+                                    region: matchedSite?.region ?? prev.region,
+                                    city: matchedSite?.city ?? prev.city,
+                                    district: matchedSite?.district ?? prev.district,
+                                  }));
+                                }}
+                                className={`text-start rounded-xl border p-3 transition hover-lift ${
+                                  active
+                                    ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
+                                    : 'border-border bg-card hover:border-primary/40'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                  <FolderOpen className="w-4 h-4 text-primary" />
+                                  <span className="truncate" dir="auto">{p.title}</span>
+                                </div>
+                                <div className="mt-1 text-xs text-muted-foreground">
+                                  {p.site_id
+                                    ? <Bi ar="مرتبط بموقع محفوظ" en="Linked to a saved site" />
+                                    : <Bi ar="بدون موقع — أضف موقعًا" en="No site — add a location" />}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <FieldError message={errors.projectId} />
+                        {form.projectId && !form.siteId && (
+                          <p className="mt-3 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                            <Bi
+                              ar="هذا المشروع بدون موقع. أدخل المنطقة والمدينة أدناه، أو اختر بدون عنوان محدد."
+                              en="This project has no site. Add a region/city below or pick no address."
+                            />
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {(form.locationMode === 'new'
+                      || (form.locationMode === 'project' && !form.siteId)
+                      || form.locationMode === 'none') && (
+                      <div data-testid="quote-location-fields" className="space-y-4">
+                        <div>
+                          <Label htmlFor="q-region"><Bi ar="المنطقة" en="Region" /></Label>
+                          <Input
+                            id="q-region"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className="h-12 mt-1.5"
+                            placeholder={bi('مثال: منطقة الرياض', 'e.g. Riyadh region')}
+                            value={form.region}
+                            onChange={(e) => update('region', e.target.value)}
+                          />
+                          <FieldError message={errors.region} />
+                        </div>
+                        <div>
+                          <Label htmlFor="q-city"><Bi ar="المدينة" en="City" /></Label>
+                          <Input
+                            id="q-city"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className="h-12 mt-1.5"
+                            placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
+                            value={form.city}
+                            onChange={(e) => update('city', e.target.value)}
+                          />
+                          <FieldError message={errors.city} />
+                        </div>
+                        <div>
+                          <Label htmlFor="q-district">
+                            <Bi ar="الحي (اختياري)" en="District (optional)" />
+                          </Label>
+                          <Input
+                            id="q-district"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className="h-12 mt-1.5"
+                            placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
+                            value={form.district}
+                            onChange={(e) => update('district', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {form.locationMode === 'none' && (
+                      <div
+                        data-testid="quote-no-location-warning"
+                        role="status"
+                        className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2"
+                      >
+                        <HelpCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <Bi
+                          ar="سيتم استقبال الطلب، لكن قد يحتاج فريق قطاعات لتوضيح الموقع قبل توجيهه للمزودين."
+                          en="Your request will be received, but the Qitaat team may need to clarify the location before routing to providers."
+                        />
+                      </div>
+                    )}
+
+                    {form.locationMode === 'new' && user && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <Bi
+                          ar="حفظ هذا العنوان في مركز العناوين متاح قريبًا."
+                          en="Saving this address to your address book is coming soon."
+                        />
+                      </p>
+                    )}
+
                     <div>
                       <div className="mb-2 text-sm font-semibold text-foreground">
                         <Bi ar="هل الخدمة مطلوبة في موقع العميل أم لدى المزود؟" en="On client site or at provider?" />
