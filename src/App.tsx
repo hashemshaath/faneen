@@ -280,6 +280,7 @@ const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershi
 // backward-compatibility notice. TODO(legacy-sunset): see TODO-C1-02 in
 // `docs/pilot-launch-backlog.md` — delete the file once verified.
 const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
+const AdminNotificationsConfig = lazyRetry(() => import("./pages/admin/AdminNotificationsConfig"));
 // Taxonomy & Reference Data Center — Phase 2.
 const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
 const AdminProjectCategories = lazyRetry(() => import("./pages/admin/AdminProjectCategories"));
