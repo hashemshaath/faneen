@@ -87,7 +87,7 @@ export const ADMIN_DASHBOARD_WIDGETS: readonly AdminWidgetDefinition[] = [
     titleAr: 'صناديق الوارد', titleEn: 'Requests Inbox',
     descriptionAr: 'الموافقات والطلبات بانتظار المسؤول.',
     descriptionEn: 'Approvals and items awaiting an admin.',
-    group: 'operations', order: 10, size: 'full',
+    group: 'operations', order: 25, size: 'full',
     permission: 'admin', defaultVisible: true, hideable: true, icon: AlertCircle,
   },
   {
@@ -95,7 +95,7 @@ export const ADMIN_DASHBOARD_WIDGETS: readonly AdminWidgetDefinition[] = [
     titleAr: 'نبض اليوم', titleEn: "Today's Pulse",
     descriptionAr: 'مقاييس اليوم الحية.',
     descriptionEn: 'Live operational counters for today.',
-    group: 'operations', order: 20, size: 'full',
+    group: 'operations', order: 15, size: 'full',
     permission: 'admin', defaultVisible: true, hideable: true, icon: Zap,
   },
   {
@@ -103,7 +103,7 @@ export const ADMIN_DASHBOARD_WIDGETS: readonly AdminWidgetDefinition[] = [
     titleAr: 'مؤشرات الأداء', titleEn: 'KPI Cards',
     descriptionAr: 'مؤشرات النظام الأساسية.',
     descriptionEn: 'Headline KPIs across the platform.',
-    group: 'overview', order: 30, size: 'full',
+    group: 'overview', order: 10, size: 'full',
     permission: 'admin', defaultVisible: true, hideable: true, icon: BarChart3,
   },
   {
@@ -175,7 +175,7 @@ export const ADMIN_DASHBOARD_WIDGETS: readonly AdminWidgetDefinition[] = [
     titleAr: 'إجراءات سريعة', titleEn: 'Quick Actions',
     descriptionAr: 'اختصارات للوصول السريع.',
     descriptionEn: 'Shortcuts to common admin destinations.',
-    group: 'overview', order: 120, size: 'full',
+    group: 'overview', order: 5, size: 'full',
     permission: 'admin', defaultVisible: true, hideable: true, icon: Sparkles,
   },
 ];
