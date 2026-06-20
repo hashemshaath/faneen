@@ -5,6 +5,7 @@
  * Data is injected from the parent row loader; each chip links to
  * `/search?category=<slug>` or `/search?q=<term>`.
  */
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, MapPin, Star } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
@@ -15,12 +16,7 @@ import { isVariantUrls } from '@/modules/files/services/image-pipeline';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { PublicTaxonomyBusiness } from '@/modules/taxonomy/search-integration';
 import type { CategoryRow } from '../data/categoryRows';
-
-const chipHref = (item: CategoryRow['items'][number]): string => {
-  if (item.slug) return `/search?category=${encodeURIComponent(item.slug)}`;
-  if (item.query) return `/search?q=${encodeURIComponent(item.query)}`;
-  return '/search';
-};
+import { cn } from '@/lib/utils';
 
 type CardImageSource =
   | { kind: 'cover'; variants?: unknown; url?: string | null }
@@ -55,15 +51,46 @@ function initialsOf(name: string): string {
 interface Props {
   row: CategoryRow;
   providers?: PublicTaxonomyBusiness[];
+  /** Per-slug provider buckets used for inline chip filtering. */
+  providersBySlug?: Record<string, PublicTaxonomyBusiness[]>;
   providersLoading?: boolean;
 }
 
-const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Props) => {
+const ALL_FILTER = '__all__';
+
+function matchesQuery(b: PublicTaxonomyBusiness, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const hay = `${b.name_ar ?? ''} ${b.name_en ?? ''}`.toLowerCase();
+  return hay.includes(q);
+}
+
+const HomeCategoryRow = ({ row, providers = [], providersBySlug = {}, providersLoading = false }: Props) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
   const Arrow = bi(ArrowLeft, ArrowRight);
+  const [activeFilter, setActiveFilter] = useState<string>(ALL_FILTER);
   const hasLogo = (b: PublicTaxonomyBusiness): boolean =>
     Boolean(b.logo_url) || isVariantUrls(b.logo_image_variants);
+
+  const filteredProviders = useMemo<PublicTaxonomyBusiness[]>(() => {
+    if (activeFilter === ALL_FILTER) return providers;
+    const item = row.items.find((it) => (it.slug ?? `q:${it.query ?? ''}`) === activeFilter);
+    if (!item) return providers;
+    if (item.slug) {
+      const bucket = providersBySlug[item.slug] ?? [];
+      const ids = new Set(bucket.map((b) => b.id));
+      return providers.filter((b) => ids.has(b.id));
+    }
+    if (item.query) return providers.filter((b) => matchesQuery(b, item.query!));
+    return providers;
+  }, [activeFilter, providers, providersBySlug, row.items]);
+
+  const chipBase =
+    'shrink-0 snap-start inline-flex items-center px-3 py-1.5 rounded-full border text-xs sm:text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2';
+  const chipIdle = 'border-border/70 bg-card text-foreground hover:bg-primary/5 hover:border-primary/40 hover:text-primary';
+  const chipActive = 'border-primary bg-primary text-primary-foreground hover:bg-primary';
+
   return (
     <section
       aria-labelledby={`row-${row.id}`}
@@ -82,21 +109,41 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
               {bi(row.subAr, row.subEn)}
             </p>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap lg:justify-end snap-x snap-mandatory">
-            {row.items.map((item) => (
-              <Link
-                key={`${row.id}-${item.ar}`}
-                to={chipHref(item)}
-                className="shrink-0 snap-start inline-flex items-center px-3 py-1.5 rounded-full border border-border/70 bg-card text-xs sm:text-[13px] font-medium text-foreground hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              >
-                {bi(item.ar, item.en)}
-              </Link>
-            ))}
+          <div
+            role="tablist"
+            aria-label={bi(row.titleAr, row.titleEn)}
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap lg:justify-end snap-x snap-mandatory"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeFilter === ALL_FILTER}
+              onClick={() => setActiveFilter(ALL_FILTER)}
+              className={cn(chipBase, activeFilter === ALL_FILTER ? chipActive : chipIdle)}
+            >
+              {bi('عرض الكل', 'View all')}
+            </button>
+            {row.items.map((item) => {
+              const key = item.slug ?? `q:${item.query ?? ''}`;
+              const active = activeFilter === key;
+              return (
+                <button
+                  key={`${row.id}-${item.ar}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setActiveFilter(key)}
+                  className={cn(chipBase, active ? chipActive : chipIdle)}
+                >
+                  {bi(item.ar, item.en)}
+                </button>
+              );
+            })}
             <Link
               to={row.allHref}
               className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-[13px] font-semibold text-primary hover:underline whitespace-nowrap"
             >
-              {bi('عرض الكل', 'View all')}
+              {bi('استعرض كل النتائج', 'Browse all results')}
               <Arrow className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -109,8 +156,8 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
                   className="shrink-0 snap-start w-[76%] sm:w-[280px] rounded-2xl border border-border/60 bg-card h-[230px] animate-pulse"
                 />
               ))
-            : providers.length > 0
-              ? providers.map((business) => {
+            : filteredProviders.length > 0
+              ? filteredProviders.map((business) => {
                   const name = bi(
                     business.name_ar ?? business.name_en ?? '',
                     business.name_en ?? business.name_ar ?? '',
@@ -226,12 +273,24 @@ const HomeCategoryRow = ({ row, providers = [], providersLoading = false }: Prop
               : (
                 <div className="w-full rounded-xl border border-border/60 bg-muted/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">
-                    {bi('لا توجد شركات مرتبطة بهذا القطاع حاليًا', 'No providers are linked to this sector yet')}
+                    {activeFilter === ALL_FILTER
+                      ? bi('لا توجد شركات مرتبطة بهذا القطاع حاليًا', 'No providers are linked to this sector yet')
+                      : bi('لا توجد نتائج لهذا الفلتر', 'No results for this filter')}
                   </p>
-                  <Link to={row.allHref} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
-                    {bi('استكشف القطاع', 'Explore sector')}
-                    <Arrow className="w-3.5 h-3.5" />
-                  </Link>
+                  {activeFilter === ALL_FILTER ? (
+                    <Link to={row.allHref} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                      {bi('استكشف القطاع', 'Explore sector')}
+                      <Arrow className="w-3.5 h-3.5" />
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setActiveFilter(ALL_FILTER)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                    >
+                      {bi('عرض الكل', 'View all')}
+                    </button>
+                  )}
                 </div>
               )}
         </div>
