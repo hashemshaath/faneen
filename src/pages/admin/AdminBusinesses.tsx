@@ -174,6 +174,7 @@ import {
   toSavedViewParams,
   type BizViewFilters,
 } from './businesses/businessSavedViews';
+import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -271,29 +272,10 @@ const AdminBusinesses = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [branchForm, setBranchForm] = useState<AdminBranchFormState | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
-  const [branchTranslating, setBranchTranslating] = useState<'ar' | 'en' | null>(null);
-  const translateBranchName = useCallback(async (from: 'ar' | 'en') => {
-    const text = ((from === 'ar' ? branchForm?.name_ar : branchForm?.name_en) || '').trim();
-    if (!text) { toast.info(pickBi(isRTL, 'لا يوجد نص لترجمته', 'Nothing to translate')); return; }
-    setBranchTranslating(from);
-    try {
-      const { data, error } = await invokeBlogAiTools({
-        action: 'translate',
-        text,
-        sourceLang: from,
-        targetLang: from === 'ar' ? 'en' : 'ar',
-      });
-      if (error) throw error;
-      const result = ((data as { result?: string } | null)?.result || '').trim();
-      if (!result) throw new Error('Empty translation');
-      setBranchForm((f) => f ? ({ ...f, ...(from === 'ar' ? { name_en: result } : { name_ar: result }) }) : f);
-      toast.success(pickBi(isRTL, 'تمت الترجمة', 'Translated'));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : pickBi(isRTL, 'فشلت الترجمة', 'Translation failed'));
-    } finally {
-      setBranchTranslating(null);
-    }
-  }, [branchForm, isRTL]);
+  const { branchTranslating, translateBranchName } = useBranchNameTranslator(
+    branchForm,
+    setBranchForm,
+  );
   const [isPending, startTransition] = useTransition();
   const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
   // Control-center tabs (Phase 1: overview + businesses are real; rest are coming-next).
