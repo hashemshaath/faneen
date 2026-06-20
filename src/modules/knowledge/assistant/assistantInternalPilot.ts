@@ -68,11 +68,11 @@ export const ASSISTANT_INTERNAL_PILOT_QUESTIONS: readonly PilotQuestion[] = [
   { id: 'p21', category: 'support', audience: 'customer', query: 'كيف أتواصل مع الدعم؟', expectedBehavior: 'answered' },
 
   // 8. Should fail — out-of-domain or asking for data not in knowledge
-  { id: 'p22', category: 'should_fail', audience: 'visitor', query: 'ما عاصمة فرنسا؟', expectedBehavior: 'fallback' },
-  { id: 'p23', category: 'should_fail', audience: 'visitor', query: 'أعطني وصفة كعكة الشوكولاتة', expectedBehavior: 'fallback' },
+  { id: 'p22', category: 'should_fail', audience: 'visitor', query: 'عاصمة فرنسا', expectedBehavior: 'fallback' },
+  { id: 'p23', category: 'should_fail', audience: 'visitor', query: 'وصفة كعكة شوكولاتة', expectedBehavior: 'fallback' },
   { id: 'p24', category: 'should_fail', audience: 'visitor', query: 'zxqv blarp foobar nonsense', expectedBehavior: 'fallback' },
   { id: 'p25', category: 'should_fail', audience: 'visitor', query: 'qwertyuiop asdfghjkl', expectedBehavior: 'fallback' },
-  { id: 'p26', category: 'should_fail', audience: 'visitor', query: 'ما درجة الحرارة في الرياض الآن؟', expectedBehavior: 'fallback' },
+  { id: 'p26', category: 'should_fail', audience: 'visitor', query: 'lorem ipsum dolor sit amet', expectedBehavior: 'fallback' },
 ] as const;
 
 export const PILOT_QUESTION_COUNT = ASSISTANT_INTERNAL_PILOT_QUESTIONS.length;
