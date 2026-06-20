@@ -48,4 +48,8 @@ export interface OpportunityOpsRow {
   contract_id: string | null;
   contract_status: string | null;
   flag: OpportunityOpsFlag;
+  first_assigned_at: string | null;
+  first_bid_at: string | null;
+  awarded_at: string | null;
+  contract_created_at: string | null;
 }
