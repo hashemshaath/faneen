@@ -470,7 +470,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         }
       case 'kpi-bento':
         {
-          const usersSeries   = seriesFromMonthly(stats?.monthlyUsers, 6);
+          const usersSeries    = seriesFromMonthly(stats?.monthlyUsers, 6);
           const contractSeries = seriesFromMonthly(stats?.monthlyContracts, 6);
           const completionRate = stats?.contracts
             ? Math.round(((stats.activeContracts ?? 0) / stats.contracts) * 100)
@@ -491,7 +491,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: Building2,
               label: isRTL ? 'المنشآت' : 'Businesses',
               value: stats?.businesses ?? 0,
-              series: usersSeries,
+              series: undefined,
               tone: 'success' as const,
               to: '/admin/businesses',
               insight: (stats?.providersPending ?? 0) > 0
@@ -525,7 +525,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: Crown,
               label: isRTL ? 'اشتراكات نشطة' : 'Active Subs',
               value: stats?.subscriptions ?? 0,
-              series: [],
+              series: undefined,
               tone: 'accent' as const,
               to: '/admin/memberships',
               insight: (stats?.approvalsPending ?? 0) > 0
@@ -536,25 +536,14 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: MessageSquare,
               label: isRTL ? 'المحادثات' : 'Conversations',
               value: stats?.messages ?? 0,
-              series: [],
+              series: undefined,
               tone: 'info' as const,
               to: '/dashboard/messages',
               insight: isRTL ? 'حجم تواصل تراكمي بين المزودين والعملاء.' : 'Cumulative provider ↔ client conversations.',
             },
-            {
-              icon: Mail,
-              label: isRTL ? 'رسائل جديدة' : 'New Messages',
-              value: stats?.newContactMessages ?? 0,
-              series: [],
-              tone: (stats?.newContactMessages ?? 0) > 0 ? ('warning' as const) : ('success' as const),
-              to: '/admin/contact-messages',
-              insight: (stats?.newContactMessages ?? 0) > 0
-                ? (isRTL ? 'رسائل تواصل بحاجة إلى رد.' : 'Contact messages waiting for a reply.')
-                : (isRTL ? 'صندوق التواصل فارغ — أحسنت.' : 'Inbox empty — nice work.'),
-            },
           ];
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {kpis.map((k) => (
                 <SmartMetricCard
                   key={k.label}
