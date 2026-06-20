@@ -61,6 +61,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BusinessOperationsSection } from '@/components/admin/businesses/sections/BusinessOperationsSection';
 import { BusinessControlsSection } from '@/components/admin/businesses/sections/BusinessControlsSection';
 import { BusinessOwnerSectionShell } from '@/components/admin/businesses/sections/BusinessOwnerSectionShell';
+import { BusinessEditPanel } from '@/components/admin/businesses/sections/BusinessEditPanel';
+import { BusinessServicesPanel, type AdminNewServiceFormState, type AdminServiceLite } from '@/components/admin/businesses/sections/BusinessServicesPanel';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
