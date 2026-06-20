@@ -1478,7 +1478,19 @@ const AdminBusinesses = () => {
           </TabsList>
 
           <TabsContent value="overview" className="mt-0">
-            <ControlCenterOverviewTab businesses={businesses} isRTL={isRTL} />
+            <ControlCenterOverviewTab
+              businesses={businesses}
+              isRTL={isRTL}
+              onQuickAction={(key: QuickActionKey) => {
+                setActiveTab('businesses');
+                applyBusinessesPreset(
+                  key === 'pilotReady' ? 'pilotReady'
+                  : key === 'pendingReview' ? 'pendingReview'
+                  : key === 'missingContact' ? 'missingContact'
+                  : 'missingPublicLink',
+                );
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="providers" className="mt-0">
