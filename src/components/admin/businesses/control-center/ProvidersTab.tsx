@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Briefcase, Filter } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
