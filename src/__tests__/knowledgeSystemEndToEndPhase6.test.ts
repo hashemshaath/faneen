@@ -235,7 +235,7 @@ describe('Phase 6 — support replies', () => {
 describe('Phase 6 — messaging snippets stay public-safe', () => {
   it('public snippets never carry internal-ops content', () => {
     for (const aud of ['visitor', 'customer', 'provider', 'business_owner'] as const) {
-      const snippets = getSafeMessageKnowledgeSnippets({ audience: aud, locale: 'ar' });
+      const snippets = getSafeMessageKnowledgeSnippets(aud, 'general', 'ar');
       const leaked = snippets.filter(
         (s) => s.item.status === 'internal' || s.item.categoryId === 'internal-ops',
       );
