@@ -483,6 +483,9 @@ const QuoteRequestDetails: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* OPPORTUNITIES PHASE 5 — bids on this opportunity (client view) */}
+        {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} />}
       </div>
     </DashboardLayout>
   );
