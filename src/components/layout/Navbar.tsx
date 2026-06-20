@@ -293,7 +293,7 @@ export const Navbar = () => {
               <PrefetchLink to="/quote" className="hidden lg:inline-flex">
                 <Button variant="primary" size="sm" className="gap-1.5">
                   <Send className="w-3.5 h-3.5" />
-                  {language === 'ar' ? 'اطلب عرض سعر' : 'Request quote'}
+                  {language === 'ar' ? 'ابدأ فرصة جديدة' : 'Start an opportunity'}
                 </Button>
               </PrefetchLink>
             )}
@@ -390,7 +390,7 @@ export const Navbar = () => {
               className="flex items-center justify-center gap-2 min-h-ctrl-md py-3 px-3 rounded-xl bg-primary text-primary-foreground font-semibold mb-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
             >
               <Send className="w-4 h-4" />
-              <span>{language === 'ar' ? 'اطلب عرض سعر مجانًا' : 'Request a free quote'}</span>
+              <span>{language === 'ar' ? 'ابدأ فرصة مجانًا' : 'Start an opportunity'}</span>
             </Link>
           )}
           {/* Primary: Search */}

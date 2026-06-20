@@ -850,7 +850,7 @@ export const HeroV2 = () => {
             <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <PrimaryCTA
                 to={ROUTES.quote}
-                label={bi('اطلب عرض سعر مجانًا', 'Request a free quote')}
+                label={bi('ابدأ فرصة جديدة', 'Start a new opportunity')}
                 onClick={() => trackAbClick('hero_headline')}
               />
               <Link to={ROUTES.signupProvider}>

@@ -531,20 +531,20 @@ const DashboardMyRequests: React.FC = () => {
                 <CardContent className="py-12 text-center space-y-3">
                   <ReceiptText className="mx-auto h-10 w-10 text-muted-foreground" />
                   <p className="font-medium">
-                    {(quoteRequests?.length ?? 0) === 0
-                      ? (isRTL ? 'لا توجد طلبات حتى الآن' : 'No quote requests yet')
+                     {(quoteRequests?.length ?? 0) === 0
+                       ? (isRTL ? 'لا توجد فرص حتى الآن' : 'No opportunities yet')
                       : (isRTL ? 'لا نتائج مطابقة' : 'No matching results')}
                   </p>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     {(quoteRequests?.length ?? 0) === 0
                       ? (isRTL
-                          ? 'ابدأ بإرسال طلب عرض سعر، وسنساعدك على تنظيم تفاصيله حسب القطاع والمدينة.'
-                          : 'Send a quote request and we will help organize the details by sector and city.')
+                          ? 'ابدأ بإنشاء فرصة جديدة، وسنساعدك على تنظيم تفاصيلها حسب القطاع والمدينة.'
+                          : 'Start a new opportunity and we will help organize the details by sector and city.')
                       : (isRTL ? 'جرّب تعديل البحث أو الفلاتر.' : 'Try adjusting search or filters.')}
                   </p>
                   {(quoteRequests?.length ?? 0) === 0 && (
                     <Button asChild className="min-h-[44px]">
-                      <Link to="/quote"><Plus /> {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+                      <Link to="/quote"><Plus /> {isRTL ? 'ابدأ فرصة جديدة' : 'Start a new opportunity'}</Link>
                     </Button>
                   )}
                 </CardContent>
@@ -582,7 +582,7 @@ const DashboardMyRequests: React.FC = () => {
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {(leads?.length ?? 0) === 0
-                        ? (isRTL ? 'ابدأ بتصفح المنشآت أو القطاعات وأرسل طلب عرض سعر.' : 'Browse providers or sectors to send a quote request.')
+                        ? (isRTL ? 'ابدأ بتصفح المنشآت أو القطاعات وأنشئ فرصتك.' : 'Browse providers or sectors and start an opportunity.')
                         : (isRTL ? 'جرّب تعديل البحث أو الفلاتر.' : 'Try adjusting search or filters.')}
                     </p>
                   </div>
