@@ -44,9 +44,11 @@ describe('AdminBusinesses control-center — Phase 1 (tabs shell + overview)', (
     expect(ids).toEqual(
       ['businesses', 'overview', 'pilot', 'providers', 'review', 'taxonomies'].sort(),
     );
-    // overview + businesses ship in Phase 1; the rest are coming-next
+    // Phase 2 (rebuild) ships every tab; all are marked ready.
     const ready = BUSINESS_ADMIN_TABS.filter((t) => t.ready).map((t) => t.id).sort();
-    expect(ready).toEqual(['businesses', 'overview']);
+    expect(ready).toEqual(
+      ['businesses', 'overview', 'pilot', 'providers', 'review', 'taxonomies'].sort(),
+    );
   });
 
   it('AdminBusinesses wraps content in Tabs and mounts every tab', () => {
