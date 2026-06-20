@@ -50,14 +50,23 @@ async function countContractsWithOpportunity(): Promise<number> {
   return count ?? 0;
 }
 
-async function distinctOpportunityIds(
-  table: 'quote_request_leads' | 'opportunity_bids',
-): Promise<Set<string>> {
-  // Read just the join column; admin RLS allows full scan. Hard-capped at
-  // 5000 rows to keep the request bounded.
+async function distinctAssignedOpportunityIds(): Promise<Set<string>> {
   const { data, error } = await supabase
-    .from(table)
-    .select('opportunity_id' as const)
+    .from('quote_request_leads')
+    .select('quote_request_id')
+    .limit(5000);
+  if (error) throw error;
+  const out = new Set<string>();
+  for (const row of (data ?? []) as Array<{ quote_request_id: string | null }>) {
+    if (row.quote_request_id) out.add(row.quote_request_id);
+  }
+  return out;
+}
+
+async function distinctBidOpportunityIds(): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('opportunity_bids')
+    .select('opportunity_id')
     .not('opportunity_id', 'is', null)
     .limit(5000);
   if (error) throw error;
@@ -85,8 +94,8 @@ export async function getOpportunityKpis(): Promise<OpportunityKpis> {
     countOpportunitiesByAward('awarded'),
     countOpportunitiesByStatus('cancelled'),
     countContractsWithOpportunity(),
-    distinctOpportunityIds('quote_request_leads'),
-    distinctOpportunityIds('opportunity_bids'),
+    distinctAssignedOpportunityIds(),
+    distinctBidOpportunityIds(),
   ]);
 
   return {
@@ -106,8 +115,8 @@ export async function getOpportunityFunnel(): Promise<OpportunityFunnel> {
     await Promise.all([
       countAll('quote_requests'),
       countOpportunitiesByStatus('matched'),
-      distinctOpportunityIds('quote_request_leads'),
-      distinctOpportunityIds('opportunity_bids'),
+      distinctAssignedOpportunityIds(),
+      distinctBidOpportunityIds(),
       countOpportunitiesByAward('awarded'),
       countContractsWithOpportunity(),
     ]);
@@ -161,8 +170,8 @@ export async function listOpportunityOpsRows(
     await Promise.all([
       supabase
         .from('quote_request_leads')
-        .select('opportunity_id')
-        .in('opportunity_id', ids),
+        .select('quote_request_id')
+        .in('quote_request_id', ids),
       supabase
         .from('opportunity_bids')
         .select('opportunity_id')
@@ -177,9 +186,12 @@ export async function listOpportunityOpsRows(
   if (cerr) throw cerr;
 
   const assignedCount = new Map<string, number>();
-  for (const r of (leads ?? []) as Array<{ opportunity_id: string | null }>) {
-    if (!r.opportunity_id) continue;
-    assignedCount.set(r.opportunity_id, (assignedCount.get(r.opportunity_id) ?? 0) + 1);
+  for (const r of (leads ?? []) as Array<{ quote_request_id: string | null }>) {
+    if (!r.quote_request_id) continue;
+    assignedCount.set(
+      r.quote_request_id,
+      (assignedCount.get(r.quote_request_id) ?? 0) + 1,
+    );
   }
   const bidCount = new Map<string, number>();
   for (const r of (bids ?? []) as Array<{ opportunity_id: string | null }>) {
