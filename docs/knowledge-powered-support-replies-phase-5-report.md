@@ -31,11 +31,13 @@
 
 ## 7. هل تم إرسال أي رسائل؟ **لا.**
 ## 8. هل تم حفظ أي مسودة؟ **لا.**
-## 9. هل تم ربط لوحة `/admin/knowledge`؟ **لا — مؤجَّل إلى Phase 5B** (تم تسليم الـhelpers والاختبارات أولًا حسب البند 7).
+## 9. هل تم ربط لوحة `/admin/knowledge`؟ **نعم — Phase 5B مكتمل.**
+تم إضافة قسم علوي بعنوان "ردود الدعم" داخل `AdminKnowledgeCenter`، يُحمِّل `SupportRepliesPanel` (قراءة فقط) ويستخدم `buildSupportReplyDraft` مباشرة. لا إرسال، لا حفظ، لا API خارجي، لا شات.
 ## 10. هل تغير DB / RLS / RPC / migrations / edge؟ **لا.**
 
 ## 11. الملفات المعدلة
 - `src/modules/knowledge/index.ts` — تصدير وحدة `support/`.
+- `src/pages/admin/AdminKnowledgeCenter.tsx` — قسم علوي "ردود الدعم".
 
 ## 12. الملفات الجديدة
 - `src/modules/knowledge/support/supportReply.types.ts`
@@ -44,6 +46,8 @@
 - `src/modules/knowledge/support/supportReplyTemplates.ts`
 - `src/modules/knowledge/support/supportReplyBuilder.ts`
 - `src/__tests__/knowledgeSupportReplyPhase5.test.ts`
+- `src/components/admin/knowledge/SupportRepliesPanel.tsx`
+- `src/__tests__/knowledgeAdminSupportRepliesPanel.test.tsx`
 - `docs/knowledge-powered-support-replies-phase-5-report.md`
 
 ## 13. نتائج `tsc`
@@ -51,10 +55,10 @@
 
 ## 14. نتائج الاختبارات
 ```
-Test Files  1 passed (1)
-Tests       14 passed (14)
+Test Files  3 passed (3) (incl. Phase 3 regression)
+Tests       38 passed (38)
 ```
-يغطي: تصنيف النوايا (RFQ/كلمة مرور/ظهور المزود/الفواتير)، fallback للسؤال غير المعروف، منع المحتوى الداخلي، صياغة WhatsApp مختصرة وEmail رسمية، تواجد `sources` و`relatedRoutes`، طلب رقم الطلب ضمن `missingInformation`، غياب أي transport/DB/RPC/edge داخل الوحدة، ونقاء TypeScript.
+يغطي: تصنيف النوايا (RFQ/كلمة مرور/ظهور المزود/الفواتير)، fallback للسؤال غير المعروف، منع المحتوى الداخلي، صياغة WhatsApp مختصرة وEmail رسمية، تواجد `sources` و`relatedRoutes`، طلب رقم الطلب ضمن `missingInformation`، غياب أي transport/DB/RPC/edge داخل الوحدة، ونقاء TypeScript. كذلك اختبارات اللوحة الإدارية (Phase 5B): وجود القسم في `/admin/knowledge`، استخدام `buildSupportReplyDraft`، عرض `sources` و`canAnswer`، وعدم وجود أي transport أو persistence.
 
 ## 15. القرار
 `KNOWLEDGE-POWERED SUPPORT REPLIES PHASE 5 PASS`
