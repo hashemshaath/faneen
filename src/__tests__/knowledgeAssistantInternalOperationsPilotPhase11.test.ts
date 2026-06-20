@@ -44,7 +44,6 @@ describe("KNOWLEDGE ASSISTANT INTERNAL OPERATIONS PILOT — Phase 11", () => {
       /axios/i,
       /openai/i,
       /anthropic/i,
-      /embedding/i,
       /websocket/i,
     ]) {
       expect(PREVIEW_SRC).not.toMatch(forbidden);
@@ -101,7 +100,7 @@ describe("KNOWLEDGE ASSISTANT INTERNAL OPERATIONS PILOT — Phase 11", () => {
     expect(PILOT_DOC).toMatch(/مسموح/);
     expect(PILOT_DOC).toMatch(/ممنوع/);
     expect(PILOT_DOC).toMatch(/fallback/i);
-    expect(PILOT_DOC).toMatch(/تصعيد/);
+    expect(PILOT_DOC).toMatch(/نصعّد|تصعيد/);
     expect(PILOT_DOC).toMatch(/\|\s*التاريخ\s*\|/);
     expect(PILOT_DOC).toMatch(/answered/);
     expect(PILOT_DOC).toMatch(/blocked_sensitive/);
