@@ -45,10 +45,19 @@ describe('SEARCH V3 — no-legacy invariants', () => {
   });
 
   it('does not depend on heavy map/chart libraries', () => {
+    // SearchMapV3 is the one intentional exception: the map view is
+    // lazy-loaded from SearchV3 via React.lazy, so leaflet never enters
+    // the initial chunk. Other v3 components must remain map/chart-free.
+    const MAP_OK = 'SearchMapV3.tsx';
     for (const { path, src } of sources) {
+      if (path.endsWith(MAP_OK)) continue;
       expect(/from\s+['"]leaflet['"]/.test(src), `${path} imports leaflet`).toBe(false);
       expect(/from\s+['"]react-leaflet['"]/.test(src), `${path} imports react-leaflet`).toBe(false);
       expect(/from\s+['"]recharts['"]/.test(src), `${path} imports recharts`).toBe(false);
     }
+    // Guard: SearchV3 page must only reference SearchMapV3 via React.lazy
+    // so leaflet stays out of the eager bundle.
+    expect(/React\.lazy\([^)]*SearchMapV3/.test(page), 'SearchV3 must lazy-load SearchMapV3').toBe(true);
+    expect(/from\s+['"]leaflet['"]/.test(page), 'SearchV3 page must not import leaflet directly').toBe(false);
   });
 });
