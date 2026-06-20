@@ -218,14 +218,16 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         ) : null;
       case 'todays-pulse':
         {
-          const leadsSeries = seriesFromMonthly(stats?.monthlyContracts, 6); // proxy series for activity flow
-          const usersSeries = seriesFromMonthly(stats?.monthlyUsers, 6);
+          // Only use sparklines where the underlying series genuinely matches
+          // the metric. We deliberately avoid showing a "proxy" series under
+          // a different metric — it looks professional but misleads.
+          const contractsMonthly = seriesFromMonthly(stats?.monthlyContracts, 6);
           const pulse = [
             {
               icon: MessageSquare,
               label: isRTL ? 'طلبات اليوم' : 'Leads today',
               value: stats?.leadsToday ?? 0,
-              series: leadsSeries,
+              series: undefined,
               tone: 'info' as const,
               to: '/admin/lead-requests',
               insight: (stats?.leadsToday ?? 0) === 0
@@ -236,35 +238,23 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               icon: FileText,
               label: isRTL ? 'عقود اليوم' : 'Contracts today',
               value: stats?.contractsToday ?? 0,
-              series: leadsSeries,
+              series: contractsMonthly,
               tone: 'accent' as const,
               to: '/admin/contracts',
               insight: (stats?.contractsToday ?? 0) > 0
-                ? (isRTL ? 'تدفّق عقود إيجابي خلال آخر الفترات.' : 'Healthy contract velocity vs. recent periods.')
+                ? (isRTL ? `${stats?.contractsToday} عقد جديد اليوم — السياق: آخر 6 أشهر.` : `${stats?.contractsToday} new today — context: last 6 months.`)
                 : (isRTL ? 'لا عقود مسجّلة اليوم — راقب قناة التحويل.' : 'No contracts logged today — watch the funnel.'),
             },
             {
               icon: UserPlus,
               label: isRTL ? 'مزودون جدد' : 'New providers',
               value: stats?.providersToday ?? 0,
-              series: usersSeries,
+              series: undefined,
               tone: 'primary' as const,
               to: '/admin/businesses',
               insight: (stats?.providersToday ?? 0) > 0
                 ? (isRTL ? 'نمو في تسجيل المزودين — راجع الموافقات.' : 'Provider sign-ups trending up — review approvals.')
                 : (isRTL ? 'هدوء في التسجيل اليوم.' : 'Quiet sign-up day so far.'),
-            },
-            {
-              icon: AlertTriangle,
-              label: isRTL ? 'بريد فاشل (48س)' : 'Email DLQ (48h)',
-              value: stats?.dlqActive ?? 0,
-              series: [],
-              tone: (stats?.dlqActive ?? 0) > 0 ? ('destructive' as const) : ('success' as const),
-              to: '/admin/email-center',
-              trendPercent: (stats?.dlqActive ?? 0) > 0 ? null : 0,
-              insight: (stats?.dlqActive ?? 0) > 0
-                ? (isRTL ? 'رسائل لم تُسلَّم — افحص قائمة DLQ فوراً.' : 'Delivery failures detected — inspect the DLQ now.')
-                : (isRTL ? 'لا فشل في الإرسال خلال آخر 48 ساعة.' : 'No delivery failures in the last 48 hours.'),
             },
           ];
           const pulseTotal = pulse.reduce((s, p) => s + (typeof p.value === 'number' ? p.value : 0), 0);
@@ -303,7 +293,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 </div>
               </CardHeader>
               <CardContent className="px-4 pb-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {pulse.map((m) => (
                     <SmartMetricCard
                       key={m.label}
@@ -311,7 +301,6 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                       label={m.label}
                       value={m.value}
                       series={m.series}
-                      trendPercent={m.trendPercent}
                       insight={m.insight}
                       tone={m.tone}
                       to={m.to}
