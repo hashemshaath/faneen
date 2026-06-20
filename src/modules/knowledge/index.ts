@@ -24,3 +24,9 @@ export {
   getAssistantKnowledgeContext,
   getMessageKnowledgeSnippets,
 } from './knowledgeHelpers';
+
+// Admin-only helpers (Phase 3 — read-only management surface).
+export * from './admin/knowledgeAdminMetrics';
+export * from './admin/knowledgeAdminFilters';
+export * from './admin/knowledgeAdminTabs';
+export * from './admin/knowledgeAdminViewModels';
