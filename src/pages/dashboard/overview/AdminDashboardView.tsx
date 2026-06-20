@@ -76,6 +76,8 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         recentUsers, recentActivity, blogPosts, contactMessages, userGrowth,
         leadsTodayQ, contractsTodayQ, providersTodayQ,
         leadsPendingQ, providersPendingQ, dlqActiveQ, contractsPendingQ,
+        quoteRequestsPendingQ, serviceRequestsPendingQ, serviceActivationsPendingQ,
+        ownershipTransfersPendingQ, accessRequestsPendingQ, approvalsPendingQ,
       ] = await Promise.all([
         countProfiles(),
         countBusinesses({ select: 'id' }),
@@ -100,6 +102,13 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         countBusinesses({ select: 'id', filters: [{ column: 'approval_status', op: 'in', value: ['submitted', 'under_review'] }] }),
         supabase.from('email_send_log').select('id', { count: 'exact', head: true }).eq('status', 'dlq').gte('created_at', fresh48hIso),
         listAllContracts({ select: 'id', count: { mode: 'exact', head: true }, eqStatus: 'pending_approval' }),
+        // Phase: Requests Inbox — live pending counters for every request channel.
+        supabase.from('quote_requests').select('id', { count: 'exact', head: true }).in('status', ['new', 'pending', 'submitted']),
+        supabase.from('service_addition_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('admin_status', 'pending_review'),
+        supabase.from('business_ownership_transfer_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('entity_access_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       ]);
 
       const allContracts = contracts.data || [];
@@ -123,6 +132,12 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         leadsToday: cnt(leadsTodayQ), contractsToday: cnt(contractsTodayQ), providersToday: cnt(providersTodayQ),
         leadsPending: cnt(leadsPendingQ), providersPending: cnt(providersPendingQ),
         dlqActive: cnt(dlqActiveQ), contractsPending: cnt(contractsPendingQ),
+        quoteRequestsPending: cnt(quoteRequestsPendingQ),
+        serviceRequestsPending: cnt(serviceRequestsPendingQ),
+        serviceActivationsPending: cnt(serviceActivationsPendingQ),
+        ownershipTransfersPending: cnt(ownershipTransfersPendingQ),
+        accessRequestsPending: cnt(accessRequestsPendingQ),
+        approvalsPending: cnt(approvalsPendingQ),
       };
     },
     staleTime: 30000,
