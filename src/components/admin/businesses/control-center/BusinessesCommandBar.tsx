@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Rocket, ShieldCheck, Phone, Link2, Beaker, EyeOff } from 'lucide-react';
 import { pickBi } from '@/components/common/Bilingual';
+import { ControlChip, type ChipTone } from './ControlChip';
 
 export type BusinessesCommandPreset =
   | 'all'
@@ -30,14 +31,14 @@ interface BusinessesCommandBarProps {
 export const BusinessesCommandBar: React.FC<BusinessesCommandBarProps> = ({
   isRTL, activePreset, onPreset, onCreate,
 }) => {
-  const chips: ReadonlyArray<{ key: BusinessesCommandPreset; label: string; icon: React.ElementType }> = [
-    { key: 'all',               label: pickBi(isRTL, 'الكل', 'All'),                       icon: ShieldCheck },
-    { key: 'pilotReady',        label: pickBi(isRTL, 'جاهزة للتشغيل', 'Pilot-ready'),       icon: Rocket },
-    { key: 'pendingReview',     label: pickBi(isRTL, 'بانتظار المراجعة', 'Pending review'), icon: ShieldCheck },
-    { key: 'missingContact',    label: pickBi(isRTL, 'بدون تواصل', 'No contact'),           icon: Phone },
-    { key: 'missingPublicLink', label: pickBi(isRTL, 'بدون رابط عام', 'No public link'),    icon: Link2 },
-    { key: 'inactive',          label: pickBi(isRTL, 'غير نشطة', 'Inactive'),               icon: EyeOff },
-    { key: 'demo',              label: pickBi(isRTL, 'تجريبية', 'Demo'),                    icon: Beaker },
+  const chips: ReadonlyArray<{ key: BusinessesCommandPreset; label: string; icon: React.ElementType; tone: ChipTone }> = [
+    { key: 'all',               label: pickBi(isRTL, 'الكل', 'All'),                       icon: ShieldCheck, tone: 'primary' },
+    { key: 'pilotReady',        label: pickBi(isRTL, 'جاهزة للتشغيل', 'Pilot-ready'),       icon: Rocket,      tone: 'success' },
+    { key: 'pendingReview',     label: pickBi(isRTL, 'بانتظار المراجعة', 'Pending review'), icon: ShieldCheck, tone: 'warning' },
+    { key: 'missingContact',    label: pickBi(isRTL, 'بدون تواصل', 'No contact'),           icon: Phone,       tone: 'destructive' },
+    { key: 'missingPublicLink', label: pickBi(isRTL, 'بدون رابط عام', 'No public link'),    icon: Link2,       tone: 'info' },
+    { key: 'inactive',          label: pickBi(isRTL, 'غير نشطة', 'Inactive'),               icon: EyeOff,      tone: 'muted' },
+    { key: 'demo',              label: pickBi(isRTL, 'تجريبية', 'Demo'),                    icon: Beaker,      tone: 'accent' },
   ];
 
   return (
@@ -53,26 +54,17 @@ export const BusinessesCommandBar: React.FC<BusinessesCommandBarProps> = ({
       <span className="h-6 w-px bg-border/60 mx-1 hidden md:inline-block" aria-hidden />
 
       <div className="flex flex-wrap gap-1.5">
-        {chips.map((c) => {
-          const Icon = c.icon;
-          const active = activePreset === c.key;
-          return (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => onPreset(c.key)}
-              className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-full border text-xs font-medium transition-colors ${
-                active
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-foreground border-border hover:bg-muted/60'
-              }`}
-              data-testid={`businesses-preset-${c.key}`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {c.label}
-            </button>
-          );
-        })}
+        {chips.map((c) => (
+          <ControlChip
+            key={c.key}
+            label={c.label}
+            icon={c.icon as never}
+            tone={c.tone}
+            active={activePreset === c.key}
+            onClick={() => onPreset(c.key)}
+            testId={`businesses-preset-${c.key}`}
+          />
+        ))}
       </div>
     </Card>
   );
