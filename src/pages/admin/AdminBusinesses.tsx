@@ -100,7 +100,6 @@ import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
-import { BusinessStatsStrip } from '@/components/admin/businesses/BusinessStatsStrip';
 import {
   BusinessDetailsDrawer,
   type BusinessDrawerRow,
