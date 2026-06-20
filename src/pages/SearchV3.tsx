@@ -584,6 +584,8 @@ const SearchV3 = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
+              hasMore={hasMore}
+              onLoadMore={handleLoadMore}
                 taxonomyDisplayMap={taxonomyDisplayMap}
               />
             )}
