@@ -56,12 +56,14 @@ import {
   Pin,
   PinOff,
 } from 'lucide-react';
-import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 import {
   UNIFIED_GROUP_LABELS,
-  UNIFIED_ITEM_LABELS,
   CREATE_ENTITY_ROUTE,
-} from '@/components/dashboard/navigation/unifiedLabels';
+  getVisibleDashboardNavGroups,
+  providerNavGroups,
+  userNavGroups,
+  adminNavGroups,
+} from '@/modules/dashboard/navigation';
 
 // ══════════════════════════════════════════
 //  ADMIN-REDESIGN PHASE 3 — Registry-driven admin sidebar
@@ -106,95 +108,7 @@ interface MenuGroup {
 // ══════════════════════════════════════════
 //  مزود الخدمة — Provider Menu
 // ══════════════════════════════════════════
-const providerGroups: MenuGroup[] = [
-  {
-    groupLabel: UNIFIED_GROUP_LABELS.dashboard,
-    icon: LayoutDashboard,
-    items: [
-      { label: UNIFIED_ITEM_LABELS.overview, url: '/dashboard', icon: LayoutDashboard, end: true },
-      { label: { ar: 'التحليلات', en: 'Analytics' }, url: '/dashboard/analytics', icon: BarChart3 },
-      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-    ],
-  },
-  {
-    groupLabel: UNIFIED_GROUP_LABELS.business,
-    icon: Wrench,
-    items: [
-      { label: UNIFIED_ITEM_LABELS.businessProfile, url: '/dashboard/business-edit', icon: Building2 },
-      { label: UNIFIED_ITEM_LABELS.services, url: '/dashboard/services', icon: Wrench },
-      { label: { ar: 'العلامات التجارية', en: 'Brands' }, url: '/dashboard/brands', icon: Award },
-      { label: UNIFIED_ITEM_LABELS.portfolio, url: '/dashboard/portfolio', icon: Image },
-      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
-      { label: UNIFIED_ITEM_LABELS.branches, url: '/dashboard/branches', icon: Building2 },
-      { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
-      { label: { ar: 'مناطق الخدمة', en: 'Service Areas' }, url: '/dashboard/provider/service-areas', icon: MapPin },
-      { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
-      { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/dashboard/private-sectors', icon: Layers },
-      { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
-      { label: UNIFIED_ITEM_LABELS.visibility, url: '/dashboard/badge', icon: ShieldCheck },
-    ],
-  },
-  {
-    groupLabel: UNIFIED_GROUP_LABELS.providerOps,
-    icon: Inbox,
-    items: [
-      { label: UNIFIED_ITEM_LABELS.clientRequests, url: '/dashboard/leads', icon: Inbox },
-      { label: UNIFIED_ITEM_LABELS.opportunities, url: '/dashboard/rfq/inbox', icon: Sparkles, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: UNIFIED_ITEM_LABELS.offers, url: '/dashboard/rfq', icon: FileText },
-      { label: UNIFIED_ITEM_LABELS.clients, url: '/dashboard/clients', icon: Users },
-      { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
-    ],
-  },
-  {
-    groupLabel: { ar: 'العمليات', en: 'Operations' },
-    icon: Activity,
-    description: { ar: 'إدارة أوامر العمل والعقود والضمانات', en: 'Work orders, contracts, and warranties' },
-    items: [
-      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList, end: true, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
-      { label: { ar: 'الضمانات', en: 'Warranties' }, url: '/dashboard/warranties', icon: Shield },
-    ],
-  },
-  {
-    groupLabel: { ar: 'التأجير والأصول', en: 'Rentals & Assets' },
-    icon: Truck,
-    description: { ar: 'عروض التأجير وأسطول المعدات', en: 'Rental offerings and equipment fleet' },
-    items: [
-      { label: { ar: 'مركز التأجير', en: 'Rentals' }, url: '/dashboard/rentals', icon: Truck, end: true, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'تقويم التأجير', en: 'Rentals Calendar' }, url: '/dashboard/rentals/calendar', icon: CalendarClock, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'تحليلات التأجير', en: 'Rentals Analytics' }, url: '/dashboard/rentals/analytics', icon: BarChart3, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'الأصول والمعدات', en: 'Assets & Equipment' }, url: '/dashboard/assets', icon: Package },
-    ],
-  },
-  {
-    groupLabel: { ar: 'العضوية والفوترة', en: 'Membership & Billing' },
-    icon: Crown,
-    description: { ar: 'الاشتراكات والرصيد والأقساط', en: 'Subscriptions, credits, and installments' },
-    items: [
-      { label: UNIFIED_ITEM_LABELS.membership, url: '/dashboard/provider/membership', icon: Crown },
-      { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
-      { label: { ar: 'الولاء', en: 'Loyalty' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-    ],
-  },
-  {
-    groupLabel: { ar: 'التواصل', en: 'Communication' },
-    icon: MessageSquare,
-    items: [
-      { label: UNIFIED_ITEM_LABELS.messages, url: '/dashboard/messages', icon: MessageSquare },
-      { label: UNIFIED_ITEM_LABELS.notifications, url: '/dashboard/notifications', icon: Bell },
-    ],
-  },
-  {
-    groupLabel: UNIFIED_GROUP_LABELS.account,
-    icon: Settings,
-    items: [
-      { label: UNIFIED_ITEM_LABELS.profile, url: '/dashboard/profile', icon: User },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
-      { label: UNIFIED_ITEM_LABELS.team, url: '/dashboard/settings/staff', icon: Users },
-      { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
-    ],
-  },
-];
+const providerGroups: MenuGroup[] = providerNavGroups;
 
 // ══════════════════════════════════════════
 //  المستخدم العادي — User Menu (UNIFIED IA)
@@ -206,43 +120,7 @@ const providerGroups: MenuGroup[] = [
 //  تُخفى تلقائيًا للمستخدم الذي لا يملك منشأة عبر بطاقة الـ CTA
 //  «إنشاء منشأة» → /register-entity (وليس /onboarding).
 // ══════════════════════════════════════════
-const userGroups: MenuGroup[] = [
-  {
-    groupLabel: UNIFIED_GROUP_LABELS.dashboard,
-    icon: LayoutDashboard,
-    items: [
-      { label: UNIFIED_ITEM_LABELS.overview, url: '/dashboard', icon: LayoutDashboard, end: true },
-      { label: UNIFIED_ITEM_LABELS.myRequests, url: '/dashboard/my-requests', icon: Inbox },
-      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
-      { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
-      { label: UNIFIED_ITEM_LABELS.branches, url: '/dashboard/branches', icon: Building2 },
-      { label: UNIFIED_ITEM_LABELS.messages, url: '/dashboard/messages', icon: MessageSquare },
-      { label: UNIFIED_ITEM_LABELS.membership, url: '/dashboard/membership', icon: Crown },
-    ],
-  },
-  {
-    groupLabel: UNIFIED_GROUP_LABELS.business,
-    icon: Building2,
-    description: { ar: 'إدارة بيانات منشأتك وفريقها', en: 'Manage your business profile and team' },
-    items: [
-      { label: UNIFIED_ITEM_LABELS.businessProfile, url: '/dashboard/business-edit', icon: Building2 },
-      { label: UNIFIED_ITEM_LABELS.services, url: '/dashboard/services', icon: Wrench },
-      { label: UNIFIED_ITEM_LABELS.portfolio, url: '/dashboard/portfolio', icon: Image },
-      { label: UNIFIED_ITEM_LABELS.team, url: '/dashboard/settings/staff', icon: Users },
-      { label: UNIFIED_ITEM_LABELS.visibility, url: '/dashboard/badge', icon: ShieldCheck },
-    ],
-  },
-  {
-    groupLabel: UNIFIED_GROUP_LABELS.account,
-    icon: User,
-    items: [
-      { label: UNIFIED_ITEM_LABELS.profile, url: '/dashboard/profile', icon: User },
-      { label: UNIFIED_ITEM_LABELS.notifications, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
-      { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
-    ],
-  },
-];
+const userGroups: MenuGroup[] = userNavGroups;
 
 // ══════════════════════════════════════════
 //  المشرف — Admin-Only Base Menu
@@ -271,22 +149,7 @@ const userGroups: MenuGroup[] = [
 // Cmd+K palette, breadcrumbs, and tests share a single source of
 // truth. Items flagged `hiddenInSidebar` remain reachable via direct
 // URL and the command palette but are not rendered here.
-const adminBaseGroups: MenuGroup[] = ADMIN_NAV_GROUPS.map((g) => ({
-  groupLabel: { ar: g.labelAr, en: g.labelEn },
-  icon: g.icon,
-  description: g.descriptionAr && g.descriptionEn
-    ? { ar: g.descriptionAr, en: g.descriptionEn }
-    : undefined,
-  items: g.items
-    .filter((it) => !it.hiddenInSidebar)
-    .map((it) => ({
-      label: { ar: it.labelAr, en: it.labelEn },
-      url: it.route,
-      icon: it.icon,
-      superAdminOnly: it.permission === 'super_admin',
-      badge: it.badge,
-    })),
-})).filter((g) => g.items.length > 0);
+const adminBaseGroups: MenuGroup[] = adminNavGroups;
 
 // ══════════════════════════════════════════
 //  Render helpers
@@ -564,13 +427,11 @@ export const DashboardSidebar: React.FC = () => {
   const hasBusiness = (workspace.entities?.length ?? 0) > 0;
   // For non-admin / non-provider users without a business, hide the
   // «المنشأة» group entirely — they get a CTA card instead.
-  const baseGroups = isAdmin
-    ? adminBaseGroups
-    : isProvider
-      ? providerGroups
-      : hasBusiness
-        ? userGroups
-        : userGroups.filter((g) => g.groupLabel.en !== UNIFIED_GROUP_LABELS.business.en);
+  const baseGroups = getVisibleDashboardNavGroups({
+    audience: isAdmin ? 'admin' : isProvider ? 'provider' : 'user',
+    hasBusiness,
+    isSuperAdmin,
+  });
 
   // Build a url → label lookup once per render. Favorites and Recent
   // resolve their display label from this so renames stay in sync and
