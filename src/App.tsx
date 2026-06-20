@@ -290,6 +290,8 @@ const AdminProcurementCenter = lazyRetry(() => import("./pages/admin/AdminProcur
 const AdminContentCenter = lazyRetry(() => import("./pages/admin/AdminContentCenter"));
 const AdminFinanceCenter = lazyRetry(() => import("./pages/admin/AdminFinanceCenter"));
 const AdminSettingsCenter = lazyRetry(() => import("./pages/admin/AdminSettingsCenter"));
+// KNOWLEDGE ADMIN MANAGEMENT — Phase 3 (read-only).
+const AdminKnowledgeCenter = lazyRetry(() => import("./pages/admin/AdminKnowledgeCenter"));
 
 const PageLoader = () => (
   <div className="flex min-h-dvh items-center justify-center bg-background">
