@@ -79,6 +79,7 @@ const Kpi: React.FC<{ icon: React.ReactNode; label: string; value: number | stri
 
 const AdminOpportunitiesOperations: React.FC = () => {
   useNoIndex();
+  const [isExporting, setIsExporting] = React.useState(false);
 
   const kpis = useQuery({ queryKey: ['admin-opps-kpis'], queryFn: getOpportunityKpis });
   const funnel = useQuery({ queryKey: ['admin-opps-funnel'], queryFn: getOpportunityFunnel });
@@ -114,11 +115,17 @@ const AdminOpportunitiesOperations: React.FC = () => {
   );
 
   const handleExport = React.useCallback((): void => {
+    if (isExporting) return;
     const data: OpportunityOpsRow[] = rows.data ?? [];
     if (data.length === 0) return;
-    const csv = buildOpportunityReportCsv(data);
-    downloadCsv(buildOpportunityReportFilename(), csv);
-  }, [rows.data]);
+    setIsExporting(true);
+    try {
+      const csv = buildOpportunityReportCsv(data);
+      downloadCsv(buildOpportunityReportFilename(), csv);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [rows.data, isExporting]);
 
   return (
     <DashboardLayout>
@@ -137,14 +144,15 @@ const AdminOpportunitiesOperations: React.FC = () => {
             size="sm"
             variant="outline"
             onClick={handleExport}
-            disabled={!rows.data || rows.data.length === 0}
+            disabled={!rows.data || rows.data.length === 0 || isExporting}
             aria-label="تصدير التقرير"
           >
-            <Download className="h-4 w-4 ms-1" /> تصدير التقرير (CSV)
+            <Download className="h-4 w-4 ms-1" />
+            {isExporting ? 'جارٍ التصدير…' : 'تصدير التقرير (CSV)'}
           </Button>
         </header>
         <p className="text-xs text-muted-foreground">
-          سقف التصدير: {OPPORTUNITY_EXPORT_LIMIT} صف كحد أقصى لكل تقرير.
+          التقرير يعتمد على النافذة المحمّلة حاليًا في اللوحة، وبحد أقصى {OPPORTUNITY_EXPORT_LIMIT} صف لكل ملف تصدير.
         </p>
 
         {anyError ? (

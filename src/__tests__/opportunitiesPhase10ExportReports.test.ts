@@ -81,7 +81,7 @@ describe('Opportunities Phase 10 — export reports', () => {
 
   it('5. filename is timestamped CSV', () => {
     const name = buildOpportunityReportFilename(new Date('2026-06-20T10:00:00Z'));
-    expect(name).toMatch(/^opportunities-report-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.csv$/);
+    expect(name).toMatch(/^qitaat-opportunities-report-\d{4}-\d{2}-\d{2}\.csv$/);
   });
 
   it('6. starts with UTF-8 BOM for Arabic compatibility', () => {
