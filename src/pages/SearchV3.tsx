@@ -419,6 +419,18 @@ const SearchV3 = () => {
     }
     return m;
   }, [businesses]);
+
+  // Facet counts — total providers per city, computed from the full
+  // unfiltered set so users see how big each option is before applying.
+  const cityCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const b of (businesses ?? []) as Array<{ city_id?: string | null }>) {
+      const id = b.city_id;
+      if (!id) continue;
+      m.set(id, (m.get(id) ?? 0) + 1);
+    }
+    return m;
+  }, [businesses]);
   const { data: taxonomyDisplayMap } = useBusinessTaxonomyDisplayBatch(visibleIds, lang);
 
   const handlePageChange = useCallback((p: number) => {
