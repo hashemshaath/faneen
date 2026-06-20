@@ -41,6 +41,7 @@ import {
   formatLastUpdated,
 } from '@/components/dashboard/overview/UnifiedDashboardHero';
 import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+import { SmartMetricCard, seriesFromMonthly } from '@/components/dashboard/admin/SmartMetricCard';
 import {
   DashboardActionCenter,
   type DashboardAction,
