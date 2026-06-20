@@ -6,7 +6,15 @@ export {
   knowledgeRegistry,
   listKnowledgeItems,
   getKnowledgeItem,
+  listByCategory,
 } from './knowledgeRegistry';
+export {
+  KNOWLEDGE_CATEGORIES,
+  getCategory,
+  publicCategories,
+  isInternalCategory,
+  type KnowledgeCategory,
+} from './knowledgeCategories';
 export {
   filterKnowledge,
   scoreKnowledge,
