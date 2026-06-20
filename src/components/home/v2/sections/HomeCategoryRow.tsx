@@ -9,7 +9,6 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, MapPin, Star } from 'lucide-react';
 import { useBi } from '@/components/common/Bilingual';
-import { useLanguage } from '@/i18n/LanguageContext';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
 import { isVariantUrls } from '@/modules/files/services/image-pipeline';
@@ -67,7 +66,6 @@ function matchesQuery(b: PublicTaxonomyBusiness, query: string): boolean {
 
 const HomeCategoryRow = ({ row, providers = [], providersBySlug = {}, providersLoading = false }: Props) => {
   const bi = useBi();
-  const { isRTL } = useLanguage();
   const Arrow = bi(ArrowLeft, ArrowRight);
   const [activeFilter, setActiveFilter] = useState<string>(ALL_FILTER);
   const hasLogo = (b: PublicTaxonomyBusiness): boolean =>
