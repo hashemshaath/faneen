@@ -247,6 +247,7 @@ const BusinessProfile = () => {
       })
     : undefined;
 
+  useImagePerfTracking('business_profile');
   usePageMeta({
     title: seoTitle,
     description: seoDesc,
