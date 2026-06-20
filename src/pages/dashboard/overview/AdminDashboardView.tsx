@@ -280,38 +280,85 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           </div>
         ) : null;
       case 'todays-pulse':
-        return (
-          <Card className="border-border/40">
-            <CardHeader className="pb-1 px-4 pt-3">
-              <CardTitle className="text-xs flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-                {isRTL ? 'نبض اليوم' : "Today's Pulse"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-3">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {([
-                  { icon: MessageSquare, label: isRTL ? 'طلبات اليوم' : 'Leads today', value: stats?.leadsToday, tone: 'text-info', bg: 'bg-info/10' },
-                  { icon: FileText,      label: isRTL ? 'عقود اليوم' : 'Contracts today', value: stats?.contractsToday, tone: 'text-accent', bg: 'bg-accent/10' },
-                  { icon: UserPlus,      label: isRTL ? 'تسجيل مزودين' : 'New providers', value: stats?.providersToday, tone: 'text-primary', bg: 'bg-primary/10' },
-                  { icon: AlertTriangle, label: isRTL ? 'بريد فاشل (48س)' : 'Email DLQ (48h)', value: stats?.dlqActive, tone: 'text-destructive', bg: 'bg-destructive/10' },
-                ] as const).map((m) => (
-                  <div key={m.label} className="rounded-xl border border-border/40 p-3 flex items-center gap-2.5">
-                    <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', m.bg, m.tone)}>
-                      <m.icon className="w-3.5 h-3.5" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className={cn('text-lg font-bold leading-none tech-content', m.tone)}>
-                        {m.value === null || m.value === undefined ? '—' : m.value}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
+        {
+          const leadsSeries = seriesFromMonthly(stats?.monthlyContracts, 6); // proxy series for activity flow
+          const usersSeries = seriesFromMonthly(stats?.monthlyUsers, 6);
+          const pulse = [
+            {
+              icon: MessageSquare,
+              label: isRTL ? 'طلبات اليوم' : 'Leads today',
+              value: stats?.leadsToday ?? 0,
+              series: leadsSeries,
+              tone: 'info' as const,
+              to: '/admin/lead-requests',
+              insight: (stats?.leadsToday ?? 0) === 0
+                ? (isRTL ? 'لا توجد طلبات جديدة اليوم — تابع لاحقاً.' : 'No incoming leads yet today — check back later.')
+                : (isRTL ? `${stats?.leadsToday} طلب نشط بانتظار المراجعة الآن.` : `${stats?.leadsToday} active leads waiting for review.`),
+            },
+            {
+              icon: FileText,
+              label: isRTL ? 'عقود اليوم' : 'Contracts today',
+              value: stats?.contractsToday ?? 0,
+              series: leadsSeries,
+              tone: 'accent' as const,
+              to: '/admin/contracts',
+              insight: (stats?.contractsToday ?? 0) > 0
+                ? (isRTL ? 'تدفّق عقود إيجابي خلال آخر الفترات.' : 'Healthy contract velocity vs. recent periods.')
+                : (isRTL ? 'لا عقود مسجّلة اليوم — راقب قناة التحويل.' : 'No contracts logged today — watch the funnel.'),
+            },
+            {
+              icon: UserPlus,
+              label: isRTL ? 'مزودون جدد' : 'New providers',
+              value: stats?.providersToday ?? 0,
+              series: usersSeries,
+              tone: 'primary' as const,
+              to: '/admin/businesses',
+              insight: (stats?.providersToday ?? 0) > 0
+                ? (isRTL ? 'نمو في تسجيل المزودين — راجع الموافقات.' : 'Provider sign-ups trending up — review approvals.')
+                : (isRTL ? 'هدوء في التسجيل اليوم.' : 'Quiet sign-up day so far.'),
+            },
+            {
+              icon: AlertTriangle,
+              label: isRTL ? 'بريد فاشل (48س)' : 'Email DLQ (48h)',
+              value: stats?.dlqActive ?? 0,
+              series: [],
+              tone: (stats?.dlqActive ?? 0) > 0 ? ('destructive' as const) : ('success' as const),
+              to: '/admin/email-center',
+              trendPercent: (stats?.dlqActive ?? 0) > 0 ? null : 0,
+              insight: (stats?.dlqActive ?? 0) > 0
+                ? (isRTL ? 'رسائل لم تُسلَّم — افحص قائمة DLQ فوراً.' : 'Delivery failures detected — inspect the DLQ now.')
+                : (isRTL ? 'لا فشل في الإرسال خلال آخر 48 ساعة.' : 'No delivery failures in the last 48 hours.'),
+            },
+          ];
+          return (
+            <Card className="border-border/40">
+              <CardHeader className="pb-1 px-4 pt-3">
+                <CardTitle className="text-xs flex items-center gap-2">
+                  <Zap className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
+                  {isRTL ? 'نبض اليوم — قراءة ذكية' : "Today's Pulse — smart read"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {pulse.map((m) => (
+                    <SmartMetricCard
+                      key={m.label}
+                      icon={m.icon}
+                      label={m.label}
+                      value={m.value}
+                      series={m.series}
+                      trendPercent={m.trendPercent}
+                      insight={m.insight}
+                      tone={m.tone}
+                      to={m.to}
+                      isRTL={isRTL}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
       case 'needs-attention':
         {
           const inbox = [
