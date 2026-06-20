@@ -33,7 +33,7 @@ type SetField = BasicSectionProps['setField'];
 
 export interface BusinessEditPanelProps {
   isRTL: boolean;
-  language: string;
+  language: 'ar' | 'en';
   editingBiz: EditingBusiness;
   editForm: EditFormState;
   setField: SetField;
@@ -236,7 +236,7 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
             editForm={editForm}
             setField={setField}
             isRTL={isRTL}
-            language={language as 'ar' | 'en'}
+            language={language}
             editingBiz={editingBiz}
             registeredServices={allServices}
             onManageServices={onManageServices}
@@ -246,7 +246,7 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
         <TabsContent value="branches" className="space-y-4 mt-3">
           <BusinessBranchesSection
             isRTL={isRTL}
-            language={language as 'ar' | 'en'}
+            language={language}
             branches={branches}
             branchForm={branchForm}
             setBranchForm={setBranchForm}
@@ -272,7 +272,7 @@ export const BusinessEditPanel: React.FC<BusinessEditPanelProps> = ({
             editForm={editForm}
             setField={setField}
             isRTL={isRTL}
-            language={language as 'ar' | 'en'}
+            language={language}
             tiers={tiers}
           />
         </TabsContent>
