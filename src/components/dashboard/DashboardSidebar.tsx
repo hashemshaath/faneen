@@ -247,7 +247,7 @@ const RenderMenu: React.FC<{
             asChild
             tooltip={collapsed ? label : undefined}
             isActive={isActive}
-            className="group/qit-nav h-11 min-h-[44px] rounded-xl px-3 gap-2.5"
+            className="group/qit-nav h-10 min-h-[40px] rounded-xl px-3 gap-3"
           >
             <NavLink
               to={item.url}
@@ -267,10 +267,10 @@ const RenderMenu: React.FC<{
               onClick={closeMobile}
             >
               <item.icon className={
-                'h-4 w-4 shrink-0 transition-transform duration-200 group-hover/qit-nav:scale-110 ' +
+                'h-5 w-5 shrink-0 transition-transform duration-200 group-hover/qit-nav:scale-110 ' +
                 (isActive ? 'text-primary' : 'text-muted-foreground group-hover/qit-nav:text-foreground')
               } />
-              {!collapsed && <span className="ms-2 truncate text-[13px]">{label}</span>}
+              {!collapsed && <span className="ms-2 truncate text-sm font-medium">{label}</span>}
               {!collapsed && badgeLabel ? <BadgePill tone={item.badge?.tone}>{badgeLabel}</BadgePill> : null}
               {pinnable ? (
                 <button
@@ -372,11 +372,11 @@ const RenderGroups: React.FC<{
                 onClick={() => setGroupOpen(groupKey, !isOpen)}
                 aria-expanded={isOpen}
                 aria-controls={`sidebar-group-${groupKey}`}
-                className="group/grp w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors"
+                className="group/grp w-full flex items-center gap-1.5 px-3 mt-5 mb-2 py-1 rounded-md text-xs font-semibold tracking-wide text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors"
               >
-                <group.icon className="w-3 h-3 opacity-70 shrink-0" />
+                <group.icon className="w-3.5 h-3.5 opacity-80 shrink-0" />
                 <span className="truncate">{isRTL ? group.groupLabel.ar : group.groupLabel.en}</span>
-                <span className="ms-auto inline-flex items-center gap-1 text-[9px] font-normal text-sidebar-foreground/40">
+                <span className="ms-auto inline-flex items-center gap-1 text-[10px] font-normal text-muted-foreground/70">
                   <span className="tabular-nums">{visibleItems.length}</span>
                   <ChevronDown
                     className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}
