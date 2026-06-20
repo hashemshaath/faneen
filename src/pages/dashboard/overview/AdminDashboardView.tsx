@@ -39,6 +39,7 @@ import {
 import { formatLastUpdated } from '@/components/dashboard/overview/UnifiedDashboardHero';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { SmartMetricCard, seriesFromMonthly } from '@/components/dashboard/admin/SmartMetricCard';
+import { AdminSmartBrief } from '@/components/dashboard/admin/AdminSmartBrief';
 import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 import {
   AdminQuickActionsWidget,
@@ -563,6 +564,28 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         }
       case 'quick-actions':
         return <AdminQuickActionsWidget isRTL={isRTL} />;
+      case 'smart-brief':
+        return (
+          <AdminSmartBrief
+            isRTL={isRTL}
+            signals={{
+              dlqActive: stats?.dlqActive,
+              contractsPending: stats?.contractsPending,
+              providersPending: stats?.providersPending,
+              approvalsPending: stats?.approvalsPending,
+              ownershipTransfersPending: stats?.ownershipTransfersPending,
+              accessRequestsPending: stats?.accessRequestsPending,
+              quoteRequestsPending: stats?.quoteRequestsPending,
+              serviceRequestsPending: stats?.serviceRequestsPending,
+              newContactMessages: stats?.newContactMessages,
+              leadsToday: stats?.leadsToday,
+              providersToday: stats?.providersToday,
+              contractsToday: stats?.contractsToday,
+              servicePendingReview: svcCounters?.pendingReview,
+              servicesSuspended: svcCounters?.suspended,
+            }}
+          />
+        );
       case 'monthly-contracts-chart':
         return (
           <Card className="border-border/40">
