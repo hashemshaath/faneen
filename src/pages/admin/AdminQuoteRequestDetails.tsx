@@ -44,6 +44,7 @@ import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { ClientBidsSection } from '@/modules/opportunities/bids';
+import { OpportunityContractSection } from '@/modules/opportunities/contracts';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
@@ -818,6 +819,11 @@ const AdminQuoteRequestDetails: React.FC = () => {
 
         {/* OPPORTUNITIES PHASE 5 — bids on this opportunity (admin view) */}
         {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} canAward />}
+
+        {/* OPPORTUNITIES PHASE 7 — admin contract conversion */}
+        {quoteUuid && (
+          <OpportunityContractSection opportunityId={quoteUuid} canConvert />
+        )}
       </div>
     </DashboardLayout>
   );
