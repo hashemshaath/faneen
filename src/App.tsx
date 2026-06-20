@@ -22,6 +22,7 @@ import { BrandFaviconApplier } from "@/components/BrandFaviconApplier";
 import { lazyRetry } from "@/lib/lazyRetry";
 const Index = lazyRetry(() => import("./pages/Index"));
 const DeferredAppOverlays = lazyRetry(() => import("./components/DeferredAppOverlays"));
+const AdminHome = lazyRetry(() => import("./pages/admin/AdminHome"));
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const AuthVerified = lazyRetry(() => import("./pages/AuthVerified"));
