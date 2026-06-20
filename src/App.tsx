@@ -27,6 +27,7 @@ const AdminHome = lazyRetry(() => import("./pages/admin/AdminHome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const AuthVerified = lazyRetry(() => import("./pages/AuthVerified"));
 const HelpCenterHome = lazyRetry(() => import("./pages/help/HelpCenterHome"));
+const KnowledgeCenter = lazyRetry(() => import("./pages/KnowledgeCenter"));
 const HelpCategoryPage = lazyRetry(() => import("./pages/help/HelpCategoryPage"));
 const HelpArticlePage = lazyRetry(() => import("./pages/help/HelpArticlePage"));
 const ReportIssuePage = lazyRetry(() => import("./pages/help/ReportIssuePage"));
@@ -366,6 +367,8 @@ const AppRoutes = () => (
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/help" element={<HelpCenterHome />} />
+          <Route path="/knowledge" element={<KnowledgeCenter />} />
+          <Route path="/faq" element={<KnowledgeCenter />} />
           <Route path="/help/category/:slug" element={<HelpCategoryPage />} />
           <Route path="/help/article/:slug" element={<HelpArticlePage />} />
           <Route path="/help/report-issue" element={<ProtectedRoute><ReportIssuePage /></ProtectedRoute>} />
