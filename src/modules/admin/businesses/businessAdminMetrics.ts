@@ -320,3 +320,67 @@ export function reviewBuckets(
     mk('noContact',  'بدون تواصل',            'No contact',            isMissingContact),
   ];
 }
+
+export interface TrendPoint {
+  day: string;
+  label: string;
+  created: number;
+  cumulative: number;
+}
+
+/**
+ * Daily creation trend for the last `days` days, based on `created_at`.
+ * Returns an empty array if no row has a parseable date.
+ */
+export function creationTrend(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+  days = 30,
+): TrendPoint[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const buckets = new Map<string, number>();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    buckets.set(d.toISOString().slice(0, 10), 0);
+  }
+  let hasAny = false;
+  for (const r of rows) {
+    if (!r.created_at) continue;
+    const k = new Date(r.created_at).toISOString().slice(0, 10);
+    if (buckets.has(k)) {
+      buckets.set(k, (buckets.get(k) ?? 0) + 1);
+      hasAny = true;
+    }
+  }
+  if (!hasAny) return [];
+  let cum = 0;
+  return [...buckets.entries()].map(([day, created]) => {
+    cum += created;
+    return { day, label: day.slice(5), created, cumulative: cum };
+  });
+}
+
+/**
+ * Build a CSV export of the safe-column business rows. No PII beyond
+ * what is already loaded in the admin UI. RFC-4180 escaping.
+ */
+export function buildBusinessesCsv(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+): string {
+  const headers = [
+    'ref_id', 'name_ar', 'name_en', 'entity_type', 'region',
+    'is_active', 'is_verified', 'is_demo', 'approval_status',
+    'username', 'phone', 'email', 'created_at',
+  ] as const;
+  const esc = (v: unknown): string => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = [headers.join(',')];
+  for (const r of rows) {
+    lines.push(headers.map((h) => esc((r as Record<string, unknown>)[h])).join(','));
+  }
+  return lines.join('\n');
+}
