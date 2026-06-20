@@ -30,3 +30,10 @@ export * from './admin/knowledgeAdminMetrics';
 export * from './admin/knowledgeAdminFilters';
 export * from './admin/knowledgeAdminTabs';
 export * from './admin/knowledgeAdminViewModels';
+
+// Phase 4 — assistant guardrails + safe messaging snippets.
+export * from './assistant/assistantKnowledgeSynonyms';
+export * from './assistant/assistantKnowledgeGuardrails';
+export * from './assistant/assistantKnowledgeRanking';
+export * from './assistant/assistantKnowledgeContext';
+export { getSafeMessageKnowledgeSnippets } from './messaging/messageKnowledgeSnippets';
