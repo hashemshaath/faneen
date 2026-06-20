@@ -38,8 +38,8 @@ describe('RFQ submission notification minimum', () => {
     expect(edgeSrc).toMatch(/send-transactional-email/);
   });
 
-  it('keeps AUTO_MATCH_ON_SUBMISSION = false', () => {
-    expect(edgeSrc).toMatch(/AUTO_MATCH_ON_SUBMISSION\s*=\s*false/);
+  it('enables AUTO_MATCH_ON_SUBMISSION so providers are notified', () => {
+    expect(edgeSrc).toMatch(/AUTO_MATCH_ON_SUBMISSION\s*=\s*true/);
   });
 
   it('does NOT send to providers or create provider leads', () => {
