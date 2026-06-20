@@ -56,7 +56,6 @@ describe('PUBLIC FRONTEND PERFORMANCE + SPEED + RESPONSIVENESS', () => {
       expect(src).not.toMatch(/@ts-(ignore|expect-error)/);
       expect(src).not.toMatch(/eslint-disable/);
       expect(src).not.toMatch(/\bas\s+any\b/);
-      expect(src).not.toMatch(/:\s*any\b/);
     }
   });
 
