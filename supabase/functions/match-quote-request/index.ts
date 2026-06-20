@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
     .from('businesses')
     .select('id,user_id,name_ar,city_id,district,is_active,is_verified,approval_status,onboarding_completion,phone,mobile,description_ar,logo_url,last_active_at')
     .eq('is_active', true)
-    .eq('approval_status', 'approved')
+    .in('approval_status', ['approved', 'published'])
     .limit(500);
   if (pErr) return jsonResponse({ success: false, error: pErr.message }, 500);
 
