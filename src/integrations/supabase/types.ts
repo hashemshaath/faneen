@@ -11995,6 +11995,63 @@ export type Database = {
           },
         ]
       }
+      opportunity_message_send_log: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          language: string
+          opportunity_id: string | null
+          opportunity_ref: string | null
+          provider: string | null
+          provider_message_id: string | null
+          provider_response: Json | null
+          recipient_phone: string | null
+          recipient_role: string
+          recipient_user_id: string | null
+          status: string
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          language: string
+          opportunity_id?: string | null
+          opportunity_ref?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          provider_response?: Json | null
+          recipient_phone?: string | null
+          recipient_role: string
+          recipient_user_id?: string | null
+          status: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          language?: string
+          opportunity_id?: string | null
+          opportunity_ref?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          provider_response?: Json | null
+          recipient_phone?: string | null
+          recipient_role?: string
+          recipient_user_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       partner_showcase_items: {
         Row: {
           business_id: string | null
