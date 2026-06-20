@@ -9,6 +9,10 @@
 
 export type BusinessMetricsRow = {
   id: string;
+  ref_id?: string | null;
+  name_ar?: string | null;
+  name_en?: string | null;
+  logo_url?: string | null;
   is_active?: boolean | null;
   is_verified?: boolean | null;
   is_demo?: boolean | null;
