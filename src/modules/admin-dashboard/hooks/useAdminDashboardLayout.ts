@@ -153,29 +153,27 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     return () => { cancelled = true; };
   }, []);
 
-  async function pushRemote(next: StoredLayout): Promise<void> {
-    try {
-      const { data: auth } = await supabase.auth.getUser();
-      const uid = auth.user?.id;
-      if (!uid) return;
-      await supabase
-        .from('user_dashboard_layouts')
-        .upsert(
-          [{
-            user_id: uid,
-            dashboard_key: DASHBOARD_KEY,
-            layout: { order: next.order, hidden: next.hidden },
-            updated_at: new Date().toISOString(),
-          }],
-          { onConflict: 'user_id,dashboard_key' },
-        );
-    } catch { /* offline / RLS: localStorage already updated */ }
-  }
-
-  function persist(next: StoredLayout): void {
+  const persist = useCallback((next: StoredLayout): void => {
     writeStored(next);
-    void pushRemote(next);
-  }
+    void (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth.user?.id;
+        if (!uid) return;
+        await supabase
+          .from('user_dashboard_layouts')
+          .upsert(
+            [{
+              user_id: uid,
+              dashboard_key: DASHBOARD_KEY,
+              layout: { order: next.order, hidden: next.hidden },
+              updated_at: new Date().toISOString(),
+            }],
+            { onConflict: 'user_id,dashboard_key' },
+          );
+      } catch { /* offline / RLS: localStorage already updated */ }
+    })();
+  }, []);
 
   const commit = useCallback((next: StoredLayout) => {
     const cleaned: StoredLayout = {
@@ -184,7 +182,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     };
     setState(cleaned);
     persist(cleaned);
-  }, []);
+  }, [persist]);
 
   const isHidden = useCallback(
     (id: string) => state.hidden.includes(id),
