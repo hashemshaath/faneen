@@ -14,6 +14,7 @@ import {
 } from '@/modules/admin/businesses/businessAdminMetrics';
 import { MetricBarList } from './MetricBarList';
 import { QuickActionsCard, type QuickActionKey } from './QuickActionsCard';
+import { OverviewChartsSection } from './OverviewChartsSection';
 
 interface OverviewTabProps {
   businesses: ReadonlyArray<BusinessMetricsRow>;
@@ -104,6 +105,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQ
           tone="warning"
         />
       </div>
+
+      <OverviewChartsSection
+        isRTL={isRTL}
+        metrics={m}
+        status={statusBuckets}
+        entityType={entityBuckets}
+        completeness={completenessBuckets}
+      />
 
     </div>
   );
