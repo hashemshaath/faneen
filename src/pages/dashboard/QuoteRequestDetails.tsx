@@ -486,7 +486,7 @@ const QuoteRequestDetails: React.FC = () => {
         </Card>
 
         {/* OPPORTUNITIES PHASE 5 — bids on this opportunity (client view) */}
-        {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} />}
+        {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} canAward />}
       </div>
     </DashboardLayout>
   );
