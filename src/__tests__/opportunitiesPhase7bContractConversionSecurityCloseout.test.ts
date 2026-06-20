@@ -9,9 +9,14 @@ const ALL_SQL = readdirSync(MIG_DIR)
   .map((f) => readFileSync(resolve(MIG_DIR, f), 'utf8'))
   .join('\n');
 
-const FN = ALL_SQL.split(
-  'CREATE OR REPLACE FUNCTION public.convert_awarded_bid_to_contract(',
-)[1] ?? '';
+const FN = (() => {
+  const after = ALL_SQL.split(
+    'CREATE OR REPLACE FUNCTION public.convert_awarded_bid_to_contract(',
+  )[1] ?? '';
+  // Stop at the next CREATE OR REPLACE FUNCTION so later migrations (e.g.
+  // Phase 9 trigger helpers that touch quote_request_leads) don't leak in.
+  return after.split(/CREATE OR REPLACE FUNCTION\b/)[0] ?? after;
+})();
 
 const SERVICE = readFileSync(
   resolve(ROOT, 'src/modules/opportunities/contracts/services.ts'),
