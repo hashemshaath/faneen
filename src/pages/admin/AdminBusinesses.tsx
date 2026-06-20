@@ -113,7 +113,10 @@ import { BusinessTableSection } from '@/components/admin/businesses/BusinessTabl
 import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
 import { BusinessVerifyConfirmDialog } from '@/components/admin/businesses/BusinessVerifyConfirmDialog';
 import { OverviewTab as ControlCenterOverviewTab } from '@/components/admin/businesses/control-center/OverviewTab';
-import { ComingNextTab } from '@/components/admin/businesses/control-center/ComingNextTab';
+import { ProvidersTab as ControlCenterProvidersTab } from '@/components/admin/businesses/control-center/ProvidersTab';
+import { TaxonomiesTab as ControlCenterTaxonomiesTab } from '@/components/admin/businesses/control-center/TaxonomiesTab';
+import { ReviewTab as ControlCenterReviewTab } from '@/components/admin/businesses/control-center/ReviewTab';
+import { PilotTab as ControlCenterPilotTab } from '@/components/admin/businesses/control-center/PilotTab';
 import {
   BUSINESS_ADMIN_TABS,
   DEFAULT_BUSINESS_ADMIN_TAB,
