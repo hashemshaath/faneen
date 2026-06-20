@@ -76,17 +76,22 @@ export const ActiveFiltersBarV3 = ({
   if (visible.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div
+      className="flex sm:flex-wrap items-center gap-1.5 overflow-x-auto sm:overflow-visible no-scrollbar -mx-1 px-1"
+      role="list"
+      aria-label={bi('الفلاتر النشطة', 'Active filters')}
+    >
       {visible.map((chip) => (
         <span
           key={chip.key}
-          className="inline-flex items-center gap-1.5 ps-2.5 pe-1 py-0.5 h-7 rounded-full bg-accent/10 text-accent border border-accent/25 text-xs font-body font-medium"
+          role="listitem"
+          className="inline-flex shrink-0 items-center gap-1.5 ps-2.5 pe-1 py-0.5 h-8 rounded-full bg-accent/10 text-accent border border-accent/25 text-xs font-body font-medium"
         >
           <span className="truncate max-w-[160px]" dir="auto">{chip.label}</span>
           <button
             type="button"
             onClick={chip.onRemove}
-            className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-accent/25"
+            className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-accent/25 focus-visible:ring-2 focus-visible:ring-accent/50"
             aria-label={bi(`إزالة ${chip.label}`, `Remove ${chip.label}`)}
           >
             <X className="w-2.5 h-2.5" />
@@ -97,7 +102,7 @@ export const ActiveFiltersBarV3 = ({
         <button
           type="button"
           onClick={onClearAll}
-          className="inline-flex items-center gap-1 text-[11px] text-destructive hover:bg-destructive/10 font-body font-medium px-2.5 py-1 rounded-full border border-destructive/25"
+          className="inline-flex shrink-0 items-center gap-1 text-[11px] text-destructive hover:bg-destructive/10 font-body font-medium px-2.5 h-8 rounded-full border border-destructive/25 focus-visible:ring-2 focus-visible:ring-destructive/40"
         >
           <RotateCcw className="w-3 h-3" />
           {bi('مسح الكل', 'Clear all')}

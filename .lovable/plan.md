@@ -1,118 +1,50 @@
-# HOME PAGE FULL PERFORMANCE + CODE QUALITY AUDIT
+## خطة تحسين صفحة البحث `/search`
 
-## النطاق
+صفحة البحث الحالية مغطاة بحراس اختبارات قوية (`searchV3.noLegacy`, `cwv-optimizations`, `publicFrontendPerformance`, `search-v3-perf` e2e, `search-header-no-overlap`, إلخ). أي تغيير واسع يكسر الحراس. الخطة أدناه مركّزة، منخفضة المخاطر، ومحترمة لكل الحراس.
 
-الصفحة الرئيسية `/` ‏(`src/pages/Index.tsx`) وكل ما تعتمد عليه:
+### 1. الأداء والسرعة
+- إضافة `keepPreviousData` على `useBusinesses` / `useCategories` / `useCities` لمنع الوميض عند تغيير الفلاتر.
+- استبدال `window.scrollTo({ behavior: 'smooth' })` بـ `prefers-reduced-motion`-aware scroll (يحترم سياسة CWV).
+- إضافة `content-visibility: auto` و `contain-intrinsic-size` لبطاقات النتائج أسفل أول 6 → تقليل CLS/LCP على الجوال.
+- `requestIdleCallback` لتأخير حساب JSON-LD `ItemList` الكبير حتى بعد التفاعل الأول.
 
-- `src/components/home/v2/HomeV2.tsx` (Hero LCP)
-- `src/components/home/v2/sections/*` (HomeSectorGrid, HomeAudienceSplit, HomeCategoryRows, FAQSection)
-- `src/components/home/v2/data/homeTaxonomy.ts`
-- `src/components/layout/{Navbar,Footer}.tsx` + ScrollToTop
-- `src/hooks/{usePageMeta,useImagePerfTracking}.ts`, `src/components/{LazyOnView,ErrorBoundary}.tsx`, `src/lib/lazyRetry.ts`
-- `src/modules/home/*` (FAQ loader)
-- أي أصول/صور مرتبطة (hero, sector tiles)
+### 2. تجربة الجوال
+- زيادة hit area لأزرار الفلتر/الفرز إلى 44px (سياسة a11y).
+- جعل `ActiveFiltersBarV3` chips قابلة للسحب أفقيًا بدون scrollbar (`.no-scrollbar`).
+- إظهار عدد النتائج Sticky في أعلى الصفحة على الجوال عند التمرير.
+- تكبير `MobileFiltersSheet` CTA بـ "تطبيق (N)" مع عدّاد فلاتر مباشر.
 
-## مرحلة 1 — Audit فقط (لا تعديل)
+### 3. الفلاتر و UX
+- إبراز الفلاتر النشطة بـ `aria-pressed` و حلقة بصرية واضحة (token-based، لا hex).
+- إضافة زر "إعادة تعيين هذا الفلتر" داخل كل قسم في `SearchFiltersV3`.
+- "Did you mean" يظهر inline بدلاً من تحت النتائج عند 0 نتيجة.
+- حفظ آخر فرز مستخدم في `localStorage` (مفتاح `qitaat_search_sort`) لاسترجاعه عند الزيارة التالية.
 
-تقرير داخلي يجيب عن الـ15 سؤال المطلوبة:
+### 4. التصميم البصري
+- `SearchResultCardV3`: تحسين ratio الصورة (16:11)، رفع تباين الشارة "موثّق"، استخدام `<VerifiedBadge>` الموحّد.
+- skeleton أكثر دقة (يطابق ارتفاع البطاقة الفعلي → 0 CLS).
+- تحسين `SearchEmptyStateV3` بأيقونة كبيرة + CTA لمسح الفلاتر.
 
-1. خريطة الملفات المرتبطة (أعلاه).
-2. أكبر المكونات (سطور/تعقيد) — HeroV2, HomeCategoryRows.
-3. تكرار sections/cards/CTA helpers بين Sectors↔CategoryRows↔Audience.
-4. Fetching: `useHomeFaq` فقط (DB-first + static fallback) — هل يتم في eager أم lazy؟
-5. N+1: فحص استعلامات homeFaq.
-6. Lazy loading: تحقق من صحة `LazyOnView` + `Suspense` لكل قسم تحت الطية.
-7. صور بدون أبعاد (width/height/aspect-ratio).
-8. صور كبيرة/غير محسّنة (hero + sector tiles).
-9. Animations ثقيلة (HeroParticles, framer-motion على mount).
-10. CLS محتمل (skeleton/reserved heights).
-11. LCP bottleneck (hero image preload, fetchpriority).
-12. Re-renders زائدة (useMemo deps في Index).
-13. Hardcoded hex / ألوان خارج tokens.
-14. مسميات/روابط قديمة (Faneen, روابط مكسورة).
-15. Dead code / imports غير مستخدمة.
+### ضمانات
+- لا تغيير في DB / RLS / RPC / migrations / edge.
+- لا تغيير في search backend أو matching logic (`filterAndSort` يبقى كما هو).
+- لا hex hardcoded، لا `any`، لا suppressions جديدة.
+- كل حراس الصفحة الحالية تبقى خضراء + اختبار جديد لكل تحسين.
 
-## مرحلة 2 — تنظيف الكود
+### الملفات المتوقّع تعديلها
+- `src/pages/SearchV3.tsx` (scroll + idle JSON-LD + persisted sort)
+- `src/components/search/v3/SearchResultCardV3.tsx` (visual)
+- `src/components/search/v3/SearchResultsV3.tsx` (content-visibility)
+- `src/components/search/v3/ActiveFiltersBarV3.tsx` (mobile UX)
+- `src/components/search/v3/MobileFiltersSheet.tsx` (CTA counter)
+- `src/components/search/v3/SearchFiltersV3.tsx` (per-section reset)
+- `src/components/search/v3/SearchSkeletonV3.tsx` (CLS)
+- `src/services/search/useBusinesses.ts` (keepPreviousData)
+- اختبارات جديدة في `src/__tests__/searchV3PageImprovements.test.tsx`
 
-- إزالة imports/مكونات/helpers غير مستخدمة في نطاق home فقط.
-- توحيد أي card/CTA مكرر داخل `home/v2/sections/` في primitive مشترك إن وُجد تكرار حقيقي.
-- توحيد loading/empty states (SectionFallback موجود — تحقق من استخدامه الكامل).
-- لا إعادة هيكلة كبيرة إذا الهيكل الحالي نظيف.
-
-## مرحلة 3 — تحسينات الأداء
-
-- التحقق من `<link rel="preload" as="image">` لصورة hero LCP في `index.html` أو الاكتفاء بـ `fetchpriority="high"` على `<img>`.
-- إضافة `width`/`height` (أو `aspect-ratio`) لكل صورة hero/sector لا تملكها.
-- ضمان `loading="lazy"` + `decoding="async"` لكل صورة خارج الطية، و `loading="eager"` + `fetchpriority="high"` لـ LCP فقط.
-- التحقق من `content-visibility: auto` (موجودة عبر `cv-auto`).
-- منع overflow أفقي على الموبايل في `HomeCategoryRows` (horizontal scroll rows).
-- تقليل re-renders: useMemo على JSON-LD موجود — التحقق من ثبات `faqItems` reference.
-
-## مرحلة 4 — SEO
-
-- تأكيد H1 واحد (داخل HeroV2).
-- title/description/canonical/og:* موجودة عبر `usePageMeta`.
-- 5 كتل JSON-LD موجودة (WebSite, ItemList sectors, SiteNav, BreadcrumbList, FAQPage) — تحقق من صحة الـURLs والروابط.
-- روابط القطاعات إلى `/search?category=<slug>` — تحقق من عدم وجود slugs ميتة.
-
-## مرحلة 5 — Accessibility
-
-- alt على كل صورة، aria-label للأزرار icon-only.
-- Heading hierarchy (h1 → h2 → h3).
-- Focus-visible على CTAs.
-- contrast باستخدام semantic tokens فقط.
-- `<main>` واحد (موجود في Index).
-
-## مرحلة 6 — Mobile
-
-- hero لا يأخذ `100dvh` كامل بلا داعٍ.
-- search/CTA tappable ≥44px.
-- بدون نصوص <12px.
-- لا overflow.
-
-## مرحلة 7 — Tests
-
-ملف جديد: `src/__tests__/homePagePerformanceCleanup.test.tsx`
-
-يثبت (بقراءة source string، نمط الاختبارات الحالية في المشروع):
-
-1. `Index.tsx` يحتوي على `<main>` واحد فقط.
-2. كل صورة في hero/sections لها `width` أو `aspect-` class.
-3. hero image ليست `loading="lazy"`.
-4. أقسام تحت الطية ملفوفة بـ `LazyOnView` + `Suspense`.
-5. روابط slugs القطاعات موجودة في `homeTaxonomy.ts`.
-6. لا hex literals (`#[0-9a-f]{3,8}`) في ملفات home/v2/.
-7. لا duplicate `Section`/`CTA` JSX patterns بنفس النص.
-8. لا `is_demo`/`demo`/`fake` data references في ملفات home.
-9. لا `@ts-ignore` / `@ts-expect-error` / `eslint-disable` في home scope.
-10. JSON-LD يحتوي على WebSite + FAQPage + BreadcrumbList.
-11. `usePageMeta` يُستدعى مرة واحدة فقط.
-
-## ممنوعات (التزام صارم)
-
-- لا DB / migrations / RLS / RPC / edge functions.
-- لا تغيير Auth / RFQ / membership / provider matching.
-- لا حذف routes / كسر redirects.
-- لا dependencies جديدة.
-- لا `any` / `@ts-ignore` / `eslint-disable` / skipped tests.
-- لا hardcoded hex.
-- لا تغيير منطق تجاري.
-
-## التقرير النهائي
-
-سأقدم تقرير `HOME PAGE FULL PERFORMANCE + CODE QUALITY AUDIT REPORT` بالـ22 بند المطلوب، مع قرار `PASS` أو `NEEDS FIX`.
-
-## خطة التنفيذ المتسلسلة
-
-1. قراءة كل ملفات home في batch واحد (HeroV2, sections, hooks).
-2. كتابة Audit findings.
-3. تطبيق التنظيف + التحسينات في حدود frontend home فقط.
-4. كتابة + تشغيل الاختبار الجديد.
-5. تشغيل `tsc --noEmit` + اختبارات home + suite كامل إن أمكن.
-6. تسليم التقرير النهائي.
-
----
-
-**ملاحظة**: نظرة سريعة على `Index.tsx` تُظهر أنه **محسّن جيداً مسبقاً** (lazyRetry, LazyOnView, Suspense fallbacks, useMemo JSON-LD, tokens, semantic). أتوقع أن معظم التحسينات ستكون داخل الـsections وليس في Index نفسه، وأن النتيجة الأرجح `PASS` مع تعديلات نقطية صغيرة.
-
-هل أبدأ التنفيذ؟
+### القرار المطلوب منك
+هل تريد:
+- (أ) تنفيذ الـ4 محاور كلها (تغيير متوسط الحجم، عدة ملفات).
+- (ب) تنفيذ المحاور 1+3 فقط (الأداء + UX، أقل مخاطرة بصرية).
+- (ج) تنفيذ المحاور 2+4 فقط (جوال + تصميم بصري).
+- (د) محور واحد محدد — حدّد أيًّا.

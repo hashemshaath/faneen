@@ -56,13 +56,20 @@ export const SearchResultsV3 = ({
   return (
     <div className="flex flex-col gap-6">
       <div className={containerCls}>
-        {businesses.map((b) => (
-          <SearchResultCardV3
+        {businesses.map((b, i) => (
+          <div
             key={b.id}
-            business={b}
-            taxonomy={taxonomyDisplayMap?.get(b.id)}
-            view={viewMode}
-          />
+            // First 6 stay fully visible for fast LCP; cards below get
+            // `content-visibility: auto` so the browser skips off-screen
+            // layout/paint until they enter the viewport.
+            style={i >= 6 ? { contentVisibility: 'auto', containIntrinsicSize: '320px' } : undefined}
+          >
+            <SearchResultCardV3
+              business={b}
+              taxonomy={taxonomyDisplayMap?.get(b.id)}
+              view={viewMode}
+            />
+          </div>
         ))}
       </div>
 

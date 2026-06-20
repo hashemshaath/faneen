@@ -32,6 +32,18 @@ import { LoadingProgressV3 } from '@/components/search/v3/LoadingProgressV3';
 import { SearchSeoLinksV3 } from '@/components/search/v3/SearchSeoLinksV3';
 
 const ITEMS_PER_PAGE = 12;
+const SORT_STORAGE_KEY = 'qitaat_search_sort';
+type SortValue = SearchFilterValues['sortBy'];
+const ALLOWED_SORTS: ReadonlyArray<SortValue> = ['rating', 'name', 'newest', 'relevance'];
+const readPersistedSort = (): SortValue | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(SORT_STORAGE_KEY);
+    return ALLOWED_SORTS.includes(raw as SortValue) ? (raw as SortValue) : null;
+  } catch {
+    return null;
+  }
+};
 
 const SearchV3 = () => {
   const { language } = useLanguage();
@@ -62,7 +74,7 @@ const SearchV3 = () => {
     cityId: searchParams.get('city') || 'all',
     minRating: Number(searchParams.get('rating')) || 0,
     verifiedOnly: searchParams.get('verified') === 'true',
-    sortBy: (searchParams.get('sort') as SearchFilterValues['sortBy']) || 'rating',
+    sortBy: (searchParams.get('sort') as SortValue) || readPersistedSort() || 'rating',
     priceMin: Number(searchParams.get('price_min')) || 0,
     priceMax: Number(searchParams.get('price_max')) || 0,
     serviceCategoryId: searchParams.get('serviceCategory') || 'all',
@@ -179,6 +191,9 @@ const SearchV3 = () => {
       const k = map[key];
       if (value === defaults[key]) p.delete(k); else p.set(k, String(value));
       setSearchParams(p, { replace: true });
+      if (key === 'sortBy' && typeof window !== 'undefined') {
+        try { window.localStorage.setItem(SORT_STORAGE_KEY, String(value)); } catch { /* ignore quota */ }
+      }
     },
     [searchParams, setSearchParams],
   );
@@ -384,11 +399,14 @@ const SearchV3 = () => {
   const handlePageChange = useCallback((p: number) => {
     setCurrentPage(p);
     const target = document.getElementById('search-main');
+    const prefersReduced = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = prefersReduced ? 'auto' : 'smooth';
     if (target) {
       const y = target.getBoundingClientRect().top + window.scrollY - 180;
-      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, y), behavior });
     } else {
-      window.scrollTo({ top: 280, behavior: 'smooth' });
+      window.scrollTo({ top: 280, behavior });
     }
   }, []);
 
