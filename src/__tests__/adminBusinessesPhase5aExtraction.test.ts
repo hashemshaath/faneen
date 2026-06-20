@@ -41,12 +41,15 @@ describe('AdminBusinesses Phase 5A modular extraction', () => {
     }
   });
 
-  it('AdminBusinesses imports and renders BusinessStatsStrip + BusinessDetailsDrawer', () => {
+  it('AdminBusinesses imports and renders the read-only details drawer', () => {
     const src = read('src/pages/admin/AdminBusinesses.tsx');
-    expect(src).toMatch(/from '@\/components\/admin\/businesses\/BusinessStatsStrip'/);
+    // BusinessDetailsDrawer remains the read-only inspection surface.
     expect(src).toMatch(/from '@\/components\/admin\/businesses\/BusinessDetailsDrawer'/);
-    expect(src).toMatch(/<BusinessStatsStrip\b/);
     expect(src).toMatch(/<BusinessDetailsDrawer\b/);
+    // BusinessStatsStrip is intentionally not rendered by the page after the
+    // command-bar / filters-bar / pagination-footer rebuild — header KPIs are
+    // distributed into those primitives. The file still exists on disk (the
+    // "new components exist" check above guards that) for legacy callers.
   });
 
   it('AdminBusinesses does not introduce SELECT * on businesses', () => {
