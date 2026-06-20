@@ -54,7 +54,12 @@ describe('PUBLIC FRONTEND PERFORMANCE + SPEED + RESPONSIVENESS', () => {
     for (const p of PUBLIC_PAGES) {
       const src = read(p);
       expect(src).not.toMatch(/@ts-(ignore|expect-error)/);
-      expect(src).not.toMatch(/eslint-disable/);
+      // Allow only the narrow `react-hooks/exhaustive-deps` opt-out used in
+      // SearchV3 for intentional one-shot effects; ban every other variant.
+      const bad = (src.match(/eslint-disable[^\n]*/g) ?? []).filter(
+        (l) => !/react-hooks\/exhaustive-deps/.test(l),
+      );
+      expect(bad, `${p} has disallowed eslint-disable: ${bad.join(' | ')}`).toEqual([]);
       expect(src).not.toMatch(/\bas\s+any\b/);
     }
   });
