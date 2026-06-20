@@ -748,6 +748,7 @@ const SectorLanding: React.FC = () => {
 export const SectorsIndex: React.FC = () => {
   const { isRTL } = useLanguage();
   const bi = useBi();
+  useImagePerfTracking('sectors_index');
   usePageMeta({
     title: buildSeoTitle({ kind: 'category', lang: bi('ar', 'en'), name: bi('القطاعات الصناعية', 'Industrial Sectors') }),
     description: buildSeoDescription({ kind: 'category', lang: bi('ar', 'en'), customDescription: bi('استعرض القطاعات الصناعية الرئيسية في دليل قِطاعات: الألمنيوم، الحديد، الزجاج، الخشب، والخزائن. اختر القطاع لاستكشاف أفضل المصانع والورش.', 'Browse Qitaat top industrial sectors: aluminum, iron, glass, wood and cabinets. Pick a sector to explore the best factories and workshops.') }),
