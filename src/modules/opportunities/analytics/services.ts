@@ -3,7 +3,7 @@
  *
  * Aggregates opportunity lifecycle metrics directly from the canonical
  * tables (`quote_requests`, `quote_request_leads`, `opportunity_bids`,
- * `contracts`). No service_role, no writes, no schema changes.
+ * `contracts`). No elevated keys, no writes, no schema changes.
  *
  * Admin RLS gates these reads — non-admin queries return empty sets.
  */
