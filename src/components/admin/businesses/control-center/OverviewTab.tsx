@@ -8,6 +8,8 @@ import { StatTile } from './StatTile';
 import {
   computeOverviewMetrics,
   computeAdvancedMetrics,
+  computeHealthScore,
+  weeklyCreationSeries,
   statusDistribution,
   entityTypeDistribution,
   completenessDistribution,
@@ -17,6 +19,7 @@ import { QuickActionsCard, type QuickActionKey } from './QuickActionsCard';
 import { OverviewChartsSection } from './OverviewChartsSection';
 import { OverviewTrendSection } from './OverviewTrendSection';
 import { CompletenessSection } from './CompletenessSection';
+import { HealthScoreCard } from './HealthScoreCard';
 
 interface OverviewTabProps {
   businesses: ReadonlyArray<BusinessMetricsRow>;
@@ -32,6 +35,8 @@ interface OverviewTabProps {
 export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQuickAction }) => {
   const m = useMemo(() => computeOverviewMetrics(businesses), [businesses]);
   const adv = useMemo(() => computeAdvancedMetrics(businesses), [businesses]);
+  const health = useMemo(() => computeHealthScore(businesses), [businesses]);
+  const velocitySpark = useMemo(() => weeklyCreationSeries(businesses, 8), [businesses]);
   const statusBuckets = useMemo(() => statusDistribution(businesses, isRTL), [businesses, isRTL]);
   const entityBuckets = useMemo(() => entityTypeDistribution(businesses, isRTL), [businesses, isRTL]);
   const completenessBuckets = useMemo(
@@ -57,6 +62,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQ
       {onQuickAction ? (
         <QuickActionsCard metrics={m} isRTL={isRTL} onAction={onQuickAction} />
       ) : null}
+
+      {/* Executive health score — weighted composite */}
+      <HealthScoreCard health={health} isRTL={isRTL} />
 
       {/* 2. Records status — counts by lifecycle stage */}
       <section className="space-y-2">
@@ -142,6 +150,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ businesses, isRTL, onQ
             tone={adv.weeklyDelta >= 0 ? 'info' : 'warning'}
             delta={adv.prevWeeklyCreated ? adv.weeklyDeltaPct : undefined}
             hint={velocityHint}
+            spark={velocitySpark}
           />
           <StatTile isRTL={isRTL}
             label={pickBi(isRTL, 'تراكم المراجعة', 'Review backlog')}

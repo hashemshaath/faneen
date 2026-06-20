@@ -447,3 +447,66 @@ export function computeAdvancedMetrics(
     reviewBacklog: rows.filter(isPendingReview).length,
   };
 }
+
+/**
+ * Weekly creation series for sparklines.
+ * Returns counts per week, oldest -> newest. Default 8 weeks.
+ */
+export function weeklyCreationSeries(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+  weeks = 8,
+): number[] {
+  const now = Date.now();
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const buckets = new Array(weeks).fill(0) as number[];
+  for (const r of rows) {
+    if (!r.created_at) continue;
+    const t = new Date(r.created_at).getTime();
+    if (Number.isNaN(t)) continue;
+    const idx = Math.floor((now - t) / WEEK);
+    if (idx >= 0 && idx < weeks) buckets[weeks - 1 - idx] += 1;
+  }
+  return buckets;
+}
+
+export interface HealthScore {
+  /** 0..100 weighted composite. */
+  score: number;
+  /** Per-dimension contributions (0..100). */
+  dimensions: ReadonlyArray<{
+    key: 'publish' | 'verify' | 'completeness' | 'contact' | 'pilot';
+    score: number;
+    weight: number; // 0..1
+  }>;
+  /** Human grade for quick reading. */
+  grade: 'A' | 'B' | 'C' | 'D';
+}
+
+/**
+ * Directory-wide health score: weighted blend of publish-rate,
+ * verification, completeness, contact-coverage and pilot-readiness.
+ * Stable, pure, and derived from already-loaded rows.
+ */
+export function computeHealthScore(
+  rows: ReadonlyArray<BusinessMetricsRow>,
+): HealthScore {
+  const a = computeAdvancedMetrics(rows);
+  const total = rows.length;
+  const contactCoverage = total
+    ? Math.round(((total - rows.filter(isMissingContact).length) / total) * 100)
+    : 0;
+
+  const dims = [
+    { key: 'publish' as const,      score: a.publishRate,       weight: 0.20 },
+    { key: 'verify' as const,       score: a.verificationRate,  weight: 0.25 },
+    { key: 'completeness' as const, score: a.avgCompleteness,   weight: 0.25 },
+    { key: 'contact' as const,      score: contactCoverage,     weight: 0.15 },
+    { key: 'pilot' as const,        score: a.pilotReadyRate,    weight: 0.15 },
+  ];
+
+  const score = Math.round(dims.reduce((s, d) => s + d.score * d.weight, 0));
+  const grade: HealthScore['grade'] =
+    score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : 'D';
+
+  return { score, grade, dimensions: dims };
+}
