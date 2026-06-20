@@ -63,7 +63,8 @@ describe('Opportunities Phase 6 — award_opportunity_bid RPC guards', () => {
   });
 
   it('does NOT create a contract or work order', () => {
-    const fnSlice = ALL_SQL.split('CREATE OR REPLACE FUNCTION public.award_opportunity_bid(')[1] ?? '';
+    const after = ALL_SQL.split('CREATE OR REPLACE FUNCTION public.award_opportunity_bid(')[1] ?? '';
+    const fnSlice = after.split(/CREATE OR REPLACE FUNCTION\b/)[0] ?? after;
     expect(fnSlice).not.toMatch(/INSERT INTO public\.contracts\b/i);
     expect(fnSlice).not.toMatch(/INSERT INTO public\.work_orders\b/i);
   });
