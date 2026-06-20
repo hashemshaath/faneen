@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
   // Candidates
   const { data: providers, error: pErr } = await admin
     .from('businesses')
-    .select('id,user_id,name_ar,city_id,district,sectors,is_active,is_verified,approval_status,onboarding_completion,phone,mobile,description_ar,logo_url,last_active_at')
+    .select('id,user_id,name_ar,city_id,district,is_active,is_verified,approval_status,onboarding_completion,phone,mobile,description_ar,logo_url,last_active_at')
     .eq('is_active', true)
     .eq('approval_status', 'approved')
     .limit(500);
@@ -238,9 +238,10 @@ Deno.serve(async (req) => {
     let score = 0;
 
     // Sector (required) — passes if either legacy or taxonomy matches.
-    const sectorList: string[] = Array.isArray(p.sectors) ? p.sectors : [];
-    const legacySectorMatch =
-      sectorList.some((s) => aliases.includes(s)) || sectorList.includes(quote.sector);
+    // Phase: `businesses.sectors` was dropped; taxonomy links are the
+    // single source of truth. Legacy match path is intentionally disabled.
+    const sectorList: string[] = [];
+    const legacySectorMatch = false;
     const txLinks = taxonomyLinksByBiz.get(p.id) ?? [];
     const txPrimaryMatch = txLinks.some((l) =>
       l.role === 'primary_activity' && l.category_id === taxonomyCategoryId);
@@ -251,7 +252,6 @@ Deno.serve(async (req) => {
     if (!legacySectorMatch && !taxonomyMatch) continue; // hard filter
     if (txPrimaryMatch) { score += 60; reasons.push('نفس النشاط الرئيسي'); }
     if (txSecondaryMatch) { score += 70; reasons.push('نفس التخصص'); }
-    if (legacySectorMatch) { score += 50; reasons.push('تطابق من التصنيف القديم'); }
 
     // Service areas city match
     const areas = areasByBiz.get(p.id) ?? [];
