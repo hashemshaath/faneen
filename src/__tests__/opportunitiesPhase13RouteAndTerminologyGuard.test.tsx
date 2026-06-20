@@ -45,12 +45,10 @@ describe('Opportunities Phase 13 — route + terminology guard', () => {
     }
   });
 
-  it('3. legacy provider redirect routes do not host divergent UI', () => {
-    // Each legacy route must resolve to a single element (either the canonical
-    // page or a <Navigate /> redirect). It must NOT mount competing dashboards.
-    for (const p of ['/dashboard/provider/leads', '/dashboard/rfq/inbox']) {
-      const re = new RegExp(`path="${p.replace(/[/]/g, '\\/')}"[^/]*/>`);
-      expect(APP).toMatch(re);
+  it('3. each legacy route is declared exactly once (no divergent duplicates)', () => {
+    for (const p of ['/dashboard/provider/leads', '/dashboard/rfq/inbox', '/dashboard/my-requests']) {
+      const occurrences = APP.match(new RegExp(`path="${p}"`, 'g')) ?? [];
+      expect(occurrences.length, `route ${p} declared ${occurrences.length}x`).toBe(1);
     }
   });
 
