@@ -43,10 +43,13 @@ describe('ORG-RBAC-STRUCTURE-5 — routing & sidebar', () => {
   });
 
   it('sidebar exposes a Staff & Teams entry pointing at the route', () => {
-    const src = read(SIDEBAR);
+    const src = read(SIDEBAR_SHELL) + '\n' + read(SIDEBAR_CONFIG);
     expect(src).toMatch(/\/dashboard\/settings\/staff/);
-    expect(src).toMatch(/Staff & Teams/);
-    expect(src).toMatch(/الموظفون والفرق/);
+    // The bilingual labels for the Staff & Teams entry are sourced from
+    // UNIFIED_ITEM_LABELS.team. Assert against that single source of truth.
+    const labels = read('src/modules/dashboard/navigation/dashboardNavigation.labels.ts');
+    expect(labels).toMatch(/team:[^}]*en:\s*'Staff & Teams'/);
+    expect(labels).toMatch(/team:[^}]*ar:\s*'الموظفون والفرق'/);
   });
 
   it('route appears in the workspace permission map under staff.view', () => {
