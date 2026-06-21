@@ -392,7 +392,7 @@ const DashboardProjects = () => {
     if (uncategorized > 0) {
       arr.push({
         id: '__uncategorized__',
-        label: isRTL ? 'غير مصنّف' : 'Uncategorized',
+        label: pickBi(isRTL, 'غير مصنّف', 'Uncategorized'),
         count: uncategorized,
       });
     }
