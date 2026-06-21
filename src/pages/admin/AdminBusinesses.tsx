@@ -178,6 +178,7 @@ import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
 import { logAdminBusinessAction } from './businesses/logAdminBusinessAction';
 import { useBusinessBranchFormState, buildBranchPayload } from './businesses/hooks/useBusinessBranchFormState';
+import { useAdminBusinessesListState } from './businesses/hooks/useAdminBusinessesListState';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -1078,36 +1079,23 @@ const AdminBusinesses = () => {
     [],
   );
 
-  const filtered = useMemo(
-    () =>
-      filterAndSortBusinesses(businesses, {
-        search,
-        filterStatus,
-        selectedTiers,
-        filterTranslation,
-        filterOrigin,
-        sortBy,
-        language: language === 'ar' ? 'ar' : 'en',
-        contractBusinessIds,
-      }),
-    [
+  const { filtered, totalPages, safePage, paged, stats, tierDistribution } =
+    useAdminBusinessesListState({
       businesses,
+      contractBusinessIds,
+      tiers,
       search,
       filterStatus,
       selectedTiers,
       filterTranslation,
       filterOrigin,
       sortBy,
-      language,
-      contractBusinessIds,
-    ],
-  );
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      language: language === 'ar' ? 'ar' : 'en',
+      page,
+      pageSize: PAGE_SIZE,
+    });
   // Keep the keyboard-export ref pointed at the latest filtered list.
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
-  const safePage = Math.min(Math.max(1, page), totalPages);
-  const paged = useMemo(() => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [filtered, safePage]);
   const allPagedSelected = paged.length > 0 && paged.every(b => selected.has(b.id));
   const togglePageAll = () => {
     setSelected(s => {
@@ -1117,16 +1105,6 @@ const AdminBusinesses = () => {
       return n;
     });
   };
-
-  const stats = useMemo(
-    () => computeBusinessStats(businesses, contractBusinessIds),
-    [businesses, contractBusinessIds],
-  );
-
-  const tierDistribution = useMemo(
-    () => computeTierDistribution(businesses, tiers),
-    [businesses],
-  );
 
   const filteredCities = editForm.country_id
     ? cities.filter((c) => c.country_id === editForm.country_id)
