@@ -82,10 +82,16 @@ describe('Phase B4 — Strip is admin-only', () => {
 
 describe('Phase B4 — Admin actions and protected surfaces preserved', () => {
   it('Admin action center actions are still present', () => {
-    expect(ADMIN_SRC).toMatch(/راجع طلبات اليوم/);
-    expect(ADMIN_SRC).toMatch(/مراجعة المزودين/);
-    expect(ADMIN_SRC).toMatch(/راقب التشغيل/);
-    expect(ADMIN_SRC).toMatch(/افتح مراكز الإدارة/);
+    // DASHBOARD OVERVIEW ADMIN ACTIONS DRIFT CLOSEOUT:
+    // Admin overview was refactored from imperative action cards
+    // ("راجع طلبات اليوم", "افتح مراكز الإدارة"...) into a grouped
+    // operations inbox (urgent / approvals / communication). The
+    // underlying operational surfaces are preserved — assertions
+    // now check the current authoritative labels + routes.
+    expect(ADMIN_SRC).toMatch(/طلبات اليوم/);          // Today's leads KPI
+    expect(ADMIN_SRC).toMatch(/مراجعة مزودين/);        // Provider review inbox item
+    expect(ADMIN_SRC).toMatch(/\/admin\/operations/);  // Operations center link
+    expect(ADMIN_SRC).toMatch(/\/admin\/activity-log/); // Admin centers hub link
   });
 
   it('Admin navigation / route file is untouched at the strip level', () => {
