@@ -1068,12 +1068,7 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters / derivations (pure helpers in businessListDerivations) ─── */
-  const translationCompleteness = useCallback(
-    (b: Parameters<typeof computeTranslationCompleteness>[0]) =>
-      computeTranslationCompleteness(b),
-    [],
-  );
-
+  const translationCompleteness = computeTranslationCompleteness;
   const { filtered, totalPages, safePage, paged, stats, tierDistribution } =
     useAdminBusinessesListState({
       businesses,
