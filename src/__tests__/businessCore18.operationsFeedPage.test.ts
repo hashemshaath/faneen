@@ -13,6 +13,11 @@ const SIDEBAR_SHELL = readFileSync(
   resolve(__dirname, '../components/dashboard/DashboardSidebar.tsx'),
   'utf8',
 );
+const SIDEBAR_CONFIG = readFileSync(
+  resolve(__dirname, '../modules/dashboard/navigation/dashboardNavigation.config.ts'),
+  'utf8',
+);
+const SIDEBAR = SIDEBAR_SHELL + '\n' + SIDEBAR_CONFIG;
 const OVERVIEW = readFileSync(
   resolve(__dirname, '../pages/dashboard/DashboardWorkOrdersOverview.tsx'),
   'utf8',
