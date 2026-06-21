@@ -448,18 +448,29 @@ export const DashboardSidebar: React.FC = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const closeMobile = () => { if (isMobile) setOpenMobile(false); };
-  const handleLogout = async () => { await signOut(); navigate('/'); };
+  const closeMobile = React.useCallback(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [isMobile, setOpenMobile]);
+  const handleLogout = React.useCallback(async () => {
+    await signOut();
+    navigate('/');
+  }, [signOut, navigate]);
 
   // Admin gets admin-specific base menu, not user/provider menu
   const hasBusiness = (workspace.entities?.length ?? 0) > 0;
+  const audience: 'provider' | 'admin' | 'user' = isAdmin
+    ? 'admin'
+    : isProvider
+      ? 'provider'
+      : 'user';
   // For non-admin / non-provider users without a business, hide the
   // «المنشأة» group entirely — they get a CTA card instead.
-  const baseGroups = getVisibleDashboardNavGroups({
-    audience: isAdmin ? 'admin' : isProvider ? 'provider' : 'user',
-    hasBusiness,
-    isSuperAdmin,
-  });
+  // Memoised: nav groups are derived purely from audience/hasBusiness/
+  // isSuperAdmin and never need to be rebuilt on unrelated re-renders.
+  const baseGroups = React.useMemo(
+    () => getVisibleDashboardNavGroups({ audience, hasBusiness, isSuperAdmin }),
+    [audience, hasBusiness, isSuperAdmin],
+  );
 
   // Build a url → label lookup once per render. Favorites and Recent
   // resolve their display label from this so renames stay in sync and
@@ -472,19 +483,21 @@ export const DashboardSidebar: React.FC = () => {
     return m;
   }, [baseGroups]);
 
-  const audience: 'provider' | 'admin' | 'user' = isAdmin ? 'admin' : isProvider ? 'provider' : 'user';
-
   // ADMIN-REDESIGN PHASE 3F — admin-scoped pinned favorites. Disabled
   // (no-op control) for non-admin audiences so the pin button never
   // renders for providers/users.
   const adminFavs = useAdminFavorites({ isSuperAdmin });
-  const adminPinControl = isAdmin
-    ? {
-        isPinned: adminFavs.isFavorite,
-        canPin: adminFavs.canPin,
-        toggle: adminFavs.toggle,
-      }
-    : undefined;
+  const adminPinControl = React.useMemo(
+    () =>
+      isAdmin
+        ? {
+            isPinned: adminFavs.isFavorite,
+            canPin: adminFavs.canPin,
+            toggle: adminFavs.toggle,
+          }
+        : undefined,
+    [isAdmin, adminFavs.isFavorite, adminFavs.canPin, adminFavs.toggle],
+  );
 
   return (
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
