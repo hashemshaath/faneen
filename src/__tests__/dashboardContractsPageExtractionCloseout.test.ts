@@ -39,8 +39,9 @@ describe('Dashboard Contracts — page extraction closeout', () => {
 
   it('hook does not perform DB / RPC / mutation work', () => {
     const src = read(HOOK);
+    // Type-only import from supabase types is allowed; runtime client is not.
+    expect(src.includes("from '@/integrations/supabase/client'")).toBe(false);
     for (const forbidden of [
-      '@/integrations/supabase',
       'supabase.from(',
       'useQuery(',
       'useMutation(',
