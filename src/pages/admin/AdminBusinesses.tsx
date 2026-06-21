@@ -256,14 +256,8 @@ const AdminBusinesses = () => {
   // the heavy header, KPI strip, approvals banner and tier distribution
   // so the active task gets full vertical priority at the top of the page.
   const panelOpen = creatingBiz || !!editingBiz || !!servicesPanel;
-  const scrollToTop = useCallback(() => {
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-  const setServiceField = useCallback(
-    (key: string, value: string | number | boolean | null) =>
-      setNewService((s) => ({ ...s, [key]: value })),
-    [],
-  );
+  const scrollToTop = useCallback(() => { if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
+  const setServiceField = useCallback((key: string, value: string | number | boolean | null) => setNewService((s) => ({ ...s, [key]: value })), []);
 
   /* ─── Queries ─── */
   const { data: businesses = [], isLoading, refetch: refetchBusinesses } = useQuery({
