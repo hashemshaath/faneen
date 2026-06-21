@@ -104,11 +104,7 @@ describe('Email Infrastructure Phase 15D — Template Registry + Copy Cleanup', 
     ];
     const literalKey = /re_[A-Za-z0-9]{12,}/;
     for (const p of paths) {
-      const out = execFileSync(
-        'grep',
-        ['-RIn', '--exclude-dir=node_modules', '-E', literalKey.source, p],
-        { encoding: 'utf8', cwd: root, maxBuffer: 16 * 1024 * 1024 },
-      ).trim();
+      const out = grep(literalKey.source, [p]);
       expect(out.trim(), `unexpected re_ literal in ${p}`).toBe('');
     }
   });
