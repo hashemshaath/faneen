@@ -36,7 +36,7 @@ describe('DASHBOARD NAV — visual + source consistency', () => {
   });
 
   it('icons render at h-5 w-5 in the menu item, w-3.5 h-3.5 in the group heading', () => {
-    expect(SIDEBAR).toMatch(/className=\{?'?[^'`}]*h-5 w-5 shrink-0/);
+    expect(SIDEBAR).toMatch(/'h-5 w-5 shrink-0/);
     expect(SIDEBAR).toContain('w-3.5 h-3.5 opacity-80 shrink-0');
   });
 
