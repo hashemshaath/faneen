@@ -765,41 +765,11 @@ const AdminBusinesses = () => {
   });
 
   const emptyBranch = () => ({
-    name_ar: '', name_en: '', is_main: false, is_active: true,
-    branch_type: 'branch' as 'main' | 'branch' | 'warehouse' | 'admin_office' | 'regional_office' | 'head_office',
-    contact_person: '', phone: '', mobile: '', unified_number: '', customer_service_phone: '',
-    email: '', website: '',
-    country_id: '', city_id: '', region: '', district: '', street_name: '',
-    building_number: '', national_id: '', additional_number: '', address: '',
-    latitude: '', longitude: '',
-    complex_name: '', complex_name_en: '', site_number: '',
-    working_hours: undefined,
-  });
-
   const saveBranchMutation = useMutation({
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
       const wantsMain = !!branchForm.is_main;
-      const payload: Record<string, unknown> = {
-        business_id: editingBiz.id,
-        name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
-        is_active: branchForm.is_active,
-        branch_type: branchForm.branch_type || 'branch',
-        contact_person: branchForm.contact_person || null, phone: branchForm.phone || null,
-        mobile: branchForm.mobile || null, unified_number: branchForm.unified_number || null,
-        customer_service_phone: branchForm.customer_service_phone || null,
-        email: branchForm.email || null, website: branchForm.website || null,
-        country_id: branchForm.country_id || null, city_id: branchForm.city_id || null,
-        region: branchForm.region || null, district: branchForm.district || null,
-        street_name: branchForm.street_name || null, building_number: branchForm.building_number || null,
-        national_id: branchForm.national_id || null, additional_number: branchForm.additional_number || null,
-        address: branchForm.address || null, latitude: branchForm.latitude || null,
-        longitude: branchForm.longitude || null,
-        complex_name: branchForm.complex_name || null,
-        complex_name_en: branchForm.complex_name_en || null,
-        site_number: branchForm.site_number || null,
-        working_hours: (branchForm.working_hours ?? {}) as unknown,
-      };
+      const payload = buildBranchPayload(branchForm, editingBiz.id);
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
         const { error } = await updateBusinessBranchById(editingBranchId, payload as never);
