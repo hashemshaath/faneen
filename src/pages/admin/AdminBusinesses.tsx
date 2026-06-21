@@ -177,11 +177,7 @@ import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
 import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
 import { logAdminBusinessAction } from './businesses/logAdminBusinessAction';
-import {
-  useBusinessBranchFormState,
-  buildBranchPayload,
-  type AdminBranchFormState,
-} from './businesses/hooks/useBusinessBranchFormState';
+import { useBusinessBranchFormState, buildBranchPayload } from './businesses/hooks/useBusinessBranchFormState';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
