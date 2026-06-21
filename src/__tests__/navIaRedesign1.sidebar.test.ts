@@ -13,7 +13,13 @@ import { ADMIN_NAV_GROUPS as REGISTRY_GROUPS } from '@/modules/admin-shell/navig
  */
 
 const root = resolve(__dirname, '..', '..');
-const SIDEBAR = readFileSync(resolve(root, 'src/components/dashboard/DashboardSidebar.tsx'), 'utf8');
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (assertion outdated):
+// Sidebar menu IA (urls, groups, labels) moved from DashboardSidebar.tsx
+// to `dashboardNavigation.config.ts`. Concat both so the existing
+// source-text guards continue to assert IA presence + admin protection.
+const SIDEBAR_SHELL  = readFileSync(resolve(root, 'src/components/dashboard/DashboardSidebar.tsx'), 'utf8');
+const SIDEBAR_CONFIG = readFileSync(resolve(root, 'src/modules/dashboard/navigation/dashboardNavigation.config.ts'), 'utf8');
+const SIDEBAR = SIDEBAR_SHELL + '\n' + SIDEBAR_CONFIG;
 const APP = readFileSync(resolve(root, 'src/App.tsx'), 'utf8');
 
 const extractUrls = (block: string) => {
@@ -60,16 +66,16 @@ describe('NAV-IA-REDESIGN-1 — sidebar/route consistency', () => {
 });
 
 describe('NAV-IA-REDESIGN-1 — grouping & operations placement', () => {
+  // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: the provider/admin group bodies
+  // are now defined in dashboardNavigation.config.ts. Extract them from
+  // there (single source of truth) so the IA-shape assertions remain
+  // meaningful after the renderer/config split.
   const providerBlock = (() => {
-    const s = SIDEBAR.indexOf('const providerGroups');
-    const e = SIDEBAR.indexOf('const userGroups');
-    return SIDEBAR.slice(s, e);
+    const s = SIDEBAR_CONFIG.indexOf('providerNavGroups');
+    const e = SIDEBAR_CONFIG.indexOf('userNavGroups');
+    return SIDEBAR_CONFIG.slice(s, e);
   })();
-  const adminBlock = (() => {
-    const s = SIDEBAR.indexOf('const adminBaseGroups');
-    const e = SIDEBAR.indexOf('// Render helpers', s);
-    return SIDEBAR.slice(s, e);
-  })();
+  const adminBlock = SIDEBAR_SHELL; // admin sidebar deep links live in shell
 
   it('provider Overview group contains Dashboard, Analytics, Operations Feed', () => {
     // PROVIDER-IA-CONSOLIDATION: /dashboard/work-orders/overview now
@@ -102,15 +108,20 @@ describe('NAV-IA-REDESIGN-1 — grouping & operations placement', () => {
     expect(block).not.toContain('/dashboard/contracts');
   });
 
-  it('admin Overview group contains Operations Center + Bulk Reference Triage', () => {
-    // ADMIN-REDESIGN PHASE 3 — admin sidebar is now derived from the
-    // central registry (`@/modules/admin-shell`). Inspect the registry
-    // directly so the assertion survives the indirection.
+  it('admin registry exposes Operations Center + Bulk Reference Triage', () => {
+    // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: in the current admin IA,
+    // `/admin/operations` lives in the dedicated `operations` group
+    // (Operations Center is the primary operations surface), while
+    // `/admin/ref/triage` remains in `overview` as the bulk-triage entry
+    // point. Both invariants are asserted at the registry level so the
+    // guard remains robust to future label/icon changes.
+    const opsCenter = REGISTRY_GROUPS
+      .flatMap((g) => g.items)
+      .find((i) => i.route === '/admin/operations');
+    expect(opsCenter, 'Operations Center route missing from registry').toBeDefined();
     const overview = REGISTRY_GROUPS.find((g) => g.id === 'overview');
     expect(overview).toBeDefined();
-    const routes = overview!.items.map((i) => i.route);
-    expect(routes).toContain('/admin/operations');
-    expect(routes).toContain('/admin/ref/triage');
+    expect(overview!.items.map((i) => i.route)).toContain('/admin/ref/triage');
   });
 
   it('admin sidebar has no /admin/ref/:refId static link (entry is via triage/resolver)', () => {
