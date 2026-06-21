@@ -73,7 +73,9 @@ describe('PROVIDER INTAKE UX PROFESSIONALIZATION', () => {
     }
     // Status + search filters were already present and must remain.
     expect(src).toMatch(/STATUS_LABEL/);
-    expect(src).toMatch(/setFilter\(/);
+    // Status filter setter was renamed from `setFilter` to `setStatus`
+    // during the leads-page refactor; either name satisfies the guard.
+    expect(src).toMatch(/set(Filter|Status)\(/);
   });
 
   it('AdminProviderGrowthQueue exposes pilot-readiness KPIs', () => {
