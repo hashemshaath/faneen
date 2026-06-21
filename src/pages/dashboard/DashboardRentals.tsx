@@ -18,6 +18,7 @@ import {
   RENTAL_UNITS, ITEM_STATUS_LABELS,
 } from '@/modules/rentals';
 import type { RentalCategory, RentalItem, RentalOrder, RentalUnit } from '@/modules/rentals';
+import { useRentalListDerivations } from '@/hooks/useRentalListDerivations';
 import { RentalStatusBadge } from '@/modules/rentals/components/RentalStatusBadge';
 import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter';
 import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
@@ -633,9 +634,8 @@ const DashboardRentals: React.FC = () => {
     })();
   }, [user?.id]);
 
-  const activeOrders = useMemo(() => orders.filter(o => o.status === 'active'), [orders]);
-  const expiringOrders = useMemo(() => orders.filter(o => o.status === 'expiring_soon'), [orders]);
-  const overdueOrders = useMemo(() => orders.filter(o => o.status === 'expired'), [orders]);
+  const { stats: orderStats } = useRentalListDerivations({ items: [], orders, listQuery: '', listStatus: 'all' });
+  const { active: activeOrders, expiring: expiringOrders, overdue: overdueOrders } = orderStats;
 
   // Stable refresh callbacks — avoid recreating closures on every render.
   const refreshItems = useCallback(async () => {
@@ -880,21 +880,14 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   const [listQuery, setListQuery] = useState('');
   const [listStatus, setListStatus] = useState<'all' | RentalItem['status']>('all');
 
-  // Memoized filter — avoids re-walking items on every keystroke/render.
-  const filteredItems = useMemo(() => {
-    const q = listQuery.trim().toLowerCase();
-    if (!q && listStatus === 'all') return items;
-    return items.filter(it => {
-      if (listStatus !== 'all' && it.status !== listStatus) return false;
-      if (!q) return true;
-      return (
-        it.name_ar?.toLowerCase().includes(q) ||
-        (it.name_en ?? '').toLowerCase().includes(q) ||
-        (it.brand ?? '').toLowerCase().includes(q) ||
-        it.ref_id?.toLowerCase().includes(q)
-      );
-    });
-  }, [items, listQuery, listStatus]);
+  // Memoized filter — extracted to `useRentalListDerivations` to avoid
+  // re-walking items on every keystroke/render.
+  const { filteredItems } = useRentalListDerivations({
+    items,
+    orders: [],
+    listQuery,
+    listStatus,
+  });
 
   useEffect(() => {
     if (!form.category_id && categories[0]) setForm(f => ({ ...f, category_id: categories[0].id }));
