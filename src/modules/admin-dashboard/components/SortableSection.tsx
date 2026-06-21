@@ -42,10 +42,9 @@ export const SortableSection: React.FC<SortableSectionProps> = ({
           type="button"
           aria-label={isRTL ? 'سحب لإعادة الترتيب' : 'Drag to reorder'}
           className={cn(
-            'absolute top-2 z-30 flex items-center justify-center w-7 h-7 rounded-full',
+            'absolute top-2 end-2 z-30 flex items-center justify-center w-7 h-7 rounded-full',
             'border bg-background/95 shadow-sm backdrop-blur cursor-grab active:cursor-grabbing',
             'text-muted-foreground hover:text-accent',
-            isRTL ? 'left-2' : 'right-2',
           )}
           {...attributes}
           {...listeners}
