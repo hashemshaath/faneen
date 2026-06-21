@@ -1099,42 +1099,17 @@ const AdminBusinesses = () => {
 
   return (
     <AdminBusinessesPageShell>
-        <AdminPageHeader
-          tone="accent"
-          icon={Building2}
-          eyebrow={pickBi(isRTL, 'لوحة الإدارة', 'Admin Console')}
-          breadcrumbs={[
-            { label: pickBi(isRTL, 'الإدارة', 'Admin'), href: '/admin' },
-            { label: pickBi(isRTL, 'إدارة الجهات والمزودين', 'Businesses & Providers') },
-          ]}
-          title={pickBi(isRTL, 'إدارة الجهات والمزودين', 'Businesses & Providers Control Center')}
-          subtitle={panelOpen ? undefined : pickBi(
-            isRTL,
-            'مركز موحد لمراجعة الجهات، إدارة المزودين، متابعة الظهور العام، وجاهزية التشغيل.',
-            'Unified center to review businesses, manage providers, track public visibility & pilot readiness.',
-          )}
-          actions={
-            <BusinessHeaderActions
-              isRTL={isRTL}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              onRefresh={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
-              onExportCsv={() => exportCSV(filtered, language)}
-              onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true); scrollToTop(); }}
-              savedViewsSlot={
-                <SavedViewsMenu
-                  views={savedViews.views}
-                  currentFilters={currentViewFilters}
-                  onApply={applySavedView}
-                  onSave={savedViews.save}
-                  onRemove={savedViews.remove}
-                />
-              }
-            />
-          }
-          /* Header KPI strip removed (Hard-Fix): identical counts now
-             live in a single place — the Overview tab — so they no
-             longer duplicate the header. */
+        <AdminBusinessesHeader
+          isRTL={isRTL}
+          panelOpen={panelOpen}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onRefresh={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
+          onExportCsv={() => exportCSV(filtered, language)}
+          onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true); scrollToTop(); }}
+          savedViews={savedViews}
+          currentViewFilters={currentViewFilters}
+          onApplySavedView={applySavedView}
         />
 
         <Tabs
