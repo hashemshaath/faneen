@@ -83,27 +83,29 @@ describe('NAV-IA-REDESIGN-1 — grouping & operations placement', () => {
     // Overview group. Work Orders lives under "Operations". The Overview
     // group exposes the cross-domain Operations Feed as the entry point
     // to operational activity.
-    const s = providerBlock.indexOf("en: 'Overview'");
-    const e = providerBlock.indexOf('groupLabel', s + 1);
-    const block = providerBlock.slice(s, e);
+    // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: group labels are now sourced
+    // from UNIFIED_GROUP_LABELS by key. Locate by key marker.
+    const s = providerBlock.indexOf("key: 'dashboard'");
+    const e = providerBlock.indexOf('  {', s + 1);
+    const block = providerBlock.slice(s, e > 0 ? e : undefined);
     expect(block).toContain("'/dashboard'");
     expect(block).toContain('/dashboard/analytics');
     expect(block).toContain('/dashboard/operations/feed');
   });
 
   it('provider Operations group contains Work Orders + Contracts', () => {
-    const s = providerBlock.indexOf("en: 'Operations'");
-    const e = providerBlock.indexOf('groupLabel', s + 1);
-    const block = providerBlock.slice(s, e);
+    const s = providerBlock.indexOf("key: 'operations'");
+    const e = providerBlock.indexOf('  {', s + 1);
+    const block = providerBlock.slice(s, e > 0 ? e : undefined);
     expect(block).toContain("'/dashboard/work-orders'");
     expect(block).toContain("'/dashboard/contracts'");
   });
 
   it('provider Membership & Billing group is separate from Operations', () => {
-    expect(providerBlock).toContain("en: 'Membership & Billing'");
-    const s = providerBlock.indexOf("en: 'Membership & Billing'");
-    const e = providerBlock.indexOf('groupLabel', s + 1);
-    const block = providerBlock.slice(s, e);
+    expect(providerBlock).toContain("key: 'billing'");
+    const s = providerBlock.indexOf("key: 'billing'");
+    const e = providerBlock.indexOf('  {', s + 1);
+    const block = providerBlock.slice(s, e > 0 ? e : undefined);
     expect(block).not.toContain('/dashboard/work-orders');
     expect(block).not.toContain('/dashboard/contracts');
   });
