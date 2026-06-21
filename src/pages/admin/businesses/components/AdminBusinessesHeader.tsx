@@ -4,6 +4,7 @@ import { pickBi } from '@/components/common/Bilingual';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { BusinessHeaderActions } from '@/components/admin/businesses/BusinessHeaderActions';
 import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
+import type { SavedView } from '@/hooks/useAdminSavedViews';
 import type { BizViewFilters } from '../businessSavedViews';
 
 /**
@@ -15,8 +16,8 @@ import type { BizViewFilters } from '../businessSavedViews';
  * previous inline header block.
  */
 interface SavedViewsApi {
-  views: { id: string; name: string; filters: BizViewFilters }[];
-  save: (name: string, filters: BizViewFilters) => void;
+  views: SavedView<BizViewFilters>[];
+  save: (name: string, filters: BizViewFilters) => SavedView<BizViewFilters>;
   remove: (id: string) => void;
 }
 
