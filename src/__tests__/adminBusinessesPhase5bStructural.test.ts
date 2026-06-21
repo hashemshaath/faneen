@@ -37,7 +37,10 @@ describe('AdminBusinesses Phase 5B structural extraction', () => {
   it('AdminBusinesses composes the new shell + sections', () => {
     const src = read('src/pages/admin/AdminBusinesses.tsx');
     expect(src).toMatch(/<AdminBusinessesPageShell\b/);
-    expect(src).toMatch(/<BusinessHeaderActions\b/);
+    // Phase 5J: BusinessHeaderActions is now rendered indirectly via
+    // AdminBusinessesHeader (the extracted page-header component) which
+    // wraps both AdminPageHeader and the action cluster.
+    expect(src).toMatch(/<AdminBusinessesHeader\b/);
     expect(src).toMatch(/<BusinessFiltersBar\b/);
     expect(src).toMatch(/<BusinessTableSection\b/);
     expect(src).toMatch(/<BusinessPaginationFooter\b/);

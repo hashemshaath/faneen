@@ -81,7 +81,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Building2, XCircle, Star, Loader2, Eye, Ban,
+  XCircle, Star, Loader2, Eye, Ban,
   Edit, Trash2, Plus, X, Globe, Phone, Mail, MapPin, Settings,
   Shield, Crown, BarChart3, Package, DollarSign, ExternalLink,
   GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
@@ -95,10 +95,6 @@ import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { parseMembershipLimitError } from '@/lib/membership-errors';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
-import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
-import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
-import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
@@ -107,7 +103,6 @@ import {
   type BusinessDrawerRow,
 } from '@/components/admin/businesses/BusinessDetailsDrawer';
 import { AdminBusinessesPageShell } from '@/components/admin/businesses/AdminBusinessesPageShell';
-import { BusinessHeaderActions } from '@/components/admin/businesses/BusinessHeaderActions';
 import { BusinessFiltersBar } from '@/components/admin/businesses/BusinessFiltersBar';
 import { BusinessTableSection } from '@/components/admin/businesses/BusinessTableSection';
 import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
@@ -151,6 +146,7 @@ import type {
 } from './adminBusinesses.types';
 import type { BranchRow as AdminBranchRow } from '@/components/admin/businesses/branches/types';
 import { BusinessBranchesPanel } from './businesses/components/BusinessBranchesPanel';
+import { AdminBusinessesHeader } from './businesses/components/AdminBusinessesHeader';
 import { getBusinessProfileHref, isReservedUsername, normalizeUsername } from '@/lib/business/profileHref';
 import {
   TIERS as tiers,
@@ -260,14 +256,8 @@ const AdminBusinesses = () => {
   // the heavy header, KPI strip, approvals banner and tier distribution
   // so the active task gets full vertical priority at the top of the page.
   const panelOpen = creatingBiz || !!editingBiz || !!servicesPanel;
-  const scrollToTop = useCallback(() => {
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-  const setServiceField = useCallback(
-    (key: string, value: string | number | boolean | null) =>
-      setNewService((s) => ({ ...s, [key]: value })),
-    [],
-  );
+  const scrollToTop = useCallback(() => { if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
+  const setServiceField = useCallback((key: string, value: string | number | boolean | null) => setNewService((s) => ({ ...s, [key]: value })), []);
 
   /* ─── Queries ─── */
   const { data: businesses = [], isLoading, refetch: refetchBusinesses } = useQuery({
@@ -1093,48 +1083,21 @@ const AdminBusinesses = () => {
     q: search, status: filterStatus, tier: filterTier,
     translation: filterTranslation, origin: filterOrigin, sort: sortBy,
   };
-  const applySavedView = (f: BizViewFilters) => {
-    setSearchInput(f.q || ''); setSearchParams(toSavedViewParams(f), { replace: false });
-  };
+  const applySavedView = (f: BizViewFilters) => { setSearchInput(f.q || ''); setSearchParams(toSavedViewParams(f), { replace: false }); };
 
   return (
     <AdminBusinessesPageShell>
-        <AdminPageHeader
-          tone="accent"
-          icon={Building2}
-          eyebrow={pickBi(isRTL, 'لوحة الإدارة', 'Admin Console')}
-          breadcrumbs={[
-            { label: pickBi(isRTL, 'الإدارة', 'Admin'), href: '/admin' },
-            { label: pickBi(isRTL, 'إدارة الجهات والمزودين', 'Businesses & Providers') },
-          ]}
-          title={pickBi(isRTL, 'إدارة الجهات والمزودين', 'Businesses & Providers Control Center')}
-          subtitle={panelOpen ? undefined : pickBi(
-            isRTL,
-            'مركز موحد لمراجعة الجهات، إدارة المزودين، متابعة الظهور العام، وجاهزية التشغيل.',
-            'Unified center to review businesses, manage providers, track public visibility & pilot readiness.',
-          )}
-          actions={
-            <BusinessHeaderActions
-              isRTL={isRTL}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              onRefresh={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
-              onExportCsv={() => exportCSV(filtered, language)}
-              onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true); scrollToTop(); }}
-              savedViewsSlot={
-                <SavedViewsMenu
-                  views={savedViews.views}
-                  currentFilters={currentViewFilters}
-                  onApply={applySavedView}
-                  onSave={savedViews.save}
-                  onRemove={savedViews.remove}
-                />
-              }
-            />
-          }
-          /* Header KPI strip removed (Hard-Fix): identical counts now
-             live in a single place — the Overview tab — so they no
-             longer duplicate the header. */
+        <AdminBusinessesHeader
+          isRTL={isRTL}
+          panelOpen={panelOpen}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onRefresh={() => { refetchBusinesses(); toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed')); }}
+          onExportCsv={() => exportCSV(filtered, language)}
+          onCreate={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true); scrollToTop(); }}
+          savedViews={savedViews}
+          currentViewFilters={currentViewFilters}
+          onApplySavedView={applySavedView}
         />
 
         <Tabs
