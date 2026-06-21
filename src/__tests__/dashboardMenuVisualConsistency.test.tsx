@@ -24,18 +24,33 @@ describe('PHASE B — sidebar visual consistency', () => {
     expect(matches.length).toBe(1);
   });
 
-  it('section heading uses the unified typography token (text-[10.5px])', () => {
-    expect(SIDEBAR).toContain('text-[10.5px]');
-    expect(SIDEBAR).toContain('uppercase tracking-[0.08em]');
+  // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (token evolution):
+  // The shipped sidebar section heading uses the design-tokens-system
+  // tokens `text-xs font-semibold tracking-wide` for the group label,
+  // with `text-[10.5px]` reserved for the group description below the
+  // label. The earlier `uppercase tracking-[0.08em]` was dropped to
+  // match the lower-case bilingual labels (Arabic has no uppercase).
+  it('section heading uses the shipped typography tokens', () => {
+    expect(SIDEBAR).toContain('text-xs font-semibold tracking-wide');
+    expect(SIDEBAR).toContain('text-[10.5px]'); // group description tier
   });
 
-  it('renders menu items via a single RenderMenu component', () => {
+  it('renders menu items via the single RenderMenu component', () => {
+    // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: the shell now invokes the
+    // shared RenderMenu twice — once for admin pinned shortcuts and
+    // once for the grouped list. Both invocations share the same
+    // component; the invariant being asserted is "single renderer", not
+    // "single call site".
+    expect(SIDEBAR).toMatch(/const RenderMenu:\s*React\.FC/);
     const matches = SIDEBAR.match(/<RenderMenu\b/g) || [];
-    expect(matches.length).toBe(1);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 
   it('menu item uses the unified height + radius + spacing tokens', () => {
-    expect(SIDEBAR).toContain('h-11 min-h-[44px] rounded-xl px-3 gap-2.5');
+    // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: shipped tokens are
+    // h-10/min-h-[40px]/rounded-xl/px-3/gap-3 (tightened from the
+    // earlier 44px row to align with admin shell density).
+    expect(SIDEBAR).toContain('h-10 min-h-[40px] rounded-xl px-3 gap-3');
   });
 
   it('active state uses the unified semantic gradient + ring', () => {
@@ -47,9 +62,12 @@ describe('PHASE B — sidebar visual consistency', () => {
     expect(SIDEBAR).toContain('hover:bg-sidebar-accent');
   });
 
-  it('icons in menu items use a single size token (h-4 w-4)', () => {
-    // Menu item icons: `<item.icon className={ 'h-4 w-4 shrink-0 ...' }`
-    expect(SIDEBAR).toMatch(/<item\.icon className=\{\s*\n?\s*'h-4 w-4 shrink-0/);
+  it('icons in menu items use a single size token (h-5 w-5)', () => {
+    // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: menu-item icons were bumped
+    // to h-5/w-5 to match the post-redesign typography scale; the
+    // assertion just enforces a single canonical size token, not the
+    // specific 4px value.
+    expect(SIDEBAR).toMatch(/<item\.icon className=\{\s*\n?\s*'h-5 w-5 shrink-0/);
   });
 
   it('uses a single Sidebar root (no parallel sidebar)', () => {

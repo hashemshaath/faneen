@@ -29,9 +29,17 @@ const NEW_CENTER_SOURCES = NEW_CENTER_FILES.map((p) =>
   readFileSync(resolve(root, p), 'utf8'),
 );
 
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: the admin sidebar grew two new
+// top-level centers since this guard was written —
+//   - /admin/opportunities  (Opportunities Operations Center)
+//   - /admin/knowledge      (Knowledge Center)
+// Both are intentional, registered in the admin navigation registry,
+// and required by the task scope ("/admin/opportunities موجود").
+// Update the canonical list accordingly so the guard stays accurate.
 const VISIBLE_CENTER_ROUTES = [
   '/admin',
   '/admin/operations',
+  '/admin/opportunities',
   '/admin/approvals',
   '/admin/procurement',
   '/admin/contracts',
@@ -40,6 +48,7 @@ const VISIBLE_CENTER_ROUTES = [
   '/admin/data-enrichment',
   '/admin/identity',
   '/admin/content',
+  '/admin/knowledge',
   '/admin/project-categories',
   '/admin/settings',
   '/admin/finance',

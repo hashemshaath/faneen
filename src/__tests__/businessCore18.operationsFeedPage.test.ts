@@ -5,10 +5,19 @@ import { resolve } from 'node:path';
 const PAGE_PATH = resolve(__dirname, '../pages/dashboard/DashboardOperationsFeed.tsx');
 const PAGE = readFileSync(PAGE_PATH, 'utf8');
 const APP = readFileSync(resolve(__dirname, '../App.tsx'), 'utf8');
-const SIDEBAR = readFileSync(
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (assertion outdated):
+// Sidebar menu items were extracted to `dashboardNavigation.config.ts`
+// (single source of truth). DashboardSidebar.tsx now only renders the
+// config. Concat both files so source-text guards still see the IA strings.
+const SIDEBAR_SHELL = readFileSync(
   resolve(__dirname, '../components/dashboard/DashboardSidebar.tsx'),
   'utf8',
 );
+const SIDEBAR_CONFIG = readFileSync(
+  resolve(__dirname, '../modules/dashboard/navigation/dashboardNavigation.config.ts'),
+  'utf8',
+);
+const SIDEBAR = SIDEBAR_SHELL + '\n' + SIDEBAR_CONFIG;
 const OVERVIEW = readFileSync(
   resolve(__dirname, '../pages/dashboard/DashboardWorkOrdersOverview.tsx'),
   'utf8',

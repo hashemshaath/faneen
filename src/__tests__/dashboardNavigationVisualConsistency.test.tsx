@@ -20,18 +20,24 @@ describe('DASHBOARD NAV — visual + source consistency', () => {
     expect(SIDEBAR).not.toMatch(/const providerGroups: MenuGroup\[\] = \[/);
   });
 
-  it('item button uses one canonical class string (h-11, rounded-xl, px-3)', () => {
-    expect(SIDEBAR).toContain('h-11 min-h-[44px] rounded-xl px-3');
+  // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (token evolution): the shipped
+  // sidebar uses tightened tokens — h-10 menu items, h-5 icons, and
+  // the group heading uses `text-xs font-semibold tracking-wide`.
+  // The 44px / `tracking-[0.08em]` tokens reflected an earlier design
+  // pass. The assertions are updated to pin the *current* canonical
+  // tokens (single source, not drift).
+  it('item button uses one canonical class string (h-10, rounded-xl, px-3)', () => {
+    expect(SIDEBAR).toContain('h-10 min-h-[40px] rounded-xl px-3');
   });
 
   it('group-label class is shared across all rendered groups', () => {
-    const matches = SIDEBAR.match(/text-\[10\.5px\] font-semibold uppercase tracking-\[0\.08em\]/g);
+    const matches = SIDEBAR.match(/text-xs font-semibold tracking-wide text-muted-foreground/g);
     expect(matches?.length ?? 0).toBeGreaterThanOrEqual(1);
   });
 
-  it('icons render at h-4 w-4 in the menu item, h-3 w-3 in the group heading', () => {
-    expect(SIDEBAR).toMatch(/className=\{?'?[^'`}]*h-4 w-4 shrink-0/);
-    expect(SIDEBAR).toContain('w-3 h-3 opacity-70 shrink-0');
+  it('icons render at h-5 w-5 in the menu item, w-3.5 h-3.5 in the group heading', () => {
+    expect(SIDEBAR).toMatch(/'h-5 w-5 shrink-0/);
+    expect(SIDEBAR).toContain('w-3.5 h-3.5 opacity-80 shrink-0');
   });
 
   it('config does not hardcode hex colors', () => {

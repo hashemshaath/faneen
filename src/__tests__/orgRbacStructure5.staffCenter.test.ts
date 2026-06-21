@@ -28,7 +28,12 @@ const read = (p: string) => readFileSync(join(ROOT, p), 'utf8');
 
 const PAGE = 'src/pages/dashboard/DashboardStaffCenter.tsx';
 const APP = 'src/App.tsx';
-const SIDEBAR = 'src/components/dashboard/DashboardSidebar.tsx';
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (assertion outdated):
+// Sidebar IA entries (urls + bilingual labels) live in the navigation
+// config. The shell file no longer inlines them.
+const SIDEBAR_SHELL  = 'src/components/dashboard/DashboardSidebar.tsx';
+const SIDEBAR_CONFIG = 'src/modules/dashboard/navigation/dashboardNavigation.config.ts';
+const SIDEBAR = SIDEBAR_SHELL; // legacy alias for non-IA assertions
 
 describe('ORG-RBAC-STRUCTURE-5 — routing & sidebar', () => {
   it('registers /dashboard/settings/staff behind ProtectedRoute', () => {
@@ -38,10 +43,15 @@ describe('ORG-RBAC-STRUCTURE-5 — routing & sidebar', () => {
   });
 
   it('sidebar exposes a Staff & Teams entry pointing at the route', () => {
-    const src = read(SIDEBAR);
+    const src = read(SIDEBAR_SHELL) + '\n' + read(SIDEBAR_CONFIG);
     expect(src).toMatch(/\/dashboard\/settings\/staff/);
-    expect(src).toMatch(/Staff & Teams/);
-    expect(src).toMatch(/الموظفون والفرق/);
+    // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: the canonical bilingual label
+    // for the staff/team entry evolved to "Team & Permissions" /
+    // "الفريق والصلاحيات" (single source: UNIFIED_ITEM_LABELS.team in
+    // unifiedLabels.ts). The route is unchanged.
+    const labels = read('src/components/dashboard/navigation/unifiedLabels.ts');
+    expect(labels).toMatch(/team:[^}]*en:\s*'Team & Permissions'/);
+    expect(labels).toMatch(/team:[^}]*ar:\s*'الفريق والصلاحيات'/);
   });
 
   it('route appears in the workspace permission map under staff.view', () => {

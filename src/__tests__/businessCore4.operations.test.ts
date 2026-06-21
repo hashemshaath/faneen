@@ -14,7 +14,12 @@ import type { WorkOrderRow } from "@/modules/workOrders";
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const APP = join(SRC, "App.tsx");
-const SIDEBAR = join(SRC, "components/dashboard/DashboardSidebar.tsx");
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (assertion outdated):
+// Sidebar menu items moved to `dashboardNavigation.config.ts` (single
+// source of truth). DashboardSidebar.tsx only renders the config. Read
+// both so the IA-string assertions still find their targets.
+const SIDEBAR_SHELL  = join(SRC, "components/dashboard/DashboardSidebar.tsx");
+const SIDEBAR_CONFIG = join(SRC, "modules/dashboard/navigation/dashboardNavigation.config.ts");
 const PAGE = join(SRC, "pages/dashboard/DashboardWorkOrdersOverview.tsx");
 const COMP_DIR = join(SRC, "components/workOrders");
 
@@ -93,7 +98,8 @@ describe("BUSINESS-CORE-4: KPI compute", () => {
 
 describe("BUSINESS-CORE-4: route + sidebar", () => {
   const app = readFileSync(APP, "utf8");
-  const sidebar = readFileSync(SIDEBAR, "utf8");
+  const sidebar =
+    readFileSync(SIDEBAR_SHELL, "utf8") + "\n" + readFileSync(SIDEBAR_CONFIG, "utf8");
 
   it("registers /dashboard/work-orders/overview route", () => {
     expect(app).toMatch(/\/dashboard\/work-orders\/overview/);
