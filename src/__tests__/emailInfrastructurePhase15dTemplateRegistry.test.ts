@@ -4,7 +4,7 @@
  * See: docs/email-infrastructure-governance-phase-15d-template-copy-cleanup-audit.md
  */
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -13,8 +13,9 @@ const read = (p: string) => readFileSync(resolve(root, p), 'utf8');
 
 function grep(pattern: string, paths: string[]): string {
   try {
-    return execSync(
-      `grep -RIn --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git -E ${JSON.stringify(pattern)} ${paths.join(' ')} || true`,
+    return execFileSync(
+      'grep',
+      ['-RIn', '--exclude-dir=node_modules', '--exclude-dir=dist', '--exclude-dir=.git', '-E', pattern, ...paths],
       { encoding: 'utf8', cwd: root, maxBuffer: 16 * 1024 * 1024 },
     );
   } catch {
@@ -103,10 +104,11 @@ describe('Email Infrastructure Phase 15D — Template Registry + Copy Cleanup', 
     ];
     const literalKey = /re_[A-Za-z0-9]{12,}/;
     for (const p of paths) {
-      const out = execSync(
-        `grep -RIn --exclude-dir=node_modules ${literalKey.source} ${p} || true`,
+      const out = execFileSync(
+        'grep',
+        ['-RIn', '--exclude-dir=node_modules', '-E', literalKey.source, p],
         { encoding: 'utf8', cwd: root, maxBuffer: 16 * 1024 * 1024 },
-      );
+      ).trim();
       expect(out.trim(), `unexpected re_ literal in ${p}`).toBe('');
     }
   });
