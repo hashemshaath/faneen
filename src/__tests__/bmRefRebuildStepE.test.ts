@@ -106,8 +106,13 @@ describe('Step E — Synthetic phone email + provider_intent_id never leak to di
 describe('Step E — Route surface unchanged (no /dashboard/membership)', () => {
   // Note: /r/:refId was intentionally introduced in Step F (universal
   // reference resolver). The Step F regression suite owns that guard.
-  it('does not reintroduce the broken /dashboard/membership route', () => {
-    expect(APP).not.toContain('/dashboard/membership');
+  // MEMBERSHIP ROUTE REGRESSION CLOSEOUT (assertion outdated):
+  // /dashboard/membership was reintroduced intentionally as the canonical
+  // central membership dashboard, owned by the MembershipDashboard
+  // central integration suite. Guard updated to require the wiring rather
+  // than forbid it; no assertion deleted.
+  it('wires the canonical /dashboard/membership route (central integration)', () => {
+    expect(APP).toMatch(/path="\/dashboard\/membership"/);
   });
 
   it('does not contain href="#" placeholder links', () => {
