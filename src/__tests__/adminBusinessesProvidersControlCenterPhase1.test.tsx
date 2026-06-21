@@ -62,8 +62,10 @@ describe('AdminBusinesses control-center — Phase 1 (tabs shell + overview)', (
     expect(src).toMatch(/<BusinessFiltersBar\b/);
     expect(src).toMatch(/<BusinessTableSection\b/);
     expect(src).toMatch(/<BusinessPaginationFooter\b/);
-    // new page title
-    expect(src).toMatch(/إدارة الجهات والمزودين/);
+    // new page title (now rendered by the extracted header component)
+    expect(src).toMatch(/<AdminBusinessesHeader\b/);
+    const header = read('src/pages/admin/businesses/components/AdminBusinessesHeader.tsx');
+    expect(header).toMatch(/إدارة الجهات والمزودين/);
   });
 
   it('overview metrics are computed from real rows (no hardcoded numbers)', () => {
