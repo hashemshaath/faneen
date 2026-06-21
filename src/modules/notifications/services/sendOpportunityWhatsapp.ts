@@ -5,7 +5,7 @@ import {
   type OpportunityEventType,
   type OpportunityMessageContext,
   type OpportunityRecipientRole,
-} from "./opportunityMessageCatalog";
+} from "../opportunityMessageCatalog";
 
 export interface DispatchOpportunityMessageInput {
   event: OpportunityEventType;

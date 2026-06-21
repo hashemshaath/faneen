@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const EDGE = "supabase/functions/send-opportunity-whatsapp/index.ts";
-const HELPER = "src/modules/notifications/sendOpportunityWhatsapp.ts";
+const HELPER = "src/modules/notifications/services/sendOpportunityWhatsapp.ts";
 
 describe("Opportunities Phase 16 — WhatsApp wiring", () => {
   it("edge function exists and targets Meta WhatsApp Cloud API", () => {
