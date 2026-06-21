@@ -107,7 +107,6 @@ import {
   type BusinessDrawerRow,
 } from '@/components/admin/businesses/BusinessDetailsDrawer';
 import { AdminBusinessesPageShell } from '@/components/admin/businesses/AdminBusinessesPageShell';
-import { BusinessHeaderActions } from '@/components/admin/businesses/BusinessHeaderActions';
 import { BusinessFiltersBar } from '@/components/admin/businesses/BusinessFiltersBar';
 import { BusinessTableSection } from '@/components/admin/businesses/BusinessTableSection';
 import { BusinessPaginationFooter } from '@/components/admin/businesses/BusinessPaginationFooter';
@@ -151,6 +150,7 @@ import type {
 } from './adminBusinesses.types';
 import type { BranchRow as AdminBranchRow } from '@/components/admin/businesses/branches/types';
 import { BusinessBranchesPanel } from './businesses/components/BusinessBranchesPanel';
+import { AdminBusinessesHeader } from './businesses/components/AdminBusinessesHeader';
 import { getBusinessProfileHref, isReservedUsername, normalizeUsername } from '@/lib/business/profileHref';
 import {
   TIERS as tiers,
