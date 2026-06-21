@@ -19,7 +19,12 @@ const APP = read('src/App.tsx');
 
 const labelsOf = (
   groups: ReturnType<typeof getVisibleDashboardNavGroups>,
-): string[] => groups.flatMap((g) => g.items.map((i) => i.label));
+): string[] =>
+  groups.flatMap((g) =>
+    g.items.map((i) =>
+      typeof i.label === 'string' ? i.label : `${i.label.ar} ${i.label.en}`,
+    ),
+  );
 
 describe('PRE-LAUNCH STABILITY AUDIT', () => {
   it('core public routes remain registered', () => {
