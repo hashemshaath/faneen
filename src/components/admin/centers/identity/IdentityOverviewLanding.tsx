@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { countByRole } from '@/modules/identity';
 import IdentityActivityFeed from '@/components/admin/identity/IdentityActivityFeed';
 
 /**
@@ -41,7 +42,7 @@ async function fetchIdentityKpis(): Promise<IdentityKpis> {
 
   const [
     totalRes, verifiedRes, bannedRes, new7dRes,
-    pendingAccessRes, pendingInvRes, actionsRes, rolesRes,
+    pendingAccessRes, pendingInvRes, actionsRes, roleCountsRes,
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
@@ -50,13 +51,10 @@ async function fetchIdentityKpis(): Promise<IdentityKpis> {
     supabase.from('entity_access_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('business_staff_invitations').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('admin_activity_log').select('*', { count: 'exact', head: true }).gte('created_at', since24h),
-    supabase.from('user_roles').select('role'),
+    countByRole(),
   ]);
 
-  const roleCounts: Record<string, number> = {};
-  for (const row of (rolesRes.data ?? []) as Array<{ role: string }>) {
-    roleCounts[row.role] = (roleCounts[row.role] ?? 0) + 1;
-  }
+  const roleCounts: Record<string, number> = { ...roleCountsRes };
 
   return {
     totalUsers: totalRes.count ?? 0,
