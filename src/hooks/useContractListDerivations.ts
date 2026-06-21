@@ -11,30 +11,15 @@
  */
 import { useMemo } from 'react';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
+import type { Database } from '@/integrations/supabase/types';
 
-interface ContractLike {
-  id: string;
-  status: string;
-  total_amount: number | string;
-  client_id?: string | null;
-  provider_id?: string | null;
-  title_ar?: string | null;
-  title_en?: string | null;
-  contract_number?: string | null;
-  created_at: string;
-}
+type ContractRow = Database['public']['Tables']['contracts']['Row'];
+type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
+type PaymentRow = Database['public']['Tables']['installment_payments']['Row'];
 
-interface PaymentLike {
-  status: string;
-  amount: number | string;
-  contract_id: string;
-}
-
-interface MilestoneLike {
-  status: string;
-  contract_id: string;
-}
-
+type ContractLike = ContractRow;
+type PaymentLike = PaymentRow;
+type MilestoneLike = MilestoneRow;
 interface AttachmentLike { contract_id: string }
 interface MaintenanceLike { contract_id: string }
 interface MeasurementLike { contract_id: string }
@@ -63,7 +48,7 @@ export interface UseContractListDerivationsArgs<C extends ContractLike> {
   sortBy: SortBy;
 }
 
-export function useContractListDerivations<C extends ContractLike>(
+export function useContractListDerivations<C extends ContractLike = ContractRow>(
   args: UseContractListDerivationsArgs<C>,
 ) {
   const {
