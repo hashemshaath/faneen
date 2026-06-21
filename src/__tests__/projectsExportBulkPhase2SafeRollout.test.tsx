@@ -45,8 +45,11 @@ describe('PROJECTS EXPORT + BULK ACTIONS PHASE 2 SAFE ROLLOUT', () => {
   it('4. ExportMenu and BulkActionBar render only when projects exist', () => {
     // ExportMenu is gated by projects.length > 0
     expect(SRC).toMatch(/\{projects\.length > 0 && \(\s*<ExportMenu/);
-    // BulkActionBar is gated by businessId AND projects.length > 0
-    expect(SRC).toMatch(/\{!!businessId && projects\.length > 0 && \(\s*<BulkActionBar/);
+    // BulkActionBar is gated by ownerScope (business OR personal owner) AND projects.length > 0
+    // NOTE: gating was widened from `!!businessId` to `!!ownerScope` so personal-owner
+    // projects also get bulk export. The no-entity case is still excluded because
+    // ownerScope is null when neither businessId nor user is available.
+    expect(SRC).toMatch(/\{!!ownerScope && projects\.length > 0 && \(\s*<BulkActionBar/);
   });
 
   it('5. BulkActionBar is wired into the page', () => {
@@ -82,8 +85,9 @@ describe('PROJECTS EXPORT + BULK ACTIONS PHASE 2 SAFE ROLLOUT', () => {
   });
 
   it('9 & 10. Empty / no-entity states do not render bulk actions', () => {
-    // The BulkActionBar gating excludes the no-entity case
-    expect(SRC).toMatch(/\{!!businessId && projects\.length > 0 && \(\s*<BulkActionBar/);
+    // The BulkActionBar gating excludes the no-entity case via ownerScope (null when
+    // neither business nor signed-in user is present) AND requires projects.length > 0.
+    expect(SRC).toMatch(/\{!!ownerScope && projects\.length > 0 && \(\s*<BulkActionBar/);
     // Foundation guarantee: BulkActionBar early-returns on count===0
     const bar = readSrc('src/components/dashboard/BulkActionBar.tsx');
     expect(bar).toMatch(/if \(count === 0\) return null/);
@@ -93,7 +97,7 @@ describe('PROJECTS EXPORT + BULK ACTIONS PHASE 2 SAFE ROLLOUT', () => {
     const block = SRC.match(/projectExportColumns[\s\S]+?bulkExportSelectedPdf[\s\S]+?\}, \[selectedProjectRows[\s\S]+?\]\);/);
     expect(block, 'new export/bulk block found').toBeTruthy();
     expect(block![0]).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
-    const bar = SRC.match(/\{!!businessId && projects\.length > 0 && \(\s*<BulkActionBar[\s\S]+?\)\}/);
+    const bar = SRC.match(/\{!!ownerScope && projects\.length > 0 && \(\s*<BulkActionBar[\s\S]+?\)\}/);
     expect(bar).toBeTruthy();
     expect(bar![0]).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
