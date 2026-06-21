@@ -38,10 +38,14 @@ describe('Phase B4 — Admin Soft Launch KPI strip exists & is wired', () => {
   });
 
   it('strip contains the required operational links', () => {
-    expect(ADMIN_SRC).toMatch(/'\/admin\/quote-requests'/);
-    expect(ADMIN_SRC).toMatch(/'\/admin\/operations'/);
-    expect(ADMIN_SRC).toMatch(/'\/admin\/provider-review'/);
-    expect(ADMIN_SRC).toMatch(/'\/admin\/activity-log'/);
+    // DASHBOARD OVERVIEW ADMIN ACTIONS DRIFT CLOSEOUT:
+    // Strip routes live in the strip component (asserted in the next test).
+    // Here we only confirm AdminDashboardView still exposes the routes it
+    // owns directly (quote-requests, provider-review, activity-log are
+    // wired through the admin inbox + activity-log link).
+    expect(ADMIN_SRC).toMatch(/\/admin\/quote-requests/);
+    expect(ADMIN_SRC).toMatch(/\/admin\/provider-review/);
+    expect(ADMIN_SRC).toMatch(/\/admin\/activity-log/);
   });
 
   it('default strip ships the same operational links', () => {
@@ -88,10 +92,10 @@ describe('Phase B4 — Admin actions and protected surfaces preserved', () => {
     // operations inbox (urgent / approvals / communication). The
     // underlying operational surfaces are preserved — assertions
     // now check the current authoritative labels + routes.
-    expect(ADMIN_SRC).toMatch(/طلبات اليوم/);          // Today's leads KPI
-    expect(ADMIN_SRC).toMatch(/مراجعة مزودين/);        // Provider review inbox item
-    expect(ADMIN_SRC).toMatch(/\/admin\/operations/);  // Operations center link
-    expect(ADMIN_SRC).toMatch(/\/admin\/activity-log/); // Admin centers hub link
+    expect(ADMIN_SRC).toMatch(/طلبات اليوم/);            // Today's leads KPI
+    expect(ADMIN_SRC).toMatch(/مراجعة مزودين/);          // Provider review inbox item
+    expect(ADMIN_SRC).toMatch(/\/admin\/provider-review/); // Provider review route
+    expect(ADMIN_SRC).toMatch(/\/admin\/activity-log/);    // Activity log link
   });
 
   it('Admin navigation / route file is untouched at the strip level', () => {
