@@ -1083,9 +1083,7 @@ const AdminBusinesses = () => {
     q: search, status: filterStatus, tier: filterTier,
     translation: filterTranslation, origin: filterOrigin, sort: sortBy,
   };
-  const applySavedView = (f: BizViewFilters) => {
-    setSearchInput(f.q || ''); setSearchParams(toSavedViewParams(f), { replace: false });
-  };
+  const applySavedView = (f: BizViewFilters) => { setSearchInput(f.q || ''); setSearchParams(toSavedViewParams(f), { replace: false }); };
 
   return (
     <AdminBusinessesPageShell>
