@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, Save, Search, Filter, Mail, MessageSquare, Smartphone, MonitorSmartphone } from "lucide-react";
+import { Bell, Save, Search, Filter, Mail, MessageSquare, Smartphone, MonitorSmartphone, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { toast } from "sonner";
@@ -266,10 +266,19 @@ const AdminNotificationsConfig = () => {
                                 size="sm"
                                 className="h-7 text-[10px] gap-1"
                                 disabled={save.isPending}
-                                onClick={() => save.mutate({ id: row.id, patch: draft })}
+                                onClick={() => {
+                                  if (save.isPending) return;
+                                  save.mutate({ id: row.id, patch: draft });
+                                }}
                               >
-                                <Save className="w-3 h-3" />
-                                {isRTL ? "حفظ" : "Save"}
+                                {save.isPending ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Save className="w-3 h-3" />
+                                )}
+                                {save.isPending
+                                  ? (isRTL ? "جاري الحفظ..." : "Saving...")
+                                  : (isRTL ? "حفظ" : "Save")}
                               </Button>
                             </div>
                           )}
