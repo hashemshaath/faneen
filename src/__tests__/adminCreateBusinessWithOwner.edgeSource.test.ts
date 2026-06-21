@@ -13,6 +13,12 @@ const CREATE_PANEL_IMPL =
   'src/components/admin/businesses/create/BusinessCreatePanel.tsx';
 const CREATE_OWNER_SECTION =
   'src/components/admin/businesses/create/BusinessCreateOwnerSection.tsx';
+// Phase 5G+ extracted the edge-call payload and client-side validation
+// (auto_confirm / redirect_to / email regex / password length) into the
+// dedicated mutation hook. Concatenating it keeps the UI-integration source
+// of truth in one place for this assertion bundle.
+const CREATE_MUTATION =
+  'src/pages/admin/businesses/adminCreateBusinessMutation.ts';
 
 describe('ADMIN-BUSINESS-CREATE-OWNER edge function source invariants', () => {
   it('edge function file exists', () => {
@@ -121,7 +127,9 @@ describe('ADMIN-BUSINESS-CREATE-OWNER UI integration (AdminBusinesses.tsx)', () 
     '\n/*PANEL_IMPL*/\n' +
     readFileSync(resolve(CREATE_PANEL_IMPL), 'utf8') +
     '\n/*OWNER_SECTION*/\n' +
-    readFileSync(resolve(CREATE_OWNER_SECTION), 'utf8');
+    readFileSync(resolve(CREATE_OWNER_SECTION), 'utf8') +
+    '\n/*CREATE_MUTATION*/\n' +
+    readFileSync(resolve(CREATE_MUTATION), 'utf8');
 
   it('imports the service wrapper', () => {
     expect(src).toContain('adminCreateBusinessWithOwner');
