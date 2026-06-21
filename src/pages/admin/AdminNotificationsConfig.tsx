@@ -55,7 +55,7 @@ const AdminNotificationsConfig = () => {
   const [channelFilter, setChannelFilter] = useState<"all" | Channel>("all");
   const [drafts, setDrafts] = useState<Record<string, Partial<Template>>>({});
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["notification-event-templates"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -177,6 +177,22 @@ const AdminNotificationsConfig = () => {
 
         {isLoading ? (
           <p className="text-xs text-muted-foreground py-8 text-center">{isRTL ? "جاري التحميل..." : "Loading..."}</p>
+        ) : isError ? (
+          <Card className="border-destructive/40">
+            <CardContent className="py-8 text-center space-y-3">
+              <p className="text-xs text-destructive">
+                {isRTL ? "تعذّر تحميل القوالب" : "Failed to load templates"}
+              </p>
+              {error instanceof Error && (
+                <p className="text-[10px] text-muted-foreground line-clamp-2 px-4">{error.message}</p>
+              )}
+              <Button size="sm" variant="outline" disabled={isRefetching} onClick={() => refetch()}>
+                {isRefetching
+                  ? (isRTL ? "جاري إعادة المحاولة..." : "Retrying...")
+                  : (isRTL ? "إعادة المحاولة" : "Retry")}
+              </Button>
+            </CardContent>
+          </Card>
         ) : eventGroups.length === 0 ? (
           <Card className="border-dashed border-2"><CardContent className="py-10 text-center text-xs text-muted-foreground">
             {isRTL ? "لا توجد قوالب مطابقة" : "No matching templates"}
