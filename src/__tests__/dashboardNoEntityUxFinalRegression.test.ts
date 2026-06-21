@@ -15,8 +15,10 @@ describe('Dashboard no-entity UX — final regression guards', () => {
 
   /* 1. Branches: Add-branch button hidden when no business */
   it('branches hides "Add branch" when no business', () => {
-    // The actions render must gate on `businessId`
-    expect(branches).toMatch(/businessId\s*\?\s*\(\s*<Button[\s\S]*?إضافة فرع/);
+    // The actions render must gate on `businessId`. The button may be
+    // wrapped in a layout element (e.g. <div className="flex justify-end">),
+    // so allow any markup between the gate and the "Add branch" label.
+    expect(branches).toMatch(/businessId\s*\?\s*\([\s\S]*?<Button[\s\S]*?إضافة فرع/);
   });
 
   /* 2. Branches: CTA points to /register-entity */
