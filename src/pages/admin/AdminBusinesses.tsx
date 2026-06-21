@@ -764,7 +764,6 @@ const AdminBusinesses = () => {
     onSuccess: () => refetchPortfolio(),
   });
 
-  const emptyBranch = () => ({
   const saveBranchMutation = useMutation({
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
