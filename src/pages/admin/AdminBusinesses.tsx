@@ -174,6 +174,7 @@ import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreat
 import { logAdminBusinessAction } from './businesses/logAdminBusinessAction';
 import { useBusinessBranchFormState, buildBranchPayload } from './businesses/hooks/useBusinessBranchFormState';
 import { useAdminBusinessesListState } from './businesses/hooks/useAdminBusinessesListState';
+import { useAdminBusinessesKeyboard } from './businesses/hooks/useAdminBusinessesKeyboard';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -882,35 +883,24 @@ const AdminBusinesses = () => {
   // Hold the latest filtered list so keyboard shortcut `e` can export the
   // current view without forcing the listener to re-bind on every change.
   const filteredRef = useRef<unknown[]>([]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (e.key === '/') { e.preventDefault(); searchRef.current?.focus(); }
-      if (e.key === 'n' || e.key === 'N') {
-        e.preventDefault();
-        setEditingBiz(null); setServicesPanel(null);
-        setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true);
-        scrollToTop();
-      }
-      if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        refetchBusinesses();
-        toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed'));
-      }
-      if (e.key === 'e' || e.key === 'E') {
-        e.preventDefault();
-        exportCSV(filteredRef.current as AdminBusinessCsvRow[], language);
-      }
-      if (e.key === 'Escape') {
-        if (editingBiz) setEditingBiz(null);
-        else if (servicesPanel) setServicesPanel(null);
-        else if (selected.size) clearSelected();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language]);
+  useAdminBusinessesKeyboard({
+    onFocusSearch: () => searchRef.current?.focus(),
+    onCreate: () => {
+      setEditingBiz(null); setServicesPanel(null);
+      setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true);
+      scrollToTop();
+    },
+    onRefresh: () => {
+      refetchBusinesses();
+      toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed'));
+    },
+    onExport: () => exportCSV(filteredRef.current as AdminBusinessCsvRow[], language),
+    onEscape: () => {
+      if (editingBiz) setEditingBiz(null);
+      else if (servicesPanel) setServicesPanel(null);
+      else if (selected.size) clearSelected();
+    },
+  });
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
     setAutoTranslating(true);
