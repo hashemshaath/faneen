@@ -63,13 +63,20 @@ describe('Final sweep — role-correct actions', () => {
     expect(PROVIDER_SRC).not.toMatch(/AdminSoftLaunchKpiStrip/);
   });
 
-  it('Admin dashboard exposes admin actions only + Soft Launch KPI strip', () => {
-    expect(ADMIN_SRC).toMatch(/role="admin"/);
-    expect(ADMIN_SRC).toMatch(/راجع طلبات اليوم/);
-    expect(ADMIN_SRC).toMatch(/مراجعة المزودين/);
-    expect(ADMIN_SRC).toMatch(/راقب التشغيل/);
-    expect(ADMIN_SRC).toMatch(/افتح مراكز الإدارة/);
-    expect(ADMIN_SRC).toMatch(/<AdminSoftLaunchKpiStrip\b/);
+  it('Admin dashboard exposes admin actions only + operations inbox', () => {
+    // DASHBOARD OVERVIEW ADMIN ACTIONS DRIFT CLOSEOUT:
+    // Admin overview moved from imperative quick-action cards
+    // ("راجع طلبات اليوم", "افتح مراكز الإدارة"...) and a separate
+    // <AdminSoftLaunchKpiStrip> into a unified grouped operations
+    // inbox (urgent / approvals / communication). Assertions now
+    // pin the current authoritative IA against the same intent.
+    // Admin identity is asserted via role-guarded data (admin role counts)
+    // rather than a `role="admin"` literal that no longer exists post-refactor.
+    expect(ADMIN_SRC).toMatch(/roleCounts\?\.admin|super_admin/);
+    expect(ADMIN_SRC).toMatch(/طلبات اليوم/);          // Today's leads KPI
+    expect(ADMIN_SRC).toMatch(/مراجعة مزودين/);        // Provider review inbox item
+    expect(ADMIN_SRC).toMatch(/InboxItem/);            // Operations inbox structure
+    expect(ADMIN_SRC).toMatch(/\/admin\/activity-log/); // Admin centers / activity hub
     expect(ADMIN_SRC).not.toMatch(/role="user"/);
     expect(ADMIN_SRC).not.toMatch(/role="provider"/);
     expect(ADMIN_SRC).not.toMatch(/اطلب عرض سعر/);
