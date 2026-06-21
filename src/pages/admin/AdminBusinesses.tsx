@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef, useTransition } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useTransition } from 'react';
 import { useAdminBusinessesUrlState } from './businesses/useAdminBusinessesUrlState';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
@@ -163,12 +163,7 @@ import { BusinessTableView, type BusinessTableRow } from './businesses/BusinessT
 import { BusinessCardView, type BusinessCardRow } from './businesses/BusinessCardView';
 import { BusinessCreatePanel } from '@/components/admin/businesses/create/BusinessCreatePanel';
 import { emptyCreateBusinessForm } from '@/components/admin/businesses/create/createFormDefaults';
-import {
-  computeBusinessStats,
-  computeTierDistribution,
-  computeTranslationCompleteness,
-  filterAndSortBusinesses,
-} from './businesses/businessListDerivations';
+import { computeTranslationCompleteness } from './businesses/businessListDerivations';
 import {
   toSavedViewParams,
   type BizViewFilters,
@@ -178,6 +173,8 @@ import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
 import { logAdminBusinessAction } from './businesses/logAdminBusinessAction';
 import { useBusinessBranchFormState, buildBranchPayload } from './businesses/hooks/useBusinessBranchFormState';
+import { useAdminBusinessesListState } from './businesses/hooks/useAdminBusinessesListState';
+import { useAdminBusinessesKeyboard } from './businesses/hooks/useAdminBusinessesKeyboard';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -883,38 +880,26 @@ const AdminBusinesses = () => {
   /* ─── AI auto-translate missing field (single business) ─── */
   const [autoTranslating, setAutoTranslating] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  // Hold the latest filtered list so keyboard shortcut `e` can export the
-  // current view without forcing the listener to re-bind on every change.
+  // Holds the latest filtered list so the `e` shortcut can export without rebinding.
   const filteredRef = useRef<unknown[]>([]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (e.key === '/') { e.preventDefault(); searchRef.current?.focus(); }
-      if (e.key === 'n' || e.key === 'N') {
-        e.preventDefault();
-        setEditingBiz(null); setServicesPanel(null);
-        setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true);
-        scrollToTop();
-      }
-      if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        refetchBusinesses();
-        toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed'));
-      }
-      if (e.key === 'e' || e.key === 'E') {
-        e.preventDefault();
-        exportCSV(filteredRef.current as AdminBusinessCsvRow[], language);
-      }
-      if (e.key === 'Escape') {
-        if (editingBiz) setEditingBiz(null);
-        else if (servicesPanel) setServicesPanel(null);
-        else if (selected.size) clearSelected();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language]);
+  useAdminBusinessesKeyboard({
+    onFocusSearch: () => searchRef.current?.focus(),
+    onCreate: () => {
+      setEditingBiz(null); setServicesPanel(null);
+      setCreateForm(emptyCreateBusinessForm()); setCreatingBiz(true);
+      scrollToTop();
+    },
+    onRefresh: () => {
+      refetchBusinesses();
+      toast.success(pickBi(isRTL, 'تم التحديث', 'Refreshed'));
+    },
+    onExport: () => exportCSV(filteredRef.current as AdminBusinessCsvRow[], language),
+    onEscape: () => {
+      if (editingBiz) setEditingBiz(null);
+      else if (servicesPanel) setServicesPanel(null);
+      else if (selected.size) clearSelected();
+    },
+  });
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
     setAutoTranslating(true);
@@ -1072,42 +1057,23 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters / derivations (pure helpers in businessListDerivations) ─── */
-  const translationCompleteness = useCallback(
-    (b: Parameters<typeof computeTranslationCompleteness>[0]) =>
-      computeTranslationCompleteness(b),
-    [],
-  );
-
-  const filtered = useMemo(
-    () =>
-      filterAndSortBusinesses(businesses, {
-        search,
-        filterStatus,
-        selectedTiers,
-        filterTranslation,
-        filterOrigin,
-        sortBy,
-        language: language === 'ar' ? 'ar' : 'en',
-        contractBusinessIds,
-      }),
-    [
+  const translationCompleteness = computeTranslationCompleteness;
+  const { filtered, totalPages, safePage, paged, stats, tierDistribution } =
+    useAdminBusinessesListState({
       businesses,
+      contractBusinessIds,
+      tiers,
       search,
       filterStatus,
       selectedTiers,
       filterTranslation,
       filterOrigin,
       sortBy,
-      language,
-      contractBusinessIds,
-    ],
-  );
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  // Keep the keyboard-export ref pointed at the latest filtered list.
+      language: language === 'ar' ? 'ar' : 'en',
+      page,
+      pageSize: PAGE_SIZE,
+    });
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
-  const safePage = Math.min(Math.max(1, page), totalPages);
-  const paged = useMemo(() => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [filtered, safePage]);
   const allPagedSelected = paged.length > 0 && paged.every(b => selected.has(b.id));
   const togglePageAll = () => {
     setSelected(s => {
@@ -1118,19 +1084,7 @@ const AdminBusinesses = () => {
     });
   };
 
-  const stats = useMemo(
-    () => computeBusinessStats(businesses, contractBusinessIds),
-    [businesses, contractBusinessIds],
-  );
-
-  const tierDistribution = useMemo(
-    () => computeTierDistribution(businesses, tiers),
-    [businesses],
-  );
-
-  const filteredCities = editForm.country_id
-    ? cities.filter((c) => c.country_id === editForm.country_id)
-    : cities;
+  const filteredCities = editForm.country_id ? cities.filter((c) => c.country_id === editForm.country_id) : cities;
   const editCityName = cities.find((c) => c.id === editForm.city_id);
 
   /* ─── Saved Views (per-admin localStorage) ─── */
@@ -1139,17 +1093,11 @@ const AdminBusinesses = () => {
   if (!isAdmin) return null;
 
   const currentViewFilters: BizViewFilters = {
-    q: search,
-    status: filterStatus,
-    tier: filterTier,
-    translation: filterTranslation,
-    origin: filterOrigin,
-    sort: sortBy,
+    q: search, status: filterStatus, tier: filterTier,
+    translation: filterTranslation, origin: filterOrigin, sort: sortBy,
   };
   const applySavedView = (f: BizViewFilters) => {
-    const sp = toSavedViewParams(f);
-    setSearchInput(f.q || '');
-    setSearchParams(sp, { replace: false });
+    setSearchInput(f.q || ''); setSearchParams(toSavedViewParams(f), { replace: false });
   };
 
   return (
