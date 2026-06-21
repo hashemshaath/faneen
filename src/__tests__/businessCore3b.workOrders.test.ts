@@ -9,7 +9,13 @@ const MIGRATION = join(
   "supabase/migrations/20260527214937_930a8d23-b336-4a4a-a79e-e06d44db4b0f.sql",
 );
 const APP = join(SRC, "App.tsx");
-const SIDEBAR = join(SRC, "components/dashboard/DashboardSidebar.tsx");
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (assertion outdated):
+// Sidebar IA strings (urls, bilingual labels) now live in
+// `src/modules/dashboard/navigation/dashboardNavigation.config.ts`.
+// DashboardSidebar.tsx only renders the config. Concat both so the
+// existing source-text guards continue to assert IA presence.
+const SIDEBAR_SHELL = join(SRC, "components/dashboard/DashboardSidebar.tsx");
+const SIDEBAR_CONFIG = join(SRC, "modules/dashboard/navigation/dashboardNavigation.config.ts");
 const PAGE = join(SRC, "pages/dashboard/DashboardWorkOrders.tsx");
 const MODULE_BARREL = join(SRC, "modules/workOrders/index.ts");
 const MODULE_DIR = join(SRC, "modules/workOrders/services");
@@ -27,7 +33,8 @@ function walk(dir: string, out: string[] = []): string[] {
 
 describe("BUSINESS-CORE-3B: route + sidebar", () => {
   const app = readFileSync(APP, "utf8");
-  const sidebar = readFileSync(SIDEBAR, "utf8");
+    const sidebar =
+      readFileSync(SIDEBAR_SHELL, "utf8") + "\n" + readFileSync(SIDEBAR_CONFIG, "utf8");
 
   it("registers /dashboard/work-orders route", () => {
     expect(app).toMatch(/path="\/dashboard\/work-orders"/);
