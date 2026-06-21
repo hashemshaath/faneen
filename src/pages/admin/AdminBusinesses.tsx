@@ -259,11 +259,8 @@ const AdminBusinesses = () => {
   // Control-center tabs (Phase 1: overview + businesses are real; rest are coming-next).
   const [activeTab, setActiveTab] = useState<BusinessAdminTabId>(DEFAULT_BUSINESS_ADMIN_TAB);
 
-  const setField = useCallback(
-    (key: string, value: unknown) =>
-      setEditForm((f) => ({ ...f, [key]: value }) as AdminEditBusinessFormState),
-    [],
-  );
+  const setField = useCallback((key: string, value: unknown) =>
+    setEditForm((f) => ({ ...f, [key]: value }) as AdminEditBusinessFormState), []);
 
   // When a workflow panel (create / edit / services) is open we collapse
   // the heavy header, KPI strip, approvals banner and tier distribution
