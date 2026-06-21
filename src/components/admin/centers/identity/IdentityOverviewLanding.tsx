@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import {
   Users, Shield, KeyRound, Activity, Lock, LayoutDashboard, ArrowRight,
   UserCheck, UserX, ShieldAlert, Crown, Mail, TrendingUp, AlertCircle,
@@ -10,8 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
-import { countByRole } from '@/modules/identity';
+import { useIdentityOverviewKpis } from '@/hooks/useIdentityOverviewKpis';
 import IdentityActivityFeed from '@/components/admin/identity/IdentityActivityFeed';
 
 /**
@@ -23,50 +21,6 @@ import IdentityActivityFeed from '@/components/admin/identity/IdentityActivityFe
  */
 
 type TileTone = 'primary' | 'users' | 'roles' | 'invite' | 'activity' | 'security';
-
-// ----- Live KPI hook (Identity Executive Dashboard) -----
-interface IdentityKpis {
-  totalUsers: number;
-  verifiedUsers: number;
-  bannedUsers: number;
-  newUsers7d: number;
-  pendingAccessRequests: number;
-  pendingInvitations: number;
-  adminActions24h: number;
-  roleCounts: Record<string, number>;
-}
-
-async function fetchIdentityKpis(): Promise<IdentityKpis> {
-  const since7d = new Date(Date.now() - 7 * 86400_000).toISOString();
-  const since24h = new Date(Date.now() - 86400_000).toISOString();
-
-  const [
-    totalRes, verifiedRes, bannedRes, new7dRes,
-    pendingAccessRes, pendingInvRes, actionsRes, roleCountsRes,
-  ] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_banned', true),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', since7d),
-    supabase.from('entity_access_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('business_staff_invitations').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('admin_activity_log').select('*', { count: 'exact', head: true }).gte('created_at', since24h),
-    countByRole(),
-  ]);
-
-  const roleCounts: Record<string, number> = { ...roleCountsRes };
-
-  return {
-    totalUsers: totalRes.count ?? 0,
-    verifiedUsers: verifiedRes.count ?? 0,
-    bannedUsers: bannedRes.count ?? 0,
-    newUsers7d: new7dRes.count ?? 0,
-    pendingAccessRequests: pendingAccessRes.count ?? 0,
-    pendingInvitations: pendingInvRes.count ?? 0,
-    adminActions24h: actionsRes.count ?? 0,
-    roleCounts,
-  };
-}
 
 type Tile = {
   key: string;
@@ -196,12 +150,7 @@ const KpiCard = ({ label, value, hint, icon: Icon, tone, loading }: KpiCardProps
 
 const IdentityOverviewLanding = () => {
   const { isRTL } = useLanguage();
-  const { data: kpis, isLoading } = useQuery({
-    queryKey: ['identity-overview-kpis'],
-    queryFn: fetchIdentityKpis,
-    staleTime: 60_000,
-    refetchOnWindowFocus: false,
-  });
+  const { data: kpis, isLoading } = useIdentityOverviewKpis();
 
   const totalRoles = Object.values(kpis?.roleCounts ?? {}).reduce((a, b) => a + b, 0) || 1;
   const verificationPct = kpis && kpis.totalUsers > 0
