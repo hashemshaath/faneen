@@ -145,12 +145,9 @@ import type {
   AdminBusinessImageVariants,
   AdminBusinessCsvRow,
   AdminBusinessBranchLite,
-  AdminBusinessBranchType,
   AdminCreateBusinessFormState,
   AdminEditBusinessFormState,
-  AdminActivityLogInsert,
   PortfolioItemInsert,
-  AdminJson,
 } from './adminBusinesses.types';
 import { BusinessBranchesSection } from '@/components/admin/businesses/branches/BusinessBranchesSection';
 import type {
@@ -179,6 +176,8 @@ import {
 import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
 import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
+import { logAdminBusinessAction } from './businesses/logAdminBusinessAction';
+import { useBusinessBranchFormState, buildBranchPayload } from './businesses/hooks/useBusinessBranchFormState';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -194,36 +193,6 @@ type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row'
   rating_avg: number | null;
   rating_count: number | null;
 } & AdminBusinessImageColumns;
-
-type AdminBranchFormState = {
-  name_ar: string;
-  name_en: string;
-  is_main: boolean;
-  is_active: boolean;
-  branch_type: AdminBusinessBranchType;
-  contact_person: string;
-  phone: string;
-  mobile: string;
-  unified_number: string;
-  customer_service_phone: string;
-  email: string;
-  website: string;
-  country_id: string;
-  city_id: string;
-  region: string;
-  district: string;
-  street_name: string;
-  building_number: string;
-  national_id: string;
-  additional_number: string;
-  address: string;
-  latitude: string | number;
-  longitude: string | number;
-  complex_name: string;
-  complex_name_en: string;
-  site_number: string;
-  working_hours?: unknown;
-};
 
 const AdminBusinesses = () => {
   useNoIndex();
@@ -274,8 +243,13 @@ const AdminBusinesses = () => {
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
-  const [branchForm, setBranchForm] = useState<AdminBranchFormState | null>(null);
-  const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
+  const {
+    branchForm,
+    setBranchForm,
+    editingBranchId,
+    setEditingBranchId,
+    emptyBranch,
+  } = useBusinessBranchFormState();
   const { branchTranslating, translateBranchName } = useBranchNameTranslator(
     branchForm,
     setBranchForm,
@@ -285,23 +259,21 @@ const AdminBusinesses = () => {
   // Control-center tabs (Phase 1: overview + businesses are real; rest are coming-next).
   const [activeTab, setActiveTab] = useState<BusinessAdminTabId>(DEFAULT_BUSINESS_ADMIN_TAB);
 
-  const setField = useCallback((key: string, value: unknown) => {
-    setEditForm((f) => ({ ...f, [key]: value }) as AdminEditBusinessFormState);
-  }, []);
+  const setField = useCallback((key: string, value: unknown) =>
+    setEditForm((f) => ({ ...f, [key]: value }) as AdminEditBusinessFormState), []);
 
   // When a workflow panel (create / edit / services) is open we collapse
   // the heavy header, KPI strip, approvals banner and tier distribution
   // so the active task gets full vertical priority at the top of the page.
   const panelOpen = creatingBiz || !!editingBiz || !!servicesPanel;
   const scrollToTop = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
-
-  const setServiceField = useCallback((key: string, value: string | number | boolean | null) => {
-    setNewService(s => ({ ...s, [key]: value }));
-  }, []);
+  const setServiceField = useCallback(
+    (key: string, value: string | number | boolean | null) =>
+      setNewService((s) => ({ ...s, [key]: value })),
+    [],
+  );
 
   /* ─── Queries ─── */
   const { data: businesses = [], isLoading, refetch: refetchBusinesses } = useQuery({
@@ -466,16 +438,11 @@ const AdminBusinesses = () => {
   });
 
   /* ─── Mutations ─── */
-  const logAction = async (action: string, entityId: string, details: Record<string, unknown>) => {
-    const payload: AdminActivityLogInsert = {
-      user_id: user!.id,
-      action,
-      entity_type: 'business',
-      entity_id: entityId,
-      details: details as AdminJson,
-    };
-    await supabase.from('admin_activity_log').insert(payload);
-  };
+  const logAction = useCallback(
+    (action: string, entityId: string, details: Record<string, unknown>) =>
+      logAdminBusinessAction(user!.id, action, entityId, details),
+    [user],
+  );
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: 'is_active' | 'is_verified'; value: boolean }) => {
@@ -785,42 +752,11 @@ const AdminBusinesses = () => {
     onSuccess: () => refetchPortfolio(),
   });
 
-  const emptyBranch = () => ({
-    name_ar: '', name_en: '', is_main: false, is_active: true,
-    branch_type: 'branch' as 'main' | 'branch' | 'warehouse' | 'admin_office' | 'regional_office' | 'head_office',
-    contact_person: '', phone: '', mobile: '', unified_number: '', customer_service_phone: '',
-    email: '', website: '',
-    country_id: '', city_id: '', region: '', district: '', street_name: '',
-    building_number: '', national_id: '', additional_number: '', address: '',
-    latitude: '', longitude: '',
-    complex_name: '', complex_name_en: '', site_number: '',
-    working_hours: undefined,
-  });
-
   const saveBranchMutation = useMutation({
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
       const wantsMain = !!branchForm.is_main;
-      const payload: Record<string, unknown> = {
-        business_id: editingBiz.id,
-        name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
-        is_active: branchForm.is_active,
-        branch_type: branchForm.branch_type || 'branch',
-        contact_person: branchForm.contact_person || null, phone: branchForm.phone || null,
-        mobile: branchForm.mobile || null, unified_number: branchForm.unified_number || null,
-        customer_service_phone: branchForm.customer_service_phone || null,
-        email: branchForm.email || null, website: branchForm.website || null,
-        country_id: branchForm.country_id || null, city_id: branchForm.city_id || null,
-        region: branchForm.region || null, district: branchForm.district || null,
-        street_name: branchForm.street_name || null, building_number: branchForm.building_number || null,
-        national_id: branchForm.national_id || null, additional_number: branchForm.additional_number || null,
-        address: branchForm.address || null, latitude: branchForm.latitude || null,
-        longitude: branchForm.longitude || null,
-        complex_name: branchForm.complex_name || null,
-        complex_name_en: branchForm.complex_name_en || null,
-        site_number: branchForm.site_number || null,
-        working_hours: (branchForm.working_hours ?? {}) as unknown,
-      };
+      const payload = buildBranchPayload(branchForm, editingBiz.id);
       let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
         const { error } = await updateBusinessBranchById(editingBranchId, payload as never);
