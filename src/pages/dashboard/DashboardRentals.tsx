@@ -634,9 +634,15 @@ const DashboardRentals: React.FC = () => {
     })();
   }, [user?.id]);
 
-  const activeOrders = useMemo(() => orders.filter(o => o.status === 'active'), [orders]);
-  const expiringOrders = useMemo(() => orders.filter(o => o.status === 'expiring_soon'), [orders]);
-  const overdueOrders = useMemo(() => orders.filter(o => o.status === 'expired'), [orders]);
+  const { stats: orderStats } = useRentalListDerivations({
+    items: [],
+    orders,
+    listQuery: '',
+    listStatus: 'all',
+  });
+  const activeOrders = orderStats.active;
+  const expiringOrders = orderStats.expiring;
+  const overdueOrders = orderStats.overdue;
 
   // Stable refresh callbacks — avoid recreating closures on every render.
   const refreshItems = useCallback(async () => {
