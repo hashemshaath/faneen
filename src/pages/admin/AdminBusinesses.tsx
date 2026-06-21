@@ -178,6 +178,7 @@ import {
 import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
 import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
+import { logAdminBusinessAction } from './businesses/logAdminBusinessAction';
 import {
   useBusinessBranchFormState,
   buildBranchPayload,
@@ -445,16 +446,11 @@ const AdminBusinesses = () => {
   });
 
   /* ─── Mutations ─── */
-  const logAction = async (action: string, entityId: string, details: Record<string, unknown>) => {
-    const payload: AdminActivityLogInsert = {
-      user_id: user!.id,
-      action,
-      entity_type: 'business',
-      entity_id: entityId,
-      details: details as AdminJson,
-    };
-    await supabase.from('admin_activity_log').insert(payload);
-  };
+  const logAction = useCallback(
+    (action: string, entityId: string, details: Record<string, unknown>) =>
+      logAdminBusinessAction(user!.id, action, entityId, details),
+    [user],
+  );
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: 'is_active' | 'is_verified'; value: boolean }) => {
