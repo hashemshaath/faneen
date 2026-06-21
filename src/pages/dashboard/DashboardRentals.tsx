@@ -887,21 +887,14 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   const [listQuery, setListQuery] = useState('');
   const [listStatus, setListStatus] = useState<'all' | RentalItem['status']>('all');
 
-  // Memoized filter — avoids re-walking items on every keystroke/render.
-  const filteredItems = useMemo(() => {
-    const q = listQuery.trim().toLowerCase();
-    if (!q && listStatus === 'all') return items;
-    return items.filter(it => {
-      if (listStatus !== 'all' && it.status !== listStatus) return false;
-      if (!q) return true;
-      return (
-        it.name_ar?.toLowerCase().includes(q) ||
-        (it.name_en ?? '').toLowerCase().includes(q) ||
-        (it.brand ?? '').toLowerCase().includes(q) ||
-        it.ref_id?.toLowerCase().includes(q)
-      );
-    });
-  }, [items, listQuery, listStatus]);
+  // Memoized filter — extracted to `useRentalListDerivations` to avoid
+  // re-walking items on every keystroke/render.
+  const { filteredItems } = useRentalListDerivations({
+    items,
+    orders: [],
+    listQuery,
+    listStatus,
+  });
 
   useEffect(() => {
     if (!form.category_id && categories[0]) setForm(f => ({ ...f, category_id: categories[0].id }));
