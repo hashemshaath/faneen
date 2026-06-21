@@ -683,7 +683,7 @@ export const HeroV2 = () => {
                 }}
                 role="search"
               >
-                <div className="flex items-center gap-2 h-14 sm:h-[60px] rounded-full bg-white/95 backdrop-blur-md border border-white/40 shadow-2xl ps-5 pe-2">
+                <div className="flex items-center gap-2 h-14 sm:h-[60px] rounded-full bg-white/95 backdrop-blur-md border border-white/40 shadow-2xl ps-5 pe-2 min-w-0 overflow-hidden">
                   <Search className="w-5 h-5 text-muted-foreground shrink-0" />
                   <input
                     type="search"
@@ -757,7 +757,7 @@ export const HeroV2 = () => {
                     dir="auto"
                     autoComplete="off"
                     placeholder={bi('ابحث: ألمنيوم، حديد، نجارة، زجاج…', 'Search: aluminum, iron, carpentry, glass…')}
-                    className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full focus-visible:outline-none"
+                    className="flex-1 min-w-0 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full focus-visible:outline-none"
                     aria-label={bi('ابحث', 'Search')}
                     role="combobox"
                     aria-autocomplete="list"
