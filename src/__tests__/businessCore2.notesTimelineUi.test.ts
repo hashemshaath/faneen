@@ -25,10 +25,19 @@ const OPS_SECTION = join(
   SRC,
   "components/admin/businesses/sections/BusinessOperationsSection.tsx",
 );
+// Phase 5E+ extracted the admin edit drawer's tab shell (incl. the "ops" tab
+// trigger/content markup) into BusinessEditPanel. AdminBusinesses still owns
+// the data wiring and passes `opsTab={<BusinessOperationsSection .../>}` —
+// so we read both sources when asserting on tab presence.
+const EDIT_PANEL = join(
+  SRC,
+  "components/admin/businesses/sections/BusinessEditPanel.tsx",
+);
 
 describe("BUSINESS-CORE-2: admin UI integration", () => {
   const admin = readFileSync(ADMIN, "utf8");
   const opsSection = readFileSync(OPS_SECTION, "utf8");
+  const editPanel = readFileSync(EDIT_PANEL, "utf8");
 
   it("imports BusinessOperationsSection (Phase 5E wrapper around BusinessOperationsPanel)", () => {
     expect(admin).toMatch(
@@ -43,8 +52,9 @@ describe("BUSINESS-CORE-2: admin UI integration", () => {
   });
 
   it("adds an 'ops' tab and renders the panel only when a business is open", () => {
-    expect(admin).toMatch(/TabsTrigger\s+value="ops"/);
-    expect(admin).toMatch(/TabsContent\s+value="ops"/);
+    // Tab trigger/content live in the extracted BusinessEditPanel shell.
+    expect(editPanel).toMatch(/TabsTrigger\s+value="ops"/);
+    expect(editPanel).toMatch(/TabsContent\s+value="ops"/);
     // Post-Phase 5E: the panel is rendered indirectly via BusinessOperationsSection.
     expect(admin).toMatch(/<BusinessOperationsSection\s+businessId=\{editingBiz\.id\}/);
   });
@@ -61,9 +71,13 @@ describe("BUSINESS-CORE-2: provider UI integration", () => {
   const provider = readFileSync(PROVIDER, "utf8");
 
   it("imports BusinessInternalNotesCard in the provider business edit page", () => {
-    expect(provider).toMatch(
-      /import\s*\{\s*BusinessInternalNotesCard\s*\}\s*from\s*["']@\/components\/business\/BusinessInternalNotesCard["']/,
-    );
+    // Provider page lazy-loads the card to keep the initial bundle small —
+    // accept either a static named import or a lazy() dynamic import.
+    const staticImport =
+      /import\s*\{\s*BusinessInternalNotesCard\s*\}\s*from\s*["']@\/components\/business\/BusinessInternalNotesCard["']/;
+    const lazyImport =
+      /import\(\s*["']@\/components\/business\/BusinessInternalNotesCard["']\s*\)/;
+    expect(staticImport.test(provider) || lazyImport.test(provider)).toBe(true);
   });
 
   it("renders the notes card with the provider's form.id (RLS-gated)", () => {
