@@ -880,8 +880,7 @@ const AdminBusinesses = () => {
   /* ─── AI auto-translate missing field (single business) ─── */
   const [autoTranslating, setAutoTranslating] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  // Hold the latest filtered list so keyboard shortcut `e` can export the
-  // current view without forcing the listener to re-bind on every change.
+  // Holds the latest filtered list so the `e` shortcut can export without rebinding.
   const filteredRef = useRef<unknown[]>([]);
   useAdminBusinessesKeyboard({
     onFocusSearch: () => searchRef.current?.focus(),
