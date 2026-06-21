@@ -18,7 +18,7 @@ type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
 type PaymentRow = Database['public']['Tables']['installment_payments']['Row'];
 
 type ContractLike = ContractRow;
-type PaymentLike = PaymentRow;
+type PaymentLike = PaymentRow & { contract_id: string | undefined };
 type MilestoneLike = MilestoneRow;
 interface AttachmentLike { contract_id: string }
 interface MaintenanceLike { contract_id: string }
