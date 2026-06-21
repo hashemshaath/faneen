@@ -28,7 +28,12 @@ const read = (p: string) => readFileSync(join(ROOT, p), 'utf8');
 
 const PAGE = 'src/pages/dashboard/DashboardStaffCenter.tsx';
 const APP = 'src/App.tsx';
-const SIDEBAR = 'src/components/dashboard/DashboardSidebar.tsx';
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (assertion outdated):
+// Sidebar IA entries (urls + bilingual labels) live in the navigation
+// config. The shell file no longer inlines them.
+const SIDEBAR_SHELL  = 'src/components/dashboard/DashboardSidebar.tsx';
+const SIDEBAR_CONFIG = 'src/modules/dashboard/navigation/dashboardNavigation.config.ts';
+const SIDEBAR = SIDEBAR_SHELL; // legacy alias for non-IA assertions
 
 describe('ORG-RBAC-STRUCTURE-5 — routing & sidebar', () => {
   it('registers /dashboard/settings/staff behind ProtectedRoute', () => {
