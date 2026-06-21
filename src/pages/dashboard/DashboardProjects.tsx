@@ -33,7 +33,7 @@ import {
   Plus, Trash2, Pencil, FolderOpen, Calendar, DollarSign, Clock,
   Images, X, Search, CheckCircle2, Eye, LayoutGrid, List,
   Star, StarOff, MapPin, Tag, Building2, Layers, GripVertical,
-  Copy, Maximize2, Loader2, Download, AlertCircle, BarChart3, Zap, EyeOff,
+  Copy, Maximize2, Loader2, Download, AlertCircle, BarChart3, Zap, EyeOff, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
