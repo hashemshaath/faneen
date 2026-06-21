@@ -17,6 +17,11 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const PAGE = "src/pages/admin/AdminDataEnrichment.tsx";
+// Refactor: legacy single-row markers (module barrel import, Website/
+// Google Maps inputs, ConfidenceBadge, conflict + Comparison surfaces)
+// were extracted into <LegacySingleRowEnrichment/> which the page still
+// mounts. Audit both files so the architectural intent stays guarded.
+const LEGACY = "src/components/admin/data-enrichment/LegacySingleRowEnrichment.tsx";
 const MODULE_INDEX = "src/modules/adminEnrichment/index.ts";
 const FETCH_FN = "supabase/functions/admin-enrichment-fetch/index.ts";
 const ENHANCE_FN = "supabase/functions/admin-enrichment-enhance/index.ts";
@@ -57,12 +62,12 @@ describe("ADMIN-DATA-ENRICHMENT-MICROSERVICE-1", () => {
   });
 
   it("page imports from the adminEnrichment module barrel", () => {
-    const src = read(PAGE);
+    const src = read(PAGE) + "\n" + read(LEGACY);
     expect(src).toMatch(/@\/modules\/adminEnrichment/);
   });
 
   it("page renders Website and Google Maps inputs", () => {
-    const src = read(PAGE);
+    const src = read(PAGE) + "\n" + read(LEGACY);
     expect(src).toMatch(/Website URL/);
     expect(src).toMatch(/Google Maps URL/);
   });
@@ -75,7 +80,7 @@ describe("ADMIN-DATA-ENRICHMENT-MICROSERVICE-1", () => {
   });
 
   it("page surfaces comparison, confidence, and conflict UI", () => {
-    const src = read(PAGE);
+    const src = read(PAGE) + "\n" + read(LEGACY);
     expect(src).toMatch(/ConfidenceBadge/);
     expect(src).toMatch(/conflict/i);
     expect(src).toMatch(/Comparison|comparison/);
