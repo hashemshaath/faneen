@@ -634,15 +634,8 @@ const DashboardRentals: React.FC = () => {
     })();
   }, [user?.id]);
 
-  const { stats: orderStats } = useRentalListDerivations({
-    items: [],
-    orders,
-    listQuery: '',
-    listStatus: 'all',
-  });
-  const activeOrders = orderStats.active;
-  const expiringOrders = orderStats.expiring;
-  const overdueOrders = orderStats.overdue;
+  const { stats: orderStats } = useRentalListDerivations({ items: [], orders, listQuery: '', listStatus: 'all' });
+  const { active: activeOrders, expiring: expiringOrders, overdue: overdueOrders } = orderStats;
 
   // Stable refresh callbacks — avoid recreating closures on every render.
   const refreshItems = useCallback(async () => {
