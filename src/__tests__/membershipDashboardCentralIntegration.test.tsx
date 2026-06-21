@@ -12,7 +12,15 @@ import path from 'node:path';
 const ROOT = path.resolve(__dirname, '..', '..');
 const PAGE = path.join(ROOT, 'src/pages/dashboard/DashboardMembership.tsx');
 const APP  = path.join(ROOT, 'src/App.tsx');
-const SIDEBAR = path.join(ROOT, 'src/components/dashboard/DashboardSidebar.tsx');
+// MEMBERSHIP ROUTE REGRESSION CLOSEOUT (assertion outdated):
+// DashboardSidebar.tsx no longer inlines menu entries — they were
+// extracted to the dashboard navigation config module. Point the
+// sidebar-exposure assertion at the actual source of truth so the
+// guard still verifies that the membership entry is wired.
+const SIDEBAR_CONFIG = path.join(
+  ROOT,
+  'src/modules/dashboard/navigation/dashboardNavigation.config.ts',
+);
 
 const read = (p: string) => fs.readFileSync(p, 'utf8');
 
@@ -26,7 +34,7 @@ describe('MembershipDashboard central integration', () => {
   });
 
   it('2. exposes the membership entry in the sidebar', () => {
-    const sb = read(SIDEBAR);
+    const sb = read(SIDEBAR_CONFIG);
     expect(sb).toContain('/dashboard/membership');
   });
 

@@ -125,8 +125,17 @@ describe('Step D — Business display uses ENT primary + BIZ legacy hint', () =>
 });
 
 describe('Step D — Route surface unchanged', () => {
-  it('does not reintroduce the broken /dashboard/membership route', () => {
-    expect(APP).not.toContain('/dashboard/membership');
+  // MEMBERSHIP ROUTE REGRESSION CLOSEOUT (assertion outdated):
+  // The original Step D guard pinned the absence of /dashboard/membership
+  // because, at the time, the route was a dead surface left over from the
+  // legacy membership prototype. After the "MembershipDashboard central
+  // integration" feature shipped, /dashboard/membership is now the
+  // canonical user-facing membership dashboard, wired in App.tsx and
+  // enforced by membershipDashboardCentralIntegration.test.tsx (test #1).
+  // The guard is updated to require the canonical wiring instead of
+  // forbidding it. No assertion was deleted — the intent flipped.
+  it('wires the canonical /dashboard/membership route (central integration)', () => {
+    expect(APP).toMatch(/path="\/dashboard\/membership"/);
   });
 
   it('keeps the canonical /membership/payments/:paymentIntentId/invoice route', () => {
