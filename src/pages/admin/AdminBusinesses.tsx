@@ -145,7 +145,6 @@ import type {
   AdminBusinessImageVariants,
   AdminBusinessCsvRow,
   AdminBusinessBranchLite,
-  AdminBusinessBranchType,
   AdminCreateBusinessFormState,
   AdminEditBusinessFormState,
   AdminActivityLogInsert,
@@ -249,8 +248,13 @@ const AdminBusinesses = () => {
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
-  const [branchForm, setBranchForm] = useState<AdminBranchFormState | null>(null);
-  const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
+  const {
+    branchForm,
+    setBranchForm,
+    editingBranchId,
+    setEditingBranchId,
+    emptyBranch,
+  } = useBusinessBranchFormState();
   const { branchTranslating, translateBranchName } = useBranchNameTranslator(
     branchForm,
     setBranchForm,
