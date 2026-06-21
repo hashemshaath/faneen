@@ -81,7 +81,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Building2, XCircle, Star, Loader2, Eye, Ban,
+  XCircle, Star, Loader2, Eye, Ban,
   Edit, Trash2, Plus, X, Globe, Phone, Mail, MapPin, Settings,
   Shield, Crown, BarChart3, Package, DollarSign, ExternalLink,
   GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
@@ -95,10 +95,8 @@ import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { parseMembershipLimitError } from '@/lib/membership-errors';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
-import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminListPageTemplate } from '@/components/admin/AdminListPageTemplate';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
-import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
