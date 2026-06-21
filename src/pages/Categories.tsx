@@ -243,7 +243,7 @@ const Categories = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {businesses.map((b: any) => (
+              {businesses.map((b: CategoryBusinessRow) => (
                 <Link key={b.id} to={`/${b.username}`}>
                   <Card className="hover:shadow-lg hover:border-gold/30 transition-all group">
                     <CardContent className="card-pad-md flex items-center gap-4">
