@@ -38,11 +38,28 @@ const PENDING_FOLLOW_UP = [
 
 const read = (file: string): string => readFileSync(resolve(ADMIN_DIR, file), 'utf8');
 
+/**
+ * Some Phase 5J+ admin pages extracted their hero into a dedicated
+ * header component that owns the `<AdminPageHeader>` import + render.
+ * The guard still requires `AdminPageHeader` reachability, but now
+ * accepts the extracted header file as the source of truth.
+ */
+const EXTRACTED_HEADER: Partial<Record<(typeof REQUIRES_HEADER)[number], string>> = {
+  'AdminBusinesses.tsx': 'businesses/components/AdminBusinessesHeader.tsx',
+};
+
 describe('admin page header coverage (Phase 4)', () => {
   it.each(REQUIRES_HEADER)('%s renders AdminPageHeader', (file) => {
-    const src = read(file);
+    const pageSrc = read(file);
+    const extracted = EXTRACTED_HEADER[file];
+    const src = extracted ? pageSrc + '\n/*EXTRACTED_HEADER*/\n' + read(extracted) : pageSrc;
     expect(src).toMatch(/<AdminPageHeader[\s>]/);
     expect(src).toContain("from '@/components/admin/AdminPageHeader'");
+    if (extracted) {
+      // Page must still mount the extracted header component
+      const compName = extracted.split('/').pop()!.replace(/\.tsx$/, '');
+      expect(pageSrc).toMatch(new RegExp(`<${compName}[\\s>]`));
+    }
   });
 
   it('REQUIRES_HEADER and PENDING_FOLLOW_UP do not overlap', () => {
