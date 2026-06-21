@@ -49,7 +49,7 @@ export const CompareTrayV3: React.FC<Props> = ({ lookup }) => {
             return (
               <li
                 key={id}
-                className="inline-flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full bg-muted/60 border border-border/40 max-w-[160px]"
+                className="inline-flex items-center gap-1.5 ps-1 pe-2 py-1 rounded-full bg-muted/60 border border-border/40 max-w-[160px]"
               >
                 {b?.logo_url ? (
                   <img src={b.logo_url} alt="" className="w-5 h-5 rounded-full object-cover bg-muted shrink-0" />
