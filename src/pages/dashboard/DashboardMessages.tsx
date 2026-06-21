@@ -38,6 +38,7 @@ import { ar, enUS } from 'date-fns/locale';
 import { MessageTemplates } from '@/components/messages/MessageTemplates';
 import { ImageLightbox, type LightboxImage } from '@/components/messages/ImageLightbox';
 import { useChatPersistence } from '@/hooks/useChatPersistence';
+import { useMessagesDerivations } from '@/hooks/useMessagesDerivations';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
@@ -904,28 +905,6 @@ const DashboardMessages = () => {
   }, [isRTL]);
 
   /* ─── Filter & Select ─── */
-  const filteredConversations = useMemo(() => {
-    let result = conversations;
-    if (deferredSearch) {
-      const q = deferredSearch.toLowerCase();
-      result = result.filter((c) => {
-        const name = c.other_profile?.full_name?.toLowerCase() || '';
-        const lastMsg = (c.last_message_text || '').toLowerCase();
-        return name.includes(q) || lastMsg.includes(q);
-      });
-    }
-    if (convFilter === 'unread') result = result.filter((c) => (unreadCounts as Record<string, number>)[c.id] > 0);
-    if (convFilter === 'starred') result = result.filter((c) => starredConvs.has(c.id));
-    if (convFilter === 'pinned') result = result.filter((c) => pinnedConvs.has(c.id));
-
-    result = [...result].sort((a, b) => {
-      const aPinned = pinnedConvs.has(a.id) ? 1 : 0;
-      const bPinned = pinnedConvs.has(b.id) ? 1 : 0;
-      return bPinned - aPinned;
-    });
-
-    return result;
-  }, [conversations, deferredSearch, convFilter, unreadCounts, starredConvs, pinnedConvs]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
