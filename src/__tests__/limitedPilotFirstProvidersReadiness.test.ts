@@ -56,7 +56,7 @@ describe('LIMITED PILOT — first 5 providers readiness', () => {
     const src = read();
     expect(src).toMatch(/demo/i);
     expect(src).toMatch(/inactive/i);
-    expect(src).toMatch(/do not\s+enter the pilot/i);
+    expect(src).toMatch(/do not[^A-Za-z]+enter the pilot/i);
   });
 
   it('introduces no DB / RLS / RPC / migration / edge changes', () => {
