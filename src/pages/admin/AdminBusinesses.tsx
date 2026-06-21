@@ -147,9 +147,7 @@ import type {
   AdminBusinessBranchLite,
   AdminCreateBusinessFormState,
   AdminEditBusinessFormState,
-  AdminActivityLogInsert,
   PortfolioItemInsert,
-  AdminJson,
 } from './adminBusinesses.types';
 import { BusinessBranchesSection } from '@/components/admin/businesses/branches/BusinessBranchesSection';
 import type {
