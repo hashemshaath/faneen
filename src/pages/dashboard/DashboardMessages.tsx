@@ -38,6 +38,7 @@ import { ar, enUS } from 'date-fns/locale';
 import { MessageTemplates } from '@/components/messages/MessageTemplates';
 import { ImageLightbox, type LightboxImage } from '@/components/messages/ImageLightbox';
 import { useChatPersistence } from '@/hooks/useChatPersistence';
+import { useMessagesDerivations } from '@/hooks/useMessagesDerivations';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
@@ -904,28 +905,6 @@ const DashboardMessages = () => {
   }, [isRTL]);
 
   /* ─── Filter & Select ─── */
-  const filteredConversations = useMemo(() => {
-    let result = conversations;
-    if (deferredSearch) {
-      const q = deferredSearch.toLowerCase();
-      result = result.filter((c) => {
-        const name = c.other_profile?.full_name?.toLowerCase() || '';
-        const lastMsg = (c.last_message_text || '').toLowerCase();
-        return name.includes(q) || lastMsg.includes(q);
-      });
-    }
-    if (convFilter === 'unread') result = result.filter((c) => (unreadCounts as Record<string, number>)[c.id] > 0);
-    if (convFilter === 'starred') result = result.filter((c) => starredConvs.has(c.id));
-    if (convFilter === 'pinned') result = result.filter((c) => pinnedConvs.has(c.id));
-
-    result = [...result].sort((a, b) => {
-      const aPinned = pinnedConvs.has(a.id) ? 1 : 0;
-      const bPinned = pinnedConvs.has(b.id) ? 1 : 0;
-      return bPinned - aPinned;
-    });
-
-    return result;
-  }, [conversations, deferredSearch, convFilter, unreadCounts, starredConvs, pinnedConvs]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
@@ -961,25 +940,21 @@ const DashboardMessages = () => {
     return source.map((m) => ({ ...m, _reaction: messageReactions[m.id] || null, _starred: starredMessages.has(m.id) }));
   }, [messages, filteredMessages, chatSearchTerm, messageReactions, starredMessages]);
 
-  const groupedMessages = useMemo(() => {
-    const groups: { date: string; label: string; messages: Array<any> }[] = [];
-    enrichedMessages.forEach((msg) => {
-      const d = new Date(msg.created_at);
-      const dateKey = format(d, 'yyyy-MM-dd');
-      const last = groups[groups.length - 1];
-      if (last && last.date === dateKey) last.messages.push(msg);
-      else groups.push({ date: dateKey, label: getDateLabel(msg.created_at, language), messages: [msg] });
-    });
-    return groups;
-  }, [enrichedMessages, language]);
-
-  /* ─── Stats ─── */
-  const stats = useMemo(() => ({
-    total: conversations.length,
-    unread: totalUnread,
-    starred: starredConvs.size,
-    pinned: pinnedConvs.size,
-  }), [conversations.length, totalUnread, starredConvs.size, pinnedConvs.size]);
+  const getDateLabelLang = useCallback(
+    (iso: string) => getDateLabel(iso, language),
+    [language],
+  );
+  const { filteredConversations, groupedMessages, stats } = useMessagesDerivations({
+    conversations,
+    messages: enrichedMessages,
+    deferredSearch,
+    convFilter,
+    unreadCounts: unreadCounts as Record<string, number>,
+    totalUnread,
+    starredConvs,
+    pinnedConvs,
+    getDateLabel: getDateLabelLang,
+  });
 
   /* ─── Lightbox source: every image attachment in current chat ─── */
   const lightboxImages = useMemo<LightboxImage[]>(() => {
