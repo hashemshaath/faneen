@@ -475,7 +475,7 @@ const DashboardPortfolio = () => {
     { key: 'value', header: pickBi(isRTL, 'القيمة', 'Value'), accessor: (i) => i.project_value ?? '' },
     { key: 'views', header: pickBi(isRTL, 'المشاهدات', 'Views'), accessor: (i) => i.view_count ?? 0 },
     { key: 'shares', header: pickBi(isRTL, 'المشاركات', 'Shares'), accessor: (i) => i.share_count ?? 0 },
-    { key: 'featured', header: pickBi(isRTL, 'مميز', 'Featured'), accessor: (i) => i.is_featured ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا' : 'No') },
+    { key: 'featured', header: pickBi(isRTL, 'مميز', 'Featured'), accessor: (i) => i.is_featured ? pickBi(isRTL, 'نعم', 'Yes') : pickBi(isRTL, 'لا', 'No') },
   ]), [isRTL]);
 
   const publicLinkFor = useCallback((_item: PortfolioItem) => {
