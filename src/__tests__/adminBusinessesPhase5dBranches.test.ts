@@ -32,9 +32,11 @@ describe('Phase 5D — AdminBusinesses branches tab extraction', () => {
     // owns the branch mutations and forwards them in as props.
     expect(src).toMatch(/<BusinessBranchesPanel\b/);
     expect(src).toMatch(/from '\.\/businesses\/components\/BusinessBranchesPanel'/);
-    expect(src).toMatch(/saveBranchMutation\.mutate\(\)/);
-    expect(src).toMatch(/deleteBranchMutation\.mutate/);
-    expect(src).toMatch(/toggleBranchMutation\.mutate/);
+    // CRUD mutations are still owned by the parent page and forwarded
+    // as props into the Phase 5I panel adapter.
+    expect(src).toMatch(/const\s+saveBranchMutation\s*=\s*useMutation/);
+    expect(src).toMatch(/const\s+deleteBranchMutation\s*=\s*useMutation/);
+    expect(src).toMatch(/const\s+toggleBranchMutation\s*=\s*useMutation/);
   });
 
   it('branch components do not import the Supabase client', () => {
