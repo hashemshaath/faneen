@@ -421,11 +421,13 @@ const DashboardProjects = () => {
   /* ─── Mutations ─── */
   const saveMut = useMutation({
     mutationFn: async () => {
-      if (!businessId) {
-        throw new Error(pickBi(isRTL, 'لا توجد منشأة. أنشئ منشأتك أولاً قبل إضافة المشاريع.', 'No business. Create your business first before adding projects.'));
+      if (!ownerScope) {
+        throw new Error(pickBi(isRTL, 'يلزم تسجيل الدخول لإضافة مشروع.', 'Sign in is required to add a project.'));
       }
       const payload = {
-        business_id: businessId, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
+        business_id: ownerScope.mode === 'business' ? ownerScope.businessId : null,
+        owner_user_id: ownerScope.mode === 'personal' ? ownerScope.userId : null,
+        title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         cover_image_url: form.cover_image_url || null, client_name: form.client_name.trim() || null,
         cover_image_asset_id: form.cover_image_asset_id || null,
