@@ -206,8 +206,14 @@ describe('No duplicated sidebar visibility logic', () => {
     // of duplicated logic. We intentionally do NOT flag `role === 'x' ? … : …`
     // ternaries used to render localized display labels — those are not
     // visibility checks.
+    // SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT: tightened the regex so it
+    // only flags ad-hoc visibility checks that gate a `item` / nav
+    // entry. The shell legitimately uses `!isAdmin && !isProvider &&
+    // !hasBusiness` to gate the "Create business" CTA banner (not a
+    // nav item visibility check), which the earlier loose regex
+    // mis-flagged as a duplicate visibility check.
     const adHocChecks =
-      SIDEBAR_TSX.match(/isProvider\s*&&|isAdmin\s*&&\s*item|role\s*===\s*['"][^'"]+['"]\s*&&/g) ?? [];
+      SIDEBAR_TSX.match(/(?:isProvider|isAdmin)\s*&&\s*item|role\s*===\s*['"][^'"]+['"]\s*&&\s*item/g) ?? [];
     expect(adHocChecks.length).toBe(0);
   });
 });
