@@ -673,7 +673,7 @@ const DashboardProjects = () => {
                   subtitle={pickBi(isRTL, `إجمالي ${filteredProjects.length} مشروع`, `Total ${filteredProjects.length} projects`)}
                 />
               )}
-              {businessId ? (
+              {ownerScope ? (
                 <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
                   <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة مشروع', 'Add Project')}
                 </Button>
@@ -682,31 +682,34 @@ const DashboardProjects = () => {
           }
         />
 
-        {business !== undefined && !businessId && (
-          <Card className="border-dashed border-amber-500/40 bg-amber-500/[0.04]">
-            <CardContent className="p-8 text-center space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 mx-auto flex items-center justify-center">
-                <AlertCircle className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+        {business !== undefined && !businessId && user && (
+          <Card className="border-dashed border-primary/30 bg-primary/[0.04]">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Info className="w-5 h-5 text-primary" />
+                </div>
+                <div className="min-w-0 space-y-1">
+                  <h3 className="text-sm font-semibold">
+                    {pickBi(isRTL, 'وضع شخصي — مشاريعك مرتبطة بحسابك', 'Personal mode — projects linked to your account')}
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {pickBi(isRTL,
+                      'يمكنك إضافة مشاريعك الشخصية وربطها بمواقعك. أنشئ منشأة لاحقاً لربط المشاريع بها بدلاً من حسابك.',
+                      'You can add personal projects and link them to your sites. Create a business later to link projects to it instead of your account.')}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-base font-semibold">
-                {pickBi(isRTL, 'لا يمكن إضافة مشاريع بدون منشأة', 'Cannot add projects without a business')}
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                {pickBi(isRTL,
-                  'المشاريع تابعة لمنشأة. أنشئ منشأتك أولاً، ثم أضف عناوين المواقع لتربط كل مشروع بموقع تنفيذي.',
-                  'Projects belong to a business. Create your business first, then add site addresses so you can link each project to an execution site.')}
-              </p>
-              <div className="flex items-center justify-center gap-2 flex-wrap">
-                <Button asChild variant="hero" size="sm">
-                  <a href="/register-entity">
-                    <Plus className="w-4 h-4 me-1" />
-                    {pickBi(isRTL, 'إنشاء منشأة', 'Create business')}
-                  </a>
-                </Button>
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button asChild variant="outline" size="sm">
                   <a href="/dashboard/sites">
                     <MapPin className="w-4 h-4 me-1" />
                     {pickBi(isRTL, 'إدارة المواقع', 'Manage sites')}
+                  </a>
+                </Button>
+                <Button asChild variant="ghost" size="sm">
+                  <a href="/register-entity">
+                    {pickBi(isRTL, 'إنشاء منشأة (اختياري)', 'Create business (optional)')}
                   </a>
                 </Button>
               </div>
@@ -1110,7 +1113,7 @@ const DashboardProjects = () => {
           <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />
         </div>
       )}
-      {!!businessId && projects.length > 0 && (
+      {!!ownerScope && projects.length > 0 && (
         <BulkActionBar
           count={selectedIds.size}
           onClear={() => setSelectedIds(new Set())}
