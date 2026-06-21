@@ -275,6 +275,15 @@ const DashboardProjects = () => {
   });
 
   const businessId = business?.id;
+  // Personal-workspace fallback: an individual without a business owns
+  // projects directly via `projects.owner_user_id`. Exactly one of
+  // `business_id` / `owner_user_id` is set per row (DB XOR check).
+  const ownerScope: { mode: 'business'; businessId: string } | { mode: 'personal'; userId: string } | null =
+    businessId
+      ? { mode: 'business', businessId }
+      : user
+        ? { mode: 'personal', userId: user.id }
+        : null;
 
   /* ─── Sites for this business (used to link a project to a saved site) ─── */
   const { data: ownerSites = [] } = useQuery({
@@ -298,17 +307,21 @@ const DashboardProjects = () => {
   });
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['dashboard-projects', businessId],
+    queryKey: ['dashboard-projects', ownerScope?.mode, ownerScope?.mode === 'business' ? ownerScope.businessId : ownerScope?.userId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('projects')
-        .select('*, cities(name_ar, name_en), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
-        .eq('business_id', businessId!)
+      if (!ownerScope) return [];
+      let q = supabase.from('projects')
+        .select('*, cities(name_ar, name_en), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)');
+      q = ownerScope.mode === 'business'
+        ? q.eq('business_id', ownerScope.businessId)
+        : q.eq('owner_user_id', ownerScope.userId);
+      const { data, error } = await q
         .order('is_featured', { ascending: false })
         .order('sort_order');
       if (error) throw error;
       return data;
     },
-    enabled: !!businessId,
+    enabled: !!ownerScope,
     staleTime: 3 * 60 * 1000,
   });
 
@@ -408,11 +421,13 @@ const DashboardProjects = () => {
   /* ─── Mutations ─── */
   const saveMut = useMutation({
     mutationFn: async () => {
-      if (!businessId) {
-        throw new Error(pickBi(isRTL, 'لا توجد منشأة. أنشئ منشأتك أولاً قبل إضافة المشاريع.', 'No business. Create your business first before adding projects.'));
+      if (!ownerScope) {
+        throw new Error(pickBi(isRTL, 'يلزم تسجيل الدخول لإضافة مشروع.', 'Sign in is required to add a project.'));
       }
       const payload = {
-        business_id: businessId, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
+        business_id: ownerScope.mode === 'business' ? ownerScope.businessId : null,
+        owner_user_id: ownerScope.mode === 'personal' ? ownerScope.userId : null,
+        title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         cover_image_url: form.cover_image_url || null, client_name: form.client_name.trim() || null,
         cover_image_asset_id: form.cover_image_asset_id || null,

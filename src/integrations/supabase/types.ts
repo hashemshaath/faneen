@@ -14115,7 +14115,7 @@ export type Database = {
       }
       projects: {
         Row: {
-          business_id: string
+          business_id: string | null
           city_id: string | null
           client_name: string | null
           completion_date: string | null
@@ -14129,6 +14129,7 @@ export type Database = {
           id: string
           is_demo: boolean
           is_featured: boolean
+          owner_user_id: string | null
           project_cost: number | null
           ref_id: string | null
           saves_count: number
@@ -14142,7 +14143,7 @@ export type Database = {
           views_count: number
         }
         Insert: {
-          business_id: string
+          business_id?: string | null
           city_id?: string | null
           client_name?: string | null
           completion_date?: string | null
@@ -14156,6 +14157,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           is_featured?: boolean
+          owner_user_id?: string | null
           project_cost?: number | null
           ref_id?: string | null
           saves_count?: number
@@ -14169,7 +14171,7 @@ export type Database = {
           views_count?: number
         }
         Update: {
-          business_id?: string
+          business_id?: string | null
           city_id?: string | null
           client_name?: string | null
           completion_date?: string | null
@@ -14183,6 +14185,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           is_featured?: boolean
+          owner_user_id?: string | null
           project_cost?: number | null
           ref_id?: string | null
           saves_count?: number
