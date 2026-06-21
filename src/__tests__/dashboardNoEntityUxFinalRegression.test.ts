@@ -26,16 +26,19 @@ describe('Dashboard no-entity UX — final regression guards', () => {
     expect(branches).toMatch(/إنشاء منشأة|Create business/);
   });
 
-  /* 3. Projects: Add-project button hidden when no business */
-  it('projects hides "Add Project" when no business', () => {
-    expect(projects).toMatch(/businessId\s*\?\s*\(\s*<Button[\s\S]*?(إضافة مشروع|Add Project)/);
+  /* 3. Projects: Add-project button is gated on ownerScope (personal-mode allowed) */
+  it('projects shows "Add Project" whenever an ownerScope exists (business or personal)', () => {
+    expect(projects).toMatch(/ownerScope\s*\?\s*\(\s*<Button[\s\S]*?(إضافة مشروع|Add Project)/);
   });
 
-  /* 4. Projects: clear warning panel when no business */
-  it('projects renders a no-business warning panel', () => {
-    expect(projects).toMatch(/business !== undefined && !businessId/);
-    expect(projects).toMatch(/لا يمكن إضافة مشاريع بدون منشأة|Cannot add projects without a business/);
-    expect(projects).toMatch(/href="\/register-entity"/);
+  /* 4. Projects: personal-mode banner replaces the legacy "cannot add" warning */
+  it('projects renders a personal-mode banner when no business is linked', () => {
+    expect(projects).toMatch(/business !== undefined && !businessId && user/);
+    expect(projects).toMatch(/وضع شخصي|Personal mode/);
+    // Legacy blocking copy must be gone.
+    expect(projects).not.toMatch(/لا يمكن إضافة مشاريع بدون منشأة|Cannot add projects without a business/);
+    // "Create business" is now optional, not the primary CTA.
+    expect(projects).toMatch(/إنشاء منشأة \(اختياري\)|Create business \(optional\)/);
   });
 
   /* 5. Sites: personal-mode warning shown when no business */
@@ -57,9 +60,9 @@ describe('Dashboard no-entity UX — final regression guards', () => {
     expect(projects).toMatch(/الموقع التنفيذي|Execution site/);
   });
 
-  /* 8. Projects save mutation refuses to run without business */
-  it('projects save mutation throws if no business', () => {
-    expect(projects).toMatch(/if \(!businessId\)\s*\{[\s\S]*?throw new Error/);
+  /* 8. Projects save mutation requires an ownerScope (business or personal) */
+  it('projects save mutation throws when there is no ownerScope', () => {
+    expect(projects).toMatch(/if \(!ownerScope\)\s*\{[\s\S]*?throw new Error/);
     // Must not silently coerce undefined business_id with non-null assertion
     expect(projects).not.toMatch(/business_id:\s*businessId!/);
   });
