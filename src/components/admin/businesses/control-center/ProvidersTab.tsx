@@ -201,12 +201,12 @@ export const ProvidersTab: React.FC<ProvidersTabProps> = ({
           </div>
 
           <div className="relative">
-            <Search className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground pointer-events-none`} />
+            <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={pickBi(isRTL, 'ابحث بالاسم أو المعرّف…', 'Search by name or ref…')}
-              className={`h-9 ${isRTL ? 'pr-9' : 'pl-9'} text-sm`}
+              className="h-9 ps-9 text-sm"
               dir="auto"
             />
           </div>
