@@ -21,9 +21,11 @@ describe('EMPTY + LOADING + ERROR STATES UX SWEEP — guards', () => {
     expect(src).toMatch(/لا توجد|No notifications|Empty/i);
   });
 
-  it('Search page (SearchV3) renders a no-results state', () => {
-    const src = read('src/pages/SearchV3.tsx');
-    expect(src).toMatch(/لا توجد|No results|no_results|noResults|Empty/i);
+  it('Search V3 ships an empty-state component', () => {
+    const src = read('src/components/search/v3/SearchEmptyStateV3.tsx');
+    expect(src).toMatch(/لا توجد نتائج|No results/);
+    const err = read('src/components/search/v3/SearchErrorStateV3.tsx');
+    expect(err).toMatch(/تعذّر تحميل النتائج|Failed to load results/);
   });
 
   it('Touched files contain no `as any`, hex, or service_role references', () => {
