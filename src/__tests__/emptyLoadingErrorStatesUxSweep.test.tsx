@@ -21,9 +21,9 @@ describe('EMPTY + LOADING + ERROR STATES UX SWEEP — guards', () => {
     expect(src).toMatch(/لا توجد|No notifications|Empty/i);
   });
 
-  it('Search page renders a no-results state', () => {
-    const src = read('src/pages/Search.tsx');
-    expect(src).toMatch(/لا توجد|No results|no_results|noResults/i);
+  it('Search page (SearchV3) renders a no-results state', () => {
+    const src = read('src/pages/SearchV3.tsx');
+    expect(src).toMatch(/لا توجد|No results|no_results|noResults|Empty/i);
   });
 
   it('Touched files contain no `as any`, hex, or service_role references', () => {
