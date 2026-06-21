@@ -149,10 +149,8 @@ import type {
   AdminEditBusinessFormState,
   PortfolioItemInsert,
 } from './adminBusinesses.types';
-import { BusinessBranchesSection } from '@/components/admin/businesses/branches/BusinessBranchesSection';
-import type {
-  BranchRow as AdminBranchRow,
-} from '@/components/admin/businesses/branches/types';
+import type { BranchRow as AdminBranchRow } from '@/components/admin/businesses/branches/types';
+import { BusinessBranchesPanel } from './businesses/components/BusinessBranchesPanel';
 import { getBusinessProfileHref, isReservedUsername, normalizeUsername } from '@/lib/business/profileHref';
 import {
   TIERS as tiers,
@@ -169,7 +167,6 @@ import {
   type BizViewFilters,
 } from './businesses/businessSavedViews';
 import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
-import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
 import { logAdminBusinessAction } from './businesses/logAdminBusinessAction';
 import { useBusinessBranchFormState, buildBranchPayload } from './businesses/hooks/useBusinessBranchFormState';
@@ -1357,7 +1354,7 @@ const AdminBusinesses = () => {
               />
             }
             branchesTab={
-              <BusinessBranchesSection
+              <BusinessBranchesPanel
                 isRTL={isRTL}
                 language={language as 'ar' | 'en'}
                 branches={branches as unknown as AdminBranchRow[]}
@@ -1368,21 +1365,12 @@ const AdminBusinesses = () => {
                 branchTranslating={branchTranslating}
                 onTranslate={translateBranchName}
                 countries={countries}
-                onToggleActive={(id, next) => toggleBranchMutation.mutate({ id, is_active: next })}
-                onEdit={(br) => { setEditingBranchId(br.id); setBranchForm(mapBranchRowToForm(br)); }}
-                onDelete={(id) => deleteBranchMutation.mutate(id)}
-                onSave={() => saveBranchMutation.mutate()}
-                saving={saveBranchMutation.isPending}
                 emptyBranch={emptyBranch}
-                mainContact={{
-                  unified_number: editForm.unified_number ?? editingBiz.unified_number ?? null,
-                  customer_service_phone:
-                    editForm.customer_service_phone ?? editingBiz.customer_service_phone ?? null,
-                  email: editForm.email ?? editingBiz.email ?? null,
-                  website: editForm.website ?? editingBiz.website ?? null,
-                }}
-                onApplyHoursToAllBranches={(hours) => applyHoursToAllBranchesMutation.mutate(hours as unknown)}
-                applyingHoursToAllBranches={applyHoursToAllBranchesMutation.isPending}
+                contactSource={{ editForm, editingBiz }}
+                toggleBranchMutation={toggleBranchMutation}
+                deleteBranchMutation={deleteBranchMutation}
+                saveBranchMutation={saveBranchMutation}
+                applyHoursToAllBranchesMutation={applyHoursToAllBranchesMutation}
               />
             }
             controlsTab={

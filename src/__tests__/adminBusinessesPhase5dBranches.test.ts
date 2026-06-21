@@ -25,14 +25,18 @@ describe('Phase 5D — AdminBusinesses branches tab extraction', () => {
     }
   });
 
-  it('AdminBusinesses.tsx wires the branches section', () => {
+  it('AdminBusinesses.tsx wires the branches section (via Phase 5I panel)', () => {
     const src = readFileSync(adminBusinessesPath, 'utf8');
-    expect(src).toMatch(/<BusinessBranchesSection\b/);
-    expect(src).toMatch(/from '@\/components\/admin\/businesses\/branches\/BusinessBranchesSection'/);
-    // The CRUD handlers (save / delete / toggle) MUST remain in the parent.
-    expect(src).toMatch(/saveBranchMutation\.mutate\(\)/);
-    expect(src).toMatch(/deleteBranchMutation\.mutate/);
-    expect(src).toMatch(/toggleBranchMutation\.mutate/);
+    // Phase 5I — `<BusinessBranchesSection>` is now mounted from the
+    // extracted `<BusinessBranchesPanel>` adapter; the parent still
+    // owns the branch mutations and forwards them in as props.
+    expect(src).toMatch(/<BusinessBranchesPanel\b/);
+    expect(src).toMatch(/from '\.\/businesses\/components\/BusinessBranchesPanel'/);
+    // CRUD mutations are still owned by the parent page and forwarded
+    // as props into the Phase 5I panel adapter.
+    expect(src).toMatch(/const\s+saveBranchMutation\s*=\s*useMutation/);
+    expect(src).toMatch(/const\s+deleteBranchMutation\s*=\s*useMutation/);
+    expect(src).toMatch(/const\s+toggleBranchMutation\s*=\s*useMutation/);
   });
 
   it('branch components do not import the Supabase client', () => {

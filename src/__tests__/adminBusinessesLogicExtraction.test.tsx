@@ -62,7 +62,7 @@ describe('AdminBusinesses Phase 5G logic extraction', () => {
     const src = read(PAGE);
     expect(src).toMatch(/<BusinessCreatePanel\b/);
     expect(src).toMatch(/<BusinessEditPanel\b/);
-    expect(src).toMatch(/<BusinessBranchesSection\b/);
+    expect(src).toMatch(/<BusinessBranchesPanel\b/);
     expect(src).toMatch(/<BusinessPublicVisibilityCard\b/);
   });
 

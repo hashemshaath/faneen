@@ -76,7 +76,7 @@ describe('AdminBusinesses Phase 5H filters + list state', () => {
     expect(src).toMatch(/<BusinessCreatePanel\b/);
     expect(src).toMatch(/<BusinessEditPanel\b/);
     expect(src).toMatch(/<BusinessPublicVisibilityCard\b/);
-    expect(src).toMatch(/<BusinessBranchesSection\b/);
+    expect(src).toMatch(/<BusinessBranchesPanel\b/);
   });
 
   it('search filter narrows the list', () => {
