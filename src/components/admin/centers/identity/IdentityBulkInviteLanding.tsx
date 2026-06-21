@@ -299,7 +299,7 @@ const IdentityBulkInviteLanding = () => {
                   return (
                     <TableRow
                       key={r.line}
-                      className={invalid ? 'bg-destructive/5 border-l-2 border-destructive' : ''}
+                      className={invalid ? 'bg-destructive/5 border-s-2 border-destructive' : ''}
                     >
                       <TableCell className="tech-content">{r.line}</TableCell>
                       <TableCell className={`tech-content ${cellClass(r, 'email')}`}>
