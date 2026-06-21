@@ -179,6 +179,11 @@ import {
 import { useBranchNameTranslator } from './businesses/useBranchNameTranslator';
 import { mapBranchRowToForm } from './businesses/mapBranchRowToForm';
 import { buildAdminCreateBusinessMutationOptions } from './businesses/adminCreateBusinessMutation';
+import {
+  useBusinessBranchFormState,
+  buildBranchPayload,
+  type AdminBranchFormState,
+} from './businesses/hooks/useBusinessBranchFormState';
 
 type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row']> & {
   id: string;
@@ -194,36 +199,6 @@ type AdminBusinessRow = Partial<Database['public']['Tables']['businesses']['Row'
   rating_avg: number | null;
   rating_count: number | null;
 } & AdminBusinessImageColumns;
-
-type AdminBranchFormState = {
-  name_ar: string;
-  name_en: string;
-  is_main: boolean;
-  is_active: boolean;
-  branch_type: AdminBusinessBranchType;
-  contact_person: string;
-  phone: string;
-  mobile: string;
-  unified_number: string;
-  customer_service_phone: string;
-  email: string;
-  website: string;
-  country_id: string;
-  city_id: string;
-  region: string;
-  district: string;
-  street_name: string;
-  building_number: string;
-  national_id: string;
-  additional_number: string;
-  address: string;
-  latitude: string | number;
-  longitude: string | number;
-  complex_name: string;
-  complex_name_en: string;
-  site_number: string;
-  working_hours?: unknown;
-};
 
 const AdminBusinesses = () => {
   useNoIndex();
