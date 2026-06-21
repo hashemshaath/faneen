@@ -19,7 +19,15 @@ import { ADMIN_NAV_GROUPS, findAdminNavItem } from '@/modules/admin-shell/naviga
 const root = resolve(__dirname, '..', '..');
 const read = (p: string) => readFileSync(resolve(root, p), 'utf8');
 
-const SIDEBAR = read('src/components/dashboard/DashboardSidebar.tsx');
+// SIDEBAR IA SNAPSHOT DRIFT CLOSEOUT (assertion outdated):
+// IA content (group descriptions, item badges) moved to
+// `dashboardNavigation.config.ts`. The shell file still hosts the
+// renderer, best-match resolver, badge/description type defs, and
+// focus/active visual styles. Concat both sources so source-text
+// assertions across the two layers continue to pass.
+const SIDEBAR_SHELL  = read('src/components/dashboard/DashboardSidebar.tsx');
+const SIDEBAR_CONFIG = read('src/modules/dashboard/navigation/dashboardNavigation.config.ts');
+const SIDEBAR = SIDEBAR_SHELL + '\n' + SIDEBAR_CONFIG;
 const LAYOUT = read('src/components/dashboard/DashboardLayout.tsx');
 const APP = read('src/App.tsx');
 const CONSOLE = read('src/pages/admin/AdminOperationsConsole.tsx');
