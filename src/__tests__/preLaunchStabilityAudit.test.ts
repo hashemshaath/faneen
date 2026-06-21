@@ -17,14 +17,20 @@ const exists = (p: string) => fs.existsSync(path.join(ROOT, p));
 
 const APP = read('src/App.tsx');
 
+const biToString = (l: unknown): string =>
+  typeof l === 'string'
+    ? l
+    : l && typeof l === 'object' && 'ar' in (l as Record<string, unknown>)
+      ? `${(l as { ar: string; en: string }).ar} ${(l as { ar: string; en: string }).en}`
+      : '';
+
 const labelsOf = (
   groups: ReturnType<typeof getVisibleDashboardNavGroups>,
 ): string[] =>
-  groups.flatMap((g) =>
-    g.items.map((i) =>
-      typeof i.label === 'string' ? i.label : `${i.label.ar} ${i.label.en}`,
-    ),
-  );
+  groups.flatMap((g) => [
+    biToString(g.groupLabel),
+    ...g.items.map((i) => biToString(i.label)),
+  ]);
 
 describe('PRE-LAUNCH STABILITY AUDIT', () => {
   it('core public routes remain registered', () => {
