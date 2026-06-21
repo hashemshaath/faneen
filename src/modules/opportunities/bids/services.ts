@@ -7,6 +7,7 @@
  * No mocks, no fake data, no `any`.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { createNotification } from '@/modules/notifications';
 import type {
   OpportunityBidRow,
   SubmitOpportunityBidInput,
@@ -91,7 +92,7 @@ export async function submitOpportunityBid(
       .eq('id', input.opportunityId)
       .maybeSingle();
     if (opp?.user_id) {
-      await supabase.from('notifications').insert({
+      await createNotification({
         user_id: opp.user_id,
         notification_type: 'opportunity_bid_submitted',
         title_ar: 'تم تقديم عرض جديد على فرصتك',
