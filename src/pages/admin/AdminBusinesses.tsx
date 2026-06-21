@@ -1084,9 +1084,7 @@ const AdminBusinesses = () => {
     });
   };
 
-  const filteredCities = editForm.country_id
-    ? cities.filter((c) => c.country_id === editForm.country_id)
-    : cities;
+  const filteredCities = editForm.country_id ? cities.filter((c) => c.country_id === editForm.country_id) : cities;
   const editCityName = cities.find((c) => c.id === editForm.city_id);
 
   /* ─── Saved Views (per-admin localStorage) ─── */
