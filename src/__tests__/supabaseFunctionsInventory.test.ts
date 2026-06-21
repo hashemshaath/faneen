@@ -69,6 +69,9 @@ const INVENTORY: Record<string, Classification> = {
   'match-quote-request': 'frontend',
   'notify-supplier-lead': 'notify',
   'notify-customer-lead-update': 'notify',
+  // Opportunities phase 16 — WhatsApp dispatcher invoked via the typed
+  // wrapper at src/modules/notifications/services/sendOpportunityWhatsapp.ts
+  'send-opportunity-whatsapp': 'notify',
   'get-revealed-contact': 'frontend',
   'admin-reveal-lead-contact': 'admin',
   'admin-create-business-with-owner': 'admin',
