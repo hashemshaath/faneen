@@ -70,7 +70,9 @@ describe('Final sweep — role-correct actions', () => {
     // <AdminSoftLaunchKpiStrip> into a unified grouped operations
     // inbox (urgent / approvals / communication). Assertions now
     // pin the current authoritative IA against the same intent.
-    expect(ADMIN_SRC).toMatch(/role="admin"/);
+    // Admin identity is asserted via role-guarded data (admin role counts)
+    // rather than a `role="admin"` literal that no longer exists post-refactor.
+    expect(ADMIN_SRC).toMatch(/roleCounts\?\.admin|super_admin/);
     expect(ADMIN_SRC).toMatch(/طلبات اليوم/);          // Today's leads KPI
     expect(ADMIN_SRC).toMatch(/مراجعة مزودين/);        // Provider review inbox item
     expect(ADMIN_SRC).toMatch(/InboxItem/);            // Operations inbox structure
