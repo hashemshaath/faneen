@@ -1107,17 +1107,12 @@ const AdminBusinesses = () => {
   if (!isAdmin) return null;
 
   const currentViewFilters: BizViewFilters = {
-    q: search,
-    status: filterStatus,
-    tier: filterTier,
-    translation: filterTranslation,
-    origin: filterOrigin,
-    sort: sortBy,
+    q: search, status: filterStatus, tier: filterTier,
+    translation: filterTranslation, origin: filterOrigin, sort: sortBy,
   };
   const applySavedView = (f: BizViewFilters) => {
-    const sp = toSavedViewParams(f);
     setSearchInput(f.q || '');
-    setSearchParams(sp, { replace: false });
+    setSearchParams(toSavedViewParams(f), { replace: false });
   };
 
   return (
