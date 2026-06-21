@@ -18,6 +18,7 @@ import {
   RENTAL_UNITS, ITEM_STATUS_LABELS,
 } from '@/modules/rentals';
 import type { RentalCategory, RentalItem, RentalOrder, RentalUnit } from '@/modules/rentals';
+import { useRentalListDerivations } from '@/hooks/useRentalListDerivations';
 import { RentalStatusBadge } from '@/modules/rentals/components/RentalStatusBadge';
 import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter';
 import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
