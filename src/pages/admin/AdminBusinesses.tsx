@@ -1073,7 +1073,6 @@ const AdminBusinesses = () => {
       page,
       pageSize: PAGE_SIZE,
     });
-  // Keep the keyboard-export ref pointed at the latest filtered list.
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
   const allPagedSelected = paged.length > 0 && paged.every(b => selected.has(b.id));
   const togglePageAll = () => {
