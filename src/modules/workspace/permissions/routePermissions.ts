@@ -64,13 +64,21 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   '/dashboard/business-edit':                { permissions: ['entity.manage'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'manage' },
   '/dashboard/services':                     { permissions: ['services.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/portfolio':                    { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
-  '/dashboard/projects':                     { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  // Personal-workspace model: projects are owned by either a business
+  // (`business_id`) OR an individual user (`owner_user_id`). The route
+  // must be visible to any authed user; per-row visibility is enforced
+  // by RLS on `projects`.
+  '/dashboard/projects':                     { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/promotions':                   { permissions: ['services.manage'],                        scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'manage' },
   '/dashboard/provider/service-areas':       { permissions: ['locations.view'],                         scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/private-sectors':              { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/reviews':                      { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/badge':                        { permissions: ['entity.manage'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'manage' },
-  '/dashboard/sites':                        { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  // Personal-workspace model: sites are owned by either a business
+  // (`business_id`) OR an individual user (`client_user_id`). The route
+  // must be visible to any authed user; per-row visibility is enforced
+  // by RLS on `client_sites`.
+  '/dashboard/sites':                        { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/brands':                       { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
   // Sales & requests
