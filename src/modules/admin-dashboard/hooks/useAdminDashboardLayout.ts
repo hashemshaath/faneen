@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity';
 import {
   ADMIN_DASHBOARD_DEFAULT_ORDER,
   ADMIN_DASHBOARD_WIDGETS,
@@ -130,7 +131,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getCurrentUser();
       const uid = auth.user?.id;
       if (!uid) return;
       const { data } = await supabase
@@ -157,7 +158,7 @@ export function useAdminDashboardLayout(): UseAdminDashboardLayoutResult {
     writeStored(next);
     void (async () => {
       try {
-        const { data: auth } = await supabase.auth.getUser();
+        const { data: auth } = await getCurrentUser();
         const uid = auth.user?.id;
         if (!uid) return;
         await supabase

@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser, logAdminActivity } from '@/modules/identity';
 import {
   parseBulkInviteCsv,
   summarizeParseResult,
@@ -89,12 +90,11 @@ const IdentityBulkInviteLanding = () => {
       }
       toast.success(ar ? `تم تحليل ${result.rows.length} صفًا` : `Parsed ${result.rows.length} rows`);
       // Record dry-run audit (non-blocking).
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getCurrentUser();
       if (user) {
-        await supabase.from('admin_activity_log').insert({
-          user_id: user.id,
+        await logAdminActivity({
           action: 'identity_bulk_invite_dry_run',
-          entity_type: 'bulk_invite',
+          entityType: 'bulk_invite',
           details: {
             file_name: file.name,
             total: result.rows.length,
@@ -111,12 +111,11 @@ const IdentityBulkInviteLanding = () => {
   };
 
   const recordSendAttempt = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getCurrentUser();
     if (!user) return;
-    await supabase.from('admin_activity_log').insert({
-      user_id: user.id,
+    await logAdminActivity({
       action: 'identity_bulk_invite_send',
-      entity_type: 'bulk_invite',
+      entityType: 'bulk_invite',
       details: {
         file_name: fileName,
         attempted: stats.valid,

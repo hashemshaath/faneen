@@ -4,7 +4,7 @@
  * See: docs/email-infrastructure-governance-phase-15f-full-email-regression.md
  */
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -13,8 +13,9 @@ const read = (p: string) => readFileSync(resolve(root, p), 'utf8');
 
 function grep(pattern: string, paths: string[]): string {
   try {
-    return execSync(
-      `grep -RIn --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git -E ${JSON.stringify(pattern)} ${paths.join(' ')} || true`,
+    return execFileSync(
+      'grep',
+      ['-RIn', '--exclude-dir=node_modules', '--exclude-dir=dist', '--exclude-dir=.git', '-E', pattern, ...paths],
       { encoding: 'utf8', cwd: root, maxBuffer: 16 * 1024 * 1024 },
     );
   } catch {
@@ -113,10 +114,7 @@ describe('Email Infrastructure Phase 15F — Full Email Regression', () => {
 
   it('10. no hardcoded Resend live keys anywhere in src/ or supabase/', () => {
     const literalKey = /re_[A-Za-z0-9]{12,}/;
-    const out = execSync(
-      `grep -RIn --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git -E ${JSON.stringify(literalKey.source)} src supabase || true`,
-      { encoding: 'utf8', cwd: root, maxBuffer: 16 * 1024 * 1024 },
-    );
+    const out = grep(literalKey.source, ['src', 'supabase']);
     const hits = out.split('\n').filter(Boolean).filter((l) => !/\.test\.ts:/.test(l));
     expect(hits, `unexpected re_ literal: ${hits.join('\n')}`).toEqual([]);
   });
