@@ -1,8 +1,8 @@
 # LIMITED PILOT RUNBOOK — First 5 Providers
 
 > **Launch class:** `Limited Pilot` (NOT a public launch).
-> Knowledge Assistant runs **internal_preview only**; public assistant is
-> disabled. RFQs are processed under **manual monitoring**.
+> Knowledge Assistant runs **internal_preview only**; public assistant is disabled.
+> RFQs are processed under **manual monitoring**.
 
 ## 1. هدف التجربة
 التحقق من جاهزية المسار الكامل (RFQ → مراجعة → توجيه → تواصل) مع
