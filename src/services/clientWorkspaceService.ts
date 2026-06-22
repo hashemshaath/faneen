@@ -14,6 +14,10 @@
  *    a future RPC approval (see Phase 4 plan).
  */
 import { supabase } from '@/integrations/supabase/client';
+import {
+  formatProjectTitle,
+  formatSiteTitle,
+} from '@/lib/workspace/displayNames';
 
 export type ClientWorkspaceKind = 'project' | 'site';
 
@@ -71,15 +75,15 @@ export interface ClientWorkspaceDetail {
   site: SiteRow | null;
 }
 
-/** Pick a non-empty title from project or site rows. */
+/**
+ * Pick a non-empty, human-friendly title from project or site rows.
+ * Never returns a raw UUID. Defaults to the Arabic surface form because
+ * the app is Arabic-first; UI pages may re-format with the current
+ * language via the helpers in `@/lib/workspace/displayNames`.
+ */
 function pickTitle(p: ProjectRow | null, s: SiteRow | null): string {
-  return (
-    p?.title_ar?.trim() ||
-    p?.title_en?.trim() ||
-    s?.site_name?.trim() ||
-    s?.label?.trim() ||
-    '—'
-  );
+  if (p) return formatProjectTitle(p, s, true);
+  return formatSiteTitle(s, true);
 }
 
 function buildAddress(s: SiteRow | null): string | null {
