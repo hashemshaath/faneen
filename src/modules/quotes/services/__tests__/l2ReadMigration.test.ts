@@ -16,9 +16,12 @@ describe('L-2 admin quote read callsite migration', () => {
     expect(src).not.toMatch(/from\(\s*['"]quote_request_events['"]\s*\)\s*\n?\s*\.select/);
     expect(src).not.toMatch(/from\(\s*['"]quote_request_lead_events['"]\s*\)/);
     expect(src).toContain('getAdminQuoteRequestById<AdminQuoteRow>(id!)');
-    expect(src).toContain('listAdminQuoteRequestFiles(id!)');
-    expect(src).toContain('listAdminQuoteRequestLeads<LeadSummaryRow>(id!)');
-    expect(src).toContain('listAdminQuoteRequestEvents(id!)');
+    // Downstream calls take the canonical UUID resolved from the fetched
+    // row (`quoteUuid`) because the URL `id` may be a REF (REQ-…). This is
+    // a legitimate refactor — service wrappers are still in use.
+    expect(src).toContain('listAdminQuoteRequestFiles(quoteUuid!)');
+    expect(src).toContain('listAdminQuoteRequestLeads<LeadSummaryRow>(quoteUuid!)');
+    expect(src).toContain('listAdminQuoteRequestEvents(quoteUuid!)');
     expect(src).toContain('listAdminQuoteRequestLeadEvents');
     // L-3: direct quote_request_events insert migrated to service.
     expect(src).not.toContain("supabase.from('quote_request_events').insert(");
@@ -27,9 +30,11 @@ describe('L-2 admin quote read callsite migration', () => {
     expect(src).not.toContain("supabase.functions.invoke('match-quote-request'");
     // Query keys preserved
     expect(src).toContain("queryKey: ['admin-quote-request', id]");
-    expect(src).toContain("queryKey: ['admin-quote-files', id]");
-    expect(src).toContain("queryKey: ['admin-quote-leads', id]");
-    expect(src).toContain("queryKey: ['admin-quote-events', id]");
+    // Files/leads/events keys are keyed by the resolved UUID for cache
+    // correctness when REF-based URLs resolve to the same row.
+    expect(src).toContain("queryKey: ['admin-quote-files', quoteUuid]");
+    expect(src).toContain("queryKey: ['admin-quote-leads', quoteUuid]");
+    expect(src).toContain("queryKey: ['admin-quote-events', quoteUuid]");
   });
 
   it('AdminQuoteOperations: no direct quote_request* reads, uses services', () => {
