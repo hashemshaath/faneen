@@ -20,7 +20,8 @@ describe('L-4: RPC + edge wrapper migration', () => {
     expect(ADMIN).toMatch(/adminRevealLeadContact/);
     expect(ADMIN).toMatch(/matchQuoteRequest\s*\(/);
     expect(ADMIN).toMatch(/adminRevealLeadContact\(\s*\{[\s\S]*?lead_id:\s*vars\.lead_id[\s\S]*?note:\s*vars\.note\s*\|\|\s*undefined[\s\S]*?override_credit_check:\s*vars\.override_credit_check\s*\|\|\s*undefined/);
-    expect(ADMIN).toMatch(/matchQuoteRequest\(\s*\{\s*quote_request_id:\s*id,\s*limit:\s*10\s*\}\s*\)/);
+    // Page resolves REF→UUID into `quoteUuid` before invoking the wrapper.
+    expect(ADMIN).toMatch(/matchQuoteRequest\(\s*\{\s*quote_request_id:\s*quoteUuid,\s*limit:\s*10\s*\}\s*\)/);
   });
 
   it('AdminQuoteRequestDetails: preserves { error } throw and toast handlers', () => {
