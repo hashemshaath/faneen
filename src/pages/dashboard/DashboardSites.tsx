@@ -810,9 +810,6 @@ export default function DashboardSites() {
           </div>
         )}
 
-        {!businessId && !isLoading && user && (
-          <PersonalModeBanner isRTL={isRTL} refId={profile?.ref_id ?? null} />
-        )}
 
         {/* Form (inline) */}
         {showForm && (

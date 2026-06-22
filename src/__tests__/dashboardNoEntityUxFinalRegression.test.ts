@@ -43,16 +43,10 @@ describe('Dashboard no-entity UX — final regression guards', () => {
     expect(projects).toMatch(/إنشاء منشأة \(اختياري\)|Create business \(optional\)/);
   });
 
-  /* 5. Sites: personal-mode warning shown when no business */
-  it('sites shows personal-mode warning when no business', () => {
-    expect(sites).toMatch(/!businessId && !isLoading && user/);
-    expect(sites).toMatch(/PersonalModeBanner/);
-    expect(sites).toMatch(/لا توجد منشأة مرتبطة بحسابك|No business linked to your account/);
-  });
-
-  /* 6. Sites: "Create business" link goes to /register-entity */
-  it('sites personal-mode banner links to /register-entity', () => {
-    expect(sites).toMatch(/href="\/register-entity"/);
+  /* 5. Sites: personal-mode banner removed — handled in sidebar globally */
+  it('sites no longer shows an inline personal-mode banner (deduplicated with sidebar)', () => {
+    expect(sites).not.toMatch(/PersonalModeBanner/);
+    expect(sites).not.toMatch(/لا توجد منشأة مرتبطة بحسابك|No business linked to your account/);
   });
 
   /* 7. Projects form exposes site_id selector when business exists */
