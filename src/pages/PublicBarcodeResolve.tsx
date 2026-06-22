@@ -222,6 +222,12 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
       }>;
       lead_counts?: { aluminum: number; blacksmith: number; kitchens: number; total: number };
     };
+    // Never render a company profile under `/q/` — redirect approved
+    // businesses to their canonical public profile path. Guarded by
+    // e2e test `provider-profile-taxonomy.spec.ts`.
+    if (biz.approved && biz.public_profile_path) {
+      return <Navigate to={biz.public_profile_path} replace />;
+    }
     const contracts = Array.isArray(biz.contracts) ? biz.contracts : [];
     const counts = biz.contracts_counts || { open: 0, closed: 0, total: contracts.length };
     const leadRequests = Array.isArray(biz.lead_requests) ? biz.lead_requests : [];
