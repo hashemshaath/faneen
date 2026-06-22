@@ -743,15 +743,42 @@ const InfoRow: React.FC<{
   );
 };
 
-const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; value: number; loading: boolean; tone?: 'destructive' }> = ({ icon: Icon, label, value, loading, tone }) => (
-  <Card className={`hover-lift ${tone === 'destructive' ? 'border-destructive/40 bg-destructive/5' : ''}`}><CardContent className="p-4">
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <Icon className={`h-4 w-4 ${tone === 'destructive' ? 'text-destructive' : 'text-primary'}`} />
-    </div>
-    <div className={`mt-2 text-2xl font-bold tech-content ${tone === 'destructive' && value > 0 ? 'text-destructive' : ''}`}>{loading ? '—' : value}</div>
-  </CardContent></Card>
-);
+type KpiAccent = 'primary' | 'blue' | 'emerald' | 'amber' | 'orange';
+const KPI_ACCENT_CLASSES: Record<KpiAccent, string> = {
+  primary: 'bg-primary/10 text-primary',
+  blue: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400',
+  emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+  amber: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
+  orange: 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400',
+};
+const KpiCard: React.FC<{
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  loading: boolean;
+  accent?: KpiAccent;
+  tone?: 'destructive';
+}> = ({ icon: Icon, label, value, loading, accent = 'primary', tone }) => {
+  const isDestructive = tone === 'destructive' && value > 0;
+  const iconClasses = isDestructive
+    ? 'bg-destructive/10 text-destructive'
+    : KPI_ACCENT_CLASSES[accent];
+  return (
+    <Card className={`hover-lift rounded-2xl ${isDestructive ? 'border-destructive/40 bg-destructive/[0.03]' : ''}`}>
+      <CardContent className="p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground mb-1 truncate">{label}</p>
+          <p className={`text-2xl font-bold tech-content leading-none ${isDestructive ? 'text-destructive' : ''}`}>
+            {loading ? '—' : value}
+          </p>
+        </div>
+        <span className={`shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-xl ${iconClasses}`}>
+          <Icon className="h-5 w-5" />
+        </span>
+      </CardContent>
+    </Card>
+  );
+};
 
 const QuickAction: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
   <button
