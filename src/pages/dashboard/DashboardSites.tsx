@@ -14,6 +14,7 @@ import { NationalAddressForm, type NationalAddressValue } from '@/modules/addres
 import { buildAddressLine } from '@/modules/addresses/helpers/buildAddressLine';
 import { LocationPicker } from '@/components/dashboard/business-edit/LocationPicker';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { formatSiteTitle, shortReferenceId } from '@/lib/workspace/displayNames';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
