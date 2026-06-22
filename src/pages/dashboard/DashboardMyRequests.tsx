@@ -542,6 +542,82 @@ const DashboardMyRequests: React.FC = () => {
           </div>
         </section>
 
+        {/* === Smart insights banner === */}
+        {(insights.quotedAwaiting.length > 0 || insights.needsInfo.length > 0) && (
+          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.08] via-emerald-500/[0.04] to-transparent p-4 sm:p-5 flex flex-wrap items-center gap-4">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <div className="font-semibold text-sm sm:text-base">
+                {isRTL ? 'يتطلب اهتمامك' : 'Needs your attention'}
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 flex flex-wrap gap-x-3 gap-y-1">
+                {insights.quotedAwaiting.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <ReceiptText className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    {isRTL
+                      ? `${insights.quotedAwaiting.length} عرض سعر بانتظار ردك`
+                      : `${insights.quotedAwaiting.length} quote${insights.quotedAwaiting.length > 1 ? 's' : ''} awaiting your reply`}
+                  </span>
+                )}
+                {insights.needsInfo.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    {isRTL
+                      ? `${insights.needsInfo.length} طلب يحتاج معلومات إضافية`
+                      : `${insights.needsInfo.length} request${insights.needsInfo.length > 1 ? 's' : ''} need more info`}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-h-[40px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+              onClick={() => { setTab('leads'); setStatusFilter(insights.quotedAwaiting.length > 0 ? 'quoted' : 'needs_info'); }}
+            >
+              <span>{isRTL ? 'مراجعة الآن' : 'Review now'}</span>
+              <ArrowRight className="rtl-flip" />
+            </Button>
+          </div>
+        )}
+
+        {/* === Status distribution mini-bar === */}
+        {distribution.total > 0 && (
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 space-y-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="font-medium">{isRTL ? 'توزيع الحالات' : 'Status distribution'}</span>
+              <span className="tech-content">{distribution.total}</span>
+            </div>
+            <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
+              {distribution.segments.map((s) => (
+                <Tooltip key={s.status}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`${s.color} transition-all hover:opacity-80`}
+                      style={{ width: `${s.pct}%` }}
+                      aria-label={`${s.status}: ${s.n}`}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span className="tech-content">{s.status} · {s.n} ({s.pct.toFixed(0)}%)</span>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              {distribution.segments.slice(0, 6).map((s) => (
+                <span key={s.status} className="inline-flex items-center gap-1.5">
+                  <span className={`h-2 w-2 rounded-full ${s.color}`} />
+                  <span>{s.status}</span>
+                  <span className="tech-content opacity-70">({s.n})</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
           {/* Sticky toolbar */}
           <div className="sticky top-0 z-20 -mx-2 px-2 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row sm:items-center gap-3">
