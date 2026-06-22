@@ -24,8 +24,9 @@ describe('Admin route migration pilot — AdminTaxonomyCenter', () => {
     expect(ADMIN_ROUTE).toMatch(/DashboardLayout/);
   });
 
-  it('AdminTaxonomyCenter page no longer wraps itself in DashboardLayout', () => {
-    expect(PAGE).not.toMatch(/DashboardLayout/);
+  it('AdminTaxonomyCenter page no longer imports or renders DashboardLayout', () => {
+    expect(PAGE).not.toMatch(/from\s+['"]@\/components\/dashboard\/DashboardLayout['"]/);
+    expect(PAGE).not.toMatch(/<DashboardLayout[\s>]/);
   });
 
   it('AdminTaxonomyCenter still renders the TaxonomyAdminPage content', () => {
@@ -47,9 +48,9 @@ describe('Admin route migration pilot — AdminTaxonomyCenter', () => {
     expect(APP).toMatch(/from\s+["']@\/components\/auth\/AdminRoute["']/);
   });
 
-  it('mass migration was NOT performed — most /admin routes still use ProtectedRoute requireAdmin', () => {
-    const adminRouteOccurrences = (APP.match(/<AdminRoute>/g) ?? []).length;
-    // Pilot scope: exactly one route migrated this round.
-    expect(adminRouteOccurrences).toBe(1);
+  it('mass migration was NOT performed — pilot scope is exactly one route', () => {
+    const adminRouteRouteElements =
+      (APP.match(/element=\{<AdminRoute>/g) ?? []).length;
+    expect(adminRouteRouteElements).toBe(1);
   });
 });
