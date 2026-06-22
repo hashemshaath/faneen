@@ -111,6 +111,8 @@ const BrandDetail = lazyRetry(() => import("./pages/BrandDetail"));
 const PrivateSectorsCatalog = lazyRetry(() => import("./pages/PrivateSectorsCatalog"));
 const PrivateSectorDetail = lazyRetry(() => import("./pages/PrivateSectorDetail"));
 const DashboardProjects = lazyRetry(() => import("./pages/dashboard/DashboardProjects"));
+const DashboardWorkspaces = lazyRetry(() => import("./pages/dashboard/DashboardWorkspaces"));
+const DashboardWorkspaceDetail = lazyRetry(() => import("./pages/dashboard/DashboardWorkspaceDetail"));
 const DashboardBlog = lazyRetry(() => import("./pages/dashboard/DashboardBlog"));
 const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/DashboardProfileSystems"));
 const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMessages"));
