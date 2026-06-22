@@ -288,6 +288,45 @@ const DashboardMyRequests: React.FC = () => {
     return { totalQ: q.length, totalL: l.length, activeQuote, activeLead, quoted };
   }, [quoteRequests, leads]);
 
+  // === Smart insights: leads that need the user's attention ===
+  const insights = useMemo(() => {
+    const l = leads ?? [];
+    const quotedAwaiting = l.filter((x) => x.status === 'quoted');
+    const needsInfo = l.filter((x) => x.status === 'needs_info');
+    return { quotedAwaiting, needsInfo };
+  }, [leads]);
+
+  // === Status distribution (for mini-bar) ===
+  const distribution = useMemo(() => {
+    const source = tab === 'quotes' ? (quoteRequests ?? []) : (leads ?? []);
+    const counts = new Map<string, number>();
+    source.forEach((r) => counts.set(r.status, (counts.get(r.status) ?? 0) + 1));
+    const total = source.length;
+    const palette: Record<string, string> = {
+      new: 'bg-blue-500',
+      viewed: 'bg-sky-500',
+      under_review: 'bg-amber-500',
+      needs_info: 'bg-amber-500',
+      matched: 'bg-indigo-500',
+      contacted: 'bg-violet-500',
+      accepted: 'bg-emerald-500',
+      quoted: 'bg-emerald-500',
+      completed: 'bg-emerald-600',
+      rejected: 'bg-rose-500',
+      cancelled: 'bg-slate-400',
+      closed: 'bg-slate-500',
+    };
+    const segments = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([status, n]) => ({
+        status,
+        n,
+        pct: total ? (n / total) * 100 : 0,
+        color: palette[status] ?? 'bg-muted-foreground/40',
+      }));
+    return { segments, total };
+  }, [tab, quoteRequests, leads]);
+
   // === Filters ===
   const quoteStatuses = useMemo(() => {
     const set = new Set<string>((quoteRequests ?? []).map((q) => q.status));
@@ -405,6 +444,21 @@ const DashboardMyRequests: React.FC = () => {
     refetchLeads();
     refetchQuotes();
   }, [refetchLeads, refetchQuotes]);
+
+  // === Keyboard shortcut: "/" focuses search ===
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      if (t?.isContentEditable) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <DashboardLayout>
