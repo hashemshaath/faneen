@@ -4,7 +4,7 @@
  * Read-only unified view of the client's `projects` + `client_sites`.
  * No DB / RPC / migration changes. No contract creation from here.
  */
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -30,6 +30,7 @@ const DashboardWorkspaces: React.FC = () => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
   const bi = useBi();
+  const [kindFilter, setKindFilter] = useState<'all' | 'project' | 'site'>('all');
 
   const { data, isLoading } = useQuery({
     queryKey: ['client-workspaces', user?.id ?? null],
@@ -38,6 +39,12 @@ const DashboardWorkspaces: React.FC = () => {
   });
 
   const workspaces: ClientWorkspace[] = data ?? [];
+  const projectCount = workspaces.filter((w) => w.kind === 'project').length;
+  const siteCount = workspaces.filter((w) => w.kind === 'site').length;
+  const visibleWorkspaces = useMemo(
+    () => (kindFilter === 'all' ? workspaces : workspaces.filter((w) => w.kind === kindFilter)),
+    [kindFilter, workspaces],
+  );
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
@@ -45,12 +52,41 @@ const DashboardWorkspaces: React.FC = () => {
       <div className="space-y-6">
         <PageHeader
           icon={Layers}
-          title={bi('مشاريعي ومواقعي', 'My Projects & Sites')}
+          title={bi('المشاريع والمواقع', 'Projects & Sites')}
           subtitle={bi(
             'إدارة مواقعك ومشاريعك وعقودك وملفاتك من مكان واحد',
             'Manage your sites, projects, contracts and files in one place',
           )}
         />
+
+        {!isLoading && workspaces.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={kindFilter === 'all' ? 'default' : 'outline'}
+              onClick={() => setKindFilter('all')}
+            >
+              <Bi ar={`الكل (${workspaces.length})`} en={`All (${workspaces.length})`} />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={kindFilter === 'project' ? 'default' : 'outline'}
+              onClick={() => setKindFilter('project')}
+            >
+              <Bi ar={`المشاريع (${projectCount})`} en={`Projects (${projectCount})`} />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={kindFilter === 'site' ? 'default' : 'outline'}
+              onClick={() => setKindFilter('site')}
+            >
+              <Bi ar={`المواقع (${siteCount})`} en={`Sites (${siteCount})`} />
+            </Button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -69,7 +105,7 @@ const DashboardWorkspaces: React.FC = () => {
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {workspaces.map((w) => {
+            {visibleWorkspaces.map((w) => {
               const Icon = w.kind === 'project' ? FolderOpen : MapPin;
               return (
                 <Card
@@ -87,8 +123,8 @@ const DashboardWorkspaces: React.FC = () => {
                         <div className="flex flex-wrap gap-1.5 mt-1">
                           <Badge variant="secondary" className="text-[10px]">
                             <Bi
-                              ar="مشروع"
-                              en="Project"
+                              ar={w.kind === 'project' ? 'مشروع' : 'موقع'}
+                              en={w.kind === 'project' ? 'Project' : 'Site'}
                             />
                           </Badge>
                           <Badge variant="outline" className="text-[10px]">
