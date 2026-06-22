@@ -24,7 +24,6 @@ import {
   listClientWorkspaces,
   type ClientWorkspace,
 } from '@/services/clientWorkspaceService';
-import { formatWorkspaceTitle } from '@/lib/workspace/displayNames';
 
 const DashboardWorkspaces: React.FC = () => {
   useNoIndex();
@@ -72,15 +71,6 @@ const DashboardWorkspaces: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {workspaces.map((w) => {
               const Icon = w.kind === 'project' ? FolderOpen : MapPin;
-              const displayTitle = formatWorkspaceTitle(
-                w.kind,
-                w.projectId ? { title_ar: w.title, title_en: w.title } : null,
-                { site_name: w.title, city_name: w.city, district: w.district },
-                isRTL,
-              );
-              // Prefer the service-provided title when it is already
-              // human-friendly (i.e. not a generic "Unnamed" placeholder).
-              const finalTitle = w.title && !/^[0-9a-f-]{20,}$/i.test(w.title) ? w.title : displayTitle;
               return (
                 <Card
                   key={`${w.kind}-${w.id}`}
@@ -93,7 +83,7 @@ const DashboardWorkspaces: React.FC = () => {
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-semibold truncate">{finalTitle}</h3>
+                        <h3 className="text-sm font-semibold truncate">{w.title}</h3>
                         <div className="flex flex-wrap gap-1.5 mt-1">
                           <Badge variant="secondary" className="text-[10px]">
                             <Bi
