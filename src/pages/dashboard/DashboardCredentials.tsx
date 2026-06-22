@@ -577,9 +577,9 @@ const DashboardCredentials: React.FC = () => {
               <ListSkeleton />
             ) : awards.length === 0 ? (
               <EmptyState
-                icon={Trophy}
+                icon={<Trophy className="h-10 w-10" />}
                 title={t(isRTL, 'لا توجد جوائز بعد', 'No awards yet')}
-                subtitle={t(isRTL, 'أضف الجوائز والتكريمات لتعزيز مكانة منشأتك.',
+                description={t(isRTL, 'أضف الجوائز والتكريمات لتعزيز مكانة منشأتك.',
                   'Add awards and recognitions to elevate your business standing.')}
               />
             ) : (
@@ -629,18 +629,6 @@ const ListSkeleton: React.FC = () => (
       <div key={i} className="h-24 rounded-xl bg-muted/40 animate-pulse" />
     ))}
   </div>
-);
-
-const EmptyState: React.FC<{ icon: React.ElementType; title: string; subtitle: string }> = ({
-  icon: Icon, title, subtitle,
-}) => (
-  <Card>
-    <CardContent className="py-12 text-center space-y-2">
-      <Icon className="h-10 w-10 mx-auto text-muted-foreground/40" />
-      <h3 className="font-bold text-foreground">{title}</h3>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
-    </CardContent>
-  </Card>
 );
 
 interface CertCardProps {
