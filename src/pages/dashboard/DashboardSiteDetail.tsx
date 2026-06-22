@@ -424,10 +424,10 @@ const DashboardSiteDetail: React.FC = () => {
           <TabsContent value="overview" className="mt-4">
             <div className="grid gap-4 md:grid-cols-2">
               {/* Activity summary spanning full width */}
-              <Card className="md:col-span-2 overflow-hidden">
+              <Card className="md:col-span-2 overflow-hidden rounded-2xl">
                 <CardContent className="p-5">
-                  <h3 className="font-semibold flex items-center gap-2 pb-3 mb-3 border-b border-border/40">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><TrendingUp className="h-4 w-4" /></span>
+                  <h3 className="font-bold text-base flex items-center gap-2.5 pb-3 mb-4 border-b border-border/40">
+                    <span className="w-1.5 h-5 rounded-full bg-emerald-500" />
                     {isRTL ? 'ملخص النشاط' : 'Activity summary'}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -460,10 +460,10 @@ const DashboardSiteDetail: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden rounded-2xl">
                 <CardContent className="p-5 space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2 pb-2 border-b border-border/40">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><User className="h-4 w-4" /></span>
+                  <h3 className="font-bold text-base flex items-center gap-2.5 pb-3 border-b border-border/40">
+                    <span className="w-1.5 h-5 rounded-full bg-blue-500" />
                     {isRTL ? 'جهة الاتصال' : 'Contact'}
                   </h3>
                   <SiteField label={isRTL ? 'الاسم' : 'Name'} value={site.contact_name} />
@@ -478,10 +478,10 @@ const DashboardSiteDetail: React.FC = () => {
                   )}
                 </CardContent>
               </Card>
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden rounded-2xl">
                 <CardContent className="p-5 space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2 pb-2 border-b border-border/40">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><MapPin className="h-4 w-4" /></span>
+                  <h3 className="font-bold text-base flex items-center gap-2.5 pb-3 border-b border-border/40">
+                    <span className="w-1.5 h-5 rounded-full bg-orange-500" />
                     {isRTL ? 'العنوان' : 'Address'}
                   </h3>
                   <SiteField label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
