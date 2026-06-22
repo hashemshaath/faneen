@@ -135,7 +135,10 @@ export const userNavGroups: DashboardNavGroup[] = [
       { label: UNIFIED_ITEM_LABELS.overview, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: UNIFIED_ITEM_LABELS.myRequests, url: '/dashboard/my-requests', icon: Inbox },
       { label: UNIFIED_ITEM_LABELS.messages, url: '/dashboard/messages', icon: MessageSquare },
-      { label: UNIFIED_ITEM_LABELS.membership, url: '/dashboard/membership', icon: Crown },
+      // MEMBERSHIP-CURRENT-SCOPE-FIX: membership is business-scoped today,
+      // so hide the link for users who don't own/manage a business entity.
+      // Drop this flag when individual membership plans launch.
+      { label: UNIFIED_ITEM_LABELS.membership, url: '/dashboard/membership', icon: Crown, requiresBusiness: true },
     ],
   },
   {
