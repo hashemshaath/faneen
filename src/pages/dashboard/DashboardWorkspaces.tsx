@@ -56,13 +56,7 @@ const DashboardWorkspaces: React.FC = () => {
           <Button asChild size="sm" variant="outline">
             <Link to="/dashboard/sites">
               <MapPin className="w-4 h-4 me-1.5" />
-              <Bi ar="إدارة المواقع والخريطة" en="Manage sites & map" />
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/dashboard/projects">
-              <FolderOpen className="w-4 h-4 me-1.5" />
-              <Bi ar="إدارة المشاريع" en="Manage projects" />
+              <Bi ar="إدارة المشاريع والخريطة" en="Manage projects & map" />
             </Link>
           </Button>
         </div>
@@ -102,8 +96,8 @@ const DashboardWorkspaces: React.FC = () => {
                         <div className="flex flex-wrap gap-1.5 mt-1">
                           <Badge variant="secondary" className="text-[10px]">
                             <Bi
-                              ar={w.kind === 'project' ? 'مشروع' : 'موقع'}
-                              en={w.kind === 'project' ? 'Project' : 'Site'}
+                              ar="مشروع"
+                              en="Project"
                             />
                           </Badge>
                           <Badge variant="outline" className="text-[10px]">
