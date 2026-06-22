@@ -335,6 +335,9 @@ export default function DashboardSites() {
   const [naf, setNaf] = useState<NationalAddressValue>(emptyNaf);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<SiteType | 'all'>('all');
+  const [cityFilter, setCityFilter] = useState<string>('all');
+  const [ownershipFilter, setOwnershipFilter] = useState<'all' | 'personal' | 'business'>('all');
+  const [completionFilter, setCompletionFilter] = useState<'all' | 'complete' | 'incomplete'>('all');
   const [showArchived, setShowArchived] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expandedBarcode, setExpandedBarcode] = useState<string | null>(null);
@@ -448,6 +451,26 @@ export default function DashboardSites() {
       const map: Record<string, number> = {};
       (data ?? []).forEach((r: { execution_site_id: string | null }) => {
         if (r.execution_site_id) map[r.execution_site_id] = (map[r.execution_site_id] ?? 0) + 1;
+      });
+      return map;
+    },
+    enabled: sites.length > 0,
+    staleTime: 60_000,
+  });
+
+  /* ─── Projects linked per site (lightweight count by site_id) ─── */
+  const { data: projectCounts = {} } = useQuery({
+    queryKey: ['site-project-counts', sites.map(s => s.id).join(',')],
+    queryFn: async () => {
+      if (!sites.length) return {} as Record<string, number>;
+      const ids = sites.map(s => s.id);
+      const { data } = await supabase
+        .from('projects')
+        .select('site_id')
+        .in('site_id', ids);
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((r: { site_id: string | null }) => {
+        if (r.site_id) map[r.site_id] = (map[r.site_id] ?? 0) + 1;
       });
       return map;
     },
@@ -624,9 +647,18 @@ export default function DashboardSites() {
   });
 
   /* ─── Derived ─── */
+  const isSiteComplete = useCallback((s: ClientSite): boolean => (
+    !!s.label && !!s.city_id && !!s.district && !!s.address_line1
+  ), []);
+
   const filtered = useMemo(() => {
     let r = sites;
     if (typeFilter !== 'all') r = r.filter(s => s.site_type === typeFilter);
+    if (cityFilter !== 'all') r = r.filter(s => (s.city_id ?? '') === cityFilter);
+    if (ownershipFilter === 'personal') r = r.filter(s => !s.business_id);
+    else if (ownershipFilter === 'business') r = r.filter(s => !!s.business_id);
+    if (completionFilter === 'complete')   r = r.filter(s => isSiteComplete(s));
+    else if (completionFilter === 'incomplete') r = r.filter(s => !isSiteComplete(s));
     if (search.trim()) {
       const q = search.toLowerCase();
       r = r.filter(s =>
@@ -639,6 +671,7 @@ export default function DashboardSites() {
         (s.municipal_license_no || '').toLowerCase().includes(q) ||
         (s.title_deed_no || '').toLowerCase().includes(q) ||
         (s.owner_name || '').toLowerCase().includes(q) ||
+        (s.district || '').toLowerCase().includes(q) ||
         (s.site_ref || '').toLowerCase().includes(q)
       );
     }
@@ -660,7 +693,7 @@ export default function DashboardSites() {
     if (advExpiryFrom) r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date >= advExpiryFrom);
     if (advExpiryTo)   r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date <= advExpiryTo);
     return r;
-  }, [sites, search, typeFilter, advLicenseNo, advDeedNo, advOwnerId, advIssueFrom, advIssueTo, advExpiryFrom, advExpiryTo]);
+  }, [sites, search, typeFilter, cityFilter, ownershipFilter, completionFilter, isSiteComplete, advLicenseNo, advDeedNo, advOwnerId, advIssueFrom, advIssueTo, advExpiryFrom, advExpiryTo]);
 
   const advancedActive = !!(advLicenseNo || advDeedNo || advOwnerId || advIssueFrom || advIssueTo || advExpiryFrom || advExpiryTo);
   const resetAdvanced = () => {
@@ -669,12 +702,24 @@ export default function DashboardSites() {
   };
 
   const stats = useMemo(() => {
-    const total = sites.filter(s => !s.archived_at).length;
+    const active = sites.filter(s => !s.archived_at);
+    const total = active.length;
+    const personal = active.filter(s => !s.business_id).length;
+    const business = active.filter(s => !!s.business_id).length;
+    const withProjects = active.filter(s => (projectCounts[s.id] ?? 0) > 0).length;
+    const withContracts = active.filter(s => (contractCounts[s.id] ?? 0) > 0).length;
+    const needsCompletion = active.filter(s => !isSiteComplete(s)).length;
     const linked = Object.values(contractCounts).reduce((a, b) => a + b, 0);
-    const types = new Set(sites.map(s => s.site_type)).size;
-    const archived = sites.filter(s => s.archived_at).length;
-    return { total, linked, types, archived };
-  }, [sites, contractCounts]);
+    return { total, personal, business, withProjects, withContracts, needsCompletion, linked };
+  }, [sites, contractCounts, projectCounts, isSiteComplete]);
+
+  const cityOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    sites.forEach(s => {
+      if (s.city_id && s.city_name && !map.has(s.city_id)) map.set(s.city_id, s.city_name);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [sites]);
 
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => {
@@ -750,8 +795,12 @@ export default function DashboardSites() {
           icon={MapPin}
           tone="primary"
           eyebrow={pickBi(isRTL, 'المواقع', 'Sites')}
-          title={pickBi(isRTL, 'عناوين المواقع', 'Site Addresses')}
-          subtitle={isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
+          title={pickBi(isRTL, 'مواقعي', 'My Sites')}
+          subtitle={pickBi(
+            isRTL,
+            'أدر مواقعك وعناوينك والمشاريع والعقود المرتبطة بها من مكان واحد',
+            'Manage your sites, addresses, and their linked projects and contracts from one place',
+          )}
           actions={user ? (
             <Button variant="hero" size="sm" className="h-8 text-xs" onClick={openCreate}>
               <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة موقع', 'Add Site')}
@@ -759,14 +808,19 @@ export default function DashboardSites() {
           ) : undefined}
         />
 
-        {/* Stats */}
+        {/* KPI strip — 6 metrics built from already-loaded data */}
         {sites.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <div
+            data-testid="sites-kpi-strip"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2"
+          >
             {[
-              { l: pickBi(isRTL, 'النشطة', 'Active'), v: stats.total, icon: MapPin, cls: 'text-primary bg-primary/10' },
-              { l: pickBi(isRTL, 'العقود المرتبطة', 'Linked Contracts'), v: stats.linked, icon: FileText, cls: 'text-accent bg-accent/10' },
-              { l: pickBi(isRTL, 'أنواع المواقع', 'Site Types'), v: stats.types, icon: Layers, cls: 'text-primary bg-primary/10' },
-              { l: pickBi(isRTL, 'المؤرشفة', 'Archived'), v: stats.archived, icon: AlertCircle, cls: 'text-muted-foreground bg-muted' },
+              { l: pickBi(isRTL, 'إجمالي المواقع', 'Total sites'),       v: stats.total,           icon: MapPin,      cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'مواقع شخصية', 'Personal sites'),       v: stats.personal,        icon: Home,        cls: 'text-info bg-info/10' },
+              { l: pickBi(isRTL, 'مرتبطة بمنشأة', 'Business-linked'),    v: stats.business,        icon: Building2,   cls: 'text-accent bg-accent/10' },
+              { l: pickBi(isRTL, 'لها مشاريع', 'With projects'),         v: stats.withProjects,    icon: Layers,      cls: 'text-success bg-success/10' },
+              { l: pickBi(isRTL, 'لها عقود', 'With contracts'),          v: stats.withContracts,   icon: FileText,    cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'تحتاج استكمال', 'Needs completion'),   v: stats.needsCompletion, icon: AlertCircle, cls: 'text-warning bg-warning/10' },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border/40 bg-card/50">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.cls}`}>
@@ -1121,6 +1175,35 @@ export default function DashboardSites() {
                 {SITE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{isRTL ? t.ar : t.en}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40" aria-label={pickBi(isRTL, 'المدينة', 'City')}>
+                <MapPin className="w-3 h-3" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{pickBi(isRTL, 'كل المدن', 'All cities')}</SelectItem>
+                {cityOptions.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={ownershipFilter} onValueChange={(v) => setOwnershipFilter(v as 'all' | 'personal' | 'business')}>
+              <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40" aria-label={pickBi(isRTL, 'الملكية', 'Ownership')}>
+                <User className="w-3 h-3" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{pickBi(isRTL, 'كل الملكية', 'All ownership')}</SelectItem>
+                <SelectItem value="personal">{pickBi(isRTL, 'شخصي', 'Personal')}</SelectItem>
+                <SelectItem value="business">{pickBi(isRTL, 'تابع لمنشأة', 'Business')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={completionFilter} onValueChange={(v) => setCompletionFilter(v as 'all' | 'complete' | 'incomplete')}>
+              <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40" aria-label={pickBi(isRTL, 'حالة الاكتمال', 'Completion')}>
+                <CheckCircle2 className="w-3 h-3" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{pickBi(isRTL, 'كل الحالات', 'All statuses')}</SelectItem>
+                <SelectItem value="complete">{pickBi(isRTL, 'مكتمل', 'Complete')}</SelectItem>
+                <SelectItem value="incomplete">{pickBi(isRTL, 'يحتاج استكمال', 'Needs completion')}</SelectItem>
+              </SelectContent>
+            </Select>
             <button onClick={() => setShowArchived(v => !v)}
               className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors ${showArchived ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
               {pickBi(isRTL, 'إظهار المؤرشفة', 'Show archived')}
@@ -1203,7 +1286,7 @@ export default function DashboardSites() {
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <Search className="w-7 h-7 mb-2" />
             <p className="text-sm font-medium">{pickBi(isRTL, 'لا توجد نتائج', 'No results')}</p>
-            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearch(''); setTypeFilter('all'); }}>{pickBi(isRTL, 'إعادة تعيين', 'Reset filters')}</button>
+            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearch(''); setTypeFilter('all'); setCityFilter('all'); setOwnershipFilter('all'); setCompletionFilter('all'); }}>{pickBi(isRTL, 'إعادة تعيين', 'Reset filters')}</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1295,14 +1378,29 @@ export default function DashboardSites() {
                     </div>
 
                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
-                      <button onClick={() => goToContracts(s.id)}
-                        className={`text-[10px] flex items-center gap-1 ${linkedCount > 0 ? 'text-primary hover:underline' : 'text-muted-foreground'}`}>
-                        <FileText className="w-3 h-3" />
-                        <span className="tech-content">{linkedCount}</span>
-                        <span>{pickBi(isRTL, 'عقد', 'contracts')}</span>
-                        {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
-                      </button>
+                      <div className="flex items-center gap-2 text-[10px]">
+                        <button onClick={() => goToContracts(s.id)}
+                          className={`flex items-center gap-1 ${linkedCount > 0 ? 'text-primary hover:underline' : 'text-muted-foreground'}`}>
+                          <FileText className="w-3 h-3" />
+                          <span className="tech-content">{linkedCount}</span>
+                          <span>{pickBi(isRTL, 'عقد', 'contracts')}</span>
+                          {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
+                        </button>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Layers className="w-3 h-3" />
+                          <span className="tech-content">{projectCounts[s.id] ?? 0}</span>
+                          <span>{pickBi(isRTL, 'مشروع', 'projects')}</span>
+                        </span>
+                      </div>
                       <div className="flex items-center gap-0.5">
+                          <Button variant="outline" size="sm" className="h-7 text-[11px] px-2"
+                            onClick={() => navigate(`/dashboard/sites/${s.id}`)}
+                            title={pickBi(isRTL, 'إدارة الموقع', 'Manage site')}
+                            aria-label={pickBi(isRTL, 'إدارة الموقع', 'Manage site')}
+                          >
+                            {pickBi(isRTL, 'إدارة الموقع', 'Manage site')}
+                          </Button>
                           <Button variant="ghost" size="icon"
                             className={`h-7 w-7 ${expandedBarcode === s.id ? 'text-primary bg-primary/10' : ''}`}
                             onClick={() => setExpandedBarcode(v => v === s.id ? null : s.id)}
