@@ -109,12 +109,16 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       )
       .eq('owner_user_id', userId)
       .order('updated_at', { ascending: false }),
+    // RLS already restricts client_sites to rows the current user can
+    // see (own sites, business-owned sites where they're owner/staff,
+    // admin). Adding an extra .or() filter on owner_user_id /
+    // client_user_id would hide business-owned sites where neither
+    // column matches the user — exactly the bug reported in P1B.
     supabase
       .from('client_sites')
       .select(
         'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
       )
-      .or(`owner_user_id.eq.${userId},client_user_id.eq.${userId}`)
       .is('archived_at', null)
       .order('updated_at', { ascending: false }),
   ]);
