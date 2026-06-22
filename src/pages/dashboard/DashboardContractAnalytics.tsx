@@ -201,6 +201,8 @@ const DashboardContractAnalytics: React.FC = () => {
 
   const errMessage =
     error instanceof Error ? error.message : '';
+  // eslint-disable-next-line no-console
+  console.log('[Analytics Error Debug]', { isError, error, errMessage, name: (error as Error)?.name, code: (error as { code?: string })?.code });
   const isForbidden = errMessage.includes('FORBIDDEN');
 
   return (
