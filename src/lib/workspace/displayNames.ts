@@ -36,6 +36,19 @@ export interface SiteNameInput {
   address_line1?: string | null;
 }
 
+export interface ContractNameInput {
+  title?: string | null;
+  contract_number?: string | null;
+  reference_number?: string | null;
+}
+
+export interface RequestNameInput {
+  title?: string | null;
+  reference_number?: string | null;
+  service_name?: string | null;
+  category_name?: string | null;
+}
+
 export function formatSiteTitle(
   site: SiteNameInput | null | undefined,
   isRTL: boolean,
@@ -91,4 +104,108 @@ export function shortReferenceId(id: string | null | undefined): string {
 
 export function isUuidLike(value: string | null | undefined): boolean {
   return typeof value === 'string' && UUID_RE.test(value.trim());
+}
+
+/**
+ * Sub-line under a site title: "{city} — {district}", or address, or a
+ * localized generic "execution site". Never echoes the site id.
+ */
+export function formatSiteSubtitle(
+  site: SiteNameInput | null | undefined,
+  isRTL: boolean,
+): string {
+  if (!site) return isRTL ? 'موقع تنفيذ' : 'Execution site';
+  const city = clean(site.city_name);
+  const district = clean(site.district);
+  if (city && district) return isRTL ? `${city} — ${district}` : `${city} — ${district}`;
+  if (city) return city;
+  if (district) return district;
+  const addr = clean(site.address_line1);
+  if (addr) return addr;
+  return isRTL ? 'موقع تنفيذ' : 'Execution site';
+}
+
+/**
+ * Sub-line under a project title: linked site name, then city, then a
+ * localized generic "project" label.
+ */
+export function formatProjectSubtitle(
+  project: ProjectNameInput | null | undefined,
+  site: SiteNameInput | null | undefined,
+  isRTL: boolean,
+): string {
+  const siteNamed = clean(site?.site_name) ?? clean(site?.label);
+  if (siteNamed) return siteNamed;
+  const place = clean(site?.city_name) ?? clean(site?.district);
+  if (place) return place;
+  return isRTL ? 'مشروع' : 'Project';
+}
+
+export interface ContractContext {
+  projectTitle?: string | null;
+  siteTitle?: string | null;
+}
+
+export function formatContractTitle(
+  contract: ContractNameInput | null | undefined,
+  context: ContractContext | null | undefined,
+  isRTL: boolean,
+): string {
+  if (!contract) return isRTL ? 'عقد غير مسمى' : 'Untitled contract';
+  const named =
+    clean(contract.title) ??
+    clean(contract.contract_number) ??
+    clean(contract.reference_number);
+  if (named) return named;
+  const proj = clean(context?.projectTitle);
+  if (proj) return isRTL ? `عقد ${proj}` : `Contract — ${proj}`;
+  const siteT = clean(context?.siteTitle);
+  if (siteT) return isRTL ? `عقد مرتبط بـ ${siteT}` : `Contract linked to ${siteT}`;
+  return isRTL ? 'عقد غير مسمى' : 'Untitled contract';
+}
+
+export function formatContractSubtitle(
+  contract: ContractNameInput | null | undefined,
+  context: ContractContext | null | undefined,
+  isRTL: boolean,
+): string {
+  const siteT = clean(context?.siteTitle);
+  if (siteT) return siteT;
+  const proj = clean(context?.projectTitle);
+  if (proj) return proj;
+  const ref = clean(contract?.reference_number);
+  if (ref) return ref;
+  return isRTL ? 'عقد' : 'Contract';
+}
+
+export interface RequestContext {
+  siteTitle?: string | null;
+}
+
+export function formatRequestTitle(
+  request: RequestNameInput | null | undefined,
+  context: RequestContext | null | undefined,
+  isRTL: boolean,
+): string {
+  if (!request) return isRTL ? 'طلب غير مسمى' : 'Untitled request';
+  const named = clean(request.title) ?? clean(request.reference_number);
+  if (named) return named;
+  const svc = clean(request.service_name) ?? clean(request.category_name);
+  if (svc) return isRTL ? `طلب ${svc}` : `Request — ${svc}`;
+  const siteT = clean(context?.siteTitle);
+  if (siteT) return isRTL ? `طلب مرتبط بـ ${siteT}` : `Request linked to ${siteT}`;
+  return isRTL ? 'طلب غير مسمى' : 'Untitled request';
+}
+
+/**
+ * Render a UUID as a small "ref: xxxxxxxx" chip — never as a primary
+ * heading. Returns empty string for invalid input.
+ */
+export function formatEntityReference(
+  id: string | null | undefined,
+  isRTL = true,
+): string {
+  const short = shortReferenceId(id);
+  if (!short) return '';
+  return isRTL ? `مرجع: ${short}` : `Ref: ${short}`;
 }
