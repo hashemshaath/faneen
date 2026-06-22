@@ -32,7 +32,12 @@ export const UNIFIED_ITEM_LABELS: Record<string, Bi> = {
   sites:        { ar: 'المواقع',           en: 'Sites' },
   branches:     { ar: 'الفروع',           en: 'Branches' },
   messages:     { ar: 'الرسائل',          en: 'Messages' },
-  membership:   { ar: 'العضوية',          en: 'Membership' },
+  // MEMBERSHIP-CURRENT-SCOPE-FIX:
+  // Current dashboard membership scope is business/entity membership.
+  // Individual membership plans may be introduced later as a separate
+  // scope. The label must reflect today's reality without closing the
+  // door on individual plans in the future.
+  membership:   { ar: 'عضوية الجهة',       en: 'Business Membership' },
 
   // Business
   businessProfile:  { ar: 'بيانات المنشأة',       en: 'Business Profile' },
