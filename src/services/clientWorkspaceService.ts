@@ -30,9 +30,6 @@ export interface ClientWorkspace {
   district: string | null;
   address: string | null;
   filesCount: number;
-  latitude: number | null;
-  longitude: number | null;
-  mapUrl: string | null;
   contractsCount: number;
   reportsCount: number;
   violationsCount: number;
@@ -64,9 +61,6 @@ interface SiteRow {
   district: string | null;
   address_line1: string | null;
   address_line2: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  map_url: string | null;
   updated_at: string | null;
   created_at: string | null;
 }
@@ -115,16 +109,12 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       )
       .eq('owner_user_id', userId)
       .order('updated_at', { ascending: false }),
-    // RLS already restricts client_sites to rows the current user can
-    // see (own sites, business-owned sites where they're owner/staff,
-    // admin). Adding an extra .or() filter on owner_user_id /
-    // client_user_id would hide business-owned sites where neither
-    // column matches the user — exactly the bug reported in P1B.
     supabase
       .from('client_sites')
       .select(
-        'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, latitude, longitude, map_url, updated_at, created_at',
+        'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
       )
+      .or(`owner_user_id.eq.${userId},client_user_id.eq.${userId}`)
       .is('archived_at', null)
       .order('updated_at', { ascending: false }),
   ]);
@@ -149,9 +139,6 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       district: site?.district ?? null,
       address: buildAddress(site),
       filesCount: 0,
-      latitude: site?.latitude ?? null,
-      longitude: site?.longitude ?? null,
-      mapUrl: site?.map_url ?? null,
       contractsCount: 0,
       reportsCount: 0,
       violationsCount: 0,
@@ -179,9 +166,6 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       district: s.district,
       address: buildAddress(s),
       filesCount: 0,
-      latitude: s.latitude,
-      longitude: s.longitude,
-      mapUrl: s.map_url,
       contractsCount: 0,
       reportsCount: 0,
       violationsCount: 0,
@@ -215,7 +199,7 @@ export async function getClientWorkspace(
       const { data: site } = await supabase
         .from('client_sites')
         .select(
-          'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, latitude, longitude, map_url, updated_at, created_at',
+          'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
         )
         .eq('id', projectRow.site_id)
         .maybeSingle();
@@ -234,9 +218,6 @@ export async function getClientWorkspace(
         district: siteRow?.district ?? null,
         address: buildAddress(siteRow),
         filesCount: 0,
-        latitude: siteRow?.latitude ?? null,
-        longitude: siteRow?.longitude ?? null,
-        mapUrl: siteRow?.map_url ?? null,
         contractsCount: 0,
         reportsCount: 0,
         violationsCount: 0,
@@ -250,7 +231,7 @@ export async function getClientWorkspace(
   const { data: site } = await supabase
     .from('client_sites')
     .select(
-      'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, latitude, longitude, map_url, updated_at, created_at',
+      'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
     )
     .eq('id', id)
     .maybeSingle();
@@ -269,9 +250,6 @@ export async function getClientWorkspace(
       district: siteRow.district,
       address: buildAddress(siteRow),
       filesCount: 0,
-      latitude: siteRow.latitude,
-      longitude: siteRow.longitude,
-      mapUrl: siteRow.map_url,
       contractsCount: 0,
       reportsCount: 0,
       violationsCount: 0,
