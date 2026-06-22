@@ -14,6 +14,7 @@ import { NationalAddressForm, type NationalAddressValue } from '@/modules/addres
 import { buildAddressLine } from '@/modules/addresses/helpers/buildAddressLine';
 import { LocationPicker } from '@/components/dashboard/business-edit/LocationPicker';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { formatSiteTitle, shortReferenceId } from '@/lib/workspace/displayNames';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1296,6 +1297,9 @@ export default function DashboardSites() {
               const linkedCount = contractCounts[s.id] ?? 0;
               const isArchived = !!s.archived_at;
               const isFocused = !!search && (s.site_ref === search.trim() || s.id === search.trim());
+              const siteTitle = formatSiteTitle(s, isRTL);
+              const complete = isSiteComplete(s);
+              const isBusiness = !!s.business_id;
               return (
                 <Card
                   key={s.id}
@@ -1310,8 +1314,8 @@ export default function DashboardSites() {
                       className="group relative block w-full aspect-[16/6] sm:aspect-[16/5.5] overflow-hidden bg-gradient-to-br from-muted to-muted/50"
                       title={pickBi(isRTL, 'فتح صفحة الموقع', 'Open site page')}
                     >
-                      {s.cover_image_url ? (
-                        <img src={s.cover_image_url} alt={s.label} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
+                       {s.cover_image_url ? (
+                        <img src={s.cover_image_url} alt={siteTitle} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
                           <Icon className="w-8 h-8" />
@@ -1324,7 +1328,7 @@ export default function DashboardSites() {
                         <div className="flex items-end justify-between gap-2">
                           <div className="min-w-0">
                             <p className="text-xs font-semibold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]" dir="auto">
-                              {s.label}
+                              {siteTitle}
                             </p>
                             {(s.city_name || s.district) && (
                               <p className="text-[10px] opacity-90 truncate mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
@@ -1347,8 +1351,14 @@ export default function DashboardSites() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <button onClick={() => navigate(`/dashboard/sites/${s.id}`)} className="font-semibold text-sm truncate text-start hover:text-primary hover:underline">
-                              {s.label}
+                              {siteTitle}
                             </button>
+                            <Badge variant="outline" className="h-4 text-[9px] px-1">
+                              {isBusiness ? pickBi(isRTL, 'منشأة', 'Business') : pickBi(isRTL, 'شخصي', 'Personal')}
+                            </Badge>
+                            <Badge variant={complete ? 'secondary' : 'outline'} className={`h-4 text-[9px] px-1 ${complete ? '' : 'text-amber-700 border-amber-400/60'}`}>
+                              {complete ? pickBi(isRTL, 'مكتمل', 'Complete') : pickBi(isRTL, 'يحتاج إكمال', 'Needs info')}
+                            </Badge>
                             {s.is_default && (
                               <Badge variant="outline" className="h-4 text-[9px] px-1 border-accent text-accent gap-0.5">
                                 <Star className="w-2.5 h-2.5 fill-current" />{pickBi(isRTL, 'افتراضي', 'Default')}
@@ -1356,7 +1366,9 @@ export default function DashboardSites() {
                             )}
                             {isArchived && <Badge variant="outline" className="h-4 text-[9px] px-1">{pickBi(isRTL, 'مؤرشف', 'Archived')}</Badge>}
                           </div>
-                          {s.site_ref && <p className="text-[10px] text-muted-foreground tech-content mt-0.5">{s.site_ref}</p>}
+                          <p className="text-[10px] text-muted-foreground tech-content mt-0.5">
+                            {s.site_ref ?? `#${shortReferenceId(s.id)}`}
+                          </p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="text-[9px] shrink-0">{isRTL ? meta.ar : meta.en}</Badge>
