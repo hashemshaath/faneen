@@ -558,8 +558,14 @@ const AppRoutes = () => (
           <Route path="/admin/contact-notification-log" element={<Navigate to="/admin/contact-messages?tab=notifications" replace />} />
           <Route path="/admin/lead-requests" element={<ProtectedRoute requireAdmin><AdminLeadRequests /></ProtectedRoute>} />
           <Route path="/admin/provider-leads" element={<ProtectedRoute requireAdmin><AdminProviderLeads /></ProtectedRoute>} />
-          <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
-          <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
+          {/* LEGACY CLEANUP L08 — `/admin/quote-requests*` redirects to
+              the canonical `/admin/opportunities/*` surface. Routes stay
+              registered (no deletion) so deep-links, email links, and
+              sidebar bookmarks continue to resolve. Components
+              `AdminQuoteRequests` / `AdminQuoteRequestDetails` remain
+              mounted on the canonical paths below. */}
+          <Route path="/admin/quote-requests" element={<Navigate to="/admin/opportunities/list" replace />} />
+          <Route path="/admin/quote-requests/:id" element={<LegacyAdminQuoteRequestDetailRedirect />} />
           {/* OPPORTUNITIES PHASE 2 — admin alias. */}
           {/* OPPORTUNITIES PHASE 8 — operations center (KPIs / funnel / table). */}
           <Route path="/admin/opportunities" element={<ProtectedRoute requireAdmin><AdminOpportunitiesOperations /></ProtectedRoute>} />
