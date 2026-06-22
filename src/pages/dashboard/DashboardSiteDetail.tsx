@@ -540,6 +540,9 @@ const DashboardSiteDetail: React.FC = () => {
           <TabsContent value="files" className="mt-4" data-testid="site-files-tab">
             <SiteFilesTab
               isRTL={isRTL}
+              siteId={site.id}
+              canManage={canManage}
+              businessId={site.business_id}
               contractIds={contracts.map((c) => c.id)}
               projectIds={projects.map((p) => p.id)}
             />
