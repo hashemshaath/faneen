@@ -24,7 +24,10 @@ describe('DashboardSiteDetail — read-only pass', () => {
   });
 
   it('renders site identity fields (label, city, address, type)', () => {
-    expect(DETAIL).toContain('site.label');
+    // Display title is now built via the shared `formatSiteTitle` helper
+    // (which internally reads site.site_name → site.label → city). The
+    // raw `label` column is still queried and used elsewhere.
+    expect(DETAIL).toMatch(/formatSiteTitle\(\s*site\s*,\s*isRTL\s*\)/);
     expect(DETAIL).toContain('site.city_name');
     expect(DETAIL).toContain('site.address_line1');
     expect(DETAIL).toContain('site.site_type');
