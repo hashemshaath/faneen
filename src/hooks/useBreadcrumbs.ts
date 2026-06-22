@@ -33,6 +33,10 @@ const LABELS: Record<string, { ar: string; en: string }> = {
   services:         { ar: 'الخدمات',     en: 'Services' },
   portfolio:        { ar: 'معرض الأعمال', en: 'Portfolio' },
   projects:         { ar: 'المشاريع',    en: 'Projects' },
+  sites:            { ar: 'المواقع',     en: 'Sites' },
+  workspaces:       { ar: 'مشاريعي ومواقعي', en: 'My Projects & Sites' },
+  project:          { ar: 'مشروع',       en: 'Project' },
+  site:             { ar: 'موقع',         en: 'Site' },
   reviews:          { ar: 'التقييمات',   en: 'Reviews' },
   warranties:       { ar: 'الضمانات',    en: 'Warranties' },
   installments:     { ar: 'الأقساط',     en: 'Installments' },
@@ -85,7 +89,17 @@ export function useBreadcrumbs(): BreadcrumbEntry[] {
       acc += `/${seg}`;
       if (SEGMENT_TO_MODULE[seg]) currentModule = SEGMENT_TO_MODULE[seg];
       // Skip dynamic ID-looking segments (UUIDs / refs) to keep crumbs clean.
-      if (/^[0-9a-f-]{20,}$/i.test(seg) || /^[A-Z]{2,8}-[0-9A-Z]{3,16}$/i.test(seg)) {
+      if (/^[0-9a-f-]{20,}$/i.test(seg)) {
+        // Never show a raw UUID in the breadcrumb — show a short masked
+        // reference instead (first 8 chars). Routing still uses the full id.
+        crumbs.push({
+          label: `#${seg.slice(0, 8)}`,
+          path: acc,
+          module: currentModule,
+        });
+        continue;
+      }
+      if (/^[A-Z]{2,8}-[0-9A-Z]{3,16}$/i.test(seg)) {
         crumbs.push({ label: seg, path: acc, module: currentModule });
         continue;
       }
