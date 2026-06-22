@@ -7,7 +7,7 @@
  *   - project_images       (per project id in `site_id = site`)
  *
  * Hard rules — enforced here AND in `dashboardSiteFilesReadOnly.test.ts`:
- *   - No file input, no useMutation, no storage write call.
+ *   - No file input, no write mutations, no storage write call.
  *   - No "Coming Soon" stub when real data exists — show it.
  *   - Empty state explicitly notes that upload is not enabled yet.
  */
