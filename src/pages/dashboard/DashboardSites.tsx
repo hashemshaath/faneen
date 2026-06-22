@@ -1378,14 +1378,29 @@ export default function DashboardSites() {
                     </div>
 
                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
-                      <button onClick={() => goToContracts(s.id)}
-                        className={`text-[10px] flex items-center gap-1 ${linkedCount > 0 ? 'text-primary hover:underline' : 'text-muted-foreground'}`}>
-                        <FileText className="w-3 h-3" />
-                        <span className="tech-content">{linkedCount}</span>
-                        <span>{pickBi(isRTL, 'عقد', 'contracts')}</span>
-                        {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
-                      </button>
+                      <div className="flex items-center gap-2 text-[10px]">
+                        <button onClick={() => goToContracts(s.id)}
+                          className={`flex items-center gap-1 ${linkedCount > 0 ? 'text-primary hover:underline' : 'text-muted-foreground'}`}>
+                          <FileText className="w-3 h-3" />
+                          <span className="tech-content">{linkedCount}</span>
+                          <span>{pickBi(isRTL, 'عقد', 'contracts')}</span>
+                          {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
+                        </button>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Layers className="w-3 h-3" />
+                          <span className="tech-content">{projectCounts[s.id] ?? 0}</span>
+                          <span>{pickBi(isRTL, 'مشروع', 'projects')}</span>
+                        </span>
+                      </div>
                       <div className="flex items-center gap-0.5">
+                          <Button variant="outline" size="sm" className="h-7 text-[11px] px-2"
+                            onClick={() => navigate(`/dashboard/sites/${s.id}`)}
+                            title={pickBi(isRTL, 'إدارة الموقع', 'Manage site')}
+                            aria-label={pickBi(isRTL, 'إدارة الموقع', 'Manage site')}
+                          >
+                            {pickBi(isRTL, 'إدارة الموقع', 'Manage site')}
+                          </Button>
                           <Button variant="ghost" size="icon"
                             className={`h-7 w-7 ${expandedBarcode === s.id ? 'text-primary bg-primary/10' : ''}`}
                             onClick={() => setExpandedBarcode(v => v === s.id ? null : s.id)}
