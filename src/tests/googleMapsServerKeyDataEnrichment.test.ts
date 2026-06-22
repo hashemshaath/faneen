@@ -38,8 +38,14 @@ describe("GOOGLE MAPS SERVER KEY — Data Enrichment", () => {
   });
 
   it("AdminDataEnrichment surfaces a non-breaking fallback when the key is missing", () => {
-    const src = read("src/pages/admin/AdminDataEnrichment.tsx");
-    // Page must render and handle a deferred Google state without throwing.
+    // Source bundle: the page is now a thin shell that mounts
+    // <LegacySingleRowEnrichment/> (manual single-row tools, where the
+    // deferred/manual-input fallback lives) and <IntakeBatchStepper/>.
+    // Scan the whole surface so the assertion tracks the real implementation.
+    const src = [
+      "src/pages/admin/AdminDataEnrichment.tsx",
+      "src/components/admin/data-enrichment/LegacySingleRowEnrichment.tsx",
+    ].map(read).join("\n");
     expect(src).toMatch(/deferred|غير\s*مفعّ?ل|إدخال\s*يدوي/);
   });
 
