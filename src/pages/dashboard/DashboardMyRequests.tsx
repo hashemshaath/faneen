@@ -199,12 +199,32 @@ const DashboardMyRequests: React.FC = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [urlParams, setUrlParams] = useSearchParams();
   const [openId, setOpenId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [tab, setTab] = useState<'quotes' | 'leads'>('quotes');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
+  const [tab, setTab] = useState<'quotes' | 'leads'>(() => (urlParams.get('tab') === 'leads' ? 'leads' : 'quotes'));
+  const [statusFilter, setStatusFilter] = useState<string>(() => urlParams.get('status') ?? 'all');
+  const [search, setSearch] = useState<string>(() => urlParams.get('q') ?? '');
   const deferredSearch = useDeferredValue(search);
+  const [pins, setPins] = useState<Set<string>>(() => loadPins());
+  const togglePin = useCallback((id: string) => {
+    setPins((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem(STORAGE_KEY_PINS, JSON.stringify(Array.from(next))); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
+  // Sync URL <- state (shareable links)
+  useEffect(() => {
+    const next = new URLSearchParams(urlParams);
+    tab === 'quotes' ? next.delete('tab') : next.set('tab', tab);
+    statusFilter === 'all' ? next.delete('status') : next.set('status', statusFilter);
+    deferredSearch ? next.set('q', deferredSearch) : next.delete('q');
+    if (next.toString() !== urlParams.toString()) setUrlParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, statusFilter, deferredSearch]);
   const [sortBy, setSortBy] = useState<SortKey>(() => {
     if (typeof window === 'undefined') return 'newest';
     return (localStorage.getItem(STORAGE_KEY_SORT) as SortKey | null) ?? 'newest';
