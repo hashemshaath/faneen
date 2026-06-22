@@ -44,10 +44,11 @@ describe('DashboardSiteDetail — read-only pass', () => {
     expect(DETAIL).toMatch(/\.eq\('execution_site_id',\s*id\)/);
   });
 
-  it('files tab is read-only / coming soon', () => {
+  it('files tab is read-only (SiteFilesTab inventory)', () => {
     expect(DETAIL).toContain('data-testid="site-files-tab"');
-    expect(DETAIL).toContain('إدارة ملفات المواقع ستتوفر في المرحلة التالية');
-    // No upload widget in the files tab block.
+    // Files tab now renders <SiteFilesTab/> (read-only inventory of
+    // contract_attachments + project_images). Upload remains disabled.
+    expect(DETAIL).toMatch(/<SiteFilesTab\b/);
     const filesBlock = DETAIL.split('data-testid="site-files-tab"')[1]?.split('</TabsContent>')[0] ?? '';
     expect(filesBlock).not.toMatch(/upload|Upload/);
     expect(filesBlock).not.toMatch(/storage\.from\(/);
