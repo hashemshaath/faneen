@@ -105,8 +105,9 @@ describe('CLIENT WORKSPACE UNIFICATION P1 — service', () => {
   });
 
   it('never calls create-contract RPCs in P1', () => {
-    expect(SERVICE).not.toMatch(/create_contract_from_template/);
-    expect(SERVICE).not.toMatch(/create_contract_from_/);
+    // Allow doc comments to reference RPC names, but forbid actual
+    // `.rpc('create_contract_from_*')` invocations.
+    expect(SERVICE).not.toMatch(/\.rpc\(\s*['"]create_contract_from_/);
     expect(SERVICE).not.toMatch(/\.rpc\(/);
   });
 });
