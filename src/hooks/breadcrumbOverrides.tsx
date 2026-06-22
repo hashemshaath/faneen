@@ -74,3 +74,14 @@ export function useSetBreadcrumbLabel(path: string | null | undefined, label: st
     return () => ctx.clear(path);
   }, [ctx, path, label]);
 }
+
+/**
+ * Render-as-side-effect helper for pages that mount their content
+ * inside `<DashboardLayout>` (the provider lives there). Place this
+ * inside the layout tree to register a label without needing the
+ * page itself to be a descendant of the provider at hook-call time.
+ */
+export const RegisterBreadcrumbLabel: React.FC<{ path: string | null | undefined; label: string | null | undefined }> = ({ path, label }) => {
+  useSetBreadcrumbLabel(path, label);
+  return null;
+};
