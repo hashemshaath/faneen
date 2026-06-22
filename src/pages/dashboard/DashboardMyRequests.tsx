@@ -757,6 +757,22 @@ const DashboardMyRequests: React.FC = () => {
                 <span>{isRTL ? 'إعادة ضبط' : 'Reset'}</span>
               </button>
             )}
+            {pins.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setPinnedOnly((v) => !v)}
+                className={`text-xs px-3 py-1.5 rounded-full border inline-flex items-center gap-1.5 ms-auto transition-colors ${
+                  pinnedOnly
+                    ? 'bg-amber-500/15 border-amber-400/50 text-amber-700 dark:text-amber-300'
+                    : 'bg-card border-border text-muted-foreground hover:bg-muted/60'
+                }`}
+                aria-pressed={pinnedOnly}
+              >
+                <Star className={`h-3 w-3 ${pinnedOnly ? 'fill-current' : ''}`} />
+                <span>{isRTL ? 'المثبتة فقط' : 'Pinned only'}</span>
+                <span className="tech-content text-[10px] opacity-70">({pins.size})</span>
+              </button>
+            )}
           </div>
 
           {/* === QUOTES TAB === */}
