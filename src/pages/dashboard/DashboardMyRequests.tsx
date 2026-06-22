@@ -147,6 +147,17 @@ type Density = 'comfortable' | 'compact';
 
 const STORAGE_KEY_SORT = 'qitaat_my_requests_sort_v1';
 const STORAGE_KEY_DENSITY = 'qitaat_my_requests_density_v1';
+const STORAGE_KEY_PINS = 'qitaat_my_requests_pins_v1';
+
+function loadPins(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PINS);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? new Set(arr.filter((x): x is string => typeof x === 'string')) : new Set();
+  } catch { return new Set(); }
+}
 
 function formatRelative(iso: string | null, isRTL: boolean): string {
   if (!iso) return '—';
