@@ -5266,6 +5266,65 @@ export type Database = {
           },
         ]
       }
+      client_site_files: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          description: string | null
+          file_category: string
+          file_name: string
+          file_size_bytes: number | null
+          file_type: string | null
+          id: string
+          is_archived: boolean
+          owner_user_id: string
+          site_id: string
+          storage_bucket: string
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_category?: string
+          file_name: string
+          file_size_bytes?: number | null
+          file_type?: string | null
+          id?: string
+          is_archived?: boolean
+          owner_user_id: string
+          site_id: string
+          storage_bucket: string
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_category?: string
+          file_name?: string
+          file_size_bytes?: number | null
+          file_type?: string | null
+          id?: string
+          is_archived?: boolean
+          owner_user_id?: string
+          site_id?: string
+          storage_bucket?: string
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_site_files_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_site_lookup_audit: {
         Row: {
           created_at: string

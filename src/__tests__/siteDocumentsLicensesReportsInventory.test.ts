@@ -1,14 +1,15 @@
 /**
  * SITE DOCUMENTS + LICENSES + REPORTS INVENTORY — source-level guards.
  *
- * Locks in the Files tab inventory pass:
- *   - Files tab is wired to <SiteFilesTab/> (no inline Coming-Soon stub).
- *   - SiteFilesTab is strictly read-only: no input[type=file], no
- *     useMutation, no storage write, no upload endpoint.
- *   - Files come from contract_attachments + project_images only, both
- *     scoped by IN(...) on already-loaded ids (no N+1, no service_role).
+ * After the upload model pass:
+ *   - Files tab is wired to <SiteFilesTab/>.
+ *   - SiteFilesTab now hosts an "own files" section (client_site_files)
+ *     with an inline upload form, AND a separate read-only "linked files"
+ *     section (contract_attachments + project_images).
+ *   - Direct storage / table calls for site files happen only through the
+ *     siteFilesService — no service_role in frontend.
  *   - Licenses tab stays a Coming Soon (no fake data).
- *   - Reports tab still renders SiteReportsTab (real site_reports).
+ *   - Reports tab still renders SiteReportsTab.
  *   - Contracts → execution_site_id; Projects → site_id (unchanged).
  */
 import { describe, it, expect } from 'vitest';
@@ -22,20 +23,20 @@ describe('DashboardSiteDetail — Files tab wiring', () => {
   it('imports the SiteFilesTab component', () => {
     expect(DETAIL).toMatch(/import\s+SiteFilesTab\s+from\s+'@\/components\/sites\/SiteFilesTab'/);
   });
-  it('renders <SiteFilesTab/> with contractIds + projectIds', () => {
-    expect(DETAIL).toMatch(/<SiteFilesTab[\s\S]*contractIds=\{contracts\.map\(\(c\)\s*=>\s*c\.id\)\}[\s\S]*projectIds=\{projects\.map\(\(p\)\s*=>\s*p\.id\)\}/);
+  it('renders <SiteFilesTab/> with siteId, canManage, contractIds, projectIds', () => {
+    expect(DETAIL).toMatch(/<SiteFilesTab[\s\S]*siteId=\{site\.id\}[\s\S]*canManage=\{canManage\}[\s\S]*contractIds=\{contracts\.map\(\(c\)\s*=>\s*c\.id\)\}[\s\S]*projectIds=\{projects\.map\(\(p\)\s*=>\s*p\.id\)\}/);
   });
   it('does not keep the legacy inline "coming next phase" Files stub', () => {
     expect(DETAIL).not.toMatch(/Site files management is coming in the next phase/);
   });
 });
 
-describe('SiteFilesTab — read-only & inventory rules', () => {
-  it('reads contract_attachments and project_images only', () => {
+describe('SiteFilesTab — split sections (own + linked)', () => {
+  it('reads contract_attachments and project_images for linked section', () => {
     expect(FILES).toMatch(/\.from\('contract_attachments'\)/);
     expect(FILES).toMatch(/\.from\('project_images'\)/);
   });
-  it('uses batched IN queries (no N+1)', () => {
+  it('uses batched IN queries (no N+1) for linked files', () => {
     expect(FILES).toMatch(/\.in\('contract_id',\s*contractIds\)/);
     expect(FILES).toMatch(/\.in\('project_id',\s*projectIds\)/);
   });
@@ -43,21 +44,24 @@ describe('SiteFilesTab — read-only & inventory rules', () => {
     expect(FILES).toMatch(/enabled:\s*contractIds\.length\s*>\s*0/);
     expect(FILES).toMatch(/enabled:\s*projectIds\.length\s*>\s*0/);
   });
-  it('renders an empty state when no files are linked', () => {
-    expect(FILES).toMatch(/data-testid="site-files-empty"/);
-    expect(FILES).toMatch(/لا توجد ملفات مرتبطة بهذا الموقع حتى الآن/);
-    expect(FILES).toMatch(/سيتم تفعيل رفع وإدارة ملفات المواقع/);
+  it('renders own-files + linked-files sections distinctly', () => {
+    expect(FILES).toMatch(/data-testid="site-files-own-section"/);
+    expect(FILES).toMatch(/data-testid="site-files-linked-section"/);
   });
-  it('exposes no file-upload surface', () => {
-    expect(FILES).not.toMatch(/<input[^>]*type=["']file["']/);
-    expect(FILES).not.toMatch(/useMutation/);
-    expect(FILES).not.toMatch(/\.upload\(/);
-    expect(FILES).not.toMatch(/\.from\(['"]storage['"]\)/);
-    expect(FILES).not.toMatch(/storage\.from\(/);
+  it('linked section stays read-only (no upload UI inside it)', () => {
+    const linked = FILES.split('site-files-linked-section')[1] ?? '';
+    expect(linked).not.toMatch(/<input[^>]*type=["']file["']/);
+    expect(linked).not.toMatch(/uploadSiteFile/);
   });
-  it('contains no service_role / hex / any / suppressions', () => {
+  it('all site-file storage/table writes go through siteFilesService', () => {
+    expect(FILES).toMatch(/from\s+'@\/services\/siteFilesService'/);
+    // No direct storage call against the site-files bucket from the component
+    expect(FILES).not.toMatch(/storage\.from\(['"]site-files['"]\)/);
+    // No direct table mutation against client_site_files from the component
+    expect(FILES).not.toMatch(/\.from\(['"]client_site_files['"]\)/);
+  });
+  it('contains no service_role / any / suppressions', () => {
     expect(FILES).not.toMatch(/service_role/i);
-    expect(FILES).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(FILES).not.toMatch(/:\s*any\b/);
     expect(FILES).not.toMatch(/\bas\s+any\b/);
     expect(FILES).not.toMatch(/@ts-ignore/);

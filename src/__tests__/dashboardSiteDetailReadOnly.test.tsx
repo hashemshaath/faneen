@@ -44,14 +44,15 @@ describe('DashboardSiteDetail — read-only pass', () => {
     expect(DETAIL).toMatch(/\.eq\('execution_site_id',\s*id\)/);
   });
 
-  it('files tab is read-only (SiteFilesTab inventory)', () => {
+  it('files tab renders SiteFilesTab and wires upload eligibility via canManage', () => {
     expect(DETAIL).toContain('data-testid="site-files-tab"');
-    // Files tab now renders <SiteFilesTab/> (read-only inventory of
-    // contract_attachments + project_images). Upload remains disabled.
     expect(DETAIL).toMatch(/<SiteFilesTab\b/);
+    // The page itself does not call storage directly — upload goes through
+    // the service layer inside SiteFilesTab.
     const filesBlock = DETAIL.split('data-testid="site-files-tab"')[1]?.split('</TabsContent>')[0] ?? '';
-    expect(filesBlock).not.toMatch(/upload|Upload/);
     expect(filesBlock).not.toMatch(/storage\.from\(/);
+    expect(filesBlock).toMatch(/canManage=\{canManage\}/);
+    expect(filesBlock).toMatch(/siteId=\{site\.id\}/);
   });
 
   it('licenses tab is coming soon only', () => {
