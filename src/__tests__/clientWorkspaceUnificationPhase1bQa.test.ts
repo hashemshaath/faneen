@@ -65,11 +65,22 @@ describe('P1B — mobile/RTL safety on the detail tabs', () => {
   });
 });
 
-describe('P1B — disabled create-contract CTA accessibility', () => {
-  it('CTA carries aria-disabled and a localized helper title', () => {
-    expect(CONTRACTS_TAB).toMatch(/aria-disabled="true"/);
-    expect(CONTRACTS_TAB).toMatch(/قيد التفعيل/);
-    expect(CONTRACTS_TAB).toMatch(/Coming soon/);
+describe('P1B — conditional create-contract CTA accessibility', () => {
+  it('CTA carries a dynamic aria-disabled tied to eligibility and a localized helper', () => {
+    // Post-Phase-4: the CTA accessibility cue is bound to `eligible`,
+    // and the helper copy explains the ineligibility cause (missing
+    // provider link) in both Arabic and English.
+    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible\}/);
+    expect(CONTRACTS_TAB).toMatch(
+      /لا يمكن إنشاء عقد حتى يتم ربط المشروع بمزود خدمة/,
+    );
+    expect(CONTRACTS_TAB).toMatch(
+      /A provider must be linked to this workspace before a contract can be created/,
+    );
+  });
+
+  it('writes go through the service wrapper, never a direct RPC in the tab', () => {
+    expect(CONTRACTS_TAB).not.toMatch(/\.rpc\(/);
   });
 });
 
