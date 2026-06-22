@@ -74,13 +74,26 @@ beforeEach(() => {
 
 describe('L-2 quote read services', () => {
   it('getAdminQuoteRequestById uses select * + maybeSingle', async () => {
-    nextResult = { data: { id: 'q1' }, error: null };
-    const r = await getAdminQuoteRequestById<{ id: string }>('q1');
+    // Wrapper supports dual lookup: UUID input → `.eq('id', …)`,
+    // public REF input → `.eq('ref_id', …)`. Use a canonical UUID here
+    // to assert the id-branch query shape.
+    const QUOTE_UUID = '11111111-1111-1111-1111-111111111111';
+    nextResult = { data: { id: QUOTE_UUID }, error: null };
+    const r = await getAdminQuoteRequestById<{ id: string }>(QUOTE_UUID);
     expect(calls[0].table).toBe('quote_requests');
     expect(calls[0].builder.select).toHaveBeenCalledWith('*');
-    expect(calls[0].builder.eq).toHaveBeenCalledWith('id', 'q1');
+    expect(calls[0].builder.eq).toHaveBeenCalledWith('id', QUOTE_UUID);
     expect(calls[0].builder.maybeSingle).toHaveBeenCalled();
-    expect(r).toEqual({ id: 'q1' });
+    expect(r).toEqual({ id: QUOTE_UUID });
+  });
+
+  it('getAdminQuoteRequestById resolves public REF via ref_id column', async () => {
+    nextResult = { data: { id: 'q1', ref_id: 'REQ-1000002' }, error: null };
+    const r = await getAdminQuoteRequestById<{ id: string; ref_id: string }>('REQ-1000002');
+    expect(calls[0].table).toBe('quote_requests');
+    expect(calls[0].builder.eq).toHaveBeenCalledWith('ref_id', 'REQ-1000002');
+    expect(calls[0].builder.maybeSingle).toHaveBeenCalled();
+    expect(r).toEqual({ id: 'q1', ref_id: 'REQ-1000002' });
   });
 
   it('listAdminQuoteRequestFiles preserves select + order desc', async () => {
