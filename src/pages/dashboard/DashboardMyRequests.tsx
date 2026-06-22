@@ -1046,14 +1046,27 @@ const QuoteRequestRowCardImpl: React.FC<{
   fileCount: number;
   isRTL: boolean;
   density?: Density;
-}> = ({ q, fileCount, isRTL, density = 'comfortable' }) => {
+  pinned?: boolean;
+  onTogglePin?: (id: string) => void;
+}> = ({ q, fileCount, isRTL, density = 'comfortable', pinned = false, onTogglePin }) => {
   const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
   const compact = density === 'compact';
   const createdAbs = new Date(q.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
   return (
-    <Card className="overflow-hidden hover-lift transition-shadow">
+    <Card className={`overflow-hidden hover-lift transition-shadow ${pinned ? 'ring-1 ring-amber-400/40 bg-amber-50/30 dark:bg-amber-500/[0.04]' : ''}`}>
       <CardContent className={`${compact ? 'p-3 sm:p-3.5 space-y-2' : 'p-4 sm:p-5 space-y-3'}`}>
         <div className="flex flex-wrap items-center gap-2">
+          {onTogglePin && (
+            <button
+              type="button"
+              onClick={() => onTogglePin(q.id)}
+              className={`h-7 w-7 -ms-1 rounded-md inline-flex items-center justify-center transition-colors ${pinned ? 'text-amber-500 hover:bg-amber-500/10' : 'text-muted-foreground/60 hover:text-amber-500 hover:bg-muted'}`}
+              aria-label={pinned ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
+              aria-pressed={pinned}
+            >
+              <Star className={`h-4 w-4 ${pinned ? 'fill-current' : ''}`} />
+            </button>
+          )}
           {q.ref_id ? (
             <>
               <ReferenceBadge refId={q.ref_id} />
