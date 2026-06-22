@@ -511,6 +511,55 @@ const DashboardSiteDetail: React.FC = () => {
             />
           </TabsContent>
 
+          <TabsContent value="projects" className="mt-4" data-testid="site-projects-tab">
+            <ListSection
+              loading={projectsLoading}
+              empty={isRTL ? 'لا توجد مشاريع مرتبطة بهذا الموقع.' : 'No projects linked to this site.'}
+              items={projects.map((p) => ({
+                key: p.id,
+                href: `/dashboard/projects/${p.id}`,
+                title: (isRTL ? p.title_ar : p.title_en) || p.title_ar || p.id,
+                ref: p.ref_id,
+                status: p.status,
+                meta: null,
+                date: p.completion_date || p.created_at,
+              }))}
+              isRTL={isRTL}
+            />
+          </TabsContent>
+
+          <TabsContent value="files" className="mt-4" data-testid="site-files-tab">
+            <Card><CardContent className="p-8 text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <ImageIcon className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-semibold">
+                {isRTL ? 'إدارة ملفات المواقع ستتوفر في المرحلة التالية' : 'Site files management is coming in the next phase'}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {isRTL
+                  ? 'حالياً يمكنك استعراض صور الموقع من تبويب «المعرض»، أما إدارة الملفات والمستندات الرسمية فهي قراءة فقط حالياً.'
+                  : 'For now, browse site photos from the “Gallery” tab. Document management is read-only at the moment.'}
+              </p>
+            </CardContent></Card>
+          </TabsContent>
+
+          <TabsContent value="licenses" className="mt-4" data-testid="site-licenses-tab">
+            <Card><CardContent className="p-8 text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <ClipboardList className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-semibold">
+                {isRTL ? 'الرخص والتصاريح والمخالفات — قريباً' : 'Licenses, permits and violations — coming soon'}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {isRTL
+                  ? 'سنضيف لاحقاً إدارة كاملة للرخص والتصاريح وسجلات المخالفات والبلاغات الرسمية للموقع.'
+                  : 'Full management of municipal licenses, permits and official violation logs will land in a later phase.'}
+              </p>
+            </CardContent></Card>
+          </TabsContent>
+
           <TabsContent value="quotes" className="mt-4">
             <ListSection
               loading={leadsLoading}
