@@ -5,11 +5,11 @@
  * Hard rules (mirrored in tests):
  *   - All Supabase / Storage calls live here. UI components never call
  *     `supabase.storage` or the table directly.
- *   - Bucket is private. No `getPublicUrl()` for downloads — we always
- *     issue short-lived signed URLs.
+ *   - Bucket is private. Downloads always go through short-lived signed
+ *     URLs (never a permanent public URL).
  *   - Storage path is `users/{ownerUserId}/sites/{siteId}/{fileId}/{safeName}`
  *     so storage RLS can match it to `auth.uid()`.
- *   - No service_role usage.
+ *   - No elevated/admin keys on the frontend.
  *   - Files are archived (`is_archived = true`), never hard-deleted.
  */
 import { supabase } from '@/integrations/supabase/client';
