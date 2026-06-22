@@ -75,9 +75,15 @@ describe('CLIENT WORKSPACE UNIFICATION P1 — routes', () => {
 });
 
 describe('CLIENT WORKSPACE UNIFICATION P1 — sidebar', () => {
-  it('user nav exposes «مشاريعي ومواقعي» pointing at /dashboard/workspaces', () => {
-    expect(NAV).toMatch(/مشاريعي ومواقعي/);
-    expect(NAV).toMatch(/url:\s*'\/dashboard\/workspaces'/);
+  // SITES AS CANONICAL CLIENT HUB: «مشاريعي ومواقعي» is no longer exposed
+  // in the personal client sidebar. The route stays mounted (see App-route
+  // tests above) but navigation now points users at «مواقعي».
+  it('user nav does NOT expose «مشاريعي ومواقعي» (sites is canonical hub)', () => {
+    expect(NAV).not.toMatch(/مشاريعي ومواقعي/);
+    expect(NAV).not.toMatch(/url:\s*'\/dashboard\/workspaces'/);
+  });
+  it('user nav exposes «مواقعي» pointing at /dashboard/sites', () => {
+    expect(NAV).toMatch(/url:\s*'\/dashboard\/sites'/);
   });
 });
 
