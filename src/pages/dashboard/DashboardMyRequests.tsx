@@ -409,64 +409,87 @@ const DashboardMyRequests: React.FC = () => {
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
       <div className="space-y-5">
-        <PageHeader
-          icon={Inbox}
-          tone="primary"
-          eyebrow={isRTL ? 'الطلبات' : 'Requests'}
-          title={isRTL ? 'طلباتي' : 'My Requests'}
-          subtitle={isRTL ? 'تابع حالة طلبات الخدمة التي أرسلتها للمنشآت' : 'Track the status of the service requests you sent to providers'}
-          actions={
-            <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="min-h-[40px]"
-                    onClick={handleExport}
-                    disabled={(tab === 'quotes' ? sortedQuotes.length : sortedLeads.length) === 0}
-                    aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
-                  >
-                    <Download />
-                    <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{isRTL ? 'تصدير CSV' : 'Export CSV'}</TooltipContent>
-              </Tooltip>
-              <Button
-                variant="outline"
-                size="sm"
-                className="min-h-[40px]"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                aria-label={isRTL ? 'تحديث' : 'Refresh'}
-              >
-                <RefreshCw className={refreshing ? 'animate-spin' : ''} />
-                <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
-              </Button>
-              <Button asChild size="sm" className="min-h-[40px]">
-                <Link to="/quote">
-                  <Plus />
-                  <span>{isRTL ? 'طلب جديد' : 'New request'}</span>
-                </Link>
-              </Button>
-            </>
-          }
-        />
+        {/* === Executive dark hero === */}
+        <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white shadow-elev-3">
+          {/* Glow accents */}
+          <div aria-hidden className="pointer-events-none absolute -top-24 -end-24 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute -bottom-24 -start-16 h-72 w-72 rounded-full bg-orange-500/[0.07] blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.06),transparent_60%)]" />
 
-        {/* KPI strip */}
-        <KpiStrip
-          items={[
-            { label: isRTL ? 'عروض الأسعار' : 'Quote requests', value: kpis.totalQ, tone: 'info' },
-            { label: isRTL ? 'نشطة' : 'Active', value: kpis.activeQuote, tone: 'success', hint: isRTL ? 'عروض الأسعار' : 'Quotes' },
-            { label: isRTL ? 'طلبات الخدمة' : 'Service requests', value: kpis.totalL, tone: 'neutral' },
-            { label: isRTL ? 'نشطة' : 'Active', value: kpis.activeLead, tone: 'success', hint: isRTL ? 'الخدمات' : 'Services' },
-            { label: isRTL ? 'عروض مستلمة' : 'Quotes received', value: kpis.quoted, tone: 'warning' },
-          ]}
-        />
+          <div className="relative p-5 sm:p-7 lg:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+              <div className="flex-1 min-w-0 space-y-2.5">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] ring-1 ring-white/10 text-[11px] font-medium text-white/80">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{isRTL ? 'الطلبات' : 'Requests'}</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  {isRTL ? 'طلباتي' : 'My Requests'}
+                </h1>
+                <p className="text-sm sm:text-base text-white/70 max-w-2xl leading-relaxed">
+                  {isRTL
+                    ? 'تابع حالة طلبات الخدمة وعروض الأسعار التي أرسلتها للمنشآت، مع تحديثات لحظية وسجل زمني كامل.'
+                    : 'Track the status of the service requests and quotes you sent to providers — live updates and full timeline.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-[40px] bg-white/5 border-white/15 text-white hover:bg-white/10 hover:text-white"
+                      onClick={handleExport}
+                      disabled={(tab === 'quotes' ? sortedQuotes.length : sortedLeads.length) === 0}
+                      aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
+                    >
+                      <Download />
+                      <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isRTL ? 'تصدير CSV' : 'Export CSV'}</TooltipContent>
+                </Tooltip>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-[40px] bg-white/5 border-white/15 text-white hover:bg-white/10 hover:text-white"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  aria-label={isRTL ? 'تحديث' : 'Refresh'}
+                >
+                  <RefreshCw className={refreshing ? 'animate-spin' : ''} />
+                  <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
+                </Button>
+                <Button asChild size="sm" className="min-h-[40px] bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/20">
+                  <Link to="/quote">
+                    <Plus />
+                    <span>{isRTL ? 'طلب جديد' : 'New request'}</span>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* === Premium KPI grid === */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+              <HeroKpi icon={ReceiptText} accent="blue"
+                label={isRTL ? 'عروض الأسعار' : 'Quote requests'} value={kpis.totalQ} />
+              <HeroKpi icon={CheckCircle2} accent="emerald"
+                label={isRTL ? 'نشطة' : 'Active'} value={kpis.activeQuote}
+                hint={isRTL ? 'عروض' : 'Quotes'} />
+              <HeroKpi icon={Inbox} accent="slate"
+                label={isRTL ? 'طلبات الخدمة' : 'Service requests'} value={kpis.totalL} />
+              <HeroKpi icon={Send} accent="amber"
+                label={isRTL ? 'نشطة' : 'Active'} value={kpis.activeLead}
+                hint={isRTL ? 'خدمات' : 'Services'} />
+              <HeroKpi icon={Wallet} accent="orange"
+                label={isRTL ? 'عروض مستلمة' : 'Quotes received'} value={kpis.quoted} />
+            </div>
+          </div>
+        </section>
 
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Sticky toolbar */}
+          <div className="sticky top-0 z-20 -mx-2 px-2 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row sm:items-center gap-3">
             <TabsList className="grid grid-cols-2 sm:inline-flex">
               <TabsTrigger value="quotes" className="gap-2">
                 <ReceiptText className="h-4 w-4" />
