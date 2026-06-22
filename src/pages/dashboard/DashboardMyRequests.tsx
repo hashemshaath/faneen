@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useDeferredValue, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useDeferredValue, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -26,6 +26,7 @@ import {
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
   Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
+import { Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
