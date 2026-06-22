@@ -69,11 +69,24 @@ describe('leads detail service', () => {
   });
 
   it('getMyQuoteRequestDetail uses quote_requests, select(*), eq id+user_id, maybeSingle', async () => {
-    nextResult = { data: { id: 'q1' }, error: null };
-    await getMyQuoteRequestDetail('q1', 'u1');
+    // Wrapper supports dual lookup: UUID input → `.eq('id', …)`,
+    // public REF (e.g. REQ-…) input → `.eq('ref_id', …)`. Use a canonical
+    // UUID here to assert the id-branch query shape.
+    const QUOTE_UUID = '11111111-1111-1111-1111-111111111111';
+    nextResult = { data: { id: QUOTE_UUID }, error: null };
+    await getMyQuoteRequestDetail(QUOTE_UUID, 'u1');
     expect(calls[0].table).toBe('quote_requests');
     expect(calls[0].builder.select).toHaveBeenCalledWith('*');
-    expect(calls[0].builder.eq).toHaveBeenNthCalledWith(1, 'id', 'q1');
+    expect(calls[0].builder.eq).toHaveBeenNthCalledWith(1, 'id', QUOTE_UUID);
+    expect(calls[0].builder.eq).toHaveBeenNthCalledWith(2, 'user_id', 'u1');
+    expect(calls[0].builder.maybeSingle).toHaveBeenCalled();
+  });
+
+  it('getMyQuoteRequestDetail resolves public REF via ref_id column', async () => {
+    nextResult = { data: { id: 'q1', ref_id: 'REQ-1000002' }, error: null };
+    await getMyQuoteRequestDetail('REQ-1000002', 'u1');
+    expect(calls[0].table).toBe('quote_requests');
+    expect(calls[0].builder.eq).toHaveBeenNthCalledWith(1, 'ref_id', 'REQ-1000002');
     expect(calls[0].builder.eq).toHaveBeenNthCalledWith(2, 'user_id', 'u1');
     expect(calls[0].builder.maybeSingle).toHaveBeenCalled();
   });
