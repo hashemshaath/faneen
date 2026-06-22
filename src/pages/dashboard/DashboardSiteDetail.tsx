@@ -21,6 +21,7 @@ import SiteCoverUploader from '@/components/sites/SiteCoverUploader';
 import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGalleryManager';
 import SiteContactsTab from '@/components/sites/SiteContactsTab';
 import SiteReportsTab from '@/components/sites/SiteReportsTab';
+import SiteFilesTab from '@/components/sites/SiteFilesTab';
 import SiteSettingsTab from '@/components/sites/SiteSettingsTab';
 import SiteField from '@/components/sites/SiteField';
 import { Users, AlertTriangle } from 'lucide-react';
@@ -537,19 +538,11 @@ const DashboardSiteDetail: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="files" className="mt-4" data-testid="site-files-tab">
-            <Card><CardContent className="p-8 text-center space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-                <ImageIcon className="h-6 w-6" />
-              </div>
-              <h3 className="text-base font-semibold">
-                {isRTL ? 'إدارة ملفات المواقع ستتوفر في المرحلة التالية' : 'Site files management is coming in the next phase'}
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                {isRTL
-                  ? 'حالياً يمكنك استعراض صور الموقع من تبويب «المعرض»، أما إدارة الملفات والمستندات الرسمية فهي قراءة فقط حالياً.'
-                  : 'For now, browse site photos from the “Gallery” tab. Document management is read-only at the moment.'}
-              </p>
-            </CardContent></Card>
+            <SiteFilesTab
+              isRTL={isRTL}
+              contractIds={contracts.map((c) => c.id)}
+              projectIds={projects.map((p) => p.id)}
+            />
           </TabsContent>
 
           <TabsContent value="licenses" className="mt-4" data-testid="site-licenses-tab">
