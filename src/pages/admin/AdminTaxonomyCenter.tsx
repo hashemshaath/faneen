@@ -1,18 +1,15 @@
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { TaxonomyAdminPage } from '@/modules/taxonomy/components/TaxonomyAdminPage';
 
 /**
  * Taxonomy & Reference Data Center — Phase 2.
  *
- * RULE: every /admin/* page MUST be rendered inside <DashboardLayout> so the
- * admin sidebar stays visible. Do not render admin page content bare.
- * TODO: migrate all admin routes to a shared AdminRoute wrapper that applies
- * <ProtectedRoute requireAdmin> + <DashboardLayout> + useNoIndex in one place.
+ * MIGRATED (Deferred Audit L17/L18 pilot): this page no longer wraps its
+ * content in `<DashboardLayout>`. The layout is now supplied by the
+ * `<AdminRoute>` wrapper registered for `/admin/taxonomy` in `src/App.tsx`,
+ * which composes `<ProtectedRoute requireAdmin>` + `<DashboardLayout>` in
+ * one place. The page renders bare so it can also be embedded as a tab
+ * loader inside `AdminContentCenter` without double-rendering the layout.
  */
-const AdminTaxonomyCenter = () => (
-  <DashboardLayout>
-    <TaxonomyAdminPage />
-  </DashboardLayout>
-);
+const AdminTaxonomyCenter = () => <TaxonomyAdminPage />;
 
 export default AdminTaxonomyCenter;
