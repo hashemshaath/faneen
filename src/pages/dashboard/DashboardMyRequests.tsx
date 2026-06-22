@@ -330,14 +330,12 @@ const DashboardMyRequests: React.FC = () => {
   // === Real-time: refetch when this user's rows change ===
   useEffect(() => {
     if (!user?.id) return;
-    const channel = supabase
-      .channel(`my-requests-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_requests', filter: `user_id=eq.${user.id}` },
-          () => { qc.invalidateQueries({ queryKey: ['my-service-requests', user.id] }); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'quote_requests', filter: `user_id=eq.${user.id}` },
-          () => { qc.invalidateQueries({ queryKey: ['my-quote-requests', user.id] }); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const unsubscribe = subscribeMyRequestsChanges({
+      userId: user.id,
+      onLeadChange: () => { qc.invalidateQueries({ queryKey: ['my-service-requests', user.id] }); },
+      onQuoteChange: () => { qc.invalidateQueries({ queryKey: ['my-quote-requests', user.id] }); },
+    });
+    return unsubscribe;
   }, [user?.id, qc]);
 
   // === Export to CSV ===
