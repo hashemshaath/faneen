@@ -59,12 +59,32 @@ describe('CLIENT WORKSPACE UNIFICATION PHASE 2 — guards', () => {
     }
   });
 
-  it('create-contract CTA is disabled with helper text', () => {
+  it('create-contract CTA is conditional with helper text and goes through the service wrapper', () => {
     const tab = read('src/components/workspace/WorkspaceContractsTab.tsx');
-    expect(tab).toMatch(/data-testid=["']workspace-create-contract-disabled["']/);
-    expect(tab).toMatch(/aria-disabled=["']true["']/);
-    expect(tab).toMatch(/قيد التفعيل/);
-    expect(tab).toMatch(/Coming soon/);
+    // Both eligible/ineligible testids must exist as the rendered value
+    // of `data-testid` (a ternary over `eligible`).
+    expect(tab).toMatch(
+      /data-testid=\{eligible\s*\?\s*['"]workspace-create-contract['"]\s*:\s*['"]workspace-create-contract-disabled['"]\}/,
+    );
+    expect(tab).toMatch(/aria-disabled=\{!eligible\}/);
+    expect(tab).toMatch(/disabled=\{!eligible\}/);
+    expect(tab).toMatch(
+      /لا يمكن إنشاء عقد حتى يتم ربط المشروع بمزود خدمة/,
+    );
+    // Writes must go through the service wrapper; no inline RPC.
+    expect(tab).not.toMatch(/\.rpc\(/);
+  });
+
+  it('My Sites surfaces never trigger contract creation', () => {
+    const sites = read('src/pages/dashboard/DashboardSites.tsx');
+    const siteDetail = read('src/pages/dashboard/DashboardSiteDetail.tsx');
+    for (const src of [sites, siteDetail]) {
+      expect(src).not.toMatch(/create_contract_from_workspace_as_client/);
+      expect(src).not.toMatch(/create_contract_from_template/);
+      expect(src).not.toMatch(/workspace-create-contract['"]/);
+      // Only navigation to contracts pages is allowed — no mutations.
+      expect(src).not.toMatch(/useMutation\([^)]*createContractFromWorkspace/);
+    }
   });
 
   it('detail page tabs wrap on mobile (h-auto + flex-wrap)', () => {
