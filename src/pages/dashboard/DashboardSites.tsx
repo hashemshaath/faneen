@@ -647,9 +647,18 @@ export default function DashboardSites() {
   });
 
   /* ─── Derived ─── */
+  const isSiteComplete = useCallback((s: ClientSite): boolean => (
+    !!s.label && !!s.city_id && !!s.district && !!s.address_line1
+  ), []);
+
   const filtered = useMemo(() => {
     let r = sites;
     if (typeFilter !== 'all') r = r.filter(s => s.site_type === typeFilter);
+    if (cityFilter !== 'all') r = r.filter(s => (s.city_id ?? '') === cityFilter);
+    if (ownershipFilter === 'personal') r = r.filter(s => !s.business_id);
+    else if (ownershipFilter === 'business') r = r.filter(s => !!s.business_id);
+    if (completionFilter === 'complete')   r = r.filter(s => isSiteComplete(s));
+    else if (completionFilter === 'incomplete') r = r.filter(s => !isSiteComplete(s));
     if (search.trim()) {
       const q = search.toLowerCase();
       r = r.filter(s =>
@@ -662,6 +671,7 @@ export default function DashboardSites() {
         (s.municipal_license_no || '').toLowerCase().includes(q) ||
         (s.title_deed_no || '').toLowerCase().includes(q) ||
         (s.owner_name || '').toLowerCase().includes(q) ||
+        (s.district || '').toLowerCase().includes(q) ||
         (s.site_ref || '').toLowerCase().includes(q)
       );
     }
@@ -683,7 +693,7 @@ export default function DashboardSites() {
     if (advExpiryFrom) r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date >= advExpiryFrom);
     if (advExpiryTo)   r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date <= advExpiryTo);
     return r;
-  }, [sites, search, typeFilter, advLicenseNo, advDeedNo, advOwnerId, advIssueFrom, advIssueTo, advExpiryFrom, advExpiryTo]);
+  }, [sites, search, typeFilter, cityFilter, ownershipFilter, completionFilter, isSiteComplete, advLicenseNo, advDeedNo, advOwnerId, advIssueFrom, advIssueTo, advExpiryFrom, advExpiryTo]);
 
   const advancedActive = !!(advLicenseNo || advDeedNo || advOwnerId || advIssueFrom || advIssueTo || advExpiryFrom || advExpiryTo);
   const resetAdvanced = () => {
@@ -692,12 +702,24 @@ export default function DashboardSites() {
   };
 
   const stats = useMemo(() => {
-    const total = sites.filter(s => !s.archived_at).length;
+    const active = sites.filter(s => !s.archived_at);
+    const total = active.length;
+    const personal = active.filter(s => !s.business_id).length;
+    const business = active.filter(s => !!s.business_id).length;
+    const withProjects = active.filter(s => (projectCounts[s.id] ?? 0) > 0).length;
+    const withContracts = active.filter(s => (contractCounts[s.id] ?? 0) > 0).length;
+    const needsCompletion = active.filter(s => !isSiteComplete(s)).length;
     const linked = Object.values(contractCounts).reduce((a, b) => a + b, 0);
-    const types = new Set(sites.map(s => s.site_type)).size;
-    const archived = sites.filter(s => s.archived_at).length;
-    return { total, linked, types, archived };
-  }, [sites, contractCounts]);
+    return { total, personal, business, withProjects, withContracts, needsCompletion, linked };
+  }, [sites, contractCounts, projectCounts, isSiteComplete]);
+
+  const cityOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    sites.forEach(s => {
+      if (s.city_id && s.city_name && !map.has(s.city_id)) map.set(s.city_id, s.city_name);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [sites]);
 
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => {
