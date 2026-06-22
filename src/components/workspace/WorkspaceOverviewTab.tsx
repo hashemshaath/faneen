@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import type { ClientWorkspaceDetail } from '@/services/clientWorkspaceService';
+import { MapPin, ExternalLink } from 'lucide-react';
 
 interface Props {
   detail: ClientWorkspaceDetail;
@@ -37,6 +38,7 @@ export const WorkspaceOverviewTab: React.FC<Props> = ({ detail }) => {
   ];
 
   return (
+    <div className="space-y-4">
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base font-semibold">{workspace.title}</CardTitle>
@@ -70,6 +72,39 @@ export const WorkspaceOverviewTab: React.FC<Props> = ({ detail }) => {
         )}
       </CardContent>
     </Card>
+    {(workspace.latitude != null && workspace.longitude != null) && (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-primary" />
+            <Bi ar="الموقع على الخريطة" en="Location on map" />
+          </CardTitle>
+          <a
+            href={workspace.mapUrl || `https://www.google.com/maps?q=${workspace.latitude},${workspace.longitude}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+          >
+            <Bi ar="فتح في الخرائط" en="Open in Maps" />
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-xl overflow-hidden border h-72">
+            <iframe
+              title="map"
+              loading="lazy"
+              className="w-full h-full"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${workspace.longitude - 0.005}%2C${workspace.latitude - 0.005}%2C${workspace.longitude + 0.005}%2C${workspace.latitude + 0.005}&layer=mapnik&marker=${workspace.latitude}%2C${workspace.longitude}`}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2 tech-content">
+            {workspace.latitude.toFixed(5)}, {workspace.longitude.toFixed(5)}
+          </p>
+        </CardContent>
+      </Card>
+    )}
+    </div>
   );
 };
 
