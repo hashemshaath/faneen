@@ -31,6 +31,7 @@ import {
   formatProjectTitle,
   shortReferenceId,
 } from '@/lib/workspace/displayNames';
+import { RegisterBreadcrumbLabel } from '@/hooks/breadcrumbOverrides';
 
 type Json = Record<string, unknown>;
 
