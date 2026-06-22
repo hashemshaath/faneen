@@ -5325,6 +5325,78 @@ export type Database = {
           },
         ]
       }
+      client_site_licenses: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          expiry_date: string | null
+          file_id: string | null
+          id: string
+          is_archived: boolean
+          issue_date: string | null
+          issuer_name: string | null
+          license_number: string | null
+          license_type: string
+          notes: string | null
+          owner_user_id: string
+          site_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          file_id?: string | null
+          id?: string
+          is_archived?: boolean
+          issue_date?: string | null
+          issuer_name?: string | null
+          license_number?: string | null
+          license_type?: string
+          notes?: string | null
+          owner_user_id: string
+          site_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          file_id?: string | null
+          id?: string
+          is_archived?: boolean
+          issue_date?: string | null
+          issuer_name?: string | null
+          license_number?: string | null
+          license_type?: string
+          notes?: string | null
+          owner_user_id?: string
+          site_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_site_licenses_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "client_site_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_licenses_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_site_lookup_audit: {
         Row: {
           created_at: string

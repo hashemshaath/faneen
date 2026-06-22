@@ -22,6 +22,7 @@ import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGa
 import SiteContactsTab from '@/components/sites/SiteContactsTab';
 import SiteReportsTab from '@/components/sites/SiteReportsTab';
 import SiteFilesTab from '@/components/sites/SiteFilesTab';
+import SiteLicensesTab from '@/components/sites/SiteLicensesTab';
 import SiteSettingsTab from '@/components/sites/SiteSettingsTab';
 import SiteField from '@/components/sites/SiteField';
 import { Users, AlertTriangle } from 'lucide-react';
@@ -549,19 +550,12 @@ const DashboardSiteDetail: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="licenses" className="mt-4" data-testid="site-licenses-tab">
-            <Card><CardContent className="p-8 text-center space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-                <ClipboardList className="h-6 w-6" />
-              </div>
-              <h3 className="text-base font-semibold">
-                {isRTL ? 'الرخص والتصاريح والمخالفات — قريباً' : 'Licenses, permits and violations — coming soon'}
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                {isRTL
-                  ? 'سنضيف لاحقاً إدارة كاملة للرخص والتصاريح وسجلات المخالفات والبلاغات الرسمية للموقع.'
-                  : 'Full management of municipal licenses, permits and official violation logs will land in a later phase.'}
-              </p>
-            </CardContent></Card>
+            <SiteLicensesTab
+              isRTL={isRTL}
+              siteId={site.id}
+              canManage={canManage}
+              businessId={site.business_id}
+            />
           </TabsContent>
 
           <TabsContent value="quotes" className="mt-4">

@@ -70,9 +70,11 @@ describe('SiteFilesTab — split sections (own + linked)', () => {
 });
 
 describe('Licenses + Reports tabs invariants', () => {
-  it('Licenses tab stays a Coming-Soon (no fake licenses data)', () => {
+  it('Licenses tab renders <SiteLicensesTab/> (no fake/legacy `site_licenses` table)', () => {
     expect(DETAIL).toMatch(/data-testid="site-licenses-tab"/);
-    expect(DETAIL).toMatch(/الرخص والتصاريح والمخالفات — قريباً|coming soon/i);
+    expect(DETAIL).toMatch(/<SiteLicensesTab\b/);
+    // The licenses model uses `client_site_licenses` (correct table), never
+    // a legacy `site_licenses` name.
     expect(DETAIL).not.toMatch(/from\(['"]site_licenses['"]\)/);
   });
   it('Reports tab still renders SiteReportsTab (real site_reports)', () => {
