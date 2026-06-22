@@ -10,6 +10,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeToggle";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminRoute from "@/components/auth/AdminRoute";
 import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -522,7 +523,11 @@ const AppRoutes = () => (
           {/* Legacy taxonomy routes — show replacement notice pointing to /admin/taxonomy. */}
           <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminLegacyTaxonomyReplaced /></ProtectedRoute>} />
           <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><AdminLegacyTaxonomyReplaced /></ProtectedRoute>} />
-          <Route path="/admin/taxonomy" element={<ProtectedRoute requireAdmin><AdminTaxonomyCenter /></ProtectedRoute>} />
+          {/* DEFERRED CLEANUP L17/L18 pilot — uses the shared <AdminRoute>
+              wrapper (= <ProtectedRoute requireAdmin> + <DashboardLayout>).
+              The page itself no longer wraps its content in
+              <DashboardLayout>, so the sidebar renders exactly once. */}
+          <Route path="/admin/taxonomy" element={<AdminRoute><AdminTaxonomyCenter /></AdminRoute>} />
           <Route path="/admin/project-categories" element={<ProtectedRoute requireAdmin><AdminProjectCategories /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/ownership-transfer-requests" element={<ProtectedRoute requireAdmin><AdminOwnershipTransferRequests /></ProtectedRoute>} />
