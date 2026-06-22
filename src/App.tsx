@@ -301,6 +301,18 @@ const PageLoader = () => (
   </div>
 );
 
+/**
+ * LEGACY CLEANUP L08 — Forwards the legacy admin detail route
+ * `/admin/quote-requests/:id` to the canonical
+ * `/admin/opportunities/:id` while preserving the `:id` path param.
+ * No component is removed; the legacy route path remains registered
+ * so deep-links and bookmarks keep working.
+ */
+const LegacyAdminQuoteRequestDetailRedirect = () => {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/admin/opportunities/${id ?? ''}`} replace />;
+};
+
 const AppRoutes = () => (
   <BrowserRouter
     future={{
