@@ -101,43 +101,26 @@ function buildAddress(s: SiteRow | null): string | null {
  * permission errors — they are display-only in P1.
  */
 export async function listClientWorkspaces(userId: string): Promise<ClientWorkspace[]> {
-  const sitesRes = await supabase
-    .from('client_sites')
-    .select(
-      'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
-    )
-    .or(`owner_user_id.eq.${userId},client_user_id.eq.${userId}`)
-    .is('archived_at', null)
-    .order('updated_at', { ascending: false });
+  const [projectsRes, sitesRes] = await Promise.all([
+    supabase
+      .from('projects')
+      .select(
+        'id, business_id, owner_user_id, site_id, title_ar, title_en, description_ar, description_en, cover_image_url, updated_at, created_at',
+      )
+      .eq('owner_user_id', userId)
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('client_sites')
+      .select(
+        'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
+      )
+      .or(`owner_user_id.eq.${userId},client_user_id.eq.${userId}`)
+      .is('archived_at', null)
+      .order('updated_at', { ascending: false }),
+  ]);
 
+  const projects = (projectsRes.data ?? []) as ProjectRow[];
   const sites = (sitesRes.data ?? []) as SiteRow[];
-  const userSiteIds = sites.map((s) => s.id);
-
-  // Projects the user can see as a client: either authored by them
-  // (owner_user_id) OR linked to one of their client_sites.
-  const ownProjects = supabase
-    .from('projects')
-    .select(
-      'id, business_id, owner_user_id, site_id, title_ar, title_en, description_ar, description_en, cover_image_url, updated_at, created_at',
-    )
-    .eq('owner_user_id', userId)
-    .order('updated_at', { ascending: false });
-
-  const siteProjects = userSiteIds.length
-    ? supabase
-        .from('projects')
-        .select(
-          'id, business_id, owner_user_id, site_id, title_ar, title_en, description_ar, description_en, cover_image_url, updated_at, created_at',
-        )
-        .in('site_id', userSiteIds)
-        .order('updated_at', { ascending: false })
-    : Promise.resolve({ data: [] as ProjectRow[] });
-
-  const [ownRes, siteRes] = await Promise.all([ownProjects, siteProjects]);
-  const byId = new Map<string, ProjectRow>();
-  for (const p of ((ownRes.data ?? []) as ProjectRow[])) byId.set(p.id, p);
-  for (const p of ((siteRes.data ?? []) as ProjectRow[])) byId.set(p.id, p);
-  const projects = Array.from(byId.values());
 
   const sitesById = new Map<string, SiteRow>();
   for (const s of sites) sitesById.set(s.id, s);
