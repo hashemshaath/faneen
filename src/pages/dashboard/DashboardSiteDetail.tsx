@@ -24,6 +24,11 @@ import SiteReportsTab from '@/components/sites/SiteReportsTab';
 import SiteSettingsTab from '@/components/sites/SiteSettingsTab';
 import SiteField from '@/components/sites/SiteField';
 import { Users, AlertTriangle } from 'lucide-react';
+import {
+  formatSiteTitle,
+  formatProjectTitle,
+  shortReferenceId,
+} from '@/lib/workspace/displayNames';
 
 type Json = Record<string, unknown>;
 
