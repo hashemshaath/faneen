@@ -224,9 +224,10 @@ const DashboardMyRequests: React.FC = () => {
     tab === 'quotes' ? next.delete('tab') : next.set('tab', tab);
     statusFilter === 'all' ? next.delete('status') : next.set('status', statusFilter);
     deferredSearch ? next.set('q', deferredSearch) : next.delete('q');
+    sectorFilter === 'all' ? next.delete('sector') : next.set('sector', sectorFilter);
     if (next.toString() !== urlParams.toString()) setUrlParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, statusFilter, deferredSearch]);
+  }, [tab, statusFilter, deferredSearch, sectorFilter]);
   const [sortBy, setSortBy] = useState<SortKey>(() => {
     if (typeof window === 'undefined') return 'newest';
     return (localStorage.getItem(STORAGE_KEY_SORT) as SortKey | null) ?? 'newest';
@@ -376,6 +377,7 @@ const DashboardMyRequests: React.FC = () => {
     return (quoteRequests ?? []).filter((q) => {
       if (pinnedOnly && !pins.has(q.id)) return false;
       if (statusFilter !== 'all' && q.status !== statusFilter) return false;
+      if (sectorFilter !== 'all' && q.sector !== sectorFilter) return false;
       if (!term) return true;
       return (
         (q.ref_id ?? '').toLowerCase().includes(term) ||
@@ -384,7 +386,14 @@ const DashboardMyRequests: React.FC = () => {
         (q.city ?? '').toLowerCase().includes(term)
       );
     });
-  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins]);
+  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins, sectorFilter]);
+
+  // Top sectors (for quick-filter chips on the quotes tab)
+  const topSectors = useMemo(() => {
+    const m = new Map<string, number>();
+    (quoteRequests ?? []).forEach((q) => m.set(q.sector, (m.get(q.sector) ?? 0) + 1));
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  }, [quoteRequests]);
 
   const filteredLeads = useMemo(() => {
     const term = deferredSearch.trim().toLowerCase();
