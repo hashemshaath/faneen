@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CopyButton } from '@/components/ui/copy-button';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { isBarcodeCode } from '@/lib/barcodes/barcode-url';
 
 type ResolveResult =
   | { status: 'unavailable' }
@@ -40,10 +41,11 @@ const PublicBarcodeResolve: React.FC = () => {
   // from /q/:code). Accept legacy `barcode_code` name too.
   const params = useParams<{ code?: string; barcode_code?: string }>();
   const code = (params.code ?? params.barcode_code ?? '').trim();
+  const shouldResolveBarcode = isBarcodeCode(code);
 
   const { data, isLoading } = useQuery({
     queryKey: ['resolve-barcode', code],
-    enabled: code.length >= 4,
+    enabled: shouldResolveBarcode,
     retry: false,
     queryFn: async (): Promise<ResolveResult> => {
       const { data, error } = await supabase.rpc('resolve_barcode', { _code: code });
@@ -59,6 +61,10 @@ const PublicBarcodeResolve: React.FC = () => {
   }, [bi]);
 
   const unavailable = !isLoading && (!data || data.status !== 'available');
+
+  if (code && !shouldResolveBarcode) {
+    return <Navigate to={`/${encodeURIComponent(code)}`} replace />;
+  }
 
   return (
     <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
