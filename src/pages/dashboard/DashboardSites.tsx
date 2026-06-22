@@ -795,8 +795,12 @@ export default function DashboardSites() {
           icon={MapPin}
           tone="primary"
           eyebrow={pickBi(isRTL, 'المواقع', 'Sites')}
-          title={pickBi(isRTL, 'عناوين المواقع', 'Site Addresses')}
-          subtitle={isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
+          title={pickBi(isRTL, 'مواقعي', 'My Sites')}
+          subtitle={pickBi(
+            isRTL,
+            'أدر مواقعك وعناوينك والمشاريع والعقود المرتبطة بها من مكان واحد',
+            'Manage your sites, addresses, and their linked projects and contracts from one place',
+          )}
           actions={user ? (
             <Button variant="hero" size="sm" className="h-8 text-xs" onClick={openCreate}>
               <Plus className="w-3.5 h-3.5 me-1" />{pickBi(isRTL, 'إضافة موقع', 'Add Site')}
@@ -804,14 +808,19 @@ export default function DashboardSites() {
           ) : undefined}
         />
 
-        {/* Stats */}
+        {/* KPI strip — 6 metrics built from already-loaded data */}
         {sites.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <div
+            data-testid="sites-kpi-strip"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2"
+          >
             {[
-              { l: pickBi(isRTL, 'النشطة', 'Active'), v: stats.total, icon: MapPin, cls: 'text-primary bg-primary/10' },
-              { l: pickBi(isRTL, 'العقود المرتبطة', 'Linked Contracts'), v: stats.linked, icon: FileText, cls: 'text-accent bg-accent/10' },
-              { l: pickBi(isRTL, 'أنواع المواقع', 'Site Types'), v: stats.types, icon: Layers, cls: 'text-primary bg-primary/10' },
-              { l: pickBi(isRTL, 'المؤرشفة', 'Archived'), v: stats.archived, icon: AlertCircle, cls: 'text-muted-foreground bg-muted' },
+              { l: pickBi(isRTL, 'إجمالي المواقع', 'Total sites'),       v: stats.total,           icon: MapPin,      cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'مواقع شخصية', 'Personal sites'),       v: stats.personal,        icon: Home,        cls: 'text-info bg-info/10' },
+              { l: pickBi(isRTL, 'مرتبطة بمنشأة', 'Business-linked'),    v: stats.business,        icon: Building2,   cls: 'text-accent bg-accent/10' },
+              { l: pickBi(isRTL, 'لها مشاريع', 'With projects'),         v: stats.withProjects,    icon: Layers,      cls: 'text-success bg-success/10' },
+              { l: pickBi(isRTL, 'لها عقود', 'With contracts'),          v: stats.withContracts,   icon: FileText,    cls: 'text-primary bg-primary/10' },
+              { l: pickBi(isRTL, 'تحتاج استكمال', 'Needs completion'),   v: stats.needsCompletion, icon: AlertCircle, cls: 'text-warning bg-warning/10' },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border/40 bg-card/50">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.cls}`}>
