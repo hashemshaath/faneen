@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useDeferredValue, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +27,7 @@ import {
   Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
 import { Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
+import { Star, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
@@ -146,6 +147,17 @@ type Density = 'comfortable' | 'compact';
 
 const STORAGE_KEY_SORT = 'qitaat_my_requests_sort_v1';
 const STORAGE_KEY_DENSITY = 'qitaat_my_requests_density_v1';
+const STORAGE_KEY_PINS = 'qitaat_my_requests_pins_v1';
+
+function loadPins(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PINS);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? new Set(arr.filter((x): x is string => typeof x === 'string')) : new Set();
+  } catch { return new Set(); }
+}
 
 function formatRelative(iso: string | null, isRTL: boolean): string {
   if (!iso) return '—';
@@ -187,12 +199,32 @@ const DashboardMyRequests: React.FC = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [urlParams, setUrlParams] = useSearchParams();
   const [openId, setOpenId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [tab, setTab] = useState<'quotes' | 'leads'>('quotes');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
+  const [tab, setTab] = useState<'quotes' | 'leads'>(() => (urlParams.get('tab') === 'leads' ? 'leads' : 'quotes'));
+  const [statusFilter, setStatusFilter] = useState<string>(() => urlParams.get('status') ?? 'all');
+  const [search, setSearch] = useState<string>(() => urlParams.get('q') ?? '');
   const deferredSearch = useDeferredValue(search);
+  const [pins, setPins] = useState<Set<string>>(() => loadPins());
+  const togglePin = useCallback((id: string) => {
+    setPins((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem(STORAGE_KEY_PINS, JSON.stringify(Array.from(next))); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
+  // Sync URL <- state (shareable links)
+  useEffect(() => {
+    const next = new URLSearchParams(urlParams);
+    tab === 'quotes' ? next.delete('tab') : next.set('tab', tab);
+    statusFilter === 'all' ? next.delete('status') : next.set('status', statusFilter);
+    deferredSearch ? next.set('q', deferredSearch) : next.delete('q');
+    if (next.toString() !== urlParams.toString()) setUrlParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, statusFilter, deferredSearch]);
   const [sortBy, setSortBy] = useState<SortKey>(() => {
     if (typeof window === 'undefined') return 'newest';
     return (localStorage.getItem(STORAGE_KEY_SORT) as SortKey | null) ?? 'newest';
@@ -369,24 +401,30 @@ const DashboardMyRequests: React.FC = () => {
   const sortedQuotes = useMemo(() => {
     const arr = [...filteredQuotes];
     arr.sort((a, b) => {
+      const ap = pins.has(a.id) ? 1 : 0;
+      const bp = pins.has(b.id) ? 1 : 0;
+      if (ap !== bp) return bp - ap;
       if (sortBy === 'status') return a.status.localeCompare(b.status);
       const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
       const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
       return sortBy === 'oldest' ? aT - bT : bT - aT;
     });
     return arr;
-  }, [filteredQuotes, sortBy]);
+  }, [filteredQuotes, sortBy, pins]);
 
   const sortedLeads = useMemo(() => {
     const arr = [...filteredLeads];
     arr.sort((a, b) => {
+      const ap = pins.has(a.id) ? 1 : 0;
+      const bp = pins.has(b.id) ? 1 : 0;
+      if (ap !== bp) return bp - ap;
       if (sortBy === 'status') return a.status.localeCompare(b.status);
       const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
       const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
       return sortBy === 'oldest' ? aT - bT : bT - aT;
     });
     return arr;
-  }, [filteredLeads, sortBy]);
+  }, [filteredLeads, sortBy, pins]);
 
   // === Status counts (for chip badges) ===
   const quoteStatusCounts = useMemo(() => {
@@ -705,6 +743,17 @@ const DashboardMyRequests: React.FC = () => {
                 </button>
               );
             })}
+            {(statusFilter !== 'all' || search.trim() !== '') && (
+              <button
+                type="button"
+                onClick={() => { setStatusFilter('all'); setSearch(''); }}
+                className="text-xs px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:bg-muted/60 inline-flex items-center gap-1.5 ms-1"
+                aria-label={isRTL ? 'إعادة ضبط الفلاتر' : 'Reset filters'}
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>{isRTL ? 'إعادة ضبط' : 'Reset'}</span>
+              </button>
+            )}
           </div>
 
           {/* === QUOTES TAB === */}
@@ -747,6 +796,8 @@ const DashboardMyRequests: React.FC = () => {
                 fileCount={quoteFileCounts?.get(q.id) ?? 0}
                 isRTL={isRTL}
                 density={density}
+                pinned={pins.has(q.id)}
+                onTogglePin={togglePin}
               />
             ))}
           </TabsContent>
@@ -995,14 +1046,27 @@ const QuoteRequestRowCardImpl: React.FC<{
   fileCount: number;
   isRTL: boolean;
   density?: Density;
-}> = ({ q, fileCount, isRTL, density = 'comfortable' }) => {
+  pinned?: boolean;
+  onTogglePin?: (id: string) => void;
+}> = ({ q, fileCount, isRTL, density = 'comfortable', pinned = false, onTogglePin }) => {
   const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
   const compact = density === 'compact';
   const createdAbs = new Date(q.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
   return (
-    <Card className="overflow-hidden hover-lift transition-shadow">
+    <Card className={`overflow-hidden hover-lift transition-shadow ${pinned ? 'ring-1 ring-amber-400/40 bg-amber-50/30 dark:bg-amber-500/[0.04]' : ''}`}>
       <CardContent className={`${compact ? 'p-3 sm:p-3.5 space-y-2' : 'p-4 sm:p-5 space-y-3'}`}>
         <div className="flex flex-wrap items-center gap-2">
+          {onTogglePin && (
+            <button
+              type="button"
+              onClick={() => onTogglePin(q.id)}
+              className={`h-7 w-7 -ms-1 rounded-md inline-flex items-center justify-center transition-colors ${pinned ? 'text-amber-500 hover:bg-amber-500/10' : 'text-muted-foreground/60 hover:text-amber-500 hover:bg-muted'}`}
+              aria-label={pinned ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
+              aria-pressed={pinned}
+            >
+              <Star className={`h-4 w-4 ${pinned ? 'fill-current' : ''}`} />
+            </button>
+          )}
           {q.ref_id ? (
             <>
               <ReferenceBadge refId={q.ref_id} />
