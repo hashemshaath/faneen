@@ -389,6 +389,9 @@ const DashboardSiteDetail: React.FC = () => {
             <TabsTrigger value="overview"><ClipboardList className="h-4 w-4" /><span className="mx-2">{isRTL ? 'نظرة عامة' : 'Overview'}</span></TabsTrigger>
             <TabsTrigger value="contacts"><Users className="h-4 w-4" /><span className="mx-2">{isRTL ? 'جهات الاتصال' : 'Contacts'}</span></TabsTrigger>
             <TabsTrigger value="contracts"><FileText className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العقود' : 'Contracts'}</span></TabsTrigger>
+            <TabsTrigger value="projects"><Building2 className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المشاريع المرتبطة' : 'Linked projects'}</span></TabsTrigger>
+            <TabsTrigger value="files"><ImageIcon className="h-4 w-4" /><span className="mx-2">{isRTL ? 'الملفات' : 'Files'}</span></TabsTrigger>
+            <TabsTrigger value="licenses"><ClipboardList className="h-4 w-4" /><span className="mx-2">{isRTL ? 'الرخص والتصاريح' : 'Licenses'}</span></TabsTrigger>
             <TabsTrigger value="quotes"><MessageSquareQuote className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العروض' : 'Quotes'}</span></TabsTrigger>
             <TabsTrigger value="rfq"><Inbox className="h-4 w-4" /><span className="mx-2">RFQ</span></TabsTrigger>
             <TabsTrigger value="milestones"><Milestone className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المراحل' : 'Milestones'}</span></TabsTrigger>
