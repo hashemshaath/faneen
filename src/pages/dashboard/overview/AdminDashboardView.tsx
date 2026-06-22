@@ -31,7 +31,10 @@ import {
 } from '@/modules/leads';
 import { countConversationsTotal } from '@/modules/messaging';
 import { listAllContracts } from '@/modules/contracts';
-import { countActiveMembershipSubscriptions } from '@/modules/memberships';
+import {
+  countActiveMembershipSubscriptions,
+  countPendingApprovalMembershipSubscriptions,
+} from '@/modules/memberships';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   OverdueAlerts, TodaySummary, MembershipWidget,
@@ -48,6 +51,11 @@ import {
   SortableSection,
   useAdminDashboardLayout,
 } from '@/modules/admin-dashboard';
+import {
+  DashboardActionCenter,
+  type DashboardAction,
+} from '@/components/dashboard/overview/DashboardActionCenter';
+import { ShieldCheck as ShieldCheckIcon, LayoutDashboard as LayoutDashboardIcon, Inbox as InboxIcon } from 'lucide-react';
 import {
   DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter,
   type DragEndEvent,
@@ -120,7 +128,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         supabase.from('service_addition_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('business_ownership_transfer_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('entity_access_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
+        countPendingApprovalMembershipSubscriptions(),
       ]);
 
       const allContracts = contracts.data || [];
@@ -992,6 +1000,36 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
 
   return (
     <div className="space-y-5" ref={ref} data-admin-dashboard-edit={layout.editMode ? 'true' : 'false'}>
+      {/* Phase B2 — Role-aware Action Center (admin CTAs only). */}
+      <DashboardActionCenter
+        isRTL={isRTL}
+        role="admin"
+        actions={[
+          {
+            id: 'admin-provider-review',
+            label: { ar: 'مراجعة المزودين', en: 'Provider Review' },
+            description: {
+              ar: 'راجع المزودين الجدد وحدد الموافقة',
+              en: 'Review newly registered providers',
+            },
+            to: '/admin/provider-review',
+            icon: ShieldCheckIcon,
+            primary: true,
+          },
+          {
+            id: 'admin-hubs',
+            label: { ar: 'افتح مراكز الإدارة', en: 'Open admin hubs' },
+            to: '/admin',
+            icon: LayoutDashboardIcon,
+          },
+          {
+            id: 'admin-requests',
+            label: { ar: 'صندوق الطلبات', en: 'Requests inbox' },
+            to: '/admin/quote-requests',
+            icon: InboxIcon,
+          },
+        ] satisfies DashboardAction[]}
+      />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
           {blocks.map((run, bIdx) => {

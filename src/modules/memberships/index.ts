@@ -123,6 +123,7 @@ export type {
 export {
   listAdminMembershipSubscriptions,
   countActiveMembershipSubscriptions,
+  countPendingApprovalMembershipSubscriptions,
   adminListMembershipUsage,
 } from './services/subscriptions/reads';
 export { listMembershipSubscriptionsByIds } from './services/subscriptions/listMembershipSubscriptionsByIds';
