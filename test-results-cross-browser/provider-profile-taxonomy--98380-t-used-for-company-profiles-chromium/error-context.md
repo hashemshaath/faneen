@@ -12,7 +12,7 @@
 # Error details
 
 ```
-Error: browserType.launch: Executable doesn't exist at /webkit-2272/pw_run.sh
+Error: browserType.launch: Executable doesn't exist at /chromium_headless_shell-1217/chrome-headless-shell-linux64/chrome-headless-shell
 ╔════════════════════════════════════════════════════════════╗
 ║ Looks like Playwright was just installed or updated.       ║
 ║ Please run the following command to download new browsers: ║
