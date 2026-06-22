@@ -743,6 +743,17 @@ const DashboardMyRequests: React.FC = () => {
                 </button>
               );
             })}
+            {(statusFilter !== 'all' || search.trim() !== '') && (
+              <button
+                type="button"
+                onClick={() => { setStatusFilter('all'); setSearch(''); }}
+                className="text-xs px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:bg-muted/60 inline-flex items-center gap-1.5 ms-1"
+                aria-label={isRTL ? 'إعادة ضبط الفلاتر' : 'Reset filters'}
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>{isRTL ? 'إعادة ضبط' : 'Reset'}</span>
+              </button>
+            )}
           </div>
 
           {/* === QUOTES TAB === */}
@@ -785,6 +796,8 @@ const DashboardMyRequests: React.FC = () => {
                 fileCount={quoteFileCounts?.get(q.id) ?? 0}
                 isRTL={isRTL}
                 density={density}
+                pinned={pins.has(q.id)}
+                onTogglePin={togglePin}
               />
             ))}
           </TabsContent>
