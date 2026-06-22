@@ -33,11 +33,13 @@ describe('My Sites visual polish + display consistency', () => {
 
   it('DashboardSiteDetail uses shared helpers (no raw .id title fallbacks)', () => {
     expect(SITE_DETAIL).toMatch(/formatSiteTitle|formatProjectTitle/);
-    // No `|| c.id` / `|| p.id` / `|| l.id` / `|| r.id` raw fallbacks remain.
-    expect(SITE_DETAIL).not.toMatch(/\|\|\s*c\.id\b/);
-    expect(SITE_DETAIL).not.toMatch(/\|\|\s*p\.id\b/);
-    expect(SITE_DETAIL).not.toMatch(/title:\s*l\.ref_id\s*\|\|\s*l\.id\b/);
-    expect(SITE_DETAIL).not.toMatch(/title:\s*r\.ref_id\s*\|\|\s*r\.id\b/);
+    // No raw `|| <var>.id` (full UUID) title fallbacks remain — they were
+    // replaced by `shortReferenceId(...)`-based human strings. We allow
+    // `.id.slice(0, 8)` because that already produces an 8-char ref chip.
+    expect(SITE_DETAIL).not.toMatch(/\|\|\s*c\.id\s*[,)]/);
+    expect(SITE_DETAIL).not.toMatch(/\|\|\s*p\.id\s*[,)]/);
+    expect(SITE_DETAIL).not.toMatch(/title:\s*l\.ref_id\s*\|\|\s*l\.id\s*[,)]/);
+    expect(SITE_DETAIL).not.toMatch(/title:\s*r\.ref_id\s*\|\|\s*r\.id\s*[,)]/);
   });
 
   it('workspace service routes titles through display-name helpers', () => {
