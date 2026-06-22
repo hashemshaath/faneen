@@ -27,7 +27,7 @@ import {
   Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
 import { Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
-import { Star, RotateCcw } from 'lucide-react';
+import { Star, RotateCcw, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
@@ -207,6 +207,7 @@ const DashboardMyRequests: React.FC = () => {
   const [search, setSearch] = useState<string>(() => urlParams.get('q') ?? '');
   const deferredSearch = useDeferredValue(search);
   const [pins, setPins] = useState<Set<string>>(() => loadPins());
+  const [pinnedOnly, setPinnedOnly] = useState<boolean>(false);
   const togglePin = useCallback((id: string) => {
     setPins((prev) => {
       const next = new Set(prev);
