@@ -9,6 +9,7 @@ import { useLocation } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ADMIN_NAV_GROUPS, ADMIN_NAV_ITEMS } from '@/modules/admin-shell/navigation/adminNavigation';
+import { useBreadcrumbOverrides } from '@/hooks/breadcrumbOverrides';
 
 export interface BreadcrumbEntry {
   label: string;
@@ -77,6 +78,7 @@ export function useBreadcrumbs(): BreadcrumbEntry[] {
   const { pathname } = useLocation();
   const { isRTL } = useLanguage();
   const isMobile = useIsMobile();
+  const overrides = useBreadcrumbOverrides();
   return useMemo(() => {
     const segments = pathname.split('/').filter(Boolean);
     const crumbs: BreadcrumbEntry[] = [];
@@ -88,6 +90,11 @@ export function useBreadcrumbs(): BreadcrumbEntry[] {
     for (const seg of segments) {
       acc += `/${seg}`;
       if (SEGMENT_TO_MODULE[seg]) currentModule = SEGMENT_TO_MODULE[seg];
+      const override = overrides[acc];
+      if (override) {
+        crumbs.push({ label: override, path: acc, module: currentModule });
+        continue;
+      }
       // Skip dynamic ID-looking segments (UUIDs / refs) to keep crumbs clean.
       if (/^[0-9a-f-]{20,}$/i.test(seg)) {
         // Never show a raw UUID in the breadcrumb — show a short masked
@@ -135,5 +142,5 @@ export function useBreadcrumbs(): BreadcrumbEntry[] {
       return [crumbs[0], { label: '…', path: crumbs[crumbs.length - 3].path }, ...crumbs.slice(-2)];
     }
     return crumbs;
-  }, [pathname, isRTL, isMobile]);
+  }, [pathname, isRTL, isMobile, overrides]);
 }

@@ -38,6 +38,7 @@ import { WorkspaceScrollRestoration } from '@/components/workspace/shell/Workspa
 import { useWorkspacePreferences } from '@/hooks/useWorkspacePreferences';
 import { useWorkspaceStateSelfHeal } from '@/hooks/useWorkspaceStateSelfHeal';
 import { useEmbeddedPage } from '@/contexts/AdminTabsContext';
+import { BreadcrumbOverridesProvider } from '@/hooks/breadcrumbOverrides';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -256,6 +257,7 @@ const DashboardLayoutShell: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
+      <BreadcrumbOverridesProvider>
       <div className="min-h-dvh flex w-full">
         <DashboardSidebar />
         <div className="flex-1 flex flex-col min-w-0">
@@ -432,6 +434,7 @@ const DashboardLayoutShell: React.FC<DashboardLayoutProps> = ({ children }) => {
           </main>
         </div>
       </div>
+      </BreadcrumbOverridesProvider>
     </SidebarProvider>
   );
 };
