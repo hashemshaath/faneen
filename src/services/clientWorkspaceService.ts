@@ -30,6 +30,9 @@ export interface ClientWorkspace {
   district: string | null;
   address: string | null;
   filesCount: number;
+  latitude: number | null;
+  longitude: number | null;
+  mapUrl: string | null;
   contractsCount: number;
   reportsCount: number;
   violationsCount: number;
@@ -61,6 +64,9 @@ interface SiteRow {
   district: string | null;
   address_line1: string | null;
   address_line2: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  map_url: string | null;
   updated_at: string | null;
   created_at: string | null;
 }
@@ -117,7 +123,7 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
     supabase
       .from('client_sites')
       .select(
-        'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
+        'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, latitude, longitude, map_url, updated_at, created_at',
       )
       .is('archived_at', null)
       .order('updated_at', { ascending: false }),
@@ -143,6 +149,9 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       district: site?.district ?? null,
       address: buildAddress(site),
       filesCount: 0,
+      latitude: site?.latitude ?? null,
+      longitude: site?.longitude ?? null,
+      mapUrl: site?.map_url ?? null,
       contractsCount: 0,
       reportsCount: 0,
       violationsCount: 0,
@@ -170,6 +179,9 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       district: s.district,
       address: buildAddress(s),
       filesCount: 0,
+      latitude: s.latitude,
+      longitude: s.longitude,
+      mapUrl: s.map_url,
       contractsCount: 0,
       reportsCount: 0,
       violationsCount: 0,
