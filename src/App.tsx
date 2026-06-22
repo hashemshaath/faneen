@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import "@/lib/accent-colors";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -301,6 +301,18 @@ const PageLoader = () => (
   </div>
 );
 
+/**
+ * LEGACY CLEANUP L08 — Forwards the legacy admin detail route
+ * `/admin/quote-requests/:id` to the canonical
+ * `/admin/opportunities/:id` while preserving the `:id` path param.
+ * No component is removed; the legacy route path remains registered
+ * so deep-links and bookmarks keep working.
+ */
+const LegacyAdminQuoteRequestDetailRedirect = () => {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/admin/opportunities/${id ?? ''}`} replace />;
+};
+
 const AppRoutes = () => (
   <BrowserRouter
     future={{
@@ -546,8 +558,14 @@ const AppRoutes = () => (
           <Route path="/admin/contact-notification-log" element={<Navigate to="/admin/contact-messages?tab=notifications" replace />} />
           <Route path="/admin/lead-requests" element={<ProtectedRoute requireAdmin><AdminLeadRequests /></ProtectedRoute>} />
           <Route path="/admin/provider-leads" element={<ProtectedRoute requireAdmin><AdminProviderLeads /></ProtectedRoute>} />
-          <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
-          <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
+          {/* LEGACY CLEANUP L08 — `/admin/quote-requests*` redirects to
+              the canonical `/admin/opportunities/*` surface. Routes stay
+              registered (no deletion) so deep-links, email links, and
+              sidebar bookmarks continue to resolve. Components
+              `AdminQuoteRequests` / `AdminQuoteRequestDetails` remain
+              mounted on the canonical paths below. */}
+          <Route path="/admin/quote-requests" element={<Navigate to="/admin/opportunities/list" replace />} />
+          <Route path="/admin/quote-requests/:id" element={<LegacyAdminQuoteRequestDetailRedirect />} />
           {/* OPPORTUNITIES PHASE 2 — admin alias. */}
           {/* OPPORTUNITIES PHASE 8 — operations center (KPIs / funnel / table). */}
           <Route path="/admin/opportunities" element={<ProtectedRoute requireAdmin><AdminOpportunitiesOperations /></ProtectedRoute>} />
