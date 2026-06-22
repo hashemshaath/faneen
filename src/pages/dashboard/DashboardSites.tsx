@@ -335,6 +335,9 @@ export default function DashboardSites() {
   const [naf, setNaf] = useState<NationalAddressValue>(emptyNaf);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<SiteType | 'all'>('all');
+  const [cityFilter, setCityFilter] = useState<string>('all');
+  const [ownershipFilter, setOwnershipFilter] = useState<'all' | 'personal' | 'business'>('all');
+  const [completionFilter, setCompletionFilter] = useState<'all' | 'complete' | 'incomplete'>('all');
   const [showArchived, setShowArchived] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expandedBarcode, setExpandedBarcode] = useState<string | null>(null);
