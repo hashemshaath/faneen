@@ -1286,7 +1286,7 @@ export default function DashboardSites() {
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <Search className="w-7 h-7 mb-2" />
             <p className="text-sm font-medium">{pickBi(isRTL, 'لا توجد نتائج', 'No results')}</p>
-            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearch(''); setTypeFilter('all'); }}>{pickBi(isRTL, 'إعادة تعيين', 'Reset filters')}</button>
+            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearch(''); setTypeFilter('all'); setCityFilter('all'); setOwnershipFilter('all'); setCompletionFilter('all'); }}>{pickBi(isRTL, 'إعادة تعيين', 'Reset filters')}</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
