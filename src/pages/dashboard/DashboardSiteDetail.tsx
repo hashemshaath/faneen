@@ -297,21 +297,24 @@ const DashboardSiteDetail: React.FC = () => {
           <span className="mx-1">{isRTL ? 'كل المواقع' : 'All sites'}</span>
         </Link>
 
-        {/* Cover hero */}
-        <section className="relative overflow-hidden rounded-2xl border border-border/40 bg-card shadow-elev-2">
-          <div className="relative aspect-[21/8] sm:aspect-[21/7] md:aspect-[24/7] w-full bg-gradient-to-br from-muted via-muted/60 to-muted/30">
+        {/* Cover hero — dark executive */}
+        <section className="relative overflow-hidden rounded-3xl border border-border/40 bg-slate-900 shadow-elev-2">
+          <div className="relative aspect-[21/8] sm:aspect-[21/7] md:aspect-[24/7] w-full">
             {cover ? (
               <img src={cover} alt={displayName} className="h-full w-full object-cover" loading="lazy" decoding="async"/>
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                <ImageOff className="h-10 w-10" />
+              <div className="absolute inset-0 flex items-center justify-center text-white/30">
+                <ImageOff className="h-12 w-12" />
               </div>
             )}
-            {/* Layered gradients: deep dark base from bottom + subtle top vignette for contrast */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none" />
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
+            {/* Executive glow accents */}
+            <div className="absolute -top-24 -start-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -end-24 h-96 w-96 rounded-full bg-orange-500/[0.07] blur-3xl pointer-events-none" />
+            {/* Layered gradients for legibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-slate-950/20 pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/40 to-transparent pointer-events-none" />
             {/* Soft brand glow at bottom edge */}
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
             {canManage && (
               <div className="absolute end-3 top-3">
                 <SiteCoverUploader siteId={site.id} currentUrl={cover} onUploaded={(u) => setLocalCover(u)} />
@@ -321,21 +324,25 @@ const DashboardSiteDetail: React.FC = () => {
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-xs opacity-90 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      {isRTL ? 'نشط' : 'Active'}
+                    </span>
                     {site.site_ref ? (
-                      <span dir="ltr" className="tech-content rounded-md bg-white/15 backdrop-blur-sm ring-1 ring-white/25 px-2 py-0.5 font-mono">{site.site_ref}</span>
+                      <span dir="ltr" className="tech-content rounded-md bg-white/10 backdrop-blur-sm ring-1 ring-white/20 px-2 py-0.5 font-mono text-white/90">{site.site_ref}</span>
                     ) : null}
-                    {typeLabel && <Badge variant="secondary" className="bg-white/15 backdrop-blur-sm ring-1 ring-white/25 text-white border-0">{isRTL ? typeLabel.ar : typeLabel.en}</Badge>}
+                    {typeLabel && <Badge variant="secondary" className="bg-white/10 backdrop-blur-sm ring-1 ring-white/20 text-white border-0">{isRTL ? typeLabel.ar : typeLabel.en}</Badge>}
                   </div>
-                  <h1 dir="auto" className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]">{displayName}</h1>
+                  <h1 dir="auto" className="mt-2 text-xl sm:text-2xl md:text-4xl font-bold leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]">{displayName}</h1>
                   {(site.city_name || site.district) && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs sm:text-sm opacity-95 drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]" dir="auto">
-                      <MapPin className="h-3.5 w-3.5" />
+                    <p className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm text-slate-300 drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]" dir="auto">
+                      <MapPin className="h-4 w-4 text-emerald-400" />
                       <span>{[site.district, site.city_name].filter(Boolean).join(' · ')}</span>
                     </p>
                   )}
                 </div>
                 {canManage && (
-                  <Button size="sm" variant="secondary" onClick={() => navigate(`/dashboard/sites?edit=${site.id}`)} className="hover-lift bg-white/95 hover:bg-white text-foreground shadow-md">
+                  <Button size="sm" variant="secondary" onClick={() => navigate(`/dashboard/sites?edit=${site.id}`)} className="hover-lift bg-white hover:bg-slate-100 text-slate-900 font-semibold shadow-md rounded-xl">
                     <Pencil className="h-4 w-4" />
                     <span className="mx-2">{isRTL ? 'تعديل' : 'Edit'}</span>
                   </Button>
@@ -347,12 +354,12 @@ const DashboardSiteDetail: React.FC = () => {
 
         {/* KPI Strip */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <KpiCard icon={FileText} label={isRTL ? 'العقود' : 'Contracts'} value={contracts.length} loading={contractsLoading} />
-          <KpiCard icon={MessageSquareQuote} label={isRTL ? 'عروض' : 'Quotes'} value={leads.length} loading={leadsLoading} />
-          <KpiCard icon={Inbox} label="RFQ" value={rfqs.length} loading={rfqsLoading} />
-          <KpiCard icon={Users} label={isRTL ? 'جهات' : 'Contacts'} value={contactsRaw.length} loading={contactsLoading} />
-          <KpiCard icon={AlertTriangle} label={isRTL ? 'بلاغات' : 'Reports'} value={reportsCount} loading={false} tone={reportsCount > 0 ? 'destructive' : undefined} />
-          <KpiCard icon={ImageIcon} label={isRTL ? 'الصور' : 'Gallery'} value={gallery.length} loading={false} />
+          <KpiCard icon={FileText} label={isRTL ? 'العقود' : 'Contracts'} value={contracts.length} loading={contractsLoading} accent="blue" />
+          <KpiCard icon={MessageSquareQuote} label={isRTL ? 'عروض' : 'Quotes'} value={leads.length} loading={leadsLoading} accent="amber" />
+          <KpiCard icon={Inbox} label="RFQ" value={rfqs.length} loading={rfqsLoading} accent="emerald" />
+          <KpiCard icon={Users} label={isRTL ? 'جهات' : 'Contacts'} value={contactsRaw.length} loading={contactsLoading} accent="primary" />
+          <KpiCard icon={AlertTriangle} label={isRTL ? 'بلاغات' : 'Reports'} value={reportsCount} loading={false} accent="orange" tone={reportsCount > 0 ? 'destructive' : undefined} />
+          <KpiCard icon={ImageIcon} label={isRTL ? 'الصور' : 'Gallery'} value={gallery.length} loading={false} accent="primary" />
         </div>
 
         {/* Quick Actions Bar — every action is linked to this site's ref */}
@@ -417,10 +424,10 @@ const DashboardSiteDetail: React.FC = () => {
           <TabsContent value="overview" className="mt-4">
             <div className="grid gap-4 md:grid-cols-2">
               {/* Activity summary spanning full width */}
-              <Card className="md:col-span-2 overflow-hidden">
+              <Card className="md:col-span-2 overflow-hidden rounded-2xl">
                 <CardContent className="p-5">
-                  <h3 className="font-semibold flex items-center gap-2 pb-3 mb-3 border-b border-border/40">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><TrendingUp className="h-4 w-4" /></span>
+                  <h3 className="font-bold text-base flex items-center gap-2.5 pb-3 mb-4 border-b border-border/40">
+                    <span className="w-1.5 h-5 rounded-full bg-emerald-500" />
                     {isRTL ? 'ملخص النشاط' : 'Activity summary'}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -453,10 +460,10 @@ const DashboardSiteDetail: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden rounded-2xl">
                 <CardContent className="p-5 space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2 pb-2 border-b border-border/40">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><User className="h-4 w-4" /></span>
+                  <h3 className="font-bold text-base flex items-center gap-2.5 pb-3 border-b border-border/40">
+                    <span className="w-1.5 h-5 rounded-full bg-blue-500" />
                     {isRTL ? 'جهة الاتصال' : 'Contact'}
                   </h3>
                   <SiteField label={isRTL ? 'الاسم' : 'Name'} value={site.contact_name} />
@@ -471,10 +478,10 @@ const DashboardSiteDetail: React.FC = () => {
                   )}
                 </CardContent>
               </Card>
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden rounded-2xl">
                 <CardContent className="p-5 space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2 pb-2 border-b border-border/40">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><MapPin className="h-4 w-4" /></span>
+                  <h3 className="font-bold text-base flex items-center gap-2.5 pb-3 border-b border-border/40">
+                    <span className="w-1.5 h-5 rounded-full bg-orange-500" />
                     {isRTL ? 'العنوان' : 'Address'}
                   </h3>
                   <SiteField label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
@@ -736,15 +743,42 @@ const InfoRow: React.FC<{
   );
 };
 
-const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; value: number; loading: boolean; tone?: 'destructive' }> = ({ icon: Icon, label, value, loading, tone }) => (
-  <Card className={`hover-lift ${tone === 'destructive' ? 'border-destructive/40 bg-destructive/5' : ''}`}><CardContent className="p-4">
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <Icon className={`h-4 w-4 ${tone === 'destructive' ? 'text-destructive' : 'text-primary'}`} />
-    </div>
-    <div className={`mt-2 text-2xl font-bold tech-content ${tone === 'destructive' && value > 0 ? 'text-destructive' : ''}`}>{loading ? '—' : value}</div>
-  </CardContent></Card>
-);
+type KpiAccent = 'primary' | 'blue' | 'emerald' | 'amber' | 'orange';
+const KPI_ACCENT_CLASSES: Record<KpiAccent, string> = {
+  primary: 'bg-primary/10 text-primary',
+  blue: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400',
+  emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+  amber: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
+  orange: 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400',
+};
+const KpiCard: React.FC<{
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  loading: boolean;
+  accent?: KpiAccent;
+  tone?: 'destructive';
+}> = ({ icon: Icon, label, value, loading, accent = 'primary', tone }) => {
+  const isDestructive = tone === 'destructive' && value > 0;
+  const iconClasses = isDestructive
+    ? 'bg-destructive/10 text-destructive'
+    : KPI_ACCENT_CLASSES[accent];
+  return (
+    <Card className={`hover-lift rounded-2xl ${isDestructive ? 'border-destructive/40 bg-destructive/[0.03]' : ''}`}>
+      <CardContent className="p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground mb-1 truncate">{label}</p>
+          <p className={`text-2xl font-bold tech-content leading-none ${isDestructive ? 'text-destructive' : ''}`}>
+            {loading ? '—' : value}
+          </p>
+        </div>
+        <span className={`shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-xl ${iconClasses}`}>
+          <Icon className="h-5 w-5" />
+        </span>
+      </CardContent>
+    </Card>
+  );
+};
 
 const QuickAction: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
   <button
