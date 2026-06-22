@@ -30,14 +30,14 @@ import {
  *   • parseLimits (LIMIT_FIELDS)      → canonical plan limits schema
  *
  * No fake invoices / payment cards / hardcoded plan names or limits.
- * No DB / RLS / RPC / migrations / cron changes.
+ * No DB / RLS / RPC / schema / cron changes triggered from this page.
  *
  * MEMBERSHIP-CURRENT-SCOPE-FIX:
  * Current dashboard membership scope is BUSINESS/ENTITY membership.
  * Individual membership plans may be introduced later as a separate
  * scope. Do NOT treat a missing business_id as an individual free plan,
- * and do NOT word the UI as if individuals can never have memberships.
- * Every label/message here scopes to «الجهة» (the business entity).
+ * and do NOT word the UI in a way that forecloses future personal-tier
+ * plans. Every label/message here scopes to «الجهة» (the business entity).
  */
 
 type Sub = {
