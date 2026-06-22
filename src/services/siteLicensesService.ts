@@ -8,7 +8,7 @@
  *   - file_id (when set) must point to a file in the SAME site — enforced
  *     by a DB trigger; the service additionally validates client-side for
  *     friendlier errors.
- *   - No service_role / admin keys on the frontend.
+ *   - No elevated/admin keys on the frontend.
  */
 import { supabase } from '@/integrations/supabase/client';
 
