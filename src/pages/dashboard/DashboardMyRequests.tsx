@@ -561,6 +561,7 @@ const DashboardMyRequests: React.FC = () => {
             <div className="relative flex-1 sm:max-w-xs sm:ms-auto">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
+                ref={searchRef}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={isRTL ? 'بحث في الطلبات…' : 'Search requests…'}
@@ -568,6 +569,7 @@ const DashboardMyRequests: React.FC = () => {
                 dir="auto"
                 aria-label={isRTL ? 'بحث' : 'Search'}
               />
+              <kbd className="hidden md:inline-flex absolute end-2 top-1/2 -translate-y-1/2 h-5 items-center px-1.5 rounded border border-border bg-muted text-[10px] text-muted-foreground tech-content pointer-events-none">/</kbd>
             </div>
 
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
