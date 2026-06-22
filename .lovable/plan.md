@@ -1,65 +1,68 @@
-# Knowledge + FAQ + Help Center Unification — Master Knowledge Service
-
 ## Scope
-Frontend-only consolidation. No DB, RLS, RPC, migrations, edge functions, or message sending. Build a typed in-repo knowledge registry that FAQ, Help Center, AI assistant, and message helpers can all read from.
 
-## Phase A — Inventory
-Search the project for knowledge sources:
-- Keywords: `faq`, `help`, `support`, `knowledge`, `article`, `guide`, `docs`, `question`, `answer`, `template`, `notification`, plus Arabic equivalents (`مساعدة`, `الأسئلة الشائعة`, `مركز المساعدة`, `المعرفة`, `دليل`, `إرشادات`, `الدعم`, `كيف`).
-- Locations: `src/pages/**` (Help, FAQ, Support, About), `src/components/**` (empty states, onboarding copy), `src/modules/**`, `supabase/functions/**` (string templates only), email/notification template files.
+A presentation-only cleanup pass. No business logic, routes, RLS, RPC, edge, permissions, or matching/bids/credits/notifications behavior change. Focused on 2–5 high-impact extractions backed by existing shared primitives, plus a guard test.
 
-Output: `docs/knowledge-help-faq-unification-audit.md` with the required table (Source | Type | Path | Audience | Language | Duplicate? | Assistant-usable? | Notes).
+## Current state (audit)
 
-## Phase B — Knowledge module
-Create `src/modules/knowledge/`:
+Already shared in `src/components/shared/`:
+- `PageHeader`, `MetricCard`, `FiltersBar`, `StatusBadge` (v3 Soft & Modern primitives).
 
-```text
-knowledge.types.ts        KnowledgeItem + enums
-knowledge.schema.ts       Runtime validator (zod) + dev assertions
-knowledgeRegistry.ts      Seed entries migrated from inventory
-knowledgeSearch.ts        Filter by audience/type/tags/locale, simple scoring
-knowledgeAudience.ts      Audience guards (visitor/customer/provider/...)
-knowledgeTags.ts          Canonical tag list
-knowledgeHelpers.ts       getAssistantKnowledgeContext, getMessageKnowledgeSnippets
-index.ts                  Public exports
-```
+Gaps & duplication found:
+- **EmptyState** — no shared primitive. Bespoke empty blocks repeated across ~25+ dashboard/admin pages (e.g. `DashboardContracts`, `DashboardSites`, `DashboardCredentials`, `DashboardBrands`, `AdminOperations`, `AdminBusinesses`, `AdminBarcodeRegistry`, `AdminProjectCategories`, `AdminSitemapStatus`, `DashboardPromotions`, etc.). Each renders its own Card + icon + Arabic/English copy.
+- **ErrorRetryCard** — ad-hoc error blocks scattered; no shared primitive.
+- Many pages already import `PageHeader`/`MetricCard`/`FiltersBar`/`StatusBadge` correctly — leave those alone.
 
-`KnowledgeItem` matches the spec exactly. Strict TS, no `any`, no suppressions.
+## Changes (2 focused extractions only)
 
-## Phase C — Wire existing surfaces
-- Help Center page reads its articles from `knowledgeRegistry` (filter `type in ['help_article','guide']`, audience match).
-- FAQ page/section reads from `knowledgeRegistry` (filter `type='faq'`).
-- Where legacy hardcoded arrays exist, migrate their content into the registry and replace the array with a `useKnowledge(...)` selector. Leave a `// LEGACY: source migrated to knowledgeRegistry` comment if a full swap is risky; do not delete.
+### 1. New `EmptyState` shared primitive
+`src/components/shared/EmptyState.tsx`
+- Props: `{ icon?: LucideIcon; title: string; description?: string; action?: ReactNode; tone?: 'muted' | 'accent'; dense?: boolean; className?: string }`
+- Uses semantic tokens only (`bg-muted/40`, `text-muted-foreground`, `border-border`, `rounded-xl`).
+- RTL-safe (logical spacing); no hardcoded hex; no `any`.
+- Exported from `src/components/shared/index.ts`.
 
-## Phase D — Assistant + messaging interfaces (no sending)
-- `getAssistantKnowledgeContext(query, audience, locale)` → ranked items with title/summary/body/source/tags/relatedRoutes. Filters by `usableByAssistant` and audience-appropriate status.
-- `getMessageKnowledgeSnippets(audience, intent, locale)` → items with `usableInMessages=true`, excludes `status='internal'`.
-- No network calls, no provider wiring.
+### 2. New `ErrorRetryCard` shared primitive
+`src/components/shared/ErrorRetryCard.tsx`
+- Props: `{ title?: string; message?: string; onRetry?: () => void; retryLabel?: string; className?: string }`
+- Renders destructive-toned card with retry button (uses existing shadcn `Button`).
+- Exported from `src/components/shared/index.ts`.
 
-## Phase E — Tests
-- `src/__tests__/knowledgeRegistryUnification.test.ts` — 14 invariants from spec (unique ids, AR title required, audience present, body required for published, no internal leakage in message items, no duplicate titles, no `any`/suppression scan on the module).
-- `src/__tests__/assistantKnowledgeContext.test.ts` — audience filtering, visitor isolation from internal, AR support, tag filtering, source returned, no synthesized answers.
-- `src/__tests__/faqUsesKnowledgeRegistry.test.ts` + `helpCenterUsesKnowledgeRegistry.test.ts` — static file scans proving the pages import the registry.
+### 3. Opt-in adoption (3 call sites max, lowest risk)
+Migrate three pages with clearly duplicated empty blocks to the new primitive — chosen for being pure presentation, no test snapshots, no matching/bid/contract logic:
+- `src/pages/dashboard/DashboardCredentials.tsx`
+- `src/pages/dashboard/DashboardBrands.tsx`
+- `src/pages/dashboard/DashboardSites.tsx`
 
-## Phase F — Report
-`docs/knowledge-help-faq-unification-report.md` answering the 17 required questions, plus tsc/test results and final decision line.
+Only the empty/error JSX blocks change. Copy preserved verbatim. No data fetching, mutations, queries, or props touched.
 
-## Constraints
-- No DB / RLS / migrations / edge changes.
-- No real message sending.
-- No deletions of public pages or routes.
-- No `any`, `as any`, `@ts-ignore`, skipped tests.
-- Bilingual primitives (`<Bi>`, `pickBi`) used in UI; raw `isRTL ? ar : en` not introduced.
+### 4. Guard test
+`src/__tests__/projectComponentsCleanupReusability.test.tsx`
+- Asserts `EmptyState` and `ErrorRetryCard` exist and are exported from `@/components/shared`.
+- Asserts the 3 migrated pages import them.
+- Static guards on the 4 new/modified files: no `any`, no `as any`, no `@ts-ignore`, no `eslint-disable`, no hardcoded hex (`#[0-9a-fA-F]{3,8}`), no `service_role`.
+- Renders `EmptyState` and `ErrorRetryCard` with minimal props to verify title/description/retry callback wiring.
 
-## Out of scope (recommended as Phase 2)
-- Admin CRUD UI for knowledge (designed in report only).
-- DB-backed persistence + RLS.
-- Real AI assistant wiring beyond the interface.
-- Email/WhatsApp/notification template migration into registry (inventoried but not moved this phase).
+## Verification
 
-## Deliverables
-- `docs/knowledge-help-faq-unification-audit.md`
-- `docs/knowledge-help-faq-unification-report.md`
-- `src/modules/knowledge/*` (8 files)
-- Edits to Help/FAQ pages to source from registry
-- 4 new test files
+- `vitest run` for the new guard test plus targeted suites that touch the modified pages (`DashboardCredentials`, `DashboardBrands`, `DashboardSites`).
+- `tsc` clean (no project-wide manual run — harness handles it).
+- Final report follows the exact `PROJECT COMPONENTS CLEANUP + REUSABILITY REPORT` template.
+
+## Out of scope (deferred debt)
+
+- Migrating the remaining ~20 pages with bespoke empty states (do in later passes, 3–5 at a time).
+- KPI strip extraction (`MetricCard` already covers the common case).
+- Admin action bar / filter chips bar (`FiltersBar` already exists; no clear duplication beyond it).
+- Any backend, routing, or behavior changes.
+
+## Technical notes
+
+- File tree additions:
+  - `src/components/shared/EmptyState.tsx`
+  - `src/components/shared/ErrorRetryCard.tsx`
+  - `src/__tests__/projectComponentsCleanupReusability.test.tsx`
+- File modifications:
+  - `src/components/shared/index.ts` (re-export only)
+  - `src/pages/dashboard/DashboardCredentials.tsx` (swap empty JSX)
+  - `src/pages/dashboard/DashboardBrands.tsx` (swap empty JSX)
+  - `src/pages/dashboard/DashboardSites.tsx` (swap empty JSX)
