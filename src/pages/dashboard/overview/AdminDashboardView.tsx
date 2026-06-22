@@ -128,7 +128,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         supabase.from('service_addition_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('business_ownership_transfer_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('entity_access_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
+        countPendingApprovalMembershipSubscriptions(),
       ]);
 
       const allContracts = contracts.data || [];
