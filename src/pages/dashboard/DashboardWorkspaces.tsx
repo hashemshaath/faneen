@@ -38,7 +38,7 @@ const DashboardWorkspaces: React.FC = () => {
     enabled: !!user?.id,
   });
 
-  const workspaces: ClientWorkspace[] = data ?? [];
+  const workspaces: ClientWorkspace[] = useMemo(() => data ?? [], [data]);
   const projectCount = workspaces.filter((w) => w.kind === 'project').length;
   const siteCount = workspaces.filter((w) => w.kind === 'site').length;
   const visibleWorkspaces = useMemo(
