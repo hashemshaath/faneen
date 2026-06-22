@@ -12,6 +12,7 @@ import {
 } from '@/modules/leads/services/list';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
+import { subscribeMyRequestsChanges } from '@/modules/leads/services/subscribeMyRequestsChanges';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,7 +34,6 @@ import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { PageHeader } from '@/components/shared';
-import { supabase } from '@/integrations/supabase/client';
 
 interface MyLeadRow {
   id: string;
