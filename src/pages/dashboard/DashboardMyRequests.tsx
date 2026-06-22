@@ -401,24 +401,30 @@ const DashboardMyRequests: React.FC = () => {
   const sortedQuotes = useMemo(() => {
     const arr = [...filteredQuotes];
     arr.sort((a, b) => {
+      const ap = pins.has(a.id) ? 1 : 0;
+      const bp = pins.has(b.id) ? 1 : 0;
+      if (ap !== bp) return bp - ap;
       if (sortBy === 'status') return a.status.localeCompare(b.status);
       const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
       const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
       return sortBy === 'oldest' ? aT - bT : bT - aT;
     });
     return arr;
-  }, [filteredQuotes, sortBy]);
+  }, [filteredQuotes, sortBy, pins]);
 
   const sortedLeads = useMemo(() => {
     const arr = [...filteredLeads];
     arr.sort((a, b) => {
+      const ap = pins.has(a.id) ? 1 : 0;
+      const bp = pins.has(b.id) ? 1 : 0;
+      if (ap !== bp) return bp - ap;
       if (sortBy === 'status') return a.status.localeCompare(b.status);
       const aT = new Date(sortBy === 'updated' ? a.updated_at ?? a.created_at : a.created_at).getTime();
       const bT = new Date(sortBy === 'updated' ? b.updated_at ?? b.created_at : b.created_at).getTime();
       return sortBy === 'oldest' ? aT - bT : bT - aT;
     });
     return arr;
-  }, [filteredLeads, sortBy]);
+  }, [filteredLeads, sortBy, pins]);
 
   // === Status counts (for chip badges) ===
   const quoteStatusCounts = useMemo(() => {
