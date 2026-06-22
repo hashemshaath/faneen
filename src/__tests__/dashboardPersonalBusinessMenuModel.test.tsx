@@ -35,8 +35,8 @@ describe('individual without a business', () => {
     expect(itemEns).toContain(UNIFIED_ITEM_LABELS.sites.en);
   });
 
-  it('sees «المشاريع» (Projects)', () => {
-    expect(itemEns).toContain(UNIFIED_ITEM_LABELS.projects.en);
+  it('does NOT see «المشاريع» (Projects) — portfolio concept requires a business', () => {
+    expect(itemEns).not.toContain(UNIFIED_ITEM_LABELS.projects.en);
   });
 
   it('sees «طلباتي» (My Requests)', () => {
@@ -88,6 +88,10 @@ describe('user with a business', () => {
     for (const key of ['businessProfile', 'services', 'portfolio', 'team', 'visibility'] as const) {
       expect(itemEns).toContain(UNIFIED_ITEM_LABELS[key].en);
     }
+  });
+
+  it('sees «المشاريع» (Projects) once a business is owned', () => {
+    expect(itemEns).toContain(UNIFIED_ITEM_LABELS.projects.en);
   });
 });
 
