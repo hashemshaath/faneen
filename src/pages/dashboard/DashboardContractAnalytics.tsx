@@ -184,8 +184,6 @@ const DashboardContractAnalytics: React.FC = () => {
       const { data: rpcData, error: rpcError } = await getContractAnalyticsDashboard(
         { _business_id: effectiveBusinessId ?? undefined, _period: period, _scope: 'provider' },
       );
-      // eslint-disable-next-line no-console
-      console.log('[Analytics RPC Debug]', { rpcErrorType: typeof rpcError, isError: rpcError instanceof Error, name: (rpcError as { name?: string })?.name, message: (rpcError as { message?: string })?.message });
       if (rpcError) throw rpcError;
       return rpcData as unknown as AnalyticsPayload;
     },
@@ -202,10 +200,14 @@ const DashboardContractAnalytics: React.FC = () => {
       : bizName(businessOptions.find((b) => b.id === effectiveBusinessId) ?? { name_ar: null, name_en: null });
 
   const errMessage =
-    error instanceof Error ? error.message : '';
-  // eslint-disable-next-line no-console
-  console.log('[Analytics Error Debug]', { isError, error, errMessage, name: (error as Error)?.name, code: (error as { code?: string })?.code });
-  const isForbidden = errMessage.includes('FORBIDDEN');
+    error && typeof error === 'object' && 'message' in error && typeof (error as { message?: unknown }).message === 'string'
+      ? (error as { message: string }).message
+      : '';
+  const errorCode =
+    error && typeof error === 'object' && 'code' in error && typeof (error as { code?: unknown }).code === 'string'
+      ? (error as { code: string }).code
+      : '';
+  const isForbidden = errorCode === '42501' || errMessage.includes('FORBIDDEN');
 
   return (
     <DashboardLayout>
