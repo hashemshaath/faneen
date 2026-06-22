@@ -21571,6 +21571,15 @@ export type Database = {
         }
         Returns: string
       }
+      create_contract_from_workspace_as_client: {
+        Args: {
+          _payload: Json
+          _template_version_id: string
+          _workspace_id: string
+          _workspace_kind: string
+        }
+        Returns: string
+      }
       create_customer_tracking_link: {
         Args: {
           _customer_email?: string
