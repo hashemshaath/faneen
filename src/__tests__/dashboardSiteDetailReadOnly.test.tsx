@@ -55,9 +55,9 @@ describe('DashboardSiteDetail — read-only pass', () => {
     expect(filesBlock).toMatch(/siteId=\{site\.id\}/);
   });
 
-  it('licenses tab is coming soon only', () => {
+  it('licenses tab now renders the SiteLicensesTab (read/write phase)', () => {
     expect(DETAIL).toContain('data-testid="site-licenses-tab"');
-    expect(DETAIL).toMatch(/قريباً|coming soon/i);
+    expect(DETAIL).toMatch(/<SiteLicensesTab\b/);
   });
 
   it('does NOT call create-contract RPC from the detail page', () => {
