@@ -21,7 +21,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { KpiStrip } from '@/components/dashboard/KpiCard';
 import {
   Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
@@ -33,7 +32,43 @@ import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
-import { PageHeader } from '@/components/shared';
+import type { LucideIcon } from 'lucide-react';
+
+/** Premium KPI tile used on the executive hero. */
+type HeroKpiAccent = 'emerald' | 'blue' | 'amber' | 'orange' | 'slate';
+const HERO_KPI_ACCENTS: Record<HeroKpiAccent, { icon: string; ring: string; chip: string }> = {
+  emerald: { icon: 'bg-emerald-500/15 text-emerald-300', ring: 'ring-emerald-400/20', chip: 'bg-emerald-400/15 text-emerald-200' },
+  blue:    { icon: 'bg-blue-500/15 text-blue-300',       ring: 'ring-blue-400/20',    chip: 'bg-blue-400/15 text-blue-200' },
+  amber:   { icon: 'bg-amber-500/15 text-amber-300',     ring: 'ring-amber-400/20',   chip: 'bg-amber-400/15 text-amber-200' },
+  orange:  { icon: 'bg-orange-500/15 text-orange-300',   ring: 'ring-orange-400/20',  chip: 'bg-orange-400/15 text-orange-200' },
+  slate:   { icon: 'bg-white/10 text-white/80',          ring: 'ring-white/10',       chip: 'bg-white/10 text-white/80' },
+};
+
+const HeroKpi: React.FC<{
+  icon: LucideIcon;
+  label: string;
+  value: number | string;
+  hint?: string;
+  accent: HeroKpiAccent;
+}> = ({ icon: Icon, label, value, hint, accent }) => {
+  const a = HERO_KPI_ACCENTS[accent];
+  return (
+    <div className={`group rounded-2xl bg-white/[0.04] backdrop-blur-sm ring-1 ${a.ring} p-3.5 sm:p-4 transition-all hover:bg-white/[0.07] hover:-translate-y-0.5`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${a.icon}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        {hint && (
+          <span className={`text-[10px] px-2 py-0.5 rounded-full ${a.chip}`}>{hint}</span>
+        )}
+      </div>
+      <div className="mt-3">
+        <div className="text-2xl font-bold text-white tech-content leading-none">{value}</div>
+        <div className="text-[11px] uppercase tracking-wide text-white/60 mt-1.5">{label}</div>
+      </div>
+    </div>
+  );
+};
 
 interface MyLeadRow {
   id: string;
