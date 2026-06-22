@@ -111,6 +111,10 @@ describe("SECURITY-DEEP-REVIEW-3 static guards", () => {
       // Internal cron / DB sweep workers (no external URL input).
       "supabase/functions/data-enrichment-run/index.ts",
       "supabase/functions/membership-lifecycle-dispatcher/index.ts",
+      // WhatsApp Cloud API client — hardcoded host `graph.facebook.com/v20.0`,
+      // phone-id from env, no user-controlled URL input. Reviewed under
+      // deep-review-3 host policy (Meta Graph API is project-approved).
+      "supabase/functions/send-opportunity-whatsapp/index.ts",
     ]);
     const offenders: string[] = [];
     for (const file of edgeFiles) {

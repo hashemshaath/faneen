@@ -52,9 +52,19 @@ describe("SITE-INTEGRITY-DEEP-AUDIT-1", () => {
 
   it("no Lorem ipsum copy in production code", () => {
     const offenders: string[] = [];
+    // Documented fixture exemptions: files that legitimately contain the
+    // string "lorem ipsum" as test/pilot data — never rendered as UI copy.
+    const fixtureAllowlist = new Set<string>([
+      // Assistant internal pilot question bank — "lorem ipsum" is a
+      // nonsense-query fixture used to assert the assistant returns its
+      // out-of-domain fallback. Not user-facing copy.
+      "src/modules/knowledge/assistant/assistantInternalPilot.ts",
+    ]);
     for (const f of productionFiles) {
+      const rel = relative(process.cwd(), f).replace(/\\/g, "/");
+      if (fixtureAllowlist.has(rel)) continue;
       if (/lorem\s+ipsum/i.test(readFileSync(f, "utf8"))) {
-        offenders.push(relative(process.cwd(), f));
+        offenders.push(rel);
       }
     }
     expect(offenders).toEqual([]);
