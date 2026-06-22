@@ -439,43 +439,48 @@ export default function DashboardSites() {
     staleTime: 60_000,
   });
 
-  /* ─── Contracts linked per site ─── */
+  /* ─── Stable list of site ids ───────────────────────────────────
+   * Both count queries below depend on the same id-set. Memoizing
+   * keeps queryKeys stable across re-renders and avoids re-deriving
+   * the array on every keystroke in the inline editor. */
+  const siteIds = useMemo(() => sites.map((s) => s.id), [sites]);
+  const siteIdsKey = useMemo(() => siteIds.join(','), [siteIds]);
+
+  /* ─── Contracts linked per site (single batched IN query) ─── */
   const { data: contractCounts = {} } = useQuery({
-    queryKey: ['site-contract-counts', businessId, sites.map(s => s.id).join(',')],
+    queryKey: ['site-contract-counts', businessId, siteIdsKey],
     queryFn: async () => {
-      if (!sites.length) return {} as Record<string, number>;
-      const ids = sites.map(s => s.id);
+      if (!siteIds.length) return {} as Record<string, number>;
       const { data } = await supabase
         .from('contracts')
         .select('execution_site_id')
-        .in('execution_site_id', ids);
+        .in('execution_site_id', siteIds);
       const map: Record<string, number> = {};
       (data ?? []).forEach((r: { execution_site_id: string | null }) => {
         if (r.execution_site_id) map[r.execution_site_id] = (map[r.execution_site_id] ?? 0) + 1;
       });
       return map;
     },
-    enabled: sites.length > 0,
+    enabled: siteIds.length > 0,
     staleTime: 60_000,
   });
 
-  /* ─── Projects linked per site (lightweight count by site_id) ─── */
+  /* ─── Projects linked per site (single batched IN query) ─── */
   const { data: projectCounts = {} } = useQuery({
-    queryKey: ['site-project-counts', sites.map(s => s.id).join(',')],
+    queryKey: ['site-project-counts', siteIdsKey],
     queryFn: async () => {
-      if (!sites.length) return {} as Record<string, number>;
-      const ids = sites.map(s => s.id);
+      if (!siteIds.length) return {} as Record<string, number>;
       const { data } = await supabase
         .from('projects')
         .select('site_id')
-        .in('site_id', ids);
+        .in('site_id', siteIds);
       const map: Record<string, number> = {};
       (data ?? []).forEach((r: { site_id: string | null }) => {
         if (r.site_id) map[r.site_id] = (map[r.site_id] ?? 0) + 1;
       });
       return map;
     },
-    enabled: sites.length > 0,
+    enabled: siteIds.length > 0,
     staleTime: 60_000,
   });
 
