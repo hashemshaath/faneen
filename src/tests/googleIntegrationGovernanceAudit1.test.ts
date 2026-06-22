@@ -52,7 +52,13 @@ describe("GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1", () => {
   });
 
   it("AdminDataEnrichment imports the unified maps service", () => {
-    const src = read("src/pages/admin/AdminDataEnrichment.tsx");
+    // Source bundle: the unified maps service is consumed by the legacy
+    // single-row tool that the page mounts. Scan both files so the guard
+    // tracks the actual import location after the legitimate extraction.
+    const pagePath = "src/pages/admin/AdminDataEnrichment.tsx";
+    const childPath =
+      "src/components/admin/data-enrichment/LegacySingleRowEnrichment.tsx";
+    const src = [pagePath, childPath].map(read).join("\n");
     expect(src).toContain("@/modules/google");
     expect(src).not.toMatch(/VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY/);
   });
