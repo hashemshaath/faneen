@@ -22,6 +22,7 @@ import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGa
 import SiteContactsTab from '@/components/sites/SiteContactsTab';
 import SiteReportsTab from '@/components/sites/SiteReportsTab';
 import SiteFilesTab from '@/components/sites/SiteFilesTab';
+import SiteLicensesTab from '@/components/sites/SiteLicensesTab';
 import SiteSettingsTab from '@/components/sites/SiteSettingsTab';
 import SiteField from '@/components/sites/SiteField';
 import { Users, AlertTriangle } from 'lucide-react';
