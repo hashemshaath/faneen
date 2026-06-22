@@ -111,6 +111,8 @@ const BrandDetail = lazyRetry(() => import("./pages/BrandDetail"));
 const PrivateSectorsCatalog = lazyRetry(() => import("./pages/PrivateSectorsCatalog"));
 const PrivateSectorDetail = lazyRetry(() => import("./pages/PrivateSectorDetail"));
 const DashboardProjects = lazyRetry(() => import("./pages/dashboard/DashboardProjects"));
+const DashboardWorkspaces = lazyRetry(() => import("./pages/dashboard/DashboardWorkspaces"));
+const DashboardWorkspaceDetail = lazyRetry(() => import("./pages/dashboard/DashboardWorkspaceDetail"));
 const DashboardBlog = lazyRetry(() => import("./pages/dashboard/DashboardBlog"));
 const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/DashboardProfileSystems"));
 const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMessages"));
@@ -478,6 +480,12 @@ const AppRoutes = () => (
           <Route path="/admin/brand-requests" element={<ProtectedRoute requireAdmin><AdminBrandRequests /></ProtectedRoute>} />
           <Route path="/dashboard/brands" element={<ProtectedRoute><DashboardBrands /></ProtectedRoute>} />
           <Route path="/dashboard/projects" element={<ProtectedRoute><DashboardProjects /></ProtectedRoute>} />
+          {/* CLIENT WORKSPACE UNIFICATION P1 — unified read-only view
+              that merges the user's projects + client_sites. No DB/RPC
+              changes; contract creation from here is intentionally
+              disabled and gated behind a Phase-4 RPC approval. */}
+          <Route path="/dashboard/workspaces" element={<ProtectedRoute><DashboardWorkspaces /></ProtectedRoute>} />
+          <Route path="/dashboard/workspaces/:kind/:id" element={<ProtectedRoute><DashboardWorkspaceDetail /></ProtectedRoute>} />
           <Route path="/dashboard/operations" element={<ProtectedRoute><DashboardOperations /></ProtectedRoute>} />
           <Route path="/dashboard/operations/feed" element={<ProtectedRoute><DashboardOperationsFeed /></ProtectedRoute>} />
           <Route path="/dashboard/operations-center" element={<ProtectedRoute><DashboardOperationsCenter /></ProtectedRoute>} />
