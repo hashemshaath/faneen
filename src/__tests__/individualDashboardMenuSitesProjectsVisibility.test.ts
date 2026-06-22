@@ -37,9 +37,11 @@ describe('Individual without a business — sidebar visibility', () => {
     const sites = items.find((it) => it.label.en === UNIFIED_ITEM_LABELS.sites.en);
     expect(sites?.url).toBe('/dashboard/sites');
   });
-  it('sees «المشاريع» (Projects) at /dashboard/projects', () => {
+  it('does NOT see «المشاريع» (Projects) — portfolio concept requires a business', () => {
+    // CLIENT NAV IA FIX: Projects is gated behind `requiresBusiness`.
+    // Personal clients use «مواقعي» as the canonical hub.
     const projects = items.find((it) => it.label.en === UNIFIED_ITEM_LABELS.projects.en);
-    expect(projects?.url).toBe('/dashboard/projects');
+    expect(projects).toBeUndefined();
   });
   it('does NOT see «الفروع» (Branches)', () => {
     expect(itemEns).not.toContain(UNIFIED_ITEM_LABELS.branches.en);
