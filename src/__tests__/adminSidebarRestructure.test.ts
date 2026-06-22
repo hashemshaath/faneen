@@ -92,7 +92,7 @@ describe('admin nav registry — routing integrity', () => {
       if (!it.route.startsWith('/admin/')) return false;
       const esc = it.route.replace(/[/\-:]/g, (c) => '\\' + c);
       const re = new RegExp(
-        `path="${esc}"[^>]*requireAdmin|path="${esc}"[^>]*requireSuperAdmin`,
+        `path="${esc}"[^>]*requireAdmin|path="${esc}"[^>]*requireSuperAdmin|path="${esc}"[^>]*<AdminRoute>`,
       );
       return !re.test(APP);
     });

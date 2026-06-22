@@ -42,6 +42,7 @@ describe('ADMIN PERMISSIONS & ROLES AUDIT GUARD', () => {
     for (const line of routeLines) {
       const guarded =
         /ProtectedRoute\s+require(Admin|SuperAdmin)/.test(line) ||
+        /<AdminRoute>/.test(line) ||
         REDIRECT_ONLY_PATTERN.test(line);
       if (!guarded) offenders.push(line.trim());
     }
