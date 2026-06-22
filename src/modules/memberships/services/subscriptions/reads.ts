@@ -66,6 +66,18 @@ export async function countActiveMembershipSubscriptions() {
 }
 
 /**
+ * MEMB-7 closeout: Count membership subscriptions in `pending_approval` (head-only).
+ * Preserves the exact `{ count: 'exact', head: true }.eq('status','pending_approval')`
+ * shape previously inlined in `AdminDashboardView.tsx`. Returns the raw response.
+ */
+export async function countPendingApprovalMembershipSubscriptions() {
+  return await supabase
+    .from('membership_subscriptions')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending_approval');
+}
+
+/**
  * MEMB-7: Admin usage report RPC wrapper.
  */
 export interface AdminListMembershipUsageArgs {
