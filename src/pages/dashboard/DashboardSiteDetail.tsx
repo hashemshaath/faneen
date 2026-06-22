@@ -142,6 +142,21 @@ const DashboardSiteDetail: React.FC = () => {
     },
   });
 
+  /* ─── Projects linked via projects.site_id (read-only) ─── */
+  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+    queryKey: ['site-projects', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title_ar, title_en, status, cover_image_url, ref_id, completion_date, created_at')
+        .eq('site_id', id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
     queryKey: ['site-milestones', id, contracts.length],
     enabled: !!id && !!site && contracts.length > 0,
@@ -374,6 +389,9 @@ const DashboardSiteDetail: React.FC = () => {
             <TabsTrigger value="overview"><ClipboardList className="h-4 w-4" /><span className="mx-2">{isRTL ? 'نظرة عامة' : 'Overview'}</span></TabsTrigger>
             <TabsTrigger value="contacts"><Users className="h-4 w-4" /><span className="mx-2">{isRTL ? 'جهات الاتصال' : 'Contacts'}</span></TabsTrigger>
             <TabsTrigger value="contracts"><FileText className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العقود' : 'Contracts'}</span></TabsTrigger>
+            <TabsTrigger value="projects"><Building2 className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المشاريع المرتبطة' : 'Linked projects'}</span></TabsTrigger>
+            <TabsTrigger value="files"><ImageIcon className="h-4 w-4" /><span className="mx-2">{isRTL ? 'الملفات' : 'Files'}</span></TabsTrigger>
+            <TabsTrigger value="licenses"><ClipboardList className="h-4 w-4" /><span className="mx-2">{isRTL ? 'الرخص والتصاريح' : 'Licenses'}</span></TabsTrigger>
             <TabsTrigger value="quotes"><MessageSquareQuote className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العروض' : 'Quotes'}</span></TabsTrigger>
             <TabsTrigger value="rfq"><Inbox className="h-4 w-4" /><span className="mx-2">RFQ</span></TabsTrigger>
             <TabsTrigger value="milestones"><Milestone className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المراحل' : 'Milestones'}</span></TabsTrigger>
@@ -491,6 +509,55 @@ const DashboardSiteDetail: React.FC = () => {
                 onClick: () => navigate(`/dashboard/contracts/new?site_id=${site.id}`),
               } : undefined}
             />
+          </TabsContent>
+
+          <TabsContent value="projects" className="mt-4" data-testid="site-projects-tab">
+            <ListSection
+              loading={projectsLoading}
+              empty={isRTL ? 'لا توجد مشاريع مرتبطة بهذا الموقع.' : 'No projects linked to this site.'}
+              items={projects.map((p) => ({
+                key: p.id,
+                href: `/dashboard/projects/${p.id}`,
+                title: (isRTL ? p.title_ar : p.title_en) || p.title_ar || p.id,
+                ref: p.ref_id,
+                status: p.status,
+                meta: null,
+                date: p.completion_date || p.created_at,
+              }))}
+              isRTL={isRTL}
+            />
+          </TabsContent>
+
+          <TabsContent value="files" className="mt-4" data-testid="site-files-tab">
+            <Card><CardContent className="p-8 text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <ImageIcon className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-semibold">
+                {isRTL ? 'إدارة ملفات المواقع ستتوفر في المرحلة التالية' : 'Site files management is coming in the next phase'}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {isRTL
+                  ? 'حالياً يمكنك استعراض صور الموقع من تبويب «المعرض»، أما إدارة الملفات والمستندات الرسمية فهي قراءة فقط حالياً.'
+                  : 'For now, browse site photos from the “Gallery” tab. Document management is read-only at the moment.'}
+              </p>
+            </CardContent></Card>
+          </TabsContent>
+
+          <TabsContent value="licenses" className="mt-4" data-testid="site-licenses-tab">
+            <Card><CardContent className="p-8 text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <ClipboardList className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-semibold">
+                {isRTL ? 'الرخص والتصاريح والمخالفات — قريباً' : 'Licenses, permits and violations — coming soon'}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {isRTL
+                  ? 'سنضيف لاحقاً إدارة كاملة للرخص والتصاريح وسجلات المخالفات والبلاغات الرسمية للموقع.'
+                  : 'Full management of municipal licenses, permits and official violation logs will land in a later phase.'}
+              </p>
+            </CardContent></Card>
           </TabsContent>
 
           <TabsContent value="quotes" className="mt-4">
