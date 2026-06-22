@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { PageHeader } from '@/components/shared';
+import { PageHeader, EmptyState } from '@/components/shared';
 import { EmbeddedPageContext } from '@/contexts/AdminTabsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -439,9 +439,9 @@ const DashboardCredentials: React.FC = () => {
               <ListSkeleton />
             ) : certs.length === 0 ? (
               <EmptyState
-                icon={ShieldCheck}
+                icon={<ShieldCheck className="h-10 w-10" />}
                 title={t(isRTL, 'لا توجد شهادات بعد', 'No certifications yet')}
-                subtitle={t(isRTL, 'أضف أول شهادة لإظهار اعتمادات منشأتك على ملفك العام.',
+                description={t(isRTL, 'أضف أول شهادة لإظهار اعتمادات منشأتك على ملفك العام.',
                   'Add your first certification to display credentials on your public profile.')}
               />
             ) : (
@@ -577,9 +577,9 @@ const DashboardCredentials: React.FC = () => {
               <ListSkeleton />
             ) : awards.length === 0 ? (
               <EmptyState
-                icon={Trophy}
+                icon={<Trophy className="h-10 w-10" />}
                 title={t(isRTL, 'لا توجد جوائز بعد', 'No awards yet')}
-                subtitle={t(isRTL, 'أضف الجوائز والتكريمات لتعزيز مكانة منشأتك.',
+                description={t(isRTL, 'أضف الجوائز والتكريمات لتعزيز مكانة منشأتك.',
                   'Add awards and recognitions to elevate your business standing.')}
               />
             ) : (
@@ -629,18 +629,6 @@ const ListSkeleton: React.FC = () => (
       <div key={i} className="h-24 rounded-xl bg-muted/40 animate-pulse" />
     ))}
   </div>
-);
-
-const EmptyState: React.FC<{ icon: React.ElementType; title: string; subtitle: string }> = ({
-  icon: Icon, title, subtitle,
-}) => (
-  <Card>
-    <CardContent className="py-12 text-center space-y-2">
-      <Icon className="h-10 w-10 mx-auto text-muted-foreground/40" />
-      <h3 className="font-bold text-foreground">{title}</h3>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
-    </CardContent>
-  </Card>
 );
 
 interface CertCardProps {
