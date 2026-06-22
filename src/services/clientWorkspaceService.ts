@@ -52,7 +52,6 @@ interface ProjectRow {
 
 interface SiteRow {
   id: string;
-  owner_user_id: string | null;
   client_user_id: string | null;
   business_id: string | null;
   site_name: string | null;
@@ -112,15 +111,17 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
     supabase
       .from('client_sites')
       .select(
-        'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
+        'id, client_user_id, business_id, label, city_name, district, address_line1, address_line2, updated_at, created_at',
       )
-      .or(`owner_user_id.eq.${userId},client_user_id.eq.${userId}`)
+      .eq('client_user_id', userId)
       .is('archived_at', null)
       .order('updated_at', { ascending: false }),
   ]);
 
   const projects = (projectsRes.data ?? []) as ProjectRow[];
-  const sites = (sitesRes.data ?? []) as SiteRow[];
+  const sites = ((sitesRes.data ?? []) as Array<Omit<SiteRow, 'site_name'> & { site_name?: string | null }>).map(
+    (s) => ({ ...s, site_name: s.site_name ?? null }),
+  ) as SiteRow[];
 
   const sitesById = new Map<string, SiteRow>();
   for (const s of sites) sitesById.set(s.id, s);
@@ -199,11 +200,11 @@ export async function getClientWorkspace(
       const { data: site } = await supabase
         .from('client_sites')
         .select(
-          'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
+          'id, client_user_id, business_id, label, city_name, district, address_line1, address_line2, updated_at, created_at',
         )
         .eq('id', projectRow.site_id)
         .maybeSingle();
-      siteRow = (site as SiteRow | null) ?? null;
+      siteRow = site ? ({ ...(site as Omit<SiteRow, 'site_name'>), site_name: null } as SiteRow) : null;
     }
     return {
       workspace: {
@@ -231,12 +232,12 @@ export async function getClientWorkspace(
   const { data: site } = await supabase
     .from('client_sites')
     .select(
-      'id, owner_user_id, client_user_id, business_id, site_name, label, city_name, district, address_line1, address_line2, updated_at, created_at',
+      'id, client_user_id, business_id, label, city_name, district, address_line1, address_line2, updated_at, created_at',
     )
     .eq('id', id)
     .maybeSingle();
   if (!site) return null;
-  const siteRow = site as SiteRow;
+  const siteRow = { ...(site as Omit<SiteRow, 'site_name'>), site_name: null } as SiteRow;
   return {
     workspace: {
       kind: 'site',
