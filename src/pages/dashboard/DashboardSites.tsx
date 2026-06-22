@@ -458,6 +458,26 @@ export default function DashboardSites() {
     staleTime: 60_000,
   });
 
+  /* ─── Projects linked per site (lightweight count by site_id) ─── */
+  const { data: projectCounts = {} } = useQuery({
+    queryKey: ['site-project-counts', sites.map(s => s.id).join(',')],
+    queryFn: async () => {
+      if (!sites.length) return {} as Record<string, number>;
+      const ids = sites.map(s => s.id);
+      const { data } = await supabase
+        .from('projects')
+        .select('site_id')
+        .in('site_id', ids);
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((r: { site_id: string | null }) => {
+        if (r.site_id) map[r.site_id] = (map[r.site_id] ?? 0) + 1;
+      });
+      return map;
+    },
+    enabled: sites.length > 0,
+    staleTime: 60_000,
+  });
+
   /* ─── Mutations ─── */
   /**
    * Client-side validator — runs before we hit the RPC so we can show
