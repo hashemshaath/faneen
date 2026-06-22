@@ -281,7 +281,7 @@ const DashboardSiteDetail: React.FC = () => {
   }
 
   const typeLabel = SITE_TYPE_LABELS[site.site_type ?? 'other'];
-  const displayName = site.site_name || site.label || (isRTL ? 'موقع بدون اسم' : 'Unnamed site');
+  const displayName = formatSiteTitle(site, isRTL);
   const canManage = user?.id === site.owner_user_id || user?.id === site.client_user_id;
 
   return (
@@ -502,7 +502,10 @@ const DashboardSiteDetail: React.FC = () => {
               items={contracts.map((c) => ({
                 key: c.id,
                 href: `/dashboard/contracts/${c.id}`,
-                title: (isRTL ? c.title_ar : c.title_en) || c.contract_number || c.id,
+                title:
+                  (isRTL ? c.title_ar : c.title_en) ||
+                  c.contract_number ||
+                  (isRTL ? `عقد ${shortReferenceId(c.id)}` : `Contract ${shortReferenceId(c.id)}`),
                 ref: c.contract_number,
                 status: c.status,
                 meta: c.total_amount ? `${c.total_amount} ${c.currency_code ?? ''}` : null,
@@ -523,7 +526,7 @@ const DashboardSiteDetail: React.FC = () => {
               items={projects.map((p) => ({
                 key: p.id,
                 href: `/dashboard/projects/${p.id}`,
-                title: (isRTL ? p.title_ar : p.title_en) || p.title_ar || p.id,
+                title: formatProjectTitle(p, site, isRTL),
                 ref: p.ref_id,
                 status: p.status,
                 meta: null,
@@ -572,7 +575,9 @@ const DashboardSiteDetail: React.FC = () => {
               items={leads.map((l) => ({
                 key: l.id,
                 href: `/dashboard/leads/${l.id}`,
-                title: l.ref_id || l.id,
+                title:
+                  l.ref_id ||
+                  (isRTL ? `طلب ${shortReferenceId(l.id)}` : `Request ${shortReferenceId(l.id)}`),
                 ref: l.ref_id,
                 status: l.status,
                 meta: null,
@@ -590,7 +595,9 @@ const DashboardSiteDetail: React.FC = () => {
               items={rfqs.map((r) => ({
                 key: r.id,
                 href: `/dashboard/rfq/${r.id}`,
-                title: r.ref_id || r.id,
+                title:
+                  r.ref_id ||
+                  (isRTL ? `RFQ ${shortReferenceId(r.id)}` : `RFQ ${shortReferenceId(r.id)}`),
                 ref: r.ref_id,
                 status: r.status,
                 meta: null,
