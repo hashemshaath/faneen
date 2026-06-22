@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useDeferredValue, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useDeferredValue, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -26,6 +26,7 @@ import {
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
   Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
+import { Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
@@ -287,6 +288,45 @@ const DashboardMyRequests: React.FC = () => {
     return { totalQ: q.length, totalL: l.length, activeQuote, activeLead, quoted };
   }, [quoteRequests, leads]);
 
+  // === Smart insights: leads that need the user's attention ===
+  const insights = useMemo(() => {
+    const l = leads ?? [];
+    const quotedAwaiting = l.filter((x) => x.status === 'quoted');
+    const needsInfo = l.filter((x) => x.status === 'needs_info');
+    return { quotedAwaiting, needsInfo };
+  }, [leads]);
+
+  // === Status distribution (for mini-bar) ===
+  const distribution = useMemo(() => {
+    const source = tab === 'quotes' ? (quoteRequests ?? []) : (leads ?? []);
+    const counts = new Map<string, number>();
+    source.forEach((r) => counts.set(r.status, (counts.get(r.status) ?? 0) + 1));
+    const total = source.length;
+    const palette: Record<string, string> = {
+      new: 'bg-blue-500',
+      viewed: 'bg-sky-500',
+      under_review: 'bg-amber-500',
+      needs_info: 'bg-amber-500',
+      matched: 'bg-indigo-500',
+      contacted: 'bg-violet-500',
+      accepted: 'bg-emerald-500',
+      quoted: 'bg-emerald-500',
+      completed: 'bg-emerald-600',
+      rejected: 'bg-rose-500',
+      cancelled: 'bg-slate-400',
+      closed: 'bg-slate-500',
+    };
+    const segments = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([status, n]) => ({
+        status,
+        n,
+        pct: total ? (n / total) * 100 : 0,
+        color: palette[status] ?? 'bg-muted-foreground/40',
+      }));
+    return { segments, total };
+  }, [tab, quoteRequests, leads]);
+
   // === Filters ===
   const quoteStatuses = useMemo(() => {
     const set = new Set<string>((quoteRequests ?? []).map((q) => q.status));
@@ -405,6 +445,21 @@ const DashboardMyRequests: React.FC = () => {
     refetchQuotes();
   }, [refetchLeads, refetchQuotes]);
 
+  // === Keyboard shortcut: "/" focuses search ===
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      if (t?.isContentEditable) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   return (
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
@@ -487,6 +542,82 @@ const DashboardMyRequests: React.FC = () => {
           </div>
         </section>
 
+        {/* === Smart insights banner === */}
+        {(insights.quotedAwaiting.length > 0 || insights.needsInfo.length > 0) && (
+          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.08] via-emerald-500/[0.04] to-transparent p-4 sm:p-5 flex flex-wrap items-center gap-4">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <div className="font-semibold text-sm sm:text-base">
+                {isRTL ? 'يتطلب اهتمامك' : 'Needs your attention'}
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 flex flex-wrap gap-x-3 gap-y-1">
+                {insights.quotedAwaiting.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <ReceiptText className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    {isRTL
+                      ? `${insights.quotedAwaiting.length} عرض سعر بانتظار ردك`
+                      : `${insights.quotedAwaiting.length} quote${insights.quotedAwaiting.length > 1 ? 's' : ''} awaiting your reply`}
+                  </span>
+                )}
+                {insights.needsInfo.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    {isRTL
+                      ? `${insights.needsInfo.length} طلب يحتاج معلومات إضافية`
+                      : `${insights.needsInfo.length} request${insights.needsInfo.length > 1 ? 's' : ''} need more info`}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-h-[40px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+              onClick={() => { setTab('leads'); setStatusFilter(insights.quotedAwaiting.length > 0 ? 'quoted' : 'needs_info'); }}
+            >
+              <span>{isRTL ? 'مراجعة الآن' : 'Review now'}</span>
+              <ArrowRight className="rtl-flip" />
+            </Button>
+          </div>
+        )}
+
+        {/* === Status distribution mini-bar === */}
+        {distribution.total > 0 && (
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 space-y-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="font-medium">{isRTL ? 'توزيع الحالات' : 'Status distribution'}</span>
+              <span className="tech-content">{distribution.total}</span>
+            </div>
+            <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
+              {distribution.segments.map((s) => (
+                <Tooltip key={s.status}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`${s.color} transition-all hover:opacity-80`}
+                      style={{ width: `${s.pct}%` }}
+                      aria-label={`${s.status}: ${s.n}`}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span className="tech-content">{s.status} · {s.n} ({s.pct.toFixed(0)}%)</span>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              {distribution.segments.slice(0, 6).map((s) => (
+                <span key={s.status} className="inline-flex items-center gap-1.5">
+                  <span className={`h-2 w-2 rounded-full ${s.color}`} />
+                  <span>{s.status}</span>
+                  <span className="tech-content opacity-70">({s.n})</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
           {/* Sticky toolbar */}
           <div className="sticky top-0 z-20 -mx-2 px-2 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -506,6 +637,7 @@ const DashboardMyRequests: React.FC = () => {
             <div className="relative flex-1 sm:max-w-xs sm:ms-auto">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
+                ref={searchRef}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={isRTL ? 'بحث في الطلبات…' : 'Search requests…'}
@@ -513,6 +645,7 @@ const DashboardMyRequests: React.FC = () => {
                 dir="auto"
                 aria-label={isRTL ? 'بحث' : 'Search'}
               />
+              <kbd className="hidden md:inline-flex absolute end-2 top-1/2 -translate-y-1/2 h-5 items-center px-1.5 rounded border border-border bg-muted text-[10px] text-muted-foreground tech-content pointer-events-none">/</kbd>
             </div>
 
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
