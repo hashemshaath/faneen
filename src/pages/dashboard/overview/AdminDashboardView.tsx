@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { getProfileDisplayName, getProfileInitial } from '@/modules/profiles/utils/displayName';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,10 @@ import {
 } from '@/modules/leads';
 import { countConversationsTotal } from '@/modules/messaging';
 import { listAllContracts } from '@/modules/contracts';
-import { countActiveMembershipSubscriptions } from '@/modules/memberships';
+import {
+  countActiveMembershipSubscriptions,
+  countPendingApprovalMembershipSubscriptions,
+} from '@/modules/memberships';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   OverdueAlerts, TodaySummary, MembershipWidget,
@@ -48,6 +50,11 @@ import {
   SortableSection,
   useAdminDashboardLayout,
 } from '@/modules/admin-dashboard';
+import {
+  DashboardActionCenter,
+  type DashboardAction,
+} from '@/components/dashboard/overview/DashboardActionCenter';
+import { ShieldCheck as ShieldCheckIcon, LayoutDashboard as LayoutDashboardIcon, Inbox as InboxIcon } from 'lucide-react';
 import {
   DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter,
   type DragEndEvent,
