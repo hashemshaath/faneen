@@ -289,6 +289,7 @@ const DashboardSiteDetail: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 pb-16 md:pb-20">
+        <RegisterBreadcrumbLabel path={`/dashboard/sites/${site.id}`} label={displayName} />
         {/* Back nav */}
         <Link to="/dashboard/sites" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
