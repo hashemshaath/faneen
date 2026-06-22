@@ -113,11 +113,20 @@ describe('CLIENT WORKSPACE UNIFICATION P1 — service', () => {
 });
 
 describe('CLIENT WORKSPACE UNIFICATION P1 — UI behavior', () => {
-  it('contracts tab renders a DISABLED create-contract CTA with helper text', () => {
-    expect(CONTRACTS_TAB).toMatch(/disabled/);
+  it('contracts tab renders a conditional create-contract CTA with helper text', () => {
+    // Post-Phase-4: the CTA toggles between an enabled testid (when a
+    // provider can be derived from the workspace) and a disabled testid
+    // with an explicit ineligibility helper. Both code paths must exist
+    // in source.
+    expect(CONTRACTS_TAB).toMatch(/eligible/);
+    expect(CONTRACTS_TAB).toMatch(/disabled=\{!eligible\}/);
+    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible\}/);
+    expect(CONTRACTS_TAB).toMatch(/'workspace-create-contract'/);
+    expect(CONTRACTS_TAB).toMatch(/'workspace-create-contract-disabled'/);
     expect(CONTRACTS_TAB).toMatch(/إنشاء عقد من هذا المشروع/);
-    expect(CONTRACTS_TAB).toMatch(/قيد التفعيل/);
-    expect(CONTRACTS_TAB).toMatch(/workspace-create-contract-disabled/);
+    expect(CONTRACTS_TAB).toMatch(
+      /لا يمكن إنشاء عقد حتى يتم ربط المشروع بمزود خدمة/,
+    );
   });
 
   it('contracts tab does NOT import or invoke create_contract_from_template', () => {
