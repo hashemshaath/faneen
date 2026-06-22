@@ -373,6 +373,7 @@ const DashboardMyRequests: React.FC = () => {
   const filteredQuotes = useMemo(() => {
     const term = deferredSearch.trim().toLowerCase();
     return (quoteRequests ?? []).filter((q) => {
+      if (pinnedOnly && !pins.has(q.id)) return false;
       if (statusFilter !== 'all' && q.status !== statusFilter) return false;
       if (!term) return true;
       return (
@@ -382,11 +383,12 @@ const DashboardMyRequests: React.FC = () => {
         (q.city ?? '').toLowerCase().includes(term)
       );
     });
-  }, [quoteRequests, statusFilter, deferredSearch]);
+  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins]);
 
   const filteredLeads = useMemo(() => {
     const term = deferredSearch.trim().toLowerCase();
     return (leads ?? []).filter((l) => {
+      if (pinnedOnly && !pins.has(l.id)) return false;
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
       if (!term) return true;
       const biz = businessMap.get(l.business_id);
@@ -396,7 +398,7 @@ const DashboardMyRequests: React.FC = () => {
         (biz?.name ?? '').toLowerCase().includes(term)
       );
     });
-  }, [leads, statusFilter, deferredSearch, businessMap]);
+  }, [leads, statusFilter, deferredSearch, businessMap, pinnedOnly, pins]);
 
   // === Sort ===
   const sortedQuotes = useMemo(() => {
