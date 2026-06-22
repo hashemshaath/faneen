@@ -677,6 +677,44 @@ const BusinessProfile = () => {
             </Tabs>
           </section>
 
+          {/* SEO leaf links — connect this profile back to public hub pages
+              (sectors, services, brands, showcase) and emit deep sector
+              and sector-city leaf links from the business's public category
+              slug. Rendered only when a public category slug exists so we
+              never link to a non-existent leaf page. */}
+          <nav
+            aria-label={isRTL ? "روابط ذات صلة" : "Related hubs"}
+            className="container mx-auto px-4 py-6 text-sm text-muted-foreground"
+          >
+            <ul className="flex flex-wrap gap-x-4 gap-y-2">
+              <li><Link to="/sectors" className="hover:underline">{isRTL ? "القطاعات" : "Sectors"}</Link></li>
+              <li><Link to="/services" className="hover:underline">{isRTL ? "الخدمات" : "Services"}</Link></li>
+              <li><Link to="/brands" className="hover:underline">{isRTL ? "العلامات التجارية" : "Brands"}</Link></li>
+              <li><Link to="/showcase" className="hover:underline">{isRTL ? "المعرض" : "Showcase"}</Link></li>
+              {(business.categories as { slug?: string } | null)?.slug && (
+                <li>
+                  <Link
+                    to={`/sectors/${(business.categories as { slug?: string }).slug}`}
+                    className="hover:underline"
+                  >
+                    {categoryName || (isRTL ? "القطاع" : "Sector")}
+                  </Link>
+                </li>
+              )}
+              {(business.categories as { slug?: string } | null)?.slug &&
+                (business.cities as { slug?: string } | null)?.slug && (
+                  <li>
+                    <Link
+                      to={`/sectors/${(business.categories as { slug?: string }).slug}/${(business.cities as { slug?: string }).slug}`}
+                      className="hover:underline"
+                    >
+                      {[categoryName, cityName].filter(Boolean).join(" — ")}
+                    </Link>
+                  </li>
+                )}
+            </ul>
+          </nav>
+
           <SimilarBusinesses
             currentBusinessId={business.id}
             cityId={(business as { city_id?: string | null }).city_id ?? null}
