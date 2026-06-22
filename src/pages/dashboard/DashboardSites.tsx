@@ -1175,6 +1175,35 @@ export default function DashboardSites() {
                 {SITE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{isRTL ? t.ar : t.en}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40" aria-label={pickBi(isRTL, 'المدينة', 'City')}>
+                <MapPin className="w-3 h-3" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{pickBi(isRTL, 'كل المدن', 'All cities')}</SelectItem>
+                {cityOptions.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={ownershipFilter} onValueChange={(v) => setOwnershipFilter(v as 'all' | 'personal' | 'business')}>
+              <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40" aria-label={pickBi(isRTL, 'الملكية', 'Ownership')}>
+                <User className="w-3 h-3" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{pickBi(isRTL, 'كل الملكية', 'All ownership')}</SelectItem>
+                <SelectItem value="personal">{pickBi(isRTL, 'شخصي', 'Personal')}</SelectItem>
+                <SelectItem value="business">{pickBi(isRTL, 'تابع لمنشأة', 'Business')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={completionFilter} onValueChange={(v) => setCompletionFilter(v as 'all' | 'complete' | 'incomplete')}>
+              <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40" aria-label={pickBi(isRTL, 'حالة الاكتمال', 'Completion')}>
+                <CheckCircle2 className="w-3 h-3" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{pickBi(isRTL, 'كل الحالات', 'All statuses')}</SelectItem>
+                <SelectItem value="complete">{pickBi(isRTL, 'مكتمل', 'Complete')}</SelectItem>
+                <SelectItem value="incomplete">{pickBi(isRTL, 'يحتاج استكمال', 'Needs completion')}</SelectItem>
+              </SelectContent>
+            </Select>
             <button onClick={() => setShowArchived(v => !v)}
               className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors ${showArchived ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
               {pickBi(isRTL, 'إظهار المؤرشفة', 'Show archived')}
