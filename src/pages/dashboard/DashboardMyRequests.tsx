@@ -208,6 +208,7 @@ const DashboardMyRequests: React.FC = () => {
   const deferredSearch = useDeferredValue(search);
   const [pins, setPins] = useState<Set<string>>(() => loadPins());
   const [pinnedOnly, setPinnedOnly] = useState<boolean>(false);
+  const [sectorFilter, setSectorFilter] = useState<string>(() => urlParams.get('sector') ?? 'all');
   const togglePin = useCallback((id: string) => {
     setPins((prev) => {
       const next = new Set(prev);
