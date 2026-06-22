@@ -145,7 +145,7 @@ export const userNavGroups: DashboardNavGroup[] = [
     description: { ar: 'مواقعك ومشاريعك وعقودك (شخصية أو مرتبطة بمنشأتك)', en: 'Your sites, projects and contracts (personal or business)' },
     items: [
       { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
-      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen, requiresBusiness: true },
+      { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
     ],
   },

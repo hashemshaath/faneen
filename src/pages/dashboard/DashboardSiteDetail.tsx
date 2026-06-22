@@ -516,7 +516,7 @@ const DashboardSiteDetail: React.FC = () => {
               isRTL={isRTL}
               cta={canManage ? {
                 label: isRTL ? 'إنشاء عقد لهذا الموقع' : 'Create contract for this site',
-                onClick: () => navigate(`/dashboard/contracts/new?site_id=${site.id}`),
+                onClick: goCreateContract,
               } : undefined}
             />
           </TabsContent>

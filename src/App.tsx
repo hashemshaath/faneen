@@ -577,8 +577,8 @@ const AppRoutes = () => (
               sidebar bookmarks continue to resolve. Components
               `AdminQuoteRequests` / `AdminQuoteRequestDetails` remain
               mounted on the canonical paths below. */}
-          <Route path="/admin/quote-requests" element={<Navigate to="/admin/opportunities/list" replace />} />
-          <Route path="/admin/quote-requests/:id" element={<LegacyAdminQuoteRequestDetailRedirect />} />
+          <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><Navigate to="/admin/opportunities/list" replace /></ProtectedRoute>} />
+          <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><LegacyAdminQuoteRequestDetailRedirect /></ProtectedRoute>} />
           {/* OPPORTUNITIES PHASE 2 — admin alias. */}
           {/* OPPORTUNITIES PHASE 8 — operations center (KPIs / funnel / table). */}
           <Route path="/admin/opportunities" element={<ProtectedRoute requireAdmin><AdminOpportunitiesOperations /></ProtectedRoute>} />
