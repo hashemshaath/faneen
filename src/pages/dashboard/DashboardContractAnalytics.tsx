@@ -184,6 +184,8 @@ const DashboardContractAnalytics: React.FC = () => {
       const { data: rpcData, error: rpcError } = await getContractAnalyticsDashboard(
         { _business_id: effectiveBusinessId ?? undefined, _period: period, _scope: 'provider' },
       );
+      // eslint-disable-next-line no-console
+      console.log('[Analytics RPC Debug]', { rpcErrorType: typeof rpcError, isError: rpcError instanceof Error, name: (rpcError as { name?: string })?.name, message: (rpcError as { message?: string })?.message });
       if (rpcError) throw rpcError;
       return rpcData as unknown as AnalyticsPayload;
     },
