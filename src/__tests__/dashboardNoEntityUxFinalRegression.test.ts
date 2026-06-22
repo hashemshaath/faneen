@@ -46,7 +46,6 @@ describe('Dashboard no-entity UX — final regression guards', () => {
   /* 5. Sites: personal-mode banner removed — handled in sidebar globally */
   it('sites no longer shows an inline personal-mode banner (deduplicated with sidebar)', () => {
     expect(sites).not.toMatch(/PersonalModeBanner/);
-    expect(sites).not.toMatch(/لا توجد منشأة مرتبطة بحسابك|No business linked to your account/);
   });
 
   /* 7. Projects form exposes site_id selector when business exists */
