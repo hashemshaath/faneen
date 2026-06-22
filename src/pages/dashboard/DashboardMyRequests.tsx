@@ -27,7 +27,7 @@ import {
   Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
 import { Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
-import { Star, RotateCcw } from 'lucide-react';
+import { Star, RotateCcw, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
@@ -207,6 +207,7 @@ const DashboardMyRequests: React.FC = () => {
   const [search, setSearch] = useState<string>(() => urlParams.get('q') ?? '');
   const deferredSearch = useDeferredValue(search);
   const [pins, setPins] = useState<Set<string>>(() => loadPins());
+  const [pinnedOnly, setPinnedOnly] = useState<boolean>(false);
   const togglePin = useCallback((id: string) => {
     setPins((prev) => {
       const next = new Set(prev);
@@ -372,6 +373,7 @@ const DashboardMyRequests: React.FC = () => {
   const filteredQuotes = useMemo(() => {
     const term = deferredSearch.trim().toLowerCase();
     return (quoteRequests ?? []).filter((q) => {
+      if (pinnedOnly && !pins.has(q.id)) return false;
       if (statusFilter !== 'all' && q.status !== statusFilter) return false;
       if (!term) return true;
       return (
@@ -381,11 +383,12 @@ const DashboardMyRequests: React.FC = () => {
         (q.city ?? '').toLowerCase().includes(term)
       );
     });
-  }, [quoteRequests, statusFilter, deferredSearch]);
+  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins]);
 
   const filteredLeads = useMemo(() => {
     const term = deferredSearch.trim().toLowerCase();
     return (leads ?? []).filter((l) => {
+      if (pinnedOnly && !pins.has(l.id)) return false;
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
       if (!term) return true;
       const biz = businessMap.get(l.business_id);
@@ -395,7 +398,7 @@ const DashboardMyRequests: React.FC = () => {
         (biz?.name ?? '').toLowerCase().includes(term)
       );
     });
-  }, [leads, statusFilter, deferredSearch, businessMap]);
+  }, [leads, statusFilter, deferredSearch, businessMap, pinnedOnly, pins]);
 
   // === Sort ===
   const sortedQuotes = useMemo(() => {
@@ -754,6 +757,22 @@ const DashboardMyRequests: React.FC = () => {
                 <span>{isRTL ? 'إعادة ضبط' : 'Reset'}</span>
               </button>
             )}
+            {pins.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setPinnedOnly((v) => !v)}
+                className={`text-xs px-3 py-1.5 rounded-full border inline-flex items-center gap-1.5 ms-auto transition-colors ${
+                  pinnedOnly
+                    ? 'bg-amber-500/15 border-amber-400/50 text-amber-700 dark:text-amber-300'
+                    : 'bg-card border-border text-muted-foreground hover:bg-muted/60'
+                }`}
+                aria-pressed={pinnedOnly}
+              >
+                <Star className={`h-3 w-3 ${pinnedOnly ? 'fill-current' : ''}`} />
+                <span>{isRTL ? 'المثبتة فقط' : 'Pinned only'}</span>
+                <span className="tech-content text-[10px] opacity-70">({pins.size})</span>
+              </button>
+            )}
           </div>
 
           {/* === QUOTES TAB === */}
@@ -1052,6 +1071,10 @@ const QuoteRequestRowCardImpl: React.FC<{
   const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
   const compact = density === 'compact';
   const createdAbs = new Date(q.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
+  const isActive = !['completed', 'cancelled'].includes(q.status);
+  const lastTouchMs = new Date(q.updated_at ?? q.created_at).getTime();
+  const ageDays = (Date.now() - lastTouchMs) / 86400000;
+  const isStale = isActive && ageDays > 7;
   return (
     <Card className={`overflow-hidden hover-lift transition-shadow ${pinned ? 'ring-1 ring-amber-400/40 bg-amber-50/30 dark:bg-amber-500/[0.04]' : ''}`}>
       <CardContent className={`${compact ? 'p-3 sm:p-3.5 space-y-2' : 'p-4 sm:p-5 space-y-3'}`}>
@@ -1078,6 +1101,19 @@ const QuoteRequestRowCardImpl: React.FC<{
           <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
             {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
           </span>
+          {isStale && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-help">
+                  <Clock className="h-3 w-3" />
+                  <span className="tech-content">{Math.round(ageDays)}d</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isRTL ? `بدون تحديث منذ ${Math.round(ageDays)} يوم` : `No update for ${Math.round(ageDays)} days`}
+              </TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="text-xs text-muted-foreground tech-content ms-auto cursor-help">
