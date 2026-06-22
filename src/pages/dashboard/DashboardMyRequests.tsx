@@ -756,10 +756,10 @@ const DashboardMyRequests: React.FC = () => {
                 </button>
               );
             })}
-            {(statusFilter !== 'all' || search.trim() !== '') && (
+            {(statusFilter !== 'all' || search.trim() !== '' || sectorFilter !== 'all') && (
               <button
                 type="button"
-                onClick={() => { setStatusFilter('all'); setSearch(''); }}
+                onClick={() => { setStatusFilter('all'); setSearch(''); setSectorFilter('all'); }}
                 className="text-xs px-3 py-1.5 rounded-full border border-dashed border-border text-muted-foreground hover:bg-muted/60 inline-flex items-center gap-1.5 ms-1"
                 aria-label={isRTL ? 'إعادة ضبط الفلاتر' : 'Reset filters'}
               >
@@ -787,6 +787,42 @@ const DashboardMyRequests: React.FC = () => {
 
           {/* === QUOTES TAB === */}
           <TabsContent value="quotes" className="space-y-3 mt-0">
+            {topSectors.length > 1 && (
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
+                <button
+                  type="button"
+                  onClick={() => setSectorFilter('all')}
+                  className={`px-2.5 py-1 rounded-full border transition-colors ${
+                    sectorFilter === 'all'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-card border-border text-muted-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  {isRTL ? 'كل القطاعات' : 'All sectors'}
+                </button>
+                {topSectors.map(([sector, n]) => {
+                  const active = sectorFilter === sector;
+                  return (
+                    <button
+                      key={sector}
+                      type="button"
+                      onClick={() => setSectorFilter(active ? 'all' : sector)}
+                      className={`px-2.5 py-1 rounded-full border inline-flex items-center gap-1.5 transition-colors ${
+                        active
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-card border-border text-muted-foreground hover:bg-muted/60'
+                      }`}
+                      aria-pressed={active}
+                    >
+                      <span>{sector}</span>
+                      <span className={`tech-content text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>{n}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {loadingQuotes && (
               <div className="space-y-3">
                 {[0, 1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
