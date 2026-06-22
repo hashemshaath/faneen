@@ -32,12 +32,18 @@ describe('CLIENT WORKSPACE UNIFICATION PHASE 2 — guards', () => {
   it('no contract-creation RPC is called from workspace surface', () => {
     for (const f of FILES) {
       const src = read(f);
-      expect(src, `${f} must not call create_contract_from_template`).not.toMatch(
-        /create_contract_from_template/,
+      // Strip block + line comments before searching for actual RPC calls,
+      // so explanatory comments in the service header don't trip the guard.
+      const code = src
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/(^|[^:])\/\/.*$/gm, '$1');
+      expect(code, `${f} must not call create_contract_from_template`).not.toMatch(
+        /\.rpc\(\s*['"]create_contract_from_template['"]/,
       );
-      expect(src, `${f} must not call create_contract_from_workspace_as_client`).not.toMatch(
-        /create_contract_from_workspace_as_client/,
-      );
+      expect(
+        code,
+        `${f} must not call create_contract_from_workspace_as_client`,
+      ).not.toMatch(/\.rpc\(\s*['"]create_contract_from_workspace_as_client['"]/);
     }
   });
 
