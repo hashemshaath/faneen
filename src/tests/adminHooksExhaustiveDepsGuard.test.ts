@@ -54,6 +54,18 @@ const ALLOWLIST: ReadonlyArray<Entry> = [
     reason: 'Auto-mark-as-read on focus change must trigger exactly once per focus change; including `focused`/`updateMutation` in deps would re-mark a message that the admin manually flipped back to unread after re-focusing.',
     followup: 'Move auto-mark-as-read into a focus-id state machine that distinguishes admin-driven status changes from initial focus.',
   },
+  {
+    file: 'src/pages/admin/AdminProviderLeads.tsx',
+    count: 3,
+    reason: 'Three intentional suppressions: (1) URL-sync effect writes searchParams from filter state — depending on `searchParams`/`setSearchParams` would cause a write-loop; (2) `void onlyOverdue` comment re-evaluates `filtered` when the toggle flips without re-listing the full filter dependency tuple already declared above; (3) keyboard shortcut handler reads the latest `openId`/`filtered`/`rows` snapshot — adding handler-internal callbacks (toggles, modals) to deps would rebind the global keydown listener on every state change and drop keystrokes.',
+    followup: 'Refactor URL-sync into a `useSyncSearchParams` hook, fold the `onlyOverdue` toggle into the main `filtered` memo deps, and move the shortcut handler into a `useLatest` ref pattern.',
+  },
+  {
+    file: 'src/components/admin/provider-leads/ProviderLeadEditForm.tsx',
+    count: 1,
+    reason: 'Validation effect intentionally depends only on `f`/`touched`/`submitAttempted` — `validate` is recreated every render and including it would re-run validation in an infinite loop; `errors` is the effect output and must not be in deps.',
+    followup: 'Wrap `validate` in `useCallback` keyed by the form schema and drop the suppression.',
+  },
 ];
 
 describe('ADMIN HOOKS EXHAUSTIVE-DEPS GUARD', () => {
