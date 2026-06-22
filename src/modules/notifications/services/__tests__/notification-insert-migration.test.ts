@@ -253,7 +253,8 @@ describe('N-5 — blocking-await notification insert migration', () => {
       expect(src).toContain("body_en: 'Your quote request status has been updated.'");
       expect(src).toContain('reference_id: quote.id');
       expect(src).toContain("reference_type: 'quote_request'");
-      expect(src).toContain('action_url: `/dashboard/my-requests/${quote.id}`');
+      // action_url prefers ref_id (REQ-…) when present, falling back to UUID.
+      expect(src).toContain('action_url: `/dashboard/my-requests/${quote.ref_id ?? quote.id}`');
     });
   });
 });
