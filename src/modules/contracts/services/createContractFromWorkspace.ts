@@ -8,6 +8,7 @@
  * and the workspace ownership chain.
  */
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 export type CreateContractFromWorkspaceKind = 'project' | 'site';
 
@@ -66,7 +67,7 @@ export async function createContractFromWorkspace(
       _workspace_kind: input.kind,
       _workspace_id: input.workspaceId,
       _template_version_id: input.templateVersionId,
-      _payload: input.payload as unknown as Record<string, unknown>,
+      _payload: input.payload as unknown as Json,
     },
   );
 
