@@ -142,6 +142,21 @@ const DashboardSiteDetail: React.FC = () => {
     },
   });
 
+  /* ─── Projects linked via projects.site_id (read-only) ─── */
+  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+    queryKey: ['site-projects', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title_ar, title_en, status, cover_image_url, ref_id, completion_date, created_at')
+        .eq('site_id', id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
     queryKey: ['site-milestones', id, contracts.length],
     enabled: !!id && !!site && contracts.length > 0,
