@@ -12,6 +12,7 @@ import {
 } from '@/modules/leads/services/list';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
+import { subscribeMyRequestsChanges } from '@/modules/leads/services/subscribeMyRequestsChanges';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,7 +34,6 @@ import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { PageHeader } from '@/components/shared';
-import { supabase } from '@/integrations/supabase/client';
 
 interface MyLeadRow {
   id: string;
@@ -330,14 +330,12 @@ const DashboardMyRequests: React.FC = () => {
   // === Real-time: refetch when this user's rows change ===
   useEffect(() => {
     if (!user?.id) return;
-    const channel = supabase
-      .channel(`my-requests-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_requests', filter: `user_id=eq.${user.id}` },
-          () => { qc.invalidateQueries({ queryKey: ['my-service-requests', user.id] }); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'quote_requests', filter: `user_id=eq.${user.id}` },
-          () => { qc.invalidateQueries({ queryKey: ['my-quote-requests', user.id] }); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const unsubscribe = subscribeMyRequestsChanges({
+      userId: user.id,
+      onLeadChange: () => { qc.invalidateQueries({ queryKey: ['my-service-requests', user.id] }); },
+      onQuoteChange: () => { qc.invalidateQueries({ queryKey: ['my-quote-requests', user.id] }); },
+    });
+    return unsubscribe;
   }, [user?.id, qc]);
 
   // === Export to CSV ===
