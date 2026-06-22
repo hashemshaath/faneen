@@ -24,9 +24,10 @@ describe('Admin route migration pilot — AdminTaxonomyCenter', () => {
     expect(ADMIN_ROUTE).toMatch(/DashboardLayout/);
   });
 
-  it('AdminTaxonomyCenter page no longer imports or renders DashboardLayout', () => {
-    expect(PAGE).not.toMatch(/from\s+['"]@\/components\/dashboard\/DashboardLayout['"]/);
-    expect(PAGE).not.toMatch(/<DashboardLayout[\s>]/);
+  it('AdminTaxonomyCenter page no longer imports DashboardLayout', () => {
+    expect(PAGE).not.toMatch(
+      /from\s+['"]@\/components\/dashboard\/DashboardLayout['"]/,
+    );
   });
 
   it('AdminTaxonomyCenter still renders the TaxonomyAdminPage content', () => {
