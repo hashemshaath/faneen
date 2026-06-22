@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { PageHeader } from '@/components/shared';
+import { PageHeader, EmptyState } from '@/components/shared';
 import { EmbeddedPageContext } from '@/contexts/AdminTabsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -439,9 +439,9 @@ const DashboardCredentials: React.FC = () => {
               <ListSkeleton />
             ) : certs.length === 0 ? (
               <EmptyState
-                icon={ShieldCheck}
+                icon={<ShieldCheck className="h-10 w-10" />}
                 title={t(isRTL, 'لا توجد شهادات بعد', 'No certifications yet')}
-                subtitle={t(isRTL, 'أضف أول شهادة لإظهار اعتمادات منشأتك على ملفك العام.',
+                description={t(isRTL, 'أضف أول شهادة لإظهار اعتمادات منشأتك على ملفك العام.',
                   'Add your first certification to display credentials on your public profile.')}
               />
             ) : (
