@@ -434,6 +434,7 @@ const DashboardLayoutShell: React.FC<DashboardLayoutProps> = ({ children }) => {
           </main>
         </div>
       </div>
+      </BreadcrumbOverridesProvider>
     </SidebarProvider>
   );
 };
