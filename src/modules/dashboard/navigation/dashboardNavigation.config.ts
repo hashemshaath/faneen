@@ -144,7 +144,6 @@ export const userNavGroups: DashboardNavGroup[] = [
     icon: Wrench,
     description: { ar: 'مواقعك ومشاريعك وعقودك (شخصية أو مرتبطة بمنشأتك)', en: 'Your sites, projects and contracts (personal or business)' },
     items: [
-      { label: { ar: 'مشاريعي ومواقعي', en: 'My Projects & Sites' }, url: '/dashboard/workspaces', icon: Layers },
       { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
       { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen, requiresBusiness: true },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
