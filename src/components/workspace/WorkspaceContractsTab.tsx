@@ -70,11 +70,6 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
   const [endDate, setEndDate] = useState<string>('');
   const [descriptionAr, setDescriptionAr] = useState<string>('');
 
-  const canCreate =
-    workspace.kind === 'project' &&
-    workspace.ownershipType === 'business'
-      ? false
-      : workspace.kind === 'project' && !!workspace.businessId;
   // NOTE: per data model, an owner-user project has business_id = null
   // (XOR), so provider cannot be derived. Sites without a project have
   // no derivable provider either. We keep the gate strict and clear.
@@ -129,7 +124,6 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
     },
   });
 
-  void canCreate;
 
   return (
     <div className="space-y-4">
