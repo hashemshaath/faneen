@@ -31,6 +31,13 @@ import {
  *
  * No fake invoices / payment cards / hardcoded plan names or limits.
  * No DB / RLS / RPC / migrations / cron changes.
+ *
+ * MEMBERSHIP-CURRENT-SCOPE-FIX:
+ * Current dashboard membership scope is BUSINESS/ENTITY membership.
+ * Individual membership plans may be introduced later as a separate
+ * scope. Do NOT treat a missing business_id as an individual free plan,
+ * and do NOT word the UI as if individuals can never have memberships.
+ * Every label/message here scopes to «الجهة» (the business entity).
  */
 
 type Sub = {
@@ -186,11 +193,14 @@ const DashboardMembership: React.FC = () => {
   // 3) Usage from canonical RPC (no transformation).
   const usageQuery = useQuery({
     queryKey: ['membership-page-usage', user?.id, businessId],
-    enabled: !!user?.id,
+    // Usage is ALWAYS business-scoped today. Never fetch usage without a
+    // business_id — that would misrepresent a no-business user as having
+    // an «individual» plan, which is not a concept in this build.
+    enabled: !!user?.id && !!businessId,
     queryFn: async () => {
       const { data, error } = await getMembershipUsage<UsageRow>({
         _user_id: user!.id,
-        _business_id: businessId ?? undefined,
+        _business_id: businessId!,
       });
       if (error) throw error;
       return (data ?? []) as UsageRow[];
@@ -229,12 +239,12 @@ const DashboardMembership: React.FC = () => {
                 </div>
                 <div>
                   <h1 className="font-heading font-bold text-xl sm:text-2xl leading-tight">
-                    {isRTL ? 'العضوية والاستخدام' : 'Membership & Usage'}
+                    {isRTL ? 'عضوية الجهة' : 'Business Membership'}
                   </h1>
                   <p className="text-sm text-muted-foreground mt-1 max-w-xl">
                     {isRTL
-                      ? 'تابع خطتك الحالية واستخدامك الفعلي من المصدر الموحّد للعضويات.'
-                      : 'Track your current plan and real usage from the central memberships source.'}
+                      ? 'تابع باقة الجهة وحدودها واستخدامها الفعلي من المصدر الموحّد للعضويات.'
+                      : 'Track your business plan, its limits and real usage from the central memberships source.'}
                   </p>
                 </div>
               </div>
@@ -260,17 +270,17 @@ const DashboardMembership: React.FC = () => {
                 <Building2 className="h-5 w-5" />
               </div>
               <h2 className="font-heading font-semibold text-base">
-                {isRTL ? 'العضويات مرتبطة بالمنشأة' : 'Memberships are tied to a business'}
+                {isRTL ? 'لا توجد جهة مرتبطة بحسابك حاليًا' : 'No business is linked to your account yet'}
               </h2>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 {isRTL
-                  ? 'أنشئ منشأة أولًا لعرض الباقات والحدود الخاصة بها.'
-                  : 'Create a business first to see its plans and limits.'}
+                  ? 'العضويات المتاحة حاليًا في قطاعات مخصصة للجهات والأعمال. باقات الأفراد غير مفعّلة في هذه المرحلة وسيتم دعمها لاحقًا. أنشئ جهة لعرض باقاتها وحدودها.'
+                  : 'Memberships currently available in Qitaat are scoped to businesses and entities. Individual plans are not enabled at this stage and may be supported later. Create a business to see its plans and limits.'}
               </p>
               <Button asChild size="sm" className="gap-1.5">
                 <Link to="/register-entity">
                   <Plus className="w-3.5 h-3.5" />
-                  {isRTL ? 'إنشاء منشأة' : 'Create business'}
+                  {isRTL ? 'إنشاء جهة' : 'Create business'}
                 </Link>
               </Button>
             </CardContent>
@@ -283,7 +293,7 @@ const DashboardMembership: React.FC = () => {
             {/* 1) Current plan */}
             <Section
               icon={Crown}
-              title={isRTL ? 'الخطة الحالية' : 'Current plan'}
+              title={isRTL ? 'باقة الجهة الحالية' : 'Current business plan'}
               subtitle={isRTL ? 'مصدر البيانات: نظام العضويات المركزي' : 'Source: central memberships module'}
               aside={
                 sub ? (
@@ -291,7 +301,7 @@ const DashboardMembership: React.FC = () => {
                     <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
                       <Link to={upgradeHref}>
                         <CircleArrowUp className="w-3.5 h-3.5" />
-                        {isRTL ? 'ترقية الباقة' : 'Upgrade'}
+                        {isRTL ? 'ترقية عضوية الجهة' : 'Upgrade business plan'}
                       </Link>
                     </Button>
                   )
@@ -302,13 +312,13 @@ const DashboardMembership: React.FC = () => {
                 <div className="space-y-3">
                   <EmptyState>
                     {isRTL
-                      ? 'لا توجد عضوية مفعّلة لهذه المنشأة حتى الآن.'
-                      : 'No active membership for this business yet.'}
+                      ? 'هذه الجهة لا تملك عضوية مفعّلة حاليًا.'
+                      : 'This business has no active membership yet.'}
                   </EmptyState>
                   <div className="flex flex-wrap gap-2 justify-center">
                     {upgradeHref ? (
                       <Button asChild size="sm" className="gap-1.5">
-                        <Link to={upgradeHref}><ArrowUpRight className="w-3.5 h-3.5" /> {isRTL ? 'عرض الباقات المتاحة' : 'View available plans'}</Link>
+                        <Link to={upgradeHref}><ArrowUpRight className="w-3.5 h-3.5" /> {isRTL ? 'اختيار باقة للجهة' : 'Choose a business plan'}</Link>
                       </Button>
                     ) : (
                       <Button asChild size="sm" variant="outline" className="gap-1.5">
@@ -375,7 +385,7 @@ const DashboardMembership: React.FC = () => {
             {/* 2) Usage this period */}
             <Section
               icon={Calendar}
-              title={isRTL ? 'الاستخدام هذا الشهر' : 'Usage this month'}
+              title={isRTL ? 'استخدام الجهة هذا الشهر' : 'Business usage this month'}
               subtitle={isRTL ? 'من get_membership_usage' : 'From get_membership_usage'}
             >
               {usageQuery.isLoading ? (
@@ -432,12 +442,12 @@ const DashboardMembership: React.FC = () => {
             {/* 3) Plan features / limits matrix (confirmed-only) */}
             <Section
               icon={ShieldCheck}
-              title={isRTL ? 'الحدود والمزايا' : 'Limits & features'}
-              subtitle={isRTL ? 'القيم من خطة العضوية الحالية' : 'Values come from your current plan'}
+              title={isRTL ? 'حدود ومزايا الجهة' : 'Business limits & features'}
+              subtitle={isRTL ? 'القيم من باقة الجهة الحالية' : 'Values come from the current business plan'}
             >
               {!sub?.plan ? (
                 <EmptyState>
-                  {isRTL ? 'لا توجد خطة لعرض حدودها.' : 'No plan to show limits for.'}
+                  {isRTL ? 'لا توجد باقة جهة لعرض حدودها.' : 'No business plan to show limits for.'}
                 </EmptyState>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
