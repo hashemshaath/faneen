@@ -152,16 +152,6 @@ export default function UserDashboardView({
     refetch();
   };
 
-  const healthInput: ClientHealthInput = {
-    hasFullName: !!profile?.full_name,
-    hasRefId: !!profile?.ref_id,
-    totalContracts: stats?.totalContracts ?? 0,
-    activeContracts: stats?.activeContracts ?? 0,
-    completedContracts: stats?.completedContracts ?? 0,
-    conversations: stats?.messages ?? 0,
-    unreadNotifications: stats?.unreadNotifications ?? 0,
-  };
-
   const widgetChildren: Record<string, React.ReactNode> = {
     trends:    <TrendsWidget         isRTL={isRTL} userId={user.id} />,
     activity:  <LiveActivityWidget   isRTL={isRTL} userId={user.id} />,
