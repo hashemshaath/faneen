@@ -43,7 +43,6 @@ import {
   type DashboardAction,
 } from '@/components/dashboard/overview/DashboardActionCenter';
 import { countConversationsForUser } from '@/modules/messaging';
-import { ClientHealthScoreCard, type ClientHealthInput } from '@/components/dashboard/ClientHealthScoreCard';
 
 const TAB_KEYS = ['overview', 'activity', 'performance', 'actions'] as const;
 type TabKey = typeof TAB_KEYS[number];
@@ -151,16 +150,6 @@ export default function UserDashboardView({
     qc.invalidateQueries({ queryKey: ['dashboard-trends'] });
     setLastRefresh(new Date());
     refetch();
-  };
-
-  const healthInput: ClientHealthInput = {
-    hasFullName: !!profile?.full_name,
-    hasRefId: !!profile?.ref_id,
-    totalContracts: stats?.totalContracts ?? 0,
-    activeContracts: stats?.activeContracts ?? 0,
-    completedContracts: stats?.completedContracts ?? 0,
-    conversations: stats?.messages ?? 0,
-    unreadNotifications: stats?.unreadNotifications ?? 0,
   };
 
   const widgetChildren: Record<string, React.ReactNode> = {
@@ -372,7 +361,6 @@ export default function UserDashboardView({
         {/* Overview — Stats first */}
         <TabsContent value="overview" className="mt-5 space-y-5 focus-visible:outline-none">
           <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
-          <ClientHealthScoreCard input={healthInput} isRTL={isRTL} />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <OverdueAlerts isRTL={isRTL} userId={user.id} />
             <TodaySummary isRTL={isRTL} userId={user.id} />
