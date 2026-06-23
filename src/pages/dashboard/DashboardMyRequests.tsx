@@ -721,47 +721,6 @@ const DashboardMyRequests: React.FC = () => {
           </div>
         )}
 
-        {/* === Performance micro-metrics === */}
-        {distribution.total > 0 && (
-          <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
-            <div className="grid grid-cols-3 gap-3 sm:gap-5">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <Gauge className="h-3.5 w-3.5 text-info" />
-                    <span className="truncate">{isRTL ? 'معدل المشاهدة' : 'View rate'}</span>
-                  </div>
-                  <div className="mt-1 text-lg font-bold tech-content">{analytics.responseRate}%</div>
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5 text-warning" />
-                    <span className="truncate">{isRTL ? 'متوسط الرد' : 'Avg response'}</span>
-                  </div>
-                  <div className="mt-1 text-lg font-bold tech-content">
-                    {analytics.avgRespHours > 0 ? `${analytics.avgRespHours}${isRTL ? ' س' : 'h'}` : '—'}
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <Target className="h-3.5 w-3.5 text-success" />
-                    <span className="truncate">{isRTL ? 'التحويل' : 'Conversion'}</span>
-                  </div>
-                  <div className="mt-1 text-lg font-bold tech-content">{analytics.conversion}%</div>
-                </div>
-                {analytics.topSector && (
-                  <div className="col-span-3 mt-1 pt-2 border-t border-border/50 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <Award className="h-3.5 w-3.5 text-accent" />
-                    <span>{isRTL ? 'القطاع الأكثر طلباً:' : 'Top sector:'}</span>
-                    <span className="font-medium text-foreground capitalize truncate">
-                      {String(analytics.topSector).replace(/[-_]/g, ' ')}
-                    </span>
-                    <span className="tech-content opacity-70">({analytics.topSectorCount})</span>
-                  </div>
-                )}
-            </div>
-          </div>
-        )}
-
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
           {/* Sticky toolbar */}
           <div className="sticky top-0 z-20 -mx-2 px-2 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row sm:items-center gap-3">
