@@ -52,3 +52,50 @@ describe('Contract creation — client auto-fill', () => {
     expect(block).not.toMatch(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
   });
 });
+
+describe('Contract creation — regression closeout (provider/admin/business/editing)', () => {
+  it('isClientOnlyAccount excludes admins (admins keep ClientPicker)', () => {
+    expect(SRC).toMatch(/isClientOnlyAccount\s*=[\s\S]*?!isAdmin/);
+  });
+
+  it('isClientOnlyAccount excludes providers (providers keep ClientPicker)', () => {
+    expect(SRC).toMatch(/isClientOnlyAccount\s*=[\s\S]*?!isProvider/);
+  });
+
+  it('isClientOnlyAccount excludes business owners (businessId === null required)', () => {
+    expect(SRC).toMatch(/isClientOnlyAccount\s*=[\s\S]*?businessId\s*===\s*null/);
+  });
+
+  it('isClientOnlyAccount is disabled in edit mode (!editingId)', () => {
+    expect(SRC).toMatch(/isClientOnlyAccount\s*=[\s\S]*?!editingId/);
+  });
+
+  it('ClientPicker still renders for non-client-only accounts', () => {
+    expect(SRC).toMatch(/!isClientOnlyAccount\s*&&\s*\(\s*\n\s*<ClientPicker/);
+  });
+
+  it('self-client card only renders for client-only accounts (gated by isClientOnlyAccount)', () => {
+    expect(SRC).toMatch(/isClientOnlyAccount\s*&&\s*\(/);
+    expect(SRC).toMatch(/data-testid="contract-create-self-client-card"/);
+  });
+
+  it('auto-fill effect short-circuits when not a client-only account or when already filled', () => {
+    expect(SRC).toMatch(/if\s*\(\s*!isClientOnlyAccount\s*\)\s*return/);
+    expect(SRC).toMatch(/if\s*\(\s*selectedClient\s*\)\s*return/);
+  });
+
+  it('auto-fill does not invoke any create-client / insert client RPC', () => {
+    const block = SRC.split('CONTRACT-CREATION-CLIENT-AUTO-FILL')[1]?.split('Phase 5B.4')[0] ?? '';
+    expect(block).not.toMatch(/createClient|create_client|insertClient|\.from\(['"]clients['"]\)|\.insert\(/i);
+    expect(block).not.toMatch(/supabase\./);
+  });
+
+  it('auto-fill source is tagged as "self" so downstream code can distinguish it', () => {
+    expect(SRC).toMatch(/source:\s*'self'/);
+  });
+
+  it('contract submit still requires a client (or guest/email) for non-edit flows', () => {
+    // saveDisabled keeps the original guard: (!editingId && !selectedClient && !guestClient && !form.client_email)
+    expect(SRC).toMatch(/!editingId\s*&&\s*!selectedClient\s*&&\s*!guestClient\s*&&\s*!form\.client_email/);
+  });
+});
