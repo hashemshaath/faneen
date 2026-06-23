@@ -43,7 +43,7 @@ const ProjectDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, businesses(username, name_ar, name_en, logo_url, description_ar, description_en, short_description_ar, short_description_en, phone, email, website, is_verified), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
+        .select('*, businesses!business_id(username, name_ar, name_en, logo_url, description_ar, description_en, short_description_ar, short_description_en, phone, email, website, is_verified), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
         .eq('id', id!)
         .eq('status', 'published')
         .single();
