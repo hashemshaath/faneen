@@ -21,6 +21,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { LogoLink } from '@/components/common/LogoLink';
 
 type AcceptResult = {
   accepted: boolean;
@@ -290,9 +291,9 @@ function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean 
     >
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
-          <Link to="/" aria-label="قِطاعات — الرئيسية" className="inline-flex hover:opacity-90 transition-opacity">
+          <LogoLink surface="public" ariaLabel="قِطاعات — الرئيسية">
             <BrandLogo variant="mark" tone="auto" size="auth" alt="قِطاعات" />
-          </Link>
+          </LogoLink>
         </div>
         {children}
       </div>
