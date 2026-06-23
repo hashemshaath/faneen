@@ -661,20 +661,21 @@ const DashboardMyRequests: React.FC = () => {
               </div>
             </div>
 
-            {/* === Premium KPI grid === */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+            {/* === Unified KPI grid (no duplication) === */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
               <HeroKpi icon={ReceiptText} accent="blue"
-                label={isRTL ? 'عروض الأسعار' : 'Quote requests'} value={kpis.totalQ} />
-              <HeroKpi icon={CheckCircle2} accent="emerald"
-                label={isRTL ? 'نشطة' : 'Active'} value={kpis.activeQuote}
-                hint={isRTL ? 'عروض' : 'Quotes'} />
+                label={isRTL ? 'عروض الأسعار' : 'Quote requests'} value={kpis.totalQ}
+                hint={kpis.activeQuote > 0 ? (isRTL ? `${kpis.activeQuote} نشطة` : `${kpis.activeQuote} active`) : undefined} />
               <HeroKpi icon={Inbox} accent="slate"
-                label={isRTL ? 'طلبات الخدمة' : 'Service requests'} value={kpis.totalL} />
-              <HeroKpi icon={Send} accent="amber"
-                label={isRTL ? 'نشطة' : 'Active'} value={kpis.activeLead}
-                hint={isRTL ? 'خدمات' : 'Services'} />
+                label={isRTL ? 'طلبات الخدمة' : 'Service requests'} value={kpis.totalL}
+                hint={kpis.activeLead > 0 ? (isRTL ? `${kpis.activeLead} نشطة` : `${kpis.activeLead} active`) : undefined} />
               <HeroKpi icon={Wallet} accent="orange"
                 label={isRTL ? 'عروض مستلمة' : 'Quotes received'} value={kpis.quoted} />
+              <HeroKpi icon={Activity} accent="emerald"
+                label={isRTL ? 'هذا الأسبوع' : 'This week'} value={analytics.last7}
+                hint={typeof analytics.weekDelta === 'number'
+                  ? `${analytics.weekDelta > 0 ? '+' : ''}${analytics.weekDelta}%`
+                  : undefined} />
             </div>
           </div>
         </section>
@@ -720,73 +721,88 @@ const DashboardMyRequests: React.FC = () => {
           </div>
         )}
 
-        {/* === Status distribution mini-bar === */}
+        {/* === Unified pulse panel: distribution + micro-metrics === */}
         {distribution.total > 0 && (
-          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="font-medium">{isRTL ? 'توزيع الحالات' : 'Status distribution'}</span>
-              <span className="tech-content">{distribution.total}</span>
-            </div>
-            <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
-              {distribution.segments.map((s) => (
-                <Tooltip key={s.status}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className={`${s.color} transition-all hover:opacity-80`}
-                      style={{ width: `${s.pct}%` }}
-                      aria-label={`${s.status}: ${s.n}`}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <span className="tech-content">{s.status} · {s.n} ({s.pct.toFixed(0)}%)</span>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-              {distribution.segments.slice(0, 6).map((s) => (
-                <span key={s.status} className="inline-flex items-center gap-1.5">
-                  <span className={`h-2 w-2 rounded-full ${s.color}`} />
-                  <span>{isRTL ? (QUOTE_STATUS_LABEL_AR[s.status] ?? s.status) : (QUOTE_STATUS_LABEL_EN[s.status] ?? s.status)}</span>
-                  <span className="tech-content opacity-70">({s.n})</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+          <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr,1fr] gap-5 lg:gap-7">
+              {/* Left: status distribution */}
+              <div className="space-y-3 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <span className="h-7 w-7 rounded-lg bg-primary/10 text-primary inline-flex items-center justify-center">
+                      <Activity className="h-3.5 w-3.5" />
+                    </span>
+                    <span>{isRTL ? 'توزيع الحالات' : 'Status distribution'}</span>
+                  </div>
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    <span className="tech-content font-semibold text-foreground">{distribution.total}</span>{' '}
+                    {tab === 'quotes' ? (isRTL ? 'عرض' : 'quotes') : (isRTL ? 'طلب' : 'requests')}
+                  </span>
+                </div>
+                <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-muted">
+                  {distribution.segments.map((s) => (
+                    <Tooltip key={s.status}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`${s.color} transition-all hover:opacity-80`}
+                          style={{ width: `${s.pct}%` }}
+                          aria-label={`${s.status}: ${s.n}`}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="tech-content">{s.status} · {s.n} ({s.pct.toFixed(0)}%)</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+                  {distribution.segments.slice(0, 6).map((s) => (
+                    <span key={s.status} className="inline-flex items-center gap-1.5">
+                      <span className={`h-2 w-2 rounded-full ${s.color}`} />
+                      <span>{isRTL ? (QUOTE_STATUS_LABEL_AR[s.status] ?? s.status) : (QUOTE_STATUS_LABEL_EN[s.status] ?? s.status)}</span>
+                      <span className="tech-content opacity-70">({s.n})</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-        {/* === Performance analytics === */}
-        {(kpis.totalQ + kpis.totalL) > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-            <AnalyticTile
-              icon={Activity}
-              tone="primary"
-              label={isRTL ? 'هذا الأسبوع' : 'This week'}
-              value={analytics.last7}
-              delta={analytics.weekDelta}
-              deltaLabel={isRTL ? 'مقارنة بالأسبوع السابق' : 'vs previous week'}
-            />
-            <AnalyticTile
-              icon={Gauge}
-              tone="info"
-              label={isRTL ? 'معدل المشاهدة' : 'View rate'}
-              value={`${analytics.responseRate}%`}
-              sub={isRTL ? 'فتحها المزودون' : 'opened by providers'}
-            />
-            <AnalyticTile
-              icon={Clock}
-              tone="warning"
-              label={isRTL ? 'متوسط الرد' : 'Avg response'}
-              value={analytics.avgRespHours > 0 ? `${analytics.avgRespHours}${isRTL ? ' س' : 'h'}` : '—'}
-              sub={isRTL ? 'وقت أول تحديث' : 'time to first update'}
-            />
-            <AnalyticTile
-              icon={Target}
-              tone="success"
-              label={isRTL ? 'التحويل' : 'Conversion'}
-              value={`${analytics.conversion}%`}
-              sub={analytics.topSector ? (isRTL ? `الأكثر: ${analytics.topSector}` : `Top: ${analytics.topSector}`) : (isRTL ? 'إلى عرض/قبول' : 'to quote/accept')}
-            />
+              {/* Right: micro-metrics row */}
+              <div className="grid grid-cols-3 gap-3 lg:border-s lg:border-border/60 lg:ps-6">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Gauge className="h-3.5 w-3.5 text-info" />
+                    <span className="truncate">{isRTL ? 'معدل المشاهدة' : 'View rate'}</span>
+                  </div>
+                  <div className="mt-1 text-lg font-bold tech-content">{analytics.responseRate}%</div>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5 text-warning" />
+                    <span className="truncate">{isRTL ? 'متوسط الرد' : 'Avg response'}</span>
+                  </div>
+                  <div className="mt-1 text-lg font-bold tech-content">
+                    {analytics.avgRespHours > 0 ? `${analytics.avgRespHours}${isRTL ? ' س' : 'h'}` : '—'}
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Target className="h-3.5 w-3.5 text-success" />
+                    <span className="truncate">{isRTL ? 'التحويل' : 'Conversion'}</span>
+                  </div>
+                  <div className="mt-1 text-lg font-bold tech-content">{analytics.conversion}%</div>
+                </div>
+                {analytics.topSector && (
+                  <div className="col-span-3 mt-1 pt-2 border-t border-border/50 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Award className="h-3.5 w-3.5 text-accent" />
+                    <span>{isRTL ? 'القطاع الأكثر طلباً:' : 'Top sector:'}</span>
+                    <span className="font-medium text-foreground capitalize truncate">
+                      {String(analytics.topSector).replace(/[-_]/g, ' ')}
+                    </span>
+                    <span className="tech-content opacity-70">({analytics.topSectorCount})</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
