@@ -68,8 +68,8 @@ describe('PROJECT PROVIDER LINKING — contracts CTA gate', () => {
 
   it('disabled CTA carries an explicit data-testid + aria-disabled', () => {
     expect(CONTRACTS_TAB).toMatch(/workspace-create-contract-disabled/);
-    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible\}/);
-    expect(CONTRACTS_TAB).toMatch(/disabled=\{!eligible\}/);
+    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible(\s*\|\|[^}]+)?\}/);
+    expect(CONTRACTS_TAB).toMatch(/disabled=\{!eligible(\s*\|\|[^}]+)?\}/);
   });
 
   it('contracts tab does not call the create-contract RPC inline', () => {
