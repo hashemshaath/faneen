@@ -132,7 +132,7 @@ export const AuthShowcase: React.FC = () => {
       />
 
       {/* Brand bar */}
-      <div className="absolute top-0 inset-x-0 px-8 lg:px-12 pt-8 lg:pt-10 z-10 flex items-center justify-between">
+      <div className="absolute top-0 inset-x-0 px-8 lg:px-12 pt-8 lg:pt-10 z-20 flex items-center justify-between">
         <Link to="/" className="inline-flex items-center hover:opacity-90 transition-opacity">
           <BrandLogo variant="full" tone="light" size={44} priority alt="قِطاعات — Qitaat" />
         </Link>
