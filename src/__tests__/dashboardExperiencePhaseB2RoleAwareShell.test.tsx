@@ -155,7 +155,10 @@ describe('Phase B2 — Role-specific dashboard views inject correct actions only
   it('existing core widgets are not deleted from the views', () => {
     expect(USER_VIEW).toMatch(/UnifiedDashboardHero/);
     expect(USER_VIEW).toMatch(/UnifiedKpiGrid/);
-    expect(USER_VIEW).toMatch(/CustomizableGrid/);
+    // Post-UI-refresh: user view uses a Tabs-based widget layout
+    // instead of the legacy <CustomizableGrid> drag-and-drop shell.
+    expect(USER_VIEW).toMatch(/<Tabs\b/);
+    expect(USER_VIEW).toMatch(/LiveActivityWidget/);
     expect(PROVIDER_VIEW).toMatch(/UnifiedDashboardHero/);
     expect(PROVIDER_VIEW).toMatch(/ProviderReadinessCard/);
     expect(PROVIDER_VIEW).toMatch(/ProviderStatsOverview/);

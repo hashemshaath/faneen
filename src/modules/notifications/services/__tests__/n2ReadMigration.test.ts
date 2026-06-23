@@ -37,10 +37,12 @@ describe('N-2 migration: notification read callsites use service wrappers', () =
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*delete/);
   });
 
-  it('UserDashboardView.tsx: uses countUnreadNotificationsForUser + listRecentNotificationsForUser', () => {
+  it('UserDashboardView.tsx: uses countUnreadNotificationsForUser; no direct notifications select', () => {
     const s = read('pages/dashboard/overview/UserDashboardView.tsx');
     expect(s).toMatch(/countUnreadNotificationsForUser\(\{\s*userId:\s*user\.id\s*\}\)/);
-    expect(s).toMatch(/listRecentNotificationsForUser<Row>\(/);
+    // DASHBOARD UI REFRESH: recent-notifications feed moved into the
+    // <LiveActivityWidget> child, which owns its own service call.
+    // UserDashboardView now only reads the unread count directly.
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*select/);
   });
 
