@@ -472,6 +472,29 @@ const DashboardContracts = () => {
   /* ── Helper: isLocked ── */
   const isContractLocked = (c: ContractRow) => isContractLockedByStatus(c.status);
 
+  /* CONTRACT-CREATION-CLIENT-AUTO-FILL — When the signed-in user is a
+   * pure client account (no owned business, not provider, not admin),
+   * we never ask them to search for a client; the client party IS the
+   * current user. We auto-fill `selectedClient` from their profile and
+   * hide the ClientPicker. The execution site / address still come from
+   * the existing ExecutionSiteSection (client_sites / projects). */
+  const isClientOnlyAccount =
+    !!user && !isAdmin && !isProvider && businessId === null && !editingId;
+
+  React.useEffect(() => {
+    if (!isClientOnlyAccount) return;
+    if (selectedClient) return;
+    if (!user || !profile) return;
+    setSelectedClient({
+      user_id: user.id,
+      full_name: profile.full_name ?? profile.full_name_ar ?? profile.full_name_en ?? null,
+      email_masked: profile.email ?? null,
+      phone_masked: profile.phone ?? null,
+      ref_id: profile.ref_id ?? null,
+      source: 'self',
+    });
+  }, [isClientOnlyAccount, selectedClient, user, profile]);
+
   /* Phase 5B.4 — Consume ?lead= query param: call prepare_contract_prefill_from_lead
    * and apply *safe* prefill fields to the create form. We never auto-create a
    * contract, client, or execution site, never change lead status, and never
