@@ -123,11 +123,11 @@ export const AuthShowcase: React.FC = () => {
 
       {/* Cinematic overlays for legibility */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/30"
+        className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/30 pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent mix-blend-overlay"
+        className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent mix-blend-overlay pointer-events-none"
         aria-hidden
       />
 
