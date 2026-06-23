@@ -372,8 +372,6 @@ export default function UserDashboardView({
         <TabsContent value="activity" className="mt-5 focus-visible:outline-none">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {widgetChildren.activity}
-            {widgetChildren.notifications}
-            {widgetChildren.contracts}
             {widgetChildren.status}
           </div>
         </TabsContent>
