@@ -303,8 +303,6 @@ export default function UserDashboardView({
     ),
   };
 
-  const itemSpan = (id: string) => (id === 'activity' || id === 'tasks' ? 'lg:col-span-1' : 'lg:col-span-1');
-
   const kpiTiles: UnifiedKpiTile[] = [
     {
       id: 'spent',
