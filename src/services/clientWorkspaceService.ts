@@ -30,6 +30,13 @@ export interface ClientWorkspace {
   title: string;
   ownershipType: 'personal' | 'business';
   businessId: string | null;
+  /**
+   * Provider business explicitly linked to this project by its owner
+   * via `link_project_provider_as_client`. Null for sites and for
+   * projects without a linked provider. The contract-creation gate
+   * uses (businessId || linkedProviderBusinessId) to decide eligibility.
+   */
+  linkedProviderBusinessId: string | null;
   city: string | null;
   district: string | null;
   address: string | null;
@@ -45,6 +52,7 @@ interface ProjectRow {
   business_id: string | null;
   owner_user_id: string | null;
   site_id: string | null;
+  selected_provider_business_id: string | null;
   title_ar: string | null;
   title_en: string | null;
   description_ar: string | null;
