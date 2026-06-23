@@ -71,12 +71,14 @@ export const MobileFooter = () => {
     <div className="md:hidden">
       {/* Compact brand row */}
       <div className="container-app pt-6 pb-4 flex items-center justify-between gap-3">
-        <BrandLogo
-          variant="full"
-          tone="dark"
-          size="footer"
-          alt={isRTL ? "قِطاعات — الرئيسية" : "Qitaat — Home"}
-        />
+        <PrefetchLink to="/" aria-label={isRTL ? "قِطاعات — الرئيسية" : "Qitaat — Home"} className="inline-flex items-center hover:opacity-90 transition-opacity">
+          <BrandLogo
+            variant="full"
+            tone="dark"
+            size="footer"
+            alt={isRTL ? "قِطاعات — الرئيسية" : "Qitaat — Home"}
+          />
+        </PrefetchLink>
         <button
           onClick={scrollToTop}
           aria-label={isRTL ? "العودة للأعلى" : "Scroll to top"}
