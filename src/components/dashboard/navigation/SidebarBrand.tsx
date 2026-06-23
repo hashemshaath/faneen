@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { LogoLink } from '@/components/common/LogoLink';
 
@@ -27,6 +28,10 @@ export const SidebarBrand: React.FC<SidebarBrandProps> = ({
 }) => {
   const titleAr = businessName?.trim() || 'قِطاعات';
   const titleEn = businessName?.trim() || 'Qitaat';
+  const location = useLocation();
+  const isAdminContext = location.pathname.startsWith('/admin');
+  const surface = isAdminContext ? 'admin' : 'dashboard';
+  const ariaLabel = isAdminContext ? 'Qitaat — Admin' : 'Qitaat — Dashboard';
 
   // Always render the canonical Qitaat brand lock-up (mark + wordmark) so the
   // sidebar matches the navbar/auth/footer surfaces across every dashboard
@@ -41,7 +46,7 @@ export const SidebarBrand: React.FC<SidebarBrandProps> = ({
       data-testid="sidebar-brand"
     >
       <div className="flex items-center gap-2">
-        <LogoLink surface="dashboard" ariaLabel="Qitaat — Dashboard">
+        <LogoLink surface={surface} ariaLabel={ariaLabel}>
           {collapsed ? (
             <BrandLogo variant="mark" tone="auto" size={36} />
           ) : (
