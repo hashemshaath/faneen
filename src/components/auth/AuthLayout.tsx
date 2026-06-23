@@ -1,9 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Shield } from 'lucide-react';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { LogoLink } from '@/components/common/LogoLink';
 import { AuthShowcase } from './AuthShowcase';
 
 export const AuthLayout: React.FC<{
@@ -25,9 +25,9 @@ export const AuthLayout: React.FC<{
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 sm:px-10 py-6">
           <div className="flex items-center gap-2.5 md:hidden">
-            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <LogoLink surface="public" ariaLabel="قِطاعات — Qitaat" className="flex items-center">
               <BrandLogo variant="full" tone="auto" size={40} priority alt="قِطاعات — Qitaat" />
-            </Link>
+            </LogoLink>
           </div>
           <div className="hidden md:block" />
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Link } from 'react-router-dom';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { LogoLink } from '@/components/common/LogoLink';
 import { ShieldCheck, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import aluminumImg from '@/assets/auth/auth-slide-aluminum.jpg';
 import glassImg from '@/assets/auth/auth-slide-glass.jpg';
@@ -133,9 +133,9 @@ export const AuthShowcase: React.FC = () => {
 
       {/* Brand bar */}
       <div className="absolute top-0 inset-x-0 px-8 lg:px-12 pt-8 lg:pt-10 z-20 flex items-center justify-between">
-        <Link to="/" className="inline-flex items-center hover:opacity-90 transition-opacity">
+        <LogoLink surface="public" ariaLabel="قِطاعات — Qitaat">
           <BrandLogo variant="full" tone="light" size={44} priority alt="قِطاعات — Qitaat" />
-        </Link>
+        </LogoLink>
         <div className="hidden lg:inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/75">
           <Sparkles className="w-3.5 h-3.5" />
           {t('منصة الصناعة الأولى', 'Industrial directory')}

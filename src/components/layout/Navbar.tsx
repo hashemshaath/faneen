@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { LogoLink } from "@/components/common/LogoLink";
 
 type NavLink = {
   to?: string;
@@ -185,7 +186,7 @@ export const Navbar = () => {
         }`}>
         <div className="container flex items-center justify-between h-16 sm:h-[4.5rem] px-4 sm:px-6">
           {/* Logo */}
-          <Link to="/" aria-label={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center group rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
+          <LogoLink surface="public" ariaLabel={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center group">
             <BrandLogo
               variant="full"
               tone="auto"
@@ -194,7 +195,7 @@ export const Navbar = () => {
               alt={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'}
               imgClassName="transition-transform duration-300 group-hover:scale-[1.04]"
             />
-          </Link>
+          </LogoLink>
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-0.5 font-body text-sm">
