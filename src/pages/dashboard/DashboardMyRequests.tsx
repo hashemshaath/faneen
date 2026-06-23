@@ -721,53 +721,10 @@ const DashboardMyRequests: React.FC = () => {
           </div>
         )}
 
-        {/* === Unified pulse panel: distribution + micro-metrics === */}
+        {/* === Performance micro-metrics === */}
         {distribution.total > 0 && (
           <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
-            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr,1fr] gap-5 lg:gap-7">
-              {/* Left: status distribution */}
-              <div className="space-y-3 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <span className="h-7 w-7 rounded-lg bg-primary/10 text-primary inline-flex items-center justify-center">
-                      <Activity className="h-3.5 w-3.5" />
-                    </span>
-                    <span>{isRTL ? 'توزيع الحالات' : 'Status distribution'}</span>
-                  </div>
-                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                    <span className="tech-content font-semibold text-foreground">{distribution.total}</span>{' '}
-                    {tab === 'quotes' ? (isRTL ? 'عرض' : 'quotes') : (isRTL ? 'طلب' : 'requests')}
-                  </span>
-                </div>
-                <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-muted">
-                  {distribution.segments.map((s) => (
-                    <Tooltip key={s.status}>
-                      <TooltipTrigger asChild>
-                        <div
-                          className={`${s.color} transition-all hover:opacity-80`}
-                          style={{ width: `${s.pct}%` }}
-                          aria-label={`${s.status}: ${s.n}`}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="tech-content">{s.status} · {s.n} ({s.pct.toFixed(0)}%)</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
-                  {distribution.segments.slice(0, 6).map((s) => (
-                    <span key={s.status} className="inline-flex items-center gap-1.5">
-                      <span className={`h-2 w-2 rounded-full ${s.color}`} />
-                      <span>{isRTL ? (QUOTE_STATUS_LABEL_AR[s.status] ?? s.status) : (QUOTE_STATUS_LABEL_EN[s.status] ?? s.status)}</span>
-                      <span className="tech-content opacity-70">({s.n})</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right: micro-metrics row */}
-              <div className="grid grid-cols-3 gap-3 lg:border-s lg:border-border/60 lg:ps-6">
+            <div className="grid grid-cols-3 gap-3 sm:gap-5">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <Gauge className="h-3.5 w-3.5 text-info" />
@@ -801,7 +758,6 @@ const DashboardMyRequests: React.FC = () => {
                     <span className="tech-content opacity-70">({analytics.topSectorCount})</span>
                   </div>
                 )}
-              </div>
             </div>
           </div>
         )}
