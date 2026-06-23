@@ -55,18 +55,20 @@ const HeroKpi: React.FC<{
 }> = ({ icon: Icon, label, value, hint, accent }) => {
   const a = HERO_KPI_ACCENTS[accent];
   return (
-    <div className={`group rounded-2xl bg-background/70 backdrop-blur-sm ring-1 ${a.ring} p-3.5 sm:p-4 transition-all hover:bg-background hover:-translate-y-0.5 hover:shadow-sm`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${a.icon}`}>
-          <Icon className="h-5 w-5" />
+    <div className={`group rounded-xl bg-background/70 backdrop-blur-sm ring-1 ${a.ring} px-3 py-2.5 transition-all hover:bg-background hover:shadow-sm`}>
+      <div className="flex items-center gap-2.5">
+        <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${a.icon}`}>
+          <Icon className="h-4 w-4" />
         </div>
-        {hint && (
-          <span className={`text-[10px] px-2 py-0.5 rounded-full ${a.chip}`}>{hint}</span>
-        )}
-      </div>
-      <div className="mt-3">
-        <div className="text-2xl font-bold text-foreground tech-content leading-none">{value}</div>
-        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mt-1.5">{label}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-bold text-foreground tech-content leading-none">{value}</span>
+            {hint && (
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${a.chip} leading-none`}>{hint}</span>
+            )}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1 truncate">{label}</div>
+        </div>
       </div>
     </div>
   );
