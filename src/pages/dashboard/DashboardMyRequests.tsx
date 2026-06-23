@@ -27,7 +27,7 @@ import {
   Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
 import { Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
-import { Star, RotateCcw, Clock } from 'lucide-react';
+import { Star, RotateCcw, Clock, TrendingUp, TrendingDown, Gauge, Target, Activity, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
