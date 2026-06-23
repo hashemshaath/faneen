@@ -131,7 +131,7 @@ export async function uploadSiteFile(input: UploadSiteFileInput): Promise<SiteFi
   if (!guard.ok) {
     throw new Error(guard.reason === 'size' ? 'FILE_TOO_LARGE' : 'FILE_TYPE_FORBIDDEN');
   }
-  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  const { data: auth, error: authErr } = await getCurrentUser();
   if (authErr) throw authErr;
   const userId = auth.user?.id;
   if (!userId) throw new Error('AUTH_REQUIRED');
