@@ -372,37 +372,6 @@ const DashboardMyRequests: React.FC = () => {
     return { last7, weekDelta, responseRate, avgRespHours, conversion, topSector: top?.[0] ?? null, topSectorCount: top?.[1] ?? 0 };
   }, [leads, quoteRequests]);
 
-  // === Status distribution (for mini-bar) ===
-  const distribution = useMemo(() => {
-    const source = tab === 'quotes' ? (quoteRequests ?? []) : (leads ?? []);
-    const counts = new Map<string, number>();
-    source.forEach((r) => counts.set(r.status, (counts.get(r.status) ?? 0) + 1));
-    const total = source.length;
-    const palette: Record<string, string> = {
-      new: 'bg-primary',
-      viewed: 'bg-info',
-      under_review: 'bg-warning',
-      needs_info: 'bg-warning',
-      matched: 'bg-info',
-      contacted: 'bg-success',
-      accepted: 'bg-success',
-      quoted: 'bg-success',
-      completed: 'bg-primary',
-      rejected: 'bg-destructive',
-      cancelled: 'bg-muted-foreground/50',
-      closed: 'bg-muted-foreground/60',
-    };
-    const segments = Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([status, n]) => ({
-        status,
-        n,
-        pct: total ? (n / total) * 100 : 0,
-        color: palette[status] ?? 'bg-muted-foreground/40',
-      }));
-    return { segments, total };
-  }, [tab, quoteRequests, leads]);
-
   // === Filters ===
   const quoteStatuses = useMemo(() => {
     const set = new Set<string>((quoteRequests ?? []).map((q) => q.status));
