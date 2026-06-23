@@ -39,11 +39,11 @@ import type { LucideIcon } from 'lucide-react';
 /** Premium KPI tile used on the executive hero. */
 type HeroKpiAccent = 'emerald' | 'blue' | 'amber' | 'orange' | 'slate';
 const HERO_KPI_ACCENTS: Record<HeroKpiAccent, { icon: string; ring: string; chip: string }> = {
-  emerald: { icon: 'bg-emerald-500/15 text-emerald-300', ring: 'ring-emerald-400/20', chip: 'bg-emerald-400/15 text-emerald-200' },
-  blue:    { icon: 'bg-blue-500/15 text-blue-300',       ring: 'ring-blue-400/20',    chip: 'bg-blue-400/15 text-blue-200' },
-  amber:   { icon: 'bg-amber-500/15 text-amber-300',     ring: 'ring-amber-400/20',   chip: 'bg-amber-400/15 text-amber-200' },
-  orange:  { icon: 'bg-orange-500/15 text-orange-300',   ring: 'ring-orange-400/20',  chip: 'bg-orange-400/15 text-orange-200' },
-  slate:   { icon: 'bg-white/10 text-white/80',          ring: 'ring-white/10',       chip: 'bg-white/10 text-white/80' },
+  emerald: { icon: 'bg-primary/10 text-primary',     ring: 'ring-primary/15',   chip: 'bg-primary/10 text-primary' },
+  blue:    { icon: 'bg-info/10 text-info',           ring: 'ring-info/15',      chip: 'bg-info/10 text-info' },
+  amber:   { icon: 'bg-warning/10 text-warning',     ring: 'ring-warning/15',   chip: 'bg-warning/10 text-warning' },
+  orange:  { icon: 'bg-accent/10 text-accent',       ring: 'ring-accent/15',    chip: 'bg-accent/10 text-accent' },
+  slate:   { icon: 'bg-muted text-muted-foreground', ring: 'ring-border',       chip: 'bg-muted text-muted-foreground' },
 };
 
 const HeroKpi: React.FC<{
@@ -55,7 +55,7 @@ const HeroKpi: React.FC<{
 }> = ({ icon: Icon, label, value, hint, accent }) => {
   const a = HERO_KPI_ACCENTS[accent];
   return (
-    <div className={`group rounded-2xl bg-white/[0.04] backdrop-blur-sm ring-1 ${a.ring} p-3.5 sm:p-4 transition-all hover:bg-white/[0.07] hover:-translate-y-0.5`}>
+    <div className={`group rounded-2xl bg-background/70 backdrop-blur-sm ring-1 ${a.ring} p-3.5 sm:p-4 transition-all hover:bg-background hover:-translate-y-0.5 hover:shadow-sm`}>
       <div className="flex items-start justify-between gap-2">
         <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${a.icon}`}>
           <Icon className="h-5 w-5" />
@@ -65,8 +65,8 @@ const HeroKpi: React.FC<{
         )}
       </div>
       <div className="mt-3">
-        <div className="text-2xl font-bold text-white tech-content leading-none">{value}</div>
-        <div className="text-[11px] uppercase tracking-wide text-white/60 mt-1.5">{label}</div>
+        <div className="text-2xl font-bold text-foreground tech-content leading-none">{value}</div>
+        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mt-1.5">{label}</div>
       </div>
     </div>
   );
