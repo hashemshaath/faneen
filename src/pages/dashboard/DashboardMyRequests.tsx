@@ -27,7 +27,7 @@ import {
   Paperclip, MapPin, Tag, Search, Plus, RefreshCw, Download, ArrowUpDown, Rows3, LayoutGrid, Filter,
 } from 'lucide-react';
 import { Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
-import { Star, RotateCcw, Clock } from 'lucide-react';
+import { Star, RotateCcw, Clock, TrendingUp, TrendingDown, Gauge, Target, Activity, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
@@ -67,6 +67,53 @@ const HeroKpi: React.FC<{
       <div className="mt-3">
         <div className="text-2xl font-bold text-foreground tech-content leading-none">{value}</div>
         <div className="text-[11px] uppercase tracking-wide text-muted-foreground mt-1.5">{label}</div>
+      </div>
+    </div>
+  );
+};
+
+type AnalyticTone = 'primary' | 'info' | 'warning' | 'success';
+const ANALYTIC_TONES: Record<AnalyticTone, string> = {
+  primary: 'bg-primary/10 text-primary',
+  info:    'bg-info/10 text-info',
+  warning: 'bg-warning/10 text-warning',
+  success: 'bg-success/10 text-success',
+};
+const AnalyticTile: React.FC<{
+  icon: LucideIcon;
+  label: string;
+  value: number | string;
+  sub?: string;
+  delta?: number;
+  deltaLabel?: string;
+  tone: AnalyticTone;
+}> = ({ icon: Icon, label, value, sub, delta, deltaLabel, tone }) => {
+  const positive = (delta ?? 0) > 0;
+  const negative = (delta ?? 0) < 0;
+  return (
+    <div className="rounded-xl border border-border/60 bg-card p-3 sm:p-3.5 hover:border-primary/30 hover:shadow-sm transition-all">
+      <div className="flex items-center justify-between gap-2">
+        <div className={`h-8 w-8 rounded-lg inline-flex items-center justify-center ${ANALYTIC_TONES[tone]}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        {typeof delta === 'number' && (
+          <span
+            className={`inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full tech-content ${
+              positive ? 'bg-success/10 text-success'
+              : negative ? 'bg-destructive/10 text-destructive'
+              : 'bg-muted text-muted-foreground'
+            }`}
+            title={deltaLabel}
+          >
+            {positive ? <TrendingUp className="h-3 w-3" /> : negative ? <TrendingDown className="h-3 w-3" /> : null}
+            {positive ? '+' : ''}{delta}%
+          </span>
+        )}
+      </div>
+      <div className="mt-2">
+        <div className="text-xl font-bold text-foreground tech-content leading-none">{value}</div>
+        <div className="text-[11px] text-muted-foreground mt-1 truncate">{label}</div>
+        {sub && <div className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{sub}</div>}
       </div>
     </div>
   );
@@ -330,6 +377,45 @@ const DashboardMyRequests: React.FC = () => {
     const needsInfo = l.filter((x) => x.status === 'needs_info');
     return { quotedAwaiting, needsInfo };
   }, [leads]);
+
+  // === Advanced analytics ===
+  const analytics = useMemo(() => {
+    const l = leads ?? [];
+    const q = quoteRequests ?? [];
+    const all: { created_at: string; updated_at?: string | null; status: string; viewed_at?: string | null; sector?: string }[] = [
+      ...l.map((x) => ({ created_at: x.created_at, updated_at: x.updated_at, status: x.status, viewed_at: x.viewed_at })),
+      ...q.map((x) => ({ created_at: x.created_at, updated_at: x.updated_at, status: x.status, sector: x.sector })),
+    ];
+    const now = Date.now();
+    const DAY = 86400000;
+    const last7 = all.filter((x) => now - new Date(x.created_at).getTime() < 7 * DAY).length;
+    const prev7 = all.filter((x) => {
+      const t = now - new Date(x.created_at).getTime();
+      return t >= 7 * DAY && t < 14 * DAY;
+    }).length;
+    const weekDelta = prev7 === 0 ? (last7 > 0 ? 100 : 0) : Math.round(((last7 - prev7) / prev7) * 100);
+
+    // Provider response rate (leads viewed by any provider)
+    const viewed = l.filter((x) => !!x.viewed_at).length;
+    const responseRate = l.length === 0 ? 0 : Math.round((viewed / l.length) * 100);
+
+    // Avg time from create → first update (in hours), for leads that moved past 'new'
+    const responded = l.filter((x) => x.updated_at && x.status !== 'new');
+    const avgRespHours = responded.length === 0 ? 0 : Math.round(
+      responded.reduce((s, x) => s + Math.max(0, new Date(x.updated_at!).getTime() - new Date(x.created_at).getTime()), 0)
+      / responded.length / 3600000
+    );
+
+    // Conversion: quoted / total leads
+    const conversion = l.length === 0 ? 0 : Math.round((l.filter((x) => x.status === 'quoted' || x.status === 'accepted').length / l.length) * 100);
+
+    // Top sector
+    const sectorMap = new Map<string, number>();
+    q.forEach((x) => x.sector && sectorMap.set(x.sector, (sectorMap.get(x.sector) ?? 0) + 1));
+    const top = Array.from(sectorMap.entries()).sort((a, b) => b[1] - a[1])[0];
+
+    return { last7, weekDelta, responseRate, avgRespHours, conversion, topSector: top?.[0] ?? null, topSectorCount: top?.[1] ?? 0 };
+  }, [leads, quoteRequests]);
 
   // === Status distribution (for mini-bar) ===
   const distribution = useMemo(() => {
@@ -666,6 +752,41 @@ const DashboardMyRequests: React.FC = () => {
                 </span>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* === Performance analytics === */}
+        {(kpis.totalQ + kpis.totalL) > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            <AnalyticTile
+              icon={Activity}
+              tone="primary"
+              label={isRTL ? 'هذا الأسبوع' : 'This week'}
+              value={analytics.last7}
+              delta={analytics.weekDelta}
+              deltaLabel={isRTL ? 'مقارنة بالأسبوع السابق' : 'vs previous week'}
+            />
+            <AnalyticTile
+              icon={Gauge}
+              tone="info"
+              label={isRTL ? 'معدل المشاهدة' : 'View rate'}
+              value={`${analytics.responseRate}%`}
+              sub={isRTL ? 'فتحها المزودون' : 'opened by providers'}
+            />
+            <AnalyticTile
+              icon={Clock}
+              tone="warning"
+              label={isRTL ? 'متوسط الرد' : 'Avg response'}
+              value={analytics.avgRespHours > 0 ? `${analytics.avgRespHours}${isRTL ? ' س' : 'h'}` : '—'}
+              sub={isRTL ? 'وقت أول تحديث' : 'time to first update'}
+            />
+            <AnalyticTile
+              icon={Target}
+              tone="success"
+              label={isRTL ? 'التحويل' : 'Conversion'}
+              value={`${analytics.conversion}%`}
+              sub={analytics.topSector ? (isRTL ? `الأكثر: ${analytics.topSector}` : `Top: ${analytics.topSector}`) : (isRTL ? 'إلى عرض/قبول' : 'to quote/accept')}
+            />
           </div>
         )}
 
