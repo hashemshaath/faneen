@@ -5,7 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link2, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import type { ClientWorkspaceDetail } from '@/services/clientWorkspaceService';
 
