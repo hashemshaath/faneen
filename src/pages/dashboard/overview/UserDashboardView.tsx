@@ -43,7 +43,7 @@ import {
 } from '@/components/dashboard/overview/DashboardActionCenter';
 import { countConversationsForUser } from '@/modules/messaging';
 
-const TAB_KEYS = ['overview', 'activity', 'performance', 'actions'] as const;
+const TAB_KEYS = ['overview', 'activity', 'performance'] as const;
 type TabKey = typeof TAB_KEYS[number];
 
 type UserProfile = {
@@ -293,39 +293,11 @@ export default function UserDashboardView({
             <BarChart3 className="w-4 h-4" aria-hidden="true" />
             {isRTL ? 'الأداء' : 'Performance'}
           </TabsTrigger>
-          <TabsTrigger value="actions" className="gap-2 data-[state=active]:bg-accent/10 data-[state=active]:text-accent rounded-lg">
-            <Zap className="w-4 h-4" aria-hidden="true" />
-            {isRTL ? 'إجراءات سريعة' : 'Quick Actions'}
-          </TabsTrigger>
         </TabsList>
 
-        {/* Overview — Stats first */}
+        {/* Overview — Stats + Quick Actions merged */}
         <TabsContent value="overview" className="mt-5 space-y-5 focus-visible:outline-none">
           <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <OverdueAlerts isRTL={isRTL} userId={user.id} />
-            <TodaySummary isRTL={isRTL} userId={user.id} />
-          </div>
-        </TabsContent>
-
-        {/* Activity — live + notifications + recent contracts */}
-        <TabsContent value="activity" className="mt-5 focus-visible:outline-none">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {widgetChildren.activity}
-            {widgetChildren.status}
-          </div>
-        </TabsContent>
-
-        {/* Performance — trends + tasks */}
-        <TabsContent value="performance" className="mt-5 focus-visible:outline-none">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {widgetChildren.trends}
-            {widgetChildren.tasks}
-          </div>
-        </TabsContent>
-
-        {/* Quick actions */}
-        <TabsContent value="actions" className="mt-5 space-y-5 focus-visible:outline-none">
           <DashboardActionCenter
             isRTL={isRTL}
             role="user"
@@ -355,7 +327,27 @@ export default function UserDashboardView({
               },
             ] satisfies DashboardAction[]}
           />
-          {widgetChildren.links}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <OverdueAlerts isRTL={isRTL} userId={user.id} />
+            <TodaySummary isRTL={isRTL} userId={user.id} />
+            {widgetChildren.links}
+          </div>
+        </TabsContent>
+
+        {/* Activity — live + notifications + recent contracts */}
+        <TabsContent value="activity" className="mt-5 focus-visible:outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {widgetChildren.activity}
+            {widgetChildren.status}
+          </div>
+        </TabsContent>
+
+        {/* Performance — trends + tasks */}
+        <TabsContent value="performance" className="mt-5 focus-visible:outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {widgetChildren.trends}
+            {widgetChildren.tasks}
+          </div>
         </TabsContent>
       </Tabs>
 
