@@ -269,8 +269,8 @@ export default function UserDashboardView({
         isRefreshing={isFetching}
         subline={
           isRTL
-            ? 'منظومة موحدة: إحصائيات، نشاط، أداء، وإجراءات سريعة'
-            : 'Unified workspace: stats, activity, performance & quick actions'
+            ? 'نظرة موحدة: إحصائيات وإجراءات سريعة، نشاط، وأداء'
+            : 'Unified view: stats & quick actions, activity, performance'
         }
       />
 
