@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   countUnreadNotificationsForUser,
@@ -10,10 +10,12 @@ import { listContractsForCustomer } from '@/modules/contracts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import {
   FileText, MessageSquare, Bell, Bookmark, CreditCard, TrendingUp, DollarSign,
   PieChart as PieChartIcon, Send, Search as SearchIcon, Link as LinkIcon,
+  LayoutDashboard, Activity, BarChart3, Zap,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -32,8 +34,6 @@ import {
   UnifiedKpiGrid,
   type UnifiedKpiTile,
 } from '@/components/dashboard/overview/UnifiedKpiGrid';
-import { useDashboardCustomization } from '@/hooks/useDashboardCustomization';
-import { CustomizableGrid } from '@/components/dashboard/overview/CustomizableSection';
 import { LiveActivityWidget } from '@/components/dashboard/overview/widgets/LiveActivityWidget';
 import { SmartTasksWidget } from '@/components/dashboard/overview/widgets/SmartTasksWidget';
 import { TrendsWidget } from '@/components/dashboard/overview/widgets/TrendsWidget';
@@ -45,7 +45,8 @@ import {
 import { countConversationsForUser } from '@/modules/messaging';
 import { ClientHealthScoreCard, type ClientHealthInput } from '@/components/dashboard/ClientHealthScoreCard';
 
-const WIDGET_DEFAULTS = ['trends', 'activity', 'tasks', 'contracts', 'notifications', 'status', 'links'];
+const TAB_KEYS = ['overview', 'activity', 'performance', 'actions'] as const;
+type TabKey = typeof TAB_KEYS[number];
 
 type UserProfile = {
   full_name?: string | null;
@@ -56,6 +57,16 @@ export default function UserDashboardView({
   isRTL, user, profile,
 }: { isRTL: boolean; user: { id: string }; profile: UserProfile }) {
   const qc = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab: TabKey = (TAB_KEYS as readonly string[]).includes(tabParam ?? '')
+    ? (tabParam as TabKey)
+    : 'overview';
+  const onTabChange = (next: string) => {
+    const sp = new URLSearchParams(searchParams);
+    if (next === 'overview') sp.delete('tab'); else sp.set('tab', next);
+    setSearchParams(sp, { replace: true });
+  };
 
   const { data: stats, isFetching, refetch } = useQuery({
     queryKey: ['user-overview-stats', user?.id],
@@ -141,8 +152,6 @@ export default function UserDashboardView({
     setLastRefresh(new Date());
     refetch();
   };
-
-  const customization = useDashboardCustomization('user', WIDGET_DEFAULTS);
 
   const healthInput: ClientHealthInput = {
     hasFullName: !!profile?.full_name,
