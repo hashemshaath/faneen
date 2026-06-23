@@ -246,10 +246,24 @@ describe('2J AdminOperations page', () => {
     mockedPreview.mockResolvedValue(sampleResult());
     renderPage();
     // Wait for initial fetch to fully settle so the debounced refetch is unblocked.
-    await screen.findByTestId('status-badge');
+    // Wait for the query to fully settle (action-samples renders after data resolves,
+    // matching the gating used by other tests in this suite). Use an extended timeout
+    // because under full-suite load React Query's debounced settle can exceed the
+    // default 1000ms findBy* timeout and previously caused a flaky timeout.
+    await waitFor(
+      () => expect(screen.getByTestId('action-samples')).toBeInTheDocument(),
+      { timeout: 5000 },
+    );
+    await waitFor(
+      () => expect(screen.getByTestId('status-badge')).toBeInTheDocument(),
+      { timeout: 5000 },
+    );
     const before = mockedPreview.mock.calls.length;
     fireEvent.click(screen.getByTestId('refresh-preview'));
-    await waitFor(() => expect(mockedPreview.mock.calls.length).toBeGreaterThan(before));
+    await waitFor(
+      () => expect(mockedPreview.mock.calls.length).toBeGreaterThan(before),
+      { timeout: 5000 },
+    );
   });
 
   it('renders error state when preview throws', async () => {
