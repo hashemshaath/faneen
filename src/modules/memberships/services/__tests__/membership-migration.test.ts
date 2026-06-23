@@ -42,9 +42,10 @@ describe('MEMB-2 callsite migration', () => {
     expect(src).not.toMatch(/supabase\.rpc\(['"]get_membership_usage['"]/);
   });
 
-  it('dashboard/overview/shared MembershipWidget migrated', () => {
+  it('dashboard/overview/shared no longer ships the retired MembershipWidget', () => {
     const src = read('src/components/dashboard/overview/shared.tsx');
-    expect(src).toContain('getCurrentMembershipSubscription');
+    expect(src).not.toContain('MembershipWidget');
+    expect(src).not.toContain('getCurrentMembershipSubscription');
     expect(src).not.toMatch(/\.from\(['"]membership_subscriptions['"]\)/);
   });
 
