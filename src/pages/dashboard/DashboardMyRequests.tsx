@@ -1242,8 +1242,30 @@ const QuoteRequestRowCardImpl: React.FC<{
   const lastTouchMs = new Date(q.updated_at ?? q.created_at).getTime();
   const ageDays = (Date.now() - lastTouchMs) / 86400000;
   const isStale = isActive && ageDays > 7;
+  const contactLabel = (() => {
+    const m: Record<string, { ar: string; en: string }> = {
+      whatsapp: { ar: 'واتساب', en: 'WhatsApp' },
+      call: { ar: 'اتصال', en: 'Call' },
+      phone: { ar: 'هاتف', en: 'Phone' },
+      email: { ar: 'بريد', en: 'Email' },
+      chat: { ar: 'محادثة', en: 'Chat' },
+    };
+    const k = (q.preferred_contact_method ?? '').toLowerCase();
+    return m[k]?.[isRTL ? 'ar' : 'en'] ?? q.preferred_contact_method;
+  })();
+  const nextStep: { ar: string; en: string } | null = (() => {
+    switch (q.status) {
+      case 'new': return { ar: 'بانتظار توجيه المنصة', en: 'Awaiting platform matching' };
+      case 'matched': return { ar: 'بانتظار رد المزودين', en: 'Awaiting provider replies' };
+      case 'under_review': return { ar: 'قيد المراجعة من فريقنا', en: 'Under our team review' };
+      case 'contacted': return { ar: 'تم التواصل — تابع المحادثة', en: 'Contacted — follow the thread' };
+      case 'completed': return { ar: 'اكتمل بنجاح', en: 'Completed successfully' };
+      default: return null;
+    }
+  })();
+  const sectorInitial = (q.sector ?? '?').trim().charAt(0).toUpperCase();
   return (
-    <Card className={`group relative overflow-hidden hover-lift transition-all border-border/60 hover:border-primary/40 hover:shadow-md ${pinned ? 'ring-1 ring-amber-400/40 bg-amber-50/30 dark:bg-amber-500/[0.04]' : ''}`}>
+    <Card className={`group relative overflow-hidden hover-lift transition-all border-border/60 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/[0.04] ${pinned ? 'ring-1 ring-amber-400/40 bg-amber-50/30 dark:bg-amber-500/[0.04]' : ''}`}>
       {/* Status accent stripe */}
       <span aria-hidden className={`absolute inset-y-0 start-0 w-1 ${
         q.status === 'new' ? 'bg-primary' :
@@ -1254,7 +1276,13 @@ const QuoteRequestRowCardImpl: React.FC<{
         q.status === 'cancelled' ? 'bg-muted-foreground/40' : 'bg-muted'
       }`} />
       <CardContent className={`${compact ? 'p-3 sm:p-3.5 ps-4 sm:ps-5' : 'p-4 sm:p-5 ps-5 sm:ps-6'}`}>
-        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-5">
+          {/* Sector avatar */}
+          {!compact && (
+            <div className="hidden sm:flex shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 ring-1 ring-primary/20 items-center justify-center text-primary font-bold text-lg select-none">
+              {sectorInitial}
+            </div>
+          )}
           {/* Main column */}
           <div className="flex-1 min-w-0 space-y-2">
             {/* Header: ref + status */}
@@ -1278,7 +1306,7 @@ const QuoteRequestRowCardImpl: React.FC<{
               ) : (
                 <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
               )}
-              <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${tone}`}>
                 {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
               </span>
               {isStale && (
@@ -1298,37 +1326,40 @@ const QuoteRequestRowCardImpl: React.FC<{
 
             {/* Title */}
             {q.project_description && (
-              <h3 className={`font-semibold text-foreground leading-snug ${compact ? 'text-sm line-clamp-1' : 'text-[15px] line-clamp-2'}`}>
+              <h3 className={`font-semibold text-foreground leading-snug group-hover:text-primary transition-colors ${compact ? 'text-sm line-clamp-1' : 'text-base line-clamp-2'}`}>
                 {q.project_description}
               </h3>
             )}
 
-            {/* Meta */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <Tag className="h-3.5 w-3.5" /> {q.sector}
+            {/* Meta pills */}
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/8 text-primary border border-primary/15 font-medium">
+                <Tag className="h-3 w-3" /> {q.sector}
               </span>
-              <span className="text-border">·</span>
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" /> {q.city}{q.district ? ` · ${q.district}` : ''}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 text-muted-foreground border border-border/60">
+                <MapPin className="h-3 w-3" /> {q.city}{q.district ? ` · ${q.district}` : ''}
               </span>
-              <span className="text-border">·</span>
-              <span className="inline-flex items-center gap-1">
-                <MessageSquare className="h-3.5 w-3.5" /> {q.preferred_contact_method}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 text-muted-foreground border border-border/60">
+                <MessageSquare className="h-3 w-3" /> {contactLabel}
               </span>
               {fileCount > 0 && (
-                <>
-                  <span className="text-border">·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Paperclip className="h-3.5 w-3.5" /> {fileCount}
-                  </span>
-                </>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 text-muted-foreground border border-border/60 tech-content">
+                  <Paperclip className="h-3 w-3" /> {fileCount}
+                </span>
               )}
             </div>
+
+            {/* Next step hint */}
+            {!compact && nextStep && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-0.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/60 animate-pulse" aria-hidden />
+                <span>{isRTL ? nextStep.ar : nextStep.en}</span>
+              </div>
+            )}
           </div>
 
           {/* Side column: timestamp + CTA */}
-          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 sm:min-w-[140px] shrink-0 pt-1">
+          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-between gap-2 sm:min-w-[150px] shrink-0 sm:border-s sm:border-border/50 sm:ps-4">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-[11px] text-muted-foreground tech-content cursor-help inline-flex items-center gap-1">
@@ -1338,10 +1369,14 @@ const QuoteRequestRowCardImpl: React.FC<{
               </TooltipTrigger>
               <TooltipContent>{createdAbs}</TooltipContent>
             </Tooltip>
-            <Button asChild size="sm" variant="outline" className="min-h-[34px] h-9 group-hover:border-primary/40 group-hover:text-primary transition-colors">
+            <Button
+              asChild
+              size="sm"
+              className="h-9 shadow-sm shadow-primary/10 group-hover:shadow-md group-hover:shadow-primary/20 transition-all"
+            >
               <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
                 {isRTL ? 'عرض التفاصيل' : 'View details'}
-                <ArrowRight className="h-3.5 w-3.5 rtl-flip ms-1" />
+                <ArrowRight className="h-3.5 w-3.5 rtl-flip ms-1 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </Button>
           </div>
