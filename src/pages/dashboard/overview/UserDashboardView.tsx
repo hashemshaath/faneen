@@ -337,7 +337,7 @@ export default function UserDashboardView({
         </TabsContent>
       </Tabs>
 
-      <KeyboardShortcuts isRTL={isRTL} onCustomize={() => overviewLayout.setEditMode((value) => !value)} onRefresh={handleRefresh} />
+      <KeyboardShortcuts isRTL={isRTL} onRefresh={handleRefresh} />
     </div>
   );
 }
