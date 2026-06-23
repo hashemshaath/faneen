@@ -16,6 +16,7 @@ import { Loader2, ShieldCheck, AlertTriangle, Clock, KeyRound, RefreshCw, LogIn,
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNavigate, Link } from 'react-router-dom';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { LogoLink } from '@/components/common/LogoLink';
 
 const ResetPassword = () => {
   const { t, isRTL } = useLanguage();
@@ -265,9 +266,9 @@ const ResetPassword = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mx-auto mb-4 inline-flex">
-            <Link to="/" aria-label="قِطاعات — الرئيسية" className="inline-flex hover:opacity-90 transition-opacity">
+            <LogoLink surface="public" ariaLabel="قِطاعات — الرئيسية">
               <BrandLogo variant="mark" tone="auto" size={48} alt="قِطاعات" />
-            </Link>
+            </LogoLink>
           </div>
         </div>
         <div className="bg-card rounded-2xl border border-border p-8 shadow-sm space-y-6">

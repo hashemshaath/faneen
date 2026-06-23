@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CopyButton } from '@/components/ui/copy-button';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { LogoLink } from '@/components/common/LogoLink';
 import { isBarcodeCode } from '@/lib/barcodes/barcode-url';
 
 type ResolveResult =
@@ -70,9 +71,9 @@ const PublicBarcodeResolve: React.FC = () => {
     <div className="min-h-dvh bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <header className="border-b border-border/40 bg-background/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
-          <Link to="/" className="flex items-center gap-2 hover-lift">
+          <LogoLink surface="public" ariaLabel={bi('قِطاعات — الرئيسية', 'Qitaat — Home')} className="hover-lift">
             <BrandLogo size={28} />
-          </Link>
+          </LogoLink>
           <Badge variant="outline" size="sm" className="text-[10px]">
             <ShieldCheck className="w-3 h-3 me-1" />
             {bi('كود قِطاعات', 'Qitaat code')}
