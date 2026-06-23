@@ -43,7 +43,6 @@ import {
   type DashboardAction,
 } from '@/components/dashboard/overview/DashboardActionCenter';
 import { countConversationsForUser } from '@/modules/messaging';
-import { ClientHealthScoreCard, type ClientHealthInput } from '@/components/dashboard/ClientHealthScoreCard';
 
 const TAB_KEYS = ['overview', 'activity', 'performance', 'actions'] as const;
 type TabKey = typeof TAB_KEYS[number];
