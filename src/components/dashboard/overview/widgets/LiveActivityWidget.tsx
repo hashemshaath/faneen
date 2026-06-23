@@ -68,7 +68,7 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
       (notifs.data || []).forEach((n) => {
         const title = resolveNotificationTitle(n, isRTL ? 'ar' : 'en');
         const body = isRTL ? n.body_ar : (n.body_en || n.body_ar);
-        const key = ['notification', title, body, n.action_url || '/dashboard/notifications'].join('|');
+        const key = ['notification', title, body].join('|');
         if (seenNotificationKeys.has(key)) return;
         seenNotificationKeys.add(key);
 
