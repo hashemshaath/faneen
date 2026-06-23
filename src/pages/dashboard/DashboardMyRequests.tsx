@@ -708,6 +708,41 @@ const DashboardMyRequests: React.FC = () => {
           </div>
         )}
 
+        {/* === Performance analytics === */}
+        {(kpis.totalQ + kpis.totalL) > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            <AnalyticTile
+              icon={Activity}
+              tone="primary"
+              label={isRTL ? 'هذا الأسبوع' : 'This week'}
+              value={analytics.last7}
+              delta={analytics.weekDelta}
+              deltaLabel={isRTL ? 'مقارنة بالأسبوع السابق' : 'vs previous week'}
+            />
+            <AnalyticTile
+              icon={Gauge}
+              tone="info"
+              label={isRTL ? 'معدل المشاهدة' : 'View rate'}
+              value={`${analytics.responseRate}%`}
+              sub={isRTL ? 'فتحها المزودون' : 'opened by providers'}
+            />
+            <AnalyticTile
+              icon={Clock}
+              tone="warning"
+              label={isRTL ? 'متوسط الرد' : 'Avg response'}
+              value={analytics.avgRespHours > 0 ? `${analytics.avgRespHours}${isRTL ? ' س' : 'h'}` : '—'}
+              sub={isRTL ? 'وقت أول تحديث' : 'time to first update'}
+            />
+            <AnalyticTile
+              icon={Target}
+              tone="success"
+              label={isRTL ? 'التحويل' : 'Conversion'}
+              value={`${analytics.conversion}%`}
+              sub={analytics.topSector ? (isRTL ? `الأكثر: ${analytics.topSector}` : `Top: ${analytics.topSector}`) : (isRTL ? 'إلى عرض/قبول' : 'to quote/accept')}
+            />
+          </div>
+        )}
+
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
           {/* Sticky toolbar */}
           <div className="sticky top-0 z-20 -mx-2 px-2 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row sm:items-center gap-3">
