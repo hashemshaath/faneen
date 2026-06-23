@@ -205,21 +205,23 @@ export default function UserDashboardView({
 
   const kpiTiles: UnifiedKpiTile[] = [
     {
-      id: 'spent',
-      label: isRTL ? 'إجمالي الإنفاق' : 'Total Spent',
-      value: `${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`,
+      id: 'contracts',
+      label: isRTL ? 'إجمالي العقود' : 'Total Contracts',
+      value: stats?.totalContracts ?? 0,
       sub: isRTL
-        ? `${stats?.completedContracts ?? 0} عقد مكتمل`
-        : `${stats?.completedContracts ?? 0} completed`,
-      icon: DollarSign,
-    },
-    {
-      id: 'active',
-      label: isRTL ? 'العقود النشطة' : 'Active Contracts',
-      value: stats?.activeContracts ?? 0,
-      sub: `${isRTL ? 'من أصل' : 'of'} ${stats?.totalContracts ?? 0}`,
+        ? `${stats?.completedContracts ?? 0} مكتمل · ${stats?.activeContracts ?? 0} نشط`
+        : `${stats?.completedContracts ?? 0} done · ${stats?.activeContracts ?? 0} active`,
       to: '/dashboard/contracts',
       icon: FileText,
+    },
+    {
+      id: 'value',
+      label: isRTL ? 'قيمة العقود المكتملة' : 'Completed Value',
+      value: `${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`,
+      sub: isRTL
+        ? `من ${stats?.completedContracts ?? 0} عقد`
+        : `across ${stats?.completedContracts ?? 0} contracts`,
+      icon: DollarSign,
     },
     {
       id: 'messages',
