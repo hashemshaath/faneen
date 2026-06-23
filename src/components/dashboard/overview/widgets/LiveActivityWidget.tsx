@@ -37,6 +37,9 @@ const FILTERS: { id: ActivityKind; ar: string; en: string }[] = [
   { id: 'contract',     ar: 'عقود',      en: 'Contracts' },
 ];
 
+const normalizeActivityText = (value: string | null | undefined) =>
+  (value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+
 /**
  * Realtime activity timeline. Pulls notifications + recent messages +
  * contract updates and merges them client-side. Subscribes to the
@@ -68,7 +71,7 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
       (notifs.data || []).forEach((n) => {
         const title = resolveNotificationTitle(n, isRTL ? 'ar' : 'en');
         const body = isRTL ? n.body_ar : (n.body_en || n.body_ar);
-        const key = ['notification', title, body].join('|');
+        const key = ['notification', normalizeActivityText(title), normalizeActivityText(body)].join('|');
         if (seenNotificationKeys.has(key)) return;
         seenNotificationKeys.add(key);
 
@@ -118,8 +121,16 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
   }, [userId, qc]);
 
   const filtered = useMemo(() => {
-    if (filter === 'all') return data ?? [];
-    return (data ?? []).filter((r) => r.kind === filter);
+    const rows = filter === 'all'
+      ? data ?? []
+      : (data ?? []).filter((r) => r.kind === filter);
+    const seen = new Set<string>();
+    return rows.filter((row) => {
+      const key = [row.kind, normalizeActivityText(row.title), normalizeActivityText(row.body)].join('|');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [data, filter]);
 
   const locale = isRTL ? ar : enUS;
