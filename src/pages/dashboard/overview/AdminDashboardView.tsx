@@ -37,7 +37,7 @@ import {
 } from '@/modules/memberships';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
-  OverdueAlerts, TodaySummary, MembershipWidget,
+  OverdueAlerts, TodaySummary,
 } from '@/components/dashboard/overview/shared';
 import { formatLastUpdated } from '@/components/dashboard/overview/UnifiedDashboardHero';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -268,10 +268,9 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         );
       case 'alerts-row':
         return user ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <OverdueAlerts isRTL={isRTL} userId={user.id} />
             <TodaySummary isRTL={isRTL} userId={user.id} />
-            <MembershipWidget isRTL={isRTL} userId={user.id} />
           </div>
         ) : null;
       case 'todays-pulse':
