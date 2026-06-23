@@ -138,7 +138,7 @@ const QUOTE_STATUS_TONE: Record<string, string> = {
   under_review: 'bg-warning/10 text-warning border-warning/30',
   matched: 'bg-info/10 text-info border-info/30',
   contacted: 'bg-success/10 text-success border-success/30',
-  completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  completed: 'bg-primary/10 text-primary border-primary/30',
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
