@@ -331,6 +331,45 @@ const DashboardMyRequests: React.FC = () => {
     return { quotedAwaiting, needsInfo };
   }, [leads]);
 
+  // === Advanced analytics ===
+  const analytics = useMemo(() => {
+    const l = leads ?? [];
+    const q = quoteRequests ?? [];
+    const all: { created_at: string; updated_at?: string | null; status: string; viewed_at?: string | null; sector?: string }[] = [
+      ...l.map((x) => ({ created_at: x.created_at, updated_at: x.updated_at, status: x.status, viewed_at: x.viewed_at })),
+      ...q.map((x) => ({ created_at: x.created_at, updated_at: x.updated_at, status: x.status, sector: x.sector })),
+    ];
+    const now = Date.now();
+    const DAY = 86400000;
+    const last7 = all.filter((x) => now - new Date(x.created_at).getTime() < 7 * DAY).length;
+    const prev7 = all.filter((x) => {
+      const t = now - new Date(x.created_at).getTime();
+      return t >= 7 * DAY && t < 14 * DAY;
+    }).length;
+    const weekDelta = prev7 === 0 ? (last7 > 0 ? 100 : 0) : Math.round(((last7 - prev7) / prev7) * 100);
+
+    // Provider response rate (leads viewed by any provider)
+    const viewed = l.filter((x) => !!x.viewed_at).length;
+    const responseRate = l.length === 0 ? 0 : Math.round((viewed / l.length) * 100);
+
+    // Avg time from create → first update (in hours), for leads that moved past 'new'
+    const responded = l.filter((x) => x.updated_at && x.status !== 'new');
+    const avgRespHours = responded.length === 0 ? 0 : Math.round(
+      responded.reduce((s, x) => s + Math.max(0, new Date(x.updated_at!).getTime() - new Date(x.created_at).getTime()), 0)
+      / responded.length / 3600000
+    );
+
+    // Conversion: quoted / total leads
+    const conversion = l.length === 0 ? 0 : Math.round((l.filter((x) => x.status === 'quoted' || x.status === 'accepted').length / l.length) * 100);
+
+    // Top sector
+    const sectorMap = new Map<string, number>();
+    q.forEach((x) => x.sector && sectorMap.set(x.sector, (sectorMap.get(x.sector) ?? 0) + 1));
+    const top = Array.from(sectorMap.entries()).sort((a, b) => b[1] - a[1])[0];
+
+    return { last7, weekDelta, responseRate, avgRespHours, conversion, topSector: top?.[0] ?? null, topSectorCount: top?.[1] ?? 0 };
+  }, [leads, quoteRequests]);
+
   // === Status distribution (for mini-bar) ===
   const distribution = useMemo(() => {
     const source = tab === 'quotes' ? (quoteRequests ?? []) : (leads ?? []);
