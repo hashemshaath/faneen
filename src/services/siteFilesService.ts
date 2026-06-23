@@ -13,6 +13,7 @@
  *   - Files are archived (`is_archived = true`), never hard-deleted.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 
 export const SITE_FILES_BUCKET = 'site-files';
 export const SITE_FILES_MAX_BYTES = 10 * 1024 * 1024; // 10MB
@@ -131,7 +132,7 @@ export async function uploadSiteFile(input: UploadSiteFileInput): Promise<SiteFi
   if (!guard.ok) {
     throw new Error(guard.reason === 'size' ? 'FILE_TOO_LARGE' : 'FILE_TYPE_FORBIDDEN');
   }
-  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  const { data: auth, error: authErr } = await getCurrentUser();
   if (authErr) throw authErr;
   const userId = auth.user?.id;
   if (!userId) throw new Error('AUTH_REQUIRED');

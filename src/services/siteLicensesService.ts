@@ -11,6 +11,7 @@
  *   - No elevated/admin keys on the frontend.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 
 export type SiteLicenseType =
   | 'license'
@@ -115,7 +116,7 @@ export async function listSiteLicenses(
 export async function createSiteLicense(
   input: CreateSiteLicenseInput,
 ): Promise<SiteLicenseRow> {
-  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  const { data: auth, error: authErr } = await getCurrentUser();
   if (authErr) throw authErr;
   const userId = auth.user?.id;
   if (!userId) throw new Error('AUTH_REQUIRED');
