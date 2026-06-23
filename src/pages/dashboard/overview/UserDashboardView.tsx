@@ -297,41 +297,57 @@ export default function UserDashboardView({
 
         {/* Overview — Stats + Quick Actions merged */}
         <TabsContent value="overview" className="mt-5 space-y-5 focus-visible:outline-none">
-          <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
-          <DashboardActionCenter
-            isRTL={isRTL}
-            role="user"
-            actions={[
-              {
-                id: 'request-quote',
-                label: { ar: 'اطلب عرض سعر', en: 'Request a quote' },
-                description: {
-                  ar: 'أرسل طلبك للمزودين المناسبين',
-                  en: 'Send your RFQ to matching providers',
-                },
-                to: '/rfq/new',
-                icon: Send,
-                primary: true,
-              },
-              {
-                id: 'my-requests',
-                label: { ar: 'تابع طلباتك', en: 'Track requests' },
-                to: '/dashboard/my-requests',
-                icon: FileText,
-              },
-              {
-                id: 'browse-providers',
-                label: { ar: 'استعرض المزودين', en: 'Browse providers' },
-                to: '/search',
-                icon: SearchIcon,
-              },
-            ] satisfies DashboardAction[]}
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <OverdueAlerts isRTL={isRTL} userId={user.id} />
+          <section className="rounded-2xl border border-border/60 bg-card/80 p-3 sm:p-4 shadow-sm">
+            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-foreground">
+                  {isRTL ? 'نظرة عامة وإجراءات سريعة' : 'Overview & quick actions'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground">
+                  {isRTL ? 'الأرقام الأساسية مع أهم الخطوات في مساحة واحدة' : 'Core numbers and next steps in one workspace'}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] gap-3 sm:gap-4 items-stretch">
+              <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
+              <DashboardActionCenter
+                isRTL={isRTL}
+                role="user"
+                className="h-full border-primary/15 bg-primary/[0.03]"
+                title={{ ar: 'إجراءات سريعة', en: 'Quick actions' }}
+                actions={[
+                  {
+                    id: 'request-quote',
+                    label: { ar: 'اطلب عرض سعر', en: 'Request a quote' },
+                    description: {
+                      ar: 'أرسل طلبك للمزودين المناسبين',
+                      en: 'Send your RFQ to matching providers',
+                    },
+                    to: '/rfq/new',
+                    icon: Send,
+                    primary: true,
+                  },
+                  {
+                    id: 'my-requests',
+                    label: { ar: 'تابع طلباتك', en: 'Track requests' },
+                    to: '/dashboard/my-requests',
+                    icon: FileText,
+                  },
+                  {
+                    id: 'browse-providers',
+                    label: { ar: 'استعرض المزودين', en: 'Browse providers' },
+                    to: '/search',
+                    icon: SearchIcon,
+                  },
+                ] satisfies DashboardAction[]}
+              />
+            </div>
+          </section>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <TodaySummary isRTL={isRTL} userId={user.id} />
             {widgetChildren.links}
           </div>
+          <OverdueAlerts isRTL={isRTL} userId={user.id} />
         </TabsContent>
 
         {/* Activity — live + notifications + recent contracts */}
