@@ -515,24 +515,24 @@ const DashboardMyRequests: React.FC = () => {
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
       <div className="space-y-5">
-        {/* === Executive dark hero === */}
-        <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white shadow-elev-3">
-          {/* Glow accents */}
-          <div aria-hidden className="pointer-events-none absolute -top-24 -end-24 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
-          <div aria-hidden className="pointer-events-none absolute -bottom-24 -start-16 h-72 w-72 rounded-full bg-orange-500/[0.07] blur-3xl" />
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.06),transparent_60%)]" />
+        {/* === Brand-aligned hero === */}
+        <section className="relative overflow-hidden rounded-3xl bg-card border border-border/60 text-foreground shadow-sm">
+          {/* Brand accents */}
+          <div aria-hidden className="pointer-events-none absolute -top-24 -end-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute -bottom-24 -start-16 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.05),transparent_60%)]" />
 
           <div className="relative p-5 sm:p-7 lg:p-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
               <div className="flex-1 min-w-0 space-y-2.5">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] ring-1 ring-white/10 text-[11px] font-medium text-white/80">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 ring-1 ring-primary/20 text-[11px] font-medium text-primary">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                   <span>{isRTL ? 'الطلبات' : 'Requests'}</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                   {isRTL ? 'طلباتي' : 'My Requests'}
                 </h1>
-                <p className="text-sm sm:text-base text-white/70 max-w-2xl leading-relaxed">
+                <p className="text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
                   {isRTL
                     ? 'تابع حالة طلبات الخدمة وعروض الأسعار التي أرسلتها للمنشآت، مع تحديثات لحظية وسجل زمني كامل.'
                     : 'Track the status of the service requests and quotes you sent to providers — live updates and full timeline.'}
@@ -544,7 +544,7 @@ const DashboardMyRequests: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="min-h-[40px] bg-white/5 border-white/15 text-white hover:bg-white/10 hover:text-white"
+                      className="min-h-[40px]"
                       onClick={handleExport}
                       disabled={(tab === 'quotes' ? sortedQuotes.length : sortedLeads.length) === 0}
                       aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
@@ -558,7 +558,7 @@ const DashboardMyRequests: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="min-h-[40px] bg-white/5 border-white/15 text-white hover:bg-white/10 hover:text-white"
+                  className="min-h-[40px]"
                   onClick={handleRefresh}
                   disabled={refreshing}
                   aria-label={isRTL ? 'تحديث' : 'Refresh'}
@@ -566,7 +566,7 @@ const DashboardMyRequests: React.FC = () => {
                   <RefreshCw className={refreshing ? 'animate-spin' : ''} />
                   <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
                 </Button>
-                <Button asChild size="sm" className="min-h-[40px] bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/20">
+                <Button asChild size="sm" className="min-h-[40px] shadow-md shadow-primary/20">
                   <Link to="/quote">
                     <Plus />
                     <span>{isRTL ? 'طلب جديد' : 'New request'}</span>
