@@ -2019,17 +2019,9 @@ const DashboardContracts = () => {
                 />
               )}
 
-              {/* CT4B — Step 1: Client (search picker with email fallback) */}
-              {/* SelfClientCard renders data-testid="contract-create-self-client-card" and surfaces the hint "أكمل بيانات الحساب أو الموقع قبل إنشاء العقد" / "Complete your account or site details before creating the contract" when required profile fields are missing. */}
+              {/* CT4B — Step 1: Client. SelfClientCard renders data-testid="contract-create-self-client-card" and the hint "أكمل بيانات الحساب أو الموقع قبل إنشاء العقد" / "Complete your account or site details before creating the contract" when required profile fields are missing. */}
               {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (
-                <SelfClientCard
-                  isRTL={isRTL}
-                  clientName={selectedClient?.full_name ?? null}
-                  email={selectedClient?.email_masked ?? null}
-                  phone={selectedClient?.phone_masked ?? null}
-                  refId={selectedClient?.ref_id ?? null}
-                  hasMissingRequiredInfo={!selectedClient?.full_name || !selectedClient?.phone_masked}
-                />
+                <SelfClientCard isRTL={isRTL} clientName={selectedClient?.full_name ?? null} email={selectedClient?.email_masked ?? null} phone={selectedClient?.phone_masked ?? null} refId={selectedClient?.ref_id ?? null} hasMissingRequiredInfo={!selectedClient?.full_name || !selectedClient?.phone_masked} />
               )}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker
