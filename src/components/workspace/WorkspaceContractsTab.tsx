@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 import { FileText, Lock, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -112,21 +113,41 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
         });
         return;
       }
-      toast({ title: bi('تم إنشاء العقد', 'Contract created') });
+      const contractId = res.contractId;
+      toast({
+        title: bi('تم إنشاء العقد بنجاح كمسودة', 'Contract created successfully as a draft'),
+        action: contractId ? (
+          <ToastAction
+            altText={bi('عرض العقد', 'View contract')}
+            onClick={() => navigate(`/dashboard/contracts?id=${contractId}`)}
+          >
+            {bi('عرض العقد', 'View contract')}
+          </ToastAction>
+        ) : undefined,
+      });
+      // Refresh every contract list surface so the new draft shows up
+      // immediately in the workspace tab, /dashboard/contracts, the
+      // site detail tab and the legacy /contracts page.
       queryClient.invalidateQueries({ queryKey: ['workspace-contracts', workspace.siteId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['site-contracts', workspace.siteId] });
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
       setOpen(false);
       setTitleAr('');
       setTotalAmount('');
       setStartDate('');
       setEndDate('');
       setDescriptionAr('');
-      if (res.contractId) {
-        navigate(`/dashboard/contracts?id=${res.contractId}`);
+      if (contractId) {
+        navigate(`/dashboard/contracts?id=${contractId}`);
       }
     },
-    onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : '';
-      toast({ variant: 'destructive', title: msg || bi('خطأ', 'Error') });
+    onError: () => {
+      // Never surface raw RPC/SQL errors to end-users.
+      toast({
+        variant: 'destructive',
+        title: bi('تعذّر إنشاء العقد، حاول لاحقًا', 'Could not create contract, please try again'),
+      });
     },
   });
 
@@ -144,8 +165,8 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <Button
               type="button"
-              disabled={!eligible}
-              aria-disabled={!eligible}
+              disabled={!eligible || mutation.isPending}
+              aria-disabled={!eligible || mutation.isPending}
               data-testid={eligible ? 'workspace-create-contract' : 'workspace-create-contract-disabled'}
               onClick={() => setOpen((v) => !v)}
               className="gap-2"
@@ -239,10 +260,15 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
                 <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
                   <Bi ar="إلغاء" en="Cancel" />
                 </Button>
-                <Button type="submit" disabled={mutation.isPending}>
+                <Button
+                  type="submit"
+                  data-testid="workspace-create-contract-submit"
+                  disabled={mutation.isPending}
+                  aria-busy={mutation.isPending}
+                >
                   <Bi
-                    ar={mutation.isPending ? 'جاري الإنشاء…' : 'إنشاء العقد'}
-                    en={mutation.isPending ? 'Creating…' : 'Create contract'}
+                    ar={mutation.isPending ? 'جاري إنشاء العقد...' : 'إنشاء العقد'}
+                    en={mutation.isPending ? 'Creating contract…' : 'Create contract'}
                   />
                 </Button>
               </div>
