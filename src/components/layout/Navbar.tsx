@@ -374,7 +374,7 @@ export const Navbar = () => {
       {/* Mobile menu — anchored dropdown panel (not full-bleed) */}
       <div
         ref={menuRef}
-        className={`fixed top-[calc(4rem+0.5rem)] sm:top-[calc(4.5rem+0.5rem)] end-3 sm:end-4 z-50 lg:hidden w-[min(20rem,calc(100vw-1.5rem))] bg-white border border-[#E2E6EE] rounded-2xl shadow-xl transition-all duration-300 ease-out ${
+        className={`fixed top-[calc(4rem+0.5rem)] sm:top-[calc(4.5rem+0.5rem)] end-3 sm:end-4 z-50 lg:hidden w-80 max-w-[calc(100vw-1.5rem)] bg-white border border-[#E2E6EE] rounded-2xl shadow-xl transition-all duration-300 ease-out ${
           mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'
         }`}
       >
