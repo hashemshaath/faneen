@@ -4,7 +4,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   countUnreadNotificationsForUser,
-  listRecentNotificationsForUser,
 } from '@/modules/notifications';
 import { listContractsForCustomer } from '@/modules/contracts';
 import { Card, CardContent } from '@/components/ui/card';
@@ -104,31 +103,6 @@ export default function UserDashboardView({
     staleTime: 30000,
   });
 
-  const { data: recentNotifications } = useQuery({
-    queryKey: ['user-recent-notifications', user?.id],
-    queryFn: async () => {
-      type Row = {
-        id: string;
-        title_ar: string | null;
-        title_en: string | null;
-        body_ar: string | null;
-        body_en: string | null;
-        notification_type: string | null;
-        is_read: boolean | null;
-        created_at: string;
-        action_url: string | null;
-      };
-      const { data } = await listRecentNotificationsForUser<Row>({
-        userId: user.id,
-        select: 'id, title_ar, title_en, body_ar, body_en, notification_type, is_read, created_at, action_url',
-        limit: 5,
-      });
-      return data || [];
-    },
-    enabled: !!user,
-    staleTime: 30000,
-  });
-
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedSpent = useCountUp(stats?.totalSpent ?? 0, isVisible, 1500);
 
@@ -143,7 +117,6 @@ export default function UserDashboardView({
 
   const handleRefresh = () => {
     qc.invalidateQueries({ queryKey: ['user-overview-stats'] });
-    qc.invalidateQueries({ queryKey: ['user-recent-notifications'] });
     qc.invalidateQueries({ queryKey: ['today-summary'] });
     qc.invalidateQueries({ queryKey: ['overdue-alerts'] });
     qc.invalidateQueries({ queryKey: ['live-activity'] });
@@ -195,38 +168,6 @@ export default function UserDashboardView({
                 </Link>
               }
             />
-          )}
-        </CardContent>
-      </Card>
-    ),
-    notifications: (
-      <Card className={cn(SECTION_CARD_CLASS, 'h-full')}>
-        <CardContent className={SECTION_CONTENT_CLASS}>
-          <SectionHeader
-            icon={Bell}
-            tone="warning"
-            title={isRTL ? 'آخر الإشعارات' : 'Recent notifications'}
-            right={<SectionLinkAction to="/dashboard/notifications" label={isRTL ? 'الكل' : 'View all'} />}
-          />
-          {recentNotifications?.length ? (
-            <div className="space-y-1.5">
-              {recentNotifications.map((n) => (
-                <Link key={n.id} to={n.action_url || '/dashboard/notifications'}>
-                  <div className={cn('flex items-start gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors', !n.is_read && 'bg-accent/5')}>
-                    <div className={cn('w-6 h-6 rounded-lg shrink-0 flex items-center justify-center', !n.is_read ? 'bg-accent/15' : 'bg-muted/50')}>
-                      <Bell className={cn('w-3 h-3', !n.is_read ? 'text-accent' : 'text-muted-foreground')} aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className={cn('text-[11px] truncate', !n.is_read ? 'font-medium text-foreground' : 'text-muted-foreground')}>{isRTL ? n.title_ar : (n.title_en || n.title_ar)}</p>
-                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">{isRTL ? n.body_ar : (n.body_en || n.body_ar)}</p>
-                    </div>
-                    {!n.is_read && <div className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-1.5" />}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <SectionEmpty icon={Bell} message={isRTL ? 'لا إشعارات بعد' : 'No notifications yet'} />
           )}
         </CardContent>
       </Card>
