@@ -70,10 +70,16 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
   const [endDate, setEndDate] = useState<string>('');
   const [descriptionAr, setDescriptionAr] = useState<string>('');
 
-  // NOTE: per data model, an owner-user project has business_id = null
-  // (XOR), so provider cannot be derived. Sites without a project have
-  // no derivable provider either. We keep the gate strict and clear.
-  const eligible = workspace.kind === 'project' && !!workspace.businessId;
+  // Eligibility (Project ↔ Provider Linking phase):
+  //   - must be a project workspace
+  //   - must have an explicit provider link, EITHER via the business
+  //     that owns the project (legacy business-owned projects) OR via
+  //     the new `selected_provider_business_id` link a client owner
+  //     can set through `link_project_provider_as_client`.
+  // Sites and personal projects without a provider link stay disabled.
+  const providerBusinessId =
+    workspace.linkedProviderBusinessId ?? workspace.businessId ?? null;
+  const eligible = workspace.kind === 'project' && !!providerBusinessId;
 
   const { data, isLoading } = useQuery({
     queryKey: ['workspace-contracts', workspace.siteId],
@@ -153,8 +159,8 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
             {!eligible && (
               <p className="text-xs text-muted-foreground">
                 <Bi
-                  ar="لا يمكن إنشاء عقد حتى يتم ربط المشروع بمزود خدمة"
-                  en="A provider must be linked to this workspace before a contract can be created"
+                  ar="اربط المشروع بمزود خدمة قبل إنشاء العقد"
+                  en="Link a service provider to this project before creating a contract"
                 />
               </p>
             )}

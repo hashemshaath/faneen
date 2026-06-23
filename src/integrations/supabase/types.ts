@@ -14264,6 +14264,7 @@ export type Database = {
           project_cost: number | null
           ref_id: string | null
           saves_count: number
+          selected_provider_business_id: string | null
           shares_count: number
           site_id: string | null
           sort_order: number
@@ -14292,6 +14293,7 @@ export type Database = {
           project_cost?: number | null
           ref_id?: string | null
           saves_count?: number
+          selected_provider_business_id?: string | null
           shares_count?: number
           site_id?: string | null
           sort_order?: number
@@ -14320,6 +14322,7 @@ export type Database = {
           project_cost?: number | null
           ref_id?: string | null
           saves_count?: number
+          selected_provider_business_id?: string | null
           shares_count?: number
           site_id?: string | null
           sort_order?: number
@@ -14356,6 +14359,20 @@ export type Database = {
             columns: ["cover_image_asset_id"]
             isOneToOne: false
             referencedRelation: "image_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_selected_provider_business_id_fkey"
+            columns: ["selected_provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_selected_provider_business_id_fkey"
+            columns: ["selected_provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
           {
@@ -22469,6 +22486,10 @@ export type Database = {
       link_lead_to_contract: {
         Args: { _contract_id: string; _lead_id: string }
         Returns: Json
+      }
+      link_project_provider_as_client: {
+        Args: { p_project_id: string; p_provider_business_id: string }
+        Returns: string
       }
       list_admin_assignees: {
         Args: never

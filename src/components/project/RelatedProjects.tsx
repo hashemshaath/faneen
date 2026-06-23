@@ -52,7 +52,7 @@ export const RelatedProjects = ({ projectId, businessId, cityId: _cityId, taxono
       if (ids.length === 0) return [];
       const { data } = await supabase
         .from('projects')
-        .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, businesses(name_ar, name_en, logo_url, username), city_id, cities(name_ar, name_en)')
+        .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, businesses!business_id(name_ar, name_en, logo_url, username), city_id, cities(name_ar, name_en)')
         .in('id', ids)
         .eq('status', 'published')
         .neq('business_id', businessId)

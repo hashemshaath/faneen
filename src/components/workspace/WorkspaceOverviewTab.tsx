@@ -4,6 +4,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Lock } from 'lucide-react';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import type { ClientWorkspaceDetail } from '@/services/clientWorkspaceService';
 
@@ -14,6 +16,9 @@ interface Props {
 export const WorkspaceOverviewTab: React.FC<Props> = ({ detail }) => {
   const bi = useBi();
   const { workspace, project, site } = detail;
+  const providerBusinessId =
+    workspace.linkedProviderBusinessId ?? workspace.businessId ?? null;
+  const showProviderCard = workspace.kind === 'project';
   const description = bi(
     project?.description_ar ?? site?.label ?? '',
     project?.description_en ?? site?.label ?? '',
@@ -66,6 +71,55 @@ export const WorkspaceOverviewTab: React.FC<Props> = ({ detail }) => {
             <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">
               {description}
             </p>
+          </div>
+        )}
+        {showProviderCard && (
+          <div
+            className="pt-3 border-t space-y-2"
+            data-testid="workspace-provider-link"
+          >
+            <p className="text-xs text-muted-foreground">
+              <Bi ar="مزود الخدمة" en="Service provider" />
+            </p>
+            {providerBusinessId ? (
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="secondary">
+                  <Bi ar="مرتبط" en="Linked" />
+                </Badge>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {providerBusinessId.slice(0, 8)}…
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-foreground">
+                  <Bi
+                    ar="لم يتم ربط مزود خدمة بهذا المشروع"
+                    en="No service provider is linked to this project"
+                  />
+                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    aria-disabled
+                    data-testid="workspace-link-provider-disabled"
+                    className="gap-2"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <Bi ar="اختيار مزود خدمة" en="Choose a service provider" />
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    <Bi
+                      ar="ربط مزود الخدمة سيتم تفعيله بعد اعتماد مصدر المزودين"
+                      en="Provider linking will be enabled once an approved provider source is wired up"
+                    />
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

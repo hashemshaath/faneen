@@ -66,7 +66,7 @@ export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug,
       if (ids.length === 0) return [];
       let q = supabase
         .from('projects')
-        .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, city_id, cities(name_ar, name_en), businesses(username, name_ar, name_en)')
+        .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, city_id, cities(name_ar, name_en), businesses!business_id(username, name_ar, name_en)')
         .in('id', ids)
         .eq('status', 'published');
       if (cityId) q = q.eq('city_id', cityId);
