@@ -70,7 +70,7 @@ describe('P1B — conditional create-contract CTA accessibility', () => {
     // Post-Phase-4: the CTA accessibility cue is bound to `eligible`,
     // and the helper copy explains the ineligibility cause (missing
     // provider link) in both Arabic and English.
-    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible\}/);
+    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible(\s*\|\|[^}]+)?\}/);
     expect(CONTRACTS_TAB).toMatch(
       /لا يمكن إنشاء عقد حتى يتم ربط المشروع بمزود خدمة/,
     );

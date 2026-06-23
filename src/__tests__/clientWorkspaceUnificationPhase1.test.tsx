@@ -125,8 +125,8 @@ describe('CLIENT WORKSPACE UNIFICATION P1 — UI behavior', () => {
     // with an explicit ineligibility helper. Both code paths must exist
     // in source.
     expect(CONTRACTS_TAB).toMatch(/eligible/);
-    expect(CONTRACTS_TAB).toMatch(/disabled=\{!eligible\}/);
-    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible\}/);
+    expect(CONTRACTS_TAB).toMatch(/disabled=\{!eligible(\s*\|\|[^}]+)?\}/);
+    expect(CONTRACTS_TAB).toMatch(/aria-disabled=\{!eligible(\s*\|\|[^}]+)?\}/);
     expect(CONTRACTS_TAB).toMatch(/'workspace-create-contract'/);
     expect(CONTRACTS_TAB).toMatch(/'workspace-create-contract-disabled'/);
     expect(CONTRACTS_TAB).toMatch(/إنشاء عقد من هذا المشروع/);

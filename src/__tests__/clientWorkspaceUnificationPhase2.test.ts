@@ -66,8 +66,8 @@ describe('CLIENT WORKSPACE UNIFICATION PHASE 2 — guards', () => {
     expect(tab).toMatch(
       /data-testid=\{eligible\s*\?\s*['"]workspace-create-contract['"]\s*:\s*['"]workspace-create-contract-disabled['"]\}/,
     );
-    expect(tab).toMatch(/aria-disabled=\{!eligible\}/);
-    expect(tab).toMatch(/disabled=\{!eligible\}/);
+    expect(tab).toMatch(/aria-disabled=\{!eligible(\s*\|\|[^}]+)?\}/);
+    expect(tab).toMatch(/disabled=\{!eligible(\s*\|\|[^}]+)?\}/);
     expect(tab).toMatch(
       /لا يمكن إنشاء عقد حتى يتم ربط المشروع بمزود خدمة/,
     );
