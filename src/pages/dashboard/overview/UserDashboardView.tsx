@@ -339,7 +339,6 @@ export default function UserDashboardView({
 
   return (
     <div className="space-y-5" ref={ref}>
-      {/* Unified Hero (Phase A) */}
       <UnifiedDashboardHero
         isRTL={isRTL}
         roleLabel={{ ar: 'لوحة العميل', en: 'Client Dashboard' }}
@@ -348,105 +347,103 @@ export default function UserDashboardView({
         lastUpdated={formatLastUpdated(lastRefresh, isRTL)}
         onRefresh={handleRefresh}
         isRefreshing={isFetching}
-        onCustomize={() => customization.setEditMode(!customization.editMode)}
-        customizeActive={customization.editMode}
         subline={
           isRTL
-            ? 'تتبع عقودك ورسائلك بأناقة — اضغط ؟ لعرض الاختصارات'
-            : 'Track your contracts & messages — press ? for shortcuts'
+            ? 'منظومة موحدة: إحصائيات، نشاط، أداء، وإجراءات سريعة'
+            : 'Unified workspace: stats, activity, performance & quick actions'
         }
       />
 
-      {/* Action Center — role-aware client CTAs (Phase B2) */}
-      <DashboardActionCenter
-        isRTL={isRTL}
-        role="user"
-        actions={[
-          {
-            id: 'request-quote',
-            label: { ar: 'اطلب عرض سعر', en: 'Request a quote' },
-            description: {
-              ar: 'أرسل طلبك للمزودين المناسبين',
-              en: 'Send your RFQ to matching providers',
-            },
-            to: '/rfq/new',
-            icon: Send,
-            primary: true,
-          },
-          {
-            id: 'my-requests',
-            label: { ar: 'تابع طلباتك', en: 'Track requests' },
-            to: '/dashboard/my-requests',
-            icon: FileText,
-          },
-          {
-            id: 'browse-providers',
-            label: { ar: 'استعرض المزودين', en: 'Browse providers' },
-            to: '/search',
-            icon: SearchIcon,
-          },
-        ] satisfies DashboardAction[]}
-      />
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+        <TabsList className="w-full justify-start overflow-x-auto no-scrollbar h-auto p-1 bg-card border border-border/60 rounded-xl">
+          <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-accent/10 data-[state=active]:text-accent rounded-lg">
+            <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
+            {isRTL ? 'نظرة عامة' : 'Overview'}
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="gap-2 data-[state=active]:bg-accent/10 data-[state=active]:text-accent rounded-lg">
+            <Activity className="w-4 h-4" aria-hidden="true" />
+            {isRTL ? 'النشاط' : 'Activity'}
+            {(stats?.unreadNotifications ?? 0) > 0 && (
+              <Badge variant="outline" className="ms-1 h-4 px-1 text-[9px] border-accent/40 text-accent">
+                {stats?.unreadNotifications}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="gap-2 data-[state=active]:bg-accent/10 data-[state=active]:text-accent rounded-lg">
+            <BarChart3 className="w-4 h-4" aria-hidden="true" />
+            {isRTL ? 'الأداء' : 'Performance'}
+          </TabsTrigger>
+          <TabsTrigger value="actions" className="gap-2 data-[state=active]:bg-accent/10 data-[state=active]:text-accent rounded-lg">
+            <Zap className="w-4 h-4" aria-hidden="true" />
+            {isRTL ? 'إجراءات سريعة' : 'Quick Actions'}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <OverdueAlerts isRTL={isRTL} userId={user.id} />
-        <TodaySummary isRTL={isRTL} userId={user.id} />
-        <MembershipWidget isRTL={isRTL} userId={user.id} />
-      </div>
-
-      {/* Unified KPI grid (Phase A) */}
-      <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
-
-      {/* Client health score — composite from already-fetched data */}
-      <ClientHealthScoreCard input={healthInput} isRTL={isRTL} />
-
-      <CustomizableGrid
-        order={customization.layout.order}
-        hidden={customization.layout.hidden}
-        editMode={customization.editMode}
-        onReorder={customization.reorder}
-        onToggleHidden={customization.toggleHidden}
-        labels={widgetLabels}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-3"
-        itemClassName={itemSpan}
-        children={widgetChildren}
-      />
-
-      {customization.editMode && (
-        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:end-6 sm:max-w-md z-50 rounded-xl border border-accent/40 bg-card/95 backdrop-blur px-4 py-3 shadow-lg flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              {isRTL ? 'وضع التخصيص مفعّل' : 'Customization mode active'}
-            </p>
-            <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-              {isRTL
-                ? 'اسحب البطاقات لإعادة ترتيبها، أو استخدم أيقونة العين لإظهارها/إخفائها.'
-                : 'Drag cards to reorder them, or use the eye icon to show/hide.'}
-            </p>
+        {/* Overview — Stats first */}
+        <TabsContent value="overview" className="mt-5 space-y-5 focus-visible:outline-none">
+          <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
+          <ClientHealthScoreCard input={healthInput} isRTL={isRTL} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <OverdueAlerts isRTL={isRTL} userId={user.id} />
+            <TodaySummary isRTL={isRTL} userId={user.id} />
+            <MembershipWidget isRTL={isRTL} userId={user.id} />
           </div>
-          <button
-            type="button"
-            onClick={customization.reset}
-            className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline shrink-0"
-          >
-            {isRTL ? 'إعادة' : 'Reset'}
-          </button>
-          <button
-            type="button"
-            onClick={() => customization.setEditMode(false)}
-            className="h-8 px-3 rounded-lg bg-accent text-accent-foreground text-xs font-medium shrink-0"
-          >
-            {isRTL ? 'تم' : 'Done'}
-          </button>
-        </div>
-      )}
+        </TabsContent>
 
-      <KeyboardShortcuts
-        isRTL={isRTL}
-        onCustomize={() => customization.setEditMode(!customization.editMode)}
-        onRefresh={handleRefresh}
-      />
+        {/* Activity — live + notifications + recent contracts */}
+        <TabsContent value="activity" className="mt-5 focus-visible:outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {widgetChildren.activity}
+            {widgetChildren.notifications}
+            {widgetChildren.contracts}
+            {widgetChildren.status}
+          </div>
+        </TabsContent>
+
+        {/* Performance — trends + tasks */}
+        <TabsContent value="performance" className="mt-5 focus-visible:outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {widgetChildren.trends}
+            {widgetChildren.tasks}
+          </div>
+        </TabsContent>
+
+        {/* Quick actions */}
+        <TabsContent value="actions" className="mt-5 space-y-5 focus-visible:outline-none">
+          <DashboardActionCenter
+            isRTL={isRTL}
+            role="user"
+            actions={[
+              {
+                id: 'request-quote',
+                label: { ar: 'اطلب عرض سعر', en: 'Request a quote' },
+                description: {
+                  ar: 'أرسل طلبك للمزودين المناسبين',
+                  en: 'Send your RFQ to matching providers',
+                },
+                to: '/rfq/new',
+                icon: Send,
+                primary: true,
+              },
+              {
+                id: 'my-requests',
+                label: { ar: 'تابع طلباتك', en: 'Track requests' },
+                to: '/dashboard/my-requests',
+                icon: FileText,
+              },
+              {
+                id: 'browse-providers',
+                label: { ar: 'استعرض المزودين', en: 'Browse providers' },
+                to: '/search',
+                icon: SearchIcon,
+              },
+            ] satisfies DashboardAction[]}
+          />
+          {widgetChildren.links}
+        </TabsContent>
+      </Tabs>
+
+      <KeyboardShortcuts isRTL={isRTL} onRefresh={handleRefresh} />
     </div>
   );
 }
