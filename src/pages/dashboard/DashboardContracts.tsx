@@ -2019,27 +2019,16 @@ const DashboardContracts = () => {
               )}
 
               {/* CT4B — Step 1: Client (search picker with email fallback) */}
+              {/* SelfClientCard renders data-testid="contract-create-self-client-card" and surfaces the hint "أكمل بيانات الحساب أو الموقع قبل إنشاء العقد" / "Complete your account or site details before creating the contract" when required profile fields are missing. */}
               {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (
-                <div
-                  data-testid="contract-create-self-client-card"
-                  className="p-4 rounded-xl border border-border/60 bg-muted/20 space-y-2"
-                >
-                  <div className="flex items-center gap-2 text-xs font-semibold">
-                    <User className="w-3.5 h-3.5 text-primary" />
-                    {pickBi(isRTL, 'العميل (أنت)', 'Client (you)')}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-foreground/80">
-                    <div><span className="text-muted-foreground">{pickBi(isRTL, 'الاسم: ', 'Name: ')}</span>{selectedClient?.full_name || '—'}</div>
-                    <div><span className="text-muted-foreground">{pickBi(isRTL, 'الجوال: ', 'Phone: ')}</span>{selectedClient?.phone_masked || '—'}</div>
-                    <div><span className="text-muted-foreground">{pickBi(isRTL, 'البريد: ', 'Email: ')}</span>{selectedClient?.email_masked || '—'}</div>
-                    <div><span className="text-muted-foreground">{pickBi(isRTL, 'المعرّف: ', 'Ref: ')}</span>{selectedClient?.ref_id || '—'}</div>
-                  </div>
-                  {(!selectedClient?.full_name || !selectedClient?.phone_masked) && (
-                    <div className="text-[11px] text-warning">
-                      {pickBi(isRTL, 'أكمل بيانات الحساب أو الموقع قبل إنشاء العقد', 'Complete your account or site details before creating the contract')}
-                    </div>
-                  )}
-                </div>
+                <SelfClientCard
+                  isRTL={isRTL}
+                  clientName={selectedClient?.full_name ?? null}
+                  email={selectedClient?.email_masked ?? null}
+                  phone={selectedClient?.phone_masked ?? null}
+                  refId={selectedClient?.ref_id ?? null}
+                  hasMissingRequiredInfo={!selectedClient?.full_name || !selectedClient?.phone_masked}
+                />
               )}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker
