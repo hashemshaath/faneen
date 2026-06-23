@@ -23,13 +23,13 @@ describe('LEGACY CLEANUP L08 — /admin/quote-requests* redirect', () => {
 
   it('legacy list route redirects to canonical /admin/opportunities/list', () => {
     expect(APP).toMatch(
-      /path="\/admin\/quote-requests"\s+element=\{<Navigate\s+to="\/admin\/opportunities\/list"\s+replace\s*\/>\}/,
+      /path="\/admin\/quote-requests"\s+element=\{<ProtectedRoute\s+requireAdmin><Navigate\s+to="\/admin\/opportunities\/list"\s+replace\s*\/><\/ProtectedRoute>\}/,
     );
   });
 
   it('legacy detail route uses the LegacyAdminQuoteRequestDetailRedirect wrapper', () => {
     expect(APP).toMatch(
-      /path="\/admin\/quote-requests\/:id"\s+element=\{<LegacyAdminQuoteRequestDetailRedirect\s*\/>\}/,
+      /path="\/admin\/quote-requests\/:id"\s+element=\{<ProtectedRoute\s+requireAdmin><LegacyAdminQuoteRequestDetailRedirect\s*\/><\/ProtectedRoute>\}/,
     );
     expect(APP).toMatch(
       /Navigate to=\{`\/admin\/opportunities\/\$\{id \?\? ''\}`\} replace/,

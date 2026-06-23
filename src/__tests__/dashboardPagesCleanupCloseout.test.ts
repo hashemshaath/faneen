@@ -108,7 +108,10 @@ describe('Dashboard navigation — visibility invariants (locked)', () => {
     const itemEns = groups.flatMap((g) => g.items.map((it) => it.label.en));
     expect(groupEns).toContain(UNIFIED_GROUP_LABELS.business.en);
     expect(itemEns).toContain(UNIFIED_ITEM_LABELS.sites.en);
-    expect(itemEns).toContain(UNIFIED_ITEM_LABELS.projects.en);
+    // IA decision: personal client does NOT see «مشاريعي» — only
+    // business owners / providers do. Projects belongs to the
+    // business entity surface.
+    expect(itemEns).not.toContain(UNIFIED_ITEM_LABELS.projects.en);
     expect(itemEns).not.toContain(UNIFIED_ITEM_LABELS.branches.en);
     expect(groupEns).not.toContain(UNIFIED_GROUP_LABELS.businessEntity.en);
   });

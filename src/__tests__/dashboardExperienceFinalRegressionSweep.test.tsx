@@ -85,10 +85,15 @@ describe('Final sweep — role-correct actions', () => {
 });
 
 describe('Final sweep — core widgets preserved', () => {
-  it('User dashboard keeps Hero + KPI + customizable grid', () => {
+  it('User dashboard keeps Hero + KPI + tabbed widget layout', () => {
     expect(USER_SRC).toMatch(/UnifiedDashboardHero/);
     expect(USER_SRC).toMatch(/UnifiedKpiGrid/);
-    expect(USER_SRC).toMatch(/CustomizableGrid/);
+    // DASHBOARD MY REQUESTS UI REFRESH: user dashboard moved from
+    // <CustomizableGrid> to a <Tabs>-based widget layout (overview /
+    // activity / performance). Guard the same intent (live widgets are
+    // still mounted) against the current authoritative IA.
+    expect(USER_SRC).toMatch(/<Tabs\b/);
+    expect(USER_SRC).toMatch(/LiveActivityWidget/);
   });
   it('Provider dashboard keeps Hero + stats + membership', () => {
     expect(PROVIDER_SRC).toMatch(/UnifiedDashboardHero/);
