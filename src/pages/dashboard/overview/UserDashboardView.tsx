@@ -21,7 +21,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import {
   CHART_COLORS, getStatusLabel, getStatusColor,
-  QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
+  QuickAction, OverdueAlerts, TodaySummary,
   SectionHeader, SectionLinkAction, SectionEmpty,
   SECTION_CARD_CLASS, SECTION_CONTENT_CLASS,
 } from '@/components/dashboard/overview/shared';
@@ -302,10 +302,9 @@ export default function UserDashboardView({
         {/* Overview — Stats first */}
         <TabsContent value="overview" className="mt-5 space-y-5 focus-visible:outline-none">
           <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <OverdueAlerts isRTL={isRTL} userId={user.id} />
             <TodaySummary isRTL={isRTL} userId={user.id} />
-            <MembershipWidget isRTL={isRTL} userId={user.id} />
           </div>
         </TabsContent>
 
