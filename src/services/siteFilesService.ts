@@ -13,6 +13,7 @@
  *   - Files are archived (`is_archived = true`), never hard-deleted.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 
 export const SITE_FILES_BUCKET = 'site-files';
 export const SITE_FILES_MAX_BYTES = 10 * 1024 * 1024; // 10MB
