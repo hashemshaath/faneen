@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Link } from 'react-router-dom';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { LogoLink } from '@/components/common/LogoLink';
 import { ShieldCheck, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
