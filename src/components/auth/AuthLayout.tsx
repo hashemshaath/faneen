@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Shield } from 'lucide-react';
