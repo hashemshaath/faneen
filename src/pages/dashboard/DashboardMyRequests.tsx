@@ -338,18 +338,18 @@ const DashboardMyRequests: React.FC = () => {
     source.forEach((r) => counts.set(r.status, (counts.get(r.status) ?? 0) + 1));
     const total = source.length;
     const palette: Record<string, string> = {
-      new: 'bg-blue-500',
-      viewed: 'bg-sky-500',
-      under_review: 'bg-amber-500',
-      needs_info: 'bg-amber-500',
-      matched: 'bg-indigo-500',
-      contacted: 'bg-violet-500',
-      accepted: 'bg-emerald-500',
-      quoted: 'bg-emerald-500',
-      completed: 'bg-emerald-600',
-      rejected: 'bg-rose-500',
-      cancelled: 'bg-slate-400',
-      closed: 'bg-slate-500',
+      new: 'bg-primary',
+      viewed: 'bg-info',
+      under_review: 'bg-warning',
+      needs_info: 'bg-warning',
+      matched: 'bg-info',
+      contacted: 'bg-success',
+      accepted: 'bg-success',
+      quoted: 'bg-success',
+      completed: 'bg-primary',
+      rejected: 'bg-destructive',
+      cancelled: 'bg-muted-foreground/50',
+      closed: 'bg-muted-foreground/60',
     };
     const segments = Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
