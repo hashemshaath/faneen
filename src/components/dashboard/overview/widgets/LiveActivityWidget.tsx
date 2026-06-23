@@ -64,15 +64,24 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
 
       const rows: ActivityRow[] = [];
 
-      (notifs.data || []).forEach((n) => rows.push({
-        id: `n-${n.id}`,
-        kind: 'notification',
-        title: resolveNotificationTitle(n, isRTL ? 'ar' : 'en'),
-        body: isRTL ? n.body_ar : (n.body_en || n.body_ar),
-        url: n.action_url || '/dashboard/notifications',
-        unread: !n.is_read,
-        createdAt: n.created_at,
-      }));
+      const seenNotificationKeys = new Set<string>();
+      (notifs.data || []).forEach((n) => {
+        const title = resolveNotificationTitle(n, isRTL ? 'ar' : 'en');
+        const body = isRTL ? n.body_ar : (n.body_en || n.body_ar);
+        const key = ['notification', title, body].join('|');
+        if (seenNotificationKeys.has(key)) return;
+        seenNotificationKeys.add(key);
+
+        rows.push({
+          id: `n-${n.id}`,
+          kind: 'notification',
+          title,
+          body,
+          url: n.action_url || '/dashboard/notifications',
+          unread: !n.is_read,
+          createdAt: n.created_at,
+        });
+      });
 
       (contracts.data || []).forEach((c) => rows.push({
         id: `c-${c.id}`,
