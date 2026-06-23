@@ -371,14 +371,14 @@ export const Navbar = () => {
         onClick={closeMobile}
       />
 
-      {/* Mobile menu */}
+      {/* Mobile menu — anchored dropdown panel (not full-bleed) */}
       <div
         ref={menuRef}
-        className={`fixed top-16 sm:top-[4.5rem] end-0 start-0 z-50 lg:hidden bg-white border-t border-[#E2E6EE] shadow-lg transition-all duration-300 ease-out ${
+        className={`fixed top-[calc(4rem+0.5rem)] sm:top-[calc(4.5rem+0.5rem)] end-3 sm:end-4 z-50 lg:hidden w-[min(20rem,calc(100vw-1.5rem))] bg-white border border-[#E2E6EE] rounded-2xl shadow-xl transition-all duration-300 ease-out ${
           mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'
         }`}
       >
-        <div className="max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-4.5rem)] overflow-y-auto py-3 px-4 safe-min-pb space-y-1 font-body text-sm">
+        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto py-3 px-3 safe-min-pb space-y-1 font-body text-sm">
           {/*
             Phase 12B — Mobile primary CTA pinned above the nav groups so
             "اطلب عرض سعر" is the first action the user sees on phones.
