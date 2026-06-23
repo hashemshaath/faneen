@@ -117,7 +117,7 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
     supabase
       .from('projects')
       .select(
-        'id, business_id, owner_user_id, site_id, title_ar, title_en, description_ar, description_en, cover_image_url, updated_at, created_at',
+        'id, business_id, owner_user_id, site_id, selected_provider_business_id, title_ar, title_en, description_ar, description_en, cover_image_url, updated_at, created_at',
       )
       .eq('owner_user_id', userId)
       .order('updated_at', { ascending: false }),
@@ -147,6 +147,7 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       title: pickTitle(p, site),
       ownershipType: p.business_id ? 'business' : 'personal',
       businessId: p.business_id,
+      linkedProviderBusinessId: p.selected_provider_business_id ?? null,
       city: site?.city_name ?? null,
       district: site?.district ?? null,
       address: buildAddress(site),
@@ -174,6 +175,7 @@ export async function listClientWorkspaces(userId: string): Promise<ClientWorksp
       title: pickTitle(null, s),
       ownershipType: s.business_id ? 'business' : 'personal',
       businessId: s.business_id,
+      linkedProviderBusinessId: null,
       city: s.city_name,
       district: s.district,
       address: buildAddress(s),
@@ -200,7 +202,7 @@ export async function getClientWorkspace(
     const { data: project } = await supabase
       .from('projects')
       .select(
-        'id, business_id, owner_user_id, site_id, title_ar, title_en, description_ar, description_en, cover_image_url, updated_at, created_at',
+        'id, business_id, owner_user_id, site_id, selected_provider_business_id, title_ar, title_en, description_ar, description_en, cover_image_url, updated_at, created_at',
       )
       .eq('id', id)
       .maybeSingle();
@@ -226,6 +228,7 @@ export async function getClientWorkspace(
         title: pickTitle(projectRow, siteRow),
         ownershipType: projectRow.business_id ? 'business' : 'personal',
         businessId: projectRow.business_id,
+        linkedProviderBusinessId: projectRow.selected_provider_business_id ?? null,
         city: siteRow?.city_name ?? null,
         district: siteRow?.district ?? null,
         address: buildAddress(siteRow),
@@ -258,6 +261,7 @@ export async function getClientWorkspace(
       title: pickTitle(null, siteRow),
       ownershipType: siteRow.business_id ? 'business' : 'personal',
       businessId: siteRow.business_id,
+      linkedProviderBusinessId: null,
       city: siteRow.city_name,
       district: siteRow.district,
       address: buildAddress(siteRow),
