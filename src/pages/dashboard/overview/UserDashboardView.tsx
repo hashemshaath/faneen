@@ -21,7 +21,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import {
   CHART_COLORS, getStatusLabel, getStatusColor,
-  QuickAction, OverdueAlerts, TodaySummary,
+  OverdueAlerts,
   SectionHeader, SectionLinkAction, SectionEmpty,
   SECTION_CARD_CLASS, SECTION_CONTENT_CLASS,
 } from '@/components/dashboard/overview/shared';
@@ -41,12 +41,9 @@ import {
   DashboardActionCenter,
   type DashboardAction,
 } from '@/components/dashboard/overview/DashboardActionCenter';
-import { CustomizableGrid } from '@/components/dashboard/overview/CustomizableSection';
-import { useDashboardCustomization } from '@/hooks/useDashboardCustomization';
 import { countConversationsForUser } from '@/modules/messaging';
 
 const TAB_KEYS = ['overview', 'activity', 'performance'] as const;
-const OVERVIEW_WIDGET_ORDER = ['summary', 'links', 'alerts'];
 type TabKey = typeof TAB_KEYS[number];
 
 type UserProfile = {
@@ -108,7 +105,6 @@ export default function UserDashboardView({
 
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedSpent = useCountUp(stats?.totalSpent ?? 0, isVisible, 1500);
-  const overviewLayout = useDashboardCustomization('user_overview', OVERVIEW_WIDGET_ORDER);
 
   const [lastRefresh, setLastRefresh] = React.useState<Date>(() => new Date());
 
@@ -205,26 +201,6 @@ export default function UserDashboardView({
         </CardContent>
       </Card>
     ) : null,
-    links: (
-      <Card className={cn(SECTION_CARD_CLASS, 'h-full')}>
-        <CardContent className={SECTION_CONTENT_CLASS}>
-          <SectionHeader
-            icon={LinkIcon}
-            title={isRTL ? 'روابط سريعة' : 'Quick links'}
-          />
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { icon: FileText, label: isRTL ? 'العقود' : 'Contracts', to: '/dashboard/contracts' },
-              { icon: MessageSquare, label: isRTL ? 'الرسائل' : 'Messages', to: '/dashboard/messages' },
-              { icon: Bookmark, label: isRTL ? 'المفضلة' : 'Bookmarks', to: '/dashboard/bookmarks' },
-              { icon: CreditCard, label: isRTL ? 'الأقساط' : 'Installments', to: '/dashboard/installments' },
-              { icon: Bell, label: isRTL ? 'الإشعارات' : 'Notifications', to: '/dashboard/notifications' },
-              { icon: TrendingUp, label: isRTL ? 'البحث' : 'Search', to: '/search' },
-            ].map((a) => <QuickAction key={a.to} {...a} />)}
-          </div>
-        </CardContent>
-      </Card>
-    ),
   };
 
   const kpiTiles: UnifiedKpiTile[] = [
@@ -261,18 +237,6 @@ export default function UserDashboardView({
     },
   ];
 
-  const overviewWidgets: Record<string, React.ReactNode> = {
-    summary: <TodaySummary isRTL={isRTL} userId={user.id} />,
-    links: widgetChildren.links,
-    alerts: <OverdueAlerts isRTL={isRTL} userId={user.id} />,
-  };
-
-  const overviewWidgetLabels: Record<string, string> = {
-    summary: isRTL ? 'ملخّص يومك' : "Today's summary",
-    links: isRTL ? 'روابط سريعة' : 'Quick links',
-    alerts: isRTL ? 'تنبيهات' : 'Alerts',
-  };
-
   return (
     <div className="space-y-5" ref={ref}>
       <UnifiedDashboardHero
@@ -283,12 +247,10 @@ export default function UserDashboardView({
         lastUpdated={formatLastUpdated(lastRefresh, isRTL)}
         onRefresh={handleRefresh}
         isRefreshing={isFetching}
-        onCustomize={() => overviewLayout.setEditMode((value) => !value)}
-        customizeActive={overviewLayout.editMode}
         subline={
           isRTL
-            ? 'نظرة موحدة: إحصائيات وإجراءات سريعة، نشاط، وأداء'
-            : 'Unified view: stats & quick actions, activity, performance'
+            ? 'مساحة عمل واحدة: الأرقام، الإجراءات، النشاط، والأداء'
+            : 'One workspace: numbers, actions, activity, performance'
         }
       />
 
@@ -315,64 +277,47 @@ export default function UserDashboardView({
 
         {/* Overview — Stats + Quick Actions merged */}
         <TabsContent value="overview" className="mt-5 space-y-5 focus-visible:outline-none">
-          <section className="rounded-2xl border border-border/60 bg-card/80 p-3 sm:p-4 shadow-sm">
-            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-sm font-bold text-foreground">
-                  {isRTL ? 'نظرة عامة وإجراءات سريعة' : 'Overview & quick actions'}
-                </h2>
-                <p className="text-[11px] text-muted-foreground">
-                  {isRTL ? 'الأرقام الأساسية مع أهم الخطوات في مساحة واحدة' : 'Core numbers and next steps in one workspace'}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] gap-3 sm:gap-4 items-stretch">
-              <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
-              <DashboardActionCenter
-                isRTL={isRTL}
-                role="user"
-                className="h-full border-primary/15 bg-primary/[0.03]"
-                title={{ ar: 'إجراءات سريعة', en: 'Quick actions' }}
-                actions={[
-                  {
-                    id: 'request-quote',
-                    label: { ar: 'اطلب عرض سعر', en: 'Request a quote' },
-                    description: {
-                      ar: 'أرسل طلبك للمزودين المناسبين',
-                      en: 'Send your RFQ to matching providers',
-                    },
-                    to: '/rfq/new',
-                    icon: Send,
-                    primary: true,
-                  },
-                  {
-                    id: 'my-requests',
-                    label: { ar: 'تابع طلباتك', en: 'Track requests' },
-                    to: '/dashboard/my-requests',
-                    icon: FileText,
-                  },
-                  {
-                    id: 'browse-providers',
-                    label: { ar: 'استعرض المزودين', en: 'Browse providers' },
-                    to: '/search',
-                    icon: SearchIcon,
-                  },
-                ] satisfies DashboardAction[]}
-              />
-            </div>
-          </section>
-          <CustomizableGrid
-            order={overviewLayout.layout.order}
-            hidden={overviewLayout.layout.hidden}
-            editMode={overviewLayout.editMode}
-            onReorder={overviewLayout.reorder}
-            onToggleHidden={overviewLayout.toggleHidden}
-            labels={overviewWidgetLabels}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-3"
-            itemClassName={(id) => (id === 'alerts' ? 'lg:col-span-2' : undefined)}
-          >
-            {overviewWidgets}
-          </CustomizableGrid>
+          <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
+          <DashboardActionCenter
+            isRTL={isRTL}
+            role="user"
+            className="border-primary/15 bg-gradient-to-br from-primary/[0.04] to-accent/[0.03]"
+            title={{ ar: 'الإجراءات الموصى بها', en: 'Recommended actions' }}
+            actions={[
+              {
+                id: 'request-quote',
+                label: { ar: 'اطلب عرض سعر', en: 'Request a quote' },
+                description: {
+                  ar: 'أرسل طلبك للمزودين المناسبين خلال دقائق',
+                  en: 'Send your RFQ to matching providers in minutes',
+                },
+                to: '/rfq/new',
+                icon: Send,
+                primary: true,
+              },
+              {
+                id: 'my-requests',
+                label: { ar: 'تابع طلباتك', en: 'Track requests' },
+                description: {
+                  ar: 'حالة العروض الواردة والردود',
+                  en: 'Status of incoming quotes and replies',
+                },
+                to: '/dashboard/my-requests',
+                icon: FileText,
+              },
+              {
+                id: 'browse-providers',
+                label: { ar: 'استعرض المزودين', en: 'Browse providers' },
+                description: {
+                  ar: 'اكتشف موردين موثوقين حسب القطاع',
+                  en: 'Discover trusted suppliers by sector',
+                },
+                to: '/search',
+                icon: SearchIcon,
+              },
+            ] satisfies DashboardAction[]}
+          />
+          <OverdueAlerts isRTL={isRTL} userId={user.id} />
         </TabsContent>
 
         {/* Activity — live + notifications + recent contracts */}
@@ -392,7 +337,7 @@ export default function UserDashboardView({
         </TabsContent>
       </Tabs>
 
-      <KeyboardShortcuts isRTL={isRTL} onCustomize={() => overviewLayout.setEditMode((value) => !value)} onRefresh={handleRefresh} />
+      <KeyboardShortcuts isRTL={isRTL} onCustomize={() => {}} onRefresh={handleRefresh} />
     </div>
   );
 }
