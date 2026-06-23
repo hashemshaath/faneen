@@ -48,7 +48,6 @@ describe('MEMBERSHIP-PAGE-GOVERNANCE-REDESIGN-1', () => {
     const files = [
       'src/components/membership/FeatureGate.tsx',
       'src/components/dashboard/ProviderMembershipCard.tsx',
-      'src/components/dashboard/overview/shared.tsx',
       'src/pages/dashboard/ProviderMembership.tsx',
       'src/pages/dashboard/DashboardServices.tsx',
       'src/pages/ForProviders.tsx',
