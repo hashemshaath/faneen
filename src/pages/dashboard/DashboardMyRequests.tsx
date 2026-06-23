@@ -1122,76 +1122,108 @@ const QuoteRequestRowCardImpl: React.FC<{
   const ageDays = (Date.now() - lastTouchMs) / 86400000;
   const isStale = isActive && ageDays > 7;
   return (
-    <Card className={`overflow-hidden hover-lift transition-shadow ${pinned ? 'ring-1 ring-amber-400/40 bg-amber-50/30 dark:bg-amber-500/[0.04]' : ''}`}>
-      <CardContent className={`${compact ? 'p-3 sm:p-3.5 space-y-2' : 'p-4 sm:p-5 space-y-3'}`}>
-        <div className="flex flex-wrap items-center gap-2">
-          {onTogglePin && (
-            <button
-              type="button"
-              onClick={() => onTogglePin(q.id)}
-              className={`h-7 w-7 -ms-1 rounded-md inline-flex items-center justify-center transition-colors ${pinned ? 'text-amber-500 hover:bg-amber-500/10' : 'text-muted-foreground/60 hover:text-amber-500 hover:bg-muted'}`}
-              aria-label={pinned ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
-              aria-pressed={pinned}
-            >
-              <Star className={`h-4 w-4 ${pinned ? 'fill-current' : ''}`} />
-            </button>
-          )}
-          {q.ref_id ? (
-            <>
-              <ReferenceBadge refId={q.ref_id} />
-              <ReferenceLinkCopy refId={q.ref_id} isRTL={isRTL} />
-            </>
-          ) : (
-            <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
-          )}
-          <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
-            {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
-          </span>
-          {isStale && (
+    <Card className={`group relative overflow-hidden hover-lift transition-all border-border/60 hover:border-primary/40 hover:shadow-md ${pinned ? 'ring-1 ring-amber-400/40 bg-amber-50/30 dark:bg-amber-500/[0.04]' : ''}`}>
+      {/* Status accent stripe */}
+      <span aria-hidden className={`absolute inset-y-0 start-0 w-1 ${
+        q.status === 'new' ? 'bg-primary' :
+        q.status === 'matched' ? 'bg-info' :
+        q.status === 'under_review' ? 'bg-warning' :
+        q.status === 'contacted' ? 'bg-success' :
+        q.status === 'completed' ? 'bg-primary' :
+        q.status === 'cancelled' ? 'bg-muted-foreground/40' : 'bg-muted'
+      }`} />
+      <CardContent className={`${compact ? 'p-3 sm:p-3.5 ps-4 sm:ps-5' : 'p-4 sm:p-5 ps-5 sm:ps-6'}`}>
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+          {/* Main column */}
+          <div className="flex-1 min-w-0 space-y-2">
+            {/* Header: ref + status */}
+            <div className="flex flex-wrap items-center gap-2">
+              {onTogglePin && (
+                <button
+                  type="button"
+                  onClick={() => onTogglePin(q.id)}
+                  className={`h-7 w-7 -ms-1 rounded-md inline-flex items-center justify-center transition-colors ${pinned ? 'text-amber-500 hover:bg-amber-500/10' : 'text-muted-foreground/60 hover:text-amber-500 hover:bg-muted'}`}
+                  aria-label={pinned ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
+                  aria-pressed={pinned}
+                >
+                  <Star className={`h-4 w-4 ${pinned ? 'fill-current' : ''}`} />
+                </button>
+              )}
+              {q.ref_id ? (
+                <>
+                  <ReferenceBadge refId={q.ref_id} />
+                  <ReferenceLinkCopy refId={q.ref_id} isRTL={isRTL} />
+                </>
+              ) : (
+                <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
+              )}
+              <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
+                {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
+              </span>
+              {isStale && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-warning/15 text-warning border border-warning/30 cursor-help">
+                      <Clock className="h-3 w-3" />
+                      <span className="tech-content">{Math.round(ageDays)}d</span>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isRTL ? `بدون تحديث منذ ${Math.round(ageDays)} يوم` : `No update for ${Math.round(ageDays)} days`}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+
+            {/* Title */}
+            {q.project_description && (
+              <h3 className={`font-semibold text-foreground leading-snug ${compact ? 'text-sm line-clamp-1' : 'text-[15px] line-clamp-2'}`}>
+                {q.project_description}
+              </h3>
+            )}
+
+            {/* Meta */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5" /> {q.sector}
+              </span>
+              <span className="text-border">·</span>
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" /> {q.city}{q.district ? ` · ${q.district}` : ''}
+              </span>
+              <span className="text-border">·</span>
+              <span className="inline-flex items-center gap-1">
+                <MessageSquare className="h-3.5 w-3.5" /> {q.preferred_contact_method}
+              </span>
+              {fileCount > 0 && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Paperclip className="h-3.5 w-3.5" /> {fileCount}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Side column: timestamp + CTA */}
+          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 sm:min-w-[140px] shrink-0 pt-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-help">
-                  <Clock className="h-3 w-3" />
-                  <span className="tech-content">{Math.round(ageDays)}d</span>
+                <span className="text-[11px] text-muted-foreground tech-content cursor-help inline-flex items-center gap-1">
+                  <Clock className="h-3 w-3 opacity-60" />
+                  {formatRelative(q.created_at, isRTL)}
                 </span>
               </TooltipTrigger>
-              <TooltipContent>
-                {isRTL ? `بدون تحديث منذ ${Math.round(ageDays)} يوم` : `No update for ${Math.round(ageDays)} days`}
-              </TooltipContent>
+              <TooltipContent>{createdAbs}</TooltipContent>
             </Tooltip>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-xs text-muted-foreground tech-content ms-auto cursor-help">
-                {formatRelative(q.created_at, isRTL)}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{createdAbs}</TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <Tag className="h-4 w-4" /> {q.sector}
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <MapPin className="h-4 w-4" /> {q.city}{q.district ? ` · ${q.district}` : ''}
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <MessageSquare className="h-4 w-4" /> {q.preferred_contact_method}
-          </span>
-          {fileCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <Paperclip className="h-4 w-4" /> {fileCount}
-            </span>
-          )}
-        </div>
-        {!compact && <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>}
-        <div className="pt-1">
-          <Button asChild size="sm" variant="outline" className="min-h-[36px]">
-            <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
-              {isRTL ? 'عرض التفاصيل' : 'View details'}
-            </Link>
-          </Button>
+            <Button asChild size="sm" variant="outline" className="min-h-[34px] h-9 group-hover:border-primary/40 group-hover:text-primary transition-colors">
+              <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
+                {isRTL ? 'عرض التفاصيل' : 'View details'}
+                <ArrowRight className="h-3.5 w-3.5 rtl-flip ms-1" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
