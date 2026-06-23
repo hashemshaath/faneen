@@ -337,7 +337,7 @@ export default function UserDashboardView({
         </TabsContent>
       </Tabs>
 
-      <KeyboardShortcuts isRTL={isRTL} onRefresh={handleRefresh} />
+      <KeyboardShortcuts isRTL={isRTL} onCustomize={() => {}} onRefresh={handleRefresh} />
     </div>
   );
 }
