@@ -163,16 +163,6 @@ export default function UserDashboardView({
     unreadNotifications: stats?.unreadNotifications ?? 0,
   };
 
-  const widgetLabels: Record<string, string> = {
-    trends:        isRTL ? 'الاتجاهات'      : 'Trends',
-    activity:      isRTL ? 'النشاط المباشر' : 'Live Activity',
-    tasks:         isRTL ? 'المهام'         : 'Tasks',
-    contracts:     isRTL ? 'العقود'         : 'Contracts',
-    notifications: isRTL ? 'الإشعارات'      : 'Notifications',
-    status:        isRTL ? 'حالة العقود'    : 'Status',
-    links:         isRTL ? 'روابط سريعة'    : 'Links',
-  };
-
   const widgetChildren: Record<string, React.ReactNode> = {
     trends:    <TrendsWidget         isRTL={isRTL} userId={user.id} />,
     activity:  <LiveActivityWidget   isRTL={isRTL} userId={user.id} />,
