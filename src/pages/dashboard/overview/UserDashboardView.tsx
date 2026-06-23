@@ -372,7 +372,6 @@ export default function UserDashboardView({
         {/* Overview — Stats first */}
         <TabsContent value="overview" className="mt-5 space-y-5 focus-visible:outline-none">
           <UnifiedKpiGrid tiles={kpiTiles} isRTL={isRTL} />
-          <ClientHealthScoreCard input={healthInput} isRTL={isRTL} />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <OverdueAlerts isRTL={isRTL} userId={user.id} />
             <TodaySummary isRTL={isRTL} userId={user.id} />
