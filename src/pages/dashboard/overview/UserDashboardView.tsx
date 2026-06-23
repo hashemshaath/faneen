@@ -41,9 +41,12 @@ import {
   DashboardActionCenter,
   type DashboardAction,
 } from '@/components/dashboard/overview/DashboardActionCenter';
+import { CustomizableGrid } from '@/components/dashboard/overview/CustomizableSection';
+import { useDashboardCustomization } from '@/hooks/useDashboardCustomization';
 import { countConversationsForUser } from '@/modules/messaging';
 
 const TAB_KEYS = ['overview', 'activity', 'performance'] as const;
+const OVERVIEW_WIDGET_ORDER = ['summary', 'links', 'alerts'];
 type TabKey = typeof TAB_KEYS[number];
 
 type UserProfile = {
@@ -105,6 +108,7 @@ export default function UserDashboardView({
 
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedSpent = useCountUp(stats?.totalSpent ?? 0, isVisible, 1500);
+  const overviewLayout = useDashboardCustomization('user_overview', OVERVIEW_WIDGET_ORDER);
 
   const [lastRefresh, setLastRefresh] = React.useState<Date>(() => new Date());
 
@@ -257,6 +261,18 @@ export default function UserDashboardView({
     },
   ];
 
+  const overviewWidgets: Record<string, React.ReactNode> = {
+    summary: <TodaySummary isRTL={isRTL} userId={user.id} />,
+    links: widgetChildren.links,
+    alerts: <OverdueAlerts isRTL={isRTL} userId={user.id} />,
+  };
+
+  const overviewWidgetLabels: Record<string, string> = {
+    summary: isRTL ? 'ملخّص يومك' : "Today's summary",
+    links: isRTL ? 'روابط سريعة' : 'Quick links',
+    alerts: isRTL ? 'تنبيهات' : 'Alerts',
+  };
+
   return (
     <div className="space-y-5" ref={ref}>
       <UnifiedDashboardHero
@@ -267,6 +283,8 @@ export default function UserDashboardView({
         lastUpdated={formatLastUpdated(lastRefresh, isRTL)}
         onRefresh={handleRefresh}
         isRefreshing={isFetching}
+        onCustomize={() => overviewLayout.setEditMode((value) => !value)}
+        customizeActive={overviewLayout.editMode}
         subline={
           isRTL
             ? 'نظرة موحدة: إحصائيات وإجراءات سريعة، نشاط، وأداء'
@@ -343,11 +361,18 @@ export default function UserDashboardView({
               />
             </div>
           </section>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <TodaySummary isRTL={isRTL} userId={user.id} />
-            {widgetChildren.links}
-          </div>
-          <OverdueAlerts isRTL={isRTL} userId={user.id} />
+          <CustomizableGrid
+            order={overviewLayout.layout.order}
+            hidden={overviewLayout.layout.hidden}
+            editMode={overviewLayout.editMode}
+            onReorder={overviewLayout.reorder}
+            onToggleHidden={overviewLayout.toggleHidden}
+            labels={overviewWidgetLabels}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-3"
+            itemClassName={(id) => (id === 'alerts' ? 'lg:col-span-2' : undefined)}
+          >
+            {overviewWidgets}
+          </CustomizableGrid>
         </TabsContent>
 
         {/* Activity — live + notifications + recent contracts */}
@@ -367,7 +392,7 @@ export default function UserDashboardView({
         </TabsContent>
       </Tabs>
 
-      <KeyboardShortcuts isRTL={isRTL} onCustomize={() => undefined} onRefresh={handleRefresh} />
+      <KeyboardShortcuts isRTL={isRTL} onCustomize={() => overviewLayout.setEditMode((value) => !value)} onRefresh={handleRefresh} />
     </div>
   );
 }
