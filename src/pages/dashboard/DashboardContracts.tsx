@@ -67,7 +67,7 @@ import {
 } from '@/modules/contracts/services/invitations';
 import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
-  Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
+  Shield, DollarSign, Calendar, User, Users, ListChecks, StickyNote,
   Send, Phone, Mail, ChevronDown, ChevronUp, Activity,
   BookOpen, X, Layers, Hammer, Wrench, Home, Factory,
   Flame, TreePine, GlassWater, Grid3X3, PanelTop,
