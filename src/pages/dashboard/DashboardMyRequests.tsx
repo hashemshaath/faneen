@@ -138,7 +138,7 @@ const QUOTE_STATUS_TONE: Record<string, string> = {
   under_review: 'bg-warning/10 text-warning border-warning/30',
   matched: 'bg-info/10 text-info border-info/30',
   contacted: 'bg-success/10 text-success border-success/30',
-  completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  completed: 'bg-primary/10 text-primary border-primary/30',
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
@@ -338,18 +338,18 @@ const DashboardMyRequests: React.FC = () => {
     source.forEach((r) => counts.set(r.status, (counts.get(r.status) ?? 0) + 1));
     const total = source.length;
     const palette: Record<string, string> = {
-      new: 'bg-blue-500',
-      viewed: 'bg-sky-500',
-      under_review: 'bg-amber-500',
-      needs_info: 'bg-amber-500',
-      matched: 'bg-indigo-500',
-      contacted: 'bg-violet-500',
-      accepted: 'bg-emerald-500',
-      quoted: 'bg-emerald-500',
-      completed: 'bg-emerald-600',
-      rejected: 'bg-rose-500',
-      cancelled: 'bg-slate-400',
-      closed: 'bg-slate-500',
+      new: 'bg-primary',
+      viewed: 'bg-info',
+      under_review: 'bg-warning',
+      needs_info: 'bg-warning',
+      matched: 'bg-info',
+      contacted: 'bg-success',
+      accepted: 'bg-success',
+      quoted: 'bg-success',
+      completed: 'bg-primary',
+      rejected: 'bg-destructive',
+      cancelled: 'bg-muted-foreground/50',
+      closed: 'bg-muted-foreground/60',
     };
     const segments = Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
@@ -595,8 +595,8 @@ const DashboardMyRequests: React.FC = () => {
 
         {/* === Smart insights banner === */}
         {(insights.quotedAwaiting.length > 0 || insights.needsInfo.length > 0) && (
-          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.08] via-emerald-500/[0.04] to-transparent p-4 sm:p-5 flex flex-wrap items-center gap-4">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <div className="rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/[0.08] via-primary/[0.04] to-transparent p-4 sm:p-5 flex flex-wrap items-center gap-4">
+            <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
               <Sparkles className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-[200px]">
@@ -606,7 +606,7 @@ const DashboardMyRequests: React.FC = () => {
               <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 flex flex-wrap gap-x-3 gap-y-1">
                 {insights.quotedAwaiting.length > 0 && (
                   <span className="inline-flex items-center gap-1.5">
-                    <ReceiptText className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <ReceiptText className="h-3.5 w-3.5 text-primary" />
                     {isRTL
                       ? `${insights.quotedAwaiting.length} عرض سعر بانتظار ردك`
                       : `${insights.quotedAwaiting.length} quote${insights.quotedAwaiting.length > 1 ? 's' : ''} awaiting your reply`}
@@ -614,7 +614,7 @@ const DashboardMyRequests: React.FC = () => {
                 )}
                 {insights.needsInfo.length > 0 && (
                   <span className="inline-flex items-center gap-1.5">
-                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <AlertCircle className="h-3.5 w-3.5 text-warning" />
                     {isRTL
                       ? `${insights.needsInfo.length} طلب يحتاج معلومات إضافية`
                       : `${insights.needsInfo.length} request${insights.needsInfo.length > 1 ? 's' : ''} need more info`}
@@ -625,7 +625,7 @@ const DashboardMyRequests: React.FC = () => {
             <Button
               size="sm"
               variant="outline"
-              className="min-h-[40px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+              className="min-h-[40px] border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
               onClick={() => { setTab('leads'); setStatusFilter(insights.quotedAwaiting.length > 0 ? 'quoted' : 'needs_info'); }}
             >
               <span>{isRTL ? 'مراجعة الآن' : 'Review now'}</span>
@@ -661,7 +661,7 @@ const DashboardMyRequests: React.FC = () => {
               {distribution.segments.slice(0, 6).map((s) => (
                 <span key={s.status} className="inline-flex items-center gap-1.5">
                   <span className={`h-2 w-2 rounded-full ${s.color}`} />
-                  <span>{s.status}</span>
+                  <span>{isRTL ? (QUOTE_STATUS_LABEL_AR[s.status] ?? s.status) : (QUOTE_STATUS_LABEL_EN[s.status] ?? s.status)}</span>
                   <span className="tech-content opacity-70">({s.n})</span>
                 </span>
               ))}
