@@ -661,7 +661,7 @@ const DashboardMyRequests: React.FC = () => {
               {distribution.segments.slice(0, 6).map((s) => (
                 <span key={s.status} className="inline-flex items-center gap-1.5">
                   <span className={`h-2 w-2 rounded-full ${s.color}`} />
-                  <span>{s.status}</span>
+                  <span>{isRTL ? (QUOTE_STATUS_LABEL_AR[s.status] ?? s.status) : (QUOTE_STATUS_LABEL_EN[s.status] ?? s.status)}</span>
                   <span className="tech-content opacity-70">({s.n})</span>
                 </span>
               ))}
