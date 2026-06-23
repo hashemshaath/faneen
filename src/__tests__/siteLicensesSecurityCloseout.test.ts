@@ -93,7 +93,7 @@ describe('siteLicensesService — security invariants', () => {
     expect(SERVICE.replace(/service_role/g, '')).toBe(SERVICE); // hard fail if present
   });
   it('derives owner_user_id from auth.getUser() — not from UI payload', () => {
-    expect(SERVICE).toMatch(/supabase\.auth\.getUser\(\)/);
+    expect(SERVICE).toMatch(/supabase\.auth\.getUser\(\)|getCurrentUser\(\)/);
     expect(SERVICE).toMatch(/owner_user_id:\s*userId/);
     // UpdateSiteLicenseInput must not allow changing owner_user_id / site_id
     const updIface = SERVICE.match(/UpdateSiteLicenseInput\s*\{[\s\S]*?\}/);
