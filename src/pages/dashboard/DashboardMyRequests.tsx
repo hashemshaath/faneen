@@ -1276,10 +1276,10 @@ const QuoteRequestRowCardImpl: React.FC<{
         q.status === 'cancelled' ? 'bg-muted-foreground/40' : 'bg-muted'
       }`} />
       <CardContent className={`${compact ? 'p-3 sm:p-3.5 ps-4 sm:ps-5' : 'p-4 sm:p-5 ps-5 sm:ps-6'}`}>
-        <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-5">
+        <div className="flex flex-col md:flex-row md:items-stretch gap-3 md:gap-5">
           {/* Sector avatar */}
           {!compact && (
-            <div className="hidden sm:flex shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 ring-1 ring-primary/20 items-center justify-center text-primary font-bold text-lg select-none">
+            <div className="hidden md:flex shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 ring-1 ring-primary/20 items-center justify-center text-primary font-bold text-lg select-none">
               {sectorInitial}
             </div>
           )}
@@ -1287,6 +1287,11 @@ const QuoteRequestRowCardImpl: React.FC<{
           <div className="flex-1 min-w-0 space-y-2">
             {/* Header: ref + status */}
             <div className="flex flex-wrap items-center gap-2">
+              {!compact && (
+                <div className="md:hidden flex shrink-0 h-8 w-8 rounded-lg bg-gradient-to-br from-primary/15 to-accent/10 ring-1 ring-primary/20 items-center justify-center text-primary font-bold text-sm select-none">
+                  {sectorInitial}
+                </div>
+              )}
               {onTogglePin && (
                 <button
                   type="button"
@@ -1358,8 +1363,8 @@ const QuoteRequestRowCardImpl: React.FC<{
             )}
           </div>
 
-          {/* Side column: timestamp + CTA */}
-          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-between gap-2 sm:min-w-[150px] shrink-0 sm:border-s sm:border-border/50 sm:ps-4">
+          {/* Side column: timestamp + CTA — stacked on mobile, beside on md+ */}
+          <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-between gap-2 md:min-w-[150px] shrink-0 md:border-s md:border-border/50 md:ps-4 pt-3 md:pt-0 border-t md:border-t-0 border-border/50">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-[11px] text-muted-foreground tech-content cursor-help inline-flex items-center gap-1">
@@ -1372,9 +1377,9 @@ const QuoteRequestRowCardImpl: React.FC<{
             <Button
               asChild
               size="sm"
-              className="h-9 shadow-sm shadow-primary/10 group-hover:shadow-md group-hover:shadow-primary/20 transition-all"
+              className="h-10 md:h-9 min-h-[44px] md:min-h-[36px] px-4 shadow-sm shadow-primary/10 group-hover:shadow-md group-hover:shadow-primary/20 transition-all"
             >
-              <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`}>
+              <Link to={`/dashboard/my-requests/${q.ref_id ?? q.id}`} aria-label={isRTL ? `عرض تفاصيل ${q.ref_id ?? ''}` : `View details ${q.ref_id ?? ''}`}>
                 {isRTL ? 'عرض التفاصيل' : 'View details'}
                 <ArrowRight className="h-3.5 w-3.5 rtl-flip ms-1 group-hover:translate-x-0.5 transition-transform" />
               </Link>
