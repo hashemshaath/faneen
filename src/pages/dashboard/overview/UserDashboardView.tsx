@@ -14,7 +14,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import {
   FileText, MessageSquare, Bell, Bookmark, CreditCard, TrendingUp, DollarSign,
   PieChart as PieChartIcon, Send, Search as SearchIcon, Link as LinkIcon,
-  LayoutDashboard, Activity, BarChart3, Zap,
+  LayoutDashboard, Activity, BarChart3,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
