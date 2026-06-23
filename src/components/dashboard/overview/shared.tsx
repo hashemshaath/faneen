@@ -8,18 +8,14 @@ import {
 } from '@/modules/contracts';
 import { countMessagesSentByUserSince } from '@/modules/messaging';
 import { countNotificationsForUserSince } from '@/modules/notifications';
-import { getCurrentMembershipSubscription } from '@/modules/memberships';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowUpRight, AlertTriangle, CalendarDays, Bell, Send,
-  CreditCard, Timer, Crown, Sparkles, Zap, RefreshCw,
+  CreditCard, Timer, RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { tierIcons } from '@/lib/membership-tiers';
-import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 
 /** Brand-aligned chart palette — sourced from central design tokens. */
 export const CHART_COLORS = [
@@ -418,79 +414,6 @@ export const OverdueAlerts = React.memo(function OverdueAlerts({
             </Link>
           )}
         </div>
-      </CardContent>
-    </Card>
-  );
-});
-
-type MembershipPlan = { name_ar: string; name_en: string; tier: string };
-type MembershipSub = {
-  expires_at: string | null;
-  billing_cycle: string | null;
-  plan: MembershipPlan | null;
-};
-
-export const MembershipWidget = React.memo(function MembershipWidget({
-  isRTL, userId,
-}: { isRTL: boolean; userId: string }) {
-  const membershipVisibility = useMembershipVisibility();
-  const { data: sub } = useQuery({
-    queryKey: ['membership-widget', userId],
-    queryFn: async () => {
-      const { data } = await getCurrentMembershipSubscription<MembershipSub>({
-        userId,
-        select:
-          'expires_at, billing_cycle, plan:membership_plans!plan_id(name_ar, name_en, tier)',
-      });
-      return data;
-    },
-    staleTime: 300000,
-  });
-
-  const daysRemaining = sub?.expires_at
-    ? Math.max(0, Math.ceil((new Date(sub.expires_at).getTime() - Date.now()) / 86400000))
-    : null;
-
-  const plan = sub?.plan ?? null;
-  const tier = plan?.tier || 'free';
-  const Icon = tierIcons[tier] || Zap;
-  const cycleDays = sub?.billing_cycle === 'yearly' ? 365 : 30;
-
-  return (
-    <Card className={SECTION_CARD_CLASS}>
-      <CardContent className={SECTION_CONTENT_CLASS}>
-        <SectionHeader
-          icon={Crown}
-          tone="accent"
-          title={isRTL ? 'عضويتك' : 'Your Membership'}
-          right={<SectionChip tone="accent">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'مجاني' : 'Free')}</SectionChip>}
-        />
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-            <Icon className="w-4 h-4 text-accent" aria-hidden="true" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-bold text-foreground truncate">{plan ? (isRTL ? plan.name_ar : plan.name_en) : (isRTL ? 'الخطة المجانية' : 'Free plan')}</p>
-            {daysRemaining !== null && (
-              <>
-                <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
-                  <span>{isRTL ? `${daysRemaining} يوم متبقي` : `${daysRemaining} days left`}</span>
-                  <span>{Math.round((daysRemaining / cycleDays) * 100)}%</span>
-                </div>
-                <Progress
-                  value={Math.max(5, (daysRemaining / cycleDays) * 100)}
-                  className="h-1.5 mt-1"
-                  aria-label={isRTL ? `${daysRemaining} يوم متبقي من الاشتراك` : `${daysRemaining} days left in subscription`}
-                />
-              </>
-            )}
-          </div>
-        </div>
-        <Link to={membershipVisibility.membershipPathOrNull ?? '/contact'} className="block">
-          <Button variant="ghost" size="sm" className="w-full text-[11px] h-8 text-accent gap-1.5 font-medium">
-            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />{isRTL ? 'إدارة العضوية' : 'Manage Plan'}
-          </Button>
-        </Link>
       </CardContent>
     </Card>
   );
