@@ -159,8 +159,8 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
             {!eligible && (
               <p className="text-xs text-muted-foreground">
                 <Bi
-                  ar="لا يمكن إنشاء عقد حتى يتم ربط المشروع بمزود خدمة"
-                  en="A provider must be linked to this workspace before a contract can be created"
+                  ar="اربط المشروع بمزود خدمة قبل إنشاء العقد"
+                  en="Link a service provider to this project before creating a contract"
                 />
               </p>
             )}
