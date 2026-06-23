@@ -38,6 +38,7 @@ const STORAGE_ALLOWED_PREFIXES = [
   'src/modules/contracts/services/attachments/',    // contract-attachments service
   'src/modules/workOrders/services/',               // work-order private attachments (BUSINESS-WORKFLOW-5A)
   'src/lib/quoteRequests.ts',                       // canonical quote signed-URL helper
+  'src/services/siteFilesService.ts',               // site-files canonical service (SITE FILES SECURITY + RLS CLOSEOUT)
 ];
 
 const isAllowed = (file: string) =>

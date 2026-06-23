@@ -20,6 +20,7 @@ describe('F-6 storage isolation audit script', () => {
     expect(src).toContain('src/integrations/supabase/');
     expect(src).toContain('src/lib/quoteRequests.ts');
     expect(src).toContain('src/lib/contract-attachments.ts');
+    expect(src).toContain('src/services/siteFilesService.ts');
   });
 
   it('public URL parsing is allowed only in extractPublicStoragePath.ts', () => {
