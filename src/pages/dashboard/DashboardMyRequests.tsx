@@ -72,6 +72,53 @@ const HeroKpi: React.FC<{
   );
 };
 
+type AnalyticTone = 'primary' | 'info' | 'warning' | 'success';
+const ANALYTIC_TONES: Record<AnalyticTone, string> = {
+  primary: 'bg-primary/10 text-primary',
+  info:    'bg-info/10 text-info',
+  warning: 'bg-warning/10 text-warning',
+  success: 'bg-success/10 text-success',
+};
+const AnalyticTile: React.FC<{
+  icon: LucideIcon;
+  label: string;
+  value: number | string;
+  sub?: string;
+  delta?: number;
+  deltaLabel?: string;
+  tone: AnalyticTone;
+}> = ({ icon: Icon, label, value, sub, delta, deltaLabel, tone }) => {
+  const positive = (delta ?? 0) > 0;
+  const negative = (delta ?? 0) < 0;
+  return (
+    <div className="rounded-xl border border-border/60 bg-card p-3 sm:p-3.5 hover:border-primary/30 hover:shadow-sm transition-all">
+      <div className="flex items-center justify-between gap-2">
+        <div className={`h-8 w-8 rounded-lg inline-flex items-center justify-center ${ANALYTIC_TONES[tone]}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        {typeof delta === 'number' && (
+          <span
+            className={`inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full tech-content ${
+              positive ? 'bg-success/10 text-success'
+              : negative ? 'bg-destructive/10 text-destructive'
+              : 'bg-muted text-muted-foreground'
+            }`}
+            title={deltaLabel}
+          >
+            {positive ? <TrendingUp className="h-3 w-3" /> : negative ? <TrendingDown className="h-3 w-3" /> : null}
+            {positive ? '+' : ''}{delta}%
+          </span>
+        )}
+      </div>
+      <div className="mt-2">
+        <div className="text-xl font-bold text-foreground tech-content leading-none">{value}</div>
+        <div className="text-[11px] text-muted-foreground mt-1 truncate">{label}</div>
+        {sub && <div className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{sub}</div>}
+      </div>
+    </div>
+  );
+};
+
 interface MyLeadRow {
   id: string;
   ref_id: string | null;
