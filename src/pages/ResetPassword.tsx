@@ -14,7 +14,7 @@ import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { Loader2, ShieldCheck, AlertTriangle, Clock, KeyRound, RefreshCw, LogIn, XCircle } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { BrandLogo } from '@/components/common/BrandLogo';
 
 const ResetPassword = () => {
@@ -265,7 +265,9 @@ const ResetPassword = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mx-auto mb-4 inline-flex">
-            <BrandLogo variant="mark" tone="auto" size={48} alt="قِطاعات" />
+            <Link to="/" aria-label="قِطاعات — الرئيسية" className="inline-flex hover:opacity-90 transition-opacity">
+              <BrandLogo variant="mark" tone="auto" size={48} alt="قِطاعات" />
+            </Link>
           </div>
         </div>
         <div className="bg-card rounded-2xl border border-border p-8 shadow-sm space-y-6">

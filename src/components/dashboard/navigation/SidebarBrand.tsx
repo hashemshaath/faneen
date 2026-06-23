@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { BrandLogo } from '@/components/common/BrandLogo';
 
 /**
@@ -40,11 +41,13 @@ export const SidebarBrand: React.FC<SidebarBrandProps> = ({
       data-testid="sidebar-brand"
     >
       <div className="flex items-center gap-2">
-        {collapsed ? (
-          <BrandLogo variant="mark" tone="auto" size={36} />
-        ) : (
-          <BrandLogo variant="full" tone="auto" size={32} />
-        )}
+        <Link to="/" aria-label="Qitaat — Home" className="inline-flex items-center hover:opacity-90 transition-opacity">
+          {collapsed ? (
+            <BrandLogo variant="mark" tone="auto" size={36} />
+          ) : (
+            <BrandLogo variant="full" tone="auto" size={32} />
+          )}
+        </Link>
       </div>
 
       {hasBusiness && !collapsed && (

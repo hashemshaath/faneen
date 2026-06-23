@@ -1,6 +1,7 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Mail, Phone, MapPin, Shield, Award, MessageCircle } from "lucide-react";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { Link } from "react-router-dom";
 
 export const FooterBrand = () => {
   const { t, isRTL } = useLanguage();
@@ -19,7 +20,7 @@ export const FooterBrand = () => {
   return (
     <div className="col-span-2 space-y-5">
       {/* Logo */}
-      <div className="flex items-center group">
+      <Link to="/" aria-label={isRTL ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center group hover:opacity-90 transition-opacity">
         <BrandLogo
           variant="full"
           tone="dark"
@@ -27,7 +28,7 @@ export const FooterBrand = () => {
           alt={isRTL ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'}
           imgClassName="transition-transform duration-300 group-hover:scale-[1.03]"
         />
-      </div>
+      </Link>
 
       <p className="font-body text-sm text-surface-nav-foreground/80 leading-relaxed max-w-sm">
         {t('footer.desc')}
