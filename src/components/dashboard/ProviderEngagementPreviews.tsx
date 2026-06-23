@@ -31,11 +31,16 @@ type NotificationRow = {
   id: string;
   title_ar: string | null;
   title_en: string | null;
+  body_ar?: string | null;
+  body_en?: string | null;
   notification_type: string | null;
   is_read: boolean | null;
   created_at: string;
   action_url: string | null;
 };
+
+const normalizePreviewText = (value: string | null | undefined) =>
+  (value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 
 const LEAD_STATUS_TONE: Record<string, string> = {
   new: 'bg-info/10 text-info',
@@ -123,11 +128,20 @@ export function ProviderEngagementPreviews({ businessId }: { businessId: string 
     queryFn: async () => {
       const { data, error } = await listRecentNotificationsForUser<NotificationRow>({
         userId: user!.id,
-        select: 'id, title_ar, title_en, notification_type, is_read, created_at, action_url',
+        select: 'id, title_ar, title_en, body_ar, body_en, notification_type, is_read, created_at, action_url',
         limit: 10,
       });
       if (error) throw error;
-      const rows = (data ?? []) as NotificationRow[];
+      const seen = new Set<string>();
+      const rows = ((data ?? []) as NotificationRow[]).filter((n) => {
+        const key = [
+          normalizePreviewText(n.title_ar ?? n.title_en),
+          normalizePreviewText(n.body_ar ?? n.body_en),
+        ].join('|');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
       return { rows, unread: rows.filter((n) => !n.is_read).length };
     },
   });
