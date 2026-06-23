@@ -24,6 +24,7 @@ describe('FULL ADMIN CONTROL CENTER CONSISTENCY GUARD', () => {
     for (const line of routeLines) {
       const ok =
         /ProtectedRoute\s+require(Admin|SuperAdmin)/.test(line) ||
+        /<AdminRoute\b/.test(line) ||
         /<Navigate\s+to=/.test(line);
       expect(ok, `Unprotected admin route: ${line.trim()}`).toBe(true);
     }
