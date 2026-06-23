@@ -52,6 +52,7 @@ const ALLOWED_DIRS = [
 const ALLOWED_FILES = new Set([
   "src/lib/quoteRequests.ts",
   "src/lib/contract-attachments.ts",
+  "src/services/siteFilesService.ts",
 ]);
 
 /** Public URL parsing is centralized here only. */
