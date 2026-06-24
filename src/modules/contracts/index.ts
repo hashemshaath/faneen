@@ -33,6 +33,7 @@ export * from './services/reads';
 export * from './services/updateContractById';
 export * from './services/createContractFromTemplate';
 export * from './services/contractSummary';
+export * from './services/sendForReviewEligibility';
 export * from './services/updateContractDraftAutosave';
 export * from './services/emitContractAudit';
 export * from './services/searchContractClients';

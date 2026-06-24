@@ -45,6 +45,8 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
+import { buildContractSummary } from '@/modules/contracts/services/contractSummary';
+import { computeSendForReviewEligibility } from '@/modules/contracts/services/sendForReviewEligibility';
 import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
 import { CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
 import {
@@ -1282,22 +1284,17 @@ const DashboardContracts = () => {
 
   const sendForApprovalMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
-      // C6.4a — go through SECURITY DEFINER RPC.
       await sendContractForApproval(contract.id);
-      await createNotification({
-        user_id: contract.client_id,
+      await createNotification({ user_id: contract.client_id,
         title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`,
         title_en: `New contract pending review: ${contract.title_en || contract.title_ar}`,
-        notification_type: 'contract', reference_id: contract.id, reference_type: 'contract',
-        action_url: `/contracts/${contract.id}`,
-      });
+        notification_type: 'contract', reference_id: contract.id, reference_type: 'contract', action_url: `/contracts/${contract.id}` });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
-      setSendConfirm(null);
-      toast.success(pickBi(isRTL, 'تم إرسال العقد للمراجعة', 'Contract sent for review'));
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] }); setSendConfirm(null); toast.success(pickBi(isRTL, 'تم إرسال العقد للمراجعة', 'Contract sent for review')); },
+    onError: () => { toast.error(pickBi(isRTL, 'تعذّر إرسال العقد للمراجعة، حاول لاحقًا', 'Could not send the contract for review, please try again later')); },
   });
+
+  const computeSendEligibility = useCallback((c: ContractWithRole) => computeSendForReviewEligibility(c, { hasLineItems: allLineItems.some((li) => li.contract_id === c.id), isRTL }), [allLineItems, isRTL]);
 
   /* ── Helpers ── */
   /* Phase 4E.3 — Autosave for existing draft contracts only. */
@@ -3092,7 +3089,7 @@ const DashboardContracts = () => {
                                     { icon: Download, label: pickBi(isRTL, 'تصدير PDF', 'Export PDF'), onClick: () => handleExportPDF(c), disabled: isExporting, show: true },
                                     { icon: Copy, label: pickBi(isRTL, 'نسخ العقد', 'Duplicate'), onClick: () => handleDuplicate(c), show: true },
                                     { icon: Share2, label: pickBi(isRTL, 'مشاركة', 'Share'), onClick: () => handleShareContract(c), show: true },
-                                    { icon: Send, label: pickBi(isRTL, 'إرسال للمراجعة', 'Send for Review'), onClick: () => setSendConfirm(c), show: c.status === 'draft' && user?.id === c.provider_id, className: 'text-primary border-primary/30' },
+                                    { icon: Send, label: pickBi(isRTL, 'إرسال للمراجعة', 'Send for Review'), onClick: () => setSendConfirm(c), show: c.status === 'draft' && user?.id === c.provider_id, disabled: !computeSendEligibility(c).isEligible, className: 'text-primary border-primary/30' },
                                     { icon: CircleCheck, label: pickBi(isRTL, 'موافقة', 'Approve'), onClick: () => setApproveConfirm(c), show: ((user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at)) && c.status !== 'completed' && c.status !== 'cancelled', className: 'text-success border-success' },
                                     { icon: Edit3, label: pickBi(isRTL, 'تعديل', 'Edit'), onClick: () => openEditContract(c), show: !locked && user?.id === c.provider_id },
                                     { icon: FileText, label: pickBi(isRTL, 'طلب ملحق', 'Amendment'), onClick: () => setShowAddAmendment(c.id), show: locked, className: 'text-warning border-warning' },
@@ -3152,9 +3149,17 @@ const DashboardContracts = () => {
             <AlertDialogTitle>{pickBi(isRTL, 'إرسال العقد للمراجعة', 'Send for Review')}</AlertDialogTitle>
             <AlertDialogDescription>{pickBi(isRTL, 'سيتم إرسال إشعار للعميل لمراجعة العقد والموافقة عليه.', 'A notification will be sent to the client to review and approve.')}</AlertDialogDescription>
           </AlertDialogHeader>
+          {sendConfirm && (() => { const e = computeSendEligibility(sendConfirm); const n = buildContractSummary({ lineItemsCount: allLineItems.filter((li) => li.contract_id === sendConfirm.id).length }).lineItemsCount; return (
+            <div data-testid="send-review-summary" className="text-xs space-y-1 border rounded p-2 my-2">
+              <div>{pickBi(isRTL, 'الحالة الحالية: مسودة', 'Current status: draft')}</div>
+              <div>{pickBi(isRTL, 'الحالة التالية: مرسل للمراجعة', 'Next status: sent for review')}</div>
+              <div>{pickBi(isRTL, `عدد البنود: ${n}`, `Line items: ${n}`)}</div>
+              {!e.isEligible && (<ul className="text-destructive list-disc pe-5" data-testid="send-review-missing">{e.missing.map((m, i) => (<li key={i}>{m}</li>))}</ul>)}
+            </div>
+          ); })()}
           <AlertDialogFooter>
             <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}>
+            <AlertDialogAction data-testid="send-review-confirm" disabled={sendForApprovalMutation.isPending || !sendConfirm || !computeSendEligibility(sendConfirm).isEligible} onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}>
               <Send className="w-4 h-4 me-2" />{pickBi(isRTL, 'إرسال', 'Send')}
             </AlertDialogAction>
           </AlertDialogFooter>
