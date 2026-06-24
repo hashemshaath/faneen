@@ -124,12 +124,12 @@ export const ContractProviderSearchPicker: React.FC<ContractProviderSearchPicker
         {pickBi(isRTL, 'ابحث عن مزوّد الخدمة (الطرف الأول)', 'Search for the service provider (first party)')}
       </div>
       <div className="relative">
-        <Search className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground ${isRTL ? 'right-2.5' : 'left-2.5'}`} />
+        <Search className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground start-2.5" />
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={pickBi(isRTL, 'اكتب اسم المنشأة أو المعرّف…', 'Type business name or ref…')}
-          className={`${isRTL ? 'pr-8' : 'pl-8'} h-9 text-xs`}
+          className="ps-8 h-9 text-xs"
           aria-label={pickBi(isRTL, 'بحث المزوّد', 'Provider search')}
         />
       </div>
