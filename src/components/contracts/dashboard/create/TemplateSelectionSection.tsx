@@ -164,24 +164,14 @@ export const TemplateSelectionSection: React.FC<Props> = ({
       <p className="text-[10px] text-muted-foreground">
         {isRTL ? 'يتم عرض القوالب المناسبة للمجال المختار فقط.' : 'Only templates matching the selected sector are shown.'}
       </p>
-      <Select
-        value={effectiveVersion?.version_id ?? ''}
-        onValueChange={(v) => onSelectVersion(v)}
-      >
-        <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
-        <SelectContent>
-          {filtered.map(v => {
-            const cfg = templateCategoryConfig[v.category];
-            const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
-            const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : v.category;
-            return (
-              <SelectItem key={v.version_id} value={v.version_id} className="text-xs">
-                {label} · {catLabel} · v{v.version_number}
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+      <TemplateSearchPicker
+        isRTL={isRTL}
+        options={filtered}
+        allOptions={publishedVersions}
+        effectiveVersion={effectiveVersion}
+        templateCategoryConfig={templateCategoryConfig}
+        onSelectVersion={onSelectVersion}
+      />
       {effectiveVersion && effectiveVersion.pricing_methods.length > 0 && (
         <div className="space-y-1.5">
           <Label className="text-[10px] text-muted-foreground">{isRTL ? 'طريقة التسعير' : 'Pricing Method'}</Label>
