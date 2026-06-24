@@ -28,6 +28,7 @@ import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { SiteGovernmentDataPanel } from '@/components/contracts/SiteGovernmentDataPanel';
 import { SelfClientCard } from '@/components/contracts/SelfClientCard';
 import { SectorPlaceholderNotice, FirstPartyNotice } from '@/components/contracts/dashboard/create/ContractCreationOrderNotices';
+import { ContractPartiesPanel, type ContractAccountKind } from '@/components/contracts/dashboard/create/ContractPartiesPanel';
 import {
   listContractsForRole,
   getContractParticipantProfiles,
@@ -2018,6 +2019,8 @@ const DashboardContracts = () => {
               )}
 
               {/* Phase C — Client-only order: Sector → First party → (Site) → Second party. SelfClientCard renders data-testid="contract-create-self-client-card" after the site step with the hint "أكمل بيانات الحساب أو الموقع قبل إنشاء العقد" / "Complete your account or site details before creating the contract" when required fields are missing. */}
+              {/* Phase H — Contract parties panel (role-aware). Providers never see a provider picker for themselves; clients never see a ClientPicker for themselves. */}
+              {!editingId && inviteMode === 'idle' && (() => { const accountKind: ContractAccountKind = isAdmin ? 'admin' : (isProvider || !!businessId) ? 'provider' : 'client'; const secondPartyName = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? null) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || null); return (<ContractPartiesPanel isRTL={isRTL} accountKind={accountKind} firstPartyName={contractParties.firstPartyDisplayName} firstPartyRef={businessId ?? null} secondPartyName={secondPartyName} linkedProviderMissing={accountKind === 'client' && !contractParties.firstPartyBusinessId} />); })()}
               {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (<div className="space-y-3" data-testid="contract-create-client-order-block"><SectorPlaceholderNotice isRTL={isRTL} /><FirstPartyNotice isRTL={isRTL} providerName={null} /></div>)}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker

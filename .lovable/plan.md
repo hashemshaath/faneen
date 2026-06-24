@@ -1,47 +1,72 @@
-## Scope
+# CONTRACT PARTY FLOW + ACTIVITY SELECTION — Plan
 
-This is a large, multi-surface refactor of the contract creation flow covering terminology, party model, site-selection bug, central helper, RPC validation, and tests. Before I touch code, I need to confirm scope and gather facts so I don't break the provider/admin flows or contract lifecycle.
+This task is an audit + targeted UX/logic fix across the contract creation surface for three account types (provider/business owner, personal client, admin). It spans `DashboardContracts.tsx` (3187 lines, at line cap 3192), `WorkspaceContractsTab.tsx`, the party model helpers, and the activity (sector/category) source. **No DB/RLS/RPC/lifecycle changes** unless the audit surfaces a real gap — I will report it, not silently change it.
 
-## What I need to investigate first (read-only)
+## Phase 1 — Read-only audit (no code changes)
 
-1. The exact source of the `حدد المنشأة أولاً` message — likely in a site picker component used inside `DashboardContracts.tsx` or a shared SitePicker. Grep `حدد المنشأة` across `src/`.
-2. All "العميل" labels in the contract create UI (`DashboardContracts.tsx`, `WorkspaceContractsTab`, `ClientPicker`, `SelfClientCard`, project/site-triggered create flows).
-3. Existing central helpers: `useContractListDerivations`, `contract-completeness`, `contract-pricing`, any `create_contract` RPC, and `ensure-business`.
-4. All contract-creation entry points: dashboard, workspace tab, project detail, site detail, quote/RFQ — to see how many flows exist and whether they already share a service.
+Investigate and document the **current** behavior for each account type:
 
-## Proposed implementation (phased)
+1. `DashboardContracts.tsx` — read the create panel sections: how `firstParty` / `secondParty` are derived, where `selectedClient` / `guestClient` / provider come from, whether a provider picker exists for provider accounts, and whether the activity/sector source is wired.
+2. `WorkspaceContractsTab.tsx` — confirm provider derivation (`linkedProviderBusinessId ?? businessId`) and that ClientPicker is hidden.
+3. `contractParties.ts`, `sendForReviewEligibility.ts`, `ContractReviewSummary.tsx`, `ContractCreationOrderNotices.tsx`, `WorkTypeSection.tsx`, `TemplateSelectionSection.tsx` — confirm where "activity / sector / specialty" is read from and whether it currently falls back to project category, business primary activity, or is left blank.
+4. RPC `create_contract_from_workspace_as_client` — confirm provider derivation already handled (Phase tests show it is).
+5. Identify the **3 concrete gaps** behind the user's complaint:
+   - (a) Provider account is still shown a provider/client picker for itself.
+   - (b) Activity/sector source has no visible UI — user can't tell where it comes from or pick one when missing.
+   - (c) "أطراف العقد" header is not labeled by role — labels say "العميل" generically.
 
-### Phase A — Site picker fix (highest user impact, smallest blast radius)
-- Locate the `حدد المنشأة أولاً` guard in the site selector and gate it on `isClientOnlyAccount`. For client-only accounts, query `client_sites` by `auth.uid()` (via existing `siteFilesService`/`client_sites` query) instead of `businessId`.
-- Replace empty-state copy with `لا توجد مواقع مرتبطة بحسابك. أضف موقعًا أولًا.`
-- Provider/admin path unchanged.
+## Phase 2 — Targeted UX fixes (frontend only)
 
-### Phase B — Party terminology (client-only UI only)
-- In `DashboardContracts.tsx` + `SelfClientCard.tsx`, swap "العميل (أنت)" → "الطرف الثاني (أنت)" / "صاحب الحساب", and any "اختر العميل / البحث عن عميل / إضافة عميل" hidden labels behind `isClientOnlyAccount`.
-- Provider/admin keep `اختيار الطرف الثاني` (renamed from "اختر العميل" globally per spec — confirm with user before doing global rename, see Questions).
+Frontend-only changes; no payload/RPC/lifecycle edits.
 
-### Phase C — Central party helper
-- New `src/lib/contracts/resolveContractPartiesAndEligibility.ts` returning the shape in the spec (`firstPartyBusinessId`, `secondPartyUserId`, `executionSiteId`, `sectorId`, `templateId`, `isEligible`, `missingRequirements[]`).
-- Refactor `DashboardContracts.tsx` and `WorkspaceContractsTab` create paths to consume it. Project/site detail create buttons already delegate to these pages, so no duplication added.
+1. **New presentational component** `src/components/contracts/dashboard/create/ContractPartiesPanel.tsx`
+   - Renders a single `أطراف العقد / Contract parties` section with two labeled rows (الطرف الأول / الطرف الثاني) chosen by `accountKind`: `'provider' | 'client' | 'admin'`.
+   - Provider: first party = current business (name + ref + city if available); never opens a provider picker.
+   - Client: first party = linked provider business from project; if missing, shows the existing "اربط المشروع بمزود خدمة" message.
+   - Admin: shows both pickers explicitly labeled "الطرف الأول" and "الطرف الثاني".
+   - Pure props, no Supabase calls.
 
-### Phase D — Sector → Provider → Site ordering
-- Add a small stepper state on the create panel so the user picks sector first, then provider (for non-client flows), then site, then template. For client-only accounts where provider is fixed by the linked project, sector and provider are pre-filled and locked.
-- Template list filtered by `sectorId/categoryId` using existing `contract_templates` taxonomy.
+2. **New presentational component** `src/components/contracts/dashboard/create/ContractActivitySection.tsx`
+   - Shows the resolved activity with its **source badge** (project / business / manual).
+   - When no source, renders a `Select` over an already-loaded taxonomy categories list (reuse existing `useTaxonomyCategories` / `contract_taxonomy_categories` hook — read-only check; no new query if one exists).
+   - Emits `onChange(categoryId)` upward; `DashboardContracts.tsx` stores it in existing `form.category_id` (or adds local state if not present — frontend only).
 
-### Phase E — Tests
-- New `src/__tests__/contractPartyModelAndCreationFlow.test.ts` covering all 18 acceptance points via source-level regex on the refactored files (matching the existing test style in `contractCreationClientAutoFill.test.ts`).
-- Update legacy tests only if labels they assert change.
+3. **`DashboardContracts.tsx`** — minimal wiring:
+   - Compute `accountKind` from existing `isAdmin / isProvider / isClientOnlyAccount`.
+   - Replace the existing first-party / second-party notice blocks with `<ContractPartiesPanel />`.
+   - Insert `<ContractActivitySection />` above the template picker.
+   - Stay under the 3192 line cap by extracting the replaced blocks (net delta should be negative).
 
-### Out of scope (explicitly excluded per spec)
-- No DB / RLS / RPC / migrations / edge changes.
-- No `service_role` in frontend.
-- No lifecycle / signature / approval flow changes.
-- No new client creation.
+4. **`WorkspaceContractsTab.tsx`** — no behavior change; confirm copy already matches new labels.
+
+5. **Activity resolution helper** `src/modules/contracts/services/resolveContractActivity.ts` (new, pure):
+   - Inputs: `{ projectCategoryId?, quoteRequestCategoryId?, businessPrimaryCategoryId?, manualCategoryId? }`.
+   - Returns `{ categoryId, source: 'project'|'quote'|'business'|'manual'|null }`.
+   - Pure TS, fully unit-testable.
+
+## Phase 3 — Tests
+
+New test file `src/__tests__/contractPartyFlowAndActivitySelection.test.ts` with source-level regex guards and pure-function tests covering the 15 acceptance points listed by the user (provider-never-picks-self, client-never-picks-self, activity source precedence, manual fallback shown when missing, no service_role / `any` / hex / hardcoded IDs).
+
+Pure unit tests for `resolveContractActivity`.
+
+## Phase 4 — Verification
+
+1. `tsgo --noEmit`
+2. Targeted vitest: new test + `contractPartyModelPhaseB/D/E/F/G`, `contractCreationClientAutoFill`, `enableContractCreationFromLinkedProject`, `dashboard-contracts-installments-badge-bilingual`.
+3. Full vitest suite only if production code changed (it will), then report 0 failures.
+
+## Out of scope (will not change)
+
+- No DB / RLS / RPC / migrations / edge functions.
+- No contract lifecycle, signature, acceptance, PDF, QR, send flow.
+- No new client / business creation.
+- No relabeling of "العميل ↔ الطرف الأول/الثاني" in legal contract model — only display labels in the create UI.
 
 ## Risk
 
-This refactor touches a hot, well-tested area (~10+ existing contract test files). Each phase will be verified with `tsc` + targeted tests before moving on; full suite at the end.
+`DashboardContracts.tsx` is at line cap. All net-new render must be offset by extracting the blocks it replaces — the new panel + activity section absorb existing JSX, so net delta is expected ≤ 0. If it goes over, I extract additional helpers before declaring PASS.
 
-## Questions before I start
+## Deliverable
 
-I need 2 confirmations to avoid wasted work — see follow-up.
+A `CONTRACT PARTY FLOW + ACTIVITY SELECTION REPORT` answering all 20 numbered questions, ending with PASS or NEEDS FIX based on full-suite results.
