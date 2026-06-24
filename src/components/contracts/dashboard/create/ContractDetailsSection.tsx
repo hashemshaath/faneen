@@ -18,21 +18,18 @@ interface Props {
 }
 
 export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }) => {
-  // Track whether user manually edited the English mirror fields. Until they do,
-  // English fields auto-mirror the Arabic value so the user gets a starting point
-  // they can translate or tweak.
-  const titleEnTouched = React.useRef(false);
-  const descEnTouched = React.useRef(false);
-
+  // English mirror fields are kept in sync automatically; the UI only exposes
+  // the Arabic inputs to avoid duplicate fields. Users can edit the English
+  // copy later from the contract detail view if needed.
   React.useEffect(() => {
-    if (!titleEnTouched.current && form.title_ar && form.title_en !== form.title_ar) {
+    if (form.title_ar && form.title_en !== form.title_ar) {
       setForm(f => ({ ...f, title_en: f.title_ar }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.title_ar]);
 
   React.useEffect(() => {
-    if (!descEnTouched.current && form.description_ar && form.description_en !== form.description_ar) {
+    if (form.description_ar && form.description_en !== form.description_ar) {
       setForm(f => ({ ...f, description_en: f.description_ar }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -40,39 +37,21 @@ export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }
 
   return (
   <>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between flex-wrap gap-1">
-          <Label className="text-xs">{isRTL ? 'عنوان العقد (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
-          <FieldAiActions value={form.title_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, title_ar: v }))} fieldType="title" />
-        </div>
-        <Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} className="h-10" />
+    <div className="space-y-2">
+      <div className="flex items-center justify-between flex-wrap gap-1">
+        <Label className="text-xs">{isRTL ? 'عنوان العقد' : 'Contract title'} <span className="text-destructive">*</span></Label>
+        <FieldAiActions value={form.title_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, title_ar: v }))} fieldType="title" />
       </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between flex-wrap gap-1">
-          <Label className="text-xs">{isRTL ? 'عنوان العقد (إنجليزي)' : 'Title (English)'}</Label>
-          <FieldAiActions value={form.title_en} lang="en" onTranslated={v => { titleEnTouched.current = true; setForm(f => ({ ...f, title_en: v })); }} onImproved={v => { titleEnTouched.current = true; setForm(f => ({ ...f, title_en: v })); }} fieldType="title" />
-        </div>
-        <Input value={form.title_en} onChange={e => { titleEnTouched.current = true; setForm(f => ({ ...f, title_en: e.target.value })); }} dir="ltr" className="h-10" placeholder={isRTL ? 'يُملأ تلقائيًا من العربي — قابل للتعديل' : 'Auto-filled from Arabic — editable'} />
-      </div>
+      <Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} className="h-10" />
     </div>
 
-    {/* Descriptions */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between flex-wrap gap-1">
-          <Label className="text-xs">{isRTL ? 'نطاق العمل (عربي)' : 'Scope of work (Arabic)'}</Label>
-          <FieldAiActions value={form.description_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, description_ar: v }))} fieldType="description" />
-        </div>
-        <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} className="text-xs" />
+    {/* Description */}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between flex-wrap gap-1">
+        <Label className="text-xs">{isRTL ? 'نطاق العمل' : 'Scope of work'}</Label>
+        <FieldAiActions value={form.description_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, description_ar: v }))} fieldType="description" />
       </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between flex-wrap gap-1">
-          <Label className="text-xs">{isRTL ? 'نطاق العمل (إنجليزي)' : 'Scope of work (English)'}</Label>
-          <FieldAiActions value={form.description_en} lang="en" onTranslated={v => { descEnTouched.current = true; setForm(f => ({ ...f, description_en: v })); }} onImproved={v => { descEnTouched.current = true; setForm(f => ({ ...f, description_en: v })); }} fieldType="description" />
-        </div>
-        <Textarea value={form.description_en} onChange={e => { descEnTouched.current = true; setForm(f => ({ ...f, description_en: e.target.value })); }} rows={3} dir="ltr" className="text-xs" placeholder={isRTL ? 'يُملأ تلقائيًا من العربي — قابل للتعديل' : 'Auto-filled from Arabic — editable'} />
-      </div>
+      <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} className="text-xs" />
     </div>
 
     {/* Financial & Dates */}
