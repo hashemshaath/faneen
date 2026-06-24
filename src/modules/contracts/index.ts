@@ -32,6 +32,7 @@ export * from './services/reads';
 // CT-3 runtime mutation/RPC wrappers
 export * from './services/updateContractById';
 export * from './services/createContractFromTemplate';
+export * from './services/contractSummary';
 export * from './services/updateContractDraftAutosave';
 export * from './services/emitContractAudit';
 export * from './services/searchContractClients';
