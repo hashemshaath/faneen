@@ -1283,15 +1283,11 @@ const DashboardContracts = () => {
 
   const sendForApprovalMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
-      // C6.4a — go through SECURITY DEFINER RPC.
       await sendContractForApproval(contract.id);
-      await createNotification({
-        user_id: contract.client_id,
+      await createNotification({ user_id: contract.client_id,
         title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`,
         title_en: `New contract pending review: ${contract.title_en || contract.title_ar}`,
-        notification_type: 'contract', reference_id: contract.id, reference_type: 'contract',
-        action_url: `/contracts/${contract.id}`,
-      });
+        notification_type: 'contract', reference_id: contract.id, reference_type: 'contract', action_url: `/contracts/${contract.id}` });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
