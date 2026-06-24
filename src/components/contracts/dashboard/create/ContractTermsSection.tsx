@@ -18,7 +18,12 @@ interface Props {
 export const ContractTermsSection: React.FC<Props> = ({ isRTL, form, setForm }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div className="md:col-span-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
-      {['بنود العقد', 'الضمان', 'الدفعات', 'شروط التسليم'].map((label) => <span key={label}>{label}</span>)}
+      {[
+        { ar: 'بنود العقد', en: 'Contract terms' },
+        { ar: 'الضمان', en: 'Warranty' },
+        { ar: 'الدفعات', en: 'Payments' },
+        { ar: 'شروط التسليم', en: 'Delivery terms' },
+      ].map((label) => <span key={label.ar}>{isRTL ? label.ar : label.en}</span>)}
     </div>
     <div className="space-y-2">
       <div className="flex items-center justify-between flex-wrap gap-1">
