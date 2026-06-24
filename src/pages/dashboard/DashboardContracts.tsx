@@ -29,6 +29,7 @@ import { SiteGovernmentDataPanel } from '@/components/contracts/SiteGovernmentDa
 import { SelfClientCard } from '@/components/contracts/SelfClientCard';
 import { SectorPlaceholderNotice, FirstPartyNotice } from '@/components/contracts/dashboard/create/ContractCreationOrderNotices';
 import { ContractPartiesPanel, type ContractAccountKind } from '@/components/contracts/dashboard/create/ContractPartiesPanel';
+import { ContractProviderSearchPicker, type SelectedProviderBusiness } from '@/components/contracts/dashboard/create/ContractProviderSearchPicker';
 import {
   listContractsForRole,
   getContractParticipantProfiles,
@@ -234,6 +235,8 @@ const DashboardContracts = () => {
   const [guestClient, setGuestClient] = useState<GuestClient | null>(null);
   const [selectedWorkType, setSelectedWorkType] = useState<WorkTypeKey>('general');
   const [workTypeTouched, setWorkTypeTouched] = useState(false);
+  /* CONTRACT-CREATION — Client-account provider picker (first party). */
+  const [selectedProviderBusiness, setSelectedProviderBusiness] = useState<SelectedProviderBusiness | null>(null);
   /* CT4C.3 — Client invitation flow state. */
   const [inviteMode, setInviteMode] = useState<'idle' | 'composing' | 'awaiting'>('idle');
   const [inviteForm, setInviteForm] = useState<{ email: string; name: string; phone: string }>({ email: '', name: '', phone: '' });
@@ -480,7 +483,7 @@ const DashboardContracts = () => {
 
   /* CONTRACT-CREATION-CLIENT-AUTO-FILL — client-only accounts auto-fill the second party from the signed-in profile. */
   const hasScopeOfWork = !!(form.description_ar.trim() || form.description_en.trim()), hasContractTerms = !!(form.terms_ar.trim() || form.terms_en.trim() || effectiveVersion), hasExecutionDuration = !!(form.start_date && form.end_date);
-  const contractParties = resolveContractPartiesAndEligibility({ user: user ? { id: user.id } : null, profile: profile ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null } : null, isAdmin, isProvider, ownedBusinessId: businessId ?? null, editingId, firstParty: { fallbackBusinessId: businessId ?? null }, secondParty: { userId: selectedClient?.user_id ?? null, displayName: selectedClient?.full_name ?? guestClient?.name ?? form.client_email ?? null, hasProfile: !!(selectedClient || guestClient || form.client_email) }, executionSiteId: selectedSiteId, sectorId: workTypeTouched ? selectedWorkType : null, templateId: effectiveVersion?.version_id ?? null, hasScopeOfWork, hasContractTerms, hasWarrantyTerms: !!effectiveVersion, hasPaymentTerms: !!effectiveVersion, hasExecutionDuration, hasDeliveryTerms: !!effectiveVersion });
+  const contractParties = resolveContractPartiesAndEligibility({ user: user ? { id: user.id } : null, profile: profile ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null } : null, isAdmin, isProvider, ownedBusinessId: businessId ?? null, editingId, firstParty: { selectedProviderBusinessId: selectedProviderBusiness?.id ?? null, fallbackBusinessId: businessId ?? null, displayName: selectedProviderBusiness ? ((isRTL ? selectedProviderBusiness.name_ar : selectedProviderBusiness.name_en) ?? selectedProviderBusiness.name_ar ?? selectedProviderBusiness.name_en ?? null) : null }, secondParty: { userId: selectedClient?.user_id ?? null, displayName: selectedClient?.full_name ?? guestClient?.name ?? form.client_email ?? null, hasProfile: !!(selectedClient || guestClient || form.client_email) }, executionSiteId: selectedSiteId, sectorId: workTypeTouched ? selectedWorkType : null, templateId: effectiveVersion?.version_id ?? null, hasScopeOfWork, hasContractTerms, hasWarrantyTerms: !!effectiveVersion, hasPaymentTerms: !!effectiveVersion, hasExecutionDuration, hasDeliveryTerms: !!effectiveVersion });
   const isClientOnlyAccount =
     !!user && !isAdmin && !isProvider && businessId === null && !editingId;
 
@@ -1094,7 +1097,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['lead_requests'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
-      setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+      setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false); setSelectedProviderBusiness(null);
       setSelectedSiteId(null);
       setLeadPrefill(null);
       setLeadPrefillDismissed(false);
@@ -1712,7 +1715,7 @@ const DashboardContracts = () => {
 
   const closeForm = useCallback(() => {
     setViewSection('list'); setForm(emptyForm); setEditingId(null); setSelectedTemplate(null); setTemplatePreview(null);
-    setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+    setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false); setSelectedProviderBusiness(null);
     setSelectedVersionId(null); setSelectedPricingMethod(null);
     setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
     setSelectedSiteId(null);
@@ -2020,6 +2023,15 @@ const DashboardContracts = () => {
               {/* Phase C — Client-only order: Sector → First party → (Site) → Second party. SelfClientCard renders data-testid="contract-create-self-client-card" after the site step with the hint "أكمل بيانات الحساب أو الموقع قبل إنشاء العقد" / "Complete your account or site details before creating the contract" when required fields are missing. */}
               {/* Phase H — Contract parties panel (role-aware). Providers never see a provider picker for themselves; clients never see a ClientPicker for themselves. */}
               {!editingId && inviteMode === 'idle' && (() => { const accountKind: ContractAccountKind = isAdmin ? 'admin' : (isProvider || !!businessId) ? 'provider' : 'client'; const secondPartyName = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? null) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || null); return (<ContractPartiesPanel isRTL={isRTL} accountKind={accountKind} firstPartyName={contractParties.firstPartyDisplayName} firstPartyRef={businessId ?? null} secondPartyName={secondPartyName} linkedProviderMissing={accountKind === 'client' && !contractParties.firstPartyBusinessId} />); })()}
+              {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (
+                <div data-testid="contract-create-provider-picker-block" className="p-3 rounded-xl border border-border/50 bg-card/40">
+                  <ContractProviderSearchPicker
+                    isRTL={isRTL}
+                    selected={selectedProviderBusiness}
+                    onSelect={setSelectedProviderBusiness}
+                  />
+                </div>
+              )}
               {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (<div className="space-y-3" data-testid="contract-create-client-order-block"><SectorPlaceholderNotice isRTL={isRTL} /><FirstPartyNotice isRTL={isRTL} providerName={null} /></div>)}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker

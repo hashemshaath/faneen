@@ -1,49 +1,59 @@
-## CONTRACT CREATION PURPOSE-FIRST FLOW — Plan
+# خطة: تفعيل بحث المزوّد وإعادة تصميم خطوة الأطراف في إنشاء العقد
 
-Large frontend-only refactor of the create-contract wizard. Reorders steps to `purpose → parties → template → details/terms → review`, adds template filtering by purpose, and locks the rules with three new test files. No DB/RLS/RPC/lifecycle/payload changes.
+## ما رصدته الآن (فحص بصري)
+الصفحة `/dashboard/contracts` ← "إنشاء عقد جديد" تعمل وفق ترتيب Phase السابق:
+الغرض → الأطراف → القالب → موقع → تفاصيل → تسعير → مراجعة.
 
-### Phase 1 — Read-only audit
-Read in parallel: `src/pages/dashboard/DashboardContracts.tsx`, `ContractCreateStepper.tsx`, `ContractPartiesPanel.tsx`, `WorkTypeSection.tsx`, `TemplateSelectionSection.tsx`, `ContractReviewSummary.tsx`, `ContractDetailsSection.tsx`, `ContractTermsSection.tsx`, `resolveContractActivity.ts`, `contractParties.ts`, `contractSummary.ts`, and existing tests. Identify:
-- Current step order in `ContractCreateStepper` (today: `client → site → work → template → details → pricing → review`).
-- Where activity/work-type is collected and whether template list is filtered by it.
-- Current `DashboardContracts.tsx` line count vs cap (3192).
+لكن للحسابات الفردية (مثل حسابك الحالي بدون منشأة) يظهر تحذير:
+> «اربط المشروع بمزود خدمة قبل إنشاء العقد»
 
-### Phase 2 — New helpers (pure, testable)
-1. `src/modules/contracts/services/resolveContractPurpose.ts`
-   Returns `{ purposeId, purposeLabelAr, purposeLabelEn, source: 'project'|'quote'|'business'|'manual'|null, sectorId, serviceTypeId, isManual, confidence }`. Precedence: project → quote/opportunity → business → manual. Wraps `resolveContractActivity` for the categoryId; adds sector/serviceType/labels.
-2. `src/modules/contracts/services/filterContractTemplates.ts`
-   Pure function: `filterContractTemplates(templates, { sectorId, serviceTypeId, purposeId })` → `{ specialized: T[], general: T[] }`. Excludes non-published / inactive. Specialized first (sector + serviceType match), general fallback only when no specialized match. Annotates each row with `matchReason`.
+بدون أي زر/حقل بحث. أي أن **الطرف الأول لا يمكن اختياره يدويًا**، فيتجمّد المسار.
 
-### Phase 3 — Wizard reorder (frontend only)
-1. In `ContractCreateStepper`, change `CreateStepKey` order to: `purpose → parties → template → details → pricing → review`. Update labels (ar/en).
-2. In `DashboardContracts.tsx`:
-   - Add a `purpose` step container that renders `WorkTypeSection` + the manual category picker from `ContractActivitySection`, and shows resolved source badge from `resolveContractPurpose`.
-   - Move `ContractPartiesPanel` and client picker into a `parties` step that is only visible after purpose is chosen.
-   - Pipe `{ sectorId, serviceTypeId, purposeId }` from purpose into `TemplateSelectionSection` via the new `filterContractTemplates` helper; render specialized first, general as labeled fallback, hide unpublished.
-   - Keep `ContractReviewSummary` last and add purpose + template-kind (specialized/general) to the summary rendering only.
-3. Extract any new JSX into small components under `src/components/contracts/dashboard/create/` to keep `DashboardContracts.tsx` under the 3192 line cap. Candidates: `ContractPurposeStep.tsx`, `ContractPartiesStep.tsx`, `ContractTemplateStep.tsx`.
+## التغييرات
 
-### Phase 4 — Party rules enforcement (UI only, no payload change)
-- Provider/owner: first party auto, no picker; second party = ClientPicker / guest (existing).
-- Personal client: first party = project-linked provider (existing message when missing); second party auto-filled (already implemented), no self picker.
-- Admin: both pickers visible with explicit "الطرف الأول / الثاني" labels.
-- Invite-entity CTA: only render when a picker is shown AND no candidates exist; deferred CTA (no new DB).
+### 1) مكوّن جديد — `ContractProviderSearchPicker`
+- `src/components/contracts/dashboard/create/ContractProviderSearchPicker.tsx`
+- بحث inline (لا dialog) ضمن جدول `businesses` المنشورة:
+  - حقل بحث بـ debounce 300ms (الاسم AR/EN، الرقم المعرّف).
+  - فلتر اختياري: التخصص (يأتي من `selectedWorkType` إن وُجد).
+  - نتائج كبطاقات صغيرة (max 8) مع زر "اختيار".
+  - حالة فارغة + حالة تحميل + زر "مسح الاختيار".
+- يستخدم `useQuery` و `supabase.from('businesses').select(...).ilike(...).eq('is_published', true).limit(8)`.
+- Pure presentational + query؛ لا تغييرات على RLS/RPC/migrations.
 
-### Phase 5 — Tests (new)
-1. `src/__tests__/contractCreationPurposeFirstFlow.test.tsx` — RTL test that mounts `DashboardContracts` route, asserts step order and party-step gating, provider/client/admin role-aware rendering.
-2. `src/__tests__/contractTemplateFilteringByPurpose.test.ts` — pure tests for `filterContractTemplates` (6 assertions from spec).
-3. `src/__tests__/contractPurposeResolution.test.ts` — pure tests for `resolveContractPurpose` precedence (6 assertions).
+### 2) ربط الاختيار بحالة العقد
+في `DashboardContracts.tsx`:
+- إضافة state: `selectedProviderBusiness: { id, name_ar, name_en, ref } | null`.
+- تمريرها لـ `resolveContractPartiesAndEligibility` عبر `firstParty.selectedProviderBusinessId` و `firstParty.displayName`.
+- إظهار الـ Picker داخل خطوة "الأطراف" فقط عندما `accountKind === 'client'` و `!linkedProviderProjectId`.
 
-Source-level regex guards in (1) for: stepper order array, no provider picker for provider, no client picker for client, unpublished templates excluded.
+### 3) تحسين `ContractPartiesPanel` (إعادة تصميم احترافية)
+- بطاقتان متقابلتان (الطرف الأول/الثاني) بحدود واضحة، أيقونة دور، وحالة "مكتمل/ناقص" ملوّنة (success/warning).
+- شارة دور صريحة (`المزوّد` / `صاحب الحساب`).
+- زر تعديل/تغيير الاختيار للطرف الأول عند توفّر الـ picker.
+- شريط ملخّص أسفل البطاقات: "جاهز للمتابعة" أو "أكمل اختيار الطرف الأول".
 
-### Phase 6 — Verification
-1. `tsgo --noEmit`
-2. `bunx vitest run` on the three new files + existing `contractPartyFlowAndActivitySelection`, `contractPartyModelPhaseB..G`, `contractCreationClientAutoFill`.
-3. Verify `DashboardContracts.tsx` line count ≤ 3192; extract more if needed.
-4. Full suite if time permits.
+### 4) تحديث الـ stepper
+- اسم خطوة الأطراف للعميل الفردي يصبح: «الطرف الأول» بدل «الطرف الثاني» عند غياب المزوّد.
+- زر "التالي" مُعطّل حتى يُختار المزوّد.
 
-### Out of scope (forbidden)
-DB, RLS, RPC, migrations, edge functions, lifecycle, signatures, acceptance, payload schema, service_role, hardcoded defaults, `any` / suppressions / skipped tests.
+### 5) خط الإنتاج وحدود الملفات
+- استخراج JSX الجديد إلى `ContractPartiesStep.tsx` لإبقاء `DashboardContracts.tsx` تحت 3192.
+- لا تغيير على lifecycle العقد (يبقى `draft`) ولا على فلترة القوالب أو الإشعارات.
 
-### Deliverable
-`CONTRACT CREATION PURPOSE-FIRST FLOW REPORT` answering all 19 questions, ending with PASS or NEEDS FIX.
+## ما لن يتغيّر
+- DB / RLS / RPC / migrations / edge functions.
+- ترتيب الخطوات.
+- منطق فلترة القوالب.
+- العقود الحالية والـ matching/credits/notifications.
+
+## التحقق
+- `tsgo --noEmit`.
+- اختبارات جديدة:
+  - `contractProviderSearchPicker.test.tsx` (debounce + اختيار + مسح).
+  - تحديث `contractCreationPurposeFirstFlow.test.tsx` لتأكيد ظهور الـ picker للحساب الفردي وتعطيل "التالي" قبل الاختيار.
+- لقطة Playwright لخطوة الأطراف بعد التطبيق.
+
+## ملاحظات
+- لن أضيف أي dialog/popup (التزامًا بقاعدة المشروع: نماذج inline فقط).
+- جميع الألوان عبر tokens المعتمدة (`bg-primary/5`, `border-success/40`, إلخ).
