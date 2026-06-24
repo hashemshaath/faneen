@@ -1306,12 +1306,13 @@ const DashboardContracts = () => {
   /* Phase G — eligibility for sending a draft contract for review. */
   const computeSendEligibility = useCallback((c: ContractWithRole) => {
     const m: string[] = [];
-    if (!c.business_id) m.push(pickBi(isRTL, 'بيانات الطرف الأول ناقصة', 'Missing first party'));
-    if (!c.client_id) m.push(pickBi(isRTL, 'بيانات الطرف الثاني ناقصة', 'Missing second party'));
-    if (!allLineItems.some((li) => li.contract_id === c.id)) m.push(pickBi(isRTL, 'البنود ناقصة', 'Missing line items'));
-    if (!c.template_version_id) m.push(pickBi(isRTL, 'القالب ناقص', 'Missing template'));
-    if (!c.terms_ar || !String(c.terms_ar).trim()) m.push(pickBi(isRTL, 'شروط العقد ناقصة', 'Missing terms'));
-    if (!Number(c.total_amount)) m.push(pickBi(isRTL, 'المبلغ ناقص', 'Missing amount'));
+    const pb = (a: string, e: string) => m.push(pickBi(isRTL, a, e));
+    if (!c.business_id) pb('بيانات الطرف الأول ناقصة', 'Missing first party');
+    if (!c.client_id) pb('بيانات الطرف الثاني ناقصة', 'Missing second party');
+    if (!allLineItems.some((li) => li.contract_id === c.id)) pb('البنود ناقصة', 'Missing line items');
+    if (!c.template_version_id) pb('القالب ناقص', 'Missing template');
+    if (!c.terms_ar || !String(c.terms_ar).trim()) pb('شروط العقد ناقصة', 'Missing terms');
+    if (!Number(c.total_amount)) pb('المبلغ ناقص', 'Missing amount');
     return { isEligible: m.length === 0, missing: m };
   }, [allLineItems, isRTL]);
 
