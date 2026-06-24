@@ -2024,9 +2024,12 @@ const DashboardContracts = () => {
                 />
               )}
 
-              {/* CT4B — Step 1: Client. SelfClientCard renders data-testid="contract-create-self-client-card" and the hint "أكمل بيانات الحساب أو الموقع قبل إنشاء العقد" / "Complete your account or site details before creating the contract" when required profile fields are missing. */}
+              {/* Phase C — Client-only creation order: Sector → First party → (Site below) → Second party. */}
               {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (
-                <SelfClientCard isRTL={isRTL} clientName={selectedClient?.full_name ?? null} email={selectedClient?.email_masked ?? null} phone={selectedClient?.phone_masked ?? null} refId={selectedClient?.ref_id ?? null} hasMissingRequiredInfo={!selectedClient?.full_name || !selectedClient?.phone_masked} />
+                <div className="space-y-3" data-testid="contract-create-client-order-block">
+                  <SectorPlaceholderNotice isRTL={isRTL} />
+                  <FirstPartyNotice isRTL={isRTL} providerName={null} />
+                </div>
               )}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker
