@@ -2232,10 +2232,8 @@ const DashboardContracts = () => {
                 );
               })()}
               {!editingId && (() => {
-                const guide = getStatusGuidance('draft');
-                const w = getWorkType(selectedWorkType);
-                const missing: string[] = [];
-                const warnings: string[] = [];
+                const guide = getStatusGuidance('draft'); const w = getWorkType(selectedWorkType);
+                const missing: string[] = []; const warnings: string[] = [];
                 if (!selectedClient && !guestClient && !form.client_email) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
                 if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title'));
                 if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
@@ -2244,39 +2242,27 @@ const DashboardContracts = () => {
                 if (!selectedWorkType || !workTypeTouched) missing.push(pickBi(isRTL, 'المجال / التخصص', 'Sector / specialty'));
                 if (!effectiveVersion) { warnings.push(pickBi(isRTL, 'الضمان غير محدد — يُستمد من القالب', 'Warranty unset — inherited from template')); warnings.push(pickBi(isRTL, 'الدفعات غير محددة — تُستمد من القالب', 'Payment terms unset — inherited from template')); }
                 if (!form.start_date || !form.end_date) warnings.push(pickBi(isRTL, 'مدة التنفيذ غير محددة', 'Execution duration unset'));
-                const templateLabel = effectiveVersion
-                  ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}`
-                  : '—';
+                const templateLabel = effectiveVersion ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}` : '—';
                 const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? (isRTL ? 'الجهة المنفذة المختارة' : 'Selected executing provider')) : (isRTL ? 'لم تُحدَّد بعد' : 'Not set yet');
                 const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? (isRTL ? 'صاحب الحساب' : 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
-                const siteLabel = selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—';
-                const sectorLabel = w ? (isRTL ? w.ar : w.en) : '—';
-                const hasTpl = !!effectiveVersion;
-                const tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template';
+                const hasTpl = !!effectiveVersion; const tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template';
                 const durationLabel = form.start_date && form.end_date ? `${form.start_date} → ${form.end_date}` : '—';
                 return (
-                  <ContractReviewSummary
-                    isRTL={isRTL}
-                    guide={guide}
+                  <ContractReviewSummary isRTL={isRTL} guide={guide}
                     clientLabel={selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—'}
-                    workTypeLabel={w ? (isRTL ? w.ar : w.en) : '—'}
-                    templateLabel={templateLabel}
+                    workTypeLabel={w ? (isRTL ? w.ar : w.en) : '—'} templateLabel={templateLabel}
                     pricingMethodLabel={selectedPricingMethod || (pickBi(isRTL, 'افتراضي', 'Default'))}
                     amountLabel={form.total_amount ? `${form.total_amount} ${form.currency_code}` : '—'}
                     vatLabel={form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `Inclusive ${form.vat_rate}%`) : (isRTL ? `تُضاف ${form.vat_rate}%` : `Added ${form.vat_rate}%`)}
-                    datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')}
-                    missing={missing}
-                    firstPartyLabel={firstPartyLabel}
-                    secondPartyLabel={secondPartyLabel}
-                    executionSiteLabel={siteLabel}
-                    sectorLabel={sectorLabel}
+                    datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')} missing={missing}
+                    firstPartyLabel={firstPartyLabel} secondPartyLabel={secondPartyLabel}
+                    executionSiteLabel={selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—'}
+                    sectorLabel={w ? (isRTL ? w.ar : w.en) : '—'}
                     scopeOfWorkLabel={hasTpl ? tplPresent : '—'}
                     warrantyLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
                     paymentTermsLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
                     executionDurationLabel={durationLabel}
-                    deliveryTermsLabel={hasTpl ? tplPresent : '—'}
-                    warnings={warnings}
-                  />
+                    deliveryTermsLabel={hasTpl ? tplPresent : '—'} warnings={warnings} />
                 );
               })()}
               {!editingId && (
