@@ -23,10 +23,6 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
 import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
-import ClientSiteQrCard from '@/components/client-sites/ClientSiteQrCard';
-import ClientSiteVisibilitySettingsCard from '@/components/client-sites/ClientSiteVisibilitySettingsCard';
-import ClientSiteAccessRequestsPanel from '@/components/client-sites/ClientSiteAccessRequestsPanel';
-import ClientSiteNotificationPreferencesCard from '@/components/client-sites/ClientSiteNotificationPreferencesCard';
 
 export interface ExecutionSiteRow {
   id: string;
