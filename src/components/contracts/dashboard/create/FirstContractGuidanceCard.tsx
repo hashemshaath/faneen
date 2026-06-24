@@ -13,9 +13,9 @@ export const FirstContractGuidanceCard: React.FC<Props> = ({ isRTL }) => {
   const [open, setOpen] = useState(true);
 
   const steps: Array<{ ar: string; en: string }> = [
-    { ar: 'اختر العميل', en: 'Choose the client' },
-    { ar: 'اختر نوع العمل', en: 'Choose the work type' },
-    { ar: 'أضف البنود أو السعر', en: 'Add line items or price' },
+    { ar: 'حدّد الغرض / التخصص', en: 'Pick the purpose / specialty' },
+    { ar: 'حدّد أطراف العقد', en: 'Set the contract parties' },
+    { ar: 'اختر القالب وأضف البنود أو السعر', en: 'Choose a template and add items or price' },
     { ar: 'راجع العقد واحفظه', en: 'Review and save the contract' },
   ];
 
