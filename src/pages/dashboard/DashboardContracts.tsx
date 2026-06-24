@@ -2235,8 +2235,7 @@ const DashboardContracts = () => {
                 const guide = getStatusGuidance('draft'); const w = getWorkType(selectedWorkType);
                 const missing: string[] = []; const warnings: string[] = [];
                 if (!selectedClient && !guestClient && !form.client_email) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
-                if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title'));
-                if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
+                if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title')); if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
                 if (!effectiveVersion) missing.push(pickBi(isRTL, 'قالب عقد منشور', 'Published template'));
                 if (!selectedSiteId) missing.push(pickBi(isRTL, 'موقع التنفيذ', 'Execution site'));
                 if (!selectedWorkType || !workTypeTouched) missing.push(pickBi(isRTL, 'المجال / التخصص', 'Sector / specialty'));
