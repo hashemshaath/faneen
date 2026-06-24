@@ -2112,6 +2112,7 @@ const DashboardContracts = () => {
                 <ExecutionSiteSection
                   isRTL={isRTL}
                   businessId={businessId ?? null}
+                  isClientOnlyAccount={isClientOnlyAccount}
                   clientUserId={
                     selectedClient?.user_id
                     ?? (editingContract as unknown as { client_id?: string | null } | null)?.client_id
