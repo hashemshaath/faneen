@@ -81,3 +81,30 @@ export function pickTemplateForWorkType<T extends { category: string; status?: s
   if (exact) return exact;
   return publishedVersions.find(v => v.category === 'general') ?? publishedVersions[0];
 }
+
+/**
+ * Phase D — Filter templates by selected sector (work type).
+ *
+ * Rules:
+ *  - When no work type is selected (or it is untouched), returns an empty
+ *    list — the UI must prompt the user to pick a sector first instead of
+ *    showing all templates.
+ *  - Otherwise returns the templates whose category matches the selected
+ *    work type's `templateCategory`, plus any `general` templates as a safe
+ *    fallback (never the full list).
+ *  - Returns an empty array when nothing matches.
+ */
+export function filterTemplatesBySector<T extends { category: string }>(
+  workType: WorkTypeKey | null | undefined,
+  sectorTouched: boolean,
+  publishedVersions: T[],
+): T[] {
+  if (!workType || !sectorTouched) return [];
+  if (publishedVersions.length === 0) return [];
+  const meta = getWorkType(workType);
+  const wantedCat = meta?.templateCategory ?? null;
+  if (!wantedCat) return [];
+  return publishedVersions.filter(
+    v => v.category === wantedCat || v.category === 'general',
+  );
+}
