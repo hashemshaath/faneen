@@ -40,14 +40,14 @@ export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-1">
-          <Label className="text-xs">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+          <Label className="text-xs">{isRTL ? 'نطاق العمل (عربي)' : 'Scope of work (Arabic)'}</Label>
           <FieldAiActions value={form.description_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, description_ar: v }))} fieldType="description" />
         </div>
         <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} className="text-xs" />
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-1">
-          <Label className="text-xs">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+          <Label className="text-xs">{isRTL ? 'نطاق العمل (إنجليزي)' : 'Scope of work (English)'}</Label>
           <FieldAiActions value={form.description_en} lang="en" onTranslated={v => setForm(f => ({ ...f, description_en: v }))} onImproved={v => setForm(f => ({ ...f, description_en: v }))} fieldType="description" />
         </div>
         <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" className="text-xs" />
@@ -72,11 +72,11 @@ export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">{isRTL ? 'تاريخ البدء' : 'Start Date'}</Label>
+        <Label className="text-xs">{isRTL ? 'مدة التنفيذ — تاريخ البدء' : 'Execution duration — Start date'}</Label>
         <Input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} dir="ltr" className="h-10" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">{isRTL ? 'تاريخ الانتهاء' : 'End Date'}</Label>
+        <Label className="text-xs">{isRTL ? 'مدة التنفيذ — تاريخ الانتهاء' : 'Execution duration — End date'}</Label>
         <Input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} dir="ltr" className="h-10" />
       </div>
     </div>
