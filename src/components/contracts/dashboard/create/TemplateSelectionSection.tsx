@@ -6,11 +6,13 @@
  * required field count) already passed in via PublishedTemplateOption.
  */
 import React, { useState } from 'react';
-import { BookOpen, PlusCircle, LayoutGrid } from 'lucide-react';
+import { BookOpen, PlusCircle, LayoutGrid, Check, ChevronsUpDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { filterTemplatesBySector, getWorkTypeLabel, type WorkTypeKey } from '@/lib/contract-work-types';
 
@@ -162,24 +164,14 @@ export const TemplateSelectionSection: React.FC<Props> = ({
       <p className="text-[10px] text-muted-foreground">
         {isRTL ? 'يتم عرض القوالب المناسبة للمجال المختار فقط.' : 'Only templates matching the selected sector are shown.'}
       </p>
-      <Select
-        value={effectiveVersion?.version_id ?? ''}
-        onValueChange={(v) => onSelectVersion(v)}
-      >
-        <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
-        <SelectContent>
-          {filtered.map(v => {
-            const cfg = templateCategoryConfig[v.category];
-            const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
-            const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : v.category;
-            return (
-              <SelectItem key={v.version_id} value={v.version_id} className="text-xs">
-                {label} · {catLabel} · v{v.version_number}
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+      <TemplateSearchPicker
+        isRTL={isRTL}
+        options={filtered}
+        allOptions={publishedVersions}
+        effectiveVersion={effectiveVersion}
+        templateCategoryConfig={templateCategoryConfig}
+        onSelectVersion={onSelectVersion}
+      />
       {effectiveVersion && effectiveVersion.pricing_methods.length > 0 && (
         <div className="space-y-1.5">
           <Label className="text-[10px] text-muted-foreground">{isRTL ? 'طريقة التسعير' : 'Pricing Method'}</Label>
@@ -205,3 +197,109 @@ export const TemplateSelectionSection: React.FC<Props> = ({
 };
 
 export default TemplateSelectionSection;
+
+interface TemplateSearchPickerProps {
+  isRTL: boolean;
+  options: PublishedTemplateOption[];
+  allOptions: PublishedTemplateOption[];
+  effectiveVersion: PublishedTemplateOption | null;
+  templateCategoryConfig: Record<string, CategoryConfigEntry>;
+  onSelectVersion: (versionId: string) => void;
+}
+
+const TemplateSearchPicker: React.FC<TemplateSearchPickerProps> = ({
+  isRTL, options, allOptions, effectiveVersion, templateCategoryConfig, onSelectVersion,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const list = showAll ? allOptions : options;
+  const selectedLabel = effectiveVersion
+    ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}`
+    : (isRTL ? 'اختر قالبًا — بحث أو تصفّح' : 'Select a template — search or browse');
+
+  // Group for display
+  const grouped = (() => {
+    const map = new Map<string, PublishedTemplateOption[]>();
+    for (const v of list) {
+      const key = v.category || 'other';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(v);
+    }
+    return Array.from(map.entries());
+  })();
+
+  return (
+    <div className="space-y-1.5">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="h-10 w-full justify-between text-xs font-normal"
+            data-testid="contract-template-combobox-trigger"
+          >
+            <span className="truncate">{selectedLabel}</span>
+            <ChevronsUpDown className="ms-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-[min(520px,92vw)]" align="start">
+          <Command
+            filter={(itemValue, search) => {
+              const v = allOptions.find(x => x.version_id === itemValue);
+              if (!v) return 0;
+              const cfg = templateCategoryConfig[v.category];
+              const hay = `${v.name_ar} ${v.name_en ?? ''} ${v.category} ${cfg?.ar ?? ''} ${cfg?.en ?? ''}`.toLowerCase();
+              return hay.includes(search.toLowerCase()) ? 1 : 0;
+            }}
+          >
+            <CommandInput placeholder={isRTL ? 'ابحث عن قالب…' : 'Search templates…'} className="text-xs" />
+            <CommandList>
+              <CommandEmpty className="py-4 text-xs">{isRTL ? 'لا توجد نتائج' : 'No results'}</CommandEmpty>
+              {grouped.map(([cat, items]) => {
+                const cfg = templateCategoryConfig[cat];
+                const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : cat;
+                return (
+                  <CommandGroup key={cat} heading={catLabel}>
+                    {items.map(v => {
+                      const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
+                      const selected = effectiveVersion?.version_id === v.version_id;
+                      return (
+                        <CommandItem
+                          key={v.version_id}
+                          value={v.version_id}
+                          onSelect={(val) => { onSelectVersion(val); setOpen(false); }}
+                          className="text-xs"
+                        >
+                          <Check className={`me-2 h-3.5 w-3.5 ${selected ? 'opacity-100' : 'opacity-0'}`} />
+                          <span className="truncate flex-1">{label}</span>
+                          <span className="text-[9px] text-muted-foreground ms-2">v{v.version_number}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                );
+              })}
+            </CommandList>
+          </Command>
+          {allOptions.length > options.length && (
+            <div className="border-t border-border/40 p-2 flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">
+                {showAll
+                  ? (isRTL ? `عرض جميع القوالب (${allOptions.length})` : `Showing all templates (${allOptions.length})`)
+                  : (isRTL ? `مُصفّاة للمجال (${options.length}/${allOptions.length})` : `Filtered by sector (${options.length}/${allOptions.length})`)}
+              </span>
+              <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setShowAll(s => !s)}>
+                <LayoutGrid className="w-3 h-3 me-1" />
+                {showAll
+                  ? (isRTL ? 'إظهار المطابقة فقط' : 'Show matches only')
+                  : (isRTL ? 'عرض جميع القوالب' : 'Show all templates')}
+              </Button>
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};

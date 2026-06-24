@@ -17,7 +17,28 @@ interface Props {
   setForm: React.Dispatch<React.SetStateAction<ContractForm>>;
 }
 
-export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }) => (
+export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }) => {
+  // Track whether user manually edited the English mirror fields. Until they do,
+  // English fields auto-mirror the Arabic value so the user gets a starting point
+  // they can translate or tweak.
+  const titleEnTouched = React.useRef(false);
+  const descEnTouched = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!titleEnTouched.current && form.title_ar && form.title_en !== form.title_ar) {
+      setForm(f => ({ ...f, title_en: f.title_ar }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.title_ar]);
+
+  React.useEffect(() => {
+    if (!descEnTouched.current && form.description_ar && form.description_en !== form.description_ar) {
+      setForm(f => ({ ...f, description_en: f.description_ar }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.description_ar]);
+
+  return (
   <>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -30,9 +51,9 @@ export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }
       <div className="space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-1">
           <Label className="text-xs">{isRTL ? 'عنوان العقد (إنجليزي)' : 'Title (English)'}</Label>
-          <FieldAiActions value={form.title_en} lang="en" onTranslated={v => setForm(f => ({ ...f, title_en: v }))} onImproved={v => setForm(f => ({ ...f, title_en: v }))} fieldType="title" />
+          <FieldAiActions value={form.title_en} lang="en" onTranslated={v => { titleEnTouched.current = true; setForm(f => ({ ...f, title_en: v })); }} onImproved={v => { titleEnTouched.current = true; setForm(f => ({ ...f, title_en: v })); }} fieldType="title" />
         </div>
-        <Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" className="h-10" />
+        <Input value={form.title_en} onChange={e => { titleEnTouched.current = true; setForm(f => ({ ...f, title_en: e.target.value })); }} dir="ltr" className="h-10" placeholder={isRTL ? 'يُملأ تلقائيًا من العربي — قابل للتعديل' : 'Auto-filled from Arabic — editable'} />
       </div>
     </div>
 
@@ -48,9 +69,9 @@ export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }
       <div className="space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-1">
           <Label className="text-xs">{isRTL ? 'نطاق العمل (إنجليزي)' : 'Scope of work (English)'}</Label>
-          <FieldAiActions value={form.description_en} lang="en" onTranslated={v => setForm(f => ({ ...f, description_en: v }))} onImproved={v => setForm(f => ({ ...f, description_en: v }))} fieldType="description" />
+          <FieldAiActions value={form.description_en} lang="en" onTranslated={v => { descEnTouched.current = true; setForm(f => ({ ...f, description_en: v })); }} onImproved={v => { descEnTouched.current = true; setForm(f => ({ ...f, description_en: v })); }} fieldType="description" />
         </div>
-        <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" className="text-xs" />
+        <Textarea value={form.description_en} onChange={e => { descEnTouched.current = true; setForm(f => ({ ...f, description_en: e.target.value })); }} rows={3} dir="ltr" className="text-xs" placeholder={isRTL ? 'يُملأ تلقائيًا من العربي — قابل للتعديل' : 'Auto-filled from Arabic — editable'} />
       </div>
     </div>
 
@@ -81,6 +102,7 @@ export const ContractDetailsSection: React.FC<Props> = ({ isRTL, form, setForm }
       </div>
     </div>
   </>
-);
+  );
+};
 
 export default ContractDetailsSection;
