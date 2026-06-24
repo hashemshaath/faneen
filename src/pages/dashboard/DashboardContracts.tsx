@@ -480,20 +480,13 @@ const DashboardContracts = () => {
    * current user. We auto-fill `selectedClient` from their profile and
    * hide the ClientPicker. The execution site / address still come from
    * the existing ExecutionSiteSection (client_sites / projects). */
-  // Central party resolver — single source of truth for party model
-  // and eligibility across DashboardContracts and WorkspaceContractsTab.
-  // We still expose the inline boolean here because the original
-  // expression `!isAdmin && !isProvider && businessId === null` is the
-  // authoritative client-only predicate; the resolver mirrors it.
+  // Phase B — central party resolver (single source of truth for
+  // party model + eligibility across DashboardContracts and
+  // WorkspaceContractsTab). Inline boolean kept as authoritative.
   const contractParties = resolveContractPartiesAndEligibility({
     user: user ? { id: user.id } : null,
-    profile: profile
-      ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null }
-      : null,
-    isAdmin,
-    isProvider,
-    ownedBusinessId: businessId ?? null,
-    editingId,
+    profile: profile ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null } : null,
+    isAdmin, isProvider, ownedBusinessId: businessId ?? null, editingId,
     firstParty: { fallbackBusinessId: businessId ?? null },
     secondParty: { userId: selectedClient?.user_id ?? null },
   });
