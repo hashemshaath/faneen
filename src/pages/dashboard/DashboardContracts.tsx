@@ -2024,7 +2024,7 @@ const DashboardContracts = () => {
                 />
               )}
 
-              {/* Phase C — Client-only order: Sector → First party → (Site) → Second party. */}
+              {/* Phase C — Client-only order: Sector → First party → (Site) → Second party. SelfClientCard renders data-testid="contract-create-self-client-card" after the site step. */}
               {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (<div className="space-y-3" data-testid="contract-create-client-order-block"><SectorPlaceholderNotice isRTL={isRTL} /><FirstPartyNotice isRTL={isRTL} providerName={null} /></div>)}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker
