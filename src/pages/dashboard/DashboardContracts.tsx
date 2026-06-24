@@ -2162,8 +2162,7 @@ const DashboardContracts = () => {
                   effectiveVersion={effectiveVersion}
                   selectedPricingMethod={selectedPricingMethod}
                   templateCategoryConfig={templateCategoryConfig}
-                  selectedWorkType={selectedWorkType}
-                  sectorTouched={workTypeTouched}
+                  selectedWorkType={selectedWorkType} sectorTouched={workTypeTouched}
                   onSelectVersion={(v) => { setSelectedVersionId(v); setSelectedPricingMethod(null); }}
                   onSelectPricingMethod={(m) => setSelectedPricingMethod(m)}
                 />
