@@ -1897,7 +1897,6 @@ const DashboardContracts = () => {
         {/* ═══ Create/Edit Form ═══ */}
         {viewSection === 'create' && (
           <div className="space-y-5">
-            <ContractCreateHeroHeader isRTL={isRTL} editingId={editingId} draftRef={(editingContract as unknown as { contract_ref_id?: string | null } | null)?.contract_ref_id ?? null} />
             <Card className="border-accent/20 shadow-sm">
             <CardHeader className="pb-3">
               {!editingId && contracts.length === 0 && (
