@@ -106,23 +106,16 @@ export const TemplateSelectionSection: React.FC<Props> = ({
             </Select>
           </div>
         )}
-        <div className="flex flex-wrap gap-2">
-          {isAdmin ? (
+        {isAdmin && (
+          <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" variant="default" className="h-7 text-[11px] gap-1">
               <Link to="/admin/contracts?tab=templates" data-testid="contract-template-add-cta">
                 <PlusCircle className="w-3.5 h-3.5" />
                 {isRTL ? 'إضافة قالب' : 'Add template'}
               </Link>
             </Button>
-          ) : (
-            <Button asChild size="sm" variant="outline" className="h-7 text-[11px] gap-1">
-              <Link to={requestTo} data-testid="contract-template-request-cta">
-                <PlusCircle className="w-3.5 h-3.5" />
-                {isRTL ? 'طلب إضافة قالب' : 'Request a template'}
-              </Link>
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
