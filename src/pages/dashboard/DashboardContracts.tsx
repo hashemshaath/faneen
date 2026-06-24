@@ -3167,9 +3167,37 @@ const DashboardContracts = () => {
             <AlertDialogTitle>{pickBi(isRTL, 'إرسال العقد للمراجعة', 'Send for Review')}</AlertDialogTitle>
             <AlertDialogDescription>{pickBi(isRTL, 'سيتم إرسال إشعار للعميل لمراجعة العقد والموافقة عليه.', 'A notification will be sent to the client to review and approve.')}</AlertDialogDescription>
           </AlertDialogHeader>
+          {sendConfirm && (() => {
+            const elig = computeSendEligibility(sendConfirm);
+            const summary = buildContractSummary({
+              title: sendConfirm.title_ar ?? sendConfirm.title_en ?? null,
+              status: 'draft',
+              firstPartyDisplayName: sendConfirm.business_id ? pickBi(isRTL, 'الجهة المنفذة', 'Executing provider') : null,
+              secondPartyDisplayName: sendConfirm.client_id ? pickBi(isRTL, 'صاحب الحساب', 'Account owner') : null,
+              lineItemsCount: allLineItems.filter((li) => li.contract_id === sendConfirm.id).length,
+              hasPayments: !!Number(sendConfirm.total_amount),
+              source: 'dashboard',
+            });
+            return (
+              <div data-testid="send-review-summary" className="text-xs space-y-1 border rounded p-2 my-2">
+                <div>{pickBi(isRTL, 'الحالة الحالية: مسودة', 'Current status: draft')}</div>
+                <div>{pickBi(isRTL, 'الحالة التالية: مرسل للمراجعة', 'Next status: sent for review')}</div>
+                <div>{pickBi(isRTL, `عدد البنود: ${summary.lineItemsCount}`, `Line items: ${summary.lineItemsCount}`)}</div>
+                {!elig.isEligible && (
+                  <ul className="text-destructive list-disc pe-5" data-testid="send-review-missing">
+                    {elig.missing.map((m, i) => (<li key={i}>{m}</li>))}
+                  </ul>
+                )}
+              </div>
+            );
+          })()}
           <AlertDialogFooter>
             <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}>
+            <AlertDialogAction
+              data-testid="send-review-confirm"
+              disabled={sendForApprovalMutation.isPending || !sendConfirm || !computeSendEligibility(sendConfirm).isEligible}
+              onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}
+            >
               <Send className="w-4 h-4 me-2" />{pickBi(isRTL, 'إرسال', 'Send')}
             </AlertDialogAction>
           </AlertDialogFooter>
