@@ -1297,7 +1297,22 @@ const DashboardContracts = () => {
       setSendConfirm(null);
       toast.success(pickBi(isRTL, 'تم إرسال العقد للمراجعة', 'Contract sent for review'));
     },
+    onError: () => {
+      toast.error(pickBi(isRTL, 'تعذّر إرسال العقد للمراجعة، حاول لاحقًا', 'Could not send the contract for review, please try again later'));
+    },
   });
+
+  /* Phase G — eligibility for sending a draft contract for review. */
+  const computeSendEligibility = useCallback((c: ContractWithRole) => {
+    const missing: string[] = [];
+    if (!c.business_id) missing.push(pickBi(isRTL, 'بيانات الطرف الأول ناقصة', 'Missing first party'));
+    if (!c.client_id) missing.push(pickBi(isRTL, 'بيانات الطرف الثاني ناقصة', 'Missing second party'));
+    if (!allLineItems.some((li) => li.contract_id === c.id)) missing.push(pickBi(isRTL, 'البنود ناقصة', 'Missing line items'));
+    if (!c.template_version_id) missing.push(pickBi(isRTL, 'القالب ناقص', 'Missing template'));
+    if (!c.terms_ar || !String(c.terms_ar).trim()) missing.push(pickBi(isRTL, 'شروط العقد ناقصة', 'Missing terms'));
+    if (!Number(c.total_amount)) missing.push(pickBi(isRTL, 'المبلغ ناقص', 'Missing amount'));
+    return { isEligible: missing.length === 0, missing };
+  }, [allLineItems, isRTL]);
 
   /* ── Helpers ── */
   /* Phase 4E.3 — Autosave for existing draft contracts only. */
