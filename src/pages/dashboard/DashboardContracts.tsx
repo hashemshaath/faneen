@@ -2008,7 +2008,7 @@ const DashboardContracts = () => {
                 </div>
               )}
 
-              <div ref={stepRefs.client} className="space-y-4 scroll-mt-24">
+              <div ref={stepRefs.client} className="space-y-4 scroll-mt-24 order-2">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
               {!editingId && inviteMode === 'idle' && (
                 <AcceptedInvitationsPanel
@@ -2032,7 +2032,7 @@ const DashboardContracts = () => {
                   />
                 </div>
               )}
-              {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (<div className="space-y-3" data-testid="contract-create-client-order-block"><SectorPlaceholderNotice isRTL={isRTL} /><FirstPartyNotice isRTL={isRTL} providerName={null} /></div>)}
+              {/* SectorPlaceholderNotice + FirstPartyNotice replaced by inline ContractProviderSearchPicker + purpose-first WorkTypeSection. */}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker
                   isRTL={isRTL}
@@ -2110,7 +2110,7 @@ const DashboardContracts = () => {
               </div>
 
               {/* Phase 5C.3 — Execution site step */}
-              <div ref={stepRefs.site} className="scroll-mt-24">
+              <div ref={stepRefs.site} className="scroll-mt-24 order-4">
                 {!editingId && leadPrefill && !leadPrefill.existing_contract_id && (leadPrefill.suggested_description || leadPrefill.suggested_title) && (
                   <div className="mb-2 p-2.5 rounded-lg border border-warning/40 bg-warning/5 text-[11px] text-foreground/80 flex items-start gap-2">
                     <MapPin className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
@@ -2149,7 +2149,7 @@ const DashboardContracts = () => {
               </div>
 
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
-              <div ref={stepRefs.work} className="scroll-mt-24">
+              <div ref={stepRefs.work} className="scroll-mt-24 order-1">
               {!editingId && (
                 <WorkTypeSection
                   isRTL={isRTL}
@@ -2161,7 +2161,7 @@ const DashboardContracts = () => {
               </div>
 
               {/* CT4 — Template selector (new contracts only) */}
-              <div ref={stepRefs.template} className="scroll-mt-24">
+              <div ref={stepRefs.template} className="scroll-mt-24 order-3">
               {!editingId && (
                 <TemplateSelectionSection
                   isRTL={isRTL}
@@ -2177,19 +2177,19 @@ const DashboardContracts = () => {
               </div>
 
               {/* Titles + descriptions + dates + supervisor + terms = Details step */}
-              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24">
+              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24 order-5">
               <ContractDetailsSection isRTL={isRTL} form={form} setForm={setForm} />
               </div>
 
               {/* VAT Settings — Pricing/VAT step */}
-              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24">
+              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24 order-6">
               <VatSettingsSection isRTL={isRTL} form={form} setForm={setForm} />
               <SupervisorSection isRTL={isRTL} form={form} setForm={setForm} />
               <ContractTermsSection isRTL={isRTL} form={form} setForm={setForm} />
               </div>
 
               {/* CT4B — Review summary + status guidance before submit. */}
-              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24">
+              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24 order-7">
               {(() => {
                 const completeness = !editingId
                   ? calculateContractCompleteness({
