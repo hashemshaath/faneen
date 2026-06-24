@@ -1302,9 +1302,7 @@ const DashboardContracts = () => {
   });
 
   /* Phase G — eligibility for sending a draft contract for review. */
-  const computeSendEligibility = useCallback((c: ContractWithRole) =>
-    computeSendForReviewEligibility(c, { hasLineItems: allLineItems.some((li) => li.contract_id === c.id), isRTL }),
-    [allLineItems, isRTL]);
+  const computeSendEligibility = useCallback((c: ContractWithRole) => computeSendForReviewEligibility(c, { hasLineItems: allLineItems.some((li) => li.contract_id === c.id), isRTL }), [allLineItems, isRTL]);
 
   /* ── Helpers ── */
   /* Phase 4E.3 — Autosave for existing draft contracts only. */
