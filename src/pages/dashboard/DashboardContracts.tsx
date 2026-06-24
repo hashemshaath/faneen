@@ -44,6 +44,7 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
+import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
 import {
   uploadContractAttachmentFile,
   getContractAttachmentPublicUrl,
