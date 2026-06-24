@@ -2173,6 +2173,7 @@ const DashboardContracts = () => {
                   selectedWorkType={selectedWorkType} sectorTouched={workTypeTouched}
                   onSelectVersion={(v) => { setSelectedVersionId(v); setSelectedPricingMethod(null); }}
                   onSelectPricingMethod={(m) => setSelectedPricingMethod(m)}
+                  isAdmin={isAdmin}
                 />
               )}
               </div>
