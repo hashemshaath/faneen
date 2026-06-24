@@ -1905,7 +1905,7 @@ const DashboardContracts = () => {
               )}
               {!editingId && (() => {
                 const steps = [
-                  { key: 'client',   ar: 'العميل',       en: 'Client',   done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
+                  { key: 'client',   ar: isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', en: isClientOnlyAccount ? 'Second party' : 'Client', done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
                   { key: 'site',     ar: 'موقع التنفيذ', en: 'Site',     done: !!selectedSiteId },
                   { key: 'work',     ar: 'نوع العمل',    en: 'Work type', done: !!selectedWorkType && workTypeTouched },
                   { key: 'template', ar: 'القالب',       en: 'Template',  done: !!effectiveVersion },
@@ -2230,7 +2230,7 @@ const DashboardContracts = () => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
                 const missing: string[] = [];
-                if (!selectedClient && !guestClient && !form.client_email) missing.push(pickBi(isRTL, 'العميل', 'Client'));
+                if (!selectedClient && !guestClient && !form.client_email) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
                 if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title'));
                 if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
                 if (!effectiveVersion) missing.push(pickBi(isRTL, 'قالب عقد منشور', 'Published template'));
