@@ -3182,11 +3182,7 @@ const DashboardContracts = () => {
           )}
           <AlertDialogFooter>
             <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              data-testid="send-review-confirm"
-              disabled={sendForApprovalMutation.isPending || !sendConfirm || !computeSendEligibility(sendConfirm).isEligible}
-              onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}
-            >
+            <AlertDialogAction data-testid="send-review-confirm" disabled={sendForApprovalMutation.isPending || !sendConfirm || !computeSendEligibility(sendConfirm).isEligible} onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}>
               <Send className="w-4 h-4 me-2" />{pickBi(isRTL, 'إرسال', 'Send')}
             </AlertDialogAction>
           </AlertDialogFooter>
