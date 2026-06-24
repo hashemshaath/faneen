@@ -2179,25 +2179,14 @@ const DashboardContracts = () => {
 
               {/* Titles + descriptions + dates + supervisor + terms = Details step */}
               <div ref={stepRefs.details} className="space-y-4 scroll-mt-24 order-5">
-              <ContractDetailsSection
-                isRTL={isRTL}
-                form={form}
-                setForm={setForm}
-                selectedSiteId={selectedSiteId}
-                selectedWorkTypeLabel={(getWorkType(selectedWorkType)?.ar ?? null)}
-              />
+              <ContractDetailsSection isRTL={isRTL} form={form} setForm={setForm} selectedSiteId={selectedSiteId} selectedWorkTypeLabel={getWorkType(selectedWorkType)?.ar ?? null} />
               </div>
 
               {/* VAT Settings — Pricing/VAT step */}
               <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24 order-6">
               <VatSettingsSection isRTL={isRTL} form={form} setForm={setForm} />
               <SupervisorSection isRTL={isRTL} form={form} setForm={setForm} selectedSiteId={selectedSiteId} />
-              <ContractTermsSection
-                isRTL={isRTL}
-                form={form}
-                setForm={setForm}
-                templateVersionId={effectiveVersion?.version_id ?? null}
-              />
+              <ContractTermsSection isRTL={isRTL} form={form} setForm={setForm} templateVersionId={effectiveVersion?.version_id ?? null} />
               </div>
 
               {/* CT4B — Review summary + status guidance before submit. */}
