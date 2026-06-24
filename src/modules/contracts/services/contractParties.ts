@@ -204,7 +204,7 @@ export function resolveContractPartiesAndEligibility(
   if (!hasPermission) missing.push('missing_permission');
   if (requiresProject && !projectId) missing.push('missing_project');
   if (!firstPartyBusinessId) missing.push('missing_first_party');
-  if (!secondPartyUserId || !secondPartyHasProfile)
+  if ((isClientOnlyAccount && (!secondPartyUserId || !secondPartyHasProfile)) || (!isClientOnlyAccount && !secondPartyHasProfile))
     missing.push('missing_second_party_profile');
   if (!executionSiteId) missing.push('missing_execution_site');
   if (Object.prototype.hasOwnProperty.call(input, 'sectorId') && !sectorId)
