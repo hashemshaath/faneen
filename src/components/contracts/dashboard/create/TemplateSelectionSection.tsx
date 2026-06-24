@@ -67,7 +67,6 @@ export const TemplateSelectionSection: React.FC<Props> = ({
   }
 
   if (publishedVersions.length === 0 || filtered.length === 0) {
-    const requestTo = `/help/feature-request?topic=contract-template&sector=${encodeURIComponent(sectorLabel ?? '')}`;
     const hasAnyTemplate = publishedVersions.length > 0;
     const fallback = hasAnyTemplate ? publishedVersions : [];
     return (
