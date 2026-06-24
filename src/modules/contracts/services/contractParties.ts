@@ -24,7 +24,14 @@ export type ContractPartyMissingRequirement =
   | 'missing_first_party'
   | 'missing_second_party_profile'
   | 'missing_execution_site'
+  | 'missing_sector'
   | 'missing_template'
+  | 'missing_scope_of_work'
+  | 'missing_contract_terms'
+  | 'missing_warranty'
+  | 'missing_payment_terms'
+  | 'missing_execution_duration'
+  | 'missing_delivery_terms'
   | 'missing_project'
   | 'missing_permission';
 
@@ -44,9 +51,37 @@ export const CONTRACT_PARTY_MISSING_MESSAGES: Record<
     ar: 'أضف موقع التنفيذ قبل إنشاء العقد',
     en: 'Add an execution site before creating the contract',
   },
+  missing_sector: {
+    ar: 'اختر المجال / التخصص قبل اختيار القالب',
+    en: 'Select the sector / specialty before choosing a template',
+  },
   missing_template: {
     ar: 'لا يوجد قالب عقد متاح حاليًا',
     en: 'No contract template is currently available',
+  },
+  missing_scope_of_work: {
+    ar: 'أضف نطاق العمل قبل إنشاء العقد',
+    en: 'Add the scope of work before creating the contract',
+  },
+  missing_contract_terms: {
+    ar: 'أكمل بنود العقد أو اختر قالبًا يتضمنها',
+    en: 'Complete contract terms or choose a template that includes them',
+  },
+  missing_warranty: {
+    ar: 'حدد الضمان أو خيار لا يوجد ضمان',
+    en: 'Set warranty terms or choose no warranty',
+  },
+  missing_payment_terms: {
+    ar: 'حدد الدفعات أو طريقة الدفع المتفق عليها',
+    en: 'Set payment terms or the agreed payment method',
+  },
+  missing_execution_duration: {
+    ar: 'حدد مدة التنفيذ قبل إنشاء العقد',
+    en: 'Set the execution duration before creating the contract',
+  },
+  missing_delivery_terms: {
+    ar: 'حدد شروط التسليم أو اختر قالبًا يتضمنها',
+    en: 'Set delivery terms or choose a template that includes them',
   },
   missing_project: {
     ar: 'حدد المشروع قبل إنشاء العقد',
@@ -87,6 +122,12 @@ export interface ResolveContractPartiesInput {
   readonly projectId?: string | null;
   readonly sectorId?: string | null;
   readonly templateId?: string | null;
+  readonly hasScopeOfWork?: boolean;
+  readonly hasContractTerms?: boolean;
+  readonly hasWarrantyTerms?: boolean;
+  readonly hasPaymentTerms?: boolean;
+  readonly hasExecutionDuration?: boolean;
+  readonly hasDeliveryTerms?: boolean;
   /** Workspace surfaces require an explicit project context. */
   readonly requiresProject?: boolean;
   /** Caller-supplied permission gate (e.g. workspace ownership). */
@@ -133,6 +174,12 @@ export function resolveContractPartiesAndEligibility(
     templateId = null,
     requiresProject = false,
     hasPermission = true,
+    hasScopeOfWork,
+    hasContractTerms,
+    hasWarrantyTerms,
+    hasPaymentTerms,
+    hasExecutionDuration,
+    hasDeliveryTerms,
   } = input;
 
   const isClientOnlyAccount =
@@ -157,9 +204,19 @@ export function resolveContractPartiesAndEligibility(
   if (!hasPermission) missing.push('missing_permission');
   if (requiresProject && !projectId) missing.push('missing_project');
   if (!firstPartyBusinessId) missing.push('missing_first_party');
-  if (!secondPartyUserId || !secondPartyHasProfile)
+  if ((isClientOnlyAccount && (!secondPartyUserId || !secondPartyHasProfile)) || (!isClientOnlyAccount && !secondPartyHasProfile))
     missing.push('missing_second_party_profile');
   if (!executionSiteId) missing.push('missing_execution_site');
+  if (Object.prototype.hasOwnProperty.call(input, 'sectorId') && !sectorId)
+    missing.push('missing_sector');
+  if (Object.prototype.hasOwnProperty.call(input, 'templateId') && !templateId)
+    missing.push('missing_template');
+  if (hasScopeOfWork === false) missing.push('missing_scope_of_work');
+  if (hasContractTerms === false) missing.push('missing_contract_terms');
+  if (hasWarrantyTerms === false) missing.push('missing_warranty');
+  if (hasPaymentTerms === false) missing.push('missing_payment_terms');
+  if (hasExecutionDuration === false) missing.push('missing_execution_duration');
+  if (hasDeliveryTerms === false) missing.push('missing_delivery_terms');
 
   return {
     firstPartyBusinessId,

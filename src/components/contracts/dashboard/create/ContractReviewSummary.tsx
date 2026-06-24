@@ -26,10 +26,12 @@ interface ContractReviewSummaryProps {
   executionSiteLabel?: string;
   sectorLabel?: string;
   scopeOfWorkLabel?: string;
+  contractTermsLabel?: string;
   warrantyLabel?: string;
   paymentTermsLabel?: string;
   executionDurationLabel?: string;
   deliveryTermsLabel?: string;
+  attachmentLabel?: string;
   /** Non-blocking warnings shown alongside missing-fields banner. */
   warnings?: string[];
 }
@@ -54,10 +56,12 @@ export const ContractReviewSummary: React.FC<ContractReviewSummaryProps> = ({
   executionSiteLabel,
   sectorLabel,
   scopeOfWorkLabel,
+  contractTermsLabel,
   warrantyLabel,
   paymentTermsLabel,
   executionDurationLabel,
   deliveryTermsLabel,
+  attachmentLabel,
   warnings,
 }) => {
   return (
@@ -89,6 +93,9 @@ export const ContractReviewSummary: React.FC<ContractReviewSummaryProps> = ({
         {scopeOfWorkLabel !== undefined && (
           <div data-testid="review-scope-of-work"><span className="text-muted-foreground">{isRTL ? 'نطاق العمل:' : 'Scope of work:'}</span> {scopeOfWorkLabel}</div>
         )}
+        {contractTermsLabel !== undefined && (
+          <div data-testid="review-contract-terms"><span className="text-muted-foreground">{isRTL ? 'بنود العقد:' : 'Contract terms:'}</span> {contractTermsLabel}</div>
+        )}
         {warrantyLabel !== undefined && (
           <div data-testid="review-warranty"><span className="text-muted-foreground">{isRTL ? 'الضمان:' : 'Warranty:'}</span> {warrantyLabel}</div>
         )}
@@ -100,6 +107,9 @@ export const ContractReviewSummary: React.FC<ContractReviewSummaryProps> = ({
         )}
         {deliveryTermsLabel !== undefined && (
           <div data-testid="review-delivery-terms"><span className="text-muted-foreground">{isRTL ? 'شروط التسليم:' : 'Delivery terms:'}</span> {deliveryTermsLabel}</div>
+        )}
+        {attachmentLabel !== undefined && (
+          <div data-testid="review-attachments"><span className="text-muted-foreground">{isRTL ? 'المرفقات:' : 'Attachments:'}</span> {attachmentLabel}</div>
         )}
       </div>
       {missing.length > 0 && (
