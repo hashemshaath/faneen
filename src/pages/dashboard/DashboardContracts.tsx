@@ -131,6 +131,8 @@ import { ContractsPagination } from '@/components/contracts/dashboard/ContractsP
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
+import { ContractCreateHeroHeader } from '@/components/contracts/dashboard/create/ContractCreateHeroHeader';
+import { ContractLiveSummarySidebar } from '@/components/contracts/dashboard/create/ContractLiveSummarySidebar';
 import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
 import { ExecutionSiteSection, type ExecutionAddressSnapshot } from '@/components/contracts/dashboard/create/ExecutionSiteSection';
@@ -1894,13 +1896,10 @@ const DashboardContracts = () => {
         )}
         {/* ═══ Create/Edit Form ═══ */}
         {viewSection === 'create' && (
-          <Card className="border-accent/20 shadow-sm">
+          <div className="space-y-5">
+            <ContractCreateHeroHeader isRTL={isRTL} editingId={editingId} draftRef={(editingContract as unknown as { contract_ref_id?: string | null } | null)?.contract_ref_id ?? null} />
+            <Card className="border-accent/20 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                {editingId ? <Edit3 className="w-4 h-4 text-accent" /> : <Plus className="w-4 h-4 text-accent" />}
-                {editingId ? (pickBi(isRTL, 'تعديل العقد', 'Edit Contract')) : (pickBi(isRTL, 'إنشاء عقد جديد', 'Create New Contract'))}
-                {selectedTemplate && <Badge variant="secondary" className="text-[9px] gap-0.5"><Sparkles className="w-2.5 h-2.5" />{pickBi(isRTL, 'من قالب', 'From template')}</Badge>}
-              </CardTitle>
               {!editingId && contracts.length === 0 && (
                 <div className="pt-2"><FirstContractGuidanceCard isRTL={isRTL} /></div>
               )}
@@ -1924,7 +1923,8 @@ const DashboardContracts = () => {
                 );
               })()}
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+            <CardContent className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
               {/* Phase 5B.4 — Lead prefill banner (dismissible). */}
               {!editingId && leadPrefill && !leadPrefillDismissed && (
                 <div className={`p-3 rounded-xl border ${leadPrefill.existing_contract_id ? 'border-warning/40 bg-warning/5' : 'border-info/40 bg-info/5'} flex items-start gap-3`}>
@@ -2304,8 +2304,26 @@ const DashboardContracts = () => {
                 saveDisabled={saveBlocked}
                 onSave={() => createContractMutation.mutate(undefined)}
               />
+              </div>
+              {!editingId && (() => {
+                const w = getWorkType(selectedWorkType);
+                const score = calculateContractCompleteness({ hasClient: !!(selectedClient || guestClient || form.client_email), hasExecutionSite: !!selectedSiteId, hasWorkType: !!selectedWorkType && workTypeTouched, hasTemplate: !!effectiveVersion, titleAr: form.title_ar, titleEn: form.title_en, startDate: form.start_date, endDate: form.end_date, vatRate: form.vat_rate, totalAmount: form.total_amount, termsAr: form.terms_ar, termsEn: form.terms_en, hasTemplateSnapshot: !!effectiveVersion }).score;
+                const secondParty = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? null) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || null);
+                const rows = [
+                  { label: pickBi(isRTL, 'الغرض', 'Purpose'), value: w ? (isRTL ? w.ar : w.en) : null },
+                  { label: pickBi(isRTL, 'الطرف الأول', 'First party'), value: contractParties.firstPartyDisplayName ?? null },
+                  { label: pickBi(isRTL, 'الطرف الثاني', 'Second party'), value: secondParty },
+                  { label: pickBi(isRTL, 'القالب', 'Template'), value: effectiveVersion ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}` : null },
+                  { label: pickBi(isRTL, 'الموقع', 'Site'), value: selectedSiteId ? pickBi(isRTL, 'تم تحديد الموقع', 'Site selected') : null },
+                  { label: pickBi(isRTL, 'المبلغ', 'Amount'), value: form.total_amount ? `${Number(form.total_amount).toLocaleString()} ${form.currency_code}` : null },
+                  { label: pickBi(isRTL, 'الفترة', 'Period'), value: form.start_date && form.end_date ? `${form.start_date} → ${form.end_date}` : null },
+                ];
+                const tip = score < 40 ? pickBi(isRTL, 'ابدأ بتحديد الغرض من العقد ثم اختر الطرف الثاني للحصول على قوالب مناسبة.', 'Start by selecting the contract purpose, then choose the second party to unlock relevant templates.') : score < 80 ? pickBi(isRTL, 'أكمل تفاصيل الموقع والمبلغ والمدّة للوصول إلى ملف عقد جاهز للإرسال.', 'Fill in the site, amount, and duration to reach a submission-ready contract.') : pickBi(isRTL, 'الملف شبه مكتمل — راجع البيانات في الخطوة الأخيرة قبل الإرسال.', 'Almost complete — review the final step before submission.');
+                return (<aside className="lg:col-span-4 min-w-0"><ContractLiveSummarySidebar isRTL={isRTL} rows={rows} completenessScore={score} tip={tip} /></aside>);
+              })()}
             </CardContent>
           </Card>
+          </div>
         )}
 
         {/* ═══ Contracts List ═══ */}
