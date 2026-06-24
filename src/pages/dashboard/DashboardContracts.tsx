@@ -1290,11 +1290,7 @@ const DashboardContracts = () => {
         title_en: `New contract pending review: ${contract.title_en || contract.title_ar}`,
         notification_type: 'contract', reference_id: contract.id, reference_type: 'contract', action_url: `/contracts/${contract.id}` });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
-      setSendConfirm(null);
-      toast.success(pickBi(isRTL, 'تم إرسال العقد للمراجعة', 'Contract sent for review'));
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] }); setSendConfirm(null); toast.success(pickBi(isRTL, 'تم إرسال العقد للمراجعة', 'Contract sent for review')); },
     onError: () => { toast.error(pickBi(isRTL, 'تعذّر إرسال العقد للمراجعة، حاول لاحقًا', 'Could not send the contract for review, please try again later')); },
   });
 
