@@ -1,68 +1,47 @@
 ## Scope
 
-A presentation-only cleanup pass. No business logic, routes, RLS, RPC, edge, permissions, or matching/bids/credits/notifications behavior change. Focused on 2–5 high-impact extractions backed by existing shared primitives, plus a guard test.
+This is a large, multi-surface refactor of the contract creation flow covering terminology, party model, site-selection bug, central helper, RPC validation, and tests. Before I touch code, I need to confirm scope and gather facts so I don't break the provider/admin flows or contract lifecycle.
 
-## Current state (audit)
+## What I need to investigate first (read-only)
 
-Already shared in `src/components/shared/`:
-- `PageHeader`, `MetricCard`, `FiltersBar`, `StatusBadge` (v3 Soft & Modern primitives).
+1. The exact source of the `حدد المنشأة أولاً` message — likely in a site picker component used inside `DashboardContracts.tsx` or a shared SitePicker. Grep `حدد المنشأة` across `src/`.
+2. All "العميل" labels in the contract create UI (`DashboardContracts.tsx`, `WorkspaceContractsTab`, `ClientPicker`, `SelfClientCard`, project/site-triggered create flows).
+3. Existing central helpers: `useContractListDerivations`, `contract-completeness`, `contract-pricing`, any `create_contract` RPC, and `ensure-business`.
+4. All contract-creation entry points: dashboard, workspace tab, project detail, site detail, quote/RFQ — to see how many flows exist and whether they already share a service.
 
-Gaps & duplication found:
-- **EmptyState** — no shared primitive. Bespoke empty blocks repeated across ~25+ dashboard/admin pages (e.g. `DashboardContracts`, `DashboardSites`, `DashboardCredentials`, `DashboardBrands`, `AdminOperations`, `AdminBusinesses`, `AdminBarcodeRegistry`, `AdminProjectCategories`, `AdminSitemapStatus`, `DashboardPromotions`, etc.). Each renders its own Card + icon + Arabic/English copy.
-- **ErrorRetryCard** — ad-hoc error blocks scattered; no shared primitive.
-- Many pages already import `PageHeader`/`MetricCard`/`FiltersBar`/`StatusBadge` correctly — leave those alone.
+## Proposed implementation (phased)
 
-## Changes (2 focused extractions only)
+### Phase A — Site picker fix (highest user impact, smallest blast radius)
+- Locate the `حدد المنشأة أولاً` guard in the site selector and gate it on `isClientOnlyAccount`. For client-only accounts, query `client_sites` by `auth.uid()` (via existing `siteFilesService`/`client_sites` query) instead of `businessId`.
+- Replace empty-state copy with `لا توجد مواقع مرتبطة بحسابك. أضف موقعًا أولًا.`
+- Provider/admin path unchanged.
 
-### 1. New `EmptyState` shared primitive
-`src/components/shared/EmptyState.tsx`
-- Props: `{ icon?: LucideIcon; title: string; description?: string; action?: ReactNode; tone?: 'muted' | 'accent'; dense?: boolean; className?: string }`
-- Uses semantic tokens only (`bg-muted/40`, `text-muted-foreground`, `border-border`, `rounded-xl`).
-- RTL-safe (logical spacing); no hardcoded hex; no `any`.
-- Exported from `src/components/shared/index.ts`.
+### Phase B — Party terminology (client-only UI only)
+- In `DashboardContracts.tsx` + `SelfClientCard.tsx`, swap "العميل (أنت)" → "الطرف الثاني (أنت)" / "صاحب الحساب", and any "اختر العميل / البحث عن عميل / إضافة عميل" hidden labels behind `isClientOnlyAccount`.
+- Provider/admin keep `اختيار الطرف الثاني` (renamed from "اختر العميل" globally per spec — confirm with user before doing global rename, see Questions).
 
-### 2. New `ErrorRetryCard` shared primitive
-`src/components/shared/ErrorRetryCard.tsx`
-- Props: `{ title?: string; message?: string; onRetry?: () => void; retryLabel?: string; className?: string }`
-- Renders destructive-toned card with retry button (uses existing shadcn `Button`).
-- Exported from `src/components/shared/index.ts`.
+### Phase C — Central party helper
+- New `src/lib/contracts/resolveContractPartiesAndEligibility.ts` returning the shape in the spec (`firstPartyBusinessId`, `secondPartyUserId`, `executionSiteId`, `sectorId`, `templateId`, `isEligible`, `missingRequirements[]`).
+- Refactor `DashboardContracts.tsx` and `WorkspaceContractsTab` create paths to consume it. Project/site detail create buttons already delegate to these pages, so no duplication added.
 
-### 3. Opt-in adoption (3 call sites max, lowest risk)
-Migrate three pages with clearly duplicated empty blocks to the new primitive — chosen for being pure presentation, no test snapshots, no matching/bid/contract logic:
-- `src/pages/dashboard/DashboardCredentials.tsx`
-- `src/pages/dashboard/DashboardBrands.tsx`
-- `src/pages/dashboard/DashboardSites.tsx`
+### Phase D — Sector → Provider → Site ordering
+- Add a small stepper state on the create panel so the user picks sector first, then provider (for non-client flows), then site, then template. For client-only accounts where provider is fixed by the linked project, sector and provider are pre-filled and locked.
+- Template list filtered by `sectorId/categoryId` using existing `contract_templates` taxonomy.
 
-Only the empty/error JSX blocks change. Copy preserved verbatim. No data fetching, mutations, queries, or props touched.
+### Phase E — Tests
+- New `src/__tests__/contractPartyModelAndCreationFlow.test.ts` covering all 18 acceptance points via source-level regex on the refactored files (matching the existing test style in `contractCreationClientAutoFill.test.ts`).
+- Update legacy tests only if labels they assert change.
 
-### 4. Guard test
-`src/__tests__/projectComponentsCleanupReusability.test.tsx`
-- Asserts `EmptyState` and `ErrorRetryCard` exist and are exported from `@/components/shared`.
-- Asserts the 3 migrated pages import them.
-- Static guards on the 4 new/modified files: no `any`, no `as any`, no `@ts-ignore`, no `eslint-disable`, no hardcoded hex (`#[0-9a-fA-F]{3,8}`), no `service_role`.
-- Renders `EmptyState` and `ErrorRetryCard` with minimal props to verify title/description/retry callback wiring.
+### Out of scope (explicitly excluded per spec)
+- No DB / RLS / RPC / migrations / edge changes.
+- No `service_role` in frontend.
+- No lifecycle / signature / approval flow changes.
+- No new client creation.
 
-## Verification
+## Risk
 
-- `vitest run` for the new guard test plus targeted suites that touch the modified pages (`DashboardCredentials`, `DashboardBrands`, `DashboardSites`).
-- `tsc` clean (no project-wide manual run — harness handles it).
-- Final report follows the exact `PROJECT COMPONENTS CLEANUP + REUSABILITY REPORT` template.
+This refactor touches a hot, well-tested area (~10+ existing contract test files). Each phase will be verified with `tsc` + targeted tests before moving on; full suite at the end.
 
-## Out of scope (deferred debt)
+## Questions before I start
 
-- Migrating the remaining ~20 pages with bespoke empty states (do in later passes, 3–5 at a time).
-- KPI strip extraction (`MetricCard` already covers the common case).
-- Admin action bar / filter chips bar (`FiltersBar` already exists; no clear duplication beyond it).
-- Any backend, routing, or behavior changes.
-
-## Technical notes
-
-- File tree additions:
-  - `src/components/shared/EmptyState.tsx`
-  - `src/components/shared/ErrorRetryCard.tsx`
-  - `src/__tests__/projectComponentsCleanupReusability.test.tsx`
-- File modifications:
-  - `src/components/shared/index.ts` (re-export only)
-  - `src/pages/dashboard/DashboardCredentials.tsx` (swap empty JSX)
-  - `src/pages/dashboard/DashboardBrands.tsx` (swap empty JSX)
-  - `src/pages/dashboard/DashboardSites.tsx` (swap empty JSX)
+I need 2 confirmations to avoid wasted work — see follow-up.
