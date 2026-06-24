@@ -1896,13 +1896,10 @@ const DashboardContracts = () => {
         )}
         {/* ═══ Create/Edit Form ═══ */}
         {viewSection === 'create' && (
-          <Card className="border-accent/20 shadow-sm">
+          <div className="space-y-5">
+            <ContractCreateHeroHeader isRTL={isRTL} editingId={editingId} draftRef={editingContract?.contract_ref_id ?? null} />
+            <Card className="border-accent/20 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                {editingId ? <Edit3 className="w-4 h-4 text-accent" /> : <Plus className="w-4 h-4 text-accent" />}
-                {editingId ? (pickBi(isRTL, 'تعديل العقد', 'Edit Contract')) : (pickBi(isRTL, 'إنشاء عقد جديد', 'Create New Contract'))}
-                {selectedTemplate && <Badge variant="secondary" className="text-[9px] gap-0.5"><Sparkles className="w-2.5 h-2.5" />{pickBi(isRTL, 'من قالب', 'From template')}</Badge>}
-              </CardTitle>
               {!editingId && contracts.length === 0 && (
                 <div className="pt-2"><FirstContractGuidanceCard isRTL={isRTL} /></div>
               )}
@@ -1926,7 +1923,8 @@ const DashboardContracts = () => {
                 );
               })()}
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+            <CardContent className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
               {/* Phase 5B.4 — Lead prefill banner (dismissible). */}
               {!editingId && leadPrefill && !leadPrefillDismissed && (
                 <div className={`p-3 rounded-xl border ${leadPrefill.existing_contract_id ? 'border-warning/40 bg-warning/5' : 'border-info/40 bg-info/5'} flex items-start gap-3`}>
