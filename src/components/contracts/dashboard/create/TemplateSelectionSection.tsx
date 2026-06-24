@@ -5,7 +5,7 @@
  * is exposed — only public fields (name, version, category, pricing methods,
  * required field count) already passed in via PublishedTemplateOption.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { BookOpen, PlusCircle, LayoutGrid } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
