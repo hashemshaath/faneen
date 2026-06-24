@@ -6,7 +6,7 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Loader2, CheckCircle2, X, Building2, BadgeCheck, Star } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, X, Building2, BadgeCheck, Star, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,11 @@ export interface ContractProviderSearchPickerProps {
   isRTL: boolean;
   selected: SelectedProviderBusiness | null;
   onSelect: (provider: SelectedProviderBusiness | null) => void;
+  /**
+   * Purpose/specialization gate. When empty/falsy the picker is disabled and
+   * prompts the user to pick a contract purpose first.
+   */
+  purposeSelected?: boolean;
 }
 
 function useDebounced<T>(value: T, ms = 300): T {
@@ -41,7 +46,7 @@ function useDebounced<T>(value: T, ms = 300): T {
 }
 
 export const ContractProviderSearchPicker: React.FC<ContractProviderSearchPickerProps> = ({
-  isRTL, selected, onSelect,
+  isRTL, selected, onSelect, purposeSelected = true,
 }) => {
   const [text, setText] = useState('');
   const debounced = useDebounced(text, 300);
@@ -49,7 +54,7 @@ export const ContractProviderSearchPicker: React.FC<ContractProviderSearchPicker
   const { data: results = [], isFetching } = useQuery({
     queryKey: ['contract-provider-search', debounced],
     queryFn: () => searchPublicProvidersByText({ query: debounced, limit: 8 }),
-    enabled: debounced.trim().length >= 2 && !selected,
+    enabled: purposeSelected && debounced.trim().length >= 2 && !selected,
     staleTime: 30_000,
   });
 
@@ -85,6 +90,29 @@ export const ContractProviderSearchPicker: React.FC<ContractProviderSearchPicker
           <X className="w-3.5 h-3.5" />
           {pickBi(isRTL, 'تغيير', 'Change')}
         </Button>
+      </div>
+    );
+  }
+
+  if (!purposeSelected) {
+    return (
+      <div
+        data-testid="contract-provider-picker-locked"
+        className="p-3 rounded-xl border border-dashed border-warning/50 bg-warning/5 flex items-start gap-2"
+      >
+        <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+        <div className="text-[11px] leading-relaxed">
+          <div className="font-semibold mb-0.5">
+            {pickBi(isRTL, 'اختر الغرض / التخصص أولًا', 'Pick the purpose / specialization first')}
+          </div>
+          <div className="text-muted-foreground">
+            {pickBi(
+              isRTL,
+              'سيتم تفعيل البحث عن مزوّد الخدمة بعد تحديد موضوع العقد لتصفية الجهات المناسبة.',
+              'Provider search will unlock after you choose the contract purpose so we can filter the right businesses.',
+            )}
+          </div>
+        </div>
       </div>
     );
   }
