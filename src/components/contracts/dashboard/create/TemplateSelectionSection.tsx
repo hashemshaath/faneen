@@ -6,7 +6,7 @@
  * required field count) already passed in via PublishedTemplateOption.
  */
 import React, { useState } from 'react';
-import { BookOpen, PlusCircle, LayoutGrid, Check, ChevronsUpDown } from 'lucide-react';
+import { BookOpen, PlusCircle, LayoutGrid, Check, ChevronsUpDown, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +51,6 @@ export const TemplateSelectionSection: React.FC<Props> = ({
   selectedWorkType = null, sectorTouched = false,
   isAdmin = false,
 }) => {
-  const [showPicker, setShowPicker] = useState(false);
   // Phase D — surface sector / no-match guidance instead of silently rendering nothing.
   const sectorProvided = !!selectedWorkType && sectorTouched;
   const filtered = filterTemplatesBySector(selectedWorkType ?? null, sectorTouched, publishedVersions);
@@ -69,84 +68,28 @@ export const TemplateSelectionSection: React.FC<Props> = ({
     );
   }
 
-  if (publishedVersions.length === 0 || filtered.length === 0) {
-    const hasAnyTemplate = publishedVersions.length > 0;
-    const grouped = (() => {
-      const map = new Map<string, PublishedTemplateOption[]>();
-      for (const v of publishedVersions) {
-        const key = v.category || 'other';
-        if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push(v);
-      }
-      return Array.from(map.entries());
-    })();
+  if (publishedVersions.length === 0) {
     return (
       <div
-        data-testid="contract-template-section-no-match"
+        data-testid="contract-template-section-no-templates"
         className="p-4 rounded-xl border border-warning/40 bg-warning/5 text-[11px] space-y-3"
       >
         <div className="flex items-start gap-2">
           <BookOpen className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
-          <span>
-            {isRTL
-              ? `لا يوجد قالب مخصص لهذا المجال${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. اضغط على "اختيار قالب" لاستعراض القوالب المتاحة مصنّفة.' : ''}`
-              : `No template is specialized for this sector${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. Click "Choose template" to browse available templates by category.' : ''}`}
-          </span>
+          <span>{isRTL ? 'لا توجد قوالب عقود منشورة حاليًا.' : 'No published contract templates available.'}</span>
         </div>
-        {hasAnyTemplate && !showPicker && (
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="default" className="h-7 text-[11px] gap-1" onClick={() => setShowPicker(true)} data-testid="contract-template-open-picker">
-              <LayoutGrid className="w-3.5 h-3.5" />
-              {isRTL ? 'اختيار قالب' : 'Choose template'}
-            </Button>
-          </div>
-        )}
-        {hasAnyTemplate && showPicker && (
-          <div className="space-y-3 rounded-lg border border-border/40 bg-background p-3" data-testid="contract-template-picker">
-            {grouped.map(([cat, items]) => {
-              const cfg = templateCategoryConfig[cat];
-              const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : cat;
-              return (
-                <div key={cat} className="space-y-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="secondary" className="text-[9px]">{catLabel}</Badge>
-                    <span className="text-[10px] text-muted-foreground">{items.length}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {items.map(v => {
-                      const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
-                      const selected = effectiveVersion?.version_id === v.version_id;
-                      return (
-                        <button
-                          key={v.version_id}
-                          type="button"
-                          onClick={() => { onSelectVersion(v.version_id); setShowPicker(false); }}
-                          className={`text-start text-[11px] rounded-md border px-2.5 py-2 transition-colors ${selected ? 'border-primary bg-primary/10' : 'border-border/50 hover:border-primary/40 hover:bg-muted/40'}`}
-                        >
-                          <div className="font-medium truncate">{label}</div>
-                          <div className="text-[9px] text-muted-foreground">v{v.version_number}</div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
         {isAdmin && (
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="default" className="h-7 text-[11px] gap-1">
-              <Link to="/admin/contracts?tab=templates" data-testid="contract-template-add-cta">
-                <PlusCircle className="w-3.5 h-3.5" />
-                {isRTL ? 'إضافة قالب' : 'Add template'}
-              </Link>
-            </Button>
-          </div>
+          <Button asChild size="sm" variant="default" className="h-7 text-[11px] gap-1">
+            <Link to="/admin/contracts?tab=templates" data-testid="contract-template-add-cta">
+              <PlusCircle className="w-3.5 h-3.5" />
+              {isRTL ? 'إضافة قالب' : 'Add template'}
+            </Link>
+          </Button>
         )}
       </div>
     );
   }
+  const noExactMatch = filtered.length === 0;
   return (
     <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3">
       <div className="flex items-center gap-1.5">
@@ -161,13 +104,25 @@ export const TemplateSelectionSection: React.FC<Props> = ({
           </Badge>
         )}
       </div>
-      <p className="text-[10px] text-muted-foreground">
-        {isRTL ? 'يتم عرض القوالب المناسبة للمجال المختار فقط.' : 'Only templates matching the selected sector are shown.'}
-      </p>
+      {noExactMatch ? (
+        <div className="flex items-start gap-2 text-[10px] text-warning bg-warning/10 border border-warning/20 rounded-lg p-2" data-testid="contract-template-no-match-banner">
+          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span>
+            {isRTL
+              ? `لا يوجد قالب مخصص لهذا المجال${sectorLabel ? ` (${sectorLabel})` : ''}. اختر قالبًا من القائمة الكاملة أدناه أو الأقرب لاحتياجك.`
+              : `No template is specialized for this sector${sectorLabel ? ` (${sectorLabel})` : ''}. Pick any template from the full list below or the closest match.`}
+          </span>
+        </div>
+      ) : (
+        <p className="text-[10px] text-muted-foreground">
+          {isRTL ? 'يتم عرض القوالب المناسبة للمجال المختار فقط. يمكنك عرض جميع القوالب من زر "عرض جميع القوالب".' : 'Showing templates matching the selected sector. Use "Show all templates" to browse all.'}
+        </p>
+      )}
       <TemplateSearchPicker
         isRTL={isRTL}
         options={filtered}
         allOptions={publishedVersions}
+        defaultShowAll={noExactMatch}
         effectiveVersion={effectiveVersion}
         templateCategoryConfig={templateCategoryConfig}
         onSelectVersion={onSelectVersion}
@@ -192,6 +147,16 @@ export const TemplateSelectionSection: React.FC<Props> = ({
             : `This template has ${effectiveVersion.required_field_count} required fields — full support arrives in CT5.`}
         </p>
       )}
+      {isAdmin && (
+        <div className="pt-1">
+          <Button asChild size="sm" variant="ghost" className="h-7 text-[10px] gap-1">
+            <Link to="/admin/contracts?tab=templates" data-testid="contract-template-add-cta">
+              <PlusCircle className="w-3 h-3" />
+              {isRTL ? 'إضافة قالب جديد' : 'Add new template'}
+            </Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
@@ -205,14 +170,16 @@ interface TemplateSearchPickerProps {
   effectiveVersion: PublishedTemplateOption | null;
   templateCategoryConfig: Record<string, CategoryConfigEntry>;
   onSelectVersion: (versionId: string) => void;
+  defaultShowAll?: boolean;
 }
 
 const TemplateSearchPicker: React.FC<TemplateSearchPickerProps> = ({
-  isRTL, options, allOptions, effectiveVersion, templateCategoryConfig, onSelectVersion,
+  isRTL, options, allOptions, effectiveVersion, templateCategoryConfig, onSelectVersion, defaultShowAll = false,
 }) => {
   const [open, setOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
-  const list = showAll ? allOptions : options;
+  const [showAll, setShowAll] = useState(defaultShowAll);
+  const effectiveShowAll = showAll || options.length === 0;
+  const list = effectiveShowAll ? allOptions : options;
   const selectedLabel = effectiveVersion
     ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}`
     : (isRTL ? 'اختر قالبًا — بحث أو تصفّح' : 'Select a template — search or browse');
