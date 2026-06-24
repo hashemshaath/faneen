@@ -284,8 +284,11 @@ const DashboardContracts = () => {
     pricing: React.useRef<HTMLDivElement>(null),
     review: React.useRef<HTMLDivElement>(null),
   } as const;
-  const stepOrder: StepKey[] = ['client', 'site', 'work', 'template', 'details', 'pricing', 'review'];
-  const [activeStep, setActiveStep] = useState<StepKey>('client');
+  /* CONTRACT CREATION PURPOSE-FIRST FLOW — purpose (work-type) is the
+     first step; parties (client) only after purpose is chosen; then
+     template (filtered by purpose), then details, pricing, review. */
+  const stepOrder: StepKey[] = ['work', 'client', 'template', 'site', 'details', 'pricing', 'review'];
+  const [activeStep, setActiveStep] = useState<StepKey>('work');
   /* Phase 5C.3 — Execution site selection (held locally for new drafts;
      persisted via set_contract_execution_site for existing drafts). */
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
@@ -1900,13 +1903,13 @@ const DashboardContracts = () => {
               )}
               {!editingId && (() => {
                 const steps = [
-                  { key: 'client',   ar: isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', en: isClientOnlyAccount ? 'Second party' : 'Client', done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
-                  { key: 'site',     ar: 'موقع التنفيذ', en: 'Site',     done: !!selectedSiteId },
-                  { key: 'work',     ar: 'نوع العمل',    en: 'Work type', done: !!selectedWorkType && workTypeTouched },
-                  { key: 'template', ar: 'القالب',       en: 'Template',  done: !!effectiveVersion },
-                  { key: 'details',  ar: 'التفاصيل',     en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
-                  { key: 'pricing',  ar: 'التسعير/VAT',  en: 'Pricing/VAT', done: !!form.vat_rate },
-                  { key: 'review',   ar: 'المراجعة',     en: 'Review',    done: false },
+                  { key: 'work',     ar: 'الغرض / التخصص', en: 'Purpose',   done: !!selectedWorkType && workTypeTouched },
+                  { key: 'client',   ar: isClientOnlyAccount ? 'الطرف الثاني' : 'الأطراف', en: isClientOnlyAccount ? 'Second party' : 'Parties', done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
+                  { key: 'template', ar: 'القالب',         en: 'Template',  done: !!effectiveVersion },
+                  { key: 'site',     ar: 'موقع التنفيذ',   en: 'Site',      done: !!selectedSiteId },
+                  { key: 'details',  ar: 'التفاصيل',       en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
+                  { key: 'pricing',  ar: 'التسعير/VAT',    en: 'Pricing/VAT', done: !!form.vat_rate },
+                  { key: 'review',   ar: 'المراجعة',       en: 'Review',    done: false },
                 ] as Array<{ key: StepKey; ar: string; en: string; done: boolean }>;
                 return (
                   <ContractCreateStepper
