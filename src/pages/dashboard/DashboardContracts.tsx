@@ -2271,7 +2271,7 @@ const DashboardContracts = () => {
                 activeStep={activeStep}
                 stepOrder={stepOrder}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && (!selectedClient && !guestClient && !form.client_email)) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
+                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
                 onStepNav={goToStep}
                 onSave={() => createContractMutation.mutate(undefined)}
                 completenessScore={!editingId ? calculateContractCompleteness({
@@ -2297,7 +2297,7 @@ const DashboardContracts = () => {
                 vatRate={form.vat_rate}
                 vatInclusive={form.vat_inclusive}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && (!selectedClient && !guestClient && !form.client_email)) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
+                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
                 onSave={() => createContractMutation.mutate(undefined)}
               />
             </CardContent>
