@@ -45,7 +45,7 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
-import { CONTRACT_PARTY_MISSING_MESSAGES, resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
+import { resolveContractPartiesAndEligibility, CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
 import {
   uploadContractAttachmentFile,
   getContractAttachmentPublicUrl,
