@@ -1,0 +1,1 @@
+GRANT SELECT ON public.contract_template_versions_public TO authenticated, anon;
