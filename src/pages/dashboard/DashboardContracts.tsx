@@ -27,6 +27,7 @@ import { mapContractLockError, mapContractCreateError } from '@/lib/contract-err
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { SiteGovernmentDataPanel } from '@/components/contracts/SiteGovernmentDataPanel';
 import { SelfClientCard } from '@/components/contracts/SelfClientCard';
+import { SectorPlaceholderNotice, FirstPartyNotice } from '@/components/contracts/dashboard/create/ContractCreationOrderNotices';
 import {
   listContractsForRole,
   getContractParticipantProfiles,
