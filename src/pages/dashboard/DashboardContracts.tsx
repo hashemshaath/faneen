@@ -2029,6 +2029,7 @@ const DashboardContracts = () => {
                     isRTL={isRTL}
                     selected={selectedProviderBusiness}
                     onSelect={setSelectedProviderBusiness}
+                    purposeSelected={!!selectedWorkType && workTypeTouched}
                   />
                 </div>
               )}
