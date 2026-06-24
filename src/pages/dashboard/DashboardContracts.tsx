@@ -29,6 +29,7 @@ import { SiteGovernmentDataPanel } from '@/components/contracts/SiteGovernmentDa
 import { SelfClientCard } from '@/components/contracts/SelfClientCard';
 import { SectorPlaceholderNotice, FirstPartyNotice } from '@/components/contracts/dashboard/create/ContractCreationOrderNotices';
 import { ContractPartiesPanel, type ContractAccountKind } from '@/components/contracts/dashboard/create/ContractPartiesPanel';
+import { ContractProviderSearchPicker, type SelectedProviderBusiness } from '@/components/contracts/dashboard/create/ContractProviderSearchPicker';
 import {
   listContractsForRole,
   getContractParticipantProfiles,
