@@ -46,6 +46,7 @@ import {
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
 import { buildContractSummary } from '@/modules/contracts/services/contractSummary';
+import { computeSendForReviewEligibility } from '@/modules/contracts/services/sendForReviewEligibility';
 import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
 import { CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
 import {
@@ -1304,17 +1305,9 @@ const DashboardContracts = () => {
   });
 
   /* Phase G — eligibility for sending a draft contract for review. */
-  const computeSendEligibility = useCallback((c: ContractWithRole) => {
-    const m: string[] = [];
-    const pb = (a: string, e: string) => m.push(pickBi(isRTL, a, e));
-    if (!c.business_id) pb('بيانات الطرف الأول ناقصة', 'Missing first party');
-    if (!c.client_id) pb('بيانات الطرف الثاني ناقصة', 'Missing second party');
-    if (!allLineItems.some((li) => li.contract_id === c.id)) pb('البنود ناقصة', 'Missing line items');
-    if (!c.template_version_id) pb('القالب ناقص', 'Missing template');
-    if (!c.terms_ar || !String(c.terms_ar).trim()) pb('شروط العقد ناقصة', 'Missing terms');
-    if (!Number(c.total_amount)) pb('المبلغ ناقص', 'Missing amount');
-    return { isEligible: m.length === 0, missing: m };
-  }, [allLineItems, isRTL]);
+  const computeSendEligibility = useCallback((c: ContractWithRole) =>
+    computeSendForReviewEligibility(c, { hasLineItems: allLineItems.some((li) => li.contract_id === c.id), isRTL }),
+    [allLineItems, isRTL]);
 
   /* ── Helpers ── */
   /* Phase 4E.3 — Autosave for existing draft contracts only. */
