@@ -1097,7 +1097,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['lead_requests'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
-      setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+      setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false); setSelectedProviderBusiness(null);
       setSelectedSiteId(null);
       setLeadPrefill(null);
       setLeadPrefillDismissed(false);
@@ -1715,7 +1715,7 @@ const DashboardContracts = () => {
 
   const closeForm = useCallback(() => {
     setViewSection('list'); setForm(emptyForm); setEditingId(null); setSelectedTemplate(null); setTemplatePreview(null);
-    setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+    setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false); setSelectedProviderBusiness(null);
     setSelectedVersionId(null); setSelectedPricingMethod(null);
     setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
     setSelectedSiteId(null);
