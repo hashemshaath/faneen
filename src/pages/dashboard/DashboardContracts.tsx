@@ -2242,11 +2242,10 @@ const DashboardContracts = () => {
                 if (!selectedWorkType || !workTypeTouched) missing.push(pickBi(isRTL, 'المجال / التخصص', 'Sector / specialty'));
                 if (!effectiveVersion) { warnings.push(pickBi(isRTL, 'الضمان غير محدد — يُستمد من القالب', 'Warranty unset — inherited from template')); warnings.push(pickBi(isRTL, 'الدفعات غير محددة — تُستمد من القالب', 'Payment terms unset — inherited from template')); }
                 if (!form.start_date || !form.end_date) warnings.push(pickBi(isRTL, 'مدة التنفيذ غير محددة', 'Execution duration unset'));
-                const templateLabel = effectiveVersion ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}` : '—';
+                const hasTpl = !!effectiveVersion; const tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template'; const tplNot = isRTL ? 'غير محدد' : 'Not set';
+                const templateLabel = hasTpl ? `${isRTL ? effectiveVersion!.name_ar : (effectiveVersion!.name_en || effectiveVersion!.name_ar)} · v${effectiveVersion!.version_number}` : '—';
                 const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? (isRTL ? 'الجهة المنفذة المختارة' : 'Selected executing provider')) : (isRTL ? 'لم تُحدَّد بعد' : 'Not set yet');
                 const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? (isRTL ? 'صاحب الحساب' : 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
-                const hasTpl = !!effectiveVersion; const tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template';
-                const durationLabel = form.start_date && form.end_date ? `${form.start_date} → ${form.end_date}` : '—';
                 return (
                   <ContractReviewSummary isRTL={isRTL} guide={guide}
                     clientLabel={selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—'}
@@ -2257,9 +2256,8 @@ const DashboardContracts = () => {
                     datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')} missing={missing}
                     firstPartyLabel={firstPartyLabel} secondPartyLabel={secondPartyLabel}
                     executionSiteLabel={selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—'} sectorLabel={w ? (isRTL ? w.ar : w.en) : '—'}
-                    scopeOfWorkLabel={hasTpl ? tplPresent : '—'} warrantyLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
-                    paymentTermsLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')} executionDurationLabel={durationLabel}
-                    deliveryTermsLabel={hasTpl ? tplPresent : '—'} warnings={warnings} />
+                    scopeOfWorkLabel={hasTpl ? tplPresent : '—'} warrantyLabel={hasTpl ? tplPresent : tplNot} paymentTermsLabel={hasTpl ? tplPresent : tplNot}
+                    executionDurationLabel={form.start_date && form.end_date ? `${form.start_date} → ${form.end_date}` : '—'} deliveryTermsLabel={hasTpl ? tplPresent : '—'} warnings={warnings} />
                 );
               })()}
               {!editingId && (
