@@ -397,7 +397,7 @@ const DashboardContracts = () => {
         .from('contract_template_versions_public')
         // Phase 14: classification is taxonomy-only. Legacy
         // `contract_templates.service_category_id` is no longer read here.
-        .select('id, version_number, status, template_id, contract_templates!inner(id, slug, category, name_ar, name_en, is_active)')
+        .select('id, version_number, status, template_id, contract_templates!contract_template_versions_template_id_fkey!inner(id, slug, category, name_ar, name_en, is_active)')
         .eq('status', 'published')
         .order('version_number', { ascending: false });
       if (error) throw error;
