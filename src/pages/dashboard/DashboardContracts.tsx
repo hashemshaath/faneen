@@ -45,7 +45,8 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
-import { resolveContractPartiesAndEligibility, CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
+import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
+import { CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
 import {
   uploadContractAttachmentFile,
   getContractAttachmentPublicUrl,
@@ -475,7 +476,7 @@ const DashboardContracts = () => {
   /* ── Helper: isLocked ── */
   const isContractLocked = (c: ContractRow) => isContractLockedByStatus(c.status);
 
-  /* Client-only accounts auto-fill the second party from the signed-in profile. */
+  /* CONTRACT-CREATION-CLIENT-AUTO-FILL — client-only accounts auto-fill the second party from the signed-in profile. */
   const hasScopeOfWork = !!(form.description_ar.trim() || form.description_en.trim()), hasContractTerms = !!(form.terms_ar.trim() || form.terms_en.trim() || effectiveVersion), hasExecutionDuration = !!(form.start_date && form.end_date);
   const contractParties = resolveContractPartiesAndEligibility({ user: user ? { id: user.id } : null, profile: profile ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null } : null, isAdmin, isProvider, ownedBusinessId: businessId ?? null, editingId, firstParty: { fallbackBusinessId: businessId ?? null }, secondParty: { userId: selectedClient?.user_id ?? null, displayName: selectedClient?.full_name ?? guestClient?.name ?? form.client_email ?? null, hasProfile: !!(selectedClient || guestClient || form.client_email) }, executionSiteId: selectedSiteId, sectorId: workTypeTouched ? selectedWorkType : null, templateId: effectiveVersion?.version_id ?? null, hasScopeOfWork, hasContractTerms, hasWarrantyTerms: !!effectiveVersion, hasPaymentTerms: !!effectiveVersion, hasExecutionDuration, hasDeliveryTerms: !!effectiveVersion });
   const isClientOnlyAccount =
