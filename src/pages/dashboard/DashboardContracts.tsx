@@ -1104,7 +1104,7 @@ const DashboardContracts = () => {
       toast.error(mapped.message);
     },
   });
-  const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !contractParties.isEligible) || createContractMutation.isPending;
+  const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && !contractParties.isEligible) || createContractMutation.isPending;
 
   /* CT4C.3 — Client invitation mutations. */
   const sendInviteMutation = useMutation({
@@ -2230,6 +2230,7 @@ const DashboardContracts = () => {
               {!editingId && (() => {
                 const guide = getStatusGuidance('draft'); const w = getWorkType(selectedWorkType), hasTpl = !!effectiveVersion, tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template', tplNot = isRTL ? 'غير محدد' : 'Not set';
                 const missing = contractParties.missingRequirements.map(code => pickBi(isRTL, CONTRACT_PARTY_MISSING_MESSAGES[code].ar, CONTRACT_PARTY_MISSING_MESSAGES[code].en));
+                if (!selectedClient && !guestClient && !form.client_email && !missing.includes(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'))) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
                 if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title')); if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
                 const warnings: string[] = [];
                 const templateLabel = hasTpl ? `${isRTL ? effectiveVersion!.name_ar : (effectiveVersion!.name_en || effectiveVersion!.name_ar)} · v${effectiveVersion!.version_number}` : '—';
