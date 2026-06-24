@@ -2228,13 +2228,13 @@ const DashboardContracts = () => {
                 );
               })()}
               {!editingId && (() => {
-                const guide = getStatusGuidance('draft'); const w = getWorkType(selectedWorkType), hasTpl = !!effectiveVersion, tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template', tplNot = isRTL ? 'غير محدد' : 'Not set';
+                const guide = getStatusGuidance('draft'); const w = getWorkType(selectedWorkType), hasTpl = !!effectiveVersion, tplPresent = pickBi(isRTL, 'مضمَّن في القالب', 'Included in template'), tplNot = pickBi(isRTL, 'غير محدد', 'Not set');
                 const missing = contractParties.missingRequirements.map(code => pickBi(isRTL, CONTRACT_PARTY_MISSING_MESSAGES[code].ar, CONTRACT_PARTY_MISSING_MESSAGES[code].en));
                 if (!selectedClient && !guestClient && !form.client_email && !missing.includes(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'))) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
                 if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title')); if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
                 const warnings: string[] = [];
                 const templateLabel = hasTpl ? `${isRTL ? effectiveVersion!.name_ar : (effectiveVersion!.name_en || effectiveVersion!.name_ar)} · v${effectiveVersion!.version_number}` : '—';
-                const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? (isRTL ? 'الجهة المنفذة المختارة' : 'Selected executing provider')) : (isRTL ? 'لم تُحدَّد بعد' : 'Not set yet'); const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? (isRTL ? 'صاحب الحساب' : 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
+                const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? pickBi(isRTL, 'الجهة المنفذة المختارة', 'Selected executing provider')) : pickBi(isRTL, 'لم تُحدَّد بعد', 'Not set yet'); const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? pickBi(isRTL, 'صاحب الحساب', 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
                 return (
                   <ContractReviewSummary isRTL={isRTL} guide={guide}
                     clientLabel={selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—'}
@@ -2244,7 +2244,7 @@ const DashboardContracts = () => {
                     vatLabel={form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `Inclusive ${form.vat_rate}%`) : (isRTL ? `تُضاف ${form.vat_rate}%` : `Added ${form.vat_rate}%`)}
                     datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')} missing={missing}
                     firstPartyLabel={firstPartyLabel} secondPartyLabel={secondPartyLabel}
-                    executionSiteLabel={selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—'} sectorLabel={w ? (isRTL ? w.ar : w.en) : '—'}
+                    executionSiteLabel={selectedSiteId ? pickBi(isRTL, 'تم تحديد الموقع', 'Site selected') : '—'} sectorLabel={w ? (isRTL ? w.ar : w.en) : '—'}
                     scopeOfWorkLabel={hasScopeOfWork ? (form.description_ar || form.description_en) : '—'} contractTermsLabel={hasContractTerms ? (form.terms_ar || form.terms_en || tplPresent) : '—'} warrantyLabel={hasTpl ? tplPresent : tplNot} paymentTermsLabel={hasTpl ? tplPresent : tplNot}
                     executionDurationLabel={hasExecutionDuration ? `${form.start_date} → ${form.end_date}` : '—'} deliveryTermsLabel={hasTpl ? tplPresent : '—'} attachmentLabel={pickBi(isRTL, 'لا توجد مرفقات', 'No attachments')} warnings={warnings} />
                 );
