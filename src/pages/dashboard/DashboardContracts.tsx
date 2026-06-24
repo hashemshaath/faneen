@@ -235,6 +235,8 @@ const DashboardContracts = () => {
   const [guestClient, setGuestClient] = useState<GuestClient | null>(null);
   const [selectedWorkType, setSelectedWorkType] = useState<WorkTypeKey>('general');
   const [workTypeTouched, setWorkTypeTouched] = useState(false);
+  /* CONTRACT-CREATION — Client-account provider picker (first party). */
+  const [selectedProviderBusiness, setSelectedProviderBusiness] = useState<SelectedProviderBusiness | null>(null);
   /* CT4C.3 — Client invitation flow state. */
   const [inviteMode, setInviteMode] = useState<'idle' | 'composing' | 'awaiting'>('idle');
   const [inviteForm, setInviteForm] = useState<{ email: string; name: string; phone: string }>({ email: '', name: '', phone: '' });
