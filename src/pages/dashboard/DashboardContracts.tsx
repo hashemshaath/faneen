@@ -3162,18 +3162,14 @@ const DashboardContracts = () => {
             <AlertDialogTitle>{pickBi(isRTL, 'إرسال العقد للمراجعة', 'Send for Review')}</AlertDialogTitle>
             <AlertDialogDescription>{pickBi(isRTL, 'سيتم إرسال إشعار للعميل لمراجعة العقد والموافقة عليه.', 'A notification will be sent to the client to review and approve.')}</AlertDialogDescription>
           </AlertDialogHeader>
-          {sendConfirm && (
+          {sendConfirm && (() => { const e = computeSendEligibility(sendConfirm); const n = buildContractSummary({ lineItemsCount: allLineItems.filter((li) => li.contract_id === sendConfirm.id).length }).lineItemsCount; return (
             <div data-testid="send-review-summary" className="text-xs space-y-1 border rounded p-2 my-2">
               <div>{pickBi(isRTL, 'الحالة الحالية: مسودة', 'Current status: draft')}</div>
               <div>{pickBi(isRTL, 'الحالة التالية: مرسل للمراجعة', 'Next status: sent for review')}</div>
-              <div>{pickBi(isRTL, `عدد البنود: ${buildContractSummary({ lineItemsCount: allLineItems.filter((li) => li.contract_id === sendConfirm.id).length }).lineItemsCount}`, `Line items: ${allLineItems.filter((li) => li.contract_id === sendConfirm.id).length}`)}</div>
-              {!computeSendEligibility(sendConfirm).isEligible && (
-                <ul className="text-destructive list-disc pe-5" data-testid="send-review-missing">
-                  {computeSendEligibility(sendConfirm).missing.map((m, i) => (<li key={i}>{m}</li>))}
-                </ul>
-              )}
+              <div>{pickBi(isRTL, `عدد البنود: ${n}`, `Line items: ${n}`)}</div>
+              {!e.isEligible && (<ul className="text-destructive list-disc pe-5" data-testid="send-review-missing">{e.missing.map((m, i) => (<li key={i}>{m}</li>))}</ul>)}
             </div>
-          )}
+          ); })()}
           <AlertDialogFooter>
             <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction data-testid="send-review-confirm" disabled={sendForApprovalMutation.isPending || !sendConfirm || !computeSendEligibility(sendConfirm).isEligible} onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}>
