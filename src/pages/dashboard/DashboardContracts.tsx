@@ -2143,6 +2143,18 @@ const DashboardContracts = () => {
                 {selectedSiteId && (
                   <SiteGovernmentDataPanel siteId={selectedSiteId} isRTL={isRTL} />
                 )}
+                {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (
+                  <div className="mt-3">
+                    <SelfClientCard
+                      isRTL={isRTL}
+                      clientName={selectedClient?.full_name ?? null}
+                      email={selectedClient?.email_masked ?? null}
+                      phone={selectedClient?.phone_masked ?? null}
+                      refId={selectedClient?.ref_id ?? null}
+                      hasMissingRequiredInfo={!selectedClient?.full_name || !selectedClient?.phone_masked}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
