@@ -1297,7 +1297,6 @@ const DashboardContracts = () => {
     onError: () => { toast.error(pickBi(isRTL, 'تعذّر إرسال العقد للمراجعة، حاول لاحقًا', 'Could not send the contract for review, please try again later')); },
   });
 
-  /* Phase G — eligibility for sending a draft contract for review. */
   const computeSendEligibility = useCallback((c: ContractWithRole) => computeSendForReviewEligibility(c, { hasLineItems: allLineItems.some((li) => li.contract_id === c.id), isRTL }), [allLineItems, isRTL]);
 
   /* ── Helpers ── */
