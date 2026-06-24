@@ -45,7 +45,7 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
-import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
+import { CONTRACT_PARTY_MISSING_MESSAGES, resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
 import {
   uploadContractAttachmentFile,
   getContractAttachmentPublicUrl,
@@ -475,17 +475,11 @@ const DashboardContracts = () => {
   /* ── Helper: isLocked ── */
   const isContractLocked = (c: ContractRow) => isContractLockedByStatus(c.status);
 
-  /* CONTRACT-CREATION-CLIENT-AUTO-FILL — When the signed-in user is a
-   * pure client account (no owned business, not provider, not admin),
-   * we never ask them to search for a client; the client party IS the
-   * current user. We auto-fill `selectedClient` from their profile and
-   * hide the ClientPicker. The execution site / address still come from
-   * the existing ExecutionSiteSection (client_sites / projects). */
-  // Phase B — central party resolver consumed for eligibility/labels.
-  const contractParties = resolveContractPartiesAndEligibility({ user: user ? { id: user.id } : null, profile: profile ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null } : null, isAdmin, isProvider, ownedBusinessId: businessId ?? null, editingId, firstParty: { fallbackBusinessId: businessId ?? null }, secondParty: { userId: selectedClient?.user_id ?? null } });
+  /* Client-only accounts auto-fill the second party from the signed-in profile. */
+  const hasScopeOfWork = !!(form.description_ar.trim() || form.description_en.trim()), hasContractTerms = !!(form.terms_ar.trim() || form.terms_en.trim() || effectiveVersion), hasExecutionDuration = !!(form.start_date && form.end_date);
+  const contractParties = resolveContractPartiesAndEligibility({ user: user ? { id: user.id } : null, profile: profile ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null } : null, isAdmin, isProvider, ownedBusinessId: businessId ?? null, editingId, firstParty: { fallbackBusinessId: businessId ?? null }, secondParty: { userId: selectedClient?.user_id ?? null, displayName: selectedClient?.full_name ?? guestClient?.name ?? form.client_email ?? null, hasProfile: !!(selectedClient || guestClient || form.client_email) }, executionSiteId: selectedSiteId, sectorId: workTypeTouched ? selectedWorkType : null, templateId: effectiveVersion?.version_id ?? null, hasScopeOfWork, hasContractTerms, hasWarrantyTerms: !!effectiveVersion, hasPaymentTerms: !!effectiveVersion, hasExecutionDuration, hasDeliveryTerms: !!effectiveVersion });
   const isClientOnlyAccount =
     !!user && !isAdmin && !isProvider && businessId === null && !editingId;
-  void contractParties;
 
   React.useEffect(() => {
     if (!isClientOnlyAccount) return;
@@ -1109,6 +1103,7 @@ const DashboardContracts = () => {
       toast.error(mapped.message);
     },
   });
+  const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !contractParties.isEligible) || createContractMutation.isPending;
 
   /* CT4C.3 — Client invitation mutations. */
   const sendInviteMutation = useMutation({
@@ -2232,15 +2227,10 @@ const DashboardContracts = () => {
                 );
               })()}
               {!editingId && (() => {
-                const guide = getStatusGuidance('draft'); const w = getWorkType(selectedWorkType);
-                const missing: string[] = []; const warnings: string[] = [];
-                if (!selectedClient && !guestClient && !form.client_email) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
+                const guide = getStatusGuidance('draft'); const w = getWorkType(selectedWorkType), hasTpl = !!effectiveVersion, tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template', tplNot = isRTL ? 'غير محدد' : 'Not set';
+                const missing = contractParties.missingRequirements.map(code => pickBi(isRTL, CONTRACT_PARTY_MISSING_MESSAGES[code].ar, CONTRACT_PARTY_MISSING_MESSAGES[code].en));
                 if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title')); if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
-                if (!effectiveVersion) missing.push(pickBi(isRTL, 'قالب عقد منشور', 'Published template'));
-                if (!selectedSiteId) missing.push(pickBi(isRTL, 'موقع التنفيذ', 'Execution site'));
-                if (!selectedWorkType || !workTypeTouched) missing.push(pickBi(isRTL, 'المجال / التخصص', 'Sector / specialty'));
-                if (!effectiveVersion) { warnings.push(pickBi(isRTL, 'الضمان غير محدد — يُستمد من القالب', 'Warranty unset — inherited from template')); warnings.push(pickBi(isRTL, 'الدفعات غير محددة — تُستمد من القالب', 'Payment terms unset — inherited from template')); } if (!form.start_date || !form.end_date) warnings.push(pickBi(isRTL, 'مدة التنفيذ غير محددة', 'Execution duration unset'));
-                const hasTpl = !!effectiveVersion, tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template', tplNot = isRTL ? 'غير محدد' : 'Not set';
+                const warnings: string[] = [];
                 const templateLabel = hasTpl ? `${isRTL ? effectiveVersion!.name_ar : (effectiveVersion!.name_en || effectiveVersion!.name_ar)} · v${effectiveVersion!.version_number}` : '—';
                 const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? (isRTL ? 'الجهة المنفذة المختارة' : 'Selected executing provider')) : (isRTL ? 'لم تُحدَّد بعد' : 'Not set yet'); const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? (isRTL ? 'صاحب الحساب' : 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
                 return (
@@ -2253,8 +2243,8 @@ const DashboardContracts = () => {
                     datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')} missing={missing}
                     firstPartyLabel={firstPartyLabel} secondPartyLabel={secondPartyLabel}
                     executionSiteLabel={selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—'} sectorLabel={w ? (isRTL ? w.ar : w.en) : '—'}
-                    scopeOfWorkLabel={hasTpl ? tplPresent : '—'} warrantyLabel={hasTpl ? tplPresent : tplNot} paymentTermsLabel={hasTpl ? tplPresent : tplNot}
-                    executionDurationLabel={form.start_date && form.end_date ? `${form.start_date} → ${form.end_date}` : '—'} deliveryTermsLabel={hasTpl ? tplPresent : '—'} warnings={warnings} />
+                    scopeOfWorkLabel={hasScopeOfWork ? (form.description_ar || form.description_en) : '—'} contractTermsLabel={hasContractTerms ? (form.terms_ar || form.terms_en || tplPresent) : '—'} warrantyLabel={hasTpl ? tplPresent : tplNot} paymentTermsLabel={hasTpl ? tplPresent : tplNot}
+                    executionDurationLabel={hasExecutionDuration ? `${form.start_date} → ${form.end_date}` : '—'} deliveryTermsLabel={hasTpl ? tplPresent : '—'} attachmentLabel={pickBi(isRTL, 'لا توجد مرفقات', 'No attachments')} warnings={warnings} />
                 );
               })()}
               {!editingId && (
@@ -2271,7 +2261,7 @@ const DashboardContracts = () => {
                 activeStep={activeStep}
                 stepOrder={stepOrder}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
+                saveDisabled={saveBlocked}
                 onStepNav={goToStep}
                 onSave={() => createContractMutation.mutate(undefined)}
                 completenessScore={!editingId ? calculateContractCompleteness({
@@ -2297,7 +2287,7 @@ const DashboardContracts = () => {
                 vatRate={form.vat_rate}
                 vatInclusive={form.vat_inclusive}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
+                saveDisabled={saveBlocked}
                 onSave={() => createContractMutation.mutate(undefined)}
               />
             </CardContent>
