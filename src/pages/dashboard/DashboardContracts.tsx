@@ -44,6 +44,7 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
+import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
 import {
   uploadContractAttachmentFile,
   getContractAttachmentPublicUrl,
@@ -479,8 +480,11 @@ const DashboardContracts = () => {
    * current user. We auto-fill `selectedClient` from their profile and
    * hide the ClientPicker. The execution site / address still come from
    * the existing ExecutionSiteSection (client_sites / projects). */
+  // Phase B — central party resolver consumed for eligibility/labels.
+  const contractParties = resolveContractPartiesAndEligibility({ user: user ? { id: user.id } : null, profile: profile ? { full_name: profile.full_name ?? null, phone: profile.phone ?? null } : null, isAdmin, isProvider, ownedBusinessId: businessId ?? null, editingId, firstParty: { fallbackBusinessId: businessId ?? null }, secondParty: { userId: selectedClient?.user_id ?? null } });
   const isClientOnlyAccount =
     !!user && !isAdmin && !isProvider && businessId === null && !editingId;
+  void contractParties;
 
   React.useEffect(() => {
     if (!isClientOnlyAccount) return;

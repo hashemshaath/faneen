@@ -31,6 +31,7 @@ import {
   createContractFromWorkspace,
   type CreateContractFromWorkspaceErrorCode,
 } from '@/modules/contracts/services/createContractFromWorkspace';
+import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
 
 interface Props {
   workspace: ClientWorkspace;
@@ -81,6 +82,29 @@ export const WorkspaceContractsTab: React.FC<Props> = ({ workspace }) => {
   const providerBusinessId =
     workspace.linkedProviderBusinessId ?? workspace.businessId ?? null;
   const eligible = workspace.kind === 'project' && !!providerBusinessId;
+
+  // Central party resolver — keeps eligibility / missing requirement
+  // labels consistent with DashboardContracts. The inline `eligible`
+  // boolean above is retained as the canonical workspace gate; the
+  // resolver mirrors it and surfaces missing-requirement codes for
+  // future UI consumers without changing the current behavior.
+  const partyResolution = resolveContractPartiesAndEligibility({
+    user: null,
+    profile: null,
+    isAdmin: false,
+    isProvider: false,
+    ownedBusinessId: null,
+    firstParty: {
+      selectedProviderBusinessId: workspace.linkedProviderBusinessId ?? null,
+      fallbackBusinessId: workspace.businessId ?? null,
+    },
+    secondParty: { hasProfile: true },
+    executionSiteId: workspace.siteId ?? null,
+    projectId: workspace.kind === 'project' ? workspace.id : null,
+    requiresProject: true,
+    hasPermission: true,
+  });
+  void partyResolution;
 
   const { data, isLoading } = useQuery({
     queryKey: ['workspace-contracts', workspace.siteId],
