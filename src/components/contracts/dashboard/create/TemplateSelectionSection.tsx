@@ -5,8 +5,8 @@
  * is exposed — only public fields (name, version, category, pricing methods,
  * required field count) already passed in via PublishedTemplateOption.
  */
-import React from 'react';
-import { BookOpen, PlusCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { BookOpen, PlusCircle, LayoutGrid } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +49,7 @@ export const TemplateSelectionSection: React.FC<Props> = ({
   selectedWorkType = null, sectorTouched = false,
   isAdmin = false,
 }) => {
+  const [showPicker, setShowPicker] = useState(false);
   // Phase D — surface sector / no-match guidance instead of silently rendering nothing.
   const sectorProvided = !!selectedWorkType && sectorTouched;
   const filtered = filterTemplatesBySector(selectedWorkType ?? null, sectorTouched, publishedVersions);
@@ -68,7 +69,15 @@ export const TemplateSelectionSection: React.FC<Props> = ({
 
   if (publishedVersions.length === 0 || filtered.length === 0) {
     const hasAnyTemplate = publishedVersions.length > 0;
-    const fallback = hasAnyTemplate ? publishedVersions : [];
+    const grouped = (() => {
+      const map = new Map<string, PublishedTemplateOption[]>();
+      for (const v of publishedVersions) {
+        const key = v.category || 'other';
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(v);
+      }
+      return Array.from(map.entries());
+    })();
     return (
       <div
         data-testid="contract-template-section-no-match"
@@ -78,31 +87,49 @@ export const TemplateSelectionSection: React.FC<Props> = ({
           <BookOpen className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
           <span>
             {isRTL
-              ? `لا يوجد قالب مخصص لهذا المجال${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. يمكنك اختيار قالب عام من القائمة أدناه' : ''}.`
-              : `No template is specialized for this sector${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. You can pick a general template from the list below' : ''}.`}
+              ? `لا يوجد قالب مخصص لهذا المجال${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. اضغط على "اختيار قالب" لاستعراض القوالب المتاحة مصنّفة.' : ''}`
+              : `No template is specialized for this sector${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. Click "Choose template" to browse available templates by category.' : ''}`}
           </span>
         </div>
-        {hasAnyTemplate && (
-          <div className="space-y-1.5">
-            <Label className="text-[10px] text-muted-foreground">{isRTL ? 'كل القوالب المتاحة' : 'All available templates'}</Label>
-            <Select
-              value={effectiveVersion?.version_id ?? ''}
-              onValueChange={(v) => onSelectVersion(v)}
-            >
-              <SelectTrigger className="h-9 text-xs bg-background"><SelectValue placeholder={isRTL ? 'اختر قالبًا' : 'Choose a template'} /></SelectTrigger>
-              <SelectContent>
-                {fallback.map(v => {
-                  const cfg = templateCategoryConfig[v.category];
-                  const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
-                  const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : v.category;
-                  return (
-                    <SelectItem key={v.version_id} value={v.version_id} className="text-xs">
-                      {label} · {catLabel} · v{v.version_number}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+        {hasAnyTemplate && !showPicker && (
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="default" className="h-7 text-[11px] gap-1" onClick={() => setShowPicker(true)} data-testid="contract-template-open-picker">
+              <LayoutGrid className="w-3.5 h-3.5" />
+              {isRTL ? 'اختيار قالب' : 'Choose template'}
+            </Button>
+          </div>
+        )}
+        {hasAnyTemplate && showPicker && (
+          <div className="space-y-3 rounded-lg border border-border/40 bg-background p-3" data-testid="contract-template-picker">
+            {grouped.map(([cat, items]) => {
+              const cfg = templateCategoryConfig[cat];
+              const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : cat;
+              return (
+                <div key={cat} className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="secondary" className="text-[9px]">{catLabel}</Badge>
+                    <span className="text-[10px] text-muted-foreground">{items.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {items.map(v => {
+                      const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
+                      const selected = effectiveVersion?.version_id === v.version_id;
+                      return (
+                        <button
+                          key={v.version_id}
+                          type="button"
+                          onClick={() => { onSelectVersion(v.version_id); setShowPicker(false); }}
+                          className={`text-start text-[11px] rounded-md border px-2.5 py-2 transition-colors ${selected ? 'border-primary bg-primary/10' : 'border-border/50 hover:border-primary/40 hover:bg-muted/40'}`}
+                        >
+                          <div className="font-medium truncate">{label}</div>
+                          <div className="text-[9px] text-muted-foreground">v{v.version_number}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
         {isAdmin && (
