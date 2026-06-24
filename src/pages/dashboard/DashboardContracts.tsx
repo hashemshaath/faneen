@@ -2235,13 +2235,25 @@ const DashboardContracts = () => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
                 const missing: string[] = [];
+                const warnings: string[] = [];
                 if (!selectedClient && !guestClient && !form.client_email) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
                 if (!form.title_ar) missing.push(pickBi(isRTL, 'عنوان العقد', 'Title'));
                 if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'المبلغ', 'Amount'));
                 if (!effectiveVersion) missing.push(pickBi(isRTL, 'قالب عقد منشور', 'Published template'));
+                if (!selectedSiteId) missing.push(pickBi(isRTL, 'موقع التنفيذ', 'Execution site'));
+                if (!selectedWorkType || !workTypeTouched) missing.push(pickBi(isRTL, 'المجال / التخصص', 'Sector / specialty'));
+                if (!effectiveVersion) { warnings.push(pickBi(isRTL, 'الضمان غير محدد — يُستمد من القالب', 'Warranty unset — inherited from template')); warnings.push(pickBi(isRTL, 'الدفعات غير محددة — تُستمد من القالب', 'Payment terms unset — inherited from template')); }
+                if (!form.start_date || !form.end_date) warnings.push(pickBi(isRTL, 'مدة التنفيذ غير محددة', 'Execution duration unset'));
                 const templateLabel = effectiveVersion
                   ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}`
                   : '—';
+                const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? (isRTL ? 'الجهة المنفذة المختارة' : 'Selected executing provider')) : (isRTL ? 'لم تُحدَّد بعد' : 'Not set yet');
+                const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? (isRTL ? 'صاحب الحساب' : 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
+                const siteLabel = selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—';
+                const sectorLabel = w ? (isRTL ? w.ar : w.en) : '—';
+                const hasTpl = !!effectiveVersion;
+                const tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template';
+                const durationLabel = form.start_date && form.end_date ? `${form.start_date} → ${form.end_date}` : '—';
                 return (
                   <ContractReviewSummary
                     isRTL={isRTL}
@@ -2254,6 +2266,16 @@ const DashboardContracts = () => {
                     vatLabel={form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `Inclusive ${form.vat_rate}%`) : (isRTL ? `تُضاف ${form.vat_rate}%` : `Added ${form.vat_rate}%`)}
                     datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')}
                     missing={missing}
+                    firstPartyLabel={firstPartyLabel}
+                    secondPartyLabel={secondPartyLabel}
+                    executionSiteLabel={siteLabel}
+                    sectorLabel={sectorLabel}
+                    scopeOfWorkLabel={hasTpl ? tplPresent : '—'}
+                    warrantyLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
+                    paymentTermsLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
+                    executionDurationLabel={durationLabel}
+                    deliveryTermsLabel={hasTpl ? tplPresent : '—'}
+                    warnings={warnings}
                   />
                 );
               })()}
@@ -2271,7 +2293,7 @@ const DashboardContracts = () => {
                 activeStep={activeStep}
                 stepOrder={stepOrder}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
+                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && (!selectedClient && !guestClient && !form.client_email)) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
                 onStepNav={goToStep}
                 onSave={() => createContractMutation.mutate(undefined)}
                 completenessScore={!editingId ? calculateContractCompleteness({
@@ -2297,7 +2319,7 @@ const DashboardContracts = () => {
                 vatRate={form.vat_rate}
                 vatInclusive={form.vat_inclusive}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
+                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && (!selectedClient && !guestClient && !form.client_email)) || (!editingId && (!selectedSiteId || !effectiveVersion || !selectedWorkType || !workTypeTouched)) || createContractMutation.isPending}
                 onSave={() => createContractMutation.mutate(undefined)}
               />
             </CardContent>
