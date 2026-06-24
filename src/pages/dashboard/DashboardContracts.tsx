@@ -47,7 +47,8 @@ import { updateContractById } from '@/modules/contracts/services/updateContractB
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
 import { buildContractSummary } from '@/modules/contracts/services/contractSummary';
 import { computeSendForReviewEligibility } from '@/modules/contracts/services/sendForReviewEligibility';
-import { resolveContractPartiesAndEligibility, CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
+import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
+import { CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
 import {
   uploadContractAttachmentFile,
   getContractAttachmentPublicUrl,
