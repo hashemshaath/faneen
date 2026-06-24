@@ -1,72 +1,49 @@
-# CONTRACT PARTY FLOW + ACTIVITY SELECTION — Plan
+## CONTRACT CREATION PURPOSE-FIRST FLOW — Plan
 
-This task is an audit + targeted UX/logic fix across the contract creation surface for three account types (provider/business owner, personal client, admin). It spans `DashboardContracts.tsx` (3187 lines, at line cap 3192), `WorkspaceContractsTab.tsx`, the party model helpers, and the activity (sector/category) source. **No DB/RLS/RPC/lifecycle changes** unless the audit surfaces a real gap — I will report it, not silently change it.
+Large frontend-only refactor of the create-contract wizard. Reorders steps to `purpose → parties → template → details/terms → review`, adds template filtering by purpose, and locks the rules with three new test files. No DB/RLS/RPC/lifecycle/payload changes.
 
-## Phase 1 — Read-only audit (no code changes)
+### Phase 1 — Read-only audit
+Read in parallel: `src/pages/dashboard/DashboardContracts.tsx`, `ContractCreateStepper.tsx`, `ContractPartiesPanel.tsx`, `WorkTypeSection.tsx`, `TemplateSelectionSection.tsx`, `ContractReviewSummary.tsx`, `ContractDetailsSection.tsx`, `ContractTermsSection.tsx`, `resolveContractActivity.ts`, `contractParties.ts`, `contractSummary.ts`, and existing tests. Identify:
+- Current step order in `ContractCreateStepper` (today: `client → site → work → template → details → pricing → review`).
+- Where activity/work-type is collected and whether template list is filtered by it.
+- Current `DashboardContracts.tsx` line count vs cap (3192).
 
-Investigate and document the **current** behavior for each account type:
+### Phase 2 — New helpers (pure, testable)
+1. `src/modules/contracts/services/resolveContractPurpose.ts`
+   Returns `{ purposeId, purposeLabelAr, purposeLabelEn, source: 'project'|'quote'|'business'|'manual'|null, sectorId, serviceTypeId, isManual, confidence }`. Precedence: project → quote/opportunity → business → manual. Wraps `resolveContractActivity` for the categoryId; adds sector/serviceType/labels.
+2. `src/modules/contracts/services/filterContractTemplates.ts`
+   Pure function: `filterContractTemplates(templates, { sectorId, serviceTypeId, purposeId })` → `{ specialized: T[], general: T[] }`. Excludes non-published / inactive. Specialized first (sector + serviceType match), general fallback only when no specialized match. Annotates each row with `matchReason`.
 
-1. `DashboardContracts.tsx` — read the create panel sections: how `firstParty` / `secondParty` are derived, where `selectedClient` / `guestClient` / provider come from, whether a provider picker exists for provider accounts, and whether the activity/sector source is wired.
-2. `WorkspaceContractsTab.tsx` — confirm provider derivation (`linkedProviderBusinessId ?? businessId`) and that ClientPicker is hidden.
-3. `contractParties.ts`, `sendForReviewEligibility.ts`, `ContractReviewSummary.tsx`, `ContractCreationOrderNotices.tsx`, `WorkTypeSection.tsx`, `TemplateSelectionSection.tsx` — confirm where "activity / sector / specialty" is read from and whether it currently falls back to project category, business primary activity, or is left blank.
-4. RPC `create_contract_from_workspace_as_client` — confirm provider derivation already handled (Phase tests show it is).
-5. Identify the **3 concrete gaps** behind the user's complaint:
-   - (a) Provider account is still shown a provider/client picker for itself.
-   - (b) Activity/sector source has no visible UI — user can't tell where it comes from or pick one when missing.
-   - (c) "أطراف العقد" header is not labeled by role — labels say "العميل" generically.
+### Phase 3 — Wizard reorder (frontend only)
+1. In `ContractCreateStepper`, change `CreateStepKey` order to: `purpose → parties → template → details → pricing → review`. Update labels (ar/en).
+2. In `DashboardContracts.tsx`:
+   - Add a `purpose` step container that renders `WorkTypeSection` + the manual category picker from `ContractActivitySection`, and shows resolved source badge from `resolveContractPurpose`.
+   - Move `ContractPartiesPanel` and client picker into a `parties` step that is only visible after purpose is chosen.
+   - Pipe `{ sectorId, serviceTypeId, purposeId }` from purpose into `TemplateSelectionSection` via the new `filterContractTemplates` helper; render specialized first, general as labeled fallback, hide unpublished.
+   - Keep `ContractReviewSummary` last and add purpose + template-kind (specialized/general) to the summary rendering only.
+3. Extract any new JSX into small components under `src/components/contracts/dashboard/create/` to keep `DashboardContracts.tsx` under the 3192 line cap. Candidates: `ContractPurposeStep.tsx`, `ContractPartiesStep.tsx`, `ContractTemplateStep.tsx`.
 
-## Phase 2 — Targeted UX fixes (frontend only)
+### Phase 4 — Party rules enforcement (UI only, no payload change)
+- Provider/owner: first party auto, no picker; second party = ClientPicker / guest (existing).
+- Personal client: first party = project-linked provider (existing message when missing); second party auto-filled (already implemented), no self picker.
+- Admin: both pickers visible with explicit "الطرف الأول / الثاني" labels.
+- Invite-entity CTA: only render when a picker is shown AND no candidates exist; deferred CTA (no new DB).
 
-Frontend-only changes; no payload/RPC/lifecycle edits.
+### Phase 5 — Tests (new)
+1. `src/__tests__/contractCreationPurposeFirstFlow.test.tsx` — RTL test that mounts `DashboardContracts` route, asserts step order and party-step gating, provider/client/admin role-aware rendering.
+2. `src/__tests__/contractTemplateFilteringByPurpose.test.ts` — pure tests for `filterContractTemplates` (6 assertions from spec).
+3. `src/__tests__/contractPurposeResolution.test.ts` — pure tests for `resolveContractPurpose` precedence (6 assertions).
 
-1. **New presentational component** `src/components/contracts/dashboard/create/ContractPartiesPanel.tsx`
-   - Renders a single `أطراف العقد / Contract parties` section with two labeled rows (الطرف الأول / الطرف الثاني) chosen by `accountKind`: `'provider' | 'client' | 'admin'`.
-   - Provider: first party = current business (name + ref + city if available); never opens a provider picker.
-   - Client: first party = linked provider business from project; if missing, shows the existing "اربط المشروع بمزود خدمة" message.
-   - Admin: shows both pickers explicitly labeled "الطرف الأول" and "الطرف الثاني".
-   - Pure props, no Supabase calls.
+Source-level regex guards in (1) for: stepper order array, no provider picker for provider, no client picker for client, unpublished templates excluded.
 
-2. **New presentational component** `src/components/contracts/dashboard/create/ContractActivitySection.tsx`
-   - Shows the resolved activity with its **source badge** (project / business / manual).
-   - When no source, renders a `Select` over an already-loaded taxonomy categories list (reuse existing `useTaxonomyCategories` / `contract_taxonomy_categories` hook — read-only check; no new query if one exists).
-   - Emits `onChange(categoryId)` upward; `DashboardContracts.tsx` stores it in existing `form.category_id` (or adds local state if not present — frontend only).
-
-3. **`DashboardContracts.tsx`** — minimal wiring:
-   - Compute `accountKind` from existing `isAdmin / isProvider / isClientOnlyAccount`.
-   - Replace the existing first-party / second-party notice blocks with `<ContractPartiesPanel />`.
-   - Insert `<ContractActivitySection />` above the template picker.
-   - Stay under the 3192 line cap by extracting the replaced blocks (net delta should be negative).
-
-4. **`WorkspaceContractsTab.tsx`** — no behavior change; confirm copy already matches new labels.
-
-5. **Activity resolution helper** `src/modules/contracts/services/resolveContractActivity.ts` (new, pure):
-   - Inputs: `{ projectCategoryId?, quoteRequestCategoryId?, businessPrimaryCategoryId?, manualCategoryId? }`.
-   - Returns `{ categoryId, source: 'project'|'quote'|'business'|'manual'|null }`.
-   - Pure TS, fully unit-testable.
-
-## Phase 3 — Tests
-
-New test file `src/__tests__/contractPartyFlowAndActivitySelection.test.ts` with source-level regex guards and pure-function tests covering the 15 acceptance points listed by the user (provider-never-picks-self, client-never-picks-self, activity source precedence, manual fallback shown when missing, no service_role / `any` / hex / hardcoded IDs).
-
-Pure unit tests for `resolveContractActivity`.
-
-## Phase 4 — Verification
-
+### Phase 6 — Verification
 1. `tsgo --noEmit`
-2. Targeted vitest: new test + `contractPartyModelPhaseB/D/E/F/G`, `contractCreationClientAutoFill`, `enableContractCreationFromLinkedProject`, `dashboard-contracts-installments-badge-bilingual`.
-3. Full vitest suite only if production code changed (it will), then report 0 failures.
+2. `bunx vitest run` on the three new files + existing `contractPartyFlowAndActivitySelection`, `contractPartyModelPhaseB..G`, `contractCreationClientAutoFill`.
+3. Verify `DashboardContracts.tsx` line count ≤ 3192; extract more if needed.
+4. Full suite if time permits.
 
-## Out of scope (will not change)
+### Out of scope (forbidden)
+DB, RLS, RPC, migrations, edge functions, lifecycle, signatures, acceptance, payload schema, service_role, hardcoded defaults, `any` / suppressions / skipped tests.
 
-- No DB / RLS / RPC / migrations / edge functions.
-- No contract lifecycle, signature, acceptance, PDF, QR, send flow.
-- No new client / business creation.
-- No relabeling of "العميل ↔ الطرف الأول/الثاني" in legal contract model — only display labels in the create UI.
-
-## Risk
-
-`DashboardContracts.tsx` is at line cap. All net-new render must be offset by extracting the blocks it replaces — the new panel + activity section absorb existing JSX, so net delta is expected ≤ 0. If it goes over, I extract additional helpers before declaring PASS.
-
-## Deliverable
-
-A `CONTRACT PARTY FLOW + ACTIVITY SELECTION REPORT` answering all 20 numbered questions, ending with PASS or NEEDS FIX based on full-suite results.
+### Deliverable
+`CONTRACT CREATION PURPOSE-FIRST FLOW REPORT` answering all 19 questions, ending with PASS or NEEDS FIX.
