@@ -53,7 +53,7 @@ describe('Contract party model — Phase A site fix', () => {
 
 describe('Contract party model — Phase A terminology', () => {
   it('SelfClientCard labels the user as second party, not client', () => {
-    expect(SELF_CARD).toContain('الطرف الثاني (أنت)');
+    expect(SELF_CARD).toContain('الطرف الثاني — صاحب الحساب');
     expect(SELF_CARD).not.toContain('العميل (أنت)');
   });
 
