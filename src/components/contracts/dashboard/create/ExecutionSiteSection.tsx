@@ -23,10 +23,6 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
 import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
-import ClientSiteQrCard from '@/components/client-sites/ClientSiteQrCard';
-import ClientSiteVisibilitySettingsCard from '@/components/client-sites/ClientSiteVisibilitySettingsCard';
-import ClientSiteAccessRequestsPanel from '@/components/client-sites/ClientSiteAccessRequestsPanel';
-import ClientSiteNotificationPreferencesCard from '@/components/client-sites/ClientSiteNotificationPreferencesCard';
 
 export interface ExecutionSiteRow {
   id: string;
@@ -381,23 +377,6 @@ export const ExecutionSiteSection: React.FC<Props> = ({
                   size="sm"
                 />
               )}
-              <ClientSiteQrCard
-                siteId={selectedSite.id}
-                siteRef={selectedSite.site_ref}
-                siteName={selectedSite.site_name ?? selectedSite.label}
-                siteType={selectedSite.site_type ?? null}
-                cityName={selectedSite.city_name}
-                visibility={(selectedSite.visibility ?? 'private') as 'private' | 'shared_by_qr' | 'public_limited'}
-                qrEnabled={!!selectedSite.qr_enabled}
-                onChanged={() => refetch()}
-              />
-              <ClientSiteVisibilitySettingsCard
-                isRTL={isRTL}
-                siteId={selectedSite.id}
-                siteRef={selectedSite.site_ref}
-              />
-              <ClientSiteAccessRequestsPanel isRTL={isRTL} siteId={selectedSite.id} />
-              <ClientSiteNotificationPreferencesCard isRTL={isRTL} siteId={selectedSite.id} />
             </div>
           )}
 
