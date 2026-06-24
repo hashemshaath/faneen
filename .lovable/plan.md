@@ -1,59 +1,51 @@
-# خطة: تفعيل بحث المزوّد وإعادة تصميم خطوة الأطراف في إنشاء العقد
+# CONTRACT CREATION FLOW STABILIZATION + SECURITY CLEANUP — Plan
 
-## ما رصدته الآن (فحص بصري)
-الصفحة `/dashboard/contracts` ← "إنشاء عقد جديد" تعمل وفق ترتيب Phase السابق:
-الغرض → الأطراف → القالب → موقع → تفاصيل → تسعير → مراجعة.
+This is a large audit/cleanup pass. Before touching code, I want to confirm scope so I don't burn credits on the wrong areas.
 
-لكن للحسابات الفردية (مثل حسابك الحالي بدون منشأة) يظهر تحذير:
-> «اربط المشروع بمزود خدمة قبل إنشاء العقد»
+## Scope I will cover
 
-بدون أي زر/حقل بحث. أي أن **الطرف الأول لا يمكن اختياره يدويًا**، فيتجمّد المسار.
+1. **Create flow cleanup** (`DashboardContracts.tsx` + `create/*` sections)
+   - Verify step order: purpose/work type → template → parties → details → site → review.
+   - Remove any remaining duplicate headers/state; ensure no removed sections regress.
+   - Extract duplicated state between `TemplateSelectionSection` and `DashboardContracts` where safe.
 
-## التغييرات
+2. **Template picker hardening**
+   - Single Arabic pricing-method helper (`formatPricingMethodLabel`) — remove inline strings.
+   - Confirm search works AR+EN, categorized grouping, "عرض جميع القوالب" preserves `status=published` + `is_active` filter.
+   - Admin-only "إضافة قالب"; ensure "طلب إضافة قالب" is gone.
 
-### 1) مكوّن جديد — `ContractProviderSearchPicker`
-- `src/components/contracts/dashboard/create/ContractProviderSearchPicker.tsx`
-- بحث inline (لا dialog) ضمن جدول `businesses` المنشورة:
-  - حقل بحث بـ debounce 300ms (الاسم AR/EN، الرقم المعرّف).
-  - فلتر اختياري: التخصص (يأتي من `selectedWorkType` إن وُجد).
-  - نتائج كبطاقات صغيرة (max 8) مع زر "اختيار".
-  - حالة فارغة + حالة تحميل + زر "مسح الاختيار".
-- يستخدم `useQuery` و `supabase.from('businesses').select(...).ilike(...).eq('is_published', true).limit(8)`.
-- Pure presentational + query؛ لا تغييرات على RLS/RPC/migrations.
+3. **Work type / activity**
+   - Use taxonomy-backed `WORK_TYPES` only.
+   - Auto-fill EN from AR only when EN is empty (no overwrite of manual input).
+   - Remove any `any`/`as any`.
 
-### 2) ربط الاختيار بحالة العقد
-في `DashboardContracts.tsx`:
-- إضافة state: `selectedProviderBusiness: { id, name_ar, name_en, ref } | null`.
-- تمريرها لـ `resolveContractPartiesAndEligibility` عبر `firstParty.selectedProviderBusinessId` و `firstParty.displayName`.
-- إظهار الـ Picker داخل خطوة "الأطراف" فقط عندما `accountKind === 'client'` و `!linkedProviderProjectId`.
+4. **Parties**
+   - Provider can't pick self as client; client can't pick self as provider; no duplicate second-party row.
+   - No client duplication on submit (rely on existing RPC).
 
-### 3) تحسين `ContractPartiesPanel` (إعادة تصميم احترافية)
-- بطاقتان متقابلتان (الطرف الأول/الثاني) بحدود واضحة، أيقونة دور، وحالة "مكتمل/ناقص" ملوّنة (success/warning).
-- شارة دور صريحة (`المزوّد` / `صاحب الحساب`).
-- زر تعديل/تغيير الاختيار للطرف الأول عند توفّر الـ picker.
-- شريط ملخّص أسفل البطاقات: "جاهز للمتابعة" أو "أكمل اختيار الطرف الأول".
+5. **RLS / GRANTs audit**
+   - Re-check the four recent migrations for templates.
+   - Tighten: `anon` should only read via `contract_template_versions_public` (published) — not raw `contract_template_versions`.
+   - `authenticated` SELECT on raw `contract_template_versions` must keep `USING (status='published')`.
+   - `contract_template_pricing_rules` / `required_fields` reads scoped to published versions only.
+   - If the previous wide GRANT to `anon` on raw tables exists, narrow it via a follow-up migration.
 
-### 4) تحديث الـ stepper
-- اسم خطوة الأطراف للعميل الفردي يصبح: «الطرف الأول» بدل «الطرف الثاني» عند غياب المزوّد.
-- زر "التالي" مُعطّل حتى يُختار المزوّد.
+6. **Tests**
+   - Targeted: template picker, party model, client auto-fill, enable-creation, dashboardContractsPageExtractionCloseout.
+   - `tsgo` typecheck.
+   - Full `bunx vitest run`.
 
-### 5) خط الإنتاج وحدود الملفات
-- استخراج JSX الجديد إلى `ContractPartiesStep.tsx` لإبقاء `DashboardContracts.tsx` تحت 3192.
-- لا تغيير على lifecycle العقد (يبقى `draft`) ولا على فلترة القوالب أو الإشعارات.
+## What I will NOT touch
 
-## ما لن يتغيّر
-- DB / RLS / RPC / migrations / edge functions.
-- ترتيب الخطوات.
-- منطق فلترة القوالب.
-- العقود الحالية والـ matching/credits/notifications.
+- Contract lifecycle (create/sign/approve RPCs).
+- PDF / QR / email / notifications.
+- Any UI outside the create flow + template picker.
+- Removed sections will stay removed (execution-site duplicate, "طلب إضافة قالب", duplicate status header, duplicate second-party row).
 
-## التحقق
-- `tsgo --noEmit`.
-- اختبارات جديدة:
-  - `contractProviderSearchPicker.test.tsx` (debounce + اختيار + مسح).
-  - تحديث `contractCreationPurposeFirstFlow.test.tsx` لتأكيد ظهور الـ picker للحساب الفردي وتعطيل "التالي" قبل الاختيار.
-- لقطة Playwright لخطوة الأطراف بعد التطبيق.
+## Deliverable
 
-## ملاحظات
-- لن أضيف أي dialog/popup (التزامًا بقاعدة المشروع: نماذج inline فقط).
-- جميع الألوان عبر tokens المعتمدة (`bg-primary/5`, `border-success/40`, إلخ).
+The full `CONTRACT CREATION FLOW STABILIZATION + SECURITY CLEANUP REPORT` with all 21 items answered, after running typecheck + targeted tests + full suite.
+
+## Risk / cost note
+
+This audit will touch ~6 frontend files, possibly 1 tightening migration, and run the full vitest suite. It will consume meaningful credits. Please confirm before I proceed, or tell me to narrow scope (e.g., RLS-only, or picker-only).
