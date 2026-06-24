@@ -250,16 +250,16 @@ const TemplateSearchPicker: React.FC<TemplateSearchPickerProps> = ({
               })}
             </CommandList>
           </Command>
-          {allOptions.length > options.length && (
+          {(allOptions.length > options.length || options.length === 0) && (
             <div className="border-t border-border/40 p-2 flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">
-                {showAll
+                {effectiveShowAll
                   ? (isRTL ? `عرض جميع القوالب (${allOptions.length})` : `Showing all templates (${allOptions.length})`)
                   : (isRTL ? `مُصفّاة للمجال (${options.length}/${allOptions.length})` : `Filtered by sector (${options.length}/${allOptions.length})`)}
               </span>
-              <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setShowAll(s => !s)}>
+              <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px]" disabled={options.length === 0} onClick={() => setShowAll(s => !s)}>
                 <LayoutGrid className="w-3 h-3 me-1" />
-                {showAll
+                {effectiveShowAll
                   ? (isRTL ? 'إظهار المطابقة فقط' : 'Show matches only')
                   : (isRTL ? 'عرض جميع القوالب' : 'Show all templates')}
               </Button>
