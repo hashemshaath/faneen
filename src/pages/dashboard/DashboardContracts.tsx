@@ -1924,7 +1924,7 @@ const DashboardContracts = () => {
                 );
               })()}
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               {/* Phase 5B.4 — Lead prefill banner (dismissible). */}
               {!editingId && leadPrefill && !leadPrefillDismissed && (
                 <div className={`p-3 rounded-xl border ${leadPrefill.existing_contract_id ? 'border-warning/40 bg-warning/5' : 'border-info/40 bg-info/5'} flex items-start gap-3`}>
