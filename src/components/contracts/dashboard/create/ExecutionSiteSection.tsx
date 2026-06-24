@@ -377,23 +377,6 @@ export const ExecutionSiteSection: React.FC<Props> = ({
                   size="sm"
                 />
               )}
-              <ClientSiteQrCard
-                siteId={selectedSite.id}
-                siteRef={selectedSite.site_ref}
-                siteName={selectedSite.site_name ?? selectedSite.label}
-                siteType={selectedSite.site_type ?? null}
-                cityName={selectedSite.city_name}
-                visibility={(selectedSite.visibility ?? 'private') as 'private' | 'shared_by_qr' | 'public_limited'}
-                qrEnabled={!!selectedSite.qr_enabled}
-                onChanged={() => refetch()}
-              />
-              <ClientSiteVisibilitySettingsCard
-                isRTL={isRTL}
-                siteId={selectedSite.id}
-                siteRef={selectedSite.site_ref}
-              />
-              <ClientSiteAccessRequestsPanel isRTL={isRTL} siteId={selectedSite.id} />
-              <ClientSiteNotificationPreferencesCard isRTL={isRTL} siteId={selectedSite.id} />
             </div>
           )}
 
