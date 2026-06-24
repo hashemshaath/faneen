@@ -6,9 +6,11 @@
  * required field count) already passed in via PublishedTemplateOption.
  */
 import React from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, PlusCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { filterTemplatesBySector, getWorkTypeLabel, type WorkTypeKey } from '@/lib/contract-work-types';
 
@@ -37,12 +39,15 @@ interface Props {
   selectedWorkType?: WorkTypeKey | null;
   /** Phase D — whether the user has explicitly picked a sector. */
   sectorTouched?: boolean;
+  /** Allow admins to jump directly to template authoring. */
+  isAdmin?: boolean;
 }
 
 export const TemplateSelectionSection: React.FC<Props> = ({
   isRTL, publishedVersions, effectiveVersion, selectedPricingMethod,
   templateCategoryConfig, onSelectVersion, onSelectPricingMethod,
   selectedWorkType = null, sectorTouched = false,
+  isAdmin = false,
 }) => {
   // Phase D — surface sector / no-match guidance instead of silently rendering nothing.
   const sectorProvided = !!selectedWorkType && sectorTouched;
@@ -62,17 +67,37 @@ export const TemplateSelectionSection: React.FC<Props> = ({
   }
 
   if (publishedVersions.length === 0 || filtered.length === 0) {
+    const requestTo = `/help/feature-request?topic=contract-template&sector=${encodeURIComponent(sectorLabel ?? '')}`;
     return (
       <div
         data-testid="contract-template-section-no-match"
-        className="p-4 rounded-xl border border-warning/40 bg-warning/5 text-[11px] flex items-start gap-2"
+        className="p-4 rounded-xl border border-warning/40 bg-warning/5 text-[11px] space-y-3"
       >
-        <BookOpen className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
-        <span>
-          {isRTL
-            ? `لا يوجد قالب عقد متاح لهذا المجال حاليًا${sectorLabel ? ` (${sectorLabel})` : ''}`
-            : `No contract template is available for this sector yet${sectorLabel ? ` (${sectorLabel})` : ''}`}
-        </span>
+        <div className="flex items-start gap-2">
+          <BookOpen className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
+          <span>
+            {isRTL
+              ? `لا يوجد قالب عقد متاح لهذا المجال حاليًا${sectorLabel ? ` (${sectorLabel})` : ''}. يمكنك ${isAdmin ? 'إضافة قالب جديد' : 'طلب إضافة قالب'} لهذا المجال.`
+              : `No contract template is available for this sector yet${sectorLabel ? ` (${sectorLabel})` : ''}. You can ${isAdmin ? 'add a new template' : 'request a template'} for this sector.`}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {isAdmin ? (
+            <Button asChild size="sm" variant="default" className="h-7 text-[11px] gap-1">
+              <Link to="/admin/contracts?tab=templates" data-testid="contract-template-add-cta">
+                <PlusCircle className="w-3.5 h-3.5" />
+                {isRTL ? 'إضافة قالب' : 'Add template'}
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="outline" className="h-7 text-[11px] gap-1">
+              <Link to={requestTo} data-testid="contract-template-request-cta">
+                <PlusCircle className="w-3.5 h-3.5" />
+                {isRTL ? 'طلب إضافة قالب' : 'Request a template'}
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
