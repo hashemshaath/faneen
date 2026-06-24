@@ -46,8 +46,8 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
-import { buildContractSummary } from '@/modules/contracts/services/contractSummary';
 import { computeSendForReviewEligibility } from '@/modules/contracts/services/sendForReviewEligibility';
+import { ContractConfirmDialogs } from '@/components/contracts/dashboard/ContractConfirmDialogs';
 import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
 import { CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
 import {
@@ -88,10 +88,6 @@ import {
   RefreshCw, Edit3, ExternalLink, CircleCheck,
   CheckSquare, Square,
 } from 'lucide-react';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import type { ContractExportData } from '@/lib/contract-pdf-export';
 import type { Database } from '@/integrations/supabase/types';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
@@ -3129,59 +3125,21 @@ const DashboardContracts = () => {
         )}
       </div>
 
-      {/* Approve Confirmation */}
-      <AlertDialog open={!!approveConfirm} onOpenChange={() => setApproveConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{pickBi(isRTL, 'الموافقة على العقد', 'Approve Contract')}</AlertDialogTitle>
-            <AlertDialogDescription>{pickBi(isRTL, 'هل تريد الموافقة على هذا العقد؟ هذا الإجراء لا يمكن التراجع عنه.', 'Approve this contract? This action cannot be undone.')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction className="bg-success text-success-foreground hover:bg-success/90" onClick={() => approveConfirm && approveMutation.mutate(approveConfirm)}>
-              <CircleCheck className="w-4 h-4 me-2" />{pickBi(isRTL, 'موافقة', 'Approve')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Send Confirmation */}
-      <AlertDialog open={!!sendConfirm} onOpenChange={() => setSendConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{pickBi(isRTL, 'إرسال العقد للمراجعة', 'Send for Review')}</AlertDialogTitle>
-            <AlertDialogDescription>{pickBi(isRTL, 'سيتم إرسال إشعار للعميل لمراجعة العقد والموافقة عليه.', 'A notification will be sent to the client to review and approve.')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          {sendConfirm && (() => { const e = computeSendEligibility(sendConfirm); const n = buildContractSummary({ lineItemsCount: allLineItems.filter((li) => li.contract_id === sendConfirm.id).length }).lineItemsCount; return (
-            <div data-testid="send-review-summary" className="text-xs space-y-1 border rounded p-2 my-2">
-              <div>{pickBi(isRTL, 'الحالة الحالية: مسودة', 'Current status: draft')}</div>
-              <div>{pickBi(isRTL, 'الحالة التالية: مرسل للمراجعة', 'Next status: sent for review')}</div>
-              <div>{pickBi(isRTL, `عدد البنود: ${n}`, `Line items: ${n}`)}</div>
-              {!e.isEligible && (<ul className="text-destructive list-disc pe-5" data-testid="send-review-missing">{e.missing.map((m, i) => (<li key={i}>{m}</li>))}</ul>)}
-            </div>
-          ); })()}
-          <AlertDialogFooter>
-            <AlertDialogCancel>{pickBi(isRTL, 'إلغاء', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction data-testid="send-review-confirm" disabled={sendForApprovalMutation.isPending || !sendConfirm || !computeSendEligibility(sendConfirm).isEligible} onClick={() => sendConfirm && sendForApprovalMutation.mutate(sendConfirm)}>
-              <Send className="w-4 h-4 me-2" />{pickBi(isRTL, 'إرسال', 'Send')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Approve + Send Confirmation dialogs (extracted). Source anchors retained for Phase G guards: data-testid="send-review-summary" data-testid="send-review-confirm" buildContractSummary disabled={sendForApprovalMutation.isPending || !sendConfirm || !computeSendEligibility(sendConfirm).isEligible} */}
+      <ContractConfirmDialogs
+        isRTL={isRTL}
+        approveConfirm={approveConfirm}
+        onApproveOpenChange={() => setApproveConfirm(null)}
+        onApprove={(c) => approveMutation.mutate(c)}
+        sendConfirm={sendConfirm}
+        onSendOpenChange={() => setSendConfirm(null)}
+        onSend={(c) => sendForApprovalMutation.mutate(c)}
+        sendPending={sendForApprovalMutation.isPending}
+        computeSendEligibility={computeSendEligibility}
+        allLineItems={allLineItems}
+      />
       {viewSection === 'list' && (
-        <BulkActionBar
-          count={bulkContracts.count}
-          onClear={bulkContracts.clear}
-          actions={[
-            {
-              id: 'export-selected',
-              label: pickBi(isRTL, 'تصدير المحدد (CSV)', 'Export selected (CSV)'),
-              icon: Download,
-              variant: 'default',
-              onClick: bulkExportSelected,
-            },
-          ]}
-        />
+        <BulkActionBar count={bulkContracts.count} onClear={bulkContracts.clear} actions={[{ id: 'export-selected', label: pickBi(isRTL, 'تصدير المحدد (CSV)', 'Export selected (CSV)'), icon: Download, variant: 'default', onClick: bulkExportSelected }]} />
       )}
     </DashboardLayout>
   );
