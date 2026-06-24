@@ -68,6 +68,8 @@ export const TemplateSelectionSection: React.FC<Props> = ({
 
   if (publishedVersions.length === 0 || filtered.length === 0) {
     const requestTo = `/help/feature-request?topic=contract-template&sector=${encodeURIComponent(sectorLabel ?? '')}`;
+    const hasAnyTemplate = publishedVersions.length > 0;
+    const fallback = hasAnyTemplate ? publishedVersions : [];
     return (
       <div
         data-testid="contract-template-section-no-match"
@@ -77,10 +79,33 @@ export const TemplateSelectionSection: React.FC<Props> = ({
           <BookOpen className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
           <span>
             {isRTL
-              ? `لا يوجد قالب عقد متاح لهذا المجال حاليًا${sectorLabel ? ` (${sectorLabel})` : ''}. يمكنك ${isAdmin ? 'إضافة قالب جديد' : 'طلب إضافة قالب'} لهذا المجال.`
-              : `No contract template is available for this sector yet${sectorLabel ? ` (${sectorLabel})` : ''}. You can ${isAdmin ? 'add a new template' : 'request a template'} for this sector.`}
+              ? `لا يوجد قالب مخصص لهذا المجال${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. يمكنك اختيار قالب عام من القائمة أدناه' : ''}.`
+              : `No template is specialized for this sector${sectorLabel ? ` (${sectorLabel})` : ''}${hasAnyTemplate ? '. You can pick a general template from the list below' : ''}.`}
           </span>
         </div>
+        {hasAnyTemplate && (
+          <div className="space-y-1.5">
+            <Label className="text-[10px] text-muted-foreground">{isRTL ? 'كل القوالب المتاحة' : 'All available templates'}</Label>
+            <Select
+              value={effectiveVersion?.version_id ?? ''}
+              onValueChange={(v) => onSelectVersion(v)}
+            >
+              <SelectTrigger className="h-9 text-xs bg-background"><SelectValue placeholder={isRTL ? 'اختر قالبًا' : 'Choose a template'} /></SelectTrigger>
+              <SelectContent>
+                {fallback.map(v => {
+                  const cfg = templateCategoryConfig[v.category];
+                  const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
+                  const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : v.category;
+                  return (
+                    <SelectItem key={v.version_id} value={v.version_id} className="text-xs">
+                      {label} · {catLabel} · v{v.version_number}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="flex flex-wrap gap-2">
           {isAdmin ? (
             <Button asChild size="sm" variant="default" className="h-7 text-[11px] gap-1">

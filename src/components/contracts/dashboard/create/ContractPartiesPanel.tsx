@@ -80,7 +80,9 @@ export const ContractPartiesPanel: React.FC<ContractPartiesPanelProps> = ({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Row icon={<Building2 className="w-3.5 h-3.5" />} label={firstLabel} value={firstValue} hint={firstHint} />
-        <Row icon={accountKind === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />} label={secondLabel} value={secondValue} hint={secondHint} />
+        {accountKind !== 'client' && (
+          <Row icon={accountKind === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />} label={secondLabel} value={secondValue} hint={secondHint} />
+        )}
       </div>
       {firstPartyRef && (
         <div className="text-[10px] text-muted-foreground">
