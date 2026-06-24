@@ -2240,12 +2240,10 @@ const DashboardContracts = () => {
                 if (!effectiveVersion) missing.push(pickBi(isRTL, 'قالب عقد منشور', 'Published template'));
                 if (!selectedSiteId) missing.push(pickBi(isRTL, 'موقع التنفيذ', 'Execution site'));
                 if (!selectedWorkType || !workTypeTouched) missing.push(pickBi(isRTL, 'المجال / التخصص', 'Sector / specialty'));
-                if (!effectiveVersion) { warnings.push(pickBi(isRTL, 'الضمان غير محدد — يُستمد من القالب', 'Warranty unset — inherited from template')); warnings.push(pickBi(isRTL, 'الدفعات غير محددة — تُستمد من القالب', 'Payment terms unset — inherited from template')); }
-                if (!form.start_date || !form.end_date) warnings.push(pickBi(isRTL, 'مدة التنفيذ غير محددة', 'Execution duration unset'));
-                const hasTpl = !!effectiveVersion; const tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template'; const tplNot = isRTL ? 'غير محدد' : 'Not set';
+                if (!effectiveVersion) { warnings.push(pickBi(isRTL, 'الضمان غير محدد — يُستمد من القالب', 'Warranty unset — inherited from template')); warnings.push(pickBi(isRTL, 'الدفعات غير محددة — تُستمد من القالب', 'Payment terms unset — inherited from template')); } if (!form.start_date || !form.end_date) warnings.push(pickBi(isRTL, 'مدة التنفيذ غير محددة', 'Execution duration unset'));
+                const hasTpl = !!effectiveVersion, tplPresent = isRTL ? 'مضمَّن في القالب' : 'Included in template', tplNot = isRTL ? 'غير محدد' : 'Not set';
                 const templateLabel = hasTpl ? `${isRTL ? effectiveVersion!.name_ar : (effectiveVersion!.name_en || effectiveVersion!.name_ar)} · v${effectiveVersion!.version_number}` : '—';
-                const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? (isRTL ? 'الجهة المنفذة المختارة' : 'Selected executing provider')) : (isRTL ? 'لم تُحدَّد بعد' : 'Not set yet');
-                const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? (isRTL ? 'صاحب الحساب' : 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
+                const firstPartyLabel = contractParties.firstPartyBusinessId ? (contractParties.firstPartyDisplayName ?? (isRTL ? 'الجهة المنفذة المختارة' : 'Selected executing provider')) : (isRTL ? 'لم تُحدَّد بعد' : 'Not set yet'); const secondPartyLabel = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? (isRTL ? 'صاحب الحساب' : 'Account holder')) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—');
                 return (
                   <ContractReviewSummary isRTL={isRTL} guide={guide}
                     clientLabel={selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—'}
