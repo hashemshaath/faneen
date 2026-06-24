@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { filterTemplatesBySector, getWorkTypeLabel, type WorkTypeKey } from '@/lib/contract-work-types';
+import { formatPricingMethodLabel } from '@/lib/contract-pricing';
 
 export interface PublishedTemplateOption {
   version_id: string;
@@ -134,7 +135,7 @@ export const TemplateSelectionSection: React.FC<Props> = ({
             <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'اختياري' : 'Optional'} /></SelectTrigger>
             <SelectContent>
               {effectiveVersion.pricing_methods.map(m => (
-                <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                <SelectItem key={m} value={m} className="text-xs">{formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')}</SelectItem>
               ))}
             </SelectContent>
           </Select>
