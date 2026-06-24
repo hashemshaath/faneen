@@ -2256,12 +2256,9 @@ const DashboardContracts = () => {
                     vatLabel={form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `Inclusive ${form.vat_rate}%`) : (isRTL ? `تُضاف ${form.vat_rate}%` : `Added ${form.vat_rate}%`)}
                     datesLabel={(form.start_date || '—') + ' → ' + (form.end_date || '—')} missing={missing}
                     firstPartyLabel={firstPartyLabel} secondPartyLabel={secondPartyLabel}
-                    executionSiteLabel={selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—'}
-                    sectorLabel={w ? (isRTL ? w.ar : w.en) : '—'}
-                    scopeOfWorkLabel={hasTpl ? tplPresent : '—'}
-                    warrantyLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
-                    paymentTermsLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
-                    executionDurationLabel={durationLabel}
+                    executionSiteLabel={selectedSiteId ? (isRTL ? 'تم تحديد الموقع' : 'Site selected') : '—'} sectorLabel={w ? (isRTL ? w.ar : w.en) : '—'}
+                    scopeOfWorkLabel={hasTpl ? tplPresent : '—'} warrantyLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')}
+                    paymentTermsLabel={hasTpl ? tplPresent : (isRTL ? 'غير محدد' : 'Not set')} executionDurationLabel={durationLabel}
                     deliveryTermsLabel={hasTpl ? tplPresent : '—'} warnings={warnings} />
                 );
               })()}
