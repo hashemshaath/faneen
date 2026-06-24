@@ -6,11 +6,13 @@
  * required field count) already passed in via PublishedTemplateOption.
  */
 import React, { useState } from 'react';
-import { BookOpen, PlusCircle, LayoutGrid } from 'lucide-react';
+import { BookOpen, PlusCircle, LayoutGrid, Check, ChevronsUpDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { filterTemplatesBySector, getWorkTypeLabel, type WorkTypeKey } from '@/lib/contract-work-types';
 
