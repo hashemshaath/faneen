@@ -34,7 +34,7 @@ export const SelfClientCard: React.FC<SelfClientCardProps> = ({
     >
       <div className="flex items-center gap-2 text-xs font-semibold">
         <User className="w-3.5 h-3.5 text-primary" />
-        {pickBi(isRTL, 'العميل (أنت)', 'Client (you)')}
+        {pickBi(isRTL, 'الطرف الثاني (أنت)', 'Second party (you)')}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-foreground/80">
         <div><span className="text-muted-foreground">{pickBi(isRTL, 'الاسم: ', 'Name: ')}</span>{clientName || '—'}</div>

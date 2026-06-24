@@ -73,6 +73,14 @@ interface Props {
   locked: boolean;
   /** True when the contract row exists. Setter RPC is only callable then. */
   hasContract: boolean;
+  /**
+   * CONTRACT-PARTY-MODEL Phase A — when true, the signed-in user is a
+   * pure client (no business). Sites are scoped to `client_user_id`
+   * directly from `client_sites` (RLS-protected) instead of going
+   * through the business-scoped RPC, and the "select your business"
+   * hint is suppressed.
+   */
+  isClientOnlyAccount?: boolean;
   /** Fired after the local selection changes. Parent decides what to do. */
   onSelect: (siteId: string | null) => void;
   /** Setter call (only used when hasContract = true). */
@@ -94,18 +102,37 @@ const emptyForm = {
 
 export const ExecutionSiteSection: React.FC<Props> = ({
   isRTL, businessId, clientUserId, selectedSiteId, snapshot, locked,
-  hasContract, onSelect, onPersistSelect,
+  hasContract, isClientOnlyAccount = false, onSelect, onPersistSelect,
 }) => {
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [persisting, setPersisting] = useState(false);
 
-  const enabled = !!businessId && !locked;
+  // Client-only accounts have no business; their sites are loaded
+  // directly from `client_sites` scoped by `client_user_id` (RLS).
+  const enabled = !locked && (isClientOnlyAccount ? !!clientUserId : !!businessId);
 
   const { data: sites = [], isLoading, refetch } = useQuery({
-    queryKey: ['client-sites', businessId, clientUserId ?? null],
+    queryKey: ['client-sites', isClientOnlyAccount ? 'self' : (businessId ?? null), clientUserId ?? null],
     queryFn: async () => {
+      if (isClientOnlyAccount) {
+        if (!clientUserId) return [] as ExecutionSiteRow[];
+        const { data, error } = await supabase
+          .from('client_sites')
+          .select(`
+            id, client_user_id, contact_name, contact_phone,
+            city_id, city_name, district, address_line1, address_line2,
+            map_url, latitude, longitude, access_notes, is_default,
+            site_ref, site_name, site_type, visibility, qr_enabled, label
+          `)
+          .eq('client_user_id', clientUserId)
+          .is('archived_at', null)
+          .order('is_default', { ascending: false })
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return (data ?? []) as unknown as ExecutionSiteRow[];
+      }
       const { data, error } = await listClientSitesForContract({
         _business_id: businessId!,
         _client_user_id: clientUserId ?? undefined,
@@ -208,7 +235,7 @@ export const ExecutionSiteSection: React.FC<Props> = ({
             type="button" size="sm" variant="outline"
             className="h-8 text-[11px] gap-1"
             onClick={() => setAdding(true)}
-            disabled={!businessId}
+            disabled={isClientOnlyAccount ? !clientUserId : !businessId}
             aria-label={isRTL ? 'إضافة موقع جديد' : 'Add new site'}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -217,9 +244,17 @@ export const ExecutionSiteSection: React.FC<Props> = ({
         )}
       </div>
 
-      {!businessId && (
+      {!businessId && !isClientOnlyAccount && (
         <p className="text-[11px] text-muted-foreground">
           {isRTL ? 'حدد المنشأة أولاً.' : 'Select your business first.'}
+        </p>
+      )}
+
+      {isClientOnlyAccount && !clientUserId && (
+        <p className="text-[11px] text-muted-foreground">
+          {isRTL
+            ? 'أضف موقع التنفيذ قبل إنشاء العقد.'
+            : 'Add an execution site before creating the contract.'}
         </p>
       )}
 
@@ -263,7 +298,11 @@ export const ExecutionSiteSection: React.FC<Props> = ({
             </div>
           ) : sites.length === 0 && !adding ? (
             <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'لا توجد مواقع محفوظة لهذا العميل بعد.' : 'No saved sites for this client yet.'}
+              {isClientOnlyAccount
+                ? (isRTL
+                    ? 'لا توجد مواقع مرتبطة بحسابك. أضف موقعًا أولًا.'
+                    : 'No sites linked to your account yet. Add a site first.')
+                : (isRTL ? 'لا توجد مواقع محفوظة لهذا الطرف الثاني بعد.' : 'No saved sites for this party yet.')}
             </p>
           ) : (
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="listbox" aria-label={isRTL ? 'مواقع التنفيذ' : 'Execution sites'}>
