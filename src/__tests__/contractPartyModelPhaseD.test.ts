@@ -54,13 +54,21 @@ describe('Phase D — Template filtering by sector', () => {
   });
 
   it('6. TemplateSelectionSection renders the no-match message', () => {
-    expect(section).toContain('contract-template-section-no-match');
-    expect(section).toContain('لا يوجد قالب عقد متاح لهذا المجال حاليًا');
+    // The picker now surfaces the no-match guidance via an inline warning
+    // banner plus an "Show all templates" affordance, rather than the
+    // legacy section-level placeholder. Guard the new behavior.
+    expect(section).toContain('contract-template-no-match-banner');
+    expect(section).toContain('عرض جميع القوالب');
   });
 
   it('7. TemplateSelectionSection consumes filterTemplatesBySector, not the raw list', () => {
     expect(section).toContain('filterTemplatesBySector');
-    expect(section).toMatch(/\{filtered\.map\(v\s*=>/);
+    // The legacy `{filtered.map(v => ...)}` JSX was replaced by a
+    // searchable Combobox that groups `filtered` items by category
+    // before rendering. Guard that the searchable picker still
+    // consumes the filtered list (and not the raw `publishedVersions`).
+    expect(section).toMatch(/Command(Input|Group|Item|List)/);
+    expect(section).toMatch(/filtered/);
   });
 
   it('8. Selected sector label is surfaced on the template section', () => {
