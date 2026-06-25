@@ -113,6 +113,7 @@ import { ContractFinancialSummary, ContractLineVatBreakdown } from '@/components
 import { ContractApprovalTimeline } from '@/components/contracts/dashboard/ContractApprovalTimeline';
 import { WorkTypeSection } from '@/components/contracts/dashboard/create/WorkTypeSection';
 import { TemplateSelectionSection } from '@/components/contracts/dashboard/create/TemplateSelectionSection';
+import { PricingMethodSection, type ContractPricingMethodChoice } from '@/components/contracts/dashboard/create/PricingMethodSection';
 import { ContractDetailsSection } from '@/components/contracts/dashboard/create/ContractDetailsSection';
 import { VatSettingsSection } from '@/components/contracts/dashboard/create/VatSettingsSection';
 import { SupervisorSection } from '@/components/contracts/dashboard/create/SupervisorSection';
@@ -236,6 +237,8 @@ const DashboardContracts = () => {
   const [workTypeTouched, setWorkTypeTouched] = useState(false);
   /* CONTRACT-CREATION — Client-account provider picker (first party). */
   const [selectedProviderBusiness, setSelectedProviderBusiness] = useState<SelectedProviderBusiness | null>(null);
+  /* Contract-level pricing-method choice (UI-only metadata, not financial). */
+  const [contractPricingChoice, setContractPricingChoice] = useState<ContractPricingMethodChoice | null>(null);
   /* CT4C.3 — Client invitation flow state. */
   const [inviteMode, setInviteMode] = useState<'idle' | 'composing' | 'awaiting'>('idle');
   const [inviteForm, setInviteForm] = useState<{ email: string; name: string; phone: string }>({ email: '', name: '', phone: '' });
