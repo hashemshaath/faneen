@@ -189,7 +189,7 @@ const DashboardContractReview: React.FC = () => {
 
   const inlineUpdate = useMutation({
     mutationFn: async (patch: Partial<ContractRow>) => {
-      const { error } = await supabase.from('contracts').update(patch).eq('id', id!);
+      const { error } = await supabase.from('contracts').update(patch as never).eq('id', id!);
       if (error) throw error;
     },
     onSuccess: () => {
