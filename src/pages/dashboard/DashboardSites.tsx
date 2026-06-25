@@ -1,5 +1,5 @@
 import { memo, useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -406,6 +406,7 @@ export default function DashboardSites() {
     },
     enabled: !!user,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   /* ─── Stable list of site ids ───────────────────────────────────
