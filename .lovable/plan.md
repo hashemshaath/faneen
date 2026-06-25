@@ -1,54 +1,56 @@
-## الهدف
-نقل تجربة «مراجعة العقد قبل الإرسال» من `AlertDialog` إلى **صفحة مستقلة** منظمة، كل قسم في بطاقة مستقلة قابلة للتعديل Inline (Expand/Save بدون مغادرة الصفحة)، مع زر «إرسال للمراجعة» في الأسفل.
+# USER DASHBOARD NAVIGATION + LINKS + ACTIONS AUDIT — PLAN
 
-## المسار الجديد
-- `GET /dashboard/contracts/:id/review` — صفحة جديدة (lazy في `App.tsx`).
-- تتطلب أن يكون `status = 'draft'` وأن المستخدم هو `provider_id` للعقد. خلاف ذلك → redirect إلى `/dashboard/contracts`.
+نطاق المهمة كبير جدًا (8 صفحات + sidebar + mobile + role-aware + perf + E2E + full suite). لتنفيذها بدقة دون كسر شيء، سأقسمها إلى 4 جولات صغيرة منفصلة، كل جولة لها تقرير مستقل. هذه الخطة للموافقة قبل البدء.
 
-## الملف الجديد
-`src/pages/dashboard/DashboardContractReview.tsx`
-- يجلب العقد عبر `supabase.from('contracts').select(...).eq('id', id).single()` + `line_items` + الأطراف (نفس الاستعلامات في `DashboardContracts.tsx`).
-- يعرض `PageHeader` مع breadcrumb (لوحة التحكم ← العقود ← مراجعة).
-- يعرض شريط إكمال علوي (نفس `completenessScore` المُستخدم في الـ summary الحالي).
-- بطاقات مستقلة (كل قسم = `FormSection` collapsible):
-  1. **الأطراف** (طرف أول/ثاني/عميل) — read-only (تعديل في الإنشاء)
-  2. **العنوان والوصف** — تعديل Inline (title_ar/en, description_ar/en)
-  3. **الموقع والقطاع** — read-only (تعديل في الإنشاء)
-  4. **نوع العمل والقالب** — read-only
-  5. **نطاق العمل وبنود العقد** — تعديل Inline (scope_of_work, terms_ar/en, warranty)
-  6. **التسعير** — read-only (line items)
-  7. **التواريخ والمدة** — تعديل Inline (start_date/end_date/execution_duration)
-  8. **شروط الدفع والتسليم** — تعديل Inline
-  9. **المشرف** — تعديل Inline (supervisor_name/phone/email)
-  10. **المرفقات** — read-only
+## Round 1 — Inventory + Broken Links (read-only)
+- مسح `src/pages/dashboard/**` + `src/components/dashboard/**` + sidebar/topbar/mobile menu.
+- بناء جدول inventory: النص، المصدر، الوجهة، النوع (Link/navigate/href/button)، الدور المطلوب، الحالة.
+- اكتشاف: `href="#"`، `Link` بدون `to`، `button` بدون `onClick`، routes غير موجودة في `App.tsx`، روابط `undefined/null`، external بدون `rel="noopener noreferrer"`.
+- مخرَج: تقرير inventory + قائمة broken links (لا تعديلات بعد).
 
-- كل بطاقة تحرير Inline تستخدم `supabase.from('contracts').update({...}).eq('id', id)` مع تحقق eligibility + invalidation للـ `['dashboard-contracts']` و `['contract-review', id]`.
-- الأقسام «read-only» يكون فيها زر **«تعديل في شاشة الإنشاء»** ينقل إلى `/dashboard/contracts?edit={id}&step={key}` (الـ stepper الحالي يدعم `editingId`).
+## Round 2 — Targeted Fixes (frontend only)
+- إصلاح broken links المكتشفة في Round 1.
+- إصلاح زر "إنشاء العقد": تأكيد الـ handler، gating حسب الأهلية، رسائل النقص الواضحة.
+- استبدال `href="#"` بـ disabled buttons أو routes صحيحة.
+- ضبط `target="_blank" rel="noopener noreferrer"` للروابط الخارجية.
+- ضبط role-aware visibility (إخفاء projects للعميل الشخصي، إلخ).
+- لا DB/RLS/RPC/migrations.
 
-## نقاط الدخول
-1. **قائمة العقود** (`DashboardContracts.tsx`): استبدال `onClick: () => setSendConfirm(c)` في زر «إرسال للمراجعة» بـ `navigate(\`/dashboard/contracts/${c.id}/review\`)`. الإبقاء على `AlertDialog` كـ fallback (للاستخدام من الصفحة الجديدة).
-2. **شاشة الإنشاء**: في `ContractCreateActionsBar` (أو بجواره داخل `DashboardContracts.tsx` بعد Save Draft) إضافة زر «مراجعة» يظهر عند `editingId` وينتقل إلى `/dashboard/contracts/${editingId}/review`.
+## Round 3 — Performance (frontend only)
+- إضافة `enabled` gates للـ queries المعتمدة على auth/business/site.
+- `placeholderData: keepPreviousData` + `staleTime` للقوائم.
+- `useMemo`/`useCallback` للقوائم الثقيلة.
+- lazy-load tabs الثقيلة.
+- إزالة console logs الزائدة.
 
-## الإرسال للمراجعة
-- زر sticky سفلي «إرسال للمراجعة» يعيد استخدام `ContractConfirmDialogs` (لا تغيير في lifecycle ولا في RPC).
-- بعد النجاح: invalidation + toast + `navigate('/dashboard/contracts')`.
+## Round 4 — Tests + Verify
+- إضافة tests:
+  - sidebar links موجودة في router config.
+  - لا `href="#"` في dashboard.
+  - زر إنشاء العقد يعرض سبب التعطيل.
+  - external links لها `rel`.
+  - role-aware navigation.
+- `tsgo --noEmit` + targeted tests + full suite.
+- E2E Playwright إذا session متاحة، وإلا أُعلن `E2E BLOCKED`.
 
-## ممنوعات
-- لا تغيير في `contracts` schema/RLS/RPC/migrations/edge functions.
-- لا `service_role` في frontend.
-- لا تعطيل أي test موجود.
-- إبقاء `data-testid="send-review-summary"`, `send-review-confirm`, `send-review-missing`, `contract-review-summary` كما هي (الصفحة الجديدة تستوردها أيضًا).
+## ممنوعات ملتزَم بها
+- لا migrations / RLS / RPC / edge.
+- لا تغيير contract lifecycle / signatures.
+- لا حذف routes أو tests أو assertions.
+- لا `any` / `ts-ignore` / `eslint-disable`.
+- لا رفع line caps.
+- لا hardcoded IDs.
+- لا fake pass — full suite يجب أن يكون أخضرًا قبل إعلان PASS.
 
-## الاختبارات
-- `src/__tests__/contractReviewPage.test.tsx`:
-  - الصفحة موجودة ومرتبطة بـ route في `App.tsx`.
-  - تحتوي بطاقات لكل قسم (data-testid).
-  - زر الإرسال معطّل إذا `missing.length > 0`.
-  - زر «تعديل» في القسم Inline يستدعي update.
-- تشغيل full suite للتأكد لا regressions.
+## ملاحظة مهمة قبل البدء
+الجولة السابقة (`CONTRACT PRICING BASIS FULL SUITE VERIFY`) أنهت بـ **6 failures موروثة** في:
+- `contractPartyModelPhaseA` (2)
+- `contractPartyModelPhaseE` (2)
+- `contractsIsolationAudit` (1)
+- `ct10ContractsUpdateMigration` (1)
 
-## تقدير الحجم
-- ملف واحد جديد ~350-450 سطر.
-- ~30 سطر تعديل في `DashboardContracts.tsx` (entry points).
-- إضافة route واحد في `App.tsx`.
-- ملف اختبار جديد.
+هذه ليست من نطاق هذا الـ audit، لكنها ستمنع إعلان `FULL SUITE PASS` في Round 4. خياران:
+- **(أ)** أتعامل معها داخل هذا الـ audit وأرفع التقرير `PASS` كامل.
+- **(ب)** أتجاهلها وأرفع التقرير `NEEDS FIX` مع توثيق أنها موروثة.
+
+أحتاج موافقتك على الخطة وعلى الخيار (أ) أو (ب) قبل البدء.
