@@ -130,9 +130,6 @@ import { ContractActiveFilters } from '@/components/contracts/dashboard/Contract
 import { ContractsPagination } from '@/components/contracts/dashboard/ContractsPagination';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
-import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
-import { ContractCreateHeroHeader } from '@/components/contracts/dashboard/create/ContractCreateHeroHeader';
-import { ContractLiveSummarySidebar } from '@/components/contracts/dashboard/create/ContractLiveSummarySidebar';
 import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
 import { ExecutionSiteSection, type ExecutionAddressSnapshot } from '@/components/contracts/dashboard/create/ExecutionSiteSection';
