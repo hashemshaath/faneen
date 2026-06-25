@@ -2522,7 +2522,7 @@ const DashboardContracts = () => {
                         isExpanded={isExpanded} onExpand={setExpandedId} onNavigate={navigate}
                         onExportPDF={handleExportPDF}
                         onApprove={(contract) => setApproveConfirm(contract)}
-                        onSendForApproval={(contract) => setSendConfirm(contract)}
+                        onSendForApproval={(contract) => navigate(`/dashboard/contracts/${contract.id}/review`)}
                         onDuplicate={handleDuplicate}
                         onShare={handleShareContract}
                         onEdit={openEditContract}
