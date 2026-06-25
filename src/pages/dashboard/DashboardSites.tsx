@@ -433,6 +433,7 @@ export default function DashboardSites() {
     },
     enabled: siteIds.length > 0,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   /* ─── Projects linked per site (single batched IN query) ─── */
@@ -452,6 +453,7 @@ export default function DashboardSites() {
     },
     enabled: siteIds.length > 0,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   /* ─── Mutations ─── */
