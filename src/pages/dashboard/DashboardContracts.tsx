@@ -1120,7 +1120,7 @@ const DashboardContracts = () => {
       toast.error(mapped.message);
     },
   });
-  const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && !contractParties.isEligible) || createContractMutation.isPending;
+  const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && !contractParties.isEligible) || (!editingId && !contractPricingChoice) || createContractMutation.isPending;
 
   /* CT4C.3 — Client invitation mutations. */
   const sendInviteMutation = useMutation({
