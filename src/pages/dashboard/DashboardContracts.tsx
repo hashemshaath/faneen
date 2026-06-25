@@ -5,7 +5,7 @@ import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listActiveContractTemplates, notifyClientInvitation } from '@/modules/contracts';
+import { listActiveContractTemplates, notifyClientInvitation, notifyContractStatusChange } from '@/modules/contracts';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { getProfileByEmail } from '@/modules/users';
@@ -1296,6 +1296,17 @@ const DashboardContracts = () => {
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
       await acceptContract(contract.id);
+      // PHASE 1 — notify the other party that approval happened.
+      await notifyContractStatusChange({
+        contract: {
+          id: contract.id,
+          title_ar: contract.title_ar,
+          title_en: contract.title_en,
+          provider_id: contract.provider_id,
+          client_id: contract.client_id,
+        },
+        event: contract._role === 'provider' ? 'approved_first_party' : 'approved_second_party',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
@@ -1307,10 +1318,16 @@ const DashboardContracts = () => {
   const sendForApprovalMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       await sendContractForApproval(contract.id);
-      await createNotification({ user_id: contract.client_id,
-        title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`,
-        title_en: `New contract pending review: ${contract.title_en || contract.title_ar}`,
-        notification_type: 'contract', reference_id: contract.id, reference_type: 'contract', action_url: `/contracts/${contract.id}` });
+      await notifyContractStatusChange({
+        contract: {
+          id: contract.id,
+          title_ar: contract.title_ar,
+          title_en: contract.title_en,
+          provider_id: contract.provider_id,
+          client_id: contract.client_id,
+        },
+        event: 'sent_for_review',
+      });
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] }); setSendConfirm(null); toast.success(pickBi(isRTL, 'تم إرسال العقد للمراجعة', 'Contract sent for review')); },
     onError: () => { toast.error(pickBi(isRTL, 'تعذّر إرسال العقد للمراجعة، حاول لاحقًا', 'Could not send the contract for review, please try again later')); },
