@@ -1104,7 +1104,12 @@ const DashboardContracts = () => {
       setLeadPrefill(null);
       setLeadPrefillDismissed(false);
       setLeadClientConfirmed(false);
-      toast.success(editingId ? (pickBi(isRTL, 'تم تحديث العقد', 'Contract updated')) : (pickBi(isRTL, 'تم إنشاء العقد', 'Contract created')));
+      const wasEditing = !!editingId;
+      toast.success(wasEditing ? (pickBi(isRTL, 'تم تحديث العقد', 'Contract updated')) : (pickBi(isRTL, 'تم إنشاء العقد', 'Contract created')));
+      // Route to standalone review page so user reviews before sending.
+      if (result?.contractId) {
+        navigate(`/dashboard/contracts/${result.contractId}/review`);
+      }
     },
     onError: (err: Error) => {
       const mapped = mapContractCreateError(err, isRTL);
