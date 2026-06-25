@@ -297,9 +297,9 @@ const DashboardSiteDetail: React.FC = () => {
           <span className="mx-1">{isRTL ? 'كل المواقع' : 'All sites'}</span>
         </Link>
 
-        {/* Cover hero — dark executive */}
-        <section className="relative overflow-hidden rounded-3xl border border-border/40 bg-slate-900 shadow-elev-2">
-          <div className="relative aspect-[21/8] sm:aspect-[21/7] md:aspect-[24/7] w-full">
+         {/* Cover hero — dark executive */}
+         <section className="relative overflow-hidden rounded-3xl border border-border/40 bg-slate-900 shadow-elev-2">
+           <div className="relative aspect-[16/10] sm:aspect-[21/8] md:aspect-[24/8] lg:aspect-[24/7] w-full min-h-[240px]">
             {cover ? (
               <img src={cover} alt={displayName} className="h-full w-full object-cover" loading="lazy" decoding="async"/>
             ) : (
@@ -316,14 +316,14 @@ const DashboardSiteDetail: React.FC = () => {
             {/* Soft brand glow at bottom edge */}
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
             {canManage && (
-              <div className="absolute end-3 top-3">
-                <SiteCoverUploader siteId={site.id} currentUrl={cover} onUploaded={(u) => setLocalCover(u)} />
-              </div>
-            )}
-            <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 text-white">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-xs opacity-90 flex-wrap">
+               <div className="absolute end-3 top-3 z-10">
+                 <SiteCoverUploader siteId={site.id} currentUrl={cover} onUploaded={(u) => setLocalCover(u)} />
+               </div>
+             )}
+             <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 text-white">
+               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
+                 <div className="min-w-0 flex-1">
+                   <div className="flex items-center gap-2 text-xs opacity-95 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                       {isRTL ? 'نشط' : 'Active'}
@@ -333,7 +333,7 @@ const DashboardSiteDetail: React.FC = () => {
                     ) : null}
                     {typeLabel && <Badge variant="secondary" className="bg-white/10 backdrop-blur-sm ring-1 ring-white/20 text-white border-0">{isRTL ? typeLabel.ar : typeLabel.en}</Badge>}
                   </div>
-                  <h1 dir="auto" className="mt-2 text-xl sm:text-2xl md:text-4xl font-bold leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]">{displayName}</h1>
+                   <h1 dir="auto" className="mt-2.5 text-2xl sm:text-3xl md:text-4xl font-bold leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">{displayName}</h1>
                   {(site.city_name || site.district) && (
                     <p className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm text-slate-300 drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]" dir="auto">
                       <MapPin className="h-4 w-4 text-emerald-400" />
@@ -341,12 +341,17 @@ const DashboardSiteDetail: React.FC = () => {
                     </p>
                   )}
                 </div>
-                {canManage && (
-                  <Button size="sm" variant="secondary" onClick={() => navigate(`/dashboard/sites?edit=${site.id}`)} className="hover-lift bg-white hover:bg-slate-100 text-slate-900 font-semibold shadow-md rounded-xl">
-                    <Pencil className="h-4 w-4" />
-                    <span className="mx-2">{isRTL ? 'تعديل' : 'Edit'}</span>
-                  </Button>
-                )}
+                 {canManage && (
+                   <Button
+                     size="sm"
+                     variant="secondary"
+                     onClick={() => navigate(`/dashboard/sites?edit=${site.id}`)}
+                     className="hover-lift bg-white hover:bg-slate-100 text-slate-900 font-semibold shadow-md rounded-xl self-start sm:self-auto shrink-0"
+                   >
+                     <Pencil className="h-4 w-4" />
+                     <span className="mx-2">{isRTL ? 'تعديل البيانات' : 'Edit details'}</span>
+                   </Button>
+                 )}
               </div>
             </div>
           </div>
