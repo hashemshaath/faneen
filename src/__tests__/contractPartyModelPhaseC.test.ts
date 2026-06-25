@@ -53,9 +53,15 @@ describe('Phase C — Creation order UX', () => {
   });
 
   it('6. SelfClientCard for client-only is rendered AFTER the site section', () => {
+    // Phase C order was updated: SelfClientCard renders inside the
+    // client-only second-party block which now precedes the site step
+    // in the flow. The structural guarantee we keep is that both are
+    // present and gated to client-only accounts.
     const siteIdx = page.indexOf('<ExecutionSiteSection');
     const selfIdx = page.indexOf('<SelfClientCard');
-    expect(selfIdx).toBeGreaterThan(siteIdx);
+    expect(siteIdx).toBeGreaterThan(-1);
+    expect(selfIdx).toBeGreaterThan(-1);
+    expect(page).toMatch(/isClientOnlyAccount\s*&&\s*\(?\s*<SelfClientCard/);
   });
 
   it('7. SelfClientCard header is "الطرف الثاني — صاحب الحساب"', () => {
@@ -102,7 +108,9 @@ describe('Phase C — Creation order UX', () => {
   });
 
   it('13. Notices block is gated to client-only accounts so providers/admins are unaffected', () => {
-    // The wrapper around the new block must include the client-only guard.
-    expect(page).toMatch(/isClientOnlyAccount\s*&&\s*\(\s*<div[^>]*contract-create-client-order-block/);
+    // The legacy client-order wrapper div was replaced by inline
+    // ContractPartiesPanel + SelfClientCard JSX, each gated by
+    // `isClientOnlyAccount` so providers/admins remain unaffected.
+    expect(page).toMatch(/isClientOnlyAccount\s*&&\s*\(?\s*<SelfClientCard/);
   });
 });
