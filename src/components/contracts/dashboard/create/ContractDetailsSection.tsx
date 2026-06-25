@@ -72,14 +72,12 @@ export const ContractDetailsSection: React.FC<Props> = ({
     if (!titleTouched.current && composedTitle && composedTitle !== form.title_ar) {
       setForm(f => ({ ...f, title_ar: composedTitle }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [composedTitle]);
 
   React.useEffect(() => {
     if (!descTouched.current && composedDesc && composedDesc !== form.description_ar) {
       setForm(f => ({ ...f, description_ar: composedDesc }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [composedDesc]);
 
   // English mirror fields are kept in sync automatically; the UI only exposes
@@ -89,14 +87,12 @@ export const ContractDetailsSection: React.FC<Props> = ({
     if (form.title_ar && form.title_en !== form.title_ar) {
       setForm(f => ({ ...f, title_en: f.title_ar }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.title_ar]);
 
   React.useEffect(() => {
     if (form.description_ar && form.description_en !== form.description_ar) {
       setForm(f => ({ ...f, description_en: f.description_ar }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.description_ar]);
 
   // ---------- End-date / duration toggle ----------
@@ -112,7 +108,6 @@ export const ContractDetailsSection: React.FC<Props> = ({
     const end = new Date(start.getTime() + n * 24 * 60 * 60 * 1000);
     const iso = end.toISOString().slice(0, 10);
     if (iso !== form.end_date) setForm(f => ({ ...f, end_date: iso }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endMode, durationDays, form.start_date]);
 
   // ---------- Date validation (UI guard) ----------
