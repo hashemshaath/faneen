@@ -1328,47 +1328,32 @@ export default function DashboardSites() {
                        </div>
                     </button>
                   <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <button onClick={() => navigate(`/dashboard/sites/${s.id}`)} className="font-semibold text-sm truncate text-start hover:text-primary hover:underline">
-                              {siteTitle}
-                            </button>
-                            <Badge variant="outline" className="h-4 text-[9px] px-1">
-                              {isBusiness ? pickBi(isRTL, 'منشأة', 'Business') : pickBi(isRTL, 'شخصي', 'Personal')}
-                            </Badge>
-                            <Badge variant={complete ? 'secondary' : 'outline'} className={`h-4 text-[9px] px-1 ${complete ? '' : 'text-amber-700 border-amber-400/60'}`}>
-                              {complete ? pickBi(isRTL, 'مكتمل', 'Complete') : pickBi(isRTL, 'يحتاج إكمال', 'Needs info')}
-                            </Badge>
-                            {s.is_default && (
-                              <Badge variant="outline" className="h-4 text-[9px] px-1 border-accent text-accent gap-0.5">
-                                <Star className="w-2.5 h-2.5 fill-current" />{pickBi(isRTL, 'افتراضي', 'Default')}
-                              </Badge>
-                            )}
-                            {isArchived && <Badge variant="outline" className="h-4 text-[9px] px-1">{pickBi(isRTL, 'مؤرشف', 'Archived')}</Badge>}
-                          </div>
-                          <p className="text-[10px] text-muted-foreground tech-content mt-0.5">
-                            {s.site_ref ?? `#${shortReferenceId(s.id)}`}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="text-[9px] shrink-0">{isRTL ? meta.ar : meta.en}</Badge>
+                    {/* Status badges + address (no duplicate title/type/ref — already on cover) */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge variant={complete ? 'secondary' : 'outline'} className={`h-5 text-[10px] px-1.5 ${complete ? '' : 'text-amber-700 border-amber-400/60'}`}>
+                        {complete ? pickBi(isRTL, 'مكتمل', 'Complete') : pickBi(isRTL, 'يحتاج إكمال', 'Needs info')}
+                      </Badge>
+                      <Badge variant="outline" className="h-5 text-[10px] px-1.5">
+                        {isBusiness ? pickBi(isRTL, 'منشأة', 'Business') : pickBi(isRTL, 'شخصي', 'Personal')}
+                      </Badge>
+                      {s.is_default && (
+                        <Badge variant="outline" className="h-5 text-[10px] px-1.5 border-accent text-accent gap-0.5">
+                          <Star className="w-2.5 h-2.5 fill-current" />{pickBi(isRTL, 'افتراضي', 'Default')}
+                        </Badge>
+                      )}
+                      {isArchived && <Badge variant="outline" className="h-5 text-[10px] px-1.5">{pickBi(isRTL, 'مؤرشف', 'Archived')}</Badge>}
                     </div>
 
                     <div className="space-y-1 text-xs">
-                      <p className="text-muted-foreground line-clamp-2">{s.address_line1}{s.address_line2 ? `, ${s.address_line2}` : ''}</p>
-                      {(s.city_name || s.district) && (
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-2.5 h-2.5" />{[s.district, s.city_name].filter(Boolean).join(' · ')}
+                      {(s.address_line1 || s.address_line2) && (
+                        <p className="text-muted-foreground line-clamp-2 flex items-start gap-1">
+                          <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
+                          <span>{s.address_line1}{s.address_line2 ? `, ${s.address_line2}` : ''}</span>
                         </p>
                       )}
                       {s.contact_name && (
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <User className="w-2.5 h-2.5" />{s.contact_name}
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <User className="w-3 h-3" />{s.contact_name}
                           {s.contact_phone && <span className="tech-content ms-1">· {s.contact_phone}</span>}
                         </p>
                       )}
