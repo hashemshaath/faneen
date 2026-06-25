@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -80,7 +80,7 @@ const DashboardSiteDetail: React.FC = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const [tab, setTab] = useState('overview');
-  const tabsRef = React.useRef<HTMLDivElement | null>(null);
+  const tabsRef = useRef<HTMLDivElement | null>(null);
   const goToTab = (next: string) => {
     setTab(next);
     requestAnimationFrame(() => {
@@ -808,7 +808,7 @@ const TONE_CLASSES: Record<string, string> = {
   emerald: 'text-emerald-600 dark:text-emerald-400',
 };
 
-const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null; tone?: keyof typeof TONE_CLASSES | string; onClick?: () => void }> = ({ label, value, sub, tone = 'primary', onClick }) => {
+const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null; tone?: keyof typeof TONE_CLASSES | string; loading?: boolean; onClick?: () => void }> = ({ label, value, sub, tone = 'primary', loading, onClick }) => {
   const Tag: React.ElementType = onClick ? 'button' : 'div';
   return (
     <Tag
@@ -816,7 +816,11 @@ const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null;
       className={`text-start rounded-xl border border-border/40 bg-card/60 p-3 ${onClick ? 'hover:border-primary/40 hover:bg-primary/5 transition cursor-pointer' : ''}`}
     >
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-2xl font-bold tech-content ${TONE_CLASSES[tone] || TONE_CLASSES.primary}`}>{value}</div>
+      {loading ? (
+        <Skeleton className="mt-1 h-7 w-12" />
+      ) : (
+        <div className={`mt-1 text-2xl font-bold tech-content ${TONE_CLASSES[tone] || TONE_CLASSES.primary}`}>{value}</div>
+      )}
       {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
     </Tag>
   );
