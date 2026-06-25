@@ -67,7 +67,10 @@ describe('Contract party model — Phase A terminology', () => {
   });
 
   it('Review missing-fields uses second-party label when isClientOnlyAccount', () => {
-    expect(DASH).toMatch(/missing\.push\(pickBi\(isRTL,\s*isClientOnlyAccount\s*\?\s*'الطرف الثاني'\s*:\s*'العميل'/);
+    // Centralized in buildStepNavMissing — assert there.
+    const HELPER = read('modules/contracts/services/buildStepNavMissing.ts');
+    expect(HELPER).toMatch(/i\.isClientOnlyAccount\s*\?\s*'الطرف الثاني'\s*:\s*'العميل'/);
+    expect(HELPER).toMatch(/i\.isClientOnlyAccount\s*\?\s*'Second party'\s*:\s*'Client'/);
   });
 });
 

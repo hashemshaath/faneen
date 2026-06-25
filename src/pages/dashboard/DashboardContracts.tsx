@@ -49,8 +49,8 @@ import { updateContractById } from '@/modules/contracts/services/updateContractB
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
 import { computeSendForReviewEligibility } from '@/modules/contracts/services/sendForReviewEligibility';
 import { ContractConfirmDialogs } from '@/components/contracts/dashboard/ContractConfirmDialogs';
-import { resolveContractPartiesAndEligibility } from '@/modules/contracts/services/contractParties';
-import { CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
+import { resolveContractPartiesAndEligibility, CONTRACT_PARTY_MISSING_MESSAGES } from '@/modules/contracts/services/contractParties';
+import { buildStepNavMissing } from '@/modules/contracts/services/buildStepNavMissing';
 import {
   uploadContractAttachmentFile,
   getContractAttachmentPublicUrl,
@@ -2277,13 +2277,7 @@ const DashboardContracts = () => {
                   </>
                 );
               })()}
-              {!editingId && (
-                <div className="text-[10px] text-muted-foreground space-y-1 px-1">
-                  <p className="text-[11px] font-medium text-foreground">{pickBi(isRTL, 'بعد حفظ المسودة، ستفتح صفحة مراجعة مستقلة للتحقق من جميع الأقسام قبل الإرسال.', 'After saving the draft, a standalone review page opens to verify all sections before sending.')}</p>
-                  <p>{pickBi(isRTL, 'بعد الإرسال للموافقة، لا يزال العقد غير مفعّل حتى يوافق الطرفان.', 'After sending for approval, the contract remains inactive until both parties approve.')}</p>
-                  <p>{pickBi(isRTL, 'بعد تفعيل العقد، التعديلات الرسمية تتم عبر ملحق.', 'Once active, formal changes must be made through an amendment.')}</p>
-                </div>
-              )}
+              {!editingId && (<div className="text-[10px] text-muted-foreground space-y-1 px-1"><p className="text-[11px] font-medium text-foreground">{pickBi(isRTL, 'بعد حفظ المسودة، ستفتح صفحة مراجعة مستقلة للتحقق من جميع الأقسام قبل الإرسال.', 'After saving the draft, a standalone review page opens to verify all sections before sending.')}</p><p>{pickBi(isRTL, 'بعد الإرسال للموافقة، لا يزال العقد غير مفعّل حتى يوافق الطرفان.', 'After sending for approval, the contract remains inactive until both parties approve.')}</p><p>{pickBi(isRTL, 'بعد تفعيل العقد، التعديلات الرسمية تتم عبر ملحق.', 'Once active, formal changes must be made through an amendment.')}</p></div>)}
 
               {/* Provider Contract UX 2 — Part A: Back / Next + Save Draft inline. */}
               <ContractCreateActionsBar
@@ -2294,19 +2288,13 @@ const DashboardContracts = () => {
                 isSaving={createContractMutation.isPending}
                 saveDisabled={saveBlocked}
                 onStepNav={(key) => {
-                  const fromIdx = stepOrder.indexOf(activeStep);
-                  const toIdx = stepOrder.indexOf(key);
-                  if (toIdx > fromIdx) {
-                    const missing: string[] = contractParties.missingRequirements.map((r) => CONTRACT_PARTY_MISSING_MESSAGES[r][(['ar','en'] as const)[isRTL ? 0 : 1]]);
-                    if (!(selectedWorkType && workTypeTouched)) missing.push(pickBi(isRTL, 'اختر نوع العمل / الخدمة أولًا', 'Select work type / service first'));
-                    if (!contractPricingChoice) missing.push(pickBi(isRTL, 'اختر طريقة التسعير قبل إنشاء العقد', 'Pick a pricing method before creating the contract'));
-                    if (!(selectedClient || guestClient || form.client_email || pendingInvite)) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
-                    if (activeStep === 'details') {
-                      if (!form.title_ar) missing.push(pickBi(isRTL, 'أدخل عنوان العقد', 'Enter contract title'));
-                      if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'أدخل قيمة العقد', 'Enter contract amount'));
-                      if (form.start_date && form.end_date && new Date(form.end_date) < new Date(form.start_date)) missing.push(pickBi(isRTL, 'تاريخ الانتهاء قبل البدء', 'End date is before start date'));
-                    }
-                    if (activeStep === 'pricing' && !form.vat_rate) missing.push(pickBi(isRTL, 'حدد نسبة الضريبة', 'Set the VAT rate'));
+                  if (stepOrder.indexOf(key) > stepOrder.indexOf(activeStep)) {
+                    const missing = buildStepNavMissing({
+                      isRTL, activeStep, partyMissing: contractParties.missingRequirements,
+                      selectedWorkType, workTypeTouched, contractPricingChoice,
+                      hasClient: !!(selectedClient || guestClient || form.client_email || pendingInvite),
+                      isClientOnlyAccount, form,
+                    });
                     if (missing.length > 0) {
                       toast.error(pickBi(isRTL, 'لا يمكن المتابعة — يوجد نقص:', 'Cannot continue — missing:'), { description: Array.from(new Set(missing)).join(' • ') });
                       return;
