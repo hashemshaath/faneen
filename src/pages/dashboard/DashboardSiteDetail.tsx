@@ -357,16 +357,6 @@ const DashboardSiteDetail: React.FC = () => {
           </div>
         </section>
 
-        {/* KPI Strip */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <KpiCard icon={FileText} label={isRTL ? 'العقود' : 'Contracts'} value={contracts.length} loading={contractsLoading} accent="blue" />
-          <KpiCard icon={MessageSquareQuote} label={isRTL ? 'عروض' : 'Quotes'} value={leads.length} loading={leadsLoading} accent="amber" />
-          <KpiCard icon={Inbox} label="RFQ" value={rfqs.length} loading={rfqsLoading} accent="emerald" />
-          <KpiCard icon={Users} label={isRTL ? 'جهات' : 'Contacts'} value={contactsRaw.length} loading={contactsLoading} accent="primary" />
-          <KpiCard icon={AlertTriangle} label={isRTL ? 'بلاغات' : 'Reports'} value={reportsCount} loading={false} accent="orange" tone={reportsCount > 0 ? 'destructive' : undefined} />
-          <KpiCard icon={ImageIcon} label={isRTL ? 'الصور' : 'Gallery'} value={gallery.length} loading={false} accent="primary" />
-        </div>
-
         {/* Quick Actions Bar — every action is linked to this site's ref */}
         {canManage && (
           <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.04] via-card to-card">
@@ -489,9 +479,11 @@ const DashboardSiteDetail: React.FC = () => {
                     <span className="w-1.5 h-5 rounded-full bg-orange-500" />
                     {isRTL ? 'العنوان' : 'Address'}
                   </h3>
-                  <SiteField label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
-                  <SiteField label={isRTL ? 'الحي' : 'District'} value={site.district} />
-                  <SiteField label={isRTL ? 'العنوان' : 'Line'} value={site.address_line1} multiline />
+                  <div className="grid grid-cols-2 gap-3">
+                    <SiteField label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
+                    <SiteField label={isRTL ? 'الحي' : 'District'} value={site.district} />
+                  </div>
+                  <SiteField label={isRTL ? 'الشارع / تفاصيل العنوان' : 'Street / details'} value={site.address_line1} multiline />
                   <SiteField label={isRTL ? 'العنوان الوطني' : 'NAF'} value={site.short_address} kind="naf" />
                   {!site.city_name && !site.district && !site.address_line1 && !site.short_address && (
                     <p className="text-xs text-muted-foreground">{isRTL ? 'لم يُضَف عنوان بعد.' : 'No address added yet.'}</p>
