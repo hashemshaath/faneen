@@ -55,7 +55,6 @@ export const ContractTermsSection: React.FC<Props> = ({ isRTL, form, setForm, te
     const ar = templateTerms?.ar ?? DEFAULT_CONTRACT_TERMS_AR;
     const en = templateTerms?.en ?? DEFAULT_CONTRACT_TERMS_EN;
     if (ar && form.terms_ar !== ar) setForm((f) => ({ ...f, terms_ar: ar, terms_en: en }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateTerms, templateVersionId]);
 
   const sourceLabel = templateVersionId

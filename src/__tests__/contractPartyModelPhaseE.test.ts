@@ -18,6 +18,7 @@ const PAGE = read('pages/dashboard/DashboardContracts.tsx');
 const SUMMARY = read('components/contracts/dashboard/create/ContractReviewSummary.tsx');
 const DETAILS = read('components/contracts/dashboard/create/ContractDetailsSection.tsx');
 const TERMS = read('components/contracts/dashboard/create/ContractTermsSection.tsx');
+const DEFAULT_TERMS = read('lib/contract-default-terms.ts');
 const HELPER = read('modules/contracts/services/contractParties.ts');
 
 describe('Phase E — pre-submit contract review', () => {
@@ -110,9 +111,14 @@ describe('Phase E — pre-submit contract review', () => {
     expect(DETAILS).toContain('نطاق العمل');
     expect(DETAILS).toContain('مدة التنفيذ');
     expect(TERMS).toContain('بنود العقد');
-    expect(TERMS).toContain('الضمان');
-    expect(TERMS).toContain('الدفعات');
-    expect(TERMS).toContain('شروط التسليم');
+    // Warranty / payment / delivery copy now lives in the centralized
+    // default terms library that ContractTermsSection injects when no
+    // template is selected. Guard the behavior, not the inline strings.
+    expect(TERMS).toMatch(/DEFAULT_CONTRACT_TERMS_AR/);
+    expect(TERMS).toMatch(/contract_template_(sections|clauses)/);
+    expect(DEFAULT_TERMS).toMatch(/الضمان/);
+    expect(DEFAULT_TERMS).toMatch(/الدفعات/);
+    expect(DEFAULT_TERMS).toMatch(/التسليم/);
     expect(PAGE.indexOf('<ContractTermsSection')).toBeLessThan(PAGE.indexOf('<ContractCreateActionsBar'));
   });
 
