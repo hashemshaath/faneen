@@ -3,7 +3,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { pickBi } from '@/components/common/Bilingual';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listActiveContractTemplates, notifyClientInvitation } from '@/modules/contracts';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
@@ -333,12 +333,16 @@ const DashboardContracts = () => {
     queryKey: ['dashboard-contracts', 'provider', user?.id],
     queryFn: () => listContractsForRole({ userId: user!.id, role: 'provider' }),
     enabled: !!user,
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
 
   const { data: clientContracts = [], isLoading: loadingClient } = useQuery({
     queryKey: ['dashboard-contracts', 'client', user?.id],
     queryFn: () => listContractsForRole({ userId: user!.id, role: 'client' }),
     enabled: !!user,
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
 
   const isLoading = loadingProvider || loadingClient;
