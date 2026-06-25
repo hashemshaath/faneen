@@ -23829,7 +23829,16 @@ export type Database = {
         | "completed"
         | "rejected"
       membership_tier: "free" | "basic" | "premium" | "enterprise"
-      milestone_status: "pending" | "active" | "completed" | "disputed"
+      milestone_status:
+        | "pending"
+        | "active"
+        | "completed"
+        | "disputed"
+        | "in_progress"
+        | "submitted"
+        | "approved"
+        | "revision_requested"
+        | "released"
       private_sector_brand_type:
         | "own_brand"
         | "exclusive_agency"
@@ -24179,7 +24188,17 @@ export const Constants = {
         "rejected",
       ],
       membership_tier: ["free", "basic", "premium", "enterprise"],
-      milestone_status: ["pending", "active", "completed", "disputed"],
+      milestone_status: [
+        "pending",
+        "active",
+        "completed",
+        "disputed",
+        "in_progress",
+        "submitted",
+        "approved",
+        "revision_requested",
+        "released",
+      ],
       private_sector_brand_type: [
         "own_brand",
         "exclusive_agency",
