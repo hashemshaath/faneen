@@ -2153,6 +2153,13 @@ const DashboardContracts = () => {
                 )}
               </div>
 
+              {/* Pricing-method picker — rendered between provider/parties (order-2) and site (order-4). */}
+              {!editingId && (
+                <div className="scroll-mt-24 order-3">
+                  <PricingMethodSection isRTL={isRTL} value={contractPricingChoice} onSelect={setContractPricingChoice} />
+                </div>
+              )}
+
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
               <div ref={stepRefs.work} className="scroll-mt-24 order-1">
               {!editingId && (
