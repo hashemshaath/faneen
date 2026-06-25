@@ -2118,6 +2118,8 @@ const DashboardContracts = () => {
               {/* Phase 5C.3 — Execution site step */}
               <div ref={stepRefs.site} className="scroll-mt-24 order-4">
                 {!editingId && leadPrefill && !leadPrefill.existing_contract_id && (leadPrefill.suggested_description || leadPrefill.suggested_title) && (
+
+
                   <div className="mb-2 p-2.5 rounded-lg border border-warning/40 bg-warning/5 text-[11px] text-foreground/80 flex items-start gap-2">
                     <MapPin className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
                     <span>
