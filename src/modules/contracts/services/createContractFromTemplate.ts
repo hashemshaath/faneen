@@ -10,6 +10,12 @@ export interface CreateContractFromTemplateArgs {
   _payload: Json;
   _template_version_id: string;
   _pricing_method?: string | null;
+  /**
+   * CONTRACT PRICING BASIS — selected by the user in the creation flow.
+   * Persisted in `contracts.pricing_basis`. Distinct from `_pricing_method`
+   * (template-driven) and constrained to a known set server-side.
+   */
+  _pricing_basis?: 'linear_meter' | 'square_meter' | 'unit' | 'mixed' | null;
 }
 
 export async function createContractFromTemplate(args: CreateContractFromTemplateArgs) {

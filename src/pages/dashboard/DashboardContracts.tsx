@@ -1061,10 +1061,14 @@ const DashboardContracts = () => {
         if (!versionId) {
           throw new Error(pickBi(isRTL, 'لا يوجد قالب عقد منشور', 'No published contract template available'));
         }
+        if (!contractPricingChoice) {
+          throw new Error(pickBi(isRTL, 'اختر طريقة التسعير قبل إنشاء العقد', 'Select a pricing method before creating the contract'));
+        }
         const { data, error } = await createContractFromTemplate({
           _payload: payload,
           _template_version_id: versionId,
           _pricing_method: selectedPricingMethod,
+          _pricing_basis: contractPricingChoice,
         });
         if (error) throw error;
         const newId = (data ?? null) as string | null;
@@ -1120,7 +1124,7 @@ const DashboardContracts = () => {
       toast.error(mapped.message);
     },
   });
-  const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && !contractParties.isEligible) || createContractMutation.isPending;
+  const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && !contractParties.isEligible) || (!editingId && !contractPricingChoice) || createContractMutation.isPending;
 
   /* CT4C.3 — Client invitation mutations. */
   const sendInviteMutation = useMutation({

@@ -7733,6 +7733,7 @@ export type Database = {
           official_version_number: number
           opportunity_bid_id: string | null
           opportunity_id: string | null
+          pricing_basis: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -7786,6 +7787,7 @@ export type Database = {
           official_version_number?: number
           opportunity_bid_id?: string | null
           opportunity_id?: string | null
+          pricing_basis?: string | null
           pricing_method?: string | null
           provider_accepted_at?: string | null
           provider_entity_id?: string | null
@@ -7839,6 +7841,7 @@ export type Database = {
           official_version_number?: number
           opportunity_bid_id?: string | null
           opportunity_id?: string | null
+          pricing_basis?: string | null
           pricing_method?: string | null
           provider_accepted_at?: string | null
           provider_entity_id?: string | null
@@ -20384,6 +20387,7 @@ export type Database = {
           official_version_number: number
           opportunity_bid_id: string | null
           opportunity_id: string | null
+          pricing_basis: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -21428,6 +21432,7 @@ export type Database = {
           official_version_number: number
           opportunity_bid_id: string | null
           opportunity_id: string | null
+          pricing_basis: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -21602,6 +21607,7 @@ export type Database = {
           official_version_number: number
           opportunity_bid_id: string | null
           opportunity_id: string | null
+          pricing_basis: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
@@ -21711,14 +21717,24 @@ export type Database = {
         Args: { _quotation_id: string }
         Returns: Json
       }
-      create_contract_from_template: {
-        Args: {
-          _payload: Json
-          _pricing_method?: string
-          _template_version_id: string
-        }
-        Returns: string
-      }
+      create_contract_from_template:
+        | {
+            Args: {
+              _payload: Json
+              _pricing_method?: string
+              _template_version_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _payload: Json
+              _pricing_basis?: string
+              _pricing_method?: string
+              _template_version_id: string
+            }
+            Returns: string
+          }
       create_contract_from_workspace_as_client: {
         Args: {
           _payload: Json
@@ -23256,6 +23272,7 @@ export type Database = {
           official_version_number: number
           opportunity_bid_id: string | null
           opportunity_id: string | null
+          pricing_basis: string | null
           pricing_method: string | null
           provider_accepted_at: string | null
           provider_entity_id: string | null
