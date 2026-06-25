@@ -21,8 +21,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
-import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
 
 export interface ExecutionSiteRow {
   id: string;
@@ -208,7 +206,6 @@ export const ExecutionSiteSection: React.FC<Props> = ({
   };
 
   const selectedSite = sites.find((s) => s.id === selectedSiteId) || null;
-  const { data: selectedSiteBarcode } = useEntityBarcode('client_site', selectedSite?.id);
   const showLockedSnapshot = locked && !!snapshot;
 
   return (
@@ -366,19 +363,6 @@ export const ExecutionSiteSection: React.FC<Props> = ({
             </div>
           )}
 
-          {selectedSite && selectedSite.site_ref && !adding && (
-            <div className="space-y-3">
-              {selectedSiteBarcode && (
-                <BarcodeWidget
-                  barcodeCode={selectedSiteBarcode}
-                  entityType="client_site"
-                  title={isRTL ? 'كود المشروع' : 'Project Code'}
-                  subtitle={selectedSite.site_name ?? selectedSite.label ?? selectedSite.site_ref}
-                  size="sm"
-                />
-              )}
-            </div>
-          )}
 
           {adding && (
             <div className="p-3 rounded-lg border-2 border-primary/30 bg-primary/5 space-y-2">
