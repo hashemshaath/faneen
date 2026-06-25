@@ -6724,9 +6724,124 @@ export type Database = {
           },
         ]
       }
+      contract_milestone_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          contract_id: string
+          created_at: string
+          event_type: string
+          from_status: Database["public"]["Enums"]["milestone_status"] | null
+          id: string
+          metadata: Json
+          milestone_id: string
+          notes: string | null
+          to_status: Database["public"]["Enums"]["milestone_status"] | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          contract_id: string
+          created_at?: string
+          event_type: string
+          from_status?: Database["public"]["Enums"]["milestone_status"] | null
+          id?: string
+          metadata?: Json
+          milestone_id: string
+          notes?: string | null
+          to_status?: Database["public"]["Enums"]["milestone_status"] | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          contract_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: Database["public"]["Enums"]["milestone_status"] | null
+          id?: string
+          metadata?: Json
+          milestone_id?: string
+          notes?: string | null
+          to_status?: Database["public"]["Enums"]["milestone_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_milestone_events_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_milestone_events_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "contract_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_milestone_evidence: {
+        Row: {
+          contract_id: string
+          created_at: string
+          evidence_type: string
+          file_name: string | null
+          file_path: string | null
+          id: string
+          milestone_id: string
+          mime_type: string | null
+          note: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          evidence_type: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          milestone_id: string
+          mime_type?: string | null
+          note?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          evidence_type?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          milestone_id?: string
+          mime_type?: string | null
+          note?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_milestone_evidence_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_milestone_evidence_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "contract_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_milestones: {
         Row: {
           amount: number
+          approved_at: string | null
+          approved_by: string | null
+          auto_release_at: string | null
+          auto_release_days: number
           completed_at: string | null
           contract_id: string
           created_at: string
@@ -6734,14 +6849,23 @@ export type Database = {
           description_en: string | null
           due_date: string | null
           id: string
+          percentage: number | null
+          released_at: string | null
+          review_notes: string | null
           sort_order: number
           status: Database["public"]["Enums"]["milestone_status"]
+          submitted_at: string | null
+          submitted_by: string | null
           title_ar: string
           title_en: string | null
           updated_at: string
         }
         Insert: {
           amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_release_at?: string | null
+          auto_release_days?: number
           completed_at?: string | null
           contract_id: string
           created_at?: string
@@ -6749,14 +6873,23 @@ export type Database = {
           description_en?: string | null
           due_date?: string | null
           id?: string
+          percentage?: number | null
+          released_at?: string | null
+          review_notes?: string | null
           sort_order?: number
           status?: Database["public"]["Enums"]["milestone_status"]
+          submitted_at?: string | null
+          submitted_by?: string | null
           title_ar: string
           title_en?: string | null
           updated_at?: string
         }
         Update: {
           amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_release_at?: string | null
+          auto_release_days?: number
           completed_at?: string | null
           contract_id?: string
           created_at?: string
@@ -6764,8 +6897,13 @@ export type Database = {
           description_en?: string | null
           due_date?: string | null
           id?: string
+          percentage?: number | null
+          released_at?: string | null
+          review_notes?: string | null
           sort_order?: number
           status?: Database["public"]["Enums"]["milestone_status"]
+          submitted_at?: string | null
+          submitted_by?: string | null
           title_ar?: string
           title_en?: string | null
           updated_at?: string
@@ -22485,6 +22623,18 @@ export type Database = {
       }
       is_business_staff: {
         Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_contract_client: {
+        Args: { _contract_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_contract_party: {
+        Args: { _contract_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_contract_provider: {
+        Args: { _contract_id: string; _user_id: string }
         Returns: boolean
       }
       is_public_business_profile: {
