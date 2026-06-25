@@ -128,19 +128,7 @@ export const TemplateSelectionSection: React.FC<Props> = ({
         templateCategoryConfig={templateCategoryConfig}
         onSelectVersion={onSelectVersion}
       />
-      {effectiveVersion && effectiveVersion.pricing_methods.length > 0 && (
-        <div className="space-y-1.5">
-          <Label className="text-[10px] text-muted-foreground">{isRTL ? 'طريقة التسعير' : 'Pricing Method'}</Label>
-          <Select value={selectedPricingMethod ?? ''} onValueChange={(v) => onSelectPricingMethod(v || null)}>
-            <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'اختياري' : 'Optional'} /></SelectTrigger>
-            <SelectContent>
-              {effectiveVersion.pricing_methods.map(m => (
-                <SelectItem key={m} value={m} className="text-xs">{formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      {/* Pricing method picker removed — handled by the dedicated PricingMethodSection (order-3) to avoid duplication. */}
       {effectiveVersion && effectiveVersion.required_field_count > 0 && (
         <p className="text-[10px] text-warning bg-warning/10 border border-warning/20 rounded-lg p-2">
           {isRTL
