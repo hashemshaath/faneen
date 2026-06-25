@@ -2290,6 +2290,16 @@ const DashboardContracts = () => {
                   hasTemplateSnapshot: !!effectiveVersion,
                 }).score : undefined}
               />
+              {editingId && (
+                <div className="flex justify-end pt-2">
+                  <Button variant="outline" size="sm" className="text-xs h-8 gap-1"
+                    onClick={() => navigate(`/dashboard/contracts/${editingId}/review`)}
+                    data-testid="creator-open-review-page">
+                    <Send className="w-3.5 h-3.5" />
+                    {pickBi(isRTL, 'مراجعة وإرسال', 'Review & Send')}
+                  </Button>
+                </div>
+              )}
               </div>
 
               {/* Provider Contract UX 2 — Part D: sticky mobile action bar. */}
