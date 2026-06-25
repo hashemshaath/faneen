@@ -92,17 +92,14 @@ describe('CONTRACT PROVIDER SEARCH + PRICING METHOD — provider auto-select gua
   });
 });
 
-describe('CONTRACT PROVIDER SEARCH + PRICING METHOD — UI-only payload note', () => {
-  it('contractPricingChoice is currently UI-only (no payload/metadata column)', () => {
-    // contractPricingChoice exists as local state…
+describe('CONTRACT PROVIDER SEARCH + PRICING METHOD — payload persistence', () => {
+  it('contractPricingChoice is persisted via _pricing_basis (no legacy aliases)', () => {
     expect(PAGE).toMatch(/contractPricingChoice/);
-    // …but the payload built for createContractFromTemplate does NOT carry it yet.
-    // We assert there is no `pricing_choice` / `pricing_intent` key on the payload object.
-    // (The template-driven `_pricing_method` argument is a separate template concern.)
+    // The choice is forwarded to the RPC via the dedicated `_pricing_basis` argument.
+    expect(PAGE).toMatch(/_pricing_basis:\s*contractPricingChoice/);
+    // Legacy aliases must NOT be reintroduced.
     expect(PAGE).not.toMatch(/pricing_choice\s*:/);
     expect(PAGE).not.toMatch(/pricing_intent\s*:/);
-    // Documented intent — kept as a code-level beacon.
-    // pricing_method UI-only pending payload integration
   });
 });
 
