@@ -292,7 +292,10 @@ const DashboardContracts = () => {
   /* CONTRACT CREATION PURPOSE-FIRST FLOW — purpose (work-type) is the
      first step; parties (client) only after purpose is chosen; then
      template (filtered by purpose), then details, pricing, review. */
-  const stepOrder: StepKey[] = ['work', 'client', 'template', 'site', 'details', 'pricing', 'review'];
+  // NOTE: Order MUST match the visual `order-N` of the section refs below
+  // (work=1, client=2, site=4, template=6, details=7, pricing=8, review=9)
+  // otherwise "Next" scrolls backward and feels broken.
+  const stepOrder: StepKey[] = ['work', 'client', 'site', 'template', 'details', 'pricing', 'review'];
   const [activeStep, setActiveStep] = useState<StepKey>('work');
   /* Phase 5C.3 — Execution site selection (held locally for new drafts;
      persisted via set_contract_execution_site for existing drafts). */
