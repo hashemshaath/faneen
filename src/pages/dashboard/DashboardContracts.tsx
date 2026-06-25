@@ -1922,8 +1922,8 @@ const DashboardContracts = () => {
                 const steps = [
                   { key: 'work',     ar: 'الغرض / التخصص', en: 'Purpose',   done: !!selectedWorkType && workTypeTouched },
                   { key: 'client',   ar: isClientOnlyAccount ? 'الطرف الثاني' : 'الأطراف', en: isClientOnlyAccount ? 'Second party' : 'Parties', done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
-                  { key: 'template', ar: 'القالب',         en: 'Template',  done: !!effectiveVersion },
                   { key: 'site',     ar: 'موقع التنفيذ',   en: 'Site',      done: !!selectedSiteId },
+                  { key: 'template', ar: 'القالب',         en: 'Template',  done: !!effectiveVersion },
                   { key: 'details',  ar: 'التفاصيل',       en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
                   { key: 'pricing',  ar: 'التسعير/VAT',    en: 'Pricing/VAT', done: !!form.vat_rate },
                   { key: 'review',   ar: 'المراجعة',       en: 'Review',    done: false },
