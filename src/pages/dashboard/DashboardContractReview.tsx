@@ -35,9 +35,10 @@ import {
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { pickBi } from '@/components/common/Bilingual';
-import { supabase } from '@/integrations/supabase/client';
 import { sendContractForApproval } from '@/modules/contracts/services/mutations';
+import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/modules/notifications';
+import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { computeSendForReviewEligibility } from '@/modules/contracts/services/sendForReviewEligibility';
 
 type ContractRow = Record<string, any> & {
@@ -189,7 +190,7 @@ const DashboardContractReview: React.FC = () => {
 
   const inlineUpdate = useMutation({
     mutationFn: async (patch: Partial<ContractRow>) => {
-      const { error } = await supabase.from('contracts').update(patch as never).eq('id', id!);
+      const { error } = await updateContractById(id!, patch as Record<string, unknown>);
       if (error) throw error;
     },
     onSuccess: () => {

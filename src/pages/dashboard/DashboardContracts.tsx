@@ -132,6 +132,7 @@ import { ContractsPagination } from '@/components/contracts/dashboard/ContractsP
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
 import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
+import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
 import { ExecutionSiteSection, type ExecutionAddressSnapshot } from '@/components/contracts/dashboard/create/ExecutionSiteSection';
 import { ContractDraftSaveStatus, type DraftSaveState } from '@/components/contracts/dashboard/create/ContractDraftSaveStatus';
@@ -1921,7 +1922,7 @@ const DashboardContracts = () => {
               {!editingId && (() => {
                 const steps = [
                   { key: 'work',     ar: 'الغرض / التخصص', en: 'Purpose',   done: !!selectedWorkType && workTypeTouched },
-                  { key: 'client',   ar: isClientOnlyAccount ? 'الطرف الثاني' : 'الأطراف', en: isClientOnlyAccount ? 'Second party' : 'Parties', done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
+                  { key: 'client',   ar: isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', en: isClientOnlyAccount ? 'Second party' : 'Client', done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
                   { key: 'site',     ar: 'موقع التنفيذ',   en: 'Site',      done: !!selectedSiteId },
                   { key: 'template', ar: 'القالب',         en: 'Template',  done: !!effectiveVersion },
                   { key: 'details',  ar: 'التفاصيل',       en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
@@ -2216,50 +2217,46 @@ const DashboardContracts = () => {
               {/* CT4B — Review summary + status guidance before submit. */}
               <div ref={stepRefs.review} className="space-y-4 scroll-mt-24 order-9">
               {(() => {
-                const completeness = !editingId
-                  ? calculateContractCompleteness({
-                      hasClient: !!(selectedClient || guestClient || form.client_email),
-                      hasExecutionSite: !!selectedSiteId,
-                      hasWorkType: !!selectedWorkType && workTypeTouched,
-                      hasTemplate: !!effectiveVersion,
-                      titleAr: form.title_ar,
-                      titleEn: form.title_en,
-                      startDate: form.start_date,
-                      endDate: form.end_date,
-                      vatRate: form.vat_rate,
-                      totalAmount: form.total_amount,
-                      termsAr: form.terms_ar,
-                      termsEn: form.terms_en,
-                      hasTemplateSnapshot: !!effectiveVersion,
-                    })
-                  : null;
+                const completeness = !editingId ? calculateContractCompleteness({
+                  hasClient: !!(selectedClient || guestClient || form.client_email),
+                  hasExecutionSite: !!selectedSiteId, hasWorkType: !!selectedWorkType && workTypeTouched,
+                  hasTemplate: !!effectiveVersion, titleAr: form.title_ar, titleEn: form.title_en,
+                  startDate: form.start_date, endDate: form.end_date, vatRate: form.vat_rate,
+                  totalAmount: form.total_amount, termsAr: form.terms_ar, termsEn: form.terms_en,
+                  hasTemplateSnapshot: !!effectiveVersion,
+                }) : null;
                 const mStatus = createContractMutation.status;
-                const saveState: DraftSaveState =
-                  mStatus === 'pending' ? 'saving'
-                  : mStatus === 'error' ? 'error'
-                  : mStatus === 'success' ? 'saved'
-                  : 'not_saved';
+                const saveState: DraftSaveState = mStatus === 'pending' ? 'saving' : mStatus === 'error' ? 'error' : mStatus === 'success' ? 'saved' : 'not_saved';
+                const firstPartyLabel = contractParties.firstPartyDisplayName ?? '—';
+                const secondPartyLabel = contractParties.secondPartyDisplayName ?? '—';
+                const reviewMissing: string[] = contractParties.missingRequirements.map((r) => CONTRACT_PARTY_MISSING_MESSAGES[r][isRTL ? 'ar' : 'en']);
+                if (!(selectedClient || guestClient || form.client_email || pendingInvite)) {
+                  reviewMissing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
+                }
+                const tplLabel = effectiveVersion ? pickBi(isRTL, 'القالب المختار', 'Selected template') : '—';
+                const sectorLbl = getWorkType(selectedWorkType)?.[isRTL ? 'ar' : 'en'] ?? '—';
                 return (
                   <>
-                    {completeness && (
-                      <ContractCompletenessCard
-                        isRTL={isRTL}
-                        result={completeness}
-                        onGoToStep={goToStep}
-                      />
-                    )}
-                    <ContractDraftSaveStatus
-                      isRTL={isRTL}
-                      state={saveState}
-                      score={completeness?.score}
+                    {completeness && <ContractCompletenessCard isRTL={isRTL} result={completeness} onGoToStep={goToStep} />}
+                    <ContractDraftSaveStatus isRTL={isRTL} state={saveState} score={completeness?.score} />
+                    {editingId && <AutosaveStatus isRTL={isRTL} state={autosave.state} lastSavedAt={autosave.lastSavedAt} />}
+                    <ContractReviewSummary
+                      isRTL={isRTL} guide={getStatusGuidance('draft')}
+                      clientLabel={secondPartyLabel} workTypeLabel={sectorLbl} templateLabel={tplLabel}
+                      pricingMethodLabel={contractPricingChoice ?? '—'}
+                      amountLabel={form.total_amount || '—'} vatLabel={form.vat_rate || '—'}
+                      datesLabel={`${form.start_date || '—'} → ${form.end_date || '—'}`}
+                      missing={reviewMissing}
+                      firstPartyLabel={firstPartyLabel} secondPartyLabel={secondPartyLabel}
+                      executionSiteLabel={selectedSiteId ?? '—'} sectorLabel={sectorLbl}
+                      scopeOfWorkLabel={hasScopeOfWork ? pickBi(isRTL, 'مكتمل', 'Complete') : '—'}
+                      contractTermsLabel={hasContractTerms ? pickBi(isRTL, 'مكتمل', 'Complete') : '—'}
+                      warrantyLabel={effectiveVersion ? pickBi(isRTL, 'حسب القالب', 'Per template') : '—'}
+                      paymentTermsLabel={effectiveVersion ? pickBi(isRTL, 'حسب القالب', 'Per template') : '—'}
+                      executionDurationLabel={hasExecutionDuration ? pickBi(isRTL, 'محدد', 'Set') : '—'}
+                      deliveryTermsLabel={effectiveVersion ? pickBi(isRTL, 'حسب القالب', 'Per template') : '—'}
+                      attachmentLabel="—"
                     />
-                    {editingId && (
-                      <AutosaveStatus
-                        isRTL={isRTL}
-                        state={autosave.state}
-                        lastSavedAt={autosave.lastSavedAt}
-                      />
-                    )}
                   </>
                 );
               })()}
@@ -2280,57 +2277,27 @@ const DashboardContracts = () => {
                 isSaving={createContractMutation.isPending}
                 saveDisabled={saveBlocked}
                 onStepNav={(key) => {
-                  // Validate forward navigation: list missing items in current step.
                   const fromIdx = stepOrder.indexOf(activeStep);
                   const toIdx = stepOrder.indexOf(key);
                   if (toIdx > fromIdx) {
-                    const missing: string[] = [];
-                    if (activeStep === 'work' && !(selectedWorkType && workTypeTouched)) {
-                      missing.push(pickBi(isRTL, 'اختر الغرض/التخصص', 'Select purpose/specialty'));
-                    }
-                    if (activeStep === 'client' && !(selectedClient || guestClient || form.client_email || pendingInvite)) {
-                      missing.push(pickBi(isRTL, 'حدد الطرف الثاني (العميل)', 'Select the second party (client)'));
-                    }
-                    if (activeStep === 'site' && !selectedSiteId) {
-                      missing.push(pickBi(isRTL, 'اختر موقع التنفيذ', 'Select an execution site'));
-                    }
-                    if (activeStep === 'template' && !effectiveVersion) {
-                      missing.push(pickBi(isRTL, 'اختر قالب العقد', 'Select a contract template'));
-                    }
+                    const missing: string[] = contractParties.missingRequirements.map((r) => CONTRACT_PARTY_MISSING_MESSAGES[r][isRTL ? 'ar' : 'en']);
+                    if (!(selectedWorkType && workTypeTouched)) missing.push(pickBi(isRTL, 'اختر نوع العمل / الخدمة أولًا', 'Select work type / service first'));
+                    if (!contractPricingChoice) missing.push(pickBi(isRTL, 'اختر طريقة التسعير قبل إنشاء العقد', 'Pick a pricing method before creating the contract'));
+                    if (!(selectedClient || guestClient || form.client_email || pendingInvite)) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
                     if (activeStep === 'details') {
                       if (!form.title_ar) missing.push(pickBi(isRTL, 'أدخل عنوان العقد', 'Enter contract title'));
-                      if (!form.total_amount || Number(form.total_amount) <= 0) {
-                        missing.push(pickBi(isRTL, 'أدخل قيمة العقد', 'Enter contract amount'));
-                      }
-                      if (form.start_date && form.end_date && new Date(form.end_date) < new Date(form.start_date)) {
-                        missing.push(pickBi(isRTL, 'تاريخ الانتهاء قبل البدء', 'End date is before start date'));
-                      }
+                      if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(pickBi(isRTL, 'أدخل قيمة العقد', 'Enter contract amount'));
+                      if (form.start_date && form.end_date && new Date(form.end_date) < new Date(form.start_date)) missing.push(pickBi(isRTL, 'تاريخ الانتهاء قبل البدء', 'End date is before start date'));
                     }
-                    if (activeStep === 'pricing' && !form.vat_rate) {
-                      missing.push(pickBi(isRTL, 'حدد نسبة الضريبة', 'Set the VAT rate'));
-                    }
+                    if (activeStep === 'pricing' && !form.vat_rate) missing.push(pickBi(isRTL, 'حدد نسبة الضريبة', 'Set the VAT rate'));
                     if (missing.length > 0) {
-                      toast.error(
-                        pickBi(isRTL, 'لا يمكن المتابعة — يوجد نقص:', 'Cannot continue — missing:'),
-                        { description: missing.join(' • ') },
-                      );
+                      toast.error(pickBi(isRTL, 'لا يمكن المتابعة — يوجد نقص:', 'Cannot continue — missing:'), { description: Array.from(new Set(missing)).join(' • ') });
                       return;
                     }
                   }
                   goToStep(key);
                 }}
                 onSave={() => createContractMutation.mutate(undefined)}
-                completenessScore={!editingId ? calculateContractCompleteness({
-                  hasClient: !!(selectedClient || guestClient || form.client_email),
-                  hasExecutionSite: !!selectedSiteId,
-                  hasWorkType: !!selectedWorkType && workTypeTouched,
-                  hasTemplate: !!effectiveVersion,
-                  titleAr: form.title_ar, titleEn: form.title_en,
-                  startDate: form.start_date, endDate: form.end_date,
-                  vatRate: form.vat_rate, totalAmount: form.total_amount,
-                  termsAr: form.terms_ar, termsEn: form.terms_en,
-                  hasTemplateSnapshot: !!effectiveVersion,
-                }).score : undefined}
               />
               {editingId && (
                 <div className="flex justify-end pt-2">
