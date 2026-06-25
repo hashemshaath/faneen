@@ -68,6 +68,7 @@ const DashboardShowcase = lazyRetry(() => import("./pages/dashboard/DashboardSho
 const Showcase = lazyRetry(() => import("./pages/Showcase"));
 const Contracts = lazyRetry(() => import("./pages/Contracts"));
 const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
+const RequestContractPage = lazyRetry(() => import("./pages/contracts/RequestContractPage"));
 const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
 const DashboardServices = lazyRetry(() => import("./pages/dashboard/DashboardServices"));
 const DashboardPortfolio = lazyRetry(() => import("./pages/dashboard/DashboardPortfolio"));
@@ -419,6 +420,7 @@ const AppRoutes = () => (
           <Route path="/providers/join" element={<Navigate to="/join/qitaat" replace />} />
 
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
+          <Route path="/contracts/request" element={<ProtectedRoute><RequestContractPage /></ProtectedRoute>} />
           <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
