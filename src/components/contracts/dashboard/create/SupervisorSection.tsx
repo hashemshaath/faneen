@@ -9,6 +9,7 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Plus, Check, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -84,7 +85,7 @@ export const SupervisorSection: React.FC<Props> = ({ isRTL, form, setForm, selec
       }));
       // Optionally persist as a site contact when a site is selected.
       if (newSup.save && selectedSiteId) {
-        const { data: auth } = await supabase.auth.getUser();
+        const { data: auth } = await getCurrentUser();
         const uid = auth?.user?.id;
         if (!uid) throw new Error('NOT_AUTHENTICATED');
         const { error } = await supabase
