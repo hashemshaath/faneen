@@ -37,7 +37,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { pickBi } from '@/components/common/Bilingual';
 import { sendContractForApproval } from '@/modules/contracts/services/mutations';
 import { supabase } from '@/integrations/supabase/client';
-import { createNotification } from '@/modules/notifications';
+import { notifyContractStatusChange } from '@/modules/contracts/services/notifications/notifyContractStatusChange';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { computeSendForReviewEligibility } from '@/modules/contracts/services/sendForReviewEligibility';
 
@@ -192,6 +192,20 @@ const DashboardContractReview: React.FC = () => {
     mutationFn: async (patch: Partial<ContractRow>) => {
       const { error } = await updateContractById(id!, patch as Record<string, unknown>);
       if (error) throw error;
+      // PHASE 1 — notify the other party that the contract was updated.
+      const c = contractQuery.data?.contract;
+      if (c) {
+        await notifyContractStatusChange({
+          contract: {
+            id: c.id,
+            title_ar: c.title_ar,
+            title_en: c.title_en,
+            provider_id: c.provider_id,
+            client_id: c.client_id,
+          },
+          event: 'updated',
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-review', id] });
@@ -207,17 +221,16 @@ const DashboardContractReview: React.FC = () => {
   const sendMutation = useMutation({
     mutationFn: async (c: ContractRow) => {
       await sendContractForApproval(c.id);
-      if (c.client_id) {
-        await createNotification({
-          user_id: c.client_id,
-          title_ar: `عقد جديد بانتظار مراجعتك: ${c.title_ar ?? ''}`,
-          title_en: `New contract pending review: ${c.title_en || c.title_ar || ''}`,
-          notification_type: 'contract',
-          reference_id: c.id,
-          reference_type: 'contract',
-          action_url: `/contracts/${c.id}`,
-        });
-      }
+      await notifyContractStatusChange({
+        contract: {
+          id: c.id,
+          title_ar: c.title_ar,
+          title_en: c.title_en,
+          provider_id: c.provider_id,
+          client_id: c.client_id,
+        },
+        event: 'sent_for_review',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
