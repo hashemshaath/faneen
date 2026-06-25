@@ -1295,26 +1295,37 @@ export default function DashboardSites() {
                           <Icon className="w-8 h-8" />
                         </div>
                       )}
-                      {/* Permanent bottom gradient for legibility */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
-                      {/* Title overlay (always visible) */}
-                      <div className="absolute inset-x-0 bottom-0 p-2.5 text-white">
-                        <div className="flex items-end justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]" dir="auto">
-                              {siteTitle}
-                            </p>
-                            {(s.city_name || s.district) && (
-                              <p className="text-[10px] opacity-90 truncate mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-                                {[s.district, s.city_name].filter(Boolean).join(' · ')}
-                              </p>
-                            )}
-                          </div>
-                          <span className="shrink-0 rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/25 p-1 opacity-0 group-hover:opacity-100 transition">
-                            <ArrowUpRight className="w-3 h-3" />
-                          </span>
-                        </div>
-                      </div>
+                       {/* Permanent bottom gradient for legibility */}
+                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent pointer-events-none" />
+                       {/* Top-right meta badges (code + type) */}
+                       <div className="absolute top-2 end-2 flex gap-1.5">
+                         {s.site_ref && (
+                           <span dir="ltr" className="rounded-md bg-slate-900/65 backdrop-blur-md ring-1 ring-white/15 text-white text-[10px] font-mono px-1.5 py-0.5">
+                             {s.site_ref}
+                           </span>
+                         )}
+                         <span className="rounded-md bg-white/95 text-slate-900 text-[10px] font-bold px-1.5 py-0.5 shadow-sm">
+                           {isRTL ? meta.ar : meta.en}
+                         </span>
+                       </div>
+                       {/* Title overlay (always visible) */}
+                       <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+                         <div className="flex items-end justify-between gap-2">
+                           <div className="min-w-0">
+                             {(s.city_name || s.district) && (
+                               <p className="text-[10px] font-medium text-slate-200/95 truncate mb-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                                 {[s.district, s.city_name].filter(Boolean).join(' · ')}
+                               </p>
+                             )}
+                             <p className="text-sm font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]" dir="auto">
+                               {siteTitle}
+                             </p>
+                           </div>
+                           <span className="shrink-0 rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/25 p-1 opacity-0 group-hover:opacity-100 transition">
+                             <ArrowUpRight className="w-3 h-3" />
+                           </span>
+                         </div>
+                       </div>
                     </button>
                   <div className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
