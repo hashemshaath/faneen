@@ -2246,6 +2246,7 @@ const DashboardContracts = () => {
               })()}
               {!editingId && (
                 <div className="text-[10px] text-muted-foreground space-y-1 px-1">
+                  <p className="text-[11px] font-medium text-foreground">{pickBi(isRTL, 'بعد حفظ المسودة، ستفتح صفحة مراجعة مستقلة للتحقق من جميع الأقسام قبل الإرسال.', 'After saving the draft, a standalone review page opens to verify all sections before sending.')}</p>
                   <p>{pickBi(isRTL, 'بعد الإرسال للموافقة، لا يزال العقد غير مفعّل حتى يوافق الطرفان.', 'After sending for approval, the contract remains inactive until both parties approve.')}</p>
                   <p>{pickBi(isRTL, 'بعد تفعيل العقد، التعديلات الرسمية تتم عبر ملحق.', 'Once active, formal changes must be made through an amendment.')}</p>
                 </div>
