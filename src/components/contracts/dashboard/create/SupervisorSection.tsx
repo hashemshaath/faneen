@@ -66,12 +66,21 @@ export const SupervisorSection: React.FC<Props> = ({ isRTL, form, setForm, selec
     mutationFn: async () => {
       const name = newSup.name.trim();
       if (!name) throw new Error('NAME_REQUIRED');
+      const phone = newSup.phone.trim();
+      const email = newSup.email.trim();
+      // Duplicate guard — match by name/phone/email (case-insensitive).
+      const dup = options.find(o =>
+        (o.full_name && o.full_name.trim().toLowerCase() === name.toLowerCase()) ||
+        (phone && o.phone && o.phone.trim() === phone) ||
+        (email && o.email && o.email.trim().toLowerCase() === email.toLowerCase())
+      );
+      if (dup) throw new Error('DUPLICATE');
       // Always fill the form fields locally.
       setForm(f => ({
         ...f,
         supervisor_name: name,
-        supervisor_phone: newSup.phone.trim(),
-        supervisor_email: newSup.email.trim(),
+        supervisor_phone: phone,
+        supervisor_email: email,
       }));
       // Optionally persist as a site contact when a site is selected.
       if (newSup.save && selectedSiteId) {
@@ -84,8 +93,8 @@ export const SupervisorSection: React.FC<Props> = ({ isRTL, form, setForm, selec
             site_id: selectedSiteId,
             created_by: uid,
             full_name: name,
-            phone: newSup.phone.trim() || null,
-            email: newSup.email.trim() || null,
+            phone: phone || null,
+            email: email || null,
             role_code: 'supervisor',
             role_label: isRTL ? 'مشرف المشروع' : 'Project Supervisor',
           });
@@ -101,6 +110,7 @@ export const SupervisorSection: React.FC<Props> = ({ isRTL, form, setForm, selec
     onError: (e) => {
       const msg = e instanceof Error ? e.message : String(e);
       if (msg === 'NAME_REQUIRED') return toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required');
+      if (msg === 'DUPLICATE') return toast.error(isRTL ? 'هذا المشرف مسجّل مسبقاً' : 'This supervisor already exists');
       toast.error(isRTL ? `تعذرت الإضافة: ${msg}` : `Could not add: ${msg}`);
     },
   });

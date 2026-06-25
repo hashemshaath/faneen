@@ -115,6 +115,30 @@ export const ContractDetailsSection: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endMode, durationDays, form.start_date]);
 
+  // ---------- Date validation (UI guard) ----------
+  const dateError = React.useMemo(() => {
+    if (!form.start_date || !form.end_date) return null;
+    if (new Date(form.end_date) < new Date(form.start_date)) {
+      return isRTL
+        ? 'تاريخ الانتهاء لا يمكن أن يسبق تاريخ البدء'
+        : 'End date cannot be before start date';
+    }
+    return null;
+  }, [form.start_date, form.end_date, isRTL]);
+
+  const durationError = React.useMemo(() => {
+    if (endMode !== 'duration') return null;
+    if (durationDays === '') return null;
+    const n = Number(durationDays);
+    if (!Number.isFinite(n) || n <= 0) {
+      return isRTL ? 'المدة يجب أن تكون رقماً موجباً' : 'Duration must be a positive number';
+    }
+    if (!form.start_date) {
+      return isRTL ? 'حدّد تاريخ البدء أولاً' : 'Set the start date first';
+    }
+    return null;
+  }, [endMode, durationDays, form.start_date, isRTL]);
+
   return (
   <>
     <div className="space-y-2">
@@ -191,6 +215,11 @@ export const ContractDetailsSection: React.FC<Props> = ({
             dir="ltr" className="h-10"
             placeholder={isRTL ? 'عدد الأيام' : 'Number of days'}
           />
+        )}
+        {(dateError || durationError) && (
+          <p role="alert" data-testid="contract-date-error" className="text-[11px] text-destructive mt-1">
+            {dateError || durationError}
+          </p>
         )}
       </div>
     </div>
