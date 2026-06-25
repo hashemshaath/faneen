@@ -113,6 +113,7 @@ import { ContractFinancialSummary, ContractLineVatBreakdown } from '@/components
 import { ContractApprovalTimeline } from '@/components/contracts/dashboard/ContractApprovalTimeline';
 import { WorkTypeSection } from '@/components/contracts/dashboard/create/WorkTypeSection';
 import { TemplateSelectionSection } from '@/components/contracts/dashboard/create/TemplateSelectionSection';
+import { PricingMethodSection, type ContractPricingMethodChoice } from '@/components/contracts/dashboard/create/PricingMethodSection';
 import { ContractDetailsSection } from '@/components/contracts/dashboard/create/ContractDetailsSection';
 import { VatSettingsSection } from '@/components/contracts/dashboard/create/VatSettingsSection';
 import { SupervisorSection } from '@/components/contracts/dashboard/create/SupervisorSection';
@@ -236,6 +237,8 @@ const DashboardContracts = () => {
   const [workTypeTouched, setWorkTypeTouched] = useState(false);
   /* CONTRACT-CREATION — Client-account provider picker (first party). */
   const [selectedProviderBusiness, setSelectedProviderBusiness] = useState<SelectedProviderBusiness | null>(null);
+  /* Contract-level pricing-method choice (UI-only metadata, not financial). */
+  const [contractPricingChoice, setContractPricingChoice] = useState<ContractPricingMethodChoice | null>(null);
   /* CT4C.3 — Client invitation flow state. */
   const [inviteMode, setInviteMode] = useState<'idle' | 'composing' | 'awaiting'>('idle');
   const [inviteForm, setInviteForm] = useState<{ email: string; name: string; phone: string }>({ email: '', name: '', phone: '' });
@@ -2150,6 +2153,13 @@ const DashboardContracts = () => {
                 )}
               </div>
 
+              {/* Pricing-method picker — rendered between provider/parties (order-2) and site (order-4). */}
+              {!editingId && (
+                <div className="scroll-mt-24 order-3">
+                  <PricingMethodSection isRTL={isRTL} value={contractPricingChoice} onSelect={setContractPricingChoice} />
+                </div>
+              )}
+
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
               <div ref={stepRefs.work} className="scroll-mt-24 order-1">
               {!editingId && (
@@ -2163,7 +2173,7 @@ const DashboardContracts = () => {
               </div>
 
               {/* CT4 — Template selector (new contracts only) */}
-              <div ref={stepRefs.template} className="scroll-mt-24 order-3">
+              <div ref={stepRefs.template} className="scroll-mt-24 order-6">
               {!editingId && (
                 <TemplateSelectionSection
                   isRTL={isRTL}
@@ -2180,19 +2190,19 @@ const DashboardContracts = () => {
               </div>
 
               {/* Titles + descriptions + dates + supervisor + terms = Details step */}
-              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24 order-5">
+              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24 order-7">
               <ContractDetailsSection isRTL={isRTL} form={form} setForm={setForm} selectedSiteId={selectedSiteId} selectedWorkTypeLabel={getWorkType(selectedWorkType)?.ar ?? null} />
               </div>
 
               {/* VAT Settings — Pricing/VAT step */}
-              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24 order-6">
+              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24 order-8">
               <VatSettingsSection isRTL={isRTL} form={form} setForm={setForm} />
               <SupervisorSection isRTL={isRTL} form={form} setForm={setForm} selectedSiteId={selectedSiteId} />
               <ContractTermsSection isRTL={isRTL} form={form} setForm={setForm} templateVersionId={effectiveVersion?.version_id ?? null} />
               </div>
 
               {/* CT4B — Review summary + status guidance before submit. */}
-              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24 order-7">
+              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24 order-9">
               {(() => {
                 const completeness = !editingId
                   ? calculateContractCompleteness({
