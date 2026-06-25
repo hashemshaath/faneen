@@ -259,10 +259,15 @@ const DashboardSiteDetail: React.FC = () => {
     try { await navigator.clipboard.writeText(site.site_ref); setRefCopied(true); setTimeout(() => setRefCopied(false), 1500); } catch { /* noop */ }
   };
 
-  const goCreateContract = () => navigate(`/dashboard/contracts?new=1&site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
-  const goRequestQuote = () => navigate(`/quote?site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
-  const goRequestRfq = () => navigate(`/dashboard/rfq?new=1&site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
-  const goFindProvider = () => navigate(`/search?site_id=${id}&site_ref=${encodeURIComponent(site?.site_ref || '')}`);
+  /* Quick actions navigate to existing flows. DashboardContracts consumes the
+   * `site` query param to open the create flow with the site preselected.
+   * Quote/RFQ both map to the public /quote form (RFQ inbox is provider-only).
+   * site_ref is preserved in the URL for traceability. */
+  const siteRefQ = site?.site_ref ? `&site_ref=${encodeURIComponent(site.site_ref)}` : '';
+  const goCreateContract = () => navigate(`/dashboard/contracts?site=${id}${siteRefQ}`);
+  const goRequestQuote = () => navigate(`/quote?site_id=${id}${siteRefQ}`);
+  const goRequestRfq = () => navigate(`/quote?site_id=${id}${siteRefQ}&type=rfq`);
+  const goFindProvider = () => navigate(`/search?site_id=${id}${siteRefQ}`);
 
   if (isLoading) {
     return (
