@@ -183,7 +183,11 @@ export const ContractDetailsSection: React.FC<Props> = ({
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs">{isRTL ? 'مدة التنفيذ — تاريخ البدء' : 'Execution duration — Start date'}</Label>
-        <Input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} dir="ltr" className="h-10" />
+        <Input
+          type="date" value={form.start_date} dir="ltr" className="h-10"
+          onFocus={() => { if (!form.start_date) { const t = new Date().toISOString().slice(0,10); setForm(f => ({ ...f, start_date: t })); } }}
+          onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))}
+        />
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-1">
@@ -202,7 +206,11 @@ export const ContractDetailsSection: React.FC<Props> = ({
           </div>
         </div>
         {endMode === 'date' ? (
-          <Input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} dir="ltr" className="h-10" />
+          <Input
+            type="date" value={form.end_date} dir="ltr" className="h-10"
+            onFocus={() => { if (!form.end_date) { const base = form.start_date || new Date().toISOString().slice(0,10); setForm(f => ({ ...f, end_date: base })); } }}
+            onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
+          />
         ) : (
           <Input
             type="number" min={1} value={durationDays}
