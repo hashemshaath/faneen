@@ -17,6 +17,15 @@ const SRC = readFileSync(
   'utf8',
 );
 
+// SelfClientCard was extracted to its own component to keep the page
+// under its line cap. The card's markup (testid + Arabic hints) now lives
+// in `src/components/contracts/SelfClientCard.tsx`; the page only renders
+// `<SelfClientCard ... />` gated on `isClientOnlyAccount`.
+const SELF_CARD_SRC = readFileSync(
+  resolve(__dirname, '../components/contracts/SelfClientCard.tsx'),
+  'utf8',
+);
+
 describe('Contract creation — client auto-fill', () => {
   it('reads isProvider from useAuth to detect provider accounts', () => {
     expect(SRC).toMatch(/const\s*\{\s*user,\s*profile,\s*isAdmin,\s*isProvider\s*\}\s*=\s*useAuth\(\)/);
@@ -33,14 +42,16 @@ describe('Contract creation — client auto-fill', () => {
   });
 
   it('renders the self-client card and hides the ClientPicker for client accounts', () => {
-    expect(SRC).toMatch(/data-testid="contract-create-self-client-card"/);
+    // The page renders the extracted component; the testid lives inside it.
+    expect(SRC).toMatch(/<SelfClientCard\b/);
+    expect(SELF_CARD_SRC).toMatch(/data-testid="contract-create-self-client-card"/);
     // ClientPicker render is gated on !isClientOnlyAccount
     expect(SRC).toMatch(/!isClientOnlyAccount\s*&&\s*\(\s*\n\s*<ClientPicker/);
   });
 
   it('shows the "complete account/site data" hint when required fields are missing', () => {
-    expect(SRC).toContain('أكمل بيانات الحساب أو الموقع قبل إنشاء العقد');
-    expect(SRC).toContain('Complete your account or site details before creating the contract');
+    expect(SELF_CARD_SRC).toContain('أكمل بيانات الحساب أو الموقع قبل إنشاء العقد');
+    expect(SELF_CARD_SRC).toContain('Complete your account or site details before creating the contract');
   });
 
   it('does not introduce service_role, `any`, ts-ignore, or hardcoded UUIDs in the new block', () => {
@@ -75,8 +86,8 @@ describe('Contract creation — regression closeout (provider/admin/business/edi
   });
 
   it('self-client card only renders for client-only accounts (gated by isClientOnlyAccount)', () => {
-    expect(SRC).toMatch(/isClientOnlyAccount\s*&&\s*\(/);
-    expect(SRC).toMatch(/data-testid="contract-create-self-client-card"/);
+    expect(SRC).toMatch(/isClientOnlyAccount\s*&&\s*\(?\s*<SelfClientCard/);
+    expect(SELF_CARD_SRC).toMatch(/data-testid="contract-create-self-client-card"/);
   });
 
   it('auto-fill effect short-circuits when not a client-only account or when already filled', () => {

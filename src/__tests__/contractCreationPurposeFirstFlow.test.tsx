@@ -27,7 +27,9 @@ describe('Contract creation — purpose-first wizard order', () => {
     expect(PAGE).toMatch(/useState<StepKey>\('work'\)/);
   });
   it('2) parties (client) step comes after purpose and before template', () => {
-    expect(PAGE).toMatch(/\[\s*'work'\s*,\s*'client'\s*,\s*'template'\s*,/);
+    // Step order updated to: work → client → site → template → details → pricing → review.
+    // 'site' was promoted before 'template' so site-derived defaults populate the template step.
+    expect(PAGE).toMatch(/\[\s*'work'\s*,\s*'client'\s*,\s*'site'\s*,\s*'template'\s*,/);
   });
   it('3) the displayed stepper labels purpose first', () => {
     const idxPurpose = PAGE.indexOf("key: 'work'");
