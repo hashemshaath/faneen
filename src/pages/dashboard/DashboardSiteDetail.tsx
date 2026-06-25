@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -80,6 +80,13 @@ const DashboardSiteDetail: React.FC = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const [tab, setTab] = useState('overview');
+  const tabsRef = useRef<HTMLDivElement | null>(null);
+  const goToTab = (next: string) => {
+    setTab(next);
+    requestAnimationFrame(() => {
+      tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
   const [localGallery, setLocalGallery] = useState<GalleryImage[] | null>(null);
   const [localCover, setLocalCover] = useState<string | null | undefined>(undefined);
   const [refCopied, setRefCopied] = useState(false);
@@ -395,7 +402,8 @@ const DashboardSiteDetail: React.FC = () => {
         )}
 
         {/* Tabs */}
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <div ref={tabsRef} />
+        <Tabs value={tab} onValueChange={goToTab} className="w-full">
           <TabsList className="w-full overflow-x-auto no-scrollbar justify-start">
             <TabsTrigger value="overview"><ClipboardList className="h-4 w-4" /><span className="mx-2">{isRTL ? 'نظرة عامة' : 'Overview'}</span></TabsTrigger>
             <TabsTrigger value="contacts"><Users className="h-4 w-4" /><span className="mx-2">{isRTL ? 'جهات الاتصال' : 'Contacts'}</span></TabsTrigger>
@@ -426,9 +434,9 @@ const DashboardSiteDetail: React.FC = () => {
                     {isRTL ? 'ملخص النشاط' : 'Activity summary'}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <SummaryStat label={isRTL ? 'عقود نشطة' : 'Active contracts'} value={stats.activeContracts} sub={stats.completedContracts > 0 ? (isRTL ? `${stats.completedContracts} مكتمل` : `${stats.completedContracts} done`) : null} tone="primary" onClick={() => setTab('contracts')} />
-                    <SummaryStat label={isRTL ? 'عروض قيد المعالجة' : 'Open quotes'} value={stats.activeLeads} tone="amber" onClick={() => setTab('quotes')} />
-                    <SummaryStat label={isRTL ? 'طلبات RFQ نشطة' : 'Active RFQs'} value={stats.activeRfqs} tone="blue" onClick={() => setTab('rfq')} />
+                    <SummaryStat label={isRTL ? 'عقود نشطة' : 'Active contracts'} value={stats.activeContracts} sub={stats.completedContracts > 0 ? (isRTL ? `${stats.completedContracts} مكتمل` : `${stats.completedContracts} done`) : null} tone="primary" loading={contractsLoading} onClick={() => goToTab('contracts')} />
+                    <SummaryStat label={isRTL ? 'عروض قيد المعالجة' : 'Open quotes'} value={stats.activeLeads} tone="amber" loading={leadsLoading} onClick={() => goToTab('quotes')} />
+                    <SummaryStat label={isRTL ? 'طلبات RFQ نشطة' : 'Active RFQs'} value={stats.activeRfqs} tone="blue" loading={rfqsLoading} onClick={() => goToTab('rfq')} />
                     <SummaryStat label={isRTL ? 'مزودون مرتبطون' : 'Linked providers'} value={stats.providers} tone="emerald" />
                   </div>
                   {stats.totalValue > 0 && (
@@ -479,11 +487,14 @@ const DashboardSiteDetail: React.FC = () => {
                     <span className="w-1.5 h-5 rounded-full bg-orange-500" />
                     {isRTL ? 'العنوان' : 'Address'}
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <SiteField label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
-                    <SiteField label={isRTL ? 'الحي' : 'District'} value={site.district} />
-                  </div>
-                  <SiteField label={isRTL ? 'الشارع / تفاصيل العنوان' : 'Street / details'} value={site.address_line1} multiline />
+                  {(site.city_name || site.district || site.address_line1) ? (
+                    <p className="flex items-start gap-2 text-sm leading-relaxed" dir="auto">
+                      <MapPin className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <span className="font-medium break-words">
+                        {[site.city_name, site.district, site.address_line1].filter(Boolean).join(' · ')}
+                      </span>
+                    </p>
+                  ) : null}
                   <SiteField label={isRTL ? 'العنوان الوطني' : 'NAF'} value={site.short_address} kind="naf" />
                   {!site.city_name && !site.district && !site.address_line1 && !site.short_address && (
                     <p className="text-xs text-muted-foreground">{isRTL ? 'لم يُضَف عنوان بعد.' : 'No address added yet.'}</p>
@@ -797,7 +808,7 @@ const TONE_CLASSES: Record<string, string> = {
   emerald: 'text-emerald-600 dark:text-emerald-400',
 };
 
-const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null; tone?: keyof typeof TONE_CLASSES | string; onClick?: () => void }> = ({ label, value, sub, tone = 'primary', onClick }) => {
+const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null; tone?: keyof typeof TONE_CLASSES | string; loading?: boolean; onClick?: () => void }> = ({ label, value, sub, tone = 'primary', loading, onClick }) => {
   const Tag: React.ElementType = onClick ? 'button' : 'div';
   return (
     <Tag
@@ -805,7 +816,11 @@ const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null;
       className={`text-start rounded-xl border border-border/40 bg-card/60 p-3 ${onClick ? 'hover:border-primary/40 hover:bg-primary/5 transition cursor-pointer' : ''}`}
     >
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-2xl font-bold tech-content ${TONE_CLASSES[tone] || TONE_CLASSES.primary}`}>{value}</div>
+      {loading ? (
+        <Skeleton className="mt-1 h-7 w-12" />
+      ) : (
+        <div className={`mt-1 text-2xl font-bold tech-content ${TONE_CLASSES[tone] || TONE_CLASSES.primary}`}>{value}</div>
+      )}
       {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
     </Tag>
   );
