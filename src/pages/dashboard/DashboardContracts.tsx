@@ -292,7 +292,10 @@ const DashboardContracts = () => {
   /* CONTRACT CREATION PURPOSE-FIRST FLOW — purpose (work-type) is the
      first step; parties (client) only after purpose is chosen; then
      template (filtered by purpose), then details, pricing, review. */
-  const stepOrder: StepKey[] = ['work', 'client', 'template', 'site', 'details', 'pricing', 'review'];
+  // NOTE: Order MUST match the visual `order-N` of the section refs below
+  // (work=1, client=2, site=4, template=6, details=7, pricing=8, review=9)
+  // otherwise "Next" scrolls backward and feels broken.
+  const stepOrder: StepKey[] = ['work', 'client', 'site', 'template', 'details', 'pricing', 'review'];
   const [activeStep, setActiveStep] = useState<StepKey>('work');
   /* Phase 5C.3 — Execution site selection (held locally for new drafts;
      persisted via set_contract_execution_site for existing drafts). */
@@ -1919,8 +1922,8 @@ const DashboardContracts = () => {
                 const steps = [
                   { key: 'work',     ar: 'الغرض / التخصص', en: 'Purpose',   done: !!selectedWorkType && workTypeTouched },
                   { key: 'client',   ar: isClientOnlyAccount ? 'الطرف الثاني' : 'الأطراف', en: isClientOnlyAccount ? 'Second party' : 'Parties', done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
-                  { key: 'template', ar: 'القالب',         en: 'Template',  done: !!effectiveVersion },
                   { key: 'site',     ar: 'موقع التنفيذ',   en: 'Site',      done: !!selectedSiteId },
+                  { key: 'template', ar: 'القالب',         en: 'Template',  done: !!effectiveVersion },
                   { key: 'details',  ar: 'التفاصيل',       en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
                   { key: 'pricing',  ar: 'التسعير/VAT',    en: 'Pricing/VAT', done: !!form.vat_rate },
                   { key: 'review',   ar: 'المراجعة',       en: 'Review',    done: false },
@@ -2276,7 +2279,46 @@ const DashboardContracts = () => {
                 stepOrder={stepOrder}
                 isSaving={createContractMutation.isPending}
                 saveDisabled={saveBlocked}
-                onStepNav={goToStep}
+                onStepNav={(key) => {
+                  // Validate forward navigation: list missing items in current step.
+                  const fromIdx = stepOrder.indexOf(activeStep);
+                  const toIdx = stepOrder.indexOf(key);
+                  if (toIdx > fromIdx) {
+                    const missing: string[] = [];
+                    if (activeStep === 'work' && !(selectedWorkType && workTypeTouched)) {
+                      missing.push(pickBi(isRTL, 'اختر الغرض/التخصص', 'Select purpose/specialty'));
+                    }
+                    if (activeStep === 'client' && !(selectedClient || guestClient || form.client_email || pendingInvite)) {
+                      missing.push(pickBi(isRTL, 'حدد الطرف الثاني (العميل)', 'Select the second party (client)'));
+                    }
+                    if (activeStep === 'site' && !selectedSiteId) {
+                      missing.push(pickBi(isRTL, 'اختر موقع التنفيذ', 'Select an execution site'));
+                    }
+                    if (activeStep === 'template' && !effectiveVersion) {
+                      missing.push(pickBi(isRTL, 'اختر قالب العقد', 'Select a contract template'));
+                    }
+                    if (activeStep === 'details') {
+                      if (!form.title_ar) missing.push(pickBi(isRTL, 'أدخل عنوان العقد', 'Enter contract title'));
+                      if (!form.total_amount || Number(form.total_amount) <= 0) {
+                        missing.push(pickBi(isRTL, 'أدخل قيمة العقد', 'Enter contract amount'));
+                      }
+                      if (form.start_date && form.end_date && new Date(form.end_date) < new Date(form.start_date)) {
+                        missing.push(pickBi(isRTL, 'تاريخ الانتهاء قبل البدء', 'End date is before start date'));
+                      }
+                    }
+                    if (activeStep === 'pricing' && !form.vat_rate) {
+                      missing.push(pickBi(isRTL, 'حدد نسبة الضريبة', 'Set the VAT rate'));
+                    }
+                    if (missing.length > 0) {
+                      toast.error(
+                        pickBi(isRTL, 'لا يمكن المتابعة — يوجد نقص:', 'Cannot continue — missing:'),
+                        { description: missing.join(' • ') },
+                      );
+                      return;
+                    }
+                  }
+                  goToStep(key);
+                }}
                 onSave={() => createContractMutation.mutate(undefined)}
                 completenessScore={!editingId ? calculateContractCompleteness({
                   hasClient: !!(selectedClient || guestClient || form.client_email),
