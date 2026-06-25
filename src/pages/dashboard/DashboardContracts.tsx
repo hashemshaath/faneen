@@ -2290,6 +2290,16 @@ const DashboardContracts = () => {
                   hasTemplateSnapshot: !!effectiveVersion,
                 }).score : undefined}
               />
+              {editingId && (
+                <div className="flex justify-end pt-2">
+                  <Button variant="outline" size="sm" className="text-xs h-8 gap-1"
+                    onClick={() => navigate(`/dashboard/contracts/${editingId}/review`)}
+                    data-testid="creator-open-review-page">
+                    <Send className="w-3.5 h-3.5" />
+                    {pickBi(isRTL, 'مراجعة وإرسال', 'Review & Send')}
+                  </Button>
+                </div>
+              )}
               </div>
 
               {/* Provider Contract UX 2 — Part D: sticky mobile action bar. */}
@@ -3122,7 +3132,7 @@ const DashboardContracts = () => {
                                     { icon: Download, label: pickBi(isRTL, 'تصدير PDF', 'Export PDF'), onClick: () => handleExportPDF(c), disabled: isExporting, show: true },
                                     { icon: Copy, label: pickBi(isRTL, 'نسخ العقد', 'Duplicate'), onClick: () => handleDuplicate(c), show: true },
                                     { icon: Share2, label: pickBi(isRTL, 'مشاركة', 'Share'), onClick: () => handleShareContract(c), show: true },
-                                    { icon: Send, label: pickBi(isRTL, 'إرسال للمراجعة', 'Send for Review'), onClick: () => setSendConfirm(c), show: c.status === 'draft' && user?.id === c.provider_id, disabled: !computeSendEligibility(c).isEligible, className: 'text-primary border-primary/30' },
+                                    { icon: Send, label: pickBi(isRTL, 'مراجعة وإرسال', 'Review & Send'), onClick: () => navigate(`/dashboard/contracts/${c.id}/review`), show: c.status === 'draft' && user?.id === c.provider_id, className: 'text-primary border-primary/30' },
                                     { icon: CircleCheck, label: pickBi(isRTL, 'موافقة', 'Approve'), onClick: () => setApproveConfirm(c), show: ((user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at)) && c.status !== 'completed' && c.status !== 'cancelled', className: 'text-success border-success' },
                                     { icon: Edit3, label: pickBi(isRTL, 'تعديل', 'Edit'), onClick: () => openEditContract(c), show: !locked && user?.id === c.provider_id },
                                     { icon: FileText, label: pickBi(isRTL, 'طلب ملحق', 'Amendment'), onClick: () => setShowAddAmendment(c.id), show: locked, className: 'text-warning border-warning' },

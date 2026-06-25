@@ -85,6 +85,7 @@ const DashboardSitePrint = lazyRetry(() => import("./pages/dashboard/DashboardSi
 const DashboardSiteDetail = lazyRetry(() => import("./pages/dashboard/DashboardSiteDetail"));
 const DashboardReviews = lazyRetry(() => import("./pages/dashboard/DashboardReviews"));
 const DashboardContracts = lazyRetry(() => import("./pages/dashboard/DashboardContracts"));
+const DashboardContractReview = lazyRetry(() => import("./pages/dashboard/DashboardContractReview"));
 const DashboardWorkOrders = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrders"));
 const DashboardWorkOrdersOverview = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrdersOverview"));
 const ProductionBoardPage = lazyRetry(() => import("./pages/dashboard/ProductionBoardPage"));
@@ -425,6 +426,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/diagnostics" element={<ProtectedRoute><DashboardAccountDiagnostics /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 4 — Contracts hub. */}
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContractsHub /></ProtectedRoute>} />
+          <Route path="/dashboard/contracts/:id/review" element={<ProtectedRoute><DashboardContractReview /></ProtectedRoute>} />
           {/* RENTAL-MICROSERVICE-1 — provider + admin rental hubs */}
           <Route path="/dashboard/rentals" element={<ProtectedRoute><DashboardRentals /></ProtectedRoute>} />
           <Route path="/dashboard/rentals/calendar" element={<ProtectedRoute><DashboardRentalsCalendar /></ProtectedRoute>} />
