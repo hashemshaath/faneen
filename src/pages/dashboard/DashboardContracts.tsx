@@ -2032,10 +2032,8 @@ const DashboardContracts = () => {
                 />
               )}
 
-              {/* Phase C — Client-only order: Sector → First party → (Site) → Second party. SelfClientCard renders data-testid="contract-create-self-client-card" after the site step with the hint "أكمل بيانات الحساب أو الموقع قبل إنشاء العقد" / "Complete your account or site details before creating the contract" when required fields are missing. */}
-              {/* Phase H — Contract parties panel (role-aware). Providers never see a provider picker for themselves; clients never see a ClientPicker for themselves. */}
-              {!editingId && inviteMode === 'idle' && (() => { const accountKind: ContractAccountKind = isAdmin ? 'admin' : (isProvider || !!businessId) ? 'provider' : 'client'; const secondPartyName = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? null) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || null); return (<ContractPartiesPanel isRTL={isRTL} accountKind={accountKind} firstPartyName={contractParties.firstPartyDisplayName} firstPartyRef={businessId ?? null} secondPartyName={secondPartyName} linkedProviderMissing={accountKind === 'client' && !contractParties.firstPartyBusinessId} />); })()}
-              {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (<SelfClientCard isRTL={isRTL} clientName={selectedClient?.full_name ?? null} email={selectedClient?.email_masked ?? null} phone={selectedClient?.phone_masked ?? null} refId={selectedClient?.ref_id ?? null} hasMissingRequiredInfo={!selectedClient?.full_name || !selectedClient?.phone_masked} />)}
+              {/* Phase C — Client-only order: Sector → Provider search (First Party) → Parties panel → Second party. */}
+              {/* Step 2: Provider search FIRST so that contractParties.firstPartyDisplayName is populated before the panel renders. */}
               {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (
                 <div data-testid="contract-create-provider-picker-block" className="p-3 rounded-xl border border-border/50 bg-card/40">
                   <ContractProviderSearchPicker
@@ -2046,6 +2044,9 @@ const DashboardContracts = () => {
                   />
                 </div>
               )}
+              {/* Step 3+4: Contract parties panel — First Party (executor) then Second Party. */}
+              {!editingId && inviteMode === 'idle' && (() => { const accountKind: ContractAccountKind = isAdmin ? 'admin' : (isProvider || !!businessId) ? 'provider' : 'client'; const secondPartyName = isClientOnlyAccount ? (profile?.full_name ?? profile?.full_name_ar ?? profile?.full_name_en ?? null) : (selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || null); return (<ContractPartiesPanel isRTL={isRTL} accountKind={accountKind} firstPartyName={contractParties.firstPartyDisplayName} firstPartyRef={businessId ?? null} secondPartyName={secondPartyName} linkedProviderMissing={accountKind === 'client' && !contractParties.firstPartyBusinessId} />); })()}
+              {!editingId && inviteMode === 'idle' && isClientOnlyAccount && (<SelfClientCard isRTL={isRTL} clientName={selectedClient?.full_name ?? null} email={selectedClient?.email_masked ?? null} phone={selectedClient?.phone_masked ?? null} refId={selectedClient?.ref_id ?? null} hasMissingRequiredInfo={!selectedClient?.full_name || !selectedClient?.phone_masked} />)}
               {/* SectorPlaceholderNotice + FirstPartyNotice replaced by inline ContractProviderSearchPicker + purpose-first WorkTypeSection. */}
               {!editingId && inviteMode === 'idle' && !isClientOnlyAccount && (
                 <ClientPicker
