@@ -2166,7 +2166,7 @@ const DashboardContracts = () => {
               </div>
 
               {/* CT4 — Template selector (new contracts only) */}
-              <div ref={stepRefs.template} className="scroll-mt-24 order-3">
+              <div ref={stepRefs.template} className="scroll-mt-24 order-6">
               {!editingId && (
                 <TemplateSelectionSection
                   isRTL={isRTL}
@@ -2183,19 +2183,19 @@ const DashboardContracts = () => {
               </div>
 
               {/* Titles + descriptions + dates + supervisor + terms = Details step */}
-              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24 order-5">
+              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24 order-7">
               <ContractDetailsSection isRTL={isRTL} form={form} setForm={setForm} selectedSiteId={selectedSiteId} selectedWorkTypeLabel={getWorkType(selectedWorkType)?.ar ?? null} />
               </div>
 
               {/* VAT Settings — Pricing/VAT step */}
-              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24 order-6">
+              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24 order-8">
               <VatSettingsSection isRTL={isRTL} form={form} setForm={setForm} />
               <SupervisorSection isRTL={isRTL} form={form} setForm={setForm} selectedSiteId={selectedSiteId} />
               <ContractTermsSection isRTL={isRTL} form={form} setForm={setForm} templateVersionId={effectiveVersion?.version_id ?? null} />
               </div>
 
               {/* CT4B — Review summary + status guidance before submit. */}
-              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24 order-7">
+              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24 order-9">
               {(() => {
                 const completeness = !editingId
                   ? calculateContractCompleteness({
