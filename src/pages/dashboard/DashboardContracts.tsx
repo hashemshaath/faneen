@@ -2229,12 +2229,12 @@ const DashboardContracts = () => {
                 const saveState: DraftSaveState = mStatus === 'pending' ? 'saving' : mStatus === 'error' ? 'error' : mStatus === 'success' ? 'saved' : 'not_saved';
                 const firstPartyLabel = contractParties.firstPartyDisplayName ?? '—';
                 const secondPartyLabel = contractParties.secondPartyDisplayName ?? '—';
-                const reviewMissing: string[] = contractParties.missingRequirements.map((r) => CONTRACT_PARTY_MISSING_MESSAGES[r][isRTL ? 'ar' : 'en']);
+                const reviewMissing: string[] = contractParties.missingRequirements.map((r) => CONTRACT_PARTY_MISSING_MESSAGES[r][(['ar','en'] as const)[isRTL ? 0 : 1]]);
                 if (!(selectedClient || guestClient || form.client_email || pendingInvite)) {
                   reviewMissing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
                 }
                 const tplLabel = effectiveVersion ? pickBi(isRTL, 'القالب المختار', 'Selected template') : '—';
-                const sectorLbl = getWorkType(selectedWorkType)?.[isRTL ? 'ar' : 'en'] ?? '—';
+                const sectorLbl = getWorkType(selectedWorkType)?.[(['ar','en'] as const)[isRTL ? 0 : 1]] ?? '—';
                 return (
                   <>
                     {completeness && <ContractCompletenessCard isRTL={isRTL} result={completeness} onGoToStep={goToStep} />}
@@ -2280,7 +2280,7 @@ const DashboardContracts = () => {
                   const fromIdx = stepOrder.indexOf(activeStep);
                   const toIdx = stepOrder.indexOf(key);
                   if (toIdx > fromIdx) {
-                    const missing: string[] = contractParties.missingRequirements.map((r) => CONTRACT_PARTY_MISSING_MESSAGES[r][isRTL ? 'ar' : 'en']);
+                    const missing: string[] = contractParties.missingRequirements.map((r) => CONTRACT_PARTY_MISSING_MESSAGES[r][(['ar','en'] as const)[isRTL ? 0 : 1]]);
                     if (!(selectedWorkType && workTypeTouched)) missing.push(pickBi(isRTL, 'اختر نوع العمل / الخدمة أولًا', 'Select work type / service first'));
                     if (!contractPricingChoice) missing.push(pickBi(isRTL, 'اختر طريقة التسعير قبل إنشاء العقد', 'Pick a pricing method before creating the contract'));
                     if (!(selectedClient || guestClient || form.client_email || pendingInvite)) missing.push(pickBi(isRTL, isClientOnlyAccount ? 'الطرف الثاني' : 'العميل', isClientOnlyAccount ? 'Second party' : 'Client'));
