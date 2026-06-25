@@ -1359,8 +1359,8 @@ export default function DashboardSites() {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
-                      <div className="flex items-center gap-2 text-[10px]">
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 flex-wrap">
+                      <div className="flex items-center gap-2 text-[10px] shrink-0">
                         <button onClick={() => goToContracts(s.id)}
                           className={`flex items-center gap-1 ${linkedCount > 0 ? 'text-primary hover:underline' : 'text-muted-foreground'}`}>
                           <FileText className="w-3 h-3" />
@@ -1375,7 +1375,7 @@ export default function DashboardSites() {
                           <span>{pickBi(isRTL, 'مشروع', 'projects')}</span>
                         </span>
                       </div>
-                      <div className="flex items-center gap-0.5">
+                      <div className="flex items-center gap-0.5 flex-wrap justify-end">
                           <Button variant="outline" size="sm" className="h-7 text-[11px] px-2"
                             onClick={() => navigate(`/dashboard/sites/${s.id}`)}
                             title={pickBi(isRTL, 'إدارة الموقع', 'Manage site')}
