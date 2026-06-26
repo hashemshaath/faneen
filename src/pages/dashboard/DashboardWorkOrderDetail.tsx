@@ -29,8 +29,7 @@ import { WorkOrderAssigneeChip } from "@/components/workOrders/WorkOrderAssignee
 import { WorkOrderActivityCard } from "@/components/workOrders/WorkOrderActivityCard";
 import { WorkOrderAttachmentsSection } from "@/components/workOrders/WorkOrderAttachmentsSection";
 import { WorkOrderEvidenceSection } from "@/components/workOrders/WorkOrderEvidenceSection";
-import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
-import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
+import { WorkOrderMeasurementsAndBoqSection } from "@/components/workOrders/WorkOrderMeasurementsAndBoqSection";
 import { WorkOrderQuotationsSection } from "@/components/workOrders/WorkOrderQuotationsSection";
 import { WorkOrderPipelineSection } from "@/components/workOrders/WorkOrderPipelineSection";
 import { WorkOrderOperationalSummary } from "@/components/workOrders/WorkOrderOperationalSummary";
@@ -404,14 +403,14 @@ export default function DashboardWorkOrderDetail() {
               businessId={wo.business_id}
               canManage={isAdmin || wo.owner_user_id === user?.id}
             />
-            <WorkOrderMeasurementsSection
-              workOrderId={wo.id}
-              businessId={wo.business_id}
-              canManage={isAdmin || wo.owner_user_id === user?.id}
-            />
+            <div className="rounded-2xl border border-dashed border-border/40 bg-muted/10 p-4 text-xs text-muted-foreground">
+              {isRTL
+                ? "انتقل لقسم القياسات والكميات أدناه."
+                : "See the Measurements & Quantities section below."}
+            </div>
           </div>
 
-          <WorkOrderBoqSection
+          <WorkOrderMeasurementsAndBoqSection
             workOrderId={wo.id}
             businessId={wo.business_id}
             canManage={isAdmin || wo.owner_user_id === user?.id}
