@@ -32,6 +32,7 @@ import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderM
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
 import { WorkOrderQuotationsSection } from "@/components/workOrders/WorkOrderQuotationsSection";
 import { WorkOrderPipelineSection } from "@/components/workOrders/WorkOrderPipelineSection";
+import { WorkOrderOperationalSummary } from "@/components/workOrders/WorkOrderOperationalSummary";
 import { HealthBadge } from "@/components/health/HealthBadge";
 import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
 import { CustomerTrackingCard } from "@/components/workOrders/CustomerTrackingCard";
@@ -281,6 +282,8 @@ export default function DashboardWorkOrderDetail() {
               <AlertCircle className="w-3.5 h-3.5" /> {error}
             </div>
           )}
+
+          <WorkOrderOperationalSummary wo={wo} isRTL={isRTL} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <section className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-3" aria-label={tx.stages}>
