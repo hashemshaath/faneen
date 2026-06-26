@@ -217,21 +217,36 @@ describe('N-5 — blocking-await notification insert migration', () => {
   describe('DashboardContracts — send-for-approval blocking insert', () => {
     const src = read('src/pages/dashboard/DashboardContracts.tsx');
 
-    it('uses awaited createNotification (blocking)', () => {
-      expect(src).toContain('await createNotification({');
+    // NOTE: send-for-approval notifications were refactored to go through
+    // the centralized `notifyContractStatusChange` helper (see
+    // `src/modules/contracts/services/notifications/notifyContractStatusChange.ts`).
+    // The direct `createNotification({ ... })` call that previously lived
+    // inside `DashboardContracts.tsx` is gone on purpose. Behavioural
+    // coverage of the payload (recipient, title, action_url, reference_*,
+    // actor exclusion) now lives in
+    // `src/__tests__/contractStatusNotificationsPhase1.test.ts`. These
+    // assertions lock in the call-site contract only.
+    it('imports and uses the centralized notifyContractStatusChange helper', () => {
+      expect(src).toContain('notifyContractStatusChange');
+      expect(src).toContain("from '@/modules/contracts'");
+      expect(src).toContain('await notifyContractStatusChange({');
     });
 
-    it('payload fields preserved verbatim', () => {
-      expect(src).toContain('user_id: contract.client_id');
-      expect(src).toContain('title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`');
-      expect(src).toContain("title_en: `New contract pending review: ${contract.title_en || contract.title_ar}`");
-      expect(src).toContain("notification_type: 'contract', reference_id: contract.id, reference_type: 'contract'");
-      expect(src).toContain('action_url: `/contracts/${contract.id}`');
-    });
-
-    it('ordering: send-for-approval RPC precedes notification insert', () => {
+    it('send-for-approval mutation passes the contract + sent_for_review event', () => {
       const rpcIdx = src.indexOf('await sendContractForApproval(contract.id);');
-      const notifyIdx = src.indexOf('await createNotification({', rpcIdx);
+      expect(rpcIdx).toBeGreaterThan(-1);
+      const helperIdx = src.indexOf('await notifyContractStatusChange({', rpcIdx);
+      expect(helperIdx).toBeGreaterThan(rpcIdx);
+      const tail = src.slice(helperIdx, helperIdx + 600);
+      expect(tail).toContain('id: contract.id');
+      expect(tail).toContain('provider_id: contract.provider_id');
+      expect(tail).toContain('client_id: contract.client_id');
+      expect(tail).toContain("event: 'sent_for_review'");
+    });
+
+    it('ordering: send-for-approval RPC precedes helper-based notification', () => {
+      const rpcIdx = src.indexOf('await sendContractForApproval(contract.id);');
+      const notifyIdx = src.indexOf('await notifyContractStatusChange({', rpcIdx);
       expect(rpcIdx).toBeGreaterThan(-1);
       expect(notifyIdx).toBeGreaterThan(rpcIdx);
     });
