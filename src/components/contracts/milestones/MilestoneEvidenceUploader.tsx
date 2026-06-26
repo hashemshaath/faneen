@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser } from "@/modules/identity";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +20,7 @@ export function MilestoneEvidenceUploader({ milestoneId, contractId, onUploaded 
   const handleFile = async (file: File) => {
     setUploading(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await getCurrentUser();
       if (!u.user) throw new Error("غير مصادق");
       const path = `${contractId}/${milestoneId}/${Date.now()}-${file.name}`;
       const { error: upErr } = await supabase.storage
@@ -50,7 +51,7 @@ export function MilestoneEvidenceUploader({ milestoneId, contractId, onUploaded 
     if (!note.trim()) return;
     setUploading(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await getCurrentUser();
       const { error } = await supabase.from("contract_milestone_evidence").insert({
         milestone_id: milestoneId,
         contract_id: contractId,
