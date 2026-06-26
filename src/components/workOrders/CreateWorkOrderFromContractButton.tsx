@@ -20,6 +20,12 @@ import { useExistingWorkOrderForSource } from "@/hooks/useExistingWorkOrderForSo
 interface Props {
   contractId: string;
   defaultTitle?: string | null;
+  /**
+   * Current contract status. Work orders may only be spawned from an
+   * `active` contract — for any other status the button renders disabled
+   * with a localized reason. Service-layer guard remains authoritative.
+   */
+  contractStatus?: string | null;
   className?: string;
 }
 
@@ -28,7 +34,7 @@ interface Props {
  * Inline form (no popup). Renders a success card linking to the new WO.
  */
 export function CreateWorkOrderFromContractButton({
-  contractId, defaultTitle, className,
+  contractId, defaultTitle, contractStatus, className,
 }: Props) {
   const { isRTL } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -44,12 +50,14 @@ export function CreateWorkOrderFromContractButton({
     enabled: !created,
   });
 
+  const isActive = contractStatus === "active";
+
   if (!created && existing?.ref_id) {
     return (
       <Button asChild size="sm" variant="outline" className={className}>
         <Link to={`/dashboard/work-orders/${existing.ref_id}`}>
           <Wrench className="w-3.5 h-3.5 me-1.5" />
-          {isRTL ? "فتح أمر العمل" : "Open Work Order"}
+          {isRTL ? "عرض أمر العمل" : "Open Work Order"}
           <span className="tech-content ms-1">({existing.ref_id})</span>
         </Link>
       </Button>
@@ -75,6 +83,25 @@ export function CreateWorkOrderFromContractButton({
   }
 
   if (!open) {
+    if (contractStatus !== undefined && !isActive) {
+      return (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className={className}
+          disabled
+          title={
+            isRTL
+              ? "لا يمكن إنشاء أمر عمل إلا بعد تفعيل العقد"
+              : "Work orders can only be created from active contracts"
+          }
+        >
+          <Wrench className="w-3.5 h-3.5 me-1.5" />
+          {isRTL ? "إنشاء أمر عمل" : "Create Work Order"}
+        </Button>
+      );
+    }
     return (
       <Button
         type="button"
@@ -90,6 +117,7 @@ export function CreateWorkOrderFromContractButton({
   }
 
   const submit = async () => {
+    if (submitting) return;
     setSubmitting(true);
     const { data, error } = await createWorkOrderFromContract({
       contractId,

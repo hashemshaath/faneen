@@ -1810,6 +1810,7 @@ const ContractDetail = () => {
         <CreateWorkOrderFromContractButton
           contractId={contract.id}
           defaultTitle={(isRTL ? contract.title_ar : (contract.title_en || contract.title_ar)) || contract.contract_number}
+          contractStatus={contract.status}
           className="mb-5 sm:mb-6"
         />
         {pdfDebugEnabled && pdfDiagnostics && (
