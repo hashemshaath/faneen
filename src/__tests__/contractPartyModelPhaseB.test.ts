@@ -192,7 +192,7 @@ describe('resolveContractPartiesAndEligibility — missing requirements', () => 
 describe('Phase B — consumers wire the helper', () => {
   it('DashboardContracts imports the resolver', () => {
     expect(DASH).toMatch(
-      /import\s*\{\s*resolveContractPartiesAndEligibility\s*\}\s*from\s*['"]@\/modules\/contracts\/services\/contractParties['"]/,
+      /import\s*\{[^}]*\bresolveContractPartiesAndEligibility\b[^}]*\}\s*from\s*['"]@\/modules\/contracts\/services\/contractParties['"]/,
     );
   });
 
@@ -202,7 +202,7 @@ describe('Phase B — consumers wire the helper', () => {
 
   it('WorkspaceContractsTab imports the resolver', () => {
     expect(WTAB).toMatch(
-      /import\s*\{\s*resolveContractPartiesAndEligibility\s*\}\s*from\s*['"]@\/modules\/contracts\/services\/contractParties['"]/,
+      /import\s*\{[^}]*\bresolveContractPartiesAndEligibility\b[^}]*\}\s*from\s*['"]@\/modules\/contracts\/services\/contractParties['"]/,
     );
   });
 
