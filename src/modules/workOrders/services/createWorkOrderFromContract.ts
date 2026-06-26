@@ -42,12 +42,28 @@ export async function createWorkOrderFromContract(
     contract_number: string | null;
     title_ar: string | null;
     title_en: string | null;
+    status: string | null;
   }>({
     id: contractId,
-    select: "id, business_id, contract_number, title_ar, title_en",
+    select: "id, business_id, contract_number, title_ar, title_en, status",
   });
   if (contractErr || !contract) {
     return { data: null, error: contractErr ?? new Error("contract_not_found") };
+  }
+
+  // Guard: only active contracts may spawn work orders.
+  if (contract.status !== "active") {
+    const err = new Error("CONTRACT_NOT_ACTIVE") as Error & {
+      code: "CONTRACT_NOT_ACTIVE";
+      contract_status: string | null;
+      user_message_ar: string;
+      user_message_en: string;
+    };
+    err.code = "CONTRACT_NOT_ACTIVE";
+    err.contract_status = contract.status ?? null;
+    err.user_message_ar = "لا يمكن إنشاء أمر عمل إلا بعد تفعيل العقد";
+    err.user_message_en = "Work orders can only be created from active contracts";
+    return { data: null, error: err };
   }
 
   // Resolve owning business — never silently choose.
