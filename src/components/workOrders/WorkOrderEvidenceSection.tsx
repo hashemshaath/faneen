@@ -14,9 +14,9 @@ import {
  * BUSINESS-WORKFLOW-EVIDENCE-PHASE1 — Read-mostly "Site Visit / Measurement
  * Documents" surface. Reuses existing work_order_attachments rows (RLS-guarded
  * by is_work_order_member) and groups them by operational stage derived from
- * attachment_type. NEVER calls getPublicUrl — opens via short-lived signed URLs
- * minted by getWorkOrderAttachmentPreviewUrl. No uploads, no deletes, no
- * lifecycle mutations.
+ * attachment_type. Opens files only via short-lived signed URLs minted by
+ * getWorkOrderAttachmentPreviewUrl — never the public-URL helper. No uploads,
+ * no deletes, no lifecycle mutations.
  */
 interface Props {
   workOrderId: string;
