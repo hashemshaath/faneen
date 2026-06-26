@@ -165,7 +165,10 @@ describe("BUSINESS-WORKFLOW-4: detail page renders new sections", () => {
   const page = read(join(SRC, "pages/dashboard/DashboardWorkOrderDetail.tsx"));
   it("includes attachments + measurements sections", () => {
     expect(page).toMatch(/WorkOrderAttachmentsSection/);
-    expect(page).toMatch(/WorkOrderMeasurementsSection/);
+    // Phase 1 wrapper hosts the Measurements section behind a single mount.
+    expect(page).toMatch(/WorkOrderMeasurementsAndBoqSection|WorkOrderMeasurementsSection/);
+    const wrapper = read(join(SRC, "components/workOrders/WorkOrderMeasurementsAndBoqSection.tsx"));
+    expect(wrapper).toMatch(/WorkOrderMeasurementsSection/);
   });
 
   const att = read(join(SRC, "components/workOrders/WorkOrderAttachmentsSection.tsx"));
