@@ -28,6 +28,7 @@ import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBad
 import { WorkOrderAssigneeChip } from "@/components/workOrders/WorkOrderAssigneeChip";
 import { WorkOrderActivityCard } from "@/components/workOrders/WorkOrderActivityCard";
 import { WorkOrderAttachmentsSection } from "@/components/workOrders/WorkOrderAttachmentsSection";
+import { WorkOrderEvidenceSection } from "@/components/workOrders/WorkOrderEvidenceSection";
 import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
 import { WorkOrderQuotationsSection } from "@/components/workOrders/WorkOrderQuotationsSection";
@@ -415,6 +416,11 @@ export default function DashboardWorkOrderDetail() {
             businessId={wo.business_id}
             canManage={isAdmin || wo.owner_user_id === user?.id}
             workOrderRefId={wo.ref_id}
+          />
+
+          <WorkOrderEvidenceSection
+            workOrderId={wo.id}
+            isClientView={!(isAdmin || wo.owner_user_id === user?.id)}
           />
 
           <WorkOrderQuotationsSection
