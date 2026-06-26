@@ -3,6 +3,7 @@
  * Handles state transitions for contract_milestones with audit events.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser } from "@/modules/identity";
 
 export type MilestoneState =
   | "pending"
@@ -48,7 +49,7 @@ async function logEvent(args: {
   notes?: string | null;
   actorRole?: string;
 }) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getCurrentUser();
   await supabase.from("contract_milestone_events").insert({
     milestone_id: args.milestoneId,
     contract_id: args.contractId,
@@ -64,7 +65,7 @@ async function logEvent(args: {
 /** Provider submits milestone for client review. */
 export async function submitMilestoneForReview(milestone: MilestoneRow, notes?: string) {
   const autoReleaseAt = computeAutoReleaseAt(milestone.auto_release_days ?? DEFAULT_AUTO_RELEASE_DAYS);
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getCurrentUser();
   const { error } = await supabase
     .from("contract_milestones")
     .update({
@@ -89,7 +90,7 @@ export async function submitMilestoneForReview(milestone: MilestoneRow, notes?: 
 
 /** Client approves the milestone. */
 export async function approveMilestone(milestone: MilestoneRow, notes?: string) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getCurrentUser();
   const now = new Date().toISOString();
   const { error } = await supabase
     .from("contract_milestones")
