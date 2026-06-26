@@ -2,12 +2,8 @@
  * WORK ORDER MEASUREMENT SHEET + BOQ DRAFT — PHASE 1
  *
  * Thin wrapper that frames the existing Measurement Sheet and BOQ Draft
- * surfaces with a single bilingual heading and the explicit
- * "this is an operational draft — NOT an invoice / final approval" notice.
- *
- * No new DB / RLS / RPC. Read-only for clients (no `canManage`).
- * No payments / ZATCA / escrow / warranty / final handover / contract or
- * work-order lifecycle mutations.
+ * surfaces with a single bilingual heading and an operational-draft notice.
+ * No new DB / RLS / RPC. Read-only when `canManage` is false.
  */
 import { ClipboardList, Info } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
