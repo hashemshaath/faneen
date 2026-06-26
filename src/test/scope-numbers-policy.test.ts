@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { globSync } from 'glob';
+import { globSync } from 'tinyglobby';
 
 /**
  * Phase 5A + 5B scope: enforce Latin-digits / Latin-formatting policy across

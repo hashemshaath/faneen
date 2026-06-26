@@ -341,7 +341,10 @@ describe("WorkOrderBoqSection UI", () => {
 
   it("BOQ section is wired into the dashboard work-order detail page", () => {
     const page = read("src/pages/dashboard/DashboardWorkOrderDetail.tsx");
-    expect(page).toMatch(/WorkOrderBoqSection/);
+    // Phase 1 wrapper hosts both Measurements + BOQ behind a single mount.
+    expect(page).toMatch(/WorkOrderMeasurementsAndBoqSection|WorkOrderBoqSection/);
+    const wrapper = read("src/components/workOrders/WorkOrderMeasurementsAndBoqSection.tsx");
+    expect(wrapper).toMatch(/WorkOrderBoqSection/);
   });
 });
 
