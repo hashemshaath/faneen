@@ -346,7 +346,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
   autoTable(doc, {
     startY: y, body: partiesData, theme: 'plain',
     styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
-    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: MUTED_RGB } },
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80, textColor: MUTED_RGB } },
     margin: PDF_TABLE_MARGIN,
     alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
