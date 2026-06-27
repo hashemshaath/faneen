@@ -9,6 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { buildBadgeHtml, type BadgeBuildOptions } from '@/lib/badge/snippets';
 import { generateQrSvg } from '@/lib/badge/qr';
+import { sanitizeBadgeHtml, sanitizeSvgMarkup } from '@/lib/security/sanitizeHtml';
 
 interface PublicBusiness {
   id: string | null;
@@ -395,7 +396,7 @@ const VerifyBusiness = () => {
                     <div className="text-xs font-semibold text-muted-foreground mb-2 inline-flex items-center gap-1.5">
                       <BadgeCheck className="w-3.5 h-3.5" />{t.embedTitle}
                     </div>
-                    <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: embedHtml }} />
+                    <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: sanitizeBadgeHtml(embedHtml) }} />
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-3">
@@ -424,7 +425,7 @@ const VerifyBusiness = () => {
                         <QrCode className="w-3.5 h-3.5" />{t.qrTitle}
                       </div>
                       {qrSvg ? (
-                        <div className="bg-white p-2 rounded-md border border-border" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+                        <div className="bg-white p-2 rounded-md border border-border" dangerouslySetInnerHTML={{ __html: sanitizeSvgMarkup(qrSvg) }} />
                       ) : (
                         <div className="w-[180px] h-[180px] bg-background rounded-md border border-border flex items-center justify-center">
                           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
