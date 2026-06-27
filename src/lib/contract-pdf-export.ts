@@ -331,11 +331,11 @@ export const buildContractPDF = async (data: ContractExportData) => {
   sectionTitle(data.isRTL ? 'أطراف العقد' : 'Contract Parties');
   const partiesData: string[][] = [
     [
-      data.isRTL ? 'الطرف الأول — الجهة المنفذة / مزود الخدمة' : 'First Party — Service Provider',
+      data.isRTL ? 'الطرف الأول — الجهة المنفذة / مزود الخدمة' : 'First Party - Service Provider',
       data.providerName,
     ],
     [
-      data.isRTL ? 'الطرف الثاني — صاحب الحساب / طالب الخدمة' : 'Second Party — Account Holder / Service Requester',
+      data.isRTL ? 'الطرف الثاني — صاحب الحساب / طالب الخدمة' : 'Second Party - Account Holder / Service Requester',
       data.clientName,
     ],
   ];
