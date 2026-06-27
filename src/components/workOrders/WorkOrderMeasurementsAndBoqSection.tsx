@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
 import { WorkOrderMeasurementsBoqSummary } from "@/components/workOrders/WorkOrderMeasurementsBoqSummary";
+import { WorkOrderBoqReviewPanel } from "@/components/workOrders/WorkOrderBoqReviewPanel";
 
 interface Props {
   workOrderId: string;
@@ -61,6 +62,11 @@ export function WorkOrderMeasurementsAndBoqSection({
       </div>
 
       <WorkOrderMeasurementsBoqSummary
+        workOrderId={workOrderId}
+        canManage={canManage}
+      />
+
+      <WorkOrderBoqReviewPanel
         workOrderId={workOrderId}
         canManage={canManage}
       />
