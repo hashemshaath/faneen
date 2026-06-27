@@ -98,6 +98,7 @@ const ContractSkeleton = () => (
 );
 
 const Contracts = () => {
+  useNoIndex();
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
