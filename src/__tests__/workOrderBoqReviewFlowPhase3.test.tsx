@@ -58,8 +58,8 @@ describe("WORK ORDER BOQ REVIEW FLOW — Phase 3", () => {
     expect(PANEL).toMatch(/إرسال BOQ للمراجعة/);
     expect(PANEL).toMatch(/Send BOQ for review/);
     expect(PANEL).toContain("wo-boq-send-for-review");
-    // Send block lives inside the canManage branch.
-    expect(PANEL).toMatch(/canManage \?[\s\S]*wo-boq-send-for-review[\s\S]*:[\s\S]*wo-boq-client-readonly/);
+    // Send block is rendered by the provider branch; client branch renders the read-only notice.
+    expect(PANEL).toMatch(/canManage \?[\s\S]*renderProvider[\s\S]*:[\s\S]*renderClient/);
   });
 
   it("provider awaiting state is shown when BOQ is already submitted", () => {
