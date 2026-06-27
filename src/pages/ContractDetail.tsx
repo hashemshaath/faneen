@@ -1954,8 +1954,8 @@ const ContractDetail = () => {
 
         {/* ─── Parties ─── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mb-5 sm:mb-6">
-          <PartyCard profile={clientProfile} partyLabel={isRTL ? 'الطرف الأول (العميل)' : 'First Party (Client)'} partyIcon={User} acceptedAt={contract.client_accepted_at} />
-          <PartyCard profile={providerProfile} partyLabel={isRTL ? 'الطرف الثاني (مزود الخدمة)' : 'Second Party (Provider)'} partyIcon={Building2} biz={business} acceptedAt={contract.provider_accepted_at} isBiz />
+          <PartyCard profile={providerProfile} partyLabel={isRTL ? 'الطرف الأول — الجهة المنفذة / مزود الخدمة' : 'First Party — Service Provider'} partyIcon={Building2} biz={business} acceptedAt={contract.provider_accepted_at} isBiz />
+          <PartyCard profile={clientProfile} partyLabel={isRTL ? 'الطرف الثاني — صاحب الحساب / طالب الخدمة' : 'Second Party — Account Holder / Service Requester'} partyIcon={User} acceptedAt={contract.client_accepted_at} />
         </div>
 
         {/* ─── Supervisor ─── */}
@@ -2447,7 +2447,7 @@ const ContractDetail = () => {
           <div className="mb-5 sm:mb-6 space-y-3">
             <h2 className="font-heading font-bold text-base flex items-center gap-2"><BookOpen className="w-5 h-5 text-accent" />{isRTL ? 'بنود العقد' : 'Contract Clauses'}</h2>
             {desc && <ClauseSection icon={BookOpen} number={1} title={isRTL ? 'التمهيد والمقدمة' : 'Preamble'} defaultOpen><p className="text-xs sm:text-sm text-muted-foreground font-body leading-relaxed whitespace-pre-wrap">{desc}</p></ClauseSection>}
-            <ClauseSection icon={User} number={2} title={isRTL ? 'التزامات الطرف الأول (العميل)' : 'Client Obligations'}>
+            <ClauseSection icon={Building2} number={2} title={isRTL ? 'التزامات الطرف الأول (الجهة المنفذة / مزود الخدمة)' : 'First Party Obligations (Service Provider)'}>
               <ul className="space-y-2 text-xs text-muted-foreground font-body list-disc list-inside">
                 <li>{isRTL ? 'سداد المستحقات المالية وفقاً لجدول الدفعات المتفق عليه' : 'Pay dues per schedule'}</li>
                 <li>{isRTL ? 'تجهيز الموقع وتوفير المتطلبات اللازمة' : 'Prepare site and requirements'}</li>
@@ -2455,7 +2455,7 @@ const ContractDetail = () => {
                 <li>{isRTL ? 'استلام الأعمال وتوقيع محاضر التسليم' : 'Accept work and sign handover reports'}</li>
               </ul>
             </ClauseSection>
-            <ClauseSection icon={Building2} number={3} title={isRTL ? 'التزامات الطرف الثاني (المزود)' : 'Provider Obligations'}>
+            <ClauseSection icon={User} number={3} title={isRTL ? 'التزامات الطرف الثاني (صاحب الحساب / طالب الخدمة)' : 'Second Party Obligations (Account Holder)'}>
               <ul className="space-y-2 text-xs text-muted-foreground font-body list-disc list-inside">
                 <li>{isRTL ? 'تنفيذ الأعمال وفقاً للمواصفات بجودة عالية' : 'Execute per specs with quality'}</li>
                 <li>{isRTL ? 'الالتزام بالجدول الزمني لكل مرحلة' : 'Meet milestone deadlines'}</li>
@@ -2483,8 +2483,8 @@ const ContractDetail = () => {
                 <p>{isRTL ? 'حُرر هذا العقد وتم التوقيع عليه إلكترونياً من قبل الطرفين بنفس الحجية القانونية.' : 'Electronically signed by both parties with full legal validity.'}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
                   {[
-                    { label: isRTL ? 'الطرف الأول (العميل)' : 'Client', name: getProfileName(clientProfile), accepted: contract.client_accepted_at },
-                    { label: isRTL ? 'الطرف الثاني (المزود)' : 'Provider', name: bizName || getProfileName(providerProfile), accepted: contract.provider_accepted_at },
+                    { label: isRTL ? 'الطرف الأول (الجهة المنفذة / مزود الخدمة)' : 'First Party (Service Provider)', name: bizName || getProfileName(providerProfile), accepted: contract.provider_accepted_at },
+                    { label: isRTL ? 'الطرف الثاني (صاحب الحساب / طالب الخدمة)' : 'Second Party (Account Holder)', name: getProfileName(clientProfile), accepted: contract.client_accepted_at },
                   ].map((party, i) => (
                     <div key={i} className="text-center space-y-2 p-3 rounded-lg bg-muted/20">
                       <p className="font-heading font-bold text-foreground text-xs">{party.label}</p>
