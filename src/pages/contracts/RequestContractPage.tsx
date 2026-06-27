@@ -3,12 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Layers3, Wallet, FileSignature, ArrowLeft, Sparkles } from "lucide-react";
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 /**
  * Contract request entry — Phase 1.
  * Two paths: start fresh, or convert an accepted quote.
  */
 export default function RequestContractPage() {
+  useNoIndex();
   const [sp] = useSearchParams();
   const navigate = useNavigate();
   const fromQuoteId = sp.get("fromQuoteId");

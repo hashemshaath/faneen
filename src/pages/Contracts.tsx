@@ -17,6 +17,7 @@ import {
 import type { Tables } from '@/integrations/supabase/types';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   CONTRACT_STATUS_KEYS,
   getContractStatusMeta,
@@ -97,6 +98,7 @@ const ContractSkeleton = () => (
 );
 
 const Contracts = () => {
+  useNoIndex();
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
   const [search, setSearch] = useState('');

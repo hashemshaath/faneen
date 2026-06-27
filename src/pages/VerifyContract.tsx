@@ -7,7 +7,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 
 type VerifyResult =
   | { valid: true; contract_number: string; status: string; locked_at: string | null;
-      contract_barcode_code: string | null; provider_name: string | null; created_at: string | null;
+      contract_barcode_code: string | null; created_at: string | null;
       start_date: string | null; end_date: string | null; currency: string;
       hash_prefix: string | null; amendment_count: number; resolved_via?: string }
   | { valid: false; reason: 'invalid_input' | 'not_found' | 'hash_mismatch';
@@ -56,10 +56,10 @@ const VerifyContract = () => {
     notFound: 'العقد غير موجود أو ليس مفعّلاً',
     invalidInput: 'رابط التحقق غير صالح',
     contractCode: 'كود العقد', contractNumber: 'رقم العقد', status: 'الحالة', lockedAt: 'مفعّل في',
-    provider: 'مزود الخدمة', createdAt: 'تاريخ الإصدار',
-    period: 'الفترة', hashPrefix: 'بصمة المستند', amendments: 'التعديلات المطبقة',
-    currency: 'العملة', loading: 'جارٍ التحقق…',
-    privacyNote: 'لا يتم عرض أي بيانات شخصية أو مالية. التحقق يستند إلى بصمة المستند فقط.',
+    createdAt: 'تاريخ الإصدار',
+    hashPrefix: 'بصمة المستند', amendments: 'التعديلات المطبقة',
+    loading: 'جارٍ التحقق…',
+    privacyNote: 'لا يتم عرض أي بيانات شخصية أو مالية أو أسماء أطراف. التحقق يستند إلى بصمة المستند فقط.',
   } : {
     title: 'Official Contract Verification', sub: 'Public-safe authenticity check',
     valid: 'This contract is authentic', invalid: 'This contract cannot be verified',
@@ -67,10 +67,10 @@ const VerifyContract = () => {
     notFound: 'Contract not found or not active',
     invalidInput: 'Invalid verification link',
     contractCode: 'Contract Code', contractNumber: 'Contract Number', status: 'Status', lockedAt: 'Activated',
-    provider: 'Provider', createdAt: 'Issued',
-    period: 'Period', hashPrefix: 'Document Hash', amendments: 'Applied Amendments',
-    currency: 'Currency', loading: 'Verifying…',
-    privacyNote: 'No personal or financial data is shown. Verification relies solely on the document hash.',
+    createdAt: 'Issued',
+    hashPrefix: 'Document Hash', amendments: 'Applied Amendments',
+    loading: 'Verifying…',
+    privacyNote: 'No personal, financial, or party-name data is shown. Verification relies solely on the document hash.',
   }, [isRTL]);
 
   const { loading, data, error } = state;
@@ -118,11 +118,8 @@ const VerifyContract = () => {
               )}
               {isValid && (
                 <>
-                  {data.provider_name && <Row label={t.provider} value={data.provider_name} />}
                   {data.created_at && <Row label={t.createdAt} value={fmtDate(data.created_at)} />}
                   <Row label={t.lockedAt} value={fmtDate(data.locked_at)} />
-                  <Row label={t.period} value={`${fmtDate(data.start_date)} → ${fmtDate(data.end_date)}`} />
-                  <Row label={t.currency} value={data.currency} mono />
                   {data.hash_prefix && <Row label={t.hashPrefix} value={data.hash_prefix} mono />}
                   <Row label={t.amendments} value={String(data.amendment_count)} />
                 </>

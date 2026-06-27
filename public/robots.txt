@@ -48,6 +48,9 @@ Disallow: /compare-profiles?ids=
 # الصفحات الخاصة والإدارية
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /contracts
+Disallow: /contracts/
+Disallow: /v/c/
 Disallow: /auth
 Disallow: /reset-password
 Disallow: /onboarding

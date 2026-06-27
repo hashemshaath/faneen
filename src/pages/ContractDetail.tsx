@@ -28,6 +28,7 @@ import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import type { ArabicFontDiagnostics } from '@/lib/pdf-arabic-font';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
+import { useNoIndex } from '@/hooks/useNoIndex';
 import { ContractFullHistory } from '@/modules/contracts/components/ContractFullHistory';
 import { ContractCounterOffersPanel } from '@/modules/contracts/components/ContractCounterOffersPanel';
 import { ContractVersionDiff } from '@/modules/contracts/components/ContractVersionDiff';
@@ -250,6 +251,7 @@ const mapAmendmentError = (err: unknown, isRTL: boolean): string => {
 };
 
 const ContractDetail = () => {
+  useNoIndex();
   // C5C: friendly Arabic/English mapping for amendment RPC error codes.
   // Defined inside component so it can capture isRTL via closure-style call.
   const { id } = useParams<{ id: string }>();
