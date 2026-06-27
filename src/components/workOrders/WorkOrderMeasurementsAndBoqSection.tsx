@@ -9,6 +9,7 @@ import { ClipboardList, Info } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
+import { WorkOrderMeasurementsBoqSummary } from "@/components/workOrders/WorkOrderMeasurementsBoqSummary";
 
 interface Props {
   workOrderId: string;
@@ -58,6 +59,11 @@ export function WorkOrderMeasurementsAndBoqSection({
           </p>
         </div>
       </div>
+
+      <WorkOrderMeasurementsBoqSummary
+        workOrderId={workOrderId}
+        canManage={canManage}
+      />
 
       <WorkOrderMeasurementsSection
         workOrderId={workOrderId}
