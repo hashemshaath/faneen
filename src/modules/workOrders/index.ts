@@ -115,6 +115,14 @@ export {
 export type { BoqTotals } from "./services/recomputeBoqTotals";
 export { finalizeBoq } from "./services/finalizeBoq";
 
+// WORK ORDER BOQ REVIEW STATUS — PHASE 4
+export {
+  submitWorkOrderBoqForReview,
+  requestWorkOrderBoqChanges,
+  acceptWorkOrderBoqReview,
+} from "./services/transitionWorkOrderBoqReview";
+export type { TransitionWorkOrderBoqReviewResult } from "./services/transitionWorkOrderBoqReview";
+
 // BUSINESS-WORKFLOW-5D — Quotations (snapshot from finalized BOQ)
 export { createQuotationFromBoq } from "./services/createQuotationFromBoq";
 export type {
