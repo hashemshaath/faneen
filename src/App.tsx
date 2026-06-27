@@ -131,6 +131,8 @@ const Projects = lazyRetry(() => import("./pages/Projects"));
 const ProjectDetail = lazyRetry(() => import("./pages/ProjectDetail"));
 const Blog = lazyRetry(() => import("./pages/Blog"));
 const Guides = lazyRetry(() => import("./pages/Guides"));
+const ContractTemplates = lazyRetry(() => import("./pages/ContractTemplates"));
+const ContractTemplateDetail = lazyRetry(() => import("./pages/ContractTemplates").then(m => ({ default: m.ContractTemplateDetail })));
 const HeavyEquipmentRentalSaudiArabia = lazyRetry(() => import("./pages/guides/HeavyEquipmentRentalSaudiArabia"));
 const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
 const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
@@ -347,6 +349,8 @@ const AppRoutes = () => (
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/guides" element={<Guides />} />
+          <Route path="/contract-templates" element={<ContractTemplates />} />
+          <Route path="/contract-templates/:slug" element={<ContractTemplateDetail />} />
           <Route path="/guides/heavy-equipment-rental-saudi-arabia" element={<HeavyEquipmentRentalSaudiArabia />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/profile-systems" element={<ProfileSystems />} />
