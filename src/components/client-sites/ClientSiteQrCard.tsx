@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { generateQrSvg, downloadQrPng } from '@/lib/badge/qr';
 import { toast } from 'sonner';
+import { sanitizeSvgMarkup } from '@/lib/security/sanitizeHtml';
 
 export interface ClientSiteQrCardProps {
   siteId: string;
@@ -248,7 +249,7 @@ export const ClientSiteQrCard: React.FC<ClientSiteQrCardProps> = ({
                 {[siteType, cityName].filter(Boolean).join(' · ')}
               </div>
             )}
-            <div className="qr flex justify-center my-2" dangerouslySetInnerHTML={{ __html: qrSvg ?? '' }} />
+            <div className="qr flex justify-center my-2" dangerouslySetInnerHTML={{ __html: sanitizeSvgMarkup(qrSvg ?? '') }} />
             <div className="instr text-[11px] text-foreground/80 mt-2 leading-relaxed">
               <Bi as="div" ar="امسح الرمز لطلب الوصول أو تقديم عرض خدمة." en="Scan to request access or submit a service offer." />
             </div>

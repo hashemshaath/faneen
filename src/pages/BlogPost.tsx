@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
-import DOMPurify from 'dompurify';
+import { sanitizeBlogHtml } from '@/lib/security/sanitizeHtml';
 import { usePageMeta, useJsonLd, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
@@ -820,7 +820,7 @@ const BlogPost = () => {
               prose-hr:border-border/50 prose-hr:my-8
               [&_table]:block [&_table]:overflow-x-auto [&_table]:max-w-full
               ">
-              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderedHTML) }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(renderedHTML) }} />
             </article>
 
             {/* ── FAQ (guides) ── */}

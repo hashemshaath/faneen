@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import DOMPurify from 'dompurify';
+import { sanitizeSvgMarkup } from '@/lib/security/sanitizeHtml';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bi } from '@/components/common/Bilingual';
@@ -54,9 +54,7 @@ export const AssetQrIdentity: React.FC<{
     const nameSafe = escapeHtml(asset.name_en ?? asset.name_ar ?? '');
     const catSafe = escapeHtml(category?.name_en ?? category?.name_ar ?? '');
     const statusSafe = escapeHtml(String(asset.status ?? ''));
-    const sanitizedSvg = DOMPurify.sanitize(svg, {
-      USE_PROFILES: { svg: true, svgFilters: true },
-    });
+    const sanitizedSvg = sanitizeSvgMarkup(svg);
     w.document.write(`<!doctype html><html><head><title>${refSafe}</title>
       <style>body{font-family:sans-serif;padding:24px;text-align:center}
       .ref{font-family:monospace;font-size:14px;margin-top:8px}
@@ -86,11 +84,7 @@ export const AssetQrIdentity: React.FC<{
             ? <div className="flex items-center justify-center w-[180px] h-[180px]"><Loader2 className="size-5 animate-spin" /></div>
             : <div
                 className="bg-white p-2 rounded"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(svg, {
-                    USE_PROFILES: { svg: true, svgFilters: true },
-                  }),
-                }}
+                dangerouslySetInnerHTML={{ __html: sanitizeSvgMarkup(svg) }}
               />}
         </div>
         <div className="flex-1 space-y-1 text-sm">

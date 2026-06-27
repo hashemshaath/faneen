@@ -45,8 +45,13 @@ describe("SECURITY-DEEP-REVIEW-3 static guards", () => {
       const src = readFileSync(file, "utf-8");
       if (!src.includes("dangerouslySetInnerHTML")) continue;
       if (allowList.has(rel)) continue;
-      // For non-allowlisted files, must call DOMPurify.sanitize on the input.
-      if (!/DOMPurify\.sanitize\s*\(/.test(src)) {
+      // For non-allowlisted files, must sanitize via the central helper
+      // (sanitizeBlogHtml / sanitizeSvgMarkup / sanitizeBadgeHtml) or
+      // legacy DOMPurify.sanitize. The central helper is preferred.
+      if (
+        !/DOMPurify\.sanitize\s*\(/.test(src) &&
+        !/sanitize(Blog|Svg|Badge)\w*\s*\(/.test(src)
+      ) {
         offenders.push(rel);
       }
     }
