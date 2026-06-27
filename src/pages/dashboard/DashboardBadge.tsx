@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { sanitizeBadgeHtml, sanitizeSvgMarkup } from '@/lib/security/sanitizeHtml';
 import {
   Area, AreaChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
@@ -764,8 +765,8 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                       <CardTitle className="text-base flex items-center gap-2"><Eye className="w-4 h-4" />{pickBi(isRTL, 'معاينة مباشرة', 'Live preview')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="rounded-xl border bg-white p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: html }} />
-                      <div className="rounded-xl border bg-slate-900 p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: html }} />
+                      <div className="rounded-xl border bg-white p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: sanitizeBadgeHtml(html) }} />
+                      <div className="rounded-xl border bg-slate-900 p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: sanitizeBadgeHtml(html) }} />
                       <p className="text-[11px] text-muted-foreground text-center">{pickBi(isRTL, 'معاينة على خلفية فاتحة وداكنة', 'Preview on light + dark backgrounds')}</p>
                     </CardContent>
                   </Card>
@@ -993,7 +994,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                   <Card>
                     <CardHeader><CardTitle className="text-base flex items-center gap-2"><QrCode className="w-4 h-4" />{pickBi(isRTL, 'رمز QR', 'QR code')}</CardTitle></CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="flex justify-center rounded-xl border bg-white p-4 min-h-[220px] items-center" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+                      <div className="flex justify-center rounded-xl border bg-white p-4 min-h-[220px] items-center" dangerouslySetInnerHTML={{ __html: sanitizeSvgMarkup(qrSvg) }} />
                       <p className="text-xs text-muted-foreground text-center">{pickBi(isRTL, 'اطبعه على البطاقات والمنشورات', 'Print on cards and flyers')}</p>
                       <Button size="sm" variant="outline" className="w-full gap-2" onClick={() => downloadQrPng(profileLink, `qitaat-qr-${business.username}.png`)}>
                         <Download className="w-3.5 h-3.5" />{pickBi(isRTL, 'تنزيل PNG', 'Download PNG')}
@@ -1028,7 +1029,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                     </Button>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="rounded-xl border bg-card p-4" dangerouslySetInnerHTML={{ __html: emailSig }} />
+                    <div className="rounded-xl border bg-card p-4" dangerouslySetInnerHTML={{ __html: sanitizeBadgeHtml(emailSig) }} />
                     <Textarea value={emailSig} readOnly rows={4} className="font-mono text-xs tech-content" dir="ltr" onClick={(e) => (e.currentTarget as HTMLTextAreaElement).select()} />
                   </CardContent>
                 </Card>
