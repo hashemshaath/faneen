@@ -317,6 +317,18 @@ export const ContractTemplateDetail: React.FC = () => {
           { '@type': 'ListItem', position: 3, name: isRTL ? template.title_ar : template.title_en, item: `https://qitaat.com/contract-templates/${template.slug}` },
         ],
       },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: template.faq.map((f) => ({
+          '@type': 'Question',
+          name: isRTL ? f.q_ar : f.q_en,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: isRTL ? f.a_ar : f.a_en,
+          },
+        })),
+      },
     ];
   }, [template, isRTL]));
 
@@ -367,15 +379,104 @@ export const ContractTemplateDetail: React.FC = () => {
           </div>
         </section>
 
+        <section className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h2 className="font-semibold mb-4 flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-primary" />
+              {isRTL ? 'أهم البنود العامة' : 'Key general clauses'}
+            </h2>
+            <ul className="space-y-2">
+              {(isRTL ? template.clauses_ar : template.clauses_en).map((c) => (
+                <li key={c} className="flex items-start gap-2 text-sm">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                  <span>{c}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h2 className="font-semibold mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              {isRTL ? 'نقاط يجب الانتباه لها' : 'Points to watch'}
+            </h2>
+            <ul className="space-y-2">
+              {(isRTL ? template.attention_ar : template.attention_en).map((a) => (
+                <li key={a} className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 text-amber-600 shrink-0" />
+                  <span>{a}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section aria-labelledby="related-links" className="rounded-2xl border border-border bg-card p-6 mb-8">
+          <h2 id="related-links" className="font-semibold mb-4">
+            {isRTL ? 'روابط ذات صلة' : 'Related links'}
+          </h2>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <Link to={template.sector_route} className="px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition">
+              {isRTL ? `قطاع ${template.sector_ar}` : `${template.sector_en} sector`}
+            </Link>
+            <Link to="/quote" className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
+              {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}
+            </Link>
+            <Link to="/search" className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
+              {isRTL ? 'استعرض مزودي الخدمة' : 'Browse providers'}
+            </Link>
+            <Link to="/register-entity" className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
+              {isRTL ? 'ابدأ إنشاء عقد' : 'Start creating a contract'}
+            </Link>
+          </div>
+          {template.related.length > 0 && (
+            <div className="mt-5">
+              <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                {isRTL ? 'قوالب قريبة' : 'Related templates'}
+              </h3>
+              <div className="flex flex-wrap gap-2 text-sm">
+                {template.related.map((rs) => {
+                  const r = CONTRACT_TEMPLATES.find((x) => x.slug === rs);
+                  if (!r) return null;
+                  return (
+                    <Link key={rs} to={`/contract-templates/${r.slug}`} className="px-3 py-1.5 rounded-full border border-border hover:border-primary/40 hover:text-primary transition">
+                      {isRTL ? r.title_ar : r.title_en}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section aria-labelledby="template-faq" className="rounded-2xl border border-border bg-card p-6 mb-8">
+          <h2 id="template-faq" className="font-semibold mb-4 flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-primary" />
+            {isRTL ? 'الأسئلة الشائعة' : 'Frequently asked questions'}
+          </h2>
+          <dl className="space-y-4">
+            {template.faq.map((f, i) => (
+              <div key={i}>
+                <dt className="font-medium text-sm mb-1">{isRTL ? f.q_ar : f.q_en}</dt>
+                <dd className="text-sm text-muted-foreground">{isRTL ? f.a_ar : f.a_en}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
         <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center">
           <p className="text-sm text-muted-foreground mb-3">
             {isRTL
               ? 'هذا قالب تعليمي عام، ولا يحتوي أي بيانات عقد حقيقي أو أسماء أطراف أو أسعار.'
               : 'This is a general educational template. It contains no real contract data, party names, or prices.'}
           </p>
-          <Button asChild>
-            <Link to="/auth">{isRTL ? 'ابدأ طلب عقد' : 'Start a contract request'}</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button asChild>
+              <Link to="/register-entity">{isRTL ? 'ابدأ إنشاء عقد' : 'Start creating a contract'}</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/quote">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+            </Button>
+          </div>
         </div>
       </main>
       <Footer />
