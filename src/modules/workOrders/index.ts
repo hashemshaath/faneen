@@ -123,6 +123,21 @@ export {
 } from "./services/transitionWorkOrderBoqReview";
 export type { TransitionWorkOrderBoqReviewResult } from "./services/transitionWorkOrderBoqReview";
 
+// WORK ORDER BOQ REVIEW NOTIFICATIONS + TIMELINE — PHASE 5
+export {
+  notifyWorkOrderBoqReview,
+  resolveWorkOrderBoqReviewRecipients,
+  resolveWorkOrderContractParties,
+  type WorkOrderBoqReviewNotificationEvent,
+  type WorkOrderBoqReviewNotificationContext,
+} from "./services/notifications/notifyWorkOrderBoqReview";
+export {
+  listWorkOrderBoqReviewTimeline,
+  WORK_ORDER_BOQ_REVIEW_AUDIT_ACTIONS,
+  type WorkOrderBoqReviewTimelineEvent,
+  type WorkOrderBoqReviewAuditAction,
+} from "./services/listWorkOrderBoqReviewTimeline";
+
 // BUSINESS-WORKFLOW-5D — Quotations (snapshot from finalized BOQ)
 export { createQuotationFromBoq } from "./services/createQuotationFromBoq";
 export type {
