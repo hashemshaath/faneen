@@ -6,7 +6,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, CheckCircle2, ArrowRight } from 'lucide-react';
+import { FileText, CheckCircle2, ArrowRight, AlertTriangle, ListChecks, HelpCircle } from 'lucide-react';
 
 interface ContractTemplateInfo {
   slug: string;
