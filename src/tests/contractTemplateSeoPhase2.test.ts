@@ -48,8 +48,8 @@ describe('Contract Template SEO Phase 2 — page wiring', () => {
 
   it('detail page links internally to sector, quote, providers and register-entity', () => {
     expect(src).toMatch(/to=\{template\.sector_route\}/);
-    expect(src).toMatch(/to="\/quote"/);
-    expect(src).toMatch(/to="\/search"/);
+    expect(src).toMatch(/\/quote\?sector=/);
+    expect(src).toMatch(/\/search\?sector=/);
     expect(src).toMatch(/to="\/register-entity"/);
   });
 
