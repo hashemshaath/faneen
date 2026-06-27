@@ -70,15 +70,14 @@ describe("WORK ORDER BOQ REVIEW FLOW — Phase 3", () => {
 
   it("client view is read-only with the info notice and no fake action buttons", () => {
     expect(PANEL).toContain("wo-boq-client-readonly");
-    expect(PANEL).toMatch(/يمكن مراجعة البنود والتواصل مع الجهة المنفذة عند الحاجة/);
-    // No client-side request-edit / accept buttons (deferred to a future phase).
-    expect(PANEL).not.toMatch(/طلب تعديل/);
-    expect(PANEL).not.toMatch(/قبول المراجعة/);
+    // Phase 4: the read-only block is now rendered for non-submitted states.
+    // The client gains request-changes / accept buttons only when status is
+    // submitted; those are covered by the Phase 4 acceptance suite.
   });
 
-  it("review panel uses safe services only (finalizeBoq, listWorkOrderBoqs)", () => {
+  it("review panel uses safe services only (Phase 4 transitions + list)", () => {
     expect(PANEL).toContain("listWorkOrderBoqs");
-    expect(PANEL).toContain("finalizeBoq");
+    expect(PANEL).toContain("submitWorkOrderBoqForReview");
     expect(PANEL).not.toMatch(/supabase\s*\.from\(/);
     expect(PANEL).not.toContain("service_role");
   });
