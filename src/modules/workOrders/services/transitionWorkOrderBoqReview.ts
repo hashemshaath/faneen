@@ -45,7 +45,9 @@ async function transition(input: {
   actor_id: string;
   to: WorkOrderBoqReviewStatus;
   audit_action: RecordWorkOrderAuditInput["action"];
-  notification_event: WorkOrderBoqReviewNotificationEvent;
+  resolveNotificationEvent: (
+    from: WorkOrderBoqReviewStatus,
+  ) => WorkOrderBoqReviewNotificationEvent;
 }): Promise<TransitionWorkOrderBoqReviewResult> {
   const current = await supabase
     .from("work_order_boqs")
@@ -97,7 +99,7 @@ async function transition(input: {
   try {
     const parties = await resolveWorkOrderContractParties(next.work_order_id);
     await notifyWorkOrderBoqReview({
-      event: input.notification_event,
+      event: input.resolveNotificationEvent(from),
       context: {
         work_order_id: next.work_order_id,
         work_order_ref_id: parties.work_order_ref_id,
@@ -124,7 +126,8 @@ export function submitWorkOrderBoqForReview(input: {
     actor_id: input.actor_id,
     to: "submitted",
     audit_action: "work_order.boq_review_submitted",
-    notification_event: "boq_review_submitted",
+    resolveNotificationEvent: (from) =>
+      from === "needs_changes" ? "boq_review_resubmitted" : "boq_review_submitted",
   });
 }
 
@@ -137,7 +140,7 @@ export function requestWorkOrderBoqChanges(input: {
     actor_id: input.actor_id,
     to: "needs_changes",
     audit_action: "work_order.boq_review_changes_requested",
-    notification_event: "boq_review_changes_requested",
+    resolveNotificationEvent: () => "boq_review_changes_requested",
   });
 }
 
@@ -150,6 +153,6 @@ export function acceptWorkOrderBoqReview(input: {
     actor_id: input.actor_id,
     to: "accepted",
     audit_action: "work_order.boq_review_accepted",
-    notification_event: "boq_review_accepted",
+    resolveNotificationEvent: () => "boq_review_accepted",
   });
 }
