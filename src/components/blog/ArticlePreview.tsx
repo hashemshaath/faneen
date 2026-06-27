@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, User, Tag, Eye } from 'lucide-react';
 import { marked } from 'marked';
-import DOMPurify from 'dompurify';
+import { sanitizeBlogHtml } from '@/lib/security/sanitizeHtml';
 
 interface Props {
   title: string;
