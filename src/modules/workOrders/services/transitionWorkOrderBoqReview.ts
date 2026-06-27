@@ -12,7 +12,10 @@
  *   - No RLS changes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { recordWorkOrderAudit } from "./recordWorkOrderAudit";
+import {
+  recordWorkOrderAudit,
+  type RecordWorkOrderAuditInput,
+} from "./recordWorkOrderAudit";
 import {
   isAllowedBoqReviewTransition,
   type WorkOrderBoqReviewStatus,
@@ -36,7 +39,7 @@ async function transition(input: {
   boq_id: string;
   actor_id: string;
   to: WorkOrderBoqReviewStatus;
-  audit_action: string;
+  audit_action: RecordWorkOrderAuditInput["action"];
 }): Promise<TransitionWorkOrderBoqReviewResult> {
   const current = await supabase
     .from("work_order_boqs")
