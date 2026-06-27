@@ -27,6 +27,8 @@ interface ContractTemplateInfo {
   sector_route: string;
   related: string[];
   faq: Array<{ q_ar: string; q_en: string; a_ar: string; a_en: string }>;
+  /** SEO quote sector slug consumed by `/quote?sector=` (see resolveQuoteSectorFromUrl). */
+  quote_sector: 'aluminum' | 'steel' | 'wood' | 'glass' | 'stainless-steel';
 }
 
 export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
@@ -79,6 +81,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/aluminum',
     related: ['facades', 'kitchens'],
     faq: COMMON_FAQ,
+    quote_sector: 'aluminum',
   },
   {
     slug: 'steel-metal',
@@ -99,6 +102,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/steel',
     related: ['stainless-railings', 'aluminum-glass'],
     faq: COMMON_FAQ,
+    quote_sector: 'steel',
   },
   {
     slug: 'wood-works',
@@ -119,6 +123,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/wood',
     related: ['kitchens', 'aluminum-glass'],
     faq: COMMON_FAQ,
+    quote_sector: 'wood',
   },
   {
     slug: 'kitchens',
@@ -139,6 +144,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/wood',
     related: ['wood-works', 'aluminum-glass'],
     faq: COMMON_FAQ,
+    quote_sector: 'wood',
   },
   {
     slug: 'facades',
@@ -159,6 +165,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/glass',
     related: ['aluminum-glass', 'steel-metal'],
     faq: COMMON_FAQ,
+    quote_sector: 'glass',
   },
   {
     slug: 'stainless-railings',
@@ -179,6 +186,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/stainless-steel',
     related: ['steel-metal', 'facades'],
     faq: COMMON_FAQ,
+    quote_sector: 'stainless-steel',
   },
 );
 
@@ -418,14 +426,17 @@ export const ContractTemplateDetail: React.FC = () => {
             <Link to={template.sector_route} className="px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition">
               {isRTL ? `قطاع ${template.sector_ar}` : `${template.sector_en} sector`}
             </Link>
-            <Link to="/quote" className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
-              {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}
+            <Link to={`/quote?sector=${template.quote_sector}`} className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
+              {isRTL ? `اطلب عرض سعر لأعمال ${template.sector_ar}` : `Request a quote — ${template.sector_en}`}
             </Link>
-            <Link to="/search" className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
-              {isRTL ? 'استعرض مزودي الخدمة' : 'Browse providers'}
+            <Link to={`/search?sector=${template.quote_sector}`} className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
+              {isRTL ? `استعرض مزودي ${template.sector_ar}` : `Browse ${template.sector_en} providers`}
             </Link>
             <Link to="/register-entity" className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
-              {isRTL ? 'ابدأ إنشاء عقد' : 'Start creating a contract'}
+              {isRTL ? 'سجّل منشأتك' : 'Register your business'}
+            </Link>
+            <Link to="/contracts/request" className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition">
+              {isRTL ? 'أنشئ عقدك بعد تسجيل الدخول' : 'Create a contract after sign-in'}
             </Link>
           </div>
           {template.related.length > 0 && (
@@ -471,10 +482,20 @@ export const ContractTemplateDetail: React.FC = () => {
           </p>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button asChild>
-              <Link to="/register-entity">{isRTL ? 'ابدأ إنشاء عقد' : 'Start creating a contract'}</Link>
+              <Link to={`/quote?sector=${template.quote_sector}`}>
+                {isRTL ? `اطلب عرض سعر لأعمال ${template.sector_ar}` : `Request a quote — ${template.sector_en}`}
+              </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/quote">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+              <Link to={`/search?sector=${template.quote_sector}`}>
+                {isRTL ? `استعرض مزودي ${template.sector_ar}` : `Browse ${template.sector_en} providers`}
+              </Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link to="/register-entity">{isRTL ? 'سجّل منشأتك' : 'Register your business'}</Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/contracts/request">{isRTL ? 'أنشئ عقدك بعد تسجيل الدخول' : 'Create a contract after sign-in'}</Link>
             </Button>
           </div>
         </div>
