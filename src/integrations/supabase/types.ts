@@ -18668,6 +18668,7 @@ export type Database = {
           id: string
           notes: string | null
           ref_id: string | null
+          review_status: string
           status: string
           subtotal: number
           tax: number
@@ -18686,6 +18687,7 @@ export type Database = {
           id?: string
           notes?: string | null
           ref_id?: string | null
+          review_status?: string
           status?: string
           subtotal?: number
           tax?: number
@@ -18704,6 +18706,7 @@ export type Database = {
           id?: string
           notes?: string | null
           ref_id?: string | null
+          review_status?: string
           status?: string
           subtotal?: number
           tax?: number
