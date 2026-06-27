@@ -26,6 +26,8 @@ Allow: /rentals/
 Allow: /compare$
 Allow: /compare-profiles$
 Allow: /membership
+Allow: /contract-templates
+Allow: /contract-templates/
 Allow: /about
 Allow: /contact
 Allow: /privacy

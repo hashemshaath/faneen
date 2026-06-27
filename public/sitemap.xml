@@ -39,4 +39,7 @@
   <sitemap>
     <loc>https://qitaat.com/functions/v1/sitemap?type=rentals</loc>
   </sitemap>
+  <sitemap>
+    <loc>https://qitaat.com/sitemap-contract-templates.xml</loc>
+  </sitemap>
 </sitemapindex>
