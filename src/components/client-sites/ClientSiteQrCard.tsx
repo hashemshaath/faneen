@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { generateQrSvg, downloadQrPng } from '@/lib/badge/qr';
 import { toast } from 'sonner';
+import { sanitizeSvgMarkup } from '@/lib/security/sanitizeHtml';
 
 export interface ClientSiteQrCardProps {
   siteId: string;
