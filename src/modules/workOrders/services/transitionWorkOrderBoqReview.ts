@@ -17,6 +17,11 @@ import {
   type RecordWorkOrderAuditInput,
 } from "./recordWorkOrderAudit";
 import {
+  notifyWorkOrderBoqReview,
+  resolveWorkOrderContractParties,
+  type WorkOrderBoqReviewNotificationEvent,
+} from "./notifications/notifyWorkOrderBoqReview";
+import {
   isAllowedBoqReviewTransition,
   type WorkOrderBoqReviewStatus,
   type WorkOrderBoqRow,
@@ -40,6 +45,9 @@ async function transition(input: {
   actor_id: string;
   to: WorkOrderBoqReviewStatus;
   audit_action: RecordWorkOrderAuditInput["action"];
+  resolveNotificationEvent: (
+    from: WorkOrderBoqReviewStatus,
+  ) => WorkOrderBoqReviewNotificationEvent;
 }): Promise<TransitionWorkOrderBoqReviewResult> {
   const current = await supabase
     .from("work_order_boqs")
@@ -88,6 +96,24 @@ async function transition(input: {
     },
   });
 
+  try {
+    const parties = await resolveWorkOrderContractParties(next.work_order_id);
+    await notifyWorkOrderBoqReview({
+      event: input.resolveNotificationEvent(from),
+      context: {
+        work_order_id: next.work_order_id,
+        work_order_ref_id: parties.work_order_ref_id,
+        boq_id: next.id,
+        boq_ref_id: next.ref_id,
+        provider_user_id: parties.provider_user_id,
+        client_user_id: parties.client_user_id,
+        actor_user_id: input.actor_id,
+      },
+    });
+  } catch {
+    /* notifications are best-effort — must never block the transition */
+  }
+
   return { data: next, error: null };
 }
 
@@ -100,6 +126,8 @@ export function submitWorkOrderBoqForReview(input: {
     actor_id: input.actor_id,
     to: "submitted",
     audit_action: "work_order.boq_review_submitted",
+    resolveNotificationEvent: (from) =>
+      from === "needs_changes" ? "boq_review_resubmitted" : "boq_review_submitted",
   });
 }
 
@@ -112,6 +140,7 @@ export function requestWorkOrderBoqChanges(input: {
     actor_id: input.actor_id,
     to: "needs_changes",
     audit_action: "work_order.boq_review_changes_requested",
+    resolveNotificationEvent: () => "boq_review_changes_requested",
   });
 }
 
@@ -124,5 +153,6 @@ export function acceptWorkOrderBoqReview(input: {
     actor_id: input.actor_id,
     to: "accepted",
     audit_action: "work_order.boq_review_accepted",
+    resolveNotificationEvent: () => "boq_review_accepted",
   });
 }

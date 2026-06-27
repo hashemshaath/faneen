@@ -11,6 +11,7 @@ import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderM
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
 import { WorkOrderMeasurementsBoqSummary } from "@/components/workOrders/WorkOrderMeasurementsBoqSummary";
 import { WorkOrderBoqReviewPanel } from "@/components/workOrders/WorkOrderBoqReviewPanel";
+import { WorkOrderBoqReviewTimeline } from "@/components/workOrders/WorkOrderBoqReviewTimeline";
 
 interface Props {
   workOrderId: string;
@@ -70,6 +71,8 @@ export function WorkOrderMeasurementsAndBoqSection({
         workOrderId={workOrderId}
         canManage={canManage}
       />
+
+      <WorkOrderBoqReviewTimeline workOrderId={workOrderId} />
 
       <WorkOrderMeasurementsSection
         workOrderId={workOrderId}
