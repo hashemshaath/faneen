@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import DOMPurify from 'dompurify';
 import { sanitizeSvgMarkup } from '@/lib/security/sanitizeHtml';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
