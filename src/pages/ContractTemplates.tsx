@@ -30,6 +30,36 @@ interface ContractTemplateInfo {
 }
 
 export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
+];
+
+const COMMON_FAQ: ContractTemplateInfo['faq'] = [
+  {
+    q_ar: 'ما فائدة قالب عقد تنفيذ الأعمال؟',
+    q_en: 'What is the purpose of a work execution contract template?',
+    a_ar: 'يساعد القالب الطرفين على توثيق نطاق العمل والتسليم والالتزامات بشكل واضح قبل بدء التنفيذ.',
+    a_en: 'It helps both parties document the scope, deliverables and obligations clearly before execution starts.',
+  },
+  {
+    q_ar: 'هل يمكن تعديل البنود؟',
+    q_en: 'Can clauses be edited?',
+    a_ar: 'نعم، البنود قابلة للتعديل أثناء إنشاء العقد الفعلي على المنصة وفق احتياج الطرفين.',
+    a_en: 'Yes, clauses can be edited inside the actual contract draft on the platform to fit both parties.',
+  },
+  {
+    q_ar: 'هل يغني القالب عن مراجعة قانونية؟',
+    q_en: 'Does the template replace legal review?',
+    a_ar: 'لا، القالب مرجع تعليمي عام، ويُنصح بمراجعة قانونية للعقود ذات القيمة المرتفعة.',
+    a_en: 'No, the template is a general educational reference; legal review is recommended for high-value contracts.',
+  },
+  {
+    q_ar: 'هل يمكن إنشاء عقد بعد طلب عرض سعر؟',
+    q_en: 'Can a contract be created after a quote request?',
+    a_ar: 'نعم، يمكن تحويل عرض السعر المقبول إلى عقد كامل عبر تدفق إنشاء العقد على المنصة.',
+    a_en: 'Yes, an accepted quote can be turned into a full contract via the platform contract creation flow.',
+  },
+];
+
+CONTRACT_TEMPLATES.push(
   {
     slug: 'aluminum-glass',
     sector_ar: 'الألمنيوم والزجاج',
@@ -42,6 +72,13 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     use_cases_en: ['Aluminum doors & windows', 'Glass facades', 'Office glass partitions', 'Aluminum canopies'],
     scope_ar: ['المعاينة والمقاسات', 'التوريد والتصنيع', 'التركيب والاختبار', 'الضمان وما بعد التسليم'],
     scope_en: ['Site visit & measurements', 'Supply & fabrication', 'Installation & testing', 'Warranty & handover'],
+    clauses_ar: ['تعريف نطاق العمل والمواصفات', 'الجدول الزمني ومراحل التسليم', 'التزامات الطرفين', 'الضمان وفترة الصيانة', 'آلية تعديل الأعمال'],
+    clauses_en: ['Scope & specifications', 'Timeline & delivery phases', 'Obligations of both parties', 'Warranty & maintenance period', 'Change order mechanism'],
+    attention_ar: ['اعتماد المقاسات قبل التصنيع', 'تحديد نوع الزجاج وسماكته', 'توضيح أعمال السيليكون والعزل', 'تحديد جهة استلام التسليم النهائي'],
+    attention_en: ['Approve measurements before fabrication', 'Define glass type & thickness', 'Clarify silicone & sealing scope', 'Designate the final handover party'],
+    sector_route: '/sectors/aluminum',
+    related: ['facades', 'kitchens'],
+    faq: COMMON_FAQ,
   },
   {
     slug: 'steel-metal',
@@ -55,6 +92,13 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     use_cases_en: ['Steel doors & gates', 'Railings & staircases', 'Structures & canopies', 'Window grilles'],
     scope_ar: ['الرسومات والاعتماد', 'التصنيع بالورشة', 'الدهان والمعالجة', 'التركيب والتسليم'],
     scope_en: ['Shop drawings & approval', 'Workshop fabrication', 'Painting & treatment', 'Installation & handover'],
+    clauses_ar: ['وصف المواد والسماكات', 'الرسومات التنفيذية', 'مراحل التسليم والدفع', 'الضمان ضد الصدأ', 'مسؤولية النقل والتركيب'],
+    clauses_en: ['Material & thickness specs', 'Shop drawings', 'Delivery & payment milestones', 'Anti-rust warranty', 'Transport & installation responsibility'],
+    attention_ar: ['اعتماد الدهان ولون النهاية', 'تحديد جودة اللحام', 'التأكد من مطابقة الأبعاد', 'تحديد بنود السلامة'],
+    attention_en: ['Approve paint & finish color', 'Define weld quality', 'Verify dimensional accuracy', 'Specify safety requirements'],
+    sector_route: '/sectors/steel',
+    related: ['stainless-railings', 'aluminum-glass'],
+    faq: COMMON_FAQ,
   },
   {
     slug: 'wood-works',
@@ -68,6 +112,13 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     use_cases_en: ['Wooden doors', 'Wardrobes & closets', 'Interior decor', 'Custom furniture'],
     scope_ar: ['تصميم واعتماد', 'تجهيز المصنع', 'النقل والتركيب', 'اللمسات الأخيرة'],
     scope_en: ['Design & approval', 'Factory preparation', 'Delivery & installation', 'Final finishing'],
+    clauses_ar: ['نوع الخشب والقشرة', 'الإكسسوارات والمفصلات', 'دهان وتشطيب', 'الضمان ضد التقوس', 'مدة التسليم'],
+    clauses_en: ['Wood & veneer type', 'Accessories & hinges', 'Paint & finishing', 'Anti-warp warranty', 'Delivery period'],
+    attention_ar: ['الالتزام بالألوان المعتمدة', 'حماية الأرضيات أثناء التركيب', 'مطابقة المقاسات للموقع', 'توثيق العيوب قبل الاستلام'],
+    attention_en: ['Stick to approved colors', 'Protect flooring during installation', 'Match measurements to the site', 'Document defects before acceptance'],
+    sector_route: '/sectors/wood',
+    related: ['kitchens', 'aluminum-glass'],
+    faq: COMMON_FAQ,
   },
   {
     slug: 'kitchens',
@@ -81,6 +132,13 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     use_cases_en: ['Aluminum kitchens', 'Wood kitchens', 'Polylac kitchens', 'Quartz kitchens'],
     scope_ar: ['المعاينة والتصميم', 'تجهيز الكاونترات', 'التركيب والربط', 'التشغيل والتسليم'],
     scope_en: ['Site visit & design', 'Countertop preparation', 'Installation & hookup', 'Commissioning & handover'],
+    clauses_ar: ['نوع الكاونتر والأبواب', 'الإكسسوارات المعتمدة', 'الربط الكهربائي والسباكة', 'الضمان والصيانة', 'جدول التركيب'],
+    clauses_en: ['Counter & door type', 'Approved accessories', 'Electrical & plumbing hookup', 'Warranty & maintenance', 'Installation schedule'],
+    attention_ar: ['اعتماد التصميم ثلاثي الأبعاد', 'مطابقة فتحات الأجهزة', 'مواقع الإنارة والكهرباء', 'حماية الكاونتر أثناء النقل'],
+    attention_en: ['Approve the 3D design', 'Match appliance cut-outs', 'Lighting & electrical positions', 'Protect the counter during transport'],
+    sector_route: '/sectors/wood',
+    related: ['wood-works', 'aluminum-glass'],
+    faq: COMMON_FAQ,
   },
   {
     slug: 'facades',
@@ -94,6 +152,13 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     use_cases_en: ['Curtain wall', 'External cladding', 'Skylights', 'Spider facades'],
     scope_ar: ['الاستلام والمسح', 'التصنيع', 'التركيب على ارتفاع', 'اختبار التسريب'],
     scope_en: ['Survey & handover', 'Fabrication', 'High-level installation', 'Leak testing'],
+    clauses_ar: ['نظام الواجهة المعتمد', 'متطلبات السلامة على ارتفاع', 'اختبارات الأداء والتسريب', 'الضمان على العزل', 'مراحل التسليم'],
+    clauses_en: ['Approved facade system', 'Working-at-height safety', 'Performance & leak testing', 'Sealing warranty', 'Delivery milestones'],
+    attention_ar: ['الالتزام بمعايير السلامة', 'اعتماد عينة الزجاج والألوان', 'التنسيق مع المقاول الرئيسي', 'التأكد من تصاريح الموقع'],
+    attention_en: ['Comply with safety standards', 'Approve glass & color sample', 'Coordinate with main contractor', 'Confirm site permits'],
+    sector_route: '/sectors/glass',
+    related: ['aluminum-glass', 'steel-metal'],
+    faq: COMMON_FAQ,
   },
   {
     slug: 'stainless-railings',
@@ -107,8 +172,15 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     use_cases_en: ['Stair railings', 'Balcony barriers', 'Restaurant fittings', 'Professional kitchen fittings'],
     scope_ar: ['المعاينة', 'التصنيع بالورشة', 'التركيب الموقعي', 'التلميع والتسليم'],
     scope_en: ['Site visit', 'Workshop fabrication', 'On-site installation', 'Polishing & handover'],
+    clauses_ar: ['درجة الستانلس (304/316)', 'سماكة الأنابيب', 'نوع التثبيت', 'الضمان ضد التآكل', 'تشطيب اللمعان أو الساتان'],
+    clauses_en: ['Stainless grade (304/316)', 'Tube thickness', 'Fixing method', 'Anti-corrosion warranty', 'Mirror/satin finish'],
+    attention_ar: ['تحديد الدرجة المناسبة للبيئة', 'اعتماد عينة اللحام', 'متطلبات السلامة للدرابزين', 'تنظيف اللحامات بعد التركيب'],
+    attention_en: ['Pick the right grade for the environment', 'Approve weld sample', 'Railing safety requirements', 'Clean welds after installation'],
+    sector_route: '/sectors/stainless-steel',
+    related: ['steel-metal', 'facades'],
+    faq: COMMON_FAQ,
   },
-];
+);
 
 const ContractTemplates: React.FC = () => {
   const { isRTL } = useLanguage();
