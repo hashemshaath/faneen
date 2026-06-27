@@ -27,6 +27,8 @@ interface ContractTemplateInfo {
   sector_route: string;
   related: string[];
   faq: Array<{ q_ar: string; q_en: string; a_ar: string; a_en: string }>;
+  /** SEO quote sector slug consumed by `/quote?sector=` (see resolveQuoteSectorFromUrl). */
+  quote_sector: 'aluminum' | 'steel' | 'wood' | 'glass' | 'stainless-steel';
 }
 
 export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
