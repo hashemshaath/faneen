@@ -251,6 +251,7 @@ const mapAmendmentError = (err: unknown, isRTL: boolean): string => {
 };
 
 const ContractDetail = () => {
+  useNoIndex();
   // C5C: friendly Arabic/English mapping for amendment RPC error codes.
   // Defined inside component so it can capture isRTL via closure-style call.
   const { id } = useParams<{ id: string }>();
