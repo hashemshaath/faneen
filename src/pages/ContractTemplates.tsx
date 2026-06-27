@@ -20,6 +20,13 @@ interface ContractTemplateInfo {
   use_cases_en: string[];
   scope_ar: string[];
   scope_en: string[];
+  clauses_ar: string[];
+  clauses_en: string[];
+  attention_ar: string[];
+  attention_en: string[];
+  sector_route: string;
+  related: string[];
+  faq: Array<{ q_ar: string; q_en: string; a_ar: string; a_en: string }>;
 }
 
 export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
