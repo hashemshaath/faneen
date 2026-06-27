@@ -4,7 +4,7 @@
  * Read-only timeline of BOQ review FSM transitions for a single work order.
  * Reads from `business_audit_log` via the central
  * `listWorkOrderBoqReviewTimeline` service. No direct table writes, no
- * lifecycle/billing surfaces, no service_role.
+ * lifecycle/billing surfaces, no privileged keys.
  */
 import { useEffect, useState } from "react";
 import { History, Loader2 } from "lucide-react";
