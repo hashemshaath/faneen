@@ -330,8 +330,14 @@ export const buildContractPDF = async (data: ContractExportData) => {
   // ── Parties ──
   sectionTitle(data.isRTL ? 'أطراف العقد' : 'Contract Parties');
   const partiesData: string[][] = [
-    [data.isRTL ? 'العميل' : 'Client', data.clientName],
-    [data.isRTL ? 'مزود الخدمة' : 'Provider', data.providerName],
+    [
+      data.isRTL ? 'الطرف الأول — الجهة المنفذة / مزود الخدمة' : 'First Party — Service Provider',
+      data.providerName,
+    ],
+    [
+      data.isRTL ? 'الطرف الثاني — صاحب الحساب / طالب الخدمة' : 'Second Party — Account Holder / Service Requester',
+      data.clientName,
+    ],
   ];
   if (data.supervisorName) partiesData.push([data.isRTL ? 'المشرف' : 'Supervisor', data.supervisorName]);
   if (data.supervisorPhone) partiesData.push([data.isRTL ? 'هاتف المشرف' : 'Supervisor Phone', data.supervisorPhone]);
@@ -928,8 +934,8 @@ export const buildContractPDF = async (data: ContractExportData) => {
         data.isRTL ? 'القيمة الجديدة' : 'New amount',
         data.isRTL ? 'الفرق' : 'Delta',
         data.isRTL ? 'تاريخ النهاية الجديد' : 'New end',
-        data.isRTL ? 'موافقة العميل' : 'Client appr.',
-        data.isRTL ? 'موافقة المزود' : 'Provider appr.',
+        data.isRTL ? 'موافقة الطرف الثاني' : 'Second Party appr.',
+        data.isRTL ? 'موافقة الطرف الأول' : 'First Party appr.',
         data.isRTL ? 'تاريخ التطبيق' : 'Applied',
       ]],
       body: data.amendments.map(a => {
@@ -1063,8 +1069,8 @@ export const buildContractPDF = async (data: ContractExportData) => {
   doc.line(w - 85, y + 25, w - 25, y + 25);
   doc.setFontSize(8);
   doc.setTextColor(mutedR, mutedG, mutedB);
-  doc.text(data.isRTL ? 'توقيع المزود' : 'Client Signature', 55, y + 30, { align: 'center' });
-  doc.text(data.isRTL ? 'توقيع العميل' : 'Provider Signature', w - 55, y + 30, { align: 'center' });
+  doc.text(data.isRTL ? 'توقيع الطرف الأول' : 'First Party Signature', 55, y + 30, { align: 'center' });
+  doc.text(data.isRTL ? 'توقيع الطرف الثاني' : 'Second Party Signature', w - 55, y + 30, { align: 'center' });
 
   // ── Footer ──
   const pageCount = doc.getNumberOfPages();
