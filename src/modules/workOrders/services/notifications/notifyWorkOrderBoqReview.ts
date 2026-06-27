@@ -7,7 +7,7 @@
  * parent contract (`provider_id` = الطرف الأول, `client_id` = الطرف الثاني).
  *
  * Hard constraints:
- *  - No service_role, no edge function, no email SDK — in-app only.
+ *  - No privileged keys, no edge function, no email SDK — in-app only.
  *  - No billing / payment / warranty / handover surfaces.
  *  - Does not change the WO or contract lifecycle. Read-only against
  *    `work_orders` + `contracts` for party resolution; writes only to

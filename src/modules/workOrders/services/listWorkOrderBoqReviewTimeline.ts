@@ -4,7 +4,7 @@
  * Read-only timeline of BOQ review events for a single work order.
  * Uses the existing `business_audit_log` (no new table). RLS-scoped to
  * business staff via the existing audit policy — no privileged keys, no
- * service_role, no edge function. Clients without audit visibility get
+ * privileged keys, no edge function. Clients without audit visibility get
  * an empty list (this is correct; the review panel still surfaces the
  * current status to them).
  */
