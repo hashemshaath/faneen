@@ -77,6 +77,7 @@ import {
 import { sendTransactionalEmail }  from '@/modules/notifications/services/sendTransactionalEmail';
 import { getBusinessForContract } from '@/modules/businesses';
 import { CreateWorkOrderFromContractButton } from '@/components/workOrders/CreateWorkOrderFromContractButton';
+import { ContractWorkOrderBoqSummary } from '@/components/contracts/ContractWorkOrderBoqSummary';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
@@ -1813,6 +1814,8 @@ const ContractDetail = () => {
           contractStatus={contract.status}
           className="mb-5 sm:mb-6"
         />
+        {/* WO-BOQ-VISIBILITY-PHASE-2 — read-only summary of WO BOQ draft */}
+        <ContractWorkOrderBoqSummary contractId={contract.id} />
         {pdfDebugEnabled && pdfDiagnostics && (
           <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 text-xs">
             <div className="flex items-center gap-2 font-semibold mb-3">
