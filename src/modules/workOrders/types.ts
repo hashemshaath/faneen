@@ -238,6 +238,48 @@ export const WORK_ORDER_BOQ_STATUSES: ReadonlyArray<WorkOrderBoqStatus> = [
   "finalized",
 ];
 
+/**
+ * WORK ORDER BOQ REVIEW STATUS — PHASE 4
+ *
+ * Independent client-facing review lifecycle, decoupled from the technical
+ * `status` column. Persisted in `work_order_boqs.review_status` with a CHECK
+ * constraint matching the values below.
+ */
+export type WorkOrderBoqReviewStatus =
+  | "draft"
+  | "submitted"
+  | "needs_changes"
+  | "accepted";
+
+export const WORK_ORDER_BOQ_REVIEW_STATUSES: ReadonlyArray<WorkOrderBoqReviewStatus> = [
+  "draft",
+  "submitted",
+  "needs_changes",
+  "accepted",
+];
+
+/**
+ * Allowed FSM transitions for `review_status`. Anything not listed here MUST
+ * be rejected by the review services and by the acceptance tests.
+ */
+export const WORK_ORDER_BOQ_REVIEW_TRANSITIONS: ReadonlyArray<
+  readonly [WorkOrderBoqReviewStatus, WorkOrderBoqReviewStatus]
+> = [
+  ["draft", "submitted"],
+  ["submitted", "needs_changes"],
+  ["needs_changes", "submitted"],
+  ["submitted", "accepted"],
+];
+
+export function isAllowedBoqReviewTransition(
+  from: WorkOrderBoqReviewStatus,
+  to: WorkOrderBoqReviewStatus,
+): boolean {
+  return WORK_ORDER_BOQ_REVIEW_TRANSITIONS.some(
+    ([f, t]) => f === from && t === to,
+  );
+}
+
 export type WorkOrderBoqItemType =
   | "material"
   | "labor"
@@ -258,6 +300,7 @@ export interface WorkOrderBoqRow {
   business_id: string;
   title: string;
   status: WorkOrderBoqStatus;
+  review_status: WorkOrderBoqReviewStatus;
   notes: string | null;
   subtotal: number;
   tax: number;

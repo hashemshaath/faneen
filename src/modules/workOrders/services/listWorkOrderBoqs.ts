@@ -9,7 +9,7 @@ export async function listWorkOrderBoqs(options: {
   const { data, error } = await supabase
     .from("work_order_boqs")
     .select(
-      "id, ref_id, work_order_id, business_id, title, status, notes, subtotal, tax, total, created_by, finalized_at, finalized_by, created_at, updated_at, deleted_at",
+      "id, ref_id, work_order_id, business_id, title, status, review_status, notes, subtotal, tax, total, created_by, finalized_at, finalized_by, created_at, updated_at, deleted_at",
     )
     .eq("work_order_id", options.workOrderId)
     .is("deleted_at", null)

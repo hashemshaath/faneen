@@ -1,28 +1,30 @@
 /**
- * WORK ORDER BOQ REVIEW FLOW — PHASE 3
+ * WORK ORDER BOQ REVIEW STATUS — PHASE 4
  *
- * Display-only review surface around the existing BOQ status field
- * ("draft" | "finalized"). Provider/admin can "send for review" which
- * maps to the existing safe `finalizeBoq` service (locks the draft, no
- * invoice / payment / warranty / handover). Client view is strictly
- * read-only — no fake action buttons.
+ * Independent review lifecycle on top of `work_order_boqs.review_status`
+ * (draft / submitted / needs_changes / accepted). Provider/admin submits and
+ * resubmits drafts; the client can request changes or accept the review.
+ * No billing / payment / warranty / handover surfaces — review only.
  *
- * Hard constraints — read the Phase 3 brief for the full ban list.
+ * Hard constraints — read the Phase 4 brief for the full ban list.
  *  - No billing surfaces.
  *  - No contract or WO lifecycle mutation.
  *  - No privileged keys, no direct table writes from this component.
- *  - No DB / RLS / RPC / migration changes in this phase.
+ *  - No RLS changes. Transitions go through the central services.
  */
 import { useEffect, useState } from "react";
-import { FileCheck2, Send, Loader2, Info } from "lucide-react";
+import { FileCheck2, Send, Loader2, Info, ThumbsUp, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import {
   listWorkOrderBoqs,
-  finalizeBoq,
+  submitWorkOrderBoqForReview,
+  requestWorkOrderBoqChanges,
+  acceptWorkOrderBoqReview,
   type WorkOrderBoqRow,
+  type WorkOrderBoqReviewStatus,
 } from "@/modules/workOrders";
 import { getCurrentUser } from "@/modules/identity/services/session";
 
@@ -31,17 +33,11 @@ interface Props {
   canManage: boolean;
 }
 
-type ReviewState = "draft" | "submitted";
-
-function toReviewState(status: WorkOrderBoqRow["status"]): ReviewState {
-  return status === "finalized" ? "submitted" : "draft";
-}
-
 export function WorkOrderBoqReviewPanel({ workOrderId, canManage }: Props) {
   const { isRTL } = useLanguage();
   const [boqs, setBoqs] = useState<WorkOrderBoqRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -56,7 +52,7 @@ export function WorkOrderBoqReviewPanel({ workOrderId, canManage }: Props) {
   }, [workOrderId]);
 
   const latest = boqs[0] ?? null;
-  const state: ReviewState | null = latest ? toReviewState(latest.status) : null;
+  const state: WorkOrderBoqReviewStatus | null = latest?.review_status ?? null;
 
   const tx = {
     heading: isRTL ? "مراجعة مسودة BOQ" : "BOQ review",
@@ -65,44 +61,84 @@ export function WorkOrderBoqReviewPanel({ workOrderId, canManage }: Props) {
       : "No BOQ draft has been prepared yet.",
     draft: isRTL ? "مسودة" : "Draft",
     submitted: isRTL ? "مرسلة للمراجعة" : "Submitted for review",
-    needsEdit: isRTL ? "بحاجة تعديل" : "Needs changes",
+    needsChanges: isRTL ? "بحاجة تعديل" : "Needs changes",
     accepted: isRTL ? "مقبولة للمراجعة" : "Accepted for review",
     sendBtn: isRTL ? "إرسال BOQ للمراجعة" : "Send BOQ for review",
+    requestChangesBtn: isRTL ? "طلب تعديل" : "Request changes",
+    acceptBtn: isRTL ? "قبول المراجعة" : "Accept review",
     awaiting: isRTL
       ? "بانتظار مراجعة الطرف الثاني"
       : "Awaiting the other party's review",
-    clientInfo: isRTL
-      ? "يمكن مراجعة البنود والتواصل مع الجهة المنفذة عند الحاجة."
-      : "You can review the items and contact the executing party when needed.",
-    sending: isRTL ? "جارٍ الإرسال..." : "Sending...",
-    sent: isRTL ? "تم إرسال المسودة للمراجعة" : "Draft sent for review",
-    sendErr: isRTL ? "تعذر إرسال المسودة" : "Could not send the draft",
+    clientReadOnlyDraft: isRTL
+      ? "لم يتم إرسال BOQ للمراجعة بعد."
+      : "BOQ has not been sent for review yet.",
+    clientRequestedNotice: isRTL
+      ? "تم إرسال طلب تعديل إلى الجهة المنفذة."
+      : "A change request has been sent to the executing party.",
+    acceptedNotice: isRTL ? "تم قبول مراجعة BOQ." : "BOQ review accepted.",
+    working: isRTL ? "جارٍ التنفيذ..." : "Working...",
+    sentOk: isRTL ? "تم إرسال المسودة للمراجعة" : "Draft sent for review",
+    requestedOk: isRTL ? "تم إرسال طلب التعديل" : "Change request sent",
+    acceptedOk: isRTL ? "تم قبول المراجعة" : "Review accepted",
+    genericErr: isRTL ? "تعذر تنفيذ الإجراء" : "Could not perform the action",
   };
 
-  const onSend = async () => {
-    if (!latest || latest.status !== "draft") return;
-    setSending(true);
+  type Action = "submit" | "request_changes" | "accept";
+
+  const runAction = async (action: Action) => {
+    if (!latest) return;
+    setBusy(true);
     const { data: me } = await getCurrentUser();
-    if (!me?.user?.id) {
-      setSending(false);
-      toast.error(tx.sendErr);
+    const actorId = me?.user?.id;
+    if (!actorId) {
+      setBusy(false);
+      toast.error(tx.genericErr);
       return;
     }
-    const { error } = await finalizeBoq({ boq_id: latest.id, actor_id: me.user.id });
-    setSending(false);
-    if (error) {
-      toast.error(tx.sendErr);
+    const args = { boq_id: latest.id, actor_id: actorId };
+    const res =
+      action === "submit"
+        ? await submitWorkOrderBoqForReview(args)
+        : action === "request_changes"
+          ? await requestWorkOrderBoqChanges(args)
+          : await acceptWorkOrderBoqReview(args);
+    setBusy(false);
+    if (res.error) {
+      toast.error(tx.genericErr);
       return;
     }
-    toast.success(tx.sent);
+    toast.success(
+      action === "submit"
+        ? tx.sentOk
+        : action === "request_changes"
+          ? tx.requestedOk
+          : tx.acceptedOk,
+    );
     void load();
   };
 
-  const badgeFor = (s: ReviewState) => {
-    if (s === "submitted") {
+  const badgeFor = (s: WorkOrderBoqReviewStatus) => {
+    if (s === "accepted") {
       return (
         <Badge variant="outline" className="bg-success/15 text-success border-success/30">
+          {tx.accepted}
+        </Badge>
+      );
+    }
+    if (s === "submitted") {
+      return (
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
           {tx.submitted}
+        </Badge>
+      );
+    }
+    if (s === "needs_changes") {
+      return (
+        <Badge
+          variant="outline"
+          className="bg-destructive/10 text-destructive border-destructive/30"
+        >
+          {tx.needsChanges}
         </Badge>
       );
     }
@@ -113,6 +149,91 @@ export function WorkOrderBoqReviewPanel({ workOrderId, canManage }: Props) {
       >
         {tx.draft}
       </Badge>
+    );
+  };
+
+  const renderProvider = (s: WorkOrderBoqReviewStatus) => {
+    if (s === "draft" || s === "needs_changes") {
+      return (
+        <Button
+          size="sm"
+          variant="default"
+          onClick={() => runAction("submit")}
+          disabled={busy}
+          data-testid="wo-boq-send-for-review"
+        >
+          {busy ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin me-1" />
+          ) : (
+            <Send className="w-3.5 h-3.5 me-1" />
+          )}
+          {busy ? tx.working : tx.sendBtn}
+        </Button>
+      );
+    }
+    if (s === "submitted") {
+      return (
+        <div
+          className="flex items-start gap-2 rounded-xl border border-border/50 bg-muted/20 p-2.5 text-xs text-muted-foreground"
+          data-testid="wo-boq-awaiting"
+        >
+          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span dir="auto">{tx.awaiting}</span>
+        </div>
+      );
+    }
+    return (
+      <div
+        className="flex items-start gap-2 rounded-xl border border-success/30 bg-success/10 p-2.5 text-xs text-success"
+        data-testid="wo-boq-accepted-notice"
+      >
+        <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+        <span dir="auto">{tx.acceptedNotice}</span>
+      </div>
+    );
+  };
+
+  const renderClient = (s: WorkOrderBoqReviewStatus) => {
+    if (s === "submitted") {
+      return (
+        <div className="flex flex-wrap gap-2" data-testid="wo-boq-client-actions">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => runAction("request_changes")}
+            disabled={busy}
+            data-testid="wo-boq-client-request-changes"
+          >
+            <Pencil className="w-3.5 h-3.5 me-1" />
+            {tx.requestChangesBtn}
+          </Button>
+          <Button
+            size="sm"
+            variant="default"
+            onClick={() => runAction("accept")}
+            disabled={busy}
+            data-testid="wo-boq-client-accept"
+          >
+            <ThumbsUp className="w-3.5 h-3.5 me-1" />
+            {tx.acceptBtn}
+          </Button>
+        </div>
+      );
+    }
+    const text =
+      s === "draft"
+        ? tx.clientReadOnlyDraft
+        : s === "needs_changes"
+          ? tx.clientRequestedNotice
+          : tx.acceptedNotice;
+    return (
+      <div
+        className="flex items-start gap-2 rounded-xl border border-border/50 bg-muted/20 p-2.5 text-xs text-muted-foreground"
+        data-testid="wo-boq-client-readonly"
+      >
+        <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+        <span dir="auto">{text}</span>
+      </div>
     );
   };
 
@@ -132,43 +253,12 @@ export function WorkOrderBoqReviewPanel({ workOrderId, canManage }: Props) {
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           {isRTL ? "جارٍ التحميل..." : "Loading..."}
         </div>
-      ) : !latest ? (
+      ) : !latest || !state ? (
         <p className="text-xs text-muted-foreground" dir="auto">{tx.none}</p>
       ) : canManage ? (
-        <div className="space-y-2">
-          {state === "draft" ? (
-            <Button
-              size="sm"
-              variant="default"
-              onClick={onSend}
-              disabled={sending}
-              data-testid="wo-boq-send-for-review"
-            >
-              {sending ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin me-1" />
-              ) : (
-                <Send className="w-3.5 h-3.5 me-1" />
-              )}
-              {sending ? tx.sending : tx.sendBtn}
-            </Button>
-          ) : (
-            <div
-              className="flex items-start gap-2 rounded-xl border border-border/50 bg-muted/20 p-2.5 text-xs text-muted-foreground"
-              data-testid="wo-boq-awaiting"
-            >
-              <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-              <span dir="auto">{tx.awaiting}</span>
-            </div>
-          )}
-        </div>
+        <div className="space-y-2">{renderProvider(state)}</div>
       ) : (
-        <div
-          className="flex items-start gap-2 rounded-xl border border-border/50 bg-muted/20 p-2.5 text-xs text-muted-foreground"
-          data-testid="wo-boq-client-readonly"
-        >
-          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span dir="auto">{tx.clientInfo}</span>
-        </div>
+        <div className="space-y-2">{renderClient(state)}</div>
       )}
     </div>
   );
