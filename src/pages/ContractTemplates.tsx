@@ -81,6 +81,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/aluminum',
     related: ['facades', 'kitchens'],
     faq: COMMON_FAQ,
+    quote_sector: 'aluminum',
   },
   {
     slug: 'steel-metal',
@@ -101,6 +102,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/steel',
     related: ['stainless-railings', 'aluminum-glass'],
     faq: COMMON_FAQ,
+    quote_sector: 'steel',
   },
   {
     slug: 'wood-works',
@@ -121,6 +123,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/wood',
     related: ['kitchens', 'aluminum-glass'],
     faq: COMMON_FAQ,
+    quote_sector: 'wood',
   },
   {
     slug: 'kitchens',
@@ -141,6 +144,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/wood',
     related: ['wood-works', 'aluminum-glass'],
     faq: COMMON_FAQ,
+    quote_sector: 'wood',
   },
   {
     slug: 'facades',
@@ -161,6 +165,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/glass',
     related: ['aluminum-glass', 'steel-metal'],
     faq: COMMON_FAQ,
+    quote_sector: 'glass',
   },
   {
     slug: 'stainless-railings',
@@ -181,6 +186,7 @@ CONTRACT_TEMPLATES.push(
     sector_route: '/sectors/stainless-steel',
     related: ['steel-metal', 'facades'],
     faq: COMMON_FAQ,
+    quote_sector: 'stainless-steel',
   },
 );
 
