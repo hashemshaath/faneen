@@ -5,10 +5,10 @@
  * Components MUST call these helpers — direct `from('work_order_boqs').update`
  * from a component is forbidden.
  *
- * Hard scope:
- *   - No billing surfaces (no invoice / payment / ZATCA / escrow).
- *   - No warranty, no final handover, no contract or WO lifecycle mutation.
- *   - No service_role / privileged keys.
+ * Hard scope (see Phase 4 brief for the full ban list):
+ *   - Review-only surface, no billing-adjacent calls.
+ *   - No contract or WO lifecycle mutation.
+ *   - No privileged keys / direct table writes outside this service.
  *   - No RLS changes.
  */
 import { supabase } from "@/integrations/supabase/client";
