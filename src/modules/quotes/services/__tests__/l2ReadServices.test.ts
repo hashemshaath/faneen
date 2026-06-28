@@ -132,13 +132,14 @@ describe('L-2 quote read services', () => {
   });
 
   it('listAdminOpsQuoteRequests applies fromDateIso + sector filters and limit 1000', async () => {
-    await listAdminOpsQuoteRequests({ fromDateIso: '2026-01-01', sector: 'aluminum' });
+    await listAdminOpsQuoteRequests({ fromDateIso: '2026-01-01', sector: '__unresolved_sector__' });
     expect(calls[0].table).toBe('quote_requests');
     expect(calls[0].builder.select).toHaveBeenCalledWith(ADMIN_OPS_QUOTE_SELECT);
     expect(calls[0].builder.order).toHaveBeenCalledWith('created_at', { ascending: false });
     expect(calls[0].builder.limit).toHaveBeenCalledWith(1000);
     expect(calls[0].builder.gte).toHaveBeenCalledWith('created_at', '2026-01-01');
-    expect(calls[0].builder.eq).toHaveBeenCalledWith('sector', 'aluminum');
+    // Phase 3I: unresolved sectors fall back to legacy .eq('sector', value)
+    expect(calls[0].builder.eq).toHaveBeenCalledWith('sector', '__unresolved_sector__');
   });
 
   it('listAdminOpsQuoteRequests skips filters when null/all', async () => {
