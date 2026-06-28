@@ -15,6 +15,7 @@ import {
 import { Activity, AlertCircle } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { QUOTE_STATUS_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus } from '@/lib/quoteRequests';
+import { resolveQuoteRequestTaxonomyDisplay } from '@/modules/taxonomy/resolveQuoteRequestTaxonomyDisplay';
 import {
   buildDailyQuoteOperationsSeries, rowsToCsv, downloadCsv, DAILY_OPS_CSV_HEADERS,
 } from '@/lib/quoteOperationsAggregation';
@@ -33,6 +34,12 @@ type Range = QuoteOperationsRange;
 
 interface QuoteRow {
   id: string; ref_id: string | null; sector: string; city: string; status: string; created_at: string;
+  taxonomy_category_id: string | null;
+  taxonomy_category: {
+    slug: string | null;
+    name_ar: string | null;
+    name_en: string | null;
+  } | null;
 }
 interface LeadRow {
   id: string; quote_request_id: string; provider_id: string; status: string;
@@ -244,8 +251,16 @@ const AdminQuoteOperations: React.FC = () => {
     const viewedByQuote = new Map<string, boolean>();
     leads.forEach((l) => { if (l.viewed_at) viewedByQuote.set(l.quote_request_id, true); });
 
-    type Attention = { quote: QuoteRow; reason: string; tone: string };
+    type Attention = { quote: QuoteRow; reason: string; tone: string; displayLabel: string };
     const attention: Attention[] = [];
+    const labelFor = (q: QuoteRow): string =>
+      resolveQuoteRequestTaxonomyDisplay({
+        taxonomyCategoryId: q.taxonomy_category_id,
+        taxonomyCategorySlug: q.taxonomy_category?.slug ?? null,
+        taxonomyCategoryNameAr: q.taxonomy_category?.name_ar ?? null,
+        taxonomyCategoryNameEn: q.taxonomy_category?.name_en ?? null,
+        sector: q.sector,
+      }).labelAr;
     quotes.forEach((q) => {
       const ageMs = now - new Date(q.created_at).getTime();
       const matchedAt = matchedAtByQuote.get(q.id);
@@ -254,13 +269,13 @@ const AdminQuoteOperations: React.FC = () => {
       const hasViewed = viewedByQuote.get(q.id) ?? false;
 
       if (q.status === 'new' && ageMs > 24 * 3600 * 1000) {
-        attention.push({ quote: q, reason: 'جديد منذ أكثر من 24 ساعة', tone: 'bg-warning/10 text-warning border-warning/30' });
+        attention.push({ quote: q, reason: 'جديد منذ أكثر من 24 ساعة', tone: 'bg-warning/10 text-warning border-warning/30', displayLabel: labelFor(q) });
       } else if (q.status === 'under_review' && (!matchedAt || !hasLeads)) {
-        attention.push({ quote: q, reason: 'بانتظار التوجيه', tone: 'bg-info/10 text-info border-info/30' });
+        attention.push({ quote: q, reason: 'بانتظار التوجيه', tone: 'bg-info/10 text-info border-info/30', displayLabel: labelFor(q) });
       } else if (q.status === 'matched' && matchedAt && !hasViewed && (now - matchedAt) > 24 * 3600 * 1000) {
-        attention.push({ quote: q, reason: 'لم يشاهده المزودون', tone: 'bg-warning/10 text-warning border-warning/30' });
+        attention.push({ quote: q, reason: 'لم يشاهده المزودون', tone: 'bg-warning/10 text-warning border-warning/30', displayLabel: labelFor(q) });
       } else if (q.status === 'matched' && matchedAt && !hasInterest && (now - matchedAt) > 48 * 3600 * 1000) {
-        attention.push({ quote: q, reason: 'لا يوجد اهتمام', tone: 'bg-destructive/10 text-destructive border-destructive/30' });
+        attention.push({ quote: q, reason: 'لا يوجد اهتمام', tone: 'bg-destructive/10 text-destructive border-destructive/30', displayLabel: labelFor(q) });
       }
     });
     // Per-lead attention
@@ -268,13 +283,13 @@ const AdminQuoteOperations: React.FC = () => {
       if (l.status === 'interested' && !l.contact_revealed) {
         const q = quotes.find((x) => x.id === l.quote_request_id);
         if (q && !attention.some((a) => a.quote.id === q.id && a.reason.includes('إتاحة'))) {
-          attention.push({ quote: q, reason: 'بانتظار إتاحة التواصل', tone: 'bg-primary/10 text-primary border-primary/30' });
+          attention.push({ quote: q, reason: 'بانتظار إتاحة التواصل', tone: 'bg-primary/10 text-primary border-primary/30', displayLabel: labelFor(q) });
         }
       }
       if (l.contact_revealed && (l.contact_view_count ?? 0) === 0 && l.contact_revealed_at &&
           (now - new Date(l.contact_revealed_at).getTime()) > 24 * 3600 * 1000) {
         const q = quotes.find((x) => x.id === l.quote_request_id);
-        if (q) attention.push({ quote: q, reason: 'لم تُشاهد بيانات التواصل', tone: 'bg-muted text-muted-foreground border-border' });
+        if (q) attention.push({ quote: q, reason: 'لم تُشاهد بيانات التواصل', tone: 'bg-muted text-muted-foreground border-border', displayLabel: labelFor(q) });
       }
     });
     // dedupe by id+reason
