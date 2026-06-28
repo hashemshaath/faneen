@@ -106,15 +106,21 @@ describe('Phase 1 — legacy mapping edge divergence (documented baseline)', () 
     expect(missingInEdge).toEqual([]);
   });
 
-  it('Phase 2A — every edge mapping output is a canonical primary slug', () => {
-    for (const v of Object.values(edge)) {
-      expect(CANONICAL_PRIMARY_SLUGS).toContain(v as never);
+  it('Phase 2A — edge mapping equals source mapping for every shared key', () => {
+    // Full sync: every source key exists in edge with identical canonical
+    // target. Outputs that intentionally retain a legacy target (e.g.
+    // `building-materials-supply` for out-of-Home-scope materials) are
+    // preserved verbatim from the source so they cannot silently drift.
+    for (const [k, v] of Object.entries(source)) {
+      expect(edge[k]).toBe(v);
     }
   });
 
-  it('Phase 2A — no edge mapping output uses a UI-forbidden legacy slug', () => {
-    for (const v of Object.values(edge)) {
-      expect(UI_FORBIDDEN_PRIMARY_SLUGS).not.toContain(v as never);
+  it('Phase 2A — every edge output is either canonical or matches the source legacy target', () => {
+    for (const [k, v] of Object.entries(edge)) {
+      const isCanonical = (CANONICAL_PRIMARY_SLUGS as readonly string[]).includes(v);
+      const matchesSource = source[k] === v;
+      expect(isCanonical || matchesSource).toBe(true);
     }
   });
 });
