@@ -76,7 +76,14 @@ describe('Step I — ReferenceLinkCopy safety', () => {
 describe('Step I — admin quote request select guard', () => {
   it('admin quote ops select includes ref_id', () => {
     expect(ADMIN_OPS_QUOTE_SELECT).toContain('ref_id');
-    expect(ADMIN_OPS_QUOTE_SELECT).toBe('id, ref_id, sector, city, status, created_at');
+    // Phase 3E — additive FK-first columns; sector preserved for back-compat.
+    expect(ADMIN_OPS_QUOTE_SELECT).toContain('id');
+    expect(ADMIN_OPS_QUOTE_SELECT).toContain('sector');
+    expect(ADMIN_OPS_QUOTE_SELECT).toContain('city');
+    expect(ADMIN_OPS_QUOTE_SELECT).toContain('status');
+    expect(ADMIN_OPS_QUOTE_SELECT).toContain('created_at');
+    expect(ADMIN_OPS_QUOTE_SELECT).toContain('taxonomy_category_id');
+    expect(ADMIN_OPS_QUOTE_SELECT).toContain('taxonomy_categories');
   });
 
   it('admin quote ops attention list renders ref badge when ref_id is present', () => {

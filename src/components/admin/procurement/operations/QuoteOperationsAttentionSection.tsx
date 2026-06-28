@@ -27,6 +27,12 @@ export interface QuoteOperationsAttentionItem {
   quote: QuoteOperationsAttentionQuote;
   reason: string;
   tone: string;
+  /**
+   * Phase 3E — FK-first display label resolved by the parent via
+   * `resolveQuoteRequestTaxonomyDisplay`. When omitted, falls back to
+   * the legacy `SECTOR_LABEL_AR` lookup for back-compat.
+   */
+  displayLabel?: string;
 }
 
 export interface QuoteOperationsAttentionSectionProps {
@@ -78,7 +84,7 @@ export const QuoteOperationsAttentionSection: React.FC<QuoteOperationsAttentionS
               ) : (
                 <span className="font-mono text-xs text-muted-foreground tech-content">#{a.quote.id.slice(-6)}</span>
               )}
-              <span className="text-xs text-muted-foreground">{SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector} · {a.quote.city}</span>
+              <span className="text-xs text-muted-foreground">{a.displayLabel ?? SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector} · {a.quote.city}</span>
               <span className={`text-[10px] px-2 py-0.5 rounded-full border ${a.tone}`}>{a.reason}</span>
               <span className="text-[11px] text-muted-foreground tech-content">عمر: {fmtDuration(ageMs)}</span>
               <span className="text-[10px] text-muted-foreground">{QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status}</span>
