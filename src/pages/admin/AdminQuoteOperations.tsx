@@ -14,8 +14,9 @@ import {
 } from '@/modules/quotes';
 import { Activity, AlertCircle } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { QUOTE_STATUS_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus } from '@/lib/quoteRequests';
+import { SECTOR_LABEL_AR } from '@/lib/quoteRequests';
 import { resolveQuoteRequestTaxonomyDisplay } from '@/modules/taxonomy/resolveQuoteRequestTaxonomyDisplay';
+import { buildFollowUpCsvRow, FOLLOW_UP_CSV_HEADERS } from '@/modules/quotes/services/buildFollowUpCsv';
 import {
   buildDailyQuoteOperationsSeries, rowsToCsv, downloadCsv, DAILY_OPS_CSV_HEADERS,
 } from '@/lib/quoteOperationsAggregation';
@@ -370,37 +371,15 @@ const AdminQuoteOperations: React.FC = () => {
         lastEventByQuote.set(e.quote_request_id, { type: e.event_type, at: e.created_at });
       }
     });
-    const rows = metrics.attention.map((a) => {
-      const ageHours = Math.round((Date.now() - new Date(a.quote.created_at).getTime()) / 3600000);
-      const last = lastEventByQuote.get(a.quote.id);
-      const taxonomy = resolveQuoteRequestTaxonomyDisplay({
-        taxonomyCategoryId: a.quote.taxonomy_category_id,
-        taxonomyCategorySlug: a.quote.taxonomy_category?.slug ?? null,
-        taxonomyCategoryNameAr: a.quote.taxonomy_category?.name_ar ?? null,
-        taxonomyCategoryNameEn: a.quote.taxonomy_category?.name_en ?? null,
-        sector: a.quote.sector,
-      });
-      return {
-        quote_ref: a.quote.ref_id ?? `#${a.quote.id.slice(-6)}`,
-        sector: SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector,
-        taxonomy_slug: taxonomy.canonicalSlug ?? '',
-        taxonomy_label_ar: taxonomy.labelAr,
-        taxonomy_label_en: taxonomy.labelEn,
-        taxonomy_status: taxonomy.status,
-        city: a.quote.city,
-        status: QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status,
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const rows = metrics.attention.map((a) =>
+      buildFollowUpCsvRow(a.quote, {
         reason: a.reason,
-        request_age_hours: ageHours,
-        last_event_type: last?.type ?? '',
-        admin_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/admin/quote-requests/${a.quote.ref_id ?? a.quote.id}`,
-      };
-    });
-    const headers = [
-      'quote_ref', 'sector',
-      'taxonomy_slug', 'taxonomy_label_ar', 'taxonomy_label_en', 'taxonomy_status',
-      'city', 'status', 'reason',
-      'request_age_hours', 'last_event_type', 'admin_url',
-    ];
+        lastEventType: lastEventByQuote.get(a.quote.id)?.type ?? '',
+        origin,
+      }),
+    );
+    const headers = FOLLOW_UP_CSV_HEADERS as unknown as string[];
     downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
   };
 
