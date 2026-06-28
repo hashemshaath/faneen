@@ -170,7 +170,7 @@ describe('Phase 1 — CONTRACT_TEMPLATES static catalog', () => {
     // absence here surfaces any silent attempt to add it without going
     // through the migration.
     for (const t of CONTRACT_TEMPLATES) {
-      expect((t as Record<string, unknown>).taxonomySlug).toBeUndefined();
+      expect((t as unknown as Record<string, unknown>).taxonomySlug).toBeUndefined();
     }
   });
 });
@@ -188,7 +188,7 @@ describe('Phase 1 — WORK_TYPES inventory', () => {
       expect(typeof w.templateCategory).toBe('string');
       expect(w.templateCategory.length).toBeGreaterThan(0);
       // No `taxonomySlug` mapping yet — owned by Phase 3.
-      expect((w as Record<string, unknown>).taxonomySlug).toBeUndefined();
+      expect((w as unknown as Record<string, unknown>).taxonomySlug).toBeUndefined();
     }
   });
 });
