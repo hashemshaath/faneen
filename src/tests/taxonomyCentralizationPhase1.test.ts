@@ -235,13 +235,15 @@ describe('Phase 1 — CONTRACT_TEMPLATES static catalog', () => {
     }
   });
 
-  it('documents that no template carries a canonical taxonomy slug yet (Phase 1 gap)', () => {
-    // No `taxonomySlug` field exists on ContractTemplateInfo — closing this
-    // gap is owned by Phase 3 of the centralization plan. Asserting the
-    // absence here surfaces any silent attempt to add it without going
-    // through the migration.
+  it('every template now carries a canonical taxonomySlug (Phase 2C closed)', () => {
+    // Phase 2C added `taxonomySlug` to ContractTemplateInfo as metadata-only
+    // (no routing/SEO behavior change). Assert every template carries a
+    // canonical primary slug and no legacy/forbidden slug slipped in.
     for (const t of CONTRACT_TEMPLATES) {
-      expect((t as unknown as Record<string, unknown>).taxonomySlug).toBeUndefined();
+      const slug = (t as unknown as Record<string, unknown>).taxonomySlug;
+      expect(typeof slug).toBe('string');
+      expect(isCanonicalPrimarySlug(slug as string)).toBe(true);
+      expect(isLegacyPrimarySlug(slug as string)).toBe(false);
     }
   });
 });
