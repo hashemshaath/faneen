@@ -355,3 +355,264 @@ export const detectSectorFromCategorySlug = (
   // Fall back to free-text heuristic on the slug itself ("aluminum-…", etc.)
   return detectSectorFromQuery(categorySlug.replace(/-/g, ' '));
 };
+
+/* -------------------------------------------------------------------------- */
+/* Phase 2B — Canonical keyword coverage (13/13 canonical primaries)           */
+/* -------------------------------------------------------------------------- */
+/**
+ * Canonical keyword bank keyed by `CANONICAL_PRIMARY_SLUGS`. Lives next to
+ * the legacy `SECTOR_KEYWORDS` (5 legacy slugs) which keeps its existing
+ * heuristic detection role. This map is the source of truth for canonical
+ * meta keywords / descriptions per primary activity — no routes, no
+ * search behavior changes.
+ */
+import {
+  CANONICAL_PRIMARY_SLUGS,
+  type CanonicalPrimarySlug,
+} from '@/modules/taxonomy/canonical-primaries';
+
+export interface CanonicalSectorKeywordEntry {
+  canonicalSlug: CanonicalPrimarySlug;
+  name_ar: string;
+  name_en: string;
+  tagline_ar: string;
+  tagline_en: string;
+  description_ar: string;
+  description_en: string;
+  keywords_ar: string[];
+  keywords_en: string[];
+}
+
+export const SECTOR_KEYWORDS_CANONICAL: Record<
+  CanonicalPrimarySlug,
+  CanonicalSectorKeywordEntry
+> = {
+  'aluminum-works': {
+    canonicalSlug: 'aluminum-works',
+    name_ar: 'أعمال الألمنيوم',
+    name_en: 'Aluminum works',
+    tagline_ar: SECTOR_KEYWORDS.aluminum.tagline_ar,
+    tagline_en: SECTOR_KEYWORDS.aluminum.tagline_en,
+    description_ar: SECTOR_KEYWORDS.aluminum.description_ar,
+    description_en: SECTOR_KEYWORDS.aluminum.description_en,
+    keywords_ar: SECTOR_KEYWORDS.aluminum.keywords_ar,
+    keywords_en: SECTOR_KEYWORDS.aluminum.keywords_en,
+  },
+  'glass-securit-works': {
+    canonicalSlug: 'glass-securit-works',
+    name_ar: 'أعمال الزجاج والسيكوريت',
+    name_en: 'Glass & securit works',
+    tagline_ar: SECTOR_KEYWORDS.glass.tagline_ar,
+    tagline_en: SECTOR_KEYWORDS.glass.tagline_en,
+    description_ar: SECTOR_KEYWORDS.glass.description_ar,
+    description_en: SECTOR_KEYWORDS.glass.description_en,
+    keywords_ar: SECTOR_KEYWORDS.glass.keywords_ar,
+    keywords_en: SECTOR_KEYWORDS.glass.keywords_en,
+  },
+  'steel-metal-works': {
+    canonicalSlug: 'steel-metal-works',
+    name_ar: 'أعمال الحديد والمعادن',
+    name_en: 'Steel & metal works',
+    tagline_ar: SECTOR_KEYWORDS.iron.tagline_ar,
+    tagline_en: SECTOR_KEYWORDS.iron.tagline_en,
+    description_ar: SECTOR_KEYWORDS.iron.description_ar,
+    description_en: SECTOR_KEYWORDS.iron.description_en,
+    keywords_ar: SECTOR_KEYWORDS.iron.keywords_ar,
+    keywords_en: SECTOR_KEYWORDS.iron.keywords_en,
+  },
+  'stainless-steel-works': {
+    canonicalSlug: 'stainless-steel-works',
+    name_ar: 'أعمال الستانلس ستيل',
+    name_en: 'Stainless steel works',
+    tagline_ar: 'تجهيزات ستانلس للمطاعم والمطابخ التجارية',
+    tagline_en: 'Stainless steel for restaurants and commercial kitchens',
+    description_ar:
+      'دليل قِطاعات لمصنّعي الستانلس ستيل: تجهيزات مطاعم، طاولات، أحواض، درابزينات، وأعمال تفصيل خاصة للمطابخ التجارية.',
+    description_en:
+      'Qitaat directory for stainless steel fabricators: restaurant kit, tables, sinks, railings, and custom commercial-kitchen work.',
+    keywords_ar: [
+      'ستانلس ستيل', 'تجهيزات مطاعم', 'مطابخ تجارية', 'طاولات ستانلس',
+      'احواض ستانلس', 'درابزين ستانلس', 'مصاعد طعام', 'تفصيل ستانلس',
+    ],
+    keywords_en: [
+      'stainless steel', 'restaurant equipment', 'commercial kitchens',
+      'stainless tables', 'stainless sinks', 'stainless railings',
+      'food carts', 'custom stainless',
+    ],
+  },
+  'wood-carpentry': {
+    canonicalSlug: 'wood-carpentry',
+    name_ar: 'أعمال الخشب والنجارة',
+    name_en: 'Wood & carpentry',
+    tagline_ar: SECTOR_KEYWORDS.wood.tagline_ar,
+    tagline_en: SECTOR_KEYWORDS.wood.tagline_en,
+    description_ar: SECTOR_KEYWORDS.wood.description_ar,
+    description_en: SECTOR_KEYWORDS.wood.description_en,
+    keywords_ar: SECTOR_KEYWORDS.wood.keywords_ar,
+    keywords_en: SECTOR_KEYWORDS.wood.keywords_en,
+  },
+  'kitchens-works': {
+    canonicalSlug: 'kitchens-works',
+    name_ar: 'المطابخ',
+    name_en: 'Kitchens',
+    tagline_ar: 'تفصيل وتركيب مطابخ ألمنيوم وخشب وكوارتز',
+    tagline_en: 'Custom kitchens: aluminum, wood, quartz, corian',
+    description_ar:
+      'دليل قِطاعات لمصنّعي ومركّبي المطابخ: مطابخ ألمنيوم، مطابخ خشب، بولي لاك، كوارتز، كوريان، وحلول تخزين للمطبخ الحديث.',
+    description_en:
+      'Qitaat directory for kitchen makers and installers: aluminum, wood, poly-lac, quartz, corian, and modern kitchen storage.',
+    keywords_ar: [
+      'مطابخ', 'تفصيل مطابخ', 'مطابخ المنيوم', 'مطابخ خشب', 'مطابخ بولي لاك',
+      'كوارتز', 'كوريان', 'وحدات تخزين مطبخ',
+    ],
+    keywords_en: [
+      'kitchens', 'custom kitchens', 'aluminum kitchens', 'wood kitchens',
+      'poly-lac kitchens', 'quartz', 'corian', 'kitchen storage',
+    ],
+  },
+  'facades-cladding': {
+    canonicalSlug: 'facades-cladding',
+    name_ar: 'الواجهات والكلادينج',
+    name_en: 'Facades & cladding',
+    tagline_ar: 'واجهات معمارية وكلادينج للمباني',
+    tagline_en: 'Architectural facades and cladding',
+    description_ar:
+      'دليل قِطاعات للواجهات والكلادينج: ألوبوند، HPL، GRC، زجاج ستركشر، حجر صناعي، وحلول الواجهات للمباني التجارية والسكنية.',
+    description_en:
+      'Qitaat directory for facades and cladding: ALPolic, HPL, GRC, structural glazing, and façade solutions for commercial and residential buildings.',
+    keywords_ar: [
+      'واجهات', 'كلادينج', 'الوبوند', 'كلادينج HPL', 'GRC',
+      'واجهات ستركشر', 'واجهات مباني', 'واجهات فلل',
+    ],
+    keywords_en: [
+      'facades', 'cladding', 'aluminum composite', 'HPL cladding', 'GRC',
+      'structural glazing', 'building facades', 'villa facades',
+    ],
+  },
+  'contracting-finishing': {
+    canonicalSlug: 'contracting-finishing',
+    name_ar: 'المقاولات والتشطيبات',
+    name_en: 'Contracting & finishing',
+    tagline_ar: 'مقاولون وفِرَق تنفيذ وتشطيبات',
+    tagline_en: 'Contractors and finishing crews',
+    description_ar:
+      'دليل قِطاعات للمقاولين وفِرَق التنفيذ والتشطيبات: مقاولو تشييد، تشطيبات داخلية، دهانات، أرضيات، أسقف، تجهيز محلات ومكاتب.',
+    description_en:
+      'Qitaat directory for contractors and finishing crews: construction contractors, interior finishing, paint, flooring, ceilings, shop & office fit-out.',
+    keywords_ar: [
+      'مقاولات', 'تشطيبات', 'تشطيب داخلي', 'دهانات', 'ارضيات',
+      'اسقف معلقه', 'تجهيز محلات', 'تجهيز مكاتب', 'تنفيذ ديكور',
+    ],
+    keywords_en: [
+      'contracting', 'finishing', 'interior finishing', 'paint', 'flooring',
+      'suspended ceilings', 'shop fit-out', 'office fit-out', 'decor execution',
+    ],
+  },
+  'elevators-maintenance': {
+    canonicalSlug: 'elevators-maintenance',
+    name_ar: 'المصاعد والصيانة',
+    name_en: 'Elevators & maintenance',
+    tagline_ar: 'تركيب وصيانة مصاعد وسلالم متحركة',
+    tagline_en: 'Elevator and escalator install & maintenance',
+    description_ar:
+      'دليل قِطاعات للمصاعد والسلالم المتحركة: تركيب، صيانة دورية، قطع غيار، وعقود تشغيل للمباني السكنية والتجارية.',
+    description_en:
+      'Qitaat directory for elevators and escalators: installation, periodic maintenance, spare parts, and service contracts for residential and commercial buildings.',
+    keywords_ar: [
+      'مصاعد', 'صيانه مصاعد', 'تركيب مصاعد', 'سلالم متحركه',
+      'عقد صيانه مصاعد', 'قطع غيار مصاعد',
+    ],
+    keywords_en: [
+      'elevators', 'elevator maintenance', 'elevator installation',
+      'escalators', 'maintenance contracts', 'elevator spare parts',
+    ],
+  },
+  'energy-sustainability': {
+    canonicalSlug: 'energy-sustainability',
+    name_ar: 'الطاقة والاستدامة',
+    name_en: 'Energy & sustainability',
+    tagline_ar: 'حلول الطاقة الشمسية وكفاءة الطاقة',
+    tagline_en: 'Solar and energy-efficiency solutions',
+    description_ar:
+      'دليل قِطاعات للطاقة والاستدامة: أنظمة شمسية، كفاءة طاقة، عزل حراري، إضاءة LED موفّرة للمنشآت السكنية والتجارية.',
+    description_en:
+      'Qitaat directory for energy & sustainability: solar PV systems, energy efficiency audits, thermal insulation, and LED lighting for residential and commercial sites.',
+    keywords_ar: [
+      'طاقه شمسيه', 'الواح شمسيه', 'كفاءه طاقه', 'عزل حراري',
+      'اضاءه LED', 'استدامه', 'انظمه شمسيه',
+    ],
+    keywords_en: [
+      'solar energy', 'solar panels', 'energy efficiency', 'thermal insulation',
+      'LED lighting', 'sustainability', 'PV systems',
+    ],
+  },
+  'technology-networks': {
+    canonicalSlug: 'technology-networks',
+    name_ar: 'التقنية والشبكات',
+    name_en: 'Technology & networks',
+    tagline_ar: 'شبكات بيانات واتصالات ومباني ذكية',
+    tagline_en: 'Networking, communications, smart buildings',
+    description_ar:
+      'دليل قِطاعات للتقنية والشبكات: شبكات بيانات، كابلات نحاس وألياف ضوئية، سنترالات، واي فاي مؤسسي، وأنظمة المباني الذكية.',
+    description_en:
+      'Qitaat directory for technology & networks: data networking, copper & fiber cabling, PBX, enterprise Wi-Fi, and smart-building systems.',
+    keywords_ar: [
+      'شبكات', 'كابلات شبكات', 'فايبر', 'سنترال', 'واي فاي',
+      'مباني ذكيه', 'تقنيه معلومات', 'بنيه تحتيه',
+    ],
+    keywords_en: [
+      'networking', 'network cabling', 'fiber optics', 'PBX', 'Wi-Fi',
+      'smart buildings', 'IT infrastructure', 'structured cabling',
+    ],
+  },
+  'security-control-systems': {
+    canonicalSlug: 'security-control-systems',
+    name_ar: 'الأمن وأنظمة التحكم',
+    name_en: 'Security & control systems',
+    tagline_ar: 'كاميرات مراقبة وإنذار وتحكم بالوصول',
+    tagline_en: 'CCTV, alarm, and access-control systems',
+    description_ar:
+      'دليل قِطاعات لأنظمة الأمن والتحكم: كاميرات مراقبة، إنذار حريق، تحكم بالدخول، بوابات أمنية، وحلول حماية متكاملة للمنشآت.',
+    description_en:
+      'Qitaat directory for security & control: CCTV cameras, fire alarms, access control, security gates, and integrated facility protection.',
+    keywords_ar: [
+      'كاميرات مراقبه', 'انذار حريق', 'تحكم بالدخول', 'بوابات امنيه',
+      'انظمه امنيه', 'حمايه منشات',
+    ],
+    keywords_en: [
+      'CCTV', 'fire alarm', 'access control', 'security gates',
+      'security systems', 'facility protection',
+    ],
+  },
+  'equipment-rental': {
+    canonicalSlug: 'equipment-rental',
+    name_ar: 'تأجير المعدات',
+    name_en: 'Equipment rental',
+    tagline_ar: 'تأجير معدات ثقيلة، رافعات، وسقالات',
+    tagline_en: 'Heavy equipment, cranes, scaffolding rentals',
+    description_ar:
+      'دليل قِطاعات لتأجير المعدات: معدات ثقيلة، رافعات شوكية، سقالات، عربات النقل، ومعدات المواقع الإنشائية.',
+    description_en:
+      'Qitaat directory for equipment rental: heavy machinery, forklifts, scaffolding, hauling, and construction-site equipment.',
+    keywords_ar: [
+      'تاجير معدات', 'معدات ثقيله', 'رافعات', 'سقالات',
+      'تاجير سقالات', 'تاجير رافعات شوكيه', 'معدات مواقع',
+    ],
+    keywords_en: [
+      'equipment rental', 'heavy equipment', 'cranes', 'scaffolding',
+      'forklift rental', 'site equipment', 'construction rentals',
+    ],
+  },
+};
+
+/** Returns the merged canonical keyword string (AR + EN) for a canonical primary. */
+export const getCanonicalSectorKeywords = (slug: CanonicalPrimarySlug): string => {
+  const e = SECTOR_KEYWORDS_CANONICAL[slug];
+  if (!e) return '';
+  return Array.from(new Set([...e.keywords_ar, ...e.keywords_en])).join(', ');
+};
+
+/** Sanity export for tests / inventories. */
+export const CANONICAL_KEYWORD_COVERAGE = CANONICAL_PRIMARY_SLUGS.map(
+  (s) => SECTOR_KEYWORDS_CANONICAL[s]?.canonicalSlug,
+);

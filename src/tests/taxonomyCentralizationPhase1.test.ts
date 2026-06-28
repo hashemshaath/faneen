@@ -22,8 +22,12 @@ import {
   isLegacyPrimarySlug,
 } from '@/modules/taxonomy/canonical-primaries';
 import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from '@/modules/taxonomy/legacy-mapping';
-import { SECTORS_SEO } from '@/lib/sectors-seo';
-import { SECTOR_KEYWORDS } from '@/lib/sector-keywords';
+import { SECTORS_SEO, SECTORS_SEO_CANONICAL, getCanonicalSectorSeo } from '@/lib/sectors-seo';
+import {
+  SECTOR_KEYWORDS,
+  SECTOR_KEYWORDS_CANONICAL,
+  getCanonicalSectorKeywords,
+} from '@/lib/sector-keywords';
 import { WORK_TYPES } from '@/lib/contract-work-types';
 import { CONTRACT_TEMPLATES } from '@/data/contractTemplates';
 
@@ -134,24 +138,87 @@ describe('Phase 1 — legacy mapping edge divergence (documented baseline)', () 
  * Later phases will close them.
  */
 export const knownTaxonomyCoverageGaps = {
-  SECTORS_SEO: { covered: 6, total: 13 },
-  SECTOR_KEYWORDS: { covered: 5, total: 13 },
+  // Phase 2B — legacy maps stay at their original size (route-stable).
+  SECTORS_SEO_LEGACY: { covered: 6, total: 13 },
+  SECTOR_KEYWORDS_LEGACY: { covered: 5, total: 13 },
+  // Canonical maps now fully cover the 13 canonical primaries.
+  SECTORS_SEO_CANONICAL: { covered: 13, total: 13 },
+  SECTOR_KEYWORDS_CANONICAL: { covered: 13, total: 13 },
 } as const;
 
-describe('Phase 1 — SECTORS_SEO / SECTOR_KEYWORDS coverage gaps', () => {
-  it('SECTORS_SEO currently covers only 6 of the 13 canonical primaries', () => {
+describe('Phase 2B — SECTORS_SEO + SECTOR_KEYWORDS canonical coverage', () => {
+  it('legacy SECTORS_SEO keeps its 6 route-stable entries (no regression)', () => {
     expect(Object.keys(SECTORS_SEO)).toHaveLength(
-      knownTaxonomyCoverageGaps.SECTORS_SEO.covered,
-    );
-    expect(CANONICAL_PRIMARY_SLUGS).toHaveLength(
-      knownTaxonomyCoverageGaps.SECTORS_SEO.total,
+      knownTaxonomyCoverageGaps.SECTORS_SEO_LEGACY.covered,
     );
   });
 
-  it('SECTOR_KEYWORDS currently covers only 5 legacy slugs (stale vs canonical)', () => {
+  it('legacy SECTOR_KEYWORDS keeps its 5 detection entries (no regression)', () => {
     expect(Object.keys(SECTOR_KEYWORDS)).toHaveLength(
-      knownTaxonomyCoverageGaps.SECTOR_KEYWORDS.covered,
+      knownTaxonomyCoverageGaps.SECTOR_KEYWORDS_LEGACY.covered,
     );
+  });
+
+  it('SECTORS_SEO_CANONICAL covers all 13 canonical primaries with required meta', () => {
+    for (const slug of CANONICAL_PRIMARY_SLUGS) {
+      const entry = SECTORS_SEO_CANONICAL[slug];
+      expect(entry, `missing canonical SEO entry for ${slug}`).toBeDefined();
+      expect(entry.canonicalSlug).toBe(slug);
+      expect(entry.metaTitle.length).toBeGreaterThan(8);
+      expect(entry.metaDescription.length).toBeGreaterThan(40);
+      expect(entry.h1.length).toBeGreaterThan(4);
+      expect(entry.primaryCta.length).toBeGreaterThan(2);
+    }
+    expect(Object.keys(SECTORS_SEO_CANONICAL)).toHaveLength(13);
+  });
+
+  it('SECTOR_KEYWORDS_CANONICAL covers all 13 canonical primaries with AR + EN keywords', () => {
+    for (const slug of CANONICAL_PRIMARY_SLUGS) {
+      const entry = SECTOR_KEYWORDS_CANONICAL[slug];
+      expect(entry, `missing canonical keyword entry for ${slug}`).toBeDefined();
+      expect(entry.canonicalSlug).toBe(slug);
+      expect(entry.keywords_ar.length).toBeGreaterThanOrEqual(4);
+      expect(entry.keywords_en.length).toBeGreaterThanOrEqual(4);
+      expect(getCanonicalSectorKeywords(slug).length).toBeGreaterThan(20);
+    }
+    expect(Object.keys(SECTOR_KEYWORDS_CANONICAL)).toHaveLength(13);
+  });
+
+  it('forbidden / legacy primary slugs are NOT keys in either canonical map', () => {
+    for (const slug of UI_FORBIDDEN_PRIMARY_SLUGS) {
+      expect((SECTORS_SEO_CANONICAL as Record<string, unknown>)[slug]).toBeUndefined();
+      expect((SECTOR_KEYWORDS_CANONICAL as Record<string, unknown>)[slug]).toBeUndefined();
+      // building-materials-supply intentionally stays a legacy target only.
+      expect(CANONICAL_PRIMARY_SLUGS).not.toContain(slug as never);
+    }
+  });
+
+  it('legacy /sectors/* URLs still resolve to canonical primaries (route compat)', () => {
+    const legacyRoutes: Array<[string, string]> = [
+      ['aluminum', 'aluminum-works'],
+      ['steel', 'steel-metal-works'],
+      ['wood', 'wood-carpentry'],
+      ['glass', 'glass-securit-works'],
+      ['stainless-steel', 'stainless-steel-works'],
+      ['fabrication-installation', 'contracting-finishing'],
+    ];
+    for (const [legacy, canonical] of legacyRoutes) {
+      // Legacy SEO key still present (the route still renders).
+      expect((SECTORS_SEO as Record<string, unknown>)[legacy]).toBeDefined();
+      // And resolves to the canonical primary via the canonical accessor.
+      const entry = getCanonicalSectorSeo(canonical);
+      expect(entry?.canonicalSlug).toBe(canonical);
+    }
+  });
+
+  it('building-materials-supply remains a legacy target — not a canonical primary', () => {
+    expect(CANONICAL_PRIMARY_SLUGS).not.toContain('building-materials-supply' as never);
+    expect(
+      (SECTORS_SEO_CANONICAL as Record<string, unknown>)['building-materials-supply'],
+    ).toBeUndefined();
+    expect(
+      (SECTOR_KEYWORDS_CANONICAL as Record<string, unknown>)['building-materials-supply'],
+    ).toBeUndefined();
   });
 });
 

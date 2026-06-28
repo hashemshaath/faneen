@@ -304,3 +304,151 @@ export function resolveQuoteSectorFromUrl(
   if (mapped && CANONICAL_SET.has(mapped)) return mapped as CanonicalPrimarySlug;
   return null;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Phase 2B — Canonical SEO coverage (13/13 canonical primaries)               */
+/* -------------------------------------------------------------------------- */
+/**
+ * Lightweight SEO surface keyed by the 13 canonical primary slugs. This
+ * sits ALONGSIDE the legacy `SECTORS_SEO` map (which keeps powering the
+ * 6 legacy /sectors/<slug> routes unchanged) and gives downstream code a
+ * single source of meta title/description/H1/CTA per canonical primary.
+ *
+ * No routes change: nothing here is wired into `SECTORS_SEO_LIST` or the
+ * existing `<Route path="/sectors/aluminum" …>` entries. Pages that want
+ * canonical-aware meta opt in via `getCanonicalSectorSeo(slug)`.
+ */
+export interface CanonicalSectorSeoEntry {
+  canonicalSlug: CanonicalPrimarySlug;
+  name: string;
+  shortName: string;
+  metaTitle: string;
+  metaDescription: string;
+  h1: string;
+  hero: string;
+  primaryCta: string;
+  secondaryCta: string;
+  /** Optional pointer back to the legacy SEO slug when one exists. */
+  legacySeoSlug?: SeoSectorSlug;
+}
+
+const fromLegacy = (
+  canonicalSlug: CanonicalPrimarySlug,
+  legacy: SectorSeo,
+): CanonicalSectorSeoEntry => ({
+  canonicalSlug,
+  name: legacy.name,
+  shortName: legacy.shortName,
+  metaTitle: legacy.metaTitle,
+  metaDescription: legacy.metaDescription,
+  h1: legacy.h1,
+  hero: legacy.hero,
+  primaryCta: legacy.primaryCta,
+  secondaryCta: legacy.secondaryCta,
+  legacySeoSlug: legacy.slug,
+});
+
+export const SECTORS_SEO_CANONICAL: Record<CanonicalPrimarySlug, CanonicalSectorSeoEntry> = {
+  'aluminum-works': fromLegacy('aluminum-works', SECTORS_SEO.aluminum),
+  'steel-metal-works': fromLegacy('steel-metal-works', SECTORS_SEO.steel),
+  'wood-carpentry': fromLegacy('wood-carpentry', SECTORS_SEO.wood),
+  'glass-securit-works': fromLegacy('glass-securit-works', SECTORS_SEO.glass),
+  'stainless-steel-works': fromLegacy('stainless-steel-works', SECTORS_SEO['stainless-steel']),
+  'contracting-finishing': fromLegacy('contracting-finishing', SECTORS_SEO['fabrication-installation']),
+  'kitchens-works': {
+    canonicalSlug: 'kitchens-works',
+    name: 'المطابخ',
+    shortName: 'مطابخ',
+    metaTitle: 'المطابخ — تفصيل وتركيب مطابخ ألمنيوم وخشب | قطاعات',
+    metaDescription:
+      'ابحث عن مزودي تفصيل وتركيب المطابخ في السعودية: مطابخ ألمنيوم وخشب وبولي لاك وكوارتز وكوريان، واطلب عرض سعر عبر قطاعات.',
+    h1: 'تفصيل وتركيب المطابخ',
+    hero: 'مطابخ منزلية وتجارية مفصّلة حسب المقاس مع خيارات متعددة للأسطح والواجهات.',
+    primaryCta: 'اطلب عرض سعر للمطبخ',
+    secondaryCta: 'استعرض مزودي المطابخ',
+  },
+  'facades-cladding': {
+    canonicalSlug: 'facades-cladding',
+    name: 'الواجهات والكلادينج',
+    shortName: 'واجهات وكلادينج',
+    metaTitle: 'الواجهات والكلادينج — تنفيذ واجهات مباني وفلل | قطاعات',
+    metaDescription:
+      'مزودو الواجهات والكلادينج للمباني التجارية والسكنية: ألوبوند، HPL، GRC، زجاج ستركشر. اطلب عرض سعر عبر قطاعات.',
+    h1: 'الواجهات والكلادينج للمباني',
+    hero: 'تنفيذ واجهات معمارية وكلادينج بأنواعه للمباني التجارية والسكنية والفلل.',
+    primaryCta: 'اطلب عرض سعر للواجهات',
+    secondaryCta: 'استعرض مزودي الواجهات',
+  },
+  'elevators-maintenance': {
+    canonicalSlug: 'elevators-maintenance',
+    name: 'المصاعد والصيانة',
+    shortName: 'مصاعد',
+    metaTitle: 'المصاعد والصيانة — تركيب وصيانة مصاعد وسلالم متحركة | قطاعات',
+    metaDescription:
+      'تركيب وصيانة وتشغيل المصاعد والسلالم المتحركة للمباني السكنية والتجارية في السعودية. اطلب عرض سعر عبر قطاعات.',
+    h1: 'المصاعد والصيانة',
+    hero: 'مزودون متخصصون في تركيب المصاعد، السلالم المتحركة، وعقود الصيانة الدورية.',
+    primaryCta: 'اطلب عرض سعر للمصاعد',
+    secondaryCta: 'استعرض مزودي المصاعد',
+  },
+  'energy-sustainability': {
+    canonicalSlug: 'energy-sustainability',
+    name: 'الطاقة والاستدامة',
+    shortName: 'طاقة',
+    metaTitle: 'الطاقة والاستدامة — أنظمة الطاقة الشمسية وكفاءة الطاقة | قطاعات',
+    metaDescription:
+      'حلول الطاقة الشمسية، كفاءة الطاقة، الإضاءة الموفّرة، والعزل الحراري للمنشآت في السعودية. اطلب عرض سعر عبر قطاعات.',
+    h1: 'الطاقة والاستدامة',
+    hero: 'أنظمة طاقة شمسية، حلول كفاءة طاقة، وعزل حراري للمباني والمنشآت.',
+    primaryCta: 'اطلب عرض سعر للطاقة',
+    secondaryCta: 'استعرض مزودي الطاقة',
+  },
+  'technology-networks': {
+    canonicalSlug: 'technology-networks',
+    name: 'التقنية والشبكات',
+    shortName: 'تقنية وشبكات',
+    metaTitle: 'التقنية والشبكات — أنظمة الشبكات والاتصالات والبنية التحتية | قطاعات',
+    metaDescription:
+      'حلول الشبكات السلكية واللاسلكية، الكابلات، السنترالات، أنظمة الاتصالات وأنظمة المباني الذكية. اطلب عرض سعر عبر قطاعات.',
+    h1: 'التقنية والشبكات',
+    hero: 'تأسيس وتمديد شبكات البيانات والاتصالات وأنظمة المباني الذكية.',
+    primaryCta: 'اطلب عرض سعر للتقنية',
+    secondaryCta: 'استعرض مزودي التقنية',
+  },
+  'security-control-systems': {
+    canonicalSlug: 'security-control-systems',
+    name: 'الأمن وأنظمة التحكم',
+    shortName: 'أمن وتحكم',
+    metaTitle: 'الأمن وأنظمة التحكم — كاميرات وإنذار ومراقبة وصول | قطاعات',
+    metaDescription:
+      'كاميرات مراقبة، أنظمة إنذار، تحكم بالوصول، بوابات أمنية، وأنظمة حماية للمنشآت في السعودية. اطلب عرض سعر عبر قطاعات.',
+    h1: 'الأمن وأنظمة التحكم',
+    hero: 'كاميرات مراقبة، إنذار، تحكم بالدخول، وأنظمة حماية متكاملة للمنشآت.',
+    primaryCta: 'اطلب عرض سعر للأمن',
+    secondaryCta: 'استعرض مزودي الأمن',
+  },
+  'equipment-rental': {
+    canonicalSlug: 'equipment-rental',
+    name: 'تأجير المعدات',
+    shortName: 'تأجير معدات',
+    metaTitle: 'تأجير المعدات — معدات ثقيلة، رافعات، سقالات | قطاعات',
+    metaDescription:
+      'تأجير المعدات الثقيلة، الرافعات، السقالات، عربات النقل، ومعدات المواقع الإنشائية في السعودية. اطلب عرض سعر عبر قطاعات.',
+    h1: 'تأجير المعدات للمواقع',
+    hero: 'رافعات، سقالات، معدات ثقيلة، وحلول لوجستية للمواقع الإنشائية.',
+    primaryCta: 'اطلب عرض سعر للتأجير',
+    secondaryCta: 'استعرض مزودي التأجير',
+  },
+};
+
+/** Returns the canonical SEO entry for a canonical primary slug or `null`. */
+export function getCanonicalSectorSeo(
+  slug: string | null | undefined,
+): CanonicalSectorSeoEntry | null {
+  if (!slug) return null;
+  const norm = slug.trim().toLowerCase();
+  if (norm in SECTORS_SEO_CANONICAL) {
+    return SECTORS_SEO_CANONICAL[norm as CanonicalPrimarySlug];
+  }
+  return null;
+}
