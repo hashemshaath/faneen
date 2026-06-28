@@ -44,17 +44,17 @@ describe('Phase 3F — follow-up CSV taxonomy widening', () => {
         sector: 'aluminum',
         taxonomy_category_id: 'fk-1',
         taxonomy_category: {
-          slug: 'aluminum-doors-windows',
-          name_ar: 'ألمنيوم أبواب وشبابيك',
-          name_en: 'Aluminum Doors & Windows',
+          slug: 'aluminum-works',
+          name_ar: 'أعمال الألمنيوم',
+          name_en: 'Aluminum works',
         },
       }),
       { reason: 'r', now: NOW, origin: 'https://x' },
     );
     expect(row.taxonomy_status).toBe('canonical');
-    expect(row.taxonomy_slug).toBe('aluminum-doors-windows');
-    expect(row.taxonomy_label_ar).toBe('ألمنيوم أبواب وشبابيك');
-    expect(row.taxonomy_label_en).toBe('Aluminum Doors & Windows');
+    expect(row.taxonomy_slug).toBe('aluminum-works');
+    expect(row.taxonomy_label_ar).toBe('أعمال الألمنيوم');
+    expect(row.taxonomy_label_en).toBe('Aluminum works');
     expect(row.sector).toBeTruthy();
   });
 
