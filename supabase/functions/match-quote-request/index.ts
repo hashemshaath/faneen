@@ -32,6 +32,7 @@ const LEGACY_SECTOR_TO_TAXONOMY_SLUG: Record<string, string> = {
   // Glass
   glass: 'glass-securit-works',
   'glass-securit': 'glass-securit-works',
+  securit: 'glass-securit-works',
   // Facades
   storefronts: 'facades-cladding',
   facades: 'facades-cladding',
@@ -48,6 +49,7 @@ const LEGACY_SECTOR_TO_TAXONOMY_SLUG: Record<string, string> = {
   // Wood / kitchens
   wood: 'wood-carpentry',
   cabinets: 'wood-carpentry',
+  'wood-cabinets': 'wood-carpentry',
   kitchens: 'kitchens-works',
   // Contracting / fabrication / construction
   fabrication: 'contracting-finishing',
@@ -55,25 +57,33 @@ const LEGACY_SECTOR_TO_TAXONOMY_SLUG: Record<string, string> = {
   finishing: 'contracting-finishing',
   'project-fitout': 'contracting-finishing',
   construction: 'contracting-finishing',
+  'construction-building': 'contracting-finishing',
   // Elevators / maintenance
   elevators: 'elevators-maintenance',
+  escalators: 'elevators-maintenance',
   maintenance: 'elevators-maintenance',
+  operations: 'elevators-maintenance',
   // Energy
   energy: 'energy-sustainability',
+  sustainability: 'energy-sustainability',
   solar: 'energy-sustainability',
   // Technology
   technology: 'technology-networks',
   'technology-systems': 'technology-networks',
+  networks: 'technology-networks',
   // Security
   security: 'security-control-systems',
   surveillance: 'security-control-systems',
   // Equipment
   equipment: 'equipment-rental',
   'heavy-equipment-rental': 'equipment-rental',
+  rental: 'equipment-rental',
+  'equipment-rental-provider': 'equipment-rental',
   lifting: 'equipment-rental',
   scaffolding: 'equipment-rental',
   // Materials (kept on legacy target — out of Home scope)
   materials: 'building-materials-supply',
+  'building-materials': 'building-materials-supply',
 };
 
 interface MatchInput { quote_request_id: string; limit?: number }
