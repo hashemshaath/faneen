@@ -157,7 +157,7 @@ export async function listOpportunityOpsRows(
   const { data: rows, error } = await supabase
     .from('quote_requests')
     .select(
-      'id, ref_id, customer_name, city, district, sector, status, award_status, awarded_bid_id, awarded_at, created_at, updated_at',
+      'id, ref_id, customer_name, city, district, sector, status, award_status, awarded_bid_id, awarded_at, created_at, updated_at, taxonomy_category_id, taxonomy_category:taxonomy_categories(slug,name_ar,name_en)',
     )
     .order('updated_at', { ascending: false })
     .limit(safeLimit);
@@ -226,6 +226,7 @@ export async function listOpportunityOpsRows(
     const contract = contractByOpp.get(r.id) ?? null;
     const assigned_count = assignedCount.get(r.id) ?? 0;
     const bid_count = bidCount.get(r.id) ?? 0;
+    const tx = (r as unknown as { taxonomy_category?: { slug: string | null; name_ar: string | null; name_en: string | null } | null }).taxonomy_category ?? null;
     return {
       id: r.id,
       ref_id: r.ref_id ?? null,
@@ -233,6 +234,10 @@ export async function listOpportunityOpsRows(
       city: r.city ?? null,
       district: r.district ?? null,
       sector: r.sector ?? null,
+      taxonomy_category_id: (r as unknown as { taxonomy_category_id?: string | null }).taxonomy_category_id ?? null,
+      taxonomy_category_slug: tx?.slug ?? null,
+      taxonomy_category_name_ar: tx?.name_ar ?? null,
+      taxonomy_category_name_en: tx?.name_en ?? null,
       status: r.status,
       award_status: r.award_status ?? null,
       awarded_bid_id: r.awarded_bid_id ?? null,

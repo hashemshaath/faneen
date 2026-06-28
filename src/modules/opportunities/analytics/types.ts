@@ -38,6 +38,14 @@ export interface OpportunityOpsRow {
   city: string | null;
   district: string | null;
   sector: string | null;
+  /** Phase 3H — FK to canonical taxonomy (additive, nullable). */
+  taxonomy_category_id: string | null;
+  /** Phase 3H — joined slug from `taxonomy_categories.slug`. */
+  taxonomy_category_slug: string | null;
+  /** Phase 3H — joined Arabic label from `taxonomy_categories.name_ar`. */
+  taxonomy_category_name_ar: string | null;
+  /** Phase 3H — joined English label from `taxonomy_categories.name_en`. */
+  taxonomy_category_name_en: string | null;
   status: string;
   award_status: string | null;
   awarded_bid_id: string | null;
