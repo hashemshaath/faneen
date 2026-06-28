@@ -7,6 +7,7 @@
  */
 import type { OpportunityOpsRow } from './types';
 import { computeOpportunitySla } from './sla';
+import { resolveQuoteRequestTaxonomyDisplay } from '@/modules/taxonomy/resolveQuoteRequestTaxonomyDisplay';
 
 export const OPPORTUNITY_EXPORT_LIMIT = 5000;
 
@@ -17,6 +18,10 @@ export const OPPORTUNITY_EXPORT_COLUMNS = [
   'city',
   'district',
   'sector',
+  'taxonomy_slug',
+  'taxonomy_label_ar',
+  'taxonomy_label_en',
+  'taxonomy_status',
   'status',
   'assigned_count',
   'bid_count',
@@ -53,6 +58,13 @@ export function buildOpportunityReportCsv(
   const header = OPPORTUNITY_EXPORT_COLUMNS.join(',');
   const body = capped.map((r) => {
     const sla = computeOpportunitySla(r, now);
+    const tx = resolveQuoteRequestTaxonomyDisplay({
+      taxonomyCategoryId: r.taxonomy_category_id,
+      taxonomyCategorySlug: r.taxonomy_category_slug,
+      taxonomyCategoryNameAr: r.taxonomy_category_name_ar,
+      taxonomyCategoryNameEn: r.taxonomy_category_name_en,
+      sector: r.sector,
+    });
     const cells: Record<(typeof OPPORTUNITY_EXPORT_COLUMNS)[number], string> = {
       ref_id: escapeCsv(r.ref_id ?? r.id),
       created_at: escapeCsv(r.created_at),
@@ -60,6 +72,10 @@ export function buildOpportunityReportCsv(
       city: escapeCsv(r.city),
       district: escapeCsv(r.district),
       sector: escapeCsv(r.sector),
+      taxonomy_slug: escapeCsv(tx.canonicalSlug ?? ''),
+      taxonomy_label_ar: escapeCsv(tx.status === 'unclassified' ? '' : tx.labelAr),
+      taxonomy_label_en: escapeCsv(tx.status === 'unclassified' ? '' : tx.labelEn),
+      taxonomy_status: escapeCsv(tx.status),
       status: escapeCsv(r.status),
       assigned_count: escapeCsv(r.assigned_count),
       bid_count: escapeCsv(r.bid_count),
