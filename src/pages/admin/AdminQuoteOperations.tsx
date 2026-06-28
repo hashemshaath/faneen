@@ -377,7 +377,7 @@ const AdminQuoteOperations: React.FC = () => {
         reason: a.reason,
         lastEventType: lastEventByQuote.get(a.quote.id)?.type ?? '',
         origin,
-      }),
+      }) as unknown as Record<string, unknown>,
     );
     const headers = FOLLOW_UP_CSV_HEADERS as unknown as string[];
     downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
