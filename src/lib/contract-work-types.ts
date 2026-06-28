@@ -13,6 +13,7 @@
  * `contract_template_pricing_rules` (CT5D/CT5E).
  */
 import type { BoqGroupKey } from './contract-boq';
+import type { CanonicalPrimarySlug } from '@/modules/taxonomy/canonical-primaries';
 
 export type WorkTypeKey =
   | 'kitchens'
@@ -35,20 +36,27 @@ export interface WorkTypeMeta {
   templateCategory: string;
   /** Default BOQ groups suggested when starting this work type. */
   defaultBoqGroups: BoqGroupKey[];
+  /**
+   * Phase 2D — Canonical primary taxonomy slug for this work type.
+   * Must be one of `CANONICAL_PRIMARY_SLUGS`. Metadata only; does not
+   * affect template matching, contract wizard, or quote/search behavior.
+   * Multi-taxonomy mapping is deferred: each work type maps to one primary.
+   */
+  taxonomySlug: CanonicalPrimarySlug;
 }
 
 export const WORK_TYPES: WorkTypeMeta[] = [
-  { key: 'kitchens',              ar: 'مطابخ',                 en: 'Kitchens',                 templateCategory: 'kitchens',              defaultBoqGroups: ['cabinets','countertops','accessories','appliances','installation'] },
-  { key: 'aluminum_doors_windows', ar: 'ألمنيوم أبواب وشبابيك', en: 'Aluminum Doors & Windows', templateCategory: 'aluminum_doors_windows', defaultBoqGroups: ['materials','accessories','installation'] },
-  { key: 'glass_securit',         ar: 'زجاج وسيكوريت',         en: 'Glass & Securit',          templateCategory: 'glass_securit',         defaultBoqGroups: ['materials','accessories','installation'] },
-  { key: 'facades',               ar: 'واجهات وكلادينج',       en: 'Facades / Cladding',       templateCategory: 'facades',               defaultBoqGroups: ['materials','labor','installation'] },
-  { key: 'upvc',                  ar: 'UPVC أبواب وشبابيك',    en: 'UPVC Doors & Windows',     templateCategory: 'upvc',                  defaultBoqGroups: ['materials','accessories','installation'] },
-  { key: 'wood_doors',            ar: 'أبواب خشبية',           en: 'Wood Doors',               templateCategory: 'wood_doors',            defaultBoqGroups: ['materials','accessories','installation'] },
-  { key: 'iron_doors_windows',    ar: 'حديد أبواب وشبابيك',    en: 'Iron Doors & Windows',     templateCategory: 'iron_doors_windows',    defaultBoqGroups: ['materials','labor','installation'] },
-  { key: 'fire_doors',            ar: 'أبواب مقاومة للحريق',   en: 'Fire-Rated Doors',         templateCategory: 'fire_doors',            defaultBoqGroups: ['materials','accessories','installation'] },
-  { key: 'gates_structures',      ar: 'بوابات ومظلات وهناجر',  en: 'Gates & Structures',       templateCategory: 'gates_structures',      defaultBoqGroups: ['materials','labor','installation'] },
-  { key: 'wardrobes_closets',     ar: 'خزائن ودواليب',         en: 'Wardrobes & Closets',      templateCategory: 'wardrobes_closets',     defaultBoqGroups: ['cabinets','accessories','installation'] },
-  { key: 'general',               ar: 'عام / مخصص',            en: 'General / Custom',         templateCategory: 'general',               defaultBoqGroups: ['materials','labor','other'] },
+  { key: 'kitchens',              ar: 'مطابخ',                 en: 'Kitchens',                 templateCategory: 'kitchens',              taxonomySlug: 'kitchens-works',          defaultBoqGroups: ['cabinets','countertops','accessories','appliances','installation'] },
+  { key: 'aluminum_doors_windows', ar: 'ألمنيوم أبواب وشبابيك', en: 'Aluminum Doors & Windows', templateCategory: 'aluminum_doors_windows', taxonomySlug: 'aluminum-works',          defaultBoqGroups: ['materials','accessories','installation'] },
+  { key: 'glass_securit',         ar: 'زجاج وسيكوريت',         en: 'Glass & Securit',          templateCategory: 'glass_securit',         taxonomySlug: 'glass-securit-works',     defaultBoqGroups: ['materials','accessories','installation'] },
+  { key: 'facades',               ar: 'واجهات وكلادينج',       en: 'Facades / Cladding',       templateCategory: 'facades',               taxonomySlug: 'facades-cladding',        defaultBoqGroups: ['materials','labor','installation'] },
+  { key: 'upvc',                  ar: 'UPVC أبواب وشبابيك',    en: 'UPVC Doors & Windows',     templateCategory: 'upvc',                  taxonomySlug: 'aluminum-works',          defaultBoqGroups: ['materials','accessories','installation'] },
+  { key: 'wood_doors',            ar: 'أبواب خشبية',           en: 'Wood Doors',               templateCategory: 'wood_doors',            taxonomySlug: 'wood-carpentry',          defaultBoqGroups: ['materials','accessories','installation'] },
+  { key: 'iron_doors_windows',    ar: 'حديد أبواب وشبابيك',    en: 'Iron Doors & Windows',     templateCategory: 'iron_doors_windows',    taxonomySlug: 'steel-metal-works',       defaultBoqGroups: ['materials','labor','installation'] },
+  { key: 'fire_doors',            ar: 'أبواب مقاومة للحريق',   en: 'Fire-Rated Doors',         templateCategory: 'fire_doors',            taxonomySlug: 'steel-metal-works',       defaultBoqGroups: ['materials','accessories','installation'] },
+  { key: 'gates_structures',      ar: 'بوابات ومظلات وهناجر',  en: 'Gates & Structures',       templateCategory: 'gates_structures',      taxonomySlug: 'steel-metal-works',       defaultBoqGroups: ['materials','labor','installation'] },
+  { key: 'wardrobes_closets',     ar: 'خزائن ودواليب',         en: 'Wardrobes & Closets',      templateCategory: 'wardrobes_closets',     taxonomySlug: 'wood-carpentry',          defaultBoqGroups: ['cabinets','accessories','installation'] },
+  { key: 'general',               ar: 'عام / مخصص',            en: 'General / Custom',         templateCategory: 'general',               taxonomySlug: 'contracting-finishing',   defaultBoqGroups: ['materials','labor','other'] },
 ];
 
 const INDEX: Record<string, WorkTypeMeta> = WORK_TYPES.reduce(
