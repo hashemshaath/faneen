@@ -99,25 +99,23 @@ describe('Phase 1 — legacy mapping edge divergence (documented baseline)', () 
     }
   });
 
-  it('documents known keys missing from the edge copy (Phase 1 baseline)', () => {
+  it('Phase 2A — edge mapping is fully in sync with the source map (no missing keys)', () => {
     const missingInEdge = Object.keys(source)
       .filter((k) => !(k in edge))
       .sort();
-    // Snapshot baseline — surfaces in CI but does not fail unrelated work.
-    expect(missingInEdge).toMatchInlineSnapshot(`
-      [
-        "building-materials",
-        "construction-building",
-        "equipment-rental-provider",
-        "escalators",
-        "networks",
-        "operations",
-        "rental",
-        "securit",
-        "sustainability",
-        "wood-cabinets",
-      ]
-    `);
+    expect(missingInEdge).toEqual([]);
+  });
+
+  it('Phase 2A — every edge mapping output is a canonical primary slug', () => {
+    for (const v of Object.values(edge)) {
+      expect(CANONICAL_PRIMARY_SLUGS).toContain(v as never);
+    }
+  });
+
+  it('Phase 2A — no edge mapping output uses a UI-forbidden legacy slug', () => {
+    for (const v of Object.values(edge)) {
+      expect(UI_FORBIDDEN_PRIMARY_SLUGS).not.toContain(v as never);
+    }
   });
 });
 
