@@ -14,7 +14,6 @@ import {
 } from '@/modules/quotes';
 import { Activity, AlertCircle } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { SECTOR_LABEL_AR } from '@/lib/quoteRequests';
 import { resolveQuoteRequestTaxonomyDisplay } from '@/modules/taxonomy/resolveQuoteRequestTaxonomyDisplay';
 import { buildFollowUpCsvRow, FOLLOW_UP_CSV_HEADERS } from '@/modules/quotes/services/buildFollowUpCsv';
 import {
