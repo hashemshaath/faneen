@@ -260,8 +260,8 @@ describe('Phase 1 — WORK_TYPES inventory', () => {
     for (const w of WORK_TYPES) {
       expect(typeof w.templateCategory).toBe('string');
       expect(w.templateCategory.length).toBeGreaterThan(0);
-      // No `taxonomySlug` mapping yet — owned by Phase 3.
-      expect((w as unknown as Record<string, unknown>).taxonomySlug).toBeUndefined();
+      // Phase 2D added `taxonomySlug` metadata on every WORK_TYPE.
+      expect(typeof (w as unknown as Record<string, unknown>).taxonomySlug).toBe('string');
     }
   });
 });
