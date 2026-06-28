@@ -373,9 +373,20 @@ const AdminQuoteOperations: React.FC = () => {
     const rows = metrics.attention.map((a) => {
       const ageHours = Math.round((Date.now() - new Date(a.quote.created_at).getTime()) / 3600000);
       const last = lastEventByQuote.get(a.quote.id);
+      const taxonomy = resolveQuoteRequestTaxonomyDisplay({
+        taxonomyCategoryId: a.quote.taxonomy_category_id,
+        taxonomyCategorySlug: a.quote.taxonomy_category?.slug ?? null,
+        taxonomyCategoryNameAr: a.quote.taxonomy_category?.name_ar ?? null,
+        taxonomyCategoryNameEn: a.quote.taxonomy_category?.name_en ?? null,
+        sector: a.quote.sector,
+      });
       return {
         quote_ref: a.quote.ref_id ?? `#${a.quote.id.slice(-6)}`,
         sector: SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector,
+        taxonomy_slug: taxonomy.canonicalSlug ?? '',
+        taxonomy_label_ar: taxonomy.labelAr,
+        taxonomy_label_en: taxonomy.labelEn,
+        taxonomy_status: taxonomy.status,
         city: a.quote.city,
         status: QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status,
         reason: a.reason,
@@ -385,7 +396,9 @@ const AdminQuoteOperations: React.FC = () => {
       };
     });
     const headers = [
-      'quote_ref', 'sector', 'city', 'status', 'reason',
+      'quote_ref', 'sector',
+      'taxonomy_slug', 'taxonomy_label_ar', 'taxonomy_label_en', 'taxonomy_status',
+      'city', 'status', 'reason',
       'request_age_hours', 'last_event_type', 'admin_url',
     ];
     downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
