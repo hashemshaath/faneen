@@ -15792,6 +15792,7 @@ export type Database = {
           source: string
           status: string
           target_entity_id: string | null
+          taxonomy_category_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -15834,6 +15835,7 @@ export type Database = {
           source?: string
           status?: string
           target_entity_id?: string | null
+          taxonomy_category_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -15876,6 +15878,7 @@ export type Database = {
           source?: string
           status?: string
           target_entity_id?: string | null
+          taxonomy_category_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -15913,6 +15916,20 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "quote_requests_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
         ]

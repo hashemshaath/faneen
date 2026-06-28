@@ -200,20 +200,41 @@ Deno.serve(async (req) => {
   let taxonomyChildIds = new Set<string>();
   let taxonomyLinksByBiz = new Map<string, { category_id: string; role: string }[]>();
   try {
-    const normalizedSector = String(quote.sector ?? '').trim().toLowerCase();
-    const targetSlug = LEGACY_SECTOR_TO_TAXONOMY_SLUG[normalizedSector] ?? normalizedSector;
-    if (targetSlug) {
+    // Phase 3B — FK-first: if quote_requests.taxonomy_category_id is set, use it
+    // directly. Otherwise fall back to legacy sector → slug mapping.
+    const fkId = (quote as { taxonomy_category_id?: string | null }).taxonomy_category_id ?? null;
+    if (fkId) {
       const { data: catRow } = await admin
         .from('taxonomy_categories')
         .select('id, slug')
-        .eq('slug', targetSlug)
+        .eq('id', fkId)
         .eq('is_active', true)
-        .eq('is_public', true)
         .eq('is_archived', false)
         .maybeSingle();
       if (catRow) {
         taxonomyCategoryId = catRow.id as string;
         taxonomyCategorySlug = catRow.slug as string;
+      }
+    }
+    if (!taxonomyCategoryId) {
+      const normalizedSector = String(quote.sector ?? '').trim().toLowerCase();
+      const targetSlug = LEGACY_SECTOR_TO_TAXONOMY_SLUG[normalizedSector] ?? normalizedSector;
+      if (targetSlug && normalizedSector !== 'other') {
+        const { data: catRow } = await admin
+          .from('taxonomy_categories')
+          .select('id, slug')
+          .eq('slug', targetSlug)
+          .eq('is_active', true)
+          .eq('is_public', true)
+          .eq('is_archived', false)
+          .maybeSingle();
+        if (catRow) {
+          taxonomyCategoryId = catRow.id as string;
+          taxonomyCategorySlug = catRow.slug as string;
+        }
+      }
+    }
+    if (taxonomyCategoryId) {
         const { data: childRows } = await admin
           .from('taxonomy_categories')
           .select('id')
@@ -221,7 +242,6 @@ Deno.serve(async (req) => {
           .eq('is_active', true)
           .eq('is_archived', false);
         for (const r of childRows ?? []) taxonomyChildIds.add(r.id as string);
-      }
     }
     if (providerIds.length && taxonomyCategoryId) {
       const idsToCheck = [taxonomyCategoryId, ...Array.from(taxonomyChildIds)];

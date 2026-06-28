@@ -12,6 +12,63 @@ const SAUDI_PHONE = /^(?:\+?966|0)?5\d{8}$/;
 // Keep `false` while admin review is the default operating mode.
 const AUTO_MATCH_ON_SUBMISSION = true;
 
+// Phase 3B — inline legacy → canonical taxonomy slug map.
+// MUST stay in sync with src/modules/taxonomy/legacy-mapping.ts and
+// src/modules/taxonomy/canonical-primaries.ts. Edge functions cannot import
+// project source.
+const CANONICAL_PRIMARY_SLUGS_EDGE = new Set<string>([
+  'aluminum-works','glass-securit-works','steel-metal-works','stainless-steel-works',
+  'wood-carpentry','kitchens-works','facades-cladding','contracting-finishing',
+  'elevators-maintenance','energy-sustainability','technology-networks',
+  'security-control-systems','equipment-rental',
+]);
+const LEGACY_SECTOR_TO_TAXONOMY_SLUG_EDGE: Record<string, string> = {
+  aluminum: 'aluminum-works', alumnium: 'aluminum-works',
+  aluminum_glass: 'aluminum-works', 'aluminum-glass': 'aluminum-works',
+  'aluminum-glass-facades': 'aluminum-works',
+  glass: 'glass-securit-works', 'glass-securit': 'glass-securit-works', securit: 'glass-securit-works',
+  storefronts: 'facades-cladding', facades: 'facades-cladding', cladding: 'facades-cladding',
+  steel: 'steel-metal-works', iron: 'steel-metal-works', 'iron-steel': 'steel-metal-works',
+  stainless: 'stainless-steel-works', 'stainless-steel': 'stainless-steel-works',
+  stainless_steel: 'stainless-steel-works', 'stainless-steel-fabrication': 'stainless-steel-works',
+  wood: 'wood-carpentry', cabinets: 'wood-carpentry', 'wood-cabinets': 'wood-carpentry',
+  kitchens: 'kitchens-works',
+  fabrication: 'contracting-finishing', 'fabrication-installation': 'contracting-finishing',
+  finishing: 'contracting-finishing', 'project-fitout': 'contracting-finishing',
+  construction: 'contracting-finishing', 'construction-building': 'contracting-finishing',
+  elevators: 'elevators-maintenance', escalators: 'elevators-maintenance',
+  maintenance: 'elevators-maintenance', operations: 'elevators-maintenance',
+  energy: 'energy-sustainability', sustainability: 'energy-sustainability', solar: 'energy-sustainability',
+  technology: 'technology-networks', 'technology-systems': 'technology-networks', networks: 'technology-networks',
+  security: 'security-control-systems', surveillance: 'security-control-systems',
+  equipment: 'equipment-rental', 'heavy-equipment-rental': 'equipment-rental',
+  rental: 'equipment-rental', 'equipment-rental-provider': 'equipment-rental',
+  lifting: 'equipment-rental', scaffolding: 'equipment-rental',
+};
+
+function resolveQuoteSectorTaxonomySlug(
+  sector: string | null | undefined,
+  taxonomyPrimarySlug: string | null | undefined,
+): string | null {
+  const norm = (v: string | null | undefined) => {
+    if (!v) return null;
+    const x = String(v).trim().toLowerCase();
+    return x.length ? x : null;
+  };
+  const primary = norm(taxonomyPrimarySlug);
+  if (primary && primary !== 'other') {
+    if (CANONICAL_PRIMARY_SLUGS_EDGE.has(primary)) return primary;
+    const m = LEGACY_SECTOR_TO_TAXONOMY_SLUG_EDGE[primary];
+    if (m && CANONICAL_PRIMARY_SLUGS_EDGE.has(m)) return m;
+  }
+  const s = norm(sector);
+  if (!s || s === 'other') return null;
+  if (CANONICAL_PRIMARY_SLUGS_EDGE.has(s)) return s;
+  const m = LEGACY_SECTOR_TO_TAXONOMY_SLUG_EDGE[s];
+  if (m && CANONICAL_PRIMARY_SLUGS_EDGE.has(m)) return m;
+  return null;
+}
+
 // Must stay in sync with src/modules/taxonomy/canonical-primaries.ts
 // (the 13 canonical primary slugs the public RFQ form is allowed to submit).
 // Legacy short slugs are kept for back-compat with older clients/links.
@@ -137,6 +194,28 @@ Deno.serve(async (req) => {
 
   const admin = createClient(url, serviceKey);
 
+  // Phase 3B — resolve taxonomy_category_id (best-effort; never blocks submit).
+  let taxonomyCategoryId: string | null = null;
+  try {
+    const metaPrimary =
+      body.metadata && typeof body.metadata === 'object'
+        ? ((body.metadata as Record<string, unknown>)['taxonomy_primary_slug'] as string | undefined)
+        : undefined;
+    const targetSlug = resolveQuoteSectorTaxonomySlug(sector, metaPrimary ?? null);
+    if (targetSlug) {
+      const { data: catRow } = await admin
+        .from('taxonomy_categories')
+        .select('id')
+        .eq('slug', targetSlug)
+        .eq('is_active', true)
+        .eq('is_archived', false)
+        .maybeSingle();
+      taxonomyCategoryId = (catRow?.id as string | undefined) ?? null;
+    }
+  } catch (e) {
+    console.warn('taxonomy resolve failed (non-fatal)', e);
+  }
+
   const insertPayload = {
     user_id: userId,
     customer_name: name,
@@ -161,6 +240,7 @@ Deno.serve(async (req) => {
     preferred_brand_ids: preferredBrandIds,
     brand_preference_mode: brandMode,
     brand_notes: brandNotes,
+    taxonomy_category_id: taxonomyCategoryId,
   };
 
   const { data: inserted, error } = await admin
