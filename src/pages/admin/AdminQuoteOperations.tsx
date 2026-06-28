@@ -14,8 +14,8 @@ import {
 } from '@/modules/quotes';
 import { Activity, AlertCircle } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { QUOTE_STATUS_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus } from '@/lib/quoteRequests';
 import { resolveQuoteRequestTaxonomyDisplay } from '@/modules/taxonomy/resolveQuoteRequestTaxonomyDisplay';
+import { buildFollowUpCsvRow, FOLLOW_UP_CSV_HEADERS } from '@/modules/quotes/services/buildFollowUpCsv';
 import {
   buildDailyQuoteOperationsSeries, rowsToCsv, downloadCsv, DAILY_OPS_CSV_HEADERS,
 } from '@/lib/quoteOperationsAggregation';
@@ -370,24 +370,15 @@ const AdminQuoteOperations: React.FC = () => {
         lastEventByQuote.set(e.quote_request_id, { type: e.event_type, at: e.created_at });
       }
     });
-    const rows = metrics.attention.map((a) => {
-      const ageHours = Math.round((Date.now() - new Date(a.quote.created_at).getTime()) / 3600000);
-      const last = lastEventByQuote.get(a.quote.id);
-      return {
-        quote_ref: a.quote.ref_id ?? `#${a.quote.id.slice(-6)}`,
-        sector: SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector,
-        city: a.quote.city,
-        status: QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status,
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const rows = metrics.attention.map((a) =>
+      buildFollowUpCsvRow(a.quote, {
         reason: a.reason,
-        request_age_hours: ageHours,
-        last_event_type: last?.type ?? '',
-        admin_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/admin/quote-requests/${a.quote.ref_id ?? a.quote.id}`,
-      };
-    });
-    const headers = [
-      'quote_ref', 'sector', 'city', 'status', 'reason',
-      'request_age_hours', 'last_event_type', 'admin_url',
-    ];
+        lastEventType: lastEventByQuote.get(a.quote.id)?.type ?? '',
+        origin,
+      }) as unknown as Record<string, unknown>,
+    );
+    const headers = FOLLOW_UP_CSV_HEADERS as unknown as string[];
     downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
   };
 

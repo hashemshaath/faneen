@@ -79,9 +79,9 @@ describe('Phase 3E — guards: no scope creep', () => {
     expect(src).toMatch(/\.eq\('sector',\s*sector\)/);
   });
 
-  it('CSV follow-up export still uses legacy SECTOR_LABEL_AR (untouched)', () => {
-    const src = read('src/pages/admin/AdminQuoteOperations.tsx');
-    expect(src).toMatch(/sector:\s*SECTOR_LABEL_AR\[a\.quote\.sector\]/);
+  it('CSV follow-up export still emits legacy SECTOR_LABEL_AR via shared builder', () => {
+    const src = read('src/modules/quotes/services/buildFollowUpCsv.ts');
+    expect(src).toMatch(/SECTOR_LABEL_AR\[quote\.sector\]/);
   });
 
   it('aggregation/KPI grouping module unchanged in scope (no taxonomy import)', () => {
