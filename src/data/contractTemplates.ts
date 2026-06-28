@@ -28,6 +28,27 @@ export interface ContractTemplateInfo {
   faq: Array<{ q_ar: string; q_en: string; a_ar: string; a_en: string }>;
   /** SEO quote sector slug consumed by `/quote?sector=` (see resolveQuoteSectorFromUrl). */
   quote_sector: 'aluminum' | 'steel' | 'wood' | 'glass' | 'stainless-steel';
+  /**
+   * TAXONOMY CENTRALIZATION PHASE 2C — canonical primary taxonomy slug
+   * (from `CANONICAL_PRIMARY_SLUGS`). Metadata-only: NOT used for routing,
+   * filtering, SEO, JSON-LD or CTAs. `quote_sector` and `sector_route`
+   * remain the source of truth for legacy behavior. Multi-taxonomy mapping
+   * is deferred — one primary slug per template for now.
+   */
+  taxonomySlug:
+    | 'aluminum-works'
+    | 'glass-securit-works'
+    | 'steel-metal-works'
+    | 'stainless-steel-works'
+    | 'wood-carpentry'
+    | 'kitchens-works'
+    | 'facades-cladding'
+    | 'contracting-finishing'
+    | 'elevators-maintenance'
+    | 'energy-sustainability'
+    | 'technology-networks'
+    | 'security-control-systems'
+    | 'equipment-rental';
 }
 
 const COMMON_FAQ: ContractTemplateInfo['faq'] = [
@@ -78,6 +99,9 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     related: ['facades', 'kitchens'],
     faq: COMMON_FAQ,
     quote_sector: 'aluminum',
+    // aluminum-glass covers both aluminum and glass; aluminum picked as
+    // the primary canonical mapping (multi-taxonomy deferred).
+    taxonomySlug: 'aluminum-works',
   },
   {
     slug: 'steel-metal',
@@ -99,6 +123,7 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     related: ['stainless-railings', 'aluminum-glass'],
     faq: COMMON_FAQ,
     quote_sector: 'steel',
+    taxonomySlug: 'steel-metal-works',
   },
   {
     slug: 'wood-works',
@@ -120,6 +145,7 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     related: ['kitchens', 'aluminum-glass'],
     faq: COMMON_FAQ,
     quote_sector: 'wood',
+    taxonomySlug: 'wood-carpentry',
   },
   {
     slug: 'kitchens',
@@ -141,6 +167,7 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     related: ['wood-works', 'aluminum-glass'],
     faq: COMMON_FAQ,
     quote_sector: 'wood',
+    taxonomySlug: 'kitchens-works',
   },
   {
     slug: 'facades',
@@ -162,6 +189,7 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     related: ['aluminum-glass', 'steel-metal'],
     faq: COMMON_FAQ,
     quote_sector: 'glass',
+    taxonomySlug: 'facades-cladding',
   },
   {
     slug: 'stainless-railings',
@@ -183,5 +211,6 @@ export const CONTRACT_TEMPLATES: ContractTemplateInfo[] = [
     related: ['steel-metal', 'facades'],
     faq: COMMON_FAQ,
     quote_sector: 'stainless-steel',
+    taxonomySlug: 'stainless-steel-works',
   },
 ];
