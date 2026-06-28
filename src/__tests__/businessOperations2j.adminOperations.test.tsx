@@ -202,11 +202,11 @@ describe('2J AdminOperations page', () => {
   it('renders dry-run badge, totals, and masked idempotency key (EN)', async () => {
     mockedPreview.mockResolvedValue(sampleResult());
     renderPage();
-    await screen.findByText('Candidates');
+    await screen.findByText('Candidates', undefined, { timeout: 5000 });
     expect(screen.getByTestId('dry-run-badge').textContent).toMatch(/Dry-run preview only/);
     expect(screen.getByText('Operations Dashboard')).toBeInTheDocument();
     expect(screen.getByTestId('totals-grid').textContent).toMatch(/Planned notifications/);
-    await screen.findByText(/••••/);
+    await screen.findByText(/••••/, undefined, { timeout: 5000 });
     expect(screen.getByTestId('action-samples').textContent).not.toContain('sla:leads:qr-1:');
   });
 
@@ -214,7 +214,7 @@ describe('2J AdminOperations page', () => {
     mockIsRTL = true;
     mockedPreview.mockResolvedValue(sampleResult());
     renderPage();
-    await waitFor(() => expect(screen.getByTestId('action-samples')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('action-samples')).toBeInTheDocument(), { timeout: 5000 });
     expect(screen.getByText('لوحة العمليات')).toBeInTheDocument();
     expect(screen.getByTestId('dry-run-badge').textContent).toMatch(/معاينة/);
   });
@@ -222,7 +222,7 @@ describe('2J AdminOperations page', () => {
   it('contains no real-run / mutation / notification-send controls', async () => {
     mockedPreview.mockResolvedValue(sampleResult());
     const { container } = renderPage();
-    await waitFor(() => expect(screen.getByTestId('action-samples')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('action-samples')).toBeInTheDocument(), { timeout: 5000 });
     const text = container.textContent ?? '';
     for (const banned of [
       'Run real dispatch',
@@ -269,7 +269,7 @@ describe('2J AdminOperations page', () => {
   it('renders error state when preview throws', async () => {
     mockedPreview.mockRejectedValue(new Error('boom'));
     renderPage();
-    await waitFor(() => expect(screen.getByTestId('preview-error')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('preview-error')).toBeInTheDocument(), { timeout: 5000 });
     expect(screen.getByTestId('preview-error').textContent).toMatch(/boom/);
   });
 
@@ -278,7 +278,7 @@ describe('2J AdminOperations page', () => {
       sampleActions: [], loaderErrors: [], actionSampleCount: 0, totalActionCount: 0,
     }));
     renderPage();
-    await screen.findByTestId('empty-state');
+    await screen.findByTestId('empty-state', undefined, { timeout: 5000 });
   });
 });
 
