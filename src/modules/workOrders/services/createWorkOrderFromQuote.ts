@@ -71,7 +71,7 @@ export async function createWorkOrderFromQuote(
   // The nested select fetches the quote request data we need.
   const { data: leadCheck, error: leadErr } = await supabase
     .from("quote_request_leads")
-    .select("provider_id, quote_request:quote_requests(id, ref_id, project_description)")
+    .select("provider_id, quote_request:quote_requests(id, ref_id, project_description, taxonomy_category_id)")
     .eq("quote_request_id", quoteRequestId)
     .eq("provider_id", resolvedBusinessId)
     .maybeSingle();
@@ -81,7 +81,7 @@ export async function createWorkOrderFromQuote(
   }
 
   const qr = (leadCheck as unknown as Record<string, unknown>).quote_request as
-    | { id: string; ref_id: string | null; project_description: string | null }
+    | { id: string; ref_id: string | null; project_description: string | null; taxonomy_category_id: string | null }
     | null;
 
   if (!qr) {
@@ -105,6 +105,7 @@ export async function createWorkOrderFromQuote(
     source_type: "quote",
     source_id: qr.id,
     source_ref_id: sourceRefId,
+    taxonomy_category_id: qr.taxonomy_category_id ?? null,
   });
 
   if (woErr || !wo) return { data: null, error: woErr };
