@@ -24,6 +24,11 @@ export interface CreateWorkOrderInput {
   source_ref_id?: string | null;
   due_at?: string | null;
   seedDefaultStages?: boolean;
+  /**
+   * Optional centralized taxonomy classification (Phase 4E pass-through only).
+   * Wrappers do NOT populate this yet; callers may pass it explicitly.
+   */
+  taxonomy_category_id?: string | null;
 }
 
 const SOURCE_REF_PATTERN = /^[A-Z]{2,6}-[A-Z0-9]+$/;
@@ -53,6 +58,7 @@ export async function createWorkOrder(
     source_ref_id: safeSourceRef(input.source_ref_id),
     due_at: input.due_at ?? null,
     status: "draft",
+    taxonomy_category_id: input.taxonomy_category_id ?? null,
   };
 
   const { data, error } = await supabase
