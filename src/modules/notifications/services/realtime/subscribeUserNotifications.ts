@@ -45,6 +45,16 @@ export function subscribeUserNotifications({
   listeners,
   onStatus,
 }: SubscribeUserNotificationsArgs): () => void {
+  // Guard against stale channels with the same name still attached to the
+  // realtime client (HMR, React StrictMode double-invoke, rapid remounts).
+  // Adding `.on('postgres_changes', …)` to a channel that has already been
+  // `.subscribe()`d throws:
+  //   "cannot add `postgres_changes` callbacks for realtime:<name> after `subscribe()`"
+  for (const existing of supabase.getChannels()) {
+    if (existing.topic === `realtime:${channelName}`) {
+      supabase.removeChannel(existing);
+    }
+  }
   let channel = supabase.channel(channelName);
   for (const { event, onChange } of listeners) {
     channel = channel.on(
