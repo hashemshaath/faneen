@@ -41,6 +41,7 @@ import { ProjectClosureCard } from "@/components/workOrders/ProjectClosureCard";
 import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
 import { workOrderHealth } from "@/modules/health";
 import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
+import { supabase } from "@/integrations/supabase/client";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
@@ -88,6 +89,8 @@ export default function DashboardWorkOrderDetail() {
   const [stages, setStages] = useState<WorkOrderStageRow[]>([]);
   const [tasks, setTasks] = useState<WorkOrderTaskRow[]>([]);
   const [comments, setComments] = useState<WorkOrderCommentRow[]>([]);
+  // Phase 4I — display-only taxonomy label for the operational summary.
+  const [taxonomyLabel, setTaxonomyLabel] = useState<{ ar: string | null; en: string | null } | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -144,6 +147,18 @@ export default function DashboardWorkOrderDetail() {
       setStages(s.data ?? []);
       setTasks(t.data ?? []);
       setComments(c.data ?? []);
+      // Phase 4I — resolve taxonomy label (best-effort; never blocks load).
+      const taxId = (data as { taxonomy_category_id?: string | null }).taxonomy_category_id ?? null;
+      if (taxId) {
+        const { data: tax } = await supabase
+          .from("taxonomy_categories")
+          .select("name_ar, name_en")
+          .eq("id", taxId)
+          .maybeSingle();
+        setTaxonomyLabel(tax ? { ar: tax.name_ar ?? null, en: tax.name_en ?? null } : null);
+      } else {
+        setTaxonomyLabel(null);
+      }
     }
     setLoading(false);
   }, [refId, tx.errLoad]);
@@ -283,7 +298,7 @@ export default function DashboardWorkOrderDetail() {
             </div>
           )}
 
-          <WorkOrderOperationalSummary wo={wo} isRTL={isRTL} />
+          <WorkOrderOperationalSummary wo={wo} isRTL={isRTL} taxonomyLabel={taxonomyLabel} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <section className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-3" aria-label={tx.stages}>
