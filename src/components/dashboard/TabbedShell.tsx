@@ -75,11 +75,18 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
   );
 
   // Memoize lazy components so they aren't re-created on each render.
+  // Key on the tab keys (stable across renders) rather than the `tabs`
+  // array reference itself — call sites that pass an inline array would
+  // otherwise force `lazyRetry()` to rebuild on every render, which
+  // remounts Radix's <TabsContent> children and makes tab clicks feel
+  // unresponsive.
+  const lazyKey = useMemo(() => tabs.map((t) => t.key).join('|'), [tabs]);
   const lazyMap = useMemo(() => {
     const m: Record<string, React.LazyExoticComponent<React.ComponentType<unknown>>> = {};
     for (const t of tabs) m[t.key] = lazyRetry(t.loader);
     return m;
-  }, [tabs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lazyKey]);
 
   const onChange = useCallback(
     (v: string) => {
