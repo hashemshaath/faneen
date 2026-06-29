@@ -1,10 +1,10 @@
-import React, { Suspense, useCallback, useMemo } from 'react';
+import React, { Suspense, useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { EmbeddedPageContext } from '@/contexts/AdminTabsContext';
+import { EmbeddedPageContext, useEmbeddedPage } from '@/contexts/AdminTabsContext';
 import { lazyRetry } from '@/lib/lazyRetry';
 import { Loader2, type LucideIcon } from 'lucide-react';
 import { PageHeader } from '@/components/shared';
@@ -53,12 +53,18 @@ const PanelFallback: React.FC = () => (
 const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, description, tabs, noIndex }) => {
   if (noIndex) useNoIndex(); // eslint-disable-line react-hooks/rules-of-hooks
   const { isRTL } = useLanguage();
+  // When nested inside another TabbedShell, fall back to local state so
+  // inner tab clicks don't overwrite the outer `?tab=` and unmount us.
+  const nested = useEmbeddedPage();
   const [params, setParams] = useSearchParams();
 
   const validKeys = useMemo(() => tabs.map((t) => t.key), [tabs]);
   const defaultKey = validKeys[0];
-  const raw = params.get('tab');
-  const active = raw && validKeys.includes(raw) ? raw : defaultKey;
+  const [localActive, setLocalActive] = useState<string>(defaultKey);
+  const raw = nested ? null : params.get('tab');
+  const active = nested
+    ? (validKeys.includes(localActive) ? localActive : defaultKey)
+    : (raw && validKeys.includes(raw) ? raw : defaultKey);
 
   // Localized title/subtitle — memoized so PageHeader (React.memo) skips
   // re-rendering on unrelated parent updates (e.g. tab switches).
@@ -77,12 +83,16 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
 
   const onChange = useCallback(
     (v: string) => {
+      if (nested) {
+        setLocalActive(v);
+        return;
+      }
       const next = new URLSearchParams(params);
       if (v === defaultKey) next.delete('tab');
       else next.set('tab', v);
       setParams(next, { replace: true });
     },
-    [params, defaultKey, setParams],
+    [params, defaultKey, setParams, nested],
   );
 
   return (
