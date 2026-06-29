@@ -50,10 +50,18 @@ export function subscribeUserNotifications({
   // Adding `.on('postgres_changes', …)` to a channel that has already been
   // `.subscribe()`d throws:
   //   "cannot add `postgres_changes` callbacks for realtime:<name> after `subscribe()`"
-  for (const existing of supabase.getChannels()) {
-    if (existing.topic === `realtime:${channelName}`) {
-      supabase.removeChannel(existing);
+  try {
+    const existingChannels =
+      typeof (supabase as { getChannels?: () => unknown[] }).getChannels === 'function'
+        ? (supabase as { getChannels: () => Array<{ topic?: string }> }).getChannels()
+        : [];
+    for (const existing of existingChannels) {
+      if (existing?.topic === `realtime:${channelName}`) {
+        supabase.removeChannel(existing as Parameters<typeof supabase.removeChannel>[0]);
+      }
     }
+  } catch {
+    // ignore — best-effort cleanup
   }
   let channel = supabase.channel(channelName);
   for (const { event, onChange } of listeners) {
