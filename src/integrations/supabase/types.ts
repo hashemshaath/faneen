@@ -19572,6 +19572,7 @@ export type Database = {
           source_ref_id: string | null
           source_type: string | null
           status: string
+          taxonomy_category_id: string | null
           title: string
           updated_at: string
         }
@@ -19594,6 +19595,7 @@ export type Database = {
           source_ref_id?: string | null
           source_type?: string | null
           status?: string
+          taxonomy_category_id?: string | null
           title: string
           updated_at?: string
         }
@@ -19616,10 +19618,26 @@ export type Database = {
           source_ref_id?: string | null
           source_type?: string | null
           status?: string
+          taxonomy_category_id?: string | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "work_orders_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
