@@ -35,11 +35,13 @@ export const ContentSubTabs: React.FC<ContentSubTabsProps> = ({ tabs }) => {
   const { isRTL } = useLanguage();
   const [active, setActive] = useState<string>(tabs[0]?.key ?? '');
 
+  const lazyKey = React.useMemo(() => tabs.map((t) => t.key).join('|'), [tabs]);
   const lazyMap = React.useMemo(() => {
     const m: Record<string, React.LazyExoticComponent<React.ComponentType<unknown>>> = {};
     for (const t of tabs) m[t.key] = lazyRetry(t.loader);
     return m;
-  }, [tabs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lazyKey]);
 
   return (
     <Tabs value={active} onValueChange={setActive} className="space-y-3">
