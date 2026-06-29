@@ -46,8 +46,8 @@ describe('Phase 4F — createWorkOrderFromQuote inherits taxonomy_category_id', 
 });
 
 describe('Phase 4F — other wrappers untouched', () => {
-  it('7. createWorkOrderFromContract still does not pass taxonomy', () => {
-    expect(FROM_CONTRACT).not.toMatch(/taxonomy_category_id/);
+  it('7. createWorkOrderFromContract now inherits taxonomy (Phase 4H)', () => {
+    expect(FROM_CONTRACT).toMatch(/taxonomy_category_id/);
   });
   it('8. createWorkOrderFromLead still does not pass taxonomy', () => {
     expect(FROM_LEAD).not.toMatch(/taxonomy_category_id/);

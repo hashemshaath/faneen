@@ -1,8 +1,13 @@
 import { getContractById } from "@/modules/contracts/services/reads/getContractById";
 import { getCurrentUser } from "@/modules/identity/services/session/getCurrentUser";
+import { supabase } from "@/integrations/supabase/client";
 import { createWorkOrder } from "./createWorkOrder";
 import { recordWorkOrderAudit } from "./recordWorkOrderAudit";
 import { recordBusinessSourceAudit } from "@/modules/businesses/notes";
+import {
+  resolveContractWorkOrderTaxonomy,
+  type ContractTaxonomyJunctionRow,
+} from "./resolveContractWorkOrderTaxonomy";
 import type { WorkOrderRow, WorkOrderPriority } from "../types";
 
 export interface CreateWorkOrderFromContractInput {
@@ -43,9 +48,10 @@ export async function createWorkOrderFromContract(
     title_ar: string | null;
     title_en: string | null;
     status: string | null;
+    service_category_id: string | null;
   }>({
     id: contractId,
-    select: "id, business_id, contract_number, title_ar, title_en, status",
+    select: "id, business_id, contract_number, title_ar, title_en, status, service_category_id",
   });
   if (contractErr || !contract) {
     return { data: null, error: contractErr ?? new Error("contract_not_found") };
@@ -90,6 +96,23 @@ export async function createWorkOrderFromContract(
   const rawRef = (contract.contract_number ?? "").trim().toUpperCase();
   const sourceRefId = SAFE_REF.test(rawRef) ? rawRef : null;
 
+  // Phase 4H — Inherit taxonomy from contract (junction primary > single > service_category_id).
+  // Best-effort read; failure here must never block work order creation.
+  let junctionRows: ContractTaxonomyJunctionRow[] = [];
+  try {
+    const { data: rows } = await supabase
+      .from("contract_taxonomy_categories")
+      .select("category_id, is_primary")
+      .eq("contract_id", contract.id);
+    junctionRows = (rows ?? []) as ContractTaxonomyJunctionRow[];
+  } catch {
+    junctionRows = [];
+  }
+  const { taxonomy_category_id: resolvedTaxonomyId } = resolveContractWorkOrderTaxonomy({
+    junctionRows,
+    serviceCategoryId: contract.service_category_id ?? null,
+  });
+
   const defaultTitle =
     (input.title ?? "").trim() ||
     (contract.title_ar || contract.title_en || contract.contract_number || "Work order").toString();
@@ -103,6 +126,7 @@ export async function createWorkOrderFromContract(
     source_type: "contract",
     source_id: contract.id,
     source_ref_id: sourceRefId,
+    taxonomy_category_id: resolvedTaxonomyId ?? null,
   });
   if (woErr || !wo) return { data: null, error: woErr };
 

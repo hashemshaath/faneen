@@ -39,8 +39,8 @@ describe('Phase 4E — wrappers do NOT auto-populate taxonomy yet', () => {
   it('5. createWorkOrderFromQuote passes taxonomy_category_id (Phase 4F)', () => {
     expect(FROM_QUOTE).toMatch(/taxonomy_category_id/);
   });
-  it('6. createWorkOrderFromContract does not pass taxonomy_category_id', () => {
-    expect(FROM_CONTRACT).not.toMatch(/taxonomy_category_id/);
+  it('6. createWorkOrderFromContract now passes taxonomy_category_id (Phase 4H)', () => {
+    expect(FROM_CONTRACT).toMatch(/taxonomy_category_id/);
   });
   it('7. createWorkOrderFromLead does not pass taxonomy_category_id', () => {
     expect(FROM_LEAD).not.toMatch(/taxonomy_category_id/);
