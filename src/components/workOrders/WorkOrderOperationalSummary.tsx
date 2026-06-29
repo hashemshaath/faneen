@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Hash, FileText, User, Briefcase, MapPin, ClipboardList, Calendar, RefreshCw, ArrowLeftCircle } from "lucide-react";
+import { Hash, FileText, User, Briefcase, MapPin, ClipboardList, Calendar, RefreshCw, ArrowLeftCircle, Tag } from "lucide-react";
 import type { WorkOrderRow } from "@/modules/workOrders";
 
 /**
@@ -13,9 +13,15 @@ import type { WorkOrderRow } from "@/modules/workOrders";
 interface Props {
   wo: WorkOrderRow;
   isRTL: boolean;
+  /**
+   * Phase 4I — optional taxonomy label resolved from
+   * `taxonomy_categories(name_ar,name_en)` by the page-level loader.
+   * The component never queries Supabase itself.
+   */
+  taxonomyLabel?: { ar: string | null; en: string | null } | null;
 }
 
-export function WorkOrderOperationalSummary({ wo, isRTL }: Props) {
+export function WorkOrderOperationalSummary({ wo, isRTL, taxonomyLabel }: Props) {
   const t = (ar: string, en: string) => (isRTL ? ar : en);
 
   const fmt = (iso: string | null): string => {
@@ -28,6 +34,14 @@ export function WorkOrderOperationalSummary({ wo, isRTL }: Props) {
   };
 
   const contractRef = wo.source_type === "contract" ? wo.source_ref_id : null;
+
+  // Phase 4I — display-only taxonomy resolution. Never mutates DB.
+  const hasTaxonomyFk = !!(wo as { taxonomy_category_id?: string | null }).taxonomy_category_id;
+  const resolvedTaxonomyLabel = hasTaxonomyFk
+    ? (isRTL ? taxonomyLabel?.ar : taxonomyLabel?.en) ||
+      (isRTL ? taxonomyLabel?.en : taxonomyLabel?.ar) ||
+      t("مصنف", "Classified")
+    : t("غير مصنف", "Unclassified");
 
   const rows: Array<{ icon: typeof Hash; label: string; value: React.ReactNode }> = [
     { icon: Hash, label: t("رقم أمر العمل", "Work Order #"), value: <span className="tech-content">{wo.ref_id}</span> },
@@ -44,6 +58,19 @@ export function WorkOrderOperationalSummary({ wo, isRTL }: Props) {
     { icon: Briefcase, label: t("مزود الخدمة", "Provider"), value: <span className="tech-content">{wo.business_id ?? "—"}</span> },
     { icon: MapPin, label: t("الموقع", "Site"), value: "—" },
     { icon: ClipboardList, label: t("نطاق العمل", "Scope of work"), value: <span dir="auto">{wo.title || "—"}</span> },
+    {
+      icon: Tag,
+      label: t("التصنيف", "Taxonomy"),
+      value: (
+        <span
+          data-testid="work-order-taxonomy-label"
+          data-taxonomy-state={hasTaxonomyFk ? "classified" : "unclassified"}
+          dir="auto"
+        >
+          {resolvedTaxonomyLabel}
+        </span>
+      ),
+    },
     { icon: Calendar, label: t("تاريخ الإنشاء", "Created at"), value: <span className="tech-content">{fmt(wo.created_at)}</span> },
     { icon: RefreshCw, label: t("آخر تحديث", "Last update"), value: <span className="tech-content">{fmt(wo.updated_at)}</span> },
   ];
