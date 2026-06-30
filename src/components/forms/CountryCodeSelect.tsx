@@ -49,59 +49,79 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
           aria-label={isRTL ? 'مفتاح الدولة' : 'Country code'}
           aria-expanded={open}
           className={cn(
-            'inline-flex items-center gap-1.5 h-10 min-w-[110px] rounded-xl border border-input bg-background px-3 text-sm tech-content',
-            'focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50',
+            'inline-flex items-center gap-2 h-11 min-w-[120px] rounded-xl border border-input bg-background ps-3 pe-2.5 text-sm tech-content',
+            'transition-colors hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring disabled:opacity-50 disabled:cursor-not-allowed',
             error && 'border-destructive focus-visible:ring-destructive',
             className,
           )}
           dir="ltr"
         >
-          <span className="text-base leading-none">{selected.flag}</span>
-          <span className="font-medium">{selected.code}</span>
-          <ChevronDown className="ms-auto w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-lg leading-none">{selected.flag}</span>
+          <span className="font-semibold tracking-tight">{selected.code}</span>
+          <ChevronDown
+            className={cn(
+              'ms-auto w-4 h-4 text-muted-foreground transition-transform duration-200',
+              open && 'rotate-180 text-foreground',
+            )}
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="p-0 w-[280px]"
+        sideOffset={6}
+        className="p-0 w-[300px] overflow-hidden rounded-xl border border-border/80 shadow-lg"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        <div className="flex items-center gap-2 border-b px-3 py-2">
-          <Search className="w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center gap-2 border-b bg-muted/30 px-3.5 py-2.5">
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={isRTL ? 'ابحث عن دولة...' : 'Search country...'}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="flex-1 bg-transparent text-sm leading-none outline-none placeholder:text-muted-foreground"
           />
         </div>
-        <ul className="max-h-64 overflow-y-auto py-1" role="listbox">
+        <ul className="max-h-72 overflow-y-auto py-1.5" role="listbox">
           {filtered.length === 0 && (
-            <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+            <li className="px-3 py-8 text-center text-sm text-muted-foreground">
               {isRTL ? 'لا توجد نتائج' : 'No results'}
             </li>
           )}
           {filtered.map((c) => {
             const isSelected = c.code === value;
             return (
-              <li key={c.code}>
+              <li key={c.code} className="px-1.5">
                 <button
                   type="button"
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => { onChange(c.code); setOpen(false); setQuery(''); }}
                   className={cn(
-                    'flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors',
-                    isSelected && 'bg-primary/10 text-primary font-medium',
+                    'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors',
+                    'hover:bg-accent focus-visible:bg-accent focus:outline-none',
+                    isSelected && 'bg-primary/10 text-primary hover:bg-primary/15',
                   )}
                 >
-                  <span className="text-base leading-none">{c.flag}</span>
-                  <span className="flex-1 text-start truncate">
+                  <span className="text-lg leading-none shrink-0">{c.flag}</span>
+                  <span className={cn('flex-1 text-start truncate', isSelected && 'font-semibold')}>
                     {isRTL ? c.short_ar : c.name_en}
                   </span>
-                  <span className={cn('tech-content', isSelected ? 'text-primary' : 'text-muted-foreground')} dir="ltr">{c.code}</span>
-                  {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
+                  <span
+                    className={cn(
+                      'tech-content text-xs tabular-nums',
+                      isSelected ? 'text-primary font-semibold' : 'text-muted-foreground',
+                    )}
+                    dir="ltr"
+                  >
+                    {c.code}
+                  </span>
+                  <Check
+                    className={cn(
+                      'w-4 h-4 shrink-0 transition-opacity',
+                      isSelected ? 'opacity-100 text-primary' : 'opacity-0',
+                    )}
+                  />
                 </button>
               </li>
             );
