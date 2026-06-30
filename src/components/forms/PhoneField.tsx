@@ -138,7 +138,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
             aria-label={ariaLabel ?? labelText}
             dir="ltr"
             className={cn(
-              'h-10 ps-9 rounded-xl tech-content',
+              'h-11 ps-9 rounded-xl tech-content',
               error && 'border-destructive focus-visible:ring-destructive',
             )}
           />
