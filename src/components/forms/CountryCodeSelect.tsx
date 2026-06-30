@@ -92,15 +92,15 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
                   onClick={() => { onChange(c.code); setOpen(false); setQuery(''); }}
                   className={cn(
                     'flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors',
-                    isSelected && 'bg-accent/60 text-accent-foreground',
+                    isSelected && 'bg-primary/10 text-primary font-medium',
                   )}
                 >
                   <span className="text-base leading-none">{c.flag}</span>
                   <span className="flex-1 text-start truncate">
                     {isRTL ? c.name_ar : c.name_en}
                   </span>
-                  <span className="text-muted-foreground tech-content" dir="ltr">{c.code}</span>
-                  {isSelected && <Check className="w-4 h-4 text-primary" />}
+                  <span className={cn('tech-content', isSelected ? 'text-primary' : 'text-muted-foreground')} dir="ltr">{c.code}</span>
+                  {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
                 </button>
               </li>
             );
