@@ -35,6 +35,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
     return countryCodes.filter(c =>
       c.code.toLowerCase().includes(q) ||
       c.name_ar.toLowerCase().includes(q) ||
+      c.short_ar.toLowerCase().includes(q) ||
       c.name_en.toLowerCase().includes(q),
     );
   }, [query]);
@@ -97,7 +98,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
                 >
                   <span className="text-base leading-none">{c.flag}</span>
                   <span className="flex-1 text-start truncate">
-                    {isRTL ? c.name_ar : c.name_en}
+                    {isRTL ? c.short_ar : c.name_en}
                   </span>
                   <span className={cn('tech-content', isSelected ? 'text-primary' : 'text-muted-foreground')} dir="ltr">{c.code}</span>
                   {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
