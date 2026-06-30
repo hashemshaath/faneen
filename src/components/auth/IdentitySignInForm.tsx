@@ -20,7 +20,6 @@ import { AuthTrustStrip } from './AuthTrustStrip';
 import { trackLoginSuccess, trackLoginFailed, categorizeReason, track } from '@/lib/analytics-events';
 
 type Method = 'phone' | 'email';
-type EmailMode = 'password' | 'otp';
 
 interface Props {
   onForgotPassword: () => void;
@@ -32,7 +31,6 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
   const { isRTL, t } = useLanguage();
 
   const [method, setMethod] = useState<Method>('phone');
-  const [emailMode, setEmailMode] = useState<EmailMode>('password');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState('+966');
