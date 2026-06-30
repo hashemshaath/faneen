@@ -117,14 +117,27 @@ Deno.serve(async (req) => {
       return respond({ success: false, error: 'rate_limited', message: 'طلبات كثيرة، حاول لاحقاً' })
     }
 
+    let userId: string | null = null
     const { data: profile } = await adminClient
       .from('profiles')
       .select('user_id')
-      .or(`email.eq.${email},login_email.eq.${email}`)
+      .ilike('email', email)
       .limit(1)
       .maybeSingle()
 
-    if (!profile?.user_id) {
+    userId = profile?.user_id ?? null
+
+    if (!userId) {
+      const { data: authUserId, error: resolveError } = await adminClient.rpc('resolve_auth_user_id_by_email', {
+        _email: email,
+      })
+      if (resolveError) {
+        console.error('Failed to resolve auth user by email:', resolveError)
+      }
+      userId = authUserId ?? null
+    }
+
+    if (!userId) {
       await logSecurityEvent(adminClient, {
         event_type: 'email_login_otp_send',
         event_action: 'failed',
@@ -142,12 +155,12 @@ Deno.serve(async (req) => {
     }
 
     const otp = generateSecureOtp()
-    const otpHash = await hashOtp(otp, profile.user_id)
+    const otpHash = await hashOtp(otp, userId)
 
-    await adminClient.from('email_login_otps').delete().eq('user_id', profile.user_id)
+    await adminClient.from('email_login_otps').delete().eq('user_id', userId)
 
     const { error: insertError } = await adminClient.from('email_login_otps').insert({
-      user_id: profile.user_id,
+      user_id: userId,
       email,
       otp_code_hash: otpHash,
       expires_at: new Date(Date.now() + OTP_LIFETIME_MS).toISOString(),
@@ -181,7 +194,7 @@ Deno.serve(async (req) => {
         text,
         headers: {
           'X-Entity-Ref-ID': messageId,
-          'X-Idempotency-Key': `email-login-otp-${profile.user_id}-${Date.now()}`,
+          'X-Idempotency-Key': `email-login-otp-${userId}-${Date.now()}`,
         },
         tags: [{ name: 'template', value: 'email_login_otp' }],
       }),
@@ -200,7 +213,7 @@ Deno.serve(async (req) => {
         event_type: 'email_login_otp_send',
         event_action: 'failed',
         status: 'error',
-        user_id: profile.user_id,
+        user_id: userId,
         subject_hash: subjectHash,
         ip_hash: ipHash,
         reason: 'email_delivery_failed',
@@ -223,7 +236,7 @@ Deno.serve(async (req) => {
     await logSecurityEvent(adminClient, {
       event_type: 'email_login_otp_send',
       event_action: 'success',
-      user_id: profile.user_id,
+      user_id: userId,
       subject_hash: subjectHash,
       ip_hash: ipHash,
       user_agent: userAgent,
