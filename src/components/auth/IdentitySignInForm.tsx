@@ -36,7 +36,7 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
   const [countryCode, setCountryCode] = useState('+966');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [stage, setStage] = useState<'identity' | 'otp'>('identity');
+  const [stage, setStage] = useState<'identity' | 'otp' | 'email-otp'>('identity');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -65,6 +65,28 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
       toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
     },
   });
+
+  const emailOtp = useOtpFlow({
+    isRTL,
+    onSendOtp: () => authService.sendEmailLoginOtp(email.trim()),
+    onVerifyOtp: async (code) => {
+      await authService.verifyEmailLoginOtp(email.trim(), code);
+      try { trackLoginSuccess({ method: 'otp' }); } catch { /* never break login */ }
+      toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
+    },
+  });
+
+  const handleSendEmailOtp = async () => {
+    resetServerError();
+    if (!validateEmailField(email.trim())) return;
+    const result = await emailOtp.sendOtp();
+    if (result.ok) {
+      setStage('email-otp');
+      toast.success(isRTL ? 'تم إرسال الرمز إلى بريدك' : 'Code sent to your email');
+    } else {
+      toast.error(result.error || (isRTL ? 'تعذر إرسال الرمز' : 'Failed to send code'));
+    }
+  };
 
   const resetServerError = () => { setServerError(''); setServerErrorRaw(''); };
 
@@ -133,6 +155,23 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
           isRTL={isRTL} error={otp.error}
           channel="phone"
           target={`${countryCode} ${phone}`}
+        />
+      </div>
+    );
+  }
+
+  if (stage === 'email-otp') {
+    return (
+      <div className="space-y-7">
+        <OtpInput
+          otpCode={emailOtp.otpCode} onCodeChange={emailOtp.setCode} demoOtp={emailOtp.demoOtp}
+          cooldown={emailOtp.cooldown} loading={emailOtp.loading}
+          onVerify={async () => { const ok = await emailOtp.verifyOtp(); if (!ok && emailOtp.error) toast.error(emailOtp.error); }}
+          onResend={async () => { const r = await emailOtp.sendOtp(); if (r.ok) toast.success(isRTL ? 'تم الإرسال' : 'Resent'); }}
+          onBack={() => { emailOtp.resetOtp(); setStage('identity'); }}
+          isRTL={isRTL} error={emailOtp.error}
+          channel="email"
+          target={email.trim()}
         />
       </div>
     );
@@ -301,6 +340,26 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {isRTL ? 'تسجيل الدخول' : 'Sign in'}
+          </Button>
+
+          <div className="relative flex items-center gap-3 py-1">
+            <div className="flex-1 h-px bg-border/60" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">
+              {isRTL ? 'أو' : 'OR'}
+            </span>
+            <div className="flex-1 h-px bg-border/60" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSendEmailOtp}
+            disabled={!email || emailOtp.loading}
+            className="w-full h-12 rounded-xl text-sm font-semibold"
+          >
+            {emailOtp.loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+            <Mail className="w-4 h-4 me-2" />
+            {isRTL ? 'تسجيل الدخول برمز تحقق إلى البريد' : 'Sign in with email code'}
           </Button>
         </div>
       )}
