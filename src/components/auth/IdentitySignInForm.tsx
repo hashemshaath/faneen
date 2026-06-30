@@ -124,17 +124,6 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
   if (stage === 'otp') {
     return (
       <div className="space-y-7">
-        <div className="space-y-2">
-          <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">
-            {isRTL ? 'أدخل رمز التحقق' : 'Enter verification code'}
-          </h2>
-          <p className="text-sm text-muted-foreground/80">
-            {isRTL ? 'أرسلنا رمزاً مكوّناً من 6 أرقام إلى ' : 'We sent a 6-digit code to '}
-            <span className="font-mono tech-content text-foreground">
-              {countryCode}{phone}
-            </span>
-          </p>
-        </div>
         <OtpInput
           otpCode={otp.otpCode} onCodeChange={otp.setCode} demoOtp={otp.demoOtp}
           cooldown={otp.cooldown} loading={otp.loading}
@@ -142,6 +131,8 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
           onResend={async () => { const r = await otp.sendOtp(); if (r.ok) toast.success(isRTL ? 'تم الإرسال' : 'Resent'); }}
           onBack={() => { otp.resetOtp(); setStage('identity'); }}
           isRTL={isRTL} error={otp.error}
+          channel="phone"
+          target={`${countryCode} ${phone}`}
         />
       </div>
     );
