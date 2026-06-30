@@ -72,8 +72,7 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
     isRTL,
     onSendOtp: () => authService.sendEmailLoginOtp(email.trim()),
     onVerifyOtp: async (code) => {
-      const { error } = await authService.verifyEmailLoginOtp(email.trim(), code);
-      if (error) throw new Error(error.message || (isRTL ? 'تعذر التحقق' : 'Verification failed'));
+      await authService.verifyEmailLoginOtp(email.trim(), code);
       try { trackLoginSuccess({ method: 'otp' }); } catch { /* never break login */ }
       toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
     },
