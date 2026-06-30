@@ -343,6 +343,26 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {isRTL ? 'تسجيل الدخول' : 'Sign in'}
           </Button>
+
+          <div className="relative flex items-center gap-3 py-1">
+            <div className="flex-1 h-px bg-border/60" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">
+              {isRTL ? 'أو' : 'OR'}
+            </span>
+            <div className="flex-1 h-px bg-border/60" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSendEmailOtp}
+            disabled={!email || emailOtp.loading}
+            className="w-full h-12 rounded-xl text-sm font-semibold"
+          >
+            {emailOtp.loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+            <Mail className="w-4 h-4 me-2" />
+            {isRTL ? 'تسجيل الدخول برمز تحقق إلى البريد' : 'Sign in with email code'}
+          </Button>
         </div>
       )}
 
