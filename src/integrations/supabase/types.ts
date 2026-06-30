@@ -23329,6 +23329,10 @@ export type Database = {
         Returns: Json
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
+      resolve_auth_user_id_by_email: {
+        Args: { _email: string }
+        Returns: string
+      }
       resolve_barcode: { Args: { _code: string }; Returns: Json }
       resolve_site_section_visibility: {
         Args: {
