@@ -73,6 +73,29 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     },
   });
 
+  // Email OTP flow — passwordless login via emailed 6-digit code.
+  const [emailOtpMode, setEmailOtpMode] = useState(false);
+  const emailOtp = useOtpFlow({
+    isRTL,
+    onSendOtp: () => authService.sendEmailLoginOtp(email),
+    onVerifyOtp: async (code) => {
+      await authService.verifyEmailLoginOtp(email, code);
+      try { trackLoginSuccess({ method: 'otp' }); } catch { /* analytics never breaks login */ }
+      toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
+    },
+  });
+
+  const handleEmailOtpSend = async () => {
+    if (!email || !validateEmailField(email)) return;
+    const r = await emailOtp.sendOtp();
+    if (r.ok) toast.success(isRTL ? 'تم إرسال رمز التحقق إلى بريدك' : 'Verification code sent to your email');
+    else if (r.error) toast.error(r.error);
+  };
+  const handleEmailOtpVerify = async () => {
+    const ok = await emailOtp.verifyOtp();
+    if (!ok && emailOtp.error) toast.error(emailOtp.error);
+  };
+
   const handleEmailLogin = async () => {
     setLoginError('');
     setLoginErrorRaw('');
@@ -230,6 +253,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
 
       {loginMethod === 'email' && (
         <div className="space-y-4 animate-fade-in">
+          {emailOtpMode && emailOtp.otpStep ? (
+            <OtpInput
+              otpCode={emailOtp.otpCode} onCodeChange={emailOtp.setCode} demoOtp={emailOtp.demoOtp}
+              cooldown={emailOtp.cooldown} loading={emailOtp.loading}
+              onVerify={handleEmailOtpVerify} onResend={handleEmailOtpSend}
+              onBack={() => { emailOtp.resetOtp(); setEmailOtpMode(false); }}
+              isRTL={isRTL} error={emailOtp.error}
+              channel="email" target={email}
+            />
+          ) : (
+          <>
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{t('auth.email')}</Label>
             <div className="relative">
@@ -246,6 +280,29 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             </div>
             <FieldError message={errors.email} />
           </div>
+          {emailOtpMode ? (
+            <>
+              <Button
+                onClick={handleEmailOtpSend}
+                disabled={emailOtp.loading || !!errors.email || !email}
+                className="w-full h-12 rounded-xl text-sm font-semibold"
+                variant="hero"
+              >
+                {emailOtp.loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+                {isRTL ? 'إرسال رمز التحقق إلى البريد' : 'Send code to email'}
+              </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setEmailOtpMode(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground font-medium"
+                >
+                  {isRTL ? '← الدخول بكلمة المرور' : '← Sign in with password'}
+                </button>
+              </div>
+            </>
+          ) : (
+          <>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold">{t('auth.password')}</Label>
@@ -326,6 +383,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {loading ? t('common.loading') : t('auth.login')}
           </Button>
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setEmailOtpMode(true)}
+              className="text-xs text-accent hover:underline font-medium"
+            >
+              {isRTL ? 'تسجيل الدخول برمز تحقق إلى البريد بدلاً من كلمة المرور' : 'Sign in with an email code instead of password'}
+            </button>
+          </div>
+          </>
+          )}
+          </>
+          )}
         </div>
       )}
 
