@@ -223,6 +223,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
           otpCode={otp.otpCode} onCodeChange={otp.setCode} demoOtp={otp.demoOtp}
           cooldown={otp.cooldown} loading={otp.loading} onVerify={handlePhoneVerify}
           onResend={handlePhoneSend} onBack={otp.resetOtp} isRTL={isRTL} error={otp.error}
+          channel="phone"
+          target={`${countryCode} ${phone}`}
         />
       )}
 
