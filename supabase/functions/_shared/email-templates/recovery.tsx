@@ -6,16 +6,26 @@ interface RecoveryEmailProps {
   siteName: string
   siteUrl?: string
   confirmationUrl: string
+  token?: string
 }
 
-export const RecoveryEmail = ({ confirmationUrl }: RecoveryEmailProps) => (
+export const RecoveryEmail = ({ confirmationUrl, token }: RecoveryEmailProps) => (
   <BilingualEmail
     preview="إعادة تعيين كلمة المرور · Reset your password"
     badge={{ textAr: 'إعادة تعيين', textEn: 'Password reset', tone: 'warning' }}
     titleAr="إعادة تعيين كلمة المرور"
     titleEn="Reset your password"
-    introAr="تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في قِطاعات. اضغط على الزر أدناه لاختيار كلمة مرور جديدة."
-    introEn="We received a request to reset the password for your Qitaat account. Click the button below to choose a new password."
+    introAr="استخدم رمز التحقق أدناه لإكمال العملية، أو اضغط على الزر لاختيار كلمة مرور جديدة."
+    introEn="Use the verification code below to complete the process, or click the button to choose a new password."
+    highlight={token ? {
+      labelAr: 'رمز التحقق',
+      labelEn: 'Verification code',
+      content: (
+        <div style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '0.5em', textAlign: 'center', fontFamily: 'monospace' }}>
+          {token}
+        </div>
+      ),
+    } : undefined}
     cta={{
       href: confirmationUrl,
       labelAr: 'إعادة تعيين كلمة المرور',
