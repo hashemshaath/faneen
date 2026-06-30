@@ -131,6 +131,38 @@ export const authService = {
     return data as OtpResponse;
   },
 
+  // ─── Email OTP (Login) ───────────────────────────────
+  async sendEmailLoginOtp(email: string): Promise<OtpResponse> {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) throw new Error('Email required');
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: { shouldCreateUser: false },
+    });
+    if (error) {
+      const msg = error.message || '';
+      // Surface as soft error so the UI shows a friendly message.
+      if (/not\s*found|not\s*allowed|signups not allowed/i.test(msg)) {
+        return { success: false, error: 'no_account', message: msg } as OtpResponse;
+      }
+      throw error;
+    }
+    return { success: true } as OtpResponse;
+  },
+
+  async verifyEmailLoginOtp(email: string, otpCode: string) {
+    const trimmed = email.trim().toLowerCase();
+    if (!/^\d{6}$/.test(otpCode)) throw new Error('OTP must be 6 digits');
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: trimmed,
+      token: otpCode,
+      type: 'email',
+    });
+    if (error) throw error;
+    return data;
+  },
+
+
   async verifyLoginOtp(phone: string, countryCode: string, otpCode: string): Promise<OtpVerifyResponse> {
     const cleanPhone = phone.replace(/\D/g, '').replace(/^0+/, '');
     if (!/^\d{6}$/.test(otpCode)) throw new Error('OTP must be 6 digits');
