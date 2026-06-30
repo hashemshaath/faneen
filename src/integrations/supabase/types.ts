@@ -9054,6 +9054,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_login_otps: {
+        Row: {
+          attempts: number
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          otp_code_hash: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          otp_code_hash: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          otp_code_hash?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           clicks_count: number
@@ -23296,6 +23329,10 @@ export type Database = {
         Returns: Json
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
+      resolve_auth_user_id_by_email: {
+        Args: { _email: string }
+        Returns: string
+      }
       resolve_barcode: { Args: { _code: string }; Returns: Json }
       resolve_site_section_visibility: {
         Args: {

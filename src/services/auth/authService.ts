@@ -135,31 +135,57 @@ export const authService = {
   async sendEmailLoginOtp(email: string): Promise<OtpResponse> {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) throw new Error('Email required');
-    const { error } = await supabase.auth.signInWithOtp({
-      email: trimmed,
-      options: { shouldCreateUser: false },
+
+    const { data, error } = await supabase.functions.invoke('send-email-login-otp', {
+      body: { email: trimmed },
     });
-    if (error) {
-      const msg = error.message || '';
-      // Surface as soft error so the UI shows a friendly message.
-      if (/not\s*found|not\s*allowed|signups not allowed/i.test(msg)) {
-        return { success: false, error: 'no_account', message: msg } as OtpResponse;
-      }
-      throw error;
+    if (error) throw error;
+
+    const response = data as OtpResponse;
+    if (!response?.success) {
+      return response || ({ success: false, error: 'email_otp_send_failed' } as OtpResponse);
     }
-    return { success: true } as OtpResponse;
+    return response;
   },
 
   async verifyEmailLoginOtp(email: string, otpCode: string) {
     const trimmed = email.trim().toLowerCase();
     if (!/^\d{6}$/.test(otpCode)) throw new Error('OTP must be 6 digits');
-    const { data, error } = await supabase.auth.verifyOtp({
-      email: trimmed,
-      token: otpCode,
-      type: 'email',
+
+    const { data, error } = await supabase.functions.invoke('verify-email-login-otp', {
+      body: { email: trimmed, otp_code: otpCode },
     });
     if (error) throw error;
-    return data;
+
+    const response = data as OtpVerifyResponse;
+    if (!response?.success) {
+      const errorMap: Record<string, string> = {
+        otp_already_used: 'تم استخدام هذا الرمز',
+        otp_expired: 'انتهت صلاحية الرمز. اطلب رمزاً جديداً.',
+        too_many_attempts: 'تم تجاوز عدد المحاولات. اطلب رمزاً جديداً.',
+        invalid_otp: 'رمز التحقق غير صحيح',
+        no_account: 'لم يتم العثور على حساب بهذا البريد',
+      };
+      throw new Error(errorMap[response?.error || ''] || response?.message || 'تعذر التحقق من الرمز');
+    }
+
+    if (response.session) {
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: response.session.access_token,
+        refresh_token: response.session.refresh_token,
+      });
+      if (sessionError) throw sessionError;
+    } else if (response.token_hash) {
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: response.token_hash,
+        type: (response.token_type || 'magiclink') as 'magiclink' | 'email' | 'signup' | 'invite' | 'recovery',
+      });
+      if (verifyError) throw verifyError;
+    } else {
+      throw new Error('تعذر إنشاء جلسة الدخول');
+    }
+
+    return response;
   },
 
 

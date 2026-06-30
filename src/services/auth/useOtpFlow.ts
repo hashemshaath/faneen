@@ -52,7 +52,7 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
           /sms_delivery_failed|could not send sms/i.test(rawMsg);
         const shouldFallbackToEmail = isOtpCreateFailure || isSmsDeliveryFailure;
         const msg = data?.error === 'no_account'
-          ? (isRTL ? 'لم يتم العثور على حساب بهذا الرقم' : 'No account found with this number')
+          ? (data?.message || (isRTL ? 'لم يتم العثور على حساب بهذه البيانات' : 'No account found with these details'))
           : isOtpCreateFailure
             ? (isRTL
                 ? 'نعتذر، حدث خطأ تقني أثناء إرسال رمز التحقق عبر الرسائل. يمكنك بدلًا من ذلك تسجيل الدخول باستخدام البريد الإلكتروني.'
