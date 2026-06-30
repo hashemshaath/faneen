@@ -1,9 +1,9 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronDown } from 'lucide-react';
-import { countryCodes, PHONE_MAX_LENGTH } from '@/services/auth/constants';
+import { PHONE_MAX_LENGTH } from '@/services/auth/constants';
 import { FieldError } from './FieldError';
+import { CountryCodeSelect } from '@/components/forms/CountryCodeSelect';
 
 interface PhoneInputProps {
   phone: string;
@@ -27,19 +27,11 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       {optional && <span className="text-xs text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span>}
     </Label>
     <div className="flex gap-2" dir="ltr">
-      <div className="relative">
-        <select
-          value={countryCode}
-          onChange={(e) => onCountryCodeChange(e.target.value)}
-          aria-label={isRTL ? 'رمز الدولة' : 'Country code'}
-          className="appearance-none h-10 w-[100px] rounded-lg border border-input bg-background px-3 pe-7 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {countryCodes.map(c => (
-            <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-          ))}
-        </select>
-        <ChevronDown className="absolute end-2 top-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-      </div>
+      <CountryCodeSelect
+        value={countryCode}
+        onChange={onCountryCodeChange}
+        error={!!error}
+      />
       <Input
         type="tel"
         value={phone}
