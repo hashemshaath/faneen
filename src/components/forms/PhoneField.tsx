@@ -11,10 +11,11 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronDown, Phone } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import { countryCodes, PHONE_MAX_LENGTH } from '@/services/auth/constants';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
+import { CountryCodeSelect } from './CountryCodeSelect';
 
 export interface PhoneFieldValue {
   countryCode: string; // e.g. "+966"
@@ -116,25 +117,12 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
         </Label>
       )}
       <div className="flex gap-2" dir="ltr">
-        <div className="relative">
-          <select
-            value={value.countryCode}
-            onChange={(e) => handleCC(e.target.value)}
-            disabled={disabled}
-            aria-label={isRTL ? 'مفتاح الدولة' : 'Country code'}
-            className={cn(
-              'appearance-none h-10 w-[110px] rounded-xl border border-input bg-background ps-3 pe-7 text-sm tech-content focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50',
-              error && 'border-destructive focus-visible:ring-destructive',
-            )}
-          >
-            {countryCodes.map(c => (
-              <option key={c.code} value={c.code}>
-                {c.flag} {c.code}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute end-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-        </div>
+        <CountryCodeSelect
+          value={value.countryCode}
+          onChange={handleCC}
+          disabled={disabled}
+          error={!!error}
+        />
         <div className="relative flex-1">
           <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
