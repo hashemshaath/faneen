@@ -304,6 +304,11 @@ export default function DashboardSites() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ClientSite | null>(null);
+  /** True when `openEdit` successfully loaded the sensitive/government
+   *  RPCs (site owner or admin). Managers get `false` — the save mutation
+   *  strips the 5 sensitive fields from the update payload so it can't
+   *  null-overwrite the owner's data. */
+  const [canReadSensitive, setCanReadSensitive] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [naf, setNaf] = useState<NationalAddressValue>(emptyNaf);
   const [search, setSearch] = useState('');
