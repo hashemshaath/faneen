@@ -571,6 +571,13 @@ export default function DashboardSites() {
         ] as const;
         const patch: Record<string, Json | null | undefined> = { ...payload };
         IMMUTABLE.forEach((k) => { delete patch[k]; });
+        // If the caller couldn't read the sensitive fields (manager path),
+        // strip them from the update payload so a save doesn't null out
+        // the owner's national ID, tax, deed, and license data.
+        if (!canReadSensitive) {
+          (['owner_id_number', 'tax_number', 'municipal_license_no', 'title_deed_no'] as const)
+            .forEach((k) => { delete patch[k]; });
+        }
         const { error } = await supabase.rpc('update_client_site', { _site_id: editing.id, _patch: patch as Json });
         if (error) throw error;
       } else {
