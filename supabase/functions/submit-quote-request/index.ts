@@ -127,6 +127,25 @@ function err(msg: string, status = 400) {
   });
 }
 
+async function sha256Hex(input: string): Promise<string> {
+  const bytes = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function getClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for') ?? '';
+  const first = xff.split(',')[0]?.trim();
+  if (first) return first;
+  return (
+    req.headers.get('cf-connecting-ip') ??
+    req.headers.get('x-real-ip') ??
+    'unknown'
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return err('Method not allowed', 405);
@@ -181,6 +200,26 @@ Deno.serve(async (req) => {
   const anon = Deno.env.get('SUPABASE_ANON_KEY')!;
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+  const admin = createClient(url, serviceKey);
+
+  // Rate limit: 10 submissions per IP per hour (block 1h on breach).
+  try {
+    const salt = Deno.env.get('RATE_LIMIT_SALT') ?? 'qitaat-quote-submit';
+    const ipHash = await sha256Hex(`${getClientIp(req)}|${salt}`);
+    const { data: allowed, error: rlErr } = await admin.rpc('check_rate_limit', {
+      _identifier: `quote:ip:${ipHash}`,
+      _type: 'quote_submission',
+      _max_attempts: 10,
+      _window_minutes: 60,
+      _block_minutes: 60,
+    });
+    if (!rlErr && allowed === false) {
+      return err('تم تجاوز الحد المسموح. حاول لاحقًا.', 429);
+    }
+  } catch (e) {
+    console.warn('rate limit check failed (non-fatal)', e);
+  }
+
   // Identify user from JWT (if any)
   let userId: string | null = null;
   const authHeader = req.headers.get('Authorization');
@@ -191,8 +230,6 @@ Deno.serve(async (req) => {
     const { data } = await userClient.auth.getUser();
     userId = data.user?.id ?? null;
   }
-
-  const admin = createClient(url, serviceKey);
 
   // Phase 3B — resolve taxonomy_category_id (best-effort; never blocks submit).
   let taxonomyCategoryId: string | null = null;
