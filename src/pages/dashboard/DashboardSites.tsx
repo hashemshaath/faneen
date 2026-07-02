@@ -723,16 +723,34 @@ export default function DashboardSites() {
     } catch {
       sensitive = null;
     }
+    // Government/legal fields (deed no, license no) are also column-revoked;
+    // fetch via secure RPC for site owner + admin only.
+    let gov: {
+      municipal_license_no: string | null;
+      title_deed_no: string | null;
+    } | null = null;
+    try {
+      const { data: rows } = await supabase.rpc('get_client_site_government_data', { _site_id: s.id });
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row) {
+        gov = {
+          municipal_license_no: row.municipal_license_no ?? null,
+          title_deed_no: row.title_deed_no ?? null,
+        };
+      }
+    } catch {
+      gov = null;
+    }
     setForm({
       label: s.label, site_name: s.site_name || '', site_type: s.site_type, visibility: s.visibility,
       contact_name: s.contact_name || '', contact_phone: s.contact_phone || '',
       map_url: s.map_url || '', latitude: s.latitude != null ? String(s.latitude) : '',
       longitude: s.longitude != null ? String(s.longitude) : '',
       access_notes: s.access_notes || '', is_default: s.is_default,
-      municipal_license_no:           s.municipal_license_no || '',
+      municipal_license_no:           gov?.municipal_license_no || '',
       municipal_license_issue_date:   s.municipal_license_issue_date || '',
       municipal_license_expiry_date:  s.municipal_license_expiry_date || '',
-      title_deed_no:                  s.title_deed_no || '',
+      title_deed_no:                  gov?.title_deed_no || '',
       title_deed_date:                s.title_deed_date || '',
       owner_name:                     s.owner_name || '',
       owner_id_number:                sensitive?.owner_id_number || '',
