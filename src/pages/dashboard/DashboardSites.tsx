@@ -716,6 +716,10 @@ export default function DashboardSites() {
   }, []);
   const openEdit = useCallback(async (s: ClientSite) => {
     setEditing(s);
+    // Track whether the caller (owner/admin) successfully read sensitive
+    // fields. Managers get `false`, and the save mutation strips those
+    // fields from the update patch to prevent null-overwrite.
+    let sensitiveOk = false;
     // Pull owner_id_number / tax_number through the secure RPC. RLS column
     // grants block reading them via `.select()`, so we never include them in
     // the list query above. The RPC only returns values to the site's
@@ -724,7 +728,10 @@ export default function DashboardSites() {
     try {
       const { data: rows } = await supabase.rpc('get_client_site_sensitive', { _site_id: s.id });
       const row = Array.isArray(rows) ? rows[0] : rows;
-      if (row) sensitive = { owner_id_number: row.owner_id_number ?? null, tax_number: row.tax_number ?? null };
+      if (row) {
+        sensitive = { owner_id_number: row.owner_id_number ?? null, tax_number: row.tax_number ?? null };
+        sensitiveOk = true;
+      }
     } catch {
       sensitive = null;
     }
@@ -742,10 +749,12 @@ export default function DashboardSites() {
           municipal_license_no: row.municipal_license_no ?? null,
           title_deed_no: row.title_deed_no ?? null,
         };
+        sensitiveOk = true;
       }
     } catch {
       gov = null;
     }
+    setCanReadSensitive(sensitiveOk);
     setForm({
       label: s.label, site_name: s.site_name || '', site_type: s.site_type, visibility: s.visibility,
       contact_name: s.contact_name || '', contact_phone: s.contact_phone || '',
