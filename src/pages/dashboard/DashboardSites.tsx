@@ -376,11 +376,13 @@ export default function DashboardSites() {
     queryKey: ['dashboard-sites', businessId, user?.id, showArchived],
     queryFn: async () => {
       if (!user) return [];
-      // owner_id_number and tax_number are column-revoked from `authenticated`
-      // for PII protection — fetched on demand via `get_client_site_sensitive`
-      // RPC only by the site's client owner or an admin.
+      // Sensitive columns (owner_id_number, tax_number, title_deed_no,
+      // municipal_license_no, qr_token_hash) are column-revoked from
+      // `authenticated`. Managers read from the masked view; the deed/license
+      // numbers and national ID/tax are fetched on demand via the secure RPCs
+      // (`get_client_site_sensitive`, `get_client_site_government_data`).
       let q = supabase
-        .from('client_sites')
+        .from('client_sites_manager_view')
         .select(`
           id, business_id, client_user_id, owner_user_id, site_ref, label, site_name, site_type, visibility,
           contact_name, contact_phone, country_id, city_id, city_name,
@@ -388,8 +390,8 @@ export default function DashboardSites() {
           building_number, additional_number, post_code, short_address, address_en,
           address_line1, address_line2, map_url, latitude, longitude, access_notes,
           is_default, archived_at, created_at,
-          municipal_license_no, municipal_license_issue_date, municipal_license_expiry_date,
-          title_deed_no, title_deed_date, owner_name,
+          municipal_license_issue_date, municipal_license_expiry_date,
+          title_deed_date, owner_name,
           land_use_type, plot_number, block_number, plan_number, government_notes,
           cover_image_url, gallery_images
         `)
@@ -646,20 +648,15 @@ export default function DashboardSites() {
         (s.city_name || '').toLowerCase().includes(q) ||
         (s.contact_name || '').toLowerCase().includes(q) ||
         (s.site_ref || '').toLowerCase().includes(q) ||
-        (s.municipal_license_no || '').toLowerCase().includes(q) ||
-        (s.title_deed_no || '').toLowerCase().includes(q) ||
         (s.owner_name || '').toLowerCase().includes(q) ||
         (s.district || '').toLowerCase().includes(q) ||
         (s.site_ref || '').toLowerCase().includes(q)
       );
     }
-    if (advLicenseNo.trim()) {
-      const q = advLicenseNo.trim().toLowerCase();
-      r = r.filter(s => (s.municipal_license_no || '').toLowerCase().includes(q));
-    }
-    if (advDeedNo.trim()) {
-      const q = advDeedNo.trim().toLowerCase();
-      r = r.filter(s => (s.title_deed_no || '').toLowerCase().includes(q));
+    if (advLicenseNo.trim() || advDeedNo.trim()) {
+      // License/deed numbers are PII column-revoked from list queries.
+      // Advanced filter by these numbers is disabled; matches return empty.
+      r = [];
     }
     if (advOwnerId.trim()) {
       // owner_id_number is no longer available in list queries (PII column-revoked).
