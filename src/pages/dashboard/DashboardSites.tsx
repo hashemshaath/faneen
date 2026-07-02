@@ -72,10 +72,13 @@ interface ClientSite {
   archived_at: string | null;
   created_at: string;
   /* Government / legal */
-  municipal_license_no: string | null;
+  /** Column-revoked; fetched on-demand via `get_client_site_government_data`
+   *  RPC for site owner/admin only. Not present in list-view rows. */
+  municipal_license_no?: string | null;
   municipal_license_issue_date: string | null;
   municipal_license_expiry_date: string | null;
-  title_deed_no: string | null;
+  /** Same protection as `municipal_license_no`. */
+  title_deed_no?: string | null;
   title_deed_date: string | null;
   owner_name: string | null;
   /** Column-revoked for non-owners; loaded on-demand via RPC for the site's
