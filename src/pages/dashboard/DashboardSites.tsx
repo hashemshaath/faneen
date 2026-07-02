@@ -72,10 +72,13 @@ interface ClientSite {
   archived_at: string | null;
   created_at: string;
   /* Government / legal */
-  municipal_license_no: string | null;
+  /** Column-revoked; fetched on-demand via `get_client_site_government_data`
+   *  RPC for site owner/admin only. Not present in list-view rows. */
+  municipal_license_no?: string | null;
   municipal_license_issue_date: string | null;
   municipal_license_expiry_date: string | null;
-  title_deed_no: string | null;
+  /** Same protection as `municipal_license_no`. */
+  title_deed_no?: string | null;
   title_deed_date: string | null;
   owner_name: string | null;
   /** Column-revoked for non-owners; loaded on-demand via RPC for the site's
@@ -376,11 +379,13 @@ export default function DashboardSites() {
     queryKey: ['dashboard-sites', businessId, user?.id, showArchived],
     queryFn: async () => {
       if (!user) return [];
-      // owner_id_number and tax_number are column-revoked from `authenticated`
-      // for PII protection — fetched on demand via `get_client_site_sensitive`
-      // RPC only by the site's client owner or an admin.
+      // Sensitive columns (owner_id_number, tax_number, title_deed_no,
+      // municipal_license_no, qr_token_hash) are column-revoked from
+      // `authenticated`. Managers read from the masked view; the deed/license
+      // numbers and national ID/tax are fetched on demand via the secure RPCs
+      // (`get_client_site_sensitive`, `get_client_site_government_data`).
       let q = supabase
-        .from('client_sites')
+        .from('client_sites_manager_view')
         .select(`
           id, business_id, client_user_id, owner_user_id, site_ref, label, site_name, site_type, visibility,
           contact_name, contact_phone, country_id, city_id, city_name,
@@ -388,8 +393,8 @@ export default function DashboardSites() {
           building_number, additional_number, post_code, short_address, address_en,
           address_line1, address_line2, map_url, latitude, longitude, access_notes,
           is_default, archived_at, created_at,
-          municipal_license_no, municipal_license_issue_date, municipal_license_expiry_date,
-          title_deed_no, title_deed_date, owner_name,
+          municipal_license_issue_date, municipal_license_expiry_date,
+          title_deed_date, owner_name,
           land_use_type, plot_number, block_number, plan_number, government_notes,
           cover_image_url, gallery_images
         `)
@@ -646,20 +651,15 @@ export default function DashboardSites() {
         (s.city_name || '').toLowerCase().includes(q) ||
         (s.contact_name || '').toLowerCase().includes(q) ||
         (s.site_ref || '').toLowerCase().includes(q) ||
-        (s.municipal_license_no || '').toLowerCase().includes(q) ||
-        (s.title_deed_no || '').toLowerCase().includes(q) ||
         (s.owner_name || '').toLowerCase().includes(q) ||
         (s.district || '').toLowerCase().includes(q) ||
         (s.site_ref || '').toLowerCase().includes(q)
       );
     }
-    if (advLicenseNo.trim()) {
-      const q = advLicenseNo.trim().toLowerCase();
-      r = r.filter(s => (s.municipal_license_no || '').toLowerCase().includes(q));
-    }
-    if (advDeedNo.trim()) {
-      const q = advDeedNo.trim().toLowerCase();
-      r = r.filter(s => (s.title_deed_no || '').toLowerCase().includes(q));
+    if (advLicenseNo.trim() || advDeedNo.trim()) {
+      // License/deed numbers are PII column-revoked from list queries.
+      // Advanced filter by these numbers is disabled; matches return empty.
+      r = [];
     }
     if (advOwnerId.trim()) {
       // owner_id_number is no longer available in list queries (PII column-revoked).
@@ -723,16 +723,34 @@ export default function DashboardSites() {
     } catch {
       sensitive = null;
     }
+    // Government/legal fields (deed no, license no) are also column-revoked;
+    // fetch via secure RPC for site owner + admin only.
+    let gov: {
+      municipal_license_no: string | null;
+      title_deed_no: string | null;
+    } | null = null;
+    try {
+      const { data: rows } = await supabase.rpc('get_client_site_government_data', { _site_id: s.id });
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row) {
+        gov = {
+          municipal_license_no: row.municipal_license_no ?? null,
+          title_deed_no: row.title_deed_no ?? null,
+        };
+      }
+    } catch {
+      gov = null;
+    }
     setForm({
       label: s.label, site_name: s.site_name || '', site_type: s.site_type, visibility: s.visibility,
       contact_name: s.contact_name || '', contact_phone: s.contact_phone || '',
       map_url: s.map_url || '', latitude: s.latitude != null ? String(s.latitude) : '',
       longitude: s.longitude != null ? String(s.longitude) : '',
       access_notes: s.access_notes || '', is_default: s.is_default,
-      municipal_license_no:           s.municipal_license_no || '',
+      municipal_license_no:           gov?.municipal_license_no || '',
       municipal_license_issue_date:   s.municipal_license_issue_date || '',
       municipal_license_expiry_date:  s.municipal_license_expiry_date || '',
-      title_deed_no:                  s.title_deed_no || '',
+      title_deed_no:                  gov?.title_deed_no || '',
       title_deed_date:                s.title_deed_date || '',
       owner_name:                     s.owner_name || '',
       owner_id_number:                sensitive?.owner_id_number || '',

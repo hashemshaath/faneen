@@ -363,6 +363,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_client_site_access_audit_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       admin_client_site_operations_notes: {
@@ -399,6 +406,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_client_site_operations_notes_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -5264,6 +5278,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_site_access_grants_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       client_site_files: {
@@ -5321,6 +5342,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_files_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -5393,6 +5421,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_licenses_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -5475,6 +5510,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_site_notification_preferences_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: true
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       client_site_visibility_settings: {
@@ -5508,6 +5550,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_visibility_settings_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -5566,6 +5615,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_visit_logs_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -8033,6 +8089,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contracts_execution_site_id_fkey"
+            columns: ["execution_site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contracts_last_pdf_snapshot_id_fkey"
             columns: ["last_pdf_snapshot_id"]
             isOneToOne: false
@@ -10343,6 +10406,13 @@ export type Database = {
             columns: ["source_site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_requests_source_site_id_fkey"
+            columns: ["source_site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -14556,6 +14626,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "projects_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       promotions: {
@@ -15952,6 +16029,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quote_requests_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quote_requests_taxonomy_category_id_fkey"
             columns: ["taxonomy_category_id"]
             isOneToOne: false
@@ -16910,6 +16994,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rfq_requests_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       role_permissions: {
@@ -17390,6 +17481,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "site_contact_communications_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       site_contact_tasks: {
@@ -17458,6 +17556,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_contact_tasks_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -17547,6 +17652,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "site_contacts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       site_reports: {
@@ -17623,6 +17735,13 @@ export type Database = {
             referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "site_reports_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       site_settings_audit: {
@@ -17659,6 +17778,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_settings_audit_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites_manager_view"
             referencedColumns: ["id"]
           },
         ]
@@ -20091,6 +20217,206 @@ export type Database = {
           },
         ]
       }
+      client_sites_manager_view: {
+        Row: {
+          access_notes: string | null
+          additional_number: string | null
+          address_en: string | null
+          address_line1: string | null
+          address_line2: string | null
+          archived_at: string | null
+          block_number: string | null
+          building_number: string | null
+          business_id: string | null
+          city_id: string | null
+          city_name: string | null
+          client_user_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          country_id: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          created_by: string | null
+          district: string | null
+          district_en: string | null
+          gallery_images: Json | null
+          government_notes: string | null
+          id: string | null
+          is_default: boolean | null
+          is_demo: boolean | null
+          label: string | null
+          land_use_type: string | null
+          last_scanned_at: string | null
+          latitude: number | null
+          legacy_ref_id: string | null
+          longitude: number | null
+          map_url: string | null
+          municipal_license_expiry_date: string | null
+          municipal_license_issue_date: string | null
+          owner_name: string | null
+          owner_user_id: string | null
+          plan_number: string | null
+          plot_number: string | null
+          post_code: string | null
+          qr_enabled: boolean | null
+          qr_revoked_at: string | null
+          ref_id: string | null
+          region: string | null
+          region_en: string | null
+          scan_count: number | null
+          short_address: string | null
+          site_name: string | null
+          site_ref: string | null
+          site_type: string | null
+          street_name: string | null
+          street_name_en: string | null
+          title_deed_date: string | null
+          updated_at: string | null
+          visibility: string | null
+        }
+        Insert: {
+          access_notes?: string | null
+          additional_number?: string | null
+          address_en?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          archived_at?: string | null
+          block_number?: string | null
+          building_number?: string | null
+          business_id?: string | null
+          city_id?: string | null
+          city_name?: string | null
+          client_user_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          district?: string | null
+          district_en?: string | null
+          gallery_images?: Json | null
+          government_notes?: string | null
+          id?: string | null
+          is_default?: boolean | null
+          is_demo?: boolean | null
+          label?: string | null
+          land_use_type?: string | null
+          last_scanned_at?: string | null
+          latitude?: number | null
+          legacy_ref_id?: string | null
+          longitude?: number | null
+          map_url?: string | null
+          municipal_license_expiry_date?: string | null
+          municipal_license_issue_date?: string | null
+          owner_name?: string | null
+          owner_user_id?: string | null
+          plan_number?: string | null
+          plot_number?: string | null
+          post_code?: string | null
+          qr_enabled?: boolean | null
+          qr_revoked_at?: string | null
+          ref_id?: string | null
+          region?: string | null
+          region_en?: string | null
+          scan_count?: number | null
+          short_address?: string | null
+          site_name?: string | null
+          site_ref?: string | null
+          site_type?: string | null
+          street_name?: string | null
+          street_name_en?: string | null
+          title_deed_date?: string | null
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          access_notes?: string | null
+          additional_number?: string | null
+          address_en?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          archived_at?: string | null
+          block_number?: string | null
+          building_number?: string | null
+          business_id?: string | null
+          city_id?: string | null
+          city_name?: string | null
+          client_user_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          district?: string | null
+          district_en?: string | null
+          gallery_images?: Json | null
+          government_notes?: string | null
+          id?: string | null
+          is_default?: boolean | null
+          is_demo?: boolean | null
+          label?: string | null
+          land_use_type?: string | null
+          last_scanned_at?: string | null
+          latitude?: number | null
+          legacy_ref_id?: string | null
+          longitude?: number | null
+          map_url?: string | null
+          municipal_license_expiry_date?: string | null
+          municipal_license_issue_date?: string | null
+          owner_name?: string | null
+          owner_user_id?: string | null
+          plan_number?: string | null
+          plot_number?: string | null
+          post_code?: string | null
+          qr_enabled?: boolean | null
+          qr_revoked_at?: string | null
+          ref_id?: string | null
+          region?: string | null
+          region_en?: string | null
+          scan_count?: number | null
+          short_address?: string | null
+          site_name?: string | null
+          site_ref?: string | null
+          site_type?: string | null
+          street_name?: string | null
+          street_name_en?: string | null
+          title_deed_date?: string | null
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sites_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sites_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_amendment_approvals_safe: {
         Row: {
           amendment_hash: string | null
@@ -22178,6 +22504,22 @@ export type Database = {
           region: string
           sectors: Json
           username: string
+        }[]
+      }
+      get_client_site_government_data: {
+        Args: { _site_id: string }
+        Returns: {
+          block_number: string
+          government_notes: string
+          land_use_type: string
+          municipal_license_expiry_date: string
+          municipal_license_issue_date: string
+          municipal_license_no: string
+          owner_name: string
+          plan_number: string
+          plot_number: string
+          title_deed_date: string
+          title_deed_no: string
         }[]
       }
       get_client_site_notification_preferences: {

@@ -30,13 +30,33 @@ export function SiteGovernmentDataPanel({ siteId, isRTL }: { siteId: string; isR
   const { data, isLoading } = useQuery({
     queryKey: ['site-gov-data', siteId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('client_sites')
-        .select('id, site_ref, municipal_license_no, municipal_license_issue_date, municipal_license_expiry_date, title_deed_no, title_deed_date, owner_name, land_use_type, plot_number, block_number, plan_number')
+      // Non-sensitive site metadata comes from the masked view; deed/license
+      // numbers are column-revoked and returned only to the site owner + admin
+      // via the secure RPC.
+      const { data: base, error: e1 } = await supabase
+        .from('client_sites_manager_view')
+        .select('id, site_ref, municipal_license_issue_date, municipal_license_expiry_date, title_deed_date, owner_name, land_use_type, plot_number, block_number, plan_number')
         .eq('id', siteId)
         .maybeSingle();
-      if (error) throw error;
-      return data as SiteGov | null;
+      if (e1) throw e1;
+      if (!base) return null;
+      let sensitive: Pick<SiteGov, 'municipal_license_no' | 'title_deed_no'> = {
+        municipal_license_no: null,
+        title_deed_no: null,
+      };
+      try {
+        const { data: rows } = await supabase.rpc('get_client_site_government_data', { _site_id: siteId });
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        if (row) {
+          sensitive = {
+            municipal_license_no: row.municipal_license_no ?? null,
+            title_deed_no: row.title_deed_no ?? null,
+          };
+        }
+      } catch {
+        /* non-owner viewers just don't see the numbers */
+      }
+      return { ...base, ...sensitive } as SiteGov;
     },
     enabled: !!siteId,
     staleTime: 60_000,
