@@ -707,11 +707,13 @@ export default function DashboardSites() {
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => {
     setShowForm(false); setEditing(null); setForm(emptyForm); setNaf(emptyNaf);
-    setIssues([]); setActiveTab('general');
+    setIssues([]); setActiveTab('general'); setCanReadSensitive(false);
   }, []);
   const openCreate = useCallback(() => {
     setEditing(null); setForm(emptyForm); setNaf(emptyNaf);
-    setIssues([]); setActiveTab('general'); setShowForm(true);
+    setIssues([]); setActiveTab('general');
+    setCanReadSensitive(true); // creator owns the row → may write sensitive fields
+    setShowForm(true);
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, []);
   const openEdit = useCallback(async (s: ClientSite) => {
