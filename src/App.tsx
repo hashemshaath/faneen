@@ -57,7 +57,6 @@ const ProviderLeadDetails = lazyRetry(() => import("./pages/dashboard/ProviderLe
 const ProviderServiceAreas = lazyRetry(() => import("./pages/dashboard/ProviderServiceAreas"));
 const ProviderMembership = lazyRetry(() => import("./pages/dashboard/ProviderMembership"));
 const DashboardMembership = lazyRetry(() => import("./pages/dashboard/DashboardMembership"));
-const AdminProviderSubscriptions = lazyRetry(() => import("./pages/admin/AdminProviderSubscriptions"));
 const AdminServiceActivations = lazyRetry(() => import("./pages/admin/AdminServiceActivations"));
 const AdminAbExperiments = lazyRetry(() => import("./pages/admin/AdminAbExperiments"));
 const AdminShowcase = lazyRetry(() => import("./pages/admin/AdminShowcase"));
@@ -85,10 +84,8 @@ const RentalItemPublic = lazyRetry(() => import("./pages/RentalItemPublic"));
 const DashboardSitePrint = lazyRetry(() => import("./pages/dashboard/DashboardSitePrint"));
 const DashboardSiteDetail = lazyRetry(() => import("./pages/dashboard/DashboardSiteDetail"));
 const DashboardReviews = lazyRetry(() => import("./pages/dashboard/DashboardReviews"));
-const DashboardContracts = lazyRetry(() => import("./pages/dashboard/DashboardContracts"));
 const DashboardContractReview = lazyRetry(() => import("./pages/dashboard/DashboardContractReview"));
 const DashboardWorkOrders = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrders"));
-const DashboardWorkOrdersOverview = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrdersOverview"));
 const ProductionBoardPage = lazyRetry(() => import("./pages/dashboard/ProductionBoardPage"));
 const DashboardWorkOrderDetail = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrderDetail"));
 const DashboardProcurement = lazyRetry(() => import("./pages/dashboard/DashboardProcurement"));
@@ -96,8 +93,6 @@ const DashboardProcurementDetail = lazyRetry(() => import("./pages/dashboard/Das
 const DashboardWarranties = lazyRetry(() => import("./pages/dashboard/DashboardWarranties"));
 const DashboardInstallments = lazyRetry(() => import("./pages/dashboard/DashboardInstallments"));
 const DashboardSettings = lazyRetry(() => import("./pages/dashboard/DashboardSettings"));
-const DashboardStaffCenter = lazyRetry(() => import("./pages/dashboard/DashboardStaffCenter"));
-const DashboardTeamAccess = lazyRetry(() => import("./pages/dashboard/DashboardTeamAccess"));
 const DashboardNoAccess = lazyRetry(() => import("./pages/dashboard/DashboardNoAccess"));
 const DashboardProfile = lazyRetry(() => import("./pages/dashboard/DashboardProfile"));
 const DashboardPromotions = lazyRetry(() => import("./pages/dashboard/DashboardPromotions"));
@@ -121,7 +116,6 @@ const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMes
 const DashboardBookmarks = lazyRetry(() => import("./pages/dashboard/DashboardBookmarks"));
 const DashboardBookings = lazyRetry(() => import("./pages/dashboard/DashboardBookings"));
 const DashboardAnalytics = lazyRetry(() => import("./pages/dashboard/DashboardAnalytics"));
-const DashboardContractAnalytics = lazyRetry(() => import("./pages/dashboard/DashboardContractAnalytics"));
 const DashboardNotifications = lazyRetry(() => import("./pages/dashboard/DashboardNotifications"));
 const DashboardInquiries = lazyRetry(() => import("./pages/DashboardInquiries"));
 const Offers = lazyRetry(() => import("./pages/Offers"));
@@ -137,7 +131,6 @@ const HeavyEquipmentRentalSaudiArabia = lazyRetry(() => import("./pages/guides/H
 const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
 const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
 const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"));
-const AdminApiSettings = lazyRetry(() => import("./pages/admin/AdminApiSettings"));
 const AdminGoogleServices = lazyRetry(() => import("./pages/admin/AdminGoogleServices"));
 const AdminIntegrations = lazyRetry(() => import("./pages/admin/AdminIntegrations"));
 const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
@@ -146,10 +139,7 @@ const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"))
 const AdminIdentity = lazyRetry(() => import("./pages/admin/AdminIdentity"));
 const AdminIdentityHub = lazyRetry(() => import("./pages/admin/AdminIdentityHub"));
 const AdminIdentityCenter = lazyRetry(() => import("./pages/admin/AdminIdentityCenter"));
-const AdminSystemSettings = lazyRetry(() => import("./pages/admin/AdminSystemSettings"));
 const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
-const AdminOperations = lazyRetry(() => import("./pages/admin/AdminOperations"));
-const AdminOperationsConsole = lazyRetry(() => import("./pages/admin/AdminOperationsConsole"));
 const AdminReferenceInspector = lazyRetry(() => import("./pages/admin/AdminReferenceInspector"));
 const AdminBulkReferenceTriage = lazyRetry(() => import("./pages/admin/AdminBulkReferenceTriage"));
 const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
@@ -172,10 +162,6 @@ const AdminBusinessServiceAreas = lazyRetry(() => import("./pages/admin/location
 const AdminBusinessCoordinates = lazyRetry(() => import("./pages/admin/locations/AdminBusinessCoordinates"));
 const AdminClientSitesMonitoring = lazyRetry(() => import("./pages/admin/AdminClientSitesMonitoring"));
 const AdminBarcodeRegistry = lazyRetry(() => import("./pages/admin/AdminBarcodeRegistry"));
-const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
-const AdminMembershipRejections = lazyRetry(() => import("./pages/admin/AdminMembershipRejections"));
-const AdminMembershipEvents = lazyRetry(() => import("./pages/admin/AdminMembershipEvents"));
-const AdminMembershipPayments = lazyRetry(() => import("./pages/admin/AdminMembershipPayments"));
 const AdminContactCenter = lazyRetry(() => import("./pages/admin/AdminContactCenter"));
 const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
 const AdminQuoteRequests = lazyRetry(() => import("./pages/admin/AdminQuoteRequests"));
@@ -183,35 +169,20 @@ const AdminOpportunitiesOperations = lazyRetry(() => import("./pages/admin/Admin
 const AdminQuoteRequestDetails = lazyRetry(() => import("./pages/admin/AdminQuoteRequestDetails"));
 const AdminQuoteOperations = lazyRetry(() => import("./pages/admin/AdminQuoteOperations"));
 const QuoteRequestDetails = lazyRetry(() => import("./pages/dashboard/QuoteRequestDetails"));
-const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmailDeliverability"));
-const AdminEmailCenter = lazyRetry(() => import("./pages/admin/AdminEmailCenter"));
-const AdminSiteAudit = lazyRetry(() => import("./pages/admin/AdminSiteAudit"));
 const AdminPerformance = lazyRetry(() => import("./pages/admin/AdminPerformance"));
 const AdminDiagnostics = lazyRetry(() => import("./pages/admin/AdminDiagnostics"));
 const AdminDataEnrichment = lazyRetry(() => import("./pages/admin/AdminDataEnrichment"));
 const AdminDataEnrichmentGovernance = lazyRetry(() => import("./pages/admin/AdminDataEnrichmentGovernance"));
-const AdminSectorSeo = lazyRetry(() => import("./pages/admin/AdminSectorSeo"));
 const AdminMarketAnalytics = lazyRetry(() => import("./pages/admin/AdminMarketAnalytics"));
-const AdminSitemapStatus = lazyRetry(() => import("./pages/admin/AdminSitemapStatus"));
 const AdminAccessManagement = lazyRetry(() => import("./pages/admin/AdminAccessManagement"));
 const AdminSystemAccess = lazyRetry(() => import("./pages/admin/AdminSystemAccess"));
-const AdminProviderReview = lazyRetry(() => import("./pages/admin/AdminProviderReview"));
 const AdminProviderGrowth = lazyRetry(() => import("./pages/admin/AdminProviderGrowth"));
 const AdminProviderGrowthQueue = lazyRetry(() => import("./pages/admin/AdminProviderGrowthQueue"));
 const AdminCatalogGovernance = lazyRetry(() => import("./pages/admin/AdminCatalogGovernance"));
 const AdminCatalogGovernanceQueue = lazyRetry(() => import("./pages/admin/AdminCatalogGovernanceQueue"));
 const AdminProviderAnalytics = lazyRetry(() => import("./pages/admin/AdminProviderAnalytics"));
-const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContractAnalytics"));
-const AdminContracts = lazyRetry(() => import("./pages/admin/AdminContracts"));
-const AdminContractCreate = lazyRetry(() => import("./pages/admin/AdminContractCreate"));
-const AdminReports = lazyRetry(() => import("./pages/admin/AdminReports"));
-const AdminKpis = lazyRetry(() => import("./pages/admin/AdminKpis"));
 const AdminAuditLog = lazyRetry(() => import("./pages/admin/AdminAuditLog"));
-const DashboardRfq = lazyRetry(() => import("./pages/dashboard/DashboardRfq"));
 const DashboardRfqDetail = lazyRetry(() => import("./pages/dashboard/DashboardRfqDetail"));
-const DashboardRfqInbox = lazyRetry(() => import("./pages/dashboard/DashboardRfqInbox"));
-const DashboardLoyalty = lazyRetry(() => import("./pages/dashboard/DashboardLoyalty"));
-const DashboardLoyaltyStore = lazyRetry(() => import("./pages/dashboard/DashboardLoyaltyStore"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
@@ -220,7 +191,6 @@ const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardO
 const DashboardOperationsFeed = lazyRetry(() => import("./pages/dashboard/DashboardOperationsFeed"));
 const DashboardOperationsCenter = lazyRetry(() => import("./pages/dashboard/DashboardOperationsCenter"));
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
-const DashboardLeads = lazyRetry(() => import("./pages/dashboard/DashboardLeads"));
 const DashboardClients = lazyRetry(() => import("./pages/dashboard/DashboardClients"));
 const DashboardBadge = lazyRetry(() => import("./pages/dashboard/DashboardBadge"));
 const DashboardMyRequests = lazyRetry(() => import("./pages/dashboard/DashboardMyRequests"));
@@ -260,10 +230,6 @@ const DashboardBusinessEdit = lazyRetry(() => import("./pages/dashboard/Dashboar
 const DashboardEntities = lazyRetry(() => import("./pages/dashboard/DashboardEntities"));
 const DashboardEntityDetail = lazyRetry(() => import("./pages/dashboard/DashboardEntityDetail"));
 const AdminProviderLanding = lazyRetry(() => import("./pages/admin/AdminProviderLanding"));
-const AdminAnalyticsSettings = lazyRetry(() => import("./pages/admin/AdminAnalyticsSettings"));
-const AdminBranding = lazyRetry(() => import("./pages/admin/AdminBranding"));
-const AdminContractTemplates = lazyRetry(() => import("./pages/admin/AdminContractTemplates"));
-const AdminPdfExportAudit = lazyRetry(() => import("./pages/admin/AdminPdfExportAudit"));
 const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
 // NAVIGATION-CONSOLIDATION-1 — unified tabbed hubs (Phase 2).
 const DashboardBusinessProfileHub = lazyRetry(() => import("./pages/dashboard/DashboardBusinessProfileHub"));
@@ -524,7 +490,7 @@ const AppRoutes = () => (
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
           <Route path="/dashboard/profile-systems" element={<ProtectedRoute requireAdmin><DashboardProfileSystems /></ProtectedRoute>} />
-          <Route path="/admin/api-settings" element={<ProtectedRoute requireAdmin><Navigate to="/admin/system-settings?tab=api" replace /></ProtectedRoute>} />
+          <Route path="/admin/api-settings" element={<Navigate to="/admin/system-settings?tab=api" replace />} />
           <Route path="/admin/integrations/google" element={<ProtectedRoute requireAdmin><AdminGoogleServices /></ProtectedRoute>} />
           <Route path="/admin/integrations" element={<ProtectedRoute requireAdmin><AdminIntegrations /></ProtectedRoute>} />
           <Route path="/admin/ab-experiments" element={<ProtectedRoute requireAdmin><AdminAbExperiments /></ProtectedRoute>} />
@@ -568,9 +534,9 @@ const AppRoutes = () => (
           <Route path="/admin/catalog-governance/queue" element={<ProtectedRoute requireAdmin><AdminCatalogGovernanceQueue /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 13 — Memberships hub. */}
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMembershipsHub /></ProtectedRoute>} />
-          <Route path="/admin/membership-rejections" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=rejections" replace /></ProtectedRoute>} />
-          <Route path="/admin/membership-events" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=events" replace /></ProtectedRoute>} />
-          <Route path="/admin/membership-payments" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=payments" replace /></ProtectedRoute>} />
+          <Route path="/admin/membership-rejections" element={<Navigate to="/admin/memberships?tab=rejections" replace />} />
+          <Route path="/admin/membership-events" element={<Navigate to="/admin/memberships?tab=events" replace />} />
+          <Route path="/admin/membership-payments" element={<Navigate to="/admin/memberships?tab=payments" replace />} />
           {/* Phase B — Unified Contact Center. Old routes redirect to the matching tab. */}
           <Route path="/admin/contact-messages" element={<ProtectedRoute requireAdmin><AdminContactCenter /></ProtectedRoute>} />
           <Route path="/admin/contact-inbox-settings" element={<Navigate to="/admin/contact-messages?tab=settings" replace />} />
@@ -585,7 +551,7 @@ const AppRoutes = () => (
               sidebar bookmarks continue to resolve. Components
               `AdminQuoteRequests` / `AdminQuoteRequestDetails` remain
               mounted on the canonical paths below. */}
-          <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><Navigate to="/admin/opportunities/list" replace /></ProtectedRoute>} />
+          <Route path="/admin/quote-requests" element={<Navigate to="/admin/opportunities/list" replace />} />
           <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><LegacyAdminQuoteRequestDetailRedirect /></ProtectedRoute>} />
           {/* OPPORTUNITIES PHASE 2 — admin alias. */}
           {/* OPPORTUNITIES PHASE 8 — operations center (KPIs / funnel / table). */}
@@ -593,21 +559,21 @@ const AppRoutes = () => (
           <Route path="/admin/opportunities/list" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
           <Route path="/admin/opportunities/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/admin/quote-operations" element={<ProtectedRoute requireAdmin><AdminQuoteOperations /></ProtectedRoute>} />
-          <Route path="/admin/provider-subscriptions" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=providers" replace /></ProtectedRoute>} />
+          <Route path="/admin/provider-subscriptions" element={<Navigate to="/admin/memberships?tab=providers" replace />} />
           {/* NAVIGATION-CONSOLIDATION-1 group 14 — Email hub. */}
           <Route path="/admin/email-center" element={<ProtectedRoute requireAdmin><AdminEmailHub /></ProtectedRoute>} />
-          <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><Navigate to="/admin/email-center?tab=deliverability" replace /></ProtectedRoute>} />
+          <Route path="/admin/email-deliverability" element={<Navigate to="/admin/email-center?tab=deliverability" replace />} />
           {/* NAVIGATION-CONSOLIDATION-1 group 16 — SEO hub. */}
-          <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><Navigate to="/admin/sitemap-status?tab=audit" replace /></ProtectedRoute>} />
+          <Route path="/admin/site-audit" element={<Navigate to="/admin/sitemap-status?tab=audit" replace />} />
           <Route path="/admin/performance" element={<ProtectedRoute requireAdmin><AdminPerformance /></ProtectedRoute>} />
           <Route path="/admin/diagnostics" element={<ProtectedRoute requireAdmin><AdminDiagnostics /></ProtectedRoute>} />
           <Route path="/admin/data-enrichment" element={<ProtectedRoute requireAdmin><AdminDataEnrichment /></ProtectedRoute>} />
           <Route path="/admin/data-enrichment-governance" element={<ProtectedRoute requireAdmin><AdminDataEnrichmentGovernance /></ProtectedRoute>} />
-          <Route path="/admin/sector-seo" element={<ProtectedRoute requireAdmin><Navigate to="/admin/sitemap-status?tab=sector-seo" replace /></ProtectedRoute>} />
+          <Route path="/admin/sector-seo" element={<Navigate to="/admin/sitemap-status?tab=sector-seo" replace />} />
           <Route path="/admin/market-analytics" element={<ProtectedRoute requireAdmin><AdminMarketAnalytics /></ProtectedRoute>} />
           <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSeoHub /></ProtectedRoute>} />
-          <Route path="/admin/provider-analytics" element={<ProtectedRoute requireAdmin><Navigate to="/admin/provider-review?tab=analytics" replace /></ProtectedRoute>} />
-          <Route path="/admin/provider-landing" element={<ProtectedRoute requireAdmin><Navigate to="/admin/provider-review?tab=landing" replace /></ProtectedRoute>} />
+          <Route path="/admin/provider-analytics" element={<Navigate to="/admin/provider-review?tab=analytics" replace />} />
+          <Route path="/admin/provider-landing" element={<Navigate to="/admin/provider-review?tab=landing" replace />} />
           <Route path="/admin/access-management" element={<ProtectedRoute requireSuperAdmin><AdminAccessManagement /></ProtectedRoute>} />
           <Route path="/admin/system-access" element={<ProtectedRoute requireAdmin><AdminSystemAccess /></ProtectedRoute>} />
 
@@ -625,25 +591,25 @@ const AppRoutes = () => (
           <Route path="/admin/cron-runs" element={<ProtectedRoute requireAdmin><AdminCronRuns /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 9 — Operations hub. */}
           <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperationsHub /></ProtectedRoute>} />
-          <Route path="/admin/operations/console" element={<ProtectedRoute requireAdmin><Navigate to="/admin/operations?tab=console" replace /></ProtectedRoute>} />
+          <Route path="/admin/operations/console" element={<Navigate to="/admin/operations?tab=console" replace />} />
           {/* OPERATIONS-CENTER-UNIFICATION-1 — unified read-only routing hub. */}
           <Route path="/admin/operations-center" element={<ProtectedRoute requireAdmin><AdminOperationsCenterUnified /></ProtectedRoute>} />
           {/* MARKETPLACE-CONVERSION-OPTIMIZATION-1 — read-only conversion dashboard. */}
           <Route path="/admin/conversion-optimization" element={<ProtectedRoute requireAdmin><AdminConversionOptimization /></ProtectedRoute>} />
          <Route path="/admin/ref/triage" element={<ProtectedRoute requireAdmin><AdminBulkReferenceTriage /></ProtectedRoute>} />
          <Route path="/admin/ref/:refId" element={<ProtectedRoute requireAdmin><AdminReferenceInspector /></ProtectedRoute>} />
-          <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><Navigate to="/admin/system-settings?tab=analytics" replace /></ProtectedRoute>} />
-          <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><Navigate to="/admin/system-settings?tab=branding" replace /></ProtectedRoute>} />
-          <Route path="/admin/contract-templates" element={<ProtectedRoute requireAdmin><Navigate to="/admin/contracts?tab=templates" replace /></ProtectedRoute>} />
-          <Route path="/admin/pdf-exports" element={<ProtectedRoute requireAdmin><Navigate to="/admin/contracts?tab=exports" replace /></ProtectedRoute>} />
+          <Route path="/admin/analytics-settings" element={<Navigate to="/admin/system-settings?tab=analytics" replace />} />
+          <Route path="/admin/branding" element={<Navigate to="/admin/system-settings?tab=branding" replace />} />
+          <Route path="/admin/contract-templates" element={<Navigate to="/admin/contracts?tab=templates" replace />} />
+          <Route path="/admin/pdf-exports" element={<Navigate to="/admin/contracts?tab=exports" replace />} />
           <Route path="/admin/pdf-visual-qa" element={<ProtectedRoute requireAdmin><AdminPdfVisualQa /></ProtectedRoute>} />
-          <Route path="/admin/contracts/analytics" element={<ProtectedRoute requireAdmin><Navigate to="/admin/contracts?tab=analytics" replace /></ProtectedRoute>} />
+          <Route path="/admin/contracts/analytics" element={<Navigate to="/admin/contracts?tab=analytics" replace />} />
           {/* NAVIGATION-CONSOLIDATION-1 group 11 — Contracts hub. */}
           <Route path="/admin/contracts" element={<ProtectedRoute requireAdmin><AdminContractsHub /></ProtectedRoute>} />
-          <Route path="/admin/contracts/create" element={<ProtectedRoute requireAdmin><Navigate to="/admin/contracts?tab=create" replace /></ProtectedRoute>} />
+          <Route path="/admin/contracts/create" element={<Navigate to="/admin/contracts?tab=create" replace />} />
           {/* NAVIGATION-CONSOLIDATION-1 group 12 — Reports hub. */}
           <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminReportsHub /></ProtectedRoute>} />
-          <Route path="/admin/kpis" element={<ProtectedRoute requireAdmin><Navigate to="/admin/reports?tab=kpis" replace /></ProtectedRoute>} />
+          <Route path="/admin/kpis" element={<Navigate to="/admin/reports?tab=kpis" replace />} />
           <Route path="/admin/audit-log" element={<ProtectedRoute requireAdmin><AdminAuditLog /></ProtectedRoute>} />
           {/* ADMIN UX RECONSOLIDATION PHASE 2 — new canonical center shells.
               Legacy URLs continue to work unchanged; these add unified
