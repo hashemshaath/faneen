@@ -1,0 +1,84 @@
+// Auto-organized route module — grouped public surface lazy imports.
+// Moved from src/App.tsx during route module split (Phase B). No behavior change.
+import { lazyRetry } from "@/lib/lazyRetry";
+
+export const Index = lazyRetry(() => import("../pages/Index"));
+export const DeferredAppOverlays = lazyRetry(() => import("../components/DeferredAppOverlays"));
+
+export const Auth = lazyRetry(() => import("../pages/Auth"));
+export const AuthVerified = lazyRetry(() => import("../pages/AuthVerified"));
+export const HelpCenterHome = lazyRetry(() => import("../pages/help/HelpCenterHome"));
+export const KnowledgeCenter = lazyRetry(() => import("../pages/KnowledgeCenter"));
+export const HelpCategoryPage = lazyRetry(() => import("../pages/help/HelpCategoryPage"));
+export const HelpArticlePage = lazyRetry(() => import("../pages/help/HelpArticlePage"));
+export const ReportIssuePage = lazyRetry(() => import("../pages/help/ReportIssuePage"));
+export const FeatureRequestPage = lazyRetry(() => import("../pages/help/FeatureRequestPage"));
+export const EmailNotArrivingHelp = lazyRetry(() => import("../pages/help/EmailNotArriving"));
+// HelpLauncherFloating, ConsentBanner, and BuildVersionWatcher are now
+// rendered exclusively via <DeferredAppOverlays>, which holds them off the
+// critical path until window load + requestIdleCallback.
+export const PublicSiteScan = lazyRetry(() => import("../pages/PublicSiteScan"));
+export const PublicBarcodeResolve = lazyRetry(() => import("../pages/PublicBarcodeResolve"));
+export const ReferenceResolver = lazyRetry(() => import("../pages/ReferenceResolver"));
+export const ResetPassword = lazyRetry(() => import("../pages/ResetPassword"));
+export const QuotationViewer = lazyRetry(() => import("../pages/QuotationViewer"));
+export const CustomerProjectPortal = lazyRetry(() => import("../pages/CustomerProjectPortal"));
+export const QSlugDispatcher = lazyRetry(() => import("../pages/QSlugDispatcher"));
+export const BusinessProfile = lazyRetry(() => import("../pages/BusinessProfile"));
+export const BranchDetail = lazyRetry(() => import("../pages/BranchDetail"));
+export const UsernameResolver = lazyRetry(() => import("../pages/UsernameResolver"));
+export const ClaimBusiness = lazyRetry(() => import("../pages/ClaimBusiness"));
+export const Search = lazyRetry(() => import("../pages/Search"));
+export const Quote = lazyRetry(() => import("../pages/Quote"));
+export const Showcase = lazyRetry(() => import("../pages/Showcase"));
+export const Contracts = lazyRetry(() => import("../pages/Contracts"));
+export const ContractDetail = lazyRetry(() => import("../pages/ContractDetail"));
+export const RequestContractPage = lazyRetry(() => import("../pages/contracts/RequestContractPage"));
+export const RentalsCatalog = lazyRetry(() => import("../pages/RentalsCatalog"));
+export const RentalItemPublic = lazyRetry(() => import("../pages/RentalItemPublic"));
+export const BrandsCatalog = lazyRetry(() => import("../pages/BrandsCatalog"));
+export const BrandDetail = lazyRetry(() => import("../pages/BrandDetail"));
+export const PrivateSectorsCatalog = lazyRetry(() => import("../pages/PrivateSectorsCatalog"));
+export const PrivateSectorDetail = lazyRetry(() => import("../pages/PrivateSectorDetail"));
+export const Offers = lazyRetry(() => import("../pages/Offers"));
+export const Compare = lazyRetry(() => import("../pages/Compare"));
+export const CompareProfiles = lazyRetry(() => import("../pages/CompareProfiles"));
+export const Projects = lazyRetry(() => import("../pages/Projects"));
+export const ProjectDetail = lazyRetry(() => import("../pages/ProjectDetail"));
+export const Blog = lazyRetry(() => import("../pages/Blog"));
+export const Guides = lazyRetry(() => import("../pages/Guides"));
+export const ContractTemplates = lazyRetry(() => import("../pages/ContractTemplates"));
+export const ContractTemplateDetail = lazyRetry(() => import("../pages/ContractTemplates").then(m => ({ default: m.ContractTemplateDetail })));
+export const HeavyEquipmentRentalSaudiArabia = lazyRetry(() => import("../pages/guides/HeavyEquipmentRentalSaudiArabia"));
+export const BlogPost = lazyRetry(() => import("../pages/BlogPost"));
+export const ProfileSystems = lazyRetry(() => import("../pages/ProfileSystems"));
+export const ProfileSystemDetail = lazyRetry(() => import("../pages/ProfileSystemDetail"));
+export const Notifications = lazyRetry(() => import("../pages/Notifications"));
+export const Membership = lazyRetry(() => import("../pages/Membership"));
+export const MembershipInvoice = lazyRetry(() => import("../pages/MembershipInvoice"));
+export const MembershipPaymentReturn = lazyRetry(() => import("../pages/MembershipPaymentReturn"));
+export const NotFound = lazyRetry(() => import("../pages/NotFound"));
+export const Onboarding = lazyRetry(() => import("../pages/Onboarding"));
+export const Start = lazyRetry(() => import("../pages/Start"));
+export const RegisterEntity = lazyRetry(() => import("../pages/RegisterEntity"));
+export const Categories = lazyRetry(() => import("../pages/Categories"));
+export const SectorLanding = lazyRetry(() => import("../pages/SectorLanding"));
+export const SectorsIndex = lazyRetry(() => import("../pages/SectorLanding").then(m => ({ default: m.SectorsIndex })));
+export const SectorCity = lazyRetry(() => import("../pages/SectorCity"));
+export const SectorsHub = lazyRetry(() => import("../pages/SectorsHub"));
+export const SectorSeoLanding = lazyRetry(() => import("../pages/SectorSeoLanding"));
+export const SectorBrief = lazyRetry(() => import("../pages/SectorBrief"));
+export const Services = lazyRetry(() => import("../pages/Services"));
+export const ServiceDetail = lazyRetry(() => import("../pages/ServiceDetail"));
+export const About = lazyRetry(() => import("../pages/About"));
+export const Contact = lazyRetry(() => import("../pages/Contact"));
+export const Privacy = lazyRetry(() => import("../pages/Privacy"));
+export const Terms = lazyRetry(() => import("../pages/Terms"));
+export const Forbidden = lazyRetry(() => import("../pages/Forbidden"));
+export const Unsubscribe = lazyRetry(() => import("../pages/Unsubscribe"));
+export const VerifyContract = lazyRetry(() => import("../pages/VerifyContract"));
+export const VerifyBusiness = lazyRetry(() => import("../pages/VerifyBusiness"));
+export const InviteAccept = lazyRetry(() => import("../pages/InviteAccept"));
+export const StaffInviteAccept = lazyRetry(() => import("../pages/StaffInviteAccept"));
+export const Diagnostics = lazyRetry(() => import("../pages/Diagnostics"));
+export const ForProviders = lazyRetry(() => import("../pages/ForProviders"));

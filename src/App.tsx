@@ -20,251 +20,232 @@ import { BrandLogo } from "@/components/common/BrandLogo";
 import { ThemeApplier } from "@/components/ThemeApplier";
 import { IdentityTokensApplier } from "@/components/IdentityTokensApplier";
 import { BrandFaviconApplier } from "@/components/BrandFaviconApplier";
-import { lazyRetry } from "@/lib/lazyRetry";
-const Index = lazyRetry(() => import("./pages/Index"));
-const DeferredAppOverlays = lazyRetry(() => import("./components/DeferredAppOverlays"));
-const AdminHome = lazyRetry(() => import("./pages/admin/AdminHome"));
-
-const Auth = lazyRetry(() => import("./pages/Auth"));
-const AuthVerified = lazyRetry(() => import("./pages/AuthVerified"));
-const HelpCenterHome = lazyRetry(() => import("./pages/help/HelpCenterHome"));
-const KnowledgeCenter = lazyRetry(() => import("./pages/KnowledgeCenter"));
-const HelpCategoryPage = lazyRetry(() => import("./pages/help/HelpCategoryPage"));
-const HelpArticlePage = lazyRetry(() => import("./pages/help/HelpArticlePage"));
-const ReportIssuePage = lazyRetry(() => import("./pages/help/ReportIssuePage"));
-const FeatureRequestPage = lazyRetry(() => import("./pages/help/FeatureRequestPage"));
-const EmailNotArrivingHelp = lazyRetry(() => import("./pages/help/EmailNotArriving"));
-const AdminHelpCenter = lazyRetry(() => import("./pages/admin/AdminHelpCenter"));
-const DashboardHelpCenter = lazyRetry(() => import("./pages/dashboard/DashboardHelpCenter"));
-// HelpLauncherFloating, ConsentBanner, and BuildVersionWatcher are now
-// rendered exclusively via <DeferredAppOverlays>, which holds them off the
-// critical path until window load + requestIdleCallback.
-const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
-const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolve"));
-const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));
-const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
-const QuotationViewer = lazyRetry(() => import("./pages/QuotationViewer"));
-const CustomerProjectPortal = lazyRetry(() => import("./pages/CustomerProjectPortal"));
-const QSlugDispatcher = lazyRetry(() => import("./pages/QSlugDispatcher"));
-const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
-const BranchDetail = lazyRetry(() => import("./pages/BranchDetail"));
-const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
-const ClaimBusiness = lazyRetry(() => import("./pages/ClaimBusiness"));
-const Search = lazyRetry(() => import("./pages/Search"));
-const Quote = lazyRetry(() => import("./pages/Quote"));
-const ProviderLeads = lazyRetry(() => import("./pages/dashboard/ProviderLeads"));
-const ProviderLeadDetails = lazyRetry(() => import("./pages/dashboard/ProviderLeadDetails"));
-const ProviderServiceAreas = lazyRetry(() => import("./pages/dashboard/ProviderServiceAreas"));
-const ProviderMembership = lazyRetry(() => import("./pages/dashboard/ProviderMembership"));
-const DashboardMembership = lazyRetry(() => import("./pages/dashboard/DashboardMembership"));
-const AdminServiceActivations = lazyRetry(() => import("./pages/admin/AdminServiceActivations"));
-const AdminAbExperiments = lazyRetry(() => import("./pages/admin/AdminAbExperiments"));
-const AdminShowcase = lazyRetry(() => import("./pages/admin/AdminShowcase"));
-const AdminPartnerShowcase = lazyRetry(() => import("./pages/admin/AdminPartnerShowcase"));
-const AdminHomeFaq = lazyRetry(() => import("./pages/admin/AdminHomeFaq"));
-const AdminHomeSectors = lazyRetry(() => import("./pages/admin/AdminHomeSectors"));
-const DashboardShowcase = lazyRetry(() => import("./pages/dashboard/DashboardShowcase"));
-const Showcase = lazyRetry(() => import("./pages/Showcase"));
-const Contracts = lazyRetry(() => import("./pages/Contracts"));
-const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
-const RequestContractPage = lazyRetry(() => import("./pages/contracts/RequestContractPage"));
-const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
-const DashboardServices = lazyRetry(() => import("./pages/dashboard/DashboardServices"));
-const DashboardPortfolio = lazyRetry(() => import("./pages/dashboard/DashboardPortfolio"));
-const DashboardSites = lazyRetry(() => import("./pages/dashboard/DashboardSites"));
-const DashboardRentals = lazyRetry(() => import("./pages/dashboard/DashboardRentals"));
-const DashboardRentalsCalendar = lazyRetry(() => import("./pages/dashboard/DashboardRentalsCalendar"));
-const DashboardRentalsAnalytics = lazyRetry(() => import("./pages/dashboard/DashboardRentalsAnalytics"));
-const AdminRentals = lazyRetry(() => import("./pages/admin/AdminRentals"));
-const DashboardAssets = lazyRetry(() => import("./pages/dashboard/DashboardAssets"));
-const AdminAssets = lazyRetry(() => import("./pages/admin/AdminAssets"));
-const AdminAssetOverrides = lazyRetry(() => import("./pages/admin/AdminAssetOverrides"));
-const RentalsCatalog = lazyRetry(() => import("./pages/RentalsCatalog"));
-const RentalItemPublic = lazyRetry(() => import("./pages/RentalItemPublic"));
-const DashboardSitePrint = lazyRetry(() => import("./pages/dashboard/DashboardSitePrint"));
-const DashboardSiteDetail = lazyRetry(() => import("./pages/dashboard/DashboardSiteDetail"));
-const DashboardReviews = lazyRetry(() => import("./pages/dashboard/DashboardReviews"));
-const DashboardContractReview = lazyRetry(() => import("./pages/dashboard/DashboardContractReview"));
-const DashboardWorkOrders = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrders"));
-const ProductionBoardPage = lazyRetry(() => import("./pages/dashboard/ProductionBoardPage"));
-const DashboardWorkOrderDetail = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrderDetail"));
-const DashboardProcurement = lazyRetry(() => import("./pages/dashboard/DashboardProcurement"));
-const DashboardProcurementDetail = lazyRetry(() => import("./pages/dashboard/DashboardProcurementDetail"));
-const DashboardWarranties = lazyRetry(() => import("./pages/dashboard/DashboardWarranties"));
-const DashboardInstallments = lazyRetry(() => import("./pages/dashboard/DashboardInstallments"));
-const DashboardSettings = lazyRetry(() => import("./pages/dashboard/DashboardSettings"));
-const DashboardNoAccess = lazyRetry(() => import("./pages/dashboard/DashboardNoAccess"));
-const DashboardProfile = lazyRetry(() => import("./pages/dashboard/DashboardProfile"));
-const DashboardPromotions = lazyRetry(() => import("./pages/dashboard/DashboardPromotions"));
-const DashboardPrivateSectors = lazyRetry(() => import("./pages/dashboard/DashboardPrivateSectors"));
-const AdminPrivateSectors = lazyRetry(() => import("./pages/admin/AdminPrivateSectors"));
-const AdminServiceRequests = lazyRetry(() => import("./pages/admin/AdminServiceRequests"));
-const AdminBrands = lazyRetry(() => import("./pages/admin/AdminBrands"));
-const AdminBrandDetail = lazyRetry(() => import("./pages/admin/AdminBrandDetail"));
-const AdminBrandRequests = lazyRetry(() => import("./pages/admin/AdminBrandRequests"));
-const DashboardBrands = lazyRetry(() => import("./pages/dashboard/DashboardBrands"));
-const BrandsCatalog = lazyRetry(() => import("./pages/BrandsCatalog"));
-const BrandDetail = lazyRetry(() => import("./pages/BrandDetail"));
-const PrivateSectorsCatalog = lazyRetry(() => import("./pages/PrivateSectorsCatalog"));
-const PrivateSectorDetail = lazyRetry(() => import("./pages/PrivateSectorDetail"));
-const DashboardProjects = lazyRetry(() => import("./pages/dashboard/DashboardProjects"));
-const DashboardWorkspaces = lazyRetry(() => import("./pages/dashboard/DashboardWorkspaces"));
-const DashboardWorkspaceDetail = lazyRetry(() => import("./pages/dashboard/DashboardWorkspaceDetail"));
-const DashboardBlog = lazyRetry(() => import("./pages/dashboard/DashboardBlog"));
-const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/DashboardProfileSystems"));
-const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMessages"));
-const DashboardBookmarks = lazyRetry(() => import("./pages/dashboard/DashboardBookmarks"));
-const DashboardBookings = lazyRetry(() => import("./pages/dashboard/DashboardBookings"));
-const DashboardAnalytics = lazyRetry(() => import("./pages/dashboard/DashboardAnalytics"));
-const DashboardNotifications = lazyRetry(() => import("./pages/dashboard/DashboardNotifications"));
-const DashboardInquiries = lazyRetry(() => import("./pages/DashboardInquiries"));
-const Offers = lazyRetry(() => import("./pages/Offers"));
-const Compare = lazyRetry(() => import("./pages/Compare"));
-const CompareProfiles = lazyRetry(() => import("./pages/CompareProfiles"));
-const Projects = lazyRetry(() => import("./pages/Projects"));
-const ProjectDetail = lazyRetry(() => import("./pages/ProjectDetail"));
-const Blog = lazyRetry(() => import("./pages/Blog"));
-const Guides = lazyRetry(() => import("./pages/Guides"));
-const ContractTemplates = lazyRetry(() => import("./pages/ContractTemplates"));
-const ContractTemplateDetail = lazyRetry(() => import("./pages/ContractTemplates").then(m => ({ default: m.ContractTemplateDetail })));
-const HeavyEquipmentRentalSaudiArabia = lazyRetry(() => import("./pages/guides/HeavyEquipmentRentalSaudiArabia"));
-const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
-const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
-const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"));
-const AdminGoogleServices = lazyRetry(() => import("./pages/admin/AdminGoogleServices"));
-const AdminIntegrations = lazyRetry(() => import("./pages/admin/AdminIntegrations"));
-const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
-const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
-const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"));
-const AdminIdentity = lazyRetry(() => import("./pages/admin/AdminIdentity"));
-const AdminIdentityHub = lazyRetry(() => import("./pages/admin/AdminIdentityHub"));
-const AdminIdentityCenter = lazyRetry(() => import("./pages/admin/AdminIdentityCenter"));
-const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
-const AdminReferenceInspector = lazyRetry(() => import("./pages/admin/AdminReferenceInspector"));
-const AdminBulkReferenceTriage = lazyRetry(() => import("./pages/admin/AdminBulkReferenceTriage"));
-const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
-// Historical taxonomy CRUD pages (AdminCategories / AdminTags /
-// AdminTaxonomyHub) were retired in favor of /admin/taxonomy. The
-// deprecation routes still render a replacement notice for any bookmarked
-// URLs. TODO(legacy-sunset): see TODO-C1-01 in `docs/pilot-launch-backlog.md`
-// — remove the underlying files once /admin/taxonomy adoption is verified
-// at 100%. Identifier kept as `AdminLegacyTaxonomyReplaced` because tests
-// and the do-not-remove list reference it by name.
-const AdminLegacyTaxonomyReplaced = lazyRetry(() => import("./pages/admin/AdminLegacyTaxonomyReplaced"));
-const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
-const AdminOwnershipTransferRequests = lazyRetry(() => import("./pages/admin/AdminOwnershipTransferRequests"));
-const AdminEntityAccessRequests = lazyRetry(() => import("./pages/admin/AdminEntityAccessRequests"));
-const AdminApprovalsCenter = lazyRetry(() => import("./pages/admin/AdminApprovalsCenter"));
-const AdminBusinessVisibility = lazyRetry(() => import("./pages/admin/AdminBusinessVisibility"));
-const AdminLocationsHub = lazyRetry(() => import("./pages/admin/locations/AdminLocationsHub"));
-const AdminLocationsCatalog = lazyRetry(() => import("./pages/admin/locations/AdminLocationsCatalog"));
-const AdminBusinessServiceAreas = lazyRetry(() => import("./pages/admin/locations/AdminBusinessServiceAreas"));
-const AdminBusinessCoordinates = lazyRetry(() => import("./pages/admin/locations/AdminBusinessCoordinates"));
-const AdminClientSitesMonitoring = lazyRetry(() => import("./pages/admin/AdminClientSitesMonitoring"));
-const AdminBarcodeRegistry = lazyRetry(() => import("./pages/admin/AdminBarcodeRegistry"));
-const AdminContactCenter = lazyRetry(() => import("./pages/admin/AdminContactCenter"));
-const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
-const AdminQuoteRequests = lazyRetry(() => import("./pages/admin/AdminQuoteRequests"));
-const AdminOpportunitiesOperations = lazyRetry(() => import("./pages/admin/AdminOpportunitiesOperations"));
-const AdminQuoteRequestDetails = lazyRetry(() => import("./pages/admin/AdminQuoteRequestDetails"));
-const AdminQuoteOperations = lazyRetry(() => import("./pages/admin/AdminQuoteOperations"));
-const QuoteRequestDetails = lazyRetry(() => import("./pages/dashboard/QuoteRequestDetails"));
-const AdminPerformance = lazyRetry(() => import("./pages/admin/AdminPerformance"));
-const AdminDiagnostics = lazyRetry(() => import("./pages/admin/AdminDiagnostics"));
-const AdminDataEnrichment = lazyRetry(() => import("./pages/admin/AdminDataEnrichment"));
-const AdminDataEnrichmentGovernance = lazyRetry(() => import("./pages/admin/AdminDataEnrichmentGovernance"));
-const AdminMarketAnalytics = lazyRetry(() => import("./pages/admin/AdminMarketAnalytics"));
-const AdminAccessManagement = lazyRetry(() => import("./pages/admin/AdminAccessManagement"));
-const AdminSystemAccess = lazyRetry(() => import("./pages/admin/AdminSystemAccess"));
-const AdminProviderGrowth = lazyRetry(() => import("./pages/admin/AdminProviderGrowth"));
-const AdminProviderGrowthQueue = lazyRetry(() => import("./pages/admin/AdminProviderGrowthQueue"));
-const AdminCatalogGovernance = lazyRetry(() => import("./pages/admin/AdminCatalogGovernance"));
-const AdminCatalogGovernanceQueue = lazyRetry(() => import("./pages/admin/AdminCatalogGovernanceQueue"));
-const AdminProviderAnalytics = lazyRetry(() => import("./pages/admin/AdminProviderAnalytics"));
-const AdminAuditLog = lazyRetry(() => import("./pages/admin/AdminAuditLog"));
-const DashboardRfqDetail = lazyRetry(() => import("./pages/dashboard/DashboardRfqDetail"));
-const Notifications = lazyRetry(() => import("./pages/Notifications"));
-const Membership = lazyRetry(() => import("./pages/Membership"));
-const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
-const MembershipPaymentReturn = lazyRetry(() => import("./pages/MembershipPaymentReturn"));
-const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
-const DashboardOperationsFeed = lazyRetry(() => import("./pages/dashboard/DashboardOperationsFeed"));
-const DashboardOperationsCenter = lazyRetry(() => import("./pages/dashboard/DashboardOperationsCenter"));
-const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
-const DashboardClients = lazyRetry(() => import("./pages/dashboard/DashboardClients"));
-const DashboardBadge = lazyRetry(() => import("./pages/dashboard/DashboardBadge"));
-const DashboardMyRequests = lazyRetry(() => import("./pages/dashboard/DashboardMyRequests"));
-const NotFound = lazyRetry(() => import("./pages/NotFound"));
-const Onboarding = lazyRetry(() => import("./pages/Onboarding"));
-const Start = lazyRetry(() => import("./pages/Start"));
-const RegisterEntity = lazyRetry(() => import("./pages/RegisterEntity"));
-const Categories = lazyRetry(() => import("./pages/Categories"));
-const SectorLanding = lazyRetry(() => import("./pages/SectorLanding"));
-const SectorsIndex = lazyRetry(() => import("./pages/SectorLanding").then(m => ({ default: m.SectorsIndex })));
-const SectorCity = lazyRetry(() => import("./pages/SectorCity"));
-const SectorsHub = lazyRetry(() => import("./pages/SectorsHub"));
-const SectorSeoLanding = lazyRetry(() => import("./pages/SectorSeoLanding"));
-const SectorBrief = lazyRetry(() => import("./pages/SectorBrief"));
-const Services = lazyRetry(() => import("./pages/Services"));
-const ServiceDetail = lazyRetry(() => import("./pages/ServiceDetail"));
-const About = lazyRetry(() => import("./pages/About"));
-const Contact = lazyRetry(() => import("./pages/Contact"));
-const Privacy = lazyRetry(() => import("./pages/Privacy"));
-const Terms = lazyRetry(() => import("./pages/Terms"));
-const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
-const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
-const VerifyContract = lazyRetry(() => import("./pages/VerifyContract"));
-const VerifyBusiness = lazyRetry(() => import("./pages/VerifyBusiness"));
-const InviteAccept = lazyRetry(() => import("./pages/InviteAccept"));
-const StaffInviteAccept = lazyRetry(() => import("./pages/StaffInviteAccept"));
-const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
-const DashboardAccountDiagnostics = lazyRetry(() => import("./pages/dashboard/DashboardAccountDiagnostics"));
-const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
-const ProviderJoin = lazyRetry(() => import("./pages/ProviderJoin"));
-const ProviderJoinEdit = lazyRetry(() => import("./pages/ProviderJoinEdit"));
-const AdminProviderLeads = lazyRetry(() => import("./pages/admin/AdminProviderLeads"));
-const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
-const DashboardBusinessCompletion = lazyRetry(() => import("./pages/dashboard/DashboardBusinessCompletion"));
-const DashboardBusinessDraft = lazyRetry(() => import("./pages/dashboard/DashboardBusinessDraft"));
-const DashboardBusinessEdit = lazyRetry(() => import("./pages/dashboard/DashboardBusinessEdit"));
-const DashboardEntities = lazyRetry(() => import("./pages/dashboard/DashboardEntities"));
-const DashboardEntityDetail = lazyRetry(() => import("./pages/dashboard/DashboardEntityDetail"));
-const AdminProviderLanding = lazyRetry(() => import("./pages/admin/AdminProviderLanding"));
-const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
-// NAVIGATION-CONSOLIDATION-1 — unified tabbed hubs (Phase 2).
-const DashboardBusinessProfileHub = lazyRetry(() => import("./pages/dashboard/DashboardBusinessProfileHub"));
-const DashboardBranches = lazyRetry(() => import("./pages/dashboard/DashboardBranches"));
-const DashboardRequestsHub = lazyRetry(() => import("./pages/dashboard/DashboardRequestsHub"));
-const DashboardRfqHub = lazyRetry(() => import("./pages/dashboard/DashboardRfqHub"));
-const DashboardContractsHub = lazyRetry(() => import("./pages/dashboard/DashboardContractsHub"));
-const DashboardLoyaltyHub = lazyRetry(() => import("./pages/dashboard/DashboardLoyaltyHub"));
-const DashboardStaffHub = lazyRetry(() => import("./pages/dashboard/DashboardStaffHub"));
-const AdminOperationsHub = lazyRetry(() => import("./pages/admin/AdminOperationsHub"));
-const AdminOperationsCenterUnified = lazyRetry(() => import("./pages/admin/AdminOperationsCenterUnified"));
-const AdminConversionOptimization = lazyRetry(() => import("./pages/admin/AdminConversionOptimization"));
-const AdminReportsHub = lazyRetry(() => import("./pages/admin/AdminReportsHub"));
-const AdminEmailHub = lazyRetry(() => import("./pages/admin/AdminEmailHub"));
-const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
-// NAVIGATION-CONSOLIDATION-1 — Phase 3 hubs.
-const AdminProviderReviewHub = lazyRetry(() => import("./pages/admin/AdminProviderReviewHub"));
-const AdminContractsHub = lazyRetry(() => import("./pages/admin/AdminContractsHub"));
-const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershipsHub"));
-// AdminTaxonomyHub retired — the deprecation routes /admin/categories and
-// /admin/tags now render AdminLegacyTaxonomyReplaced as a
-// backward-compatibility notice. TODO(legacy-sunset): see TODO-C1-02 in
-// `docs/pilot-launch-backlog.md` — delete the file once verified.
-const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
-const AdminNotificationsConfig = lazyRetry(() => import("./pages/admin/AdminNotificationsConfig"));
-// Taxonomy & Reference Data Center — Phase 2.
-const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
-const AdminProjectCategories = lazyRetry(() => import("./pages/admin/AdminProjectCategories"));
-// ADMIN UX RECONSOLIDATION PHASE 2 — canonical center shells.
-const AdminProcurementCenter = lazyRetry(() => import("./pages/admin/AdminProcurementCenter"));
-const AdminContentCenter = lazyRetry(() => import("./pages/admin/AdminContentCenter"));
-const AdminFinanceCenter = lazyRetry(() => import("./pages/admin/AdminFinanceCenter"));
-const AdminSettingsCenter = lazyRetry(() => import("./pages/admin/AdminSettingsCenter"));
-// KNOWLEDGE ADMIN MANAGEMENT — Phase 3 (read-only).
-const AdminKnowledgeCenter = lazyRetry(() => import("./pages/admin/AdminKnowledgeCenter"));
+import {
+  Index,
+  DeferredAppOverlays,
+  Auth,
+  AuthVerified,
+  HelpCenterHome,
+  KnowledgeCenter,
+  HelpCategoryPage,
+  HelpArticlePage,
+  ReportIssuePage,
+  FeatureRequestPage,
+  EmailNotArrivingHelp,
+  PublicSiteScan,
+  PublicBarcodeResolve,
+  ReferenceResolver,
+  ResetPassword,
+  QuotationViewer,
+  CustomerProjectPortal,
+  QSlugDispatcher,
+  BusinessProfile,
+  BranchDetail,
+  UsernameResolver,
+  ClaimBusiness,
+  Search,
+  Quote,
+  Showcase,
+  Contracts,
+  ContractDetail,
+  RequestContractPage,
+  RentalsCatalog,
+  RentalItemPublic,
+  BrandsCatalog,
+  BrandDetail,
+  PrivateSectorsCatalog,
+  PrivateSectorDetail,
+  Offers,
+  Compare,
+  CompareProfiles,
+  Projects,
+  ProjectDetail,
+  Blog,
+  Guides,
+  ContractTemplates,
+  ContractTemplateDetail,
+  HeavyEquipmentRentalSaudiArabia,
+  BlogPost,
+  ProfileSystems,
+  ProfileSystemDetail,
+  Notifications,
+  Membership,
+  MembershipInvoice,
+  MembershipPaymentReturn,
+  NotFound,
+  Onboarding,
+  Start,
+  RegisterEntity,
+  Categories,
+  SectorLanding,
+  SectorsIndex,
+  SectorCity,
+  SectorsHub,
+  SectorSeoLanding,
+  SectorBrief,
+  Services,
+  ServiceDetail,
+  About,
+  Contact,
+  Privacy,
+  Terms,
+  Forbidden,
+  Unsubscribe,
+  VerifyContract,
+  VerifyBusiness,
+  InviteAccept,
+  StaffInviteAccept,
+  Diagnostics,
+  ForProviders,
+  DashboardHelpCenter,
+  ProviderLeads,
+  ProviderLeadDetails,
+  ProviderServiceAreas,
+  ProviderMembership,
+  DashboardMembership,
+  DashboardShowcase,
+  DashboardOverview,
+  DashboardServices,
+  DashboardPortfolio,
+  DashboardSites,
+  DashboardRentals,
+  DashboardRentalsCalendar,
+  DashboardRentalsAnalytics,
+  DashboardAssets,
+  DashboardSitePrint,
+  DashboardSiteDetail,
+  DashboardReviews,
+  DashboardContractReview,
+  DashboardWorkOrders,
+  ProductionBoardPage,
+  DashboardWorkOrderDetail,
+  DashboardProcurement,
+  DashboardProcurementDetail,
+  DashboardWarranties,
+  DashboardInstallments,
+  DashboardSettings,
+  DashboardNoAccess,
+  DashboardProfile,
+  DashboardPromotions,
+  DashboardPrivateSectors,
+  DashboardBrands,
+  DashboardProjects,
+  DashboardWorkspaces,
+  DashboardWorkspaceDetail,
+  DashboardBlog,
+  DashboardProfileSystems,
+  DashboardMessages,
+  DashboardBookmarks,
+  DashboardBookings,
+  DashboardAnalytics,
+  DashboardNotifications,
+  DashboardInquiries,
+  QuoteRequestDetails,
+  DashboardRfqDetail,
+  DashboardOperations,
+  DashboardOperationsFeed,
+  DashboardOperationsCenter,
+  DashboardAiCenter,
+  DashboardClients,
+  DashboardBadge,
+  DashboardMyRequests,
+  DashboardAccountDiagnostics,
+  ProviderJoin,
+  ProviderJoinEdit,
+  DashboardCommunicationPreferences,
+  DashboardBusinessCompletion,
+  DashboardBusinessDraft,
+  DashboardBusinessEdit,
+  DashboardEntities,
+  DashboardEntityDetail,
+  DashboardBusinessProfileHub,
+  DashboardBranches,
+  DashboardRequestsHub,
+  DashboardRfqHub,
+  DashboardContractsHub,
+  DashboardLoyaltyHub,
+  DashboardStaffHub,
+  AdminHome,
+  AdminHelpCenter,
+  AdminServiceActivations,
+  AdminAbExperiments,
+  AdminShowcase,
+  AdminPartnerShowcase,
+  AdminHomeFaq,
+  AdminHomeSectors,
+  AdminRentals,
+  AdminAssets,
+  AdminAssetOverrides,
+  AdminPrivateSectors,
+  AdminServiceRequests,
+  AdminBrands,
+  AdminBrandDetail,
+  AdminBrandRequests,
+  AdminGoogleServices,
+  AdminIntegrations,
+  AdminApiDocs,
+  AdminUsers,
+  AdminUserDetail,
+  AdminIdentity,
+  AdminIdentityHub,
+  AdminIdentityCenter,
+  AdminCronRuns,
+  AdminReferenceInspector,
+  AdminBulkReferenceTriage,
+  AdminActivityLog,
+  AdminLegacyTaxonomyReplaced,
+  AdminBusinesses,
+  AdminOwnershipTransferRequests,
+  AdminEntityAccessRequests,
+  AdminApprovalsCenter,
+  AdminBusinessVisibility,
+  AdminLocationsHub,
+  AdminLocationsCatalog,
+  AdminBusinessServiceAreas,
+  AdminBusinessCoordinates,
+  AdminClientSitesMonitoring,
+  AdminBarcodeRegistry,
+  AdminContactCenter,
+  AdminLeadRequests,
+  AdminQuoteRequests,
+  AdminOpportunitiesOperations,
+  AdminQuoteRequestDetails,
+  AdminQuoteOperations,
+  AdminPerformance,
+  AdminDiagnostics,
+  AdminDataEnrichment,
+  AdminDataEnrichmentGovernance,
+  AdminMarketAnalytics,
+  AdminAccessManagement,
+  AdminSystemAccess,
+  AdminProviderGrowth,
+  AdminProviderGrowthQueue,
+  AdminCatalogGovernance,
+  AdminCatalogGovernanceQueue,
+  AdminProviderAnalytics,
+  AdminAuditLog,
+  AdminProviderLeads,
+  AdminProviderLanding,
+  AdminPdfVisualQa,
+  AdminOperationsHub,
+  AdminOperationsCenterUnified,
+  AdminConversionOptimization,
+  AdminReportsHub,
+  AdminEmailHub,
+  AdminSeoHub,
+  AdminProviderReviewHub,
+  AdminContractsHub,
+  AdminMembershipsHub,
+  AdminSystemSettingsHub,
+  AdminNotificationsConfig,
+  AdminTaxonomyCenter,
+  AdminProjectCategories,
+  AdminProcurementCenter,
+  AdminContentCenter,
+  AdminFinanceCenter,
+  AdminSettingsCenter,
+  AdminKnowledgeCenter,
+} from "@/routes";
 
 const PageLoader = () => (
   <div className="flex min-h-dvh items-center justify-center bg-background">
