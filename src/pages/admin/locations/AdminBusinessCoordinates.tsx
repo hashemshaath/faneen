@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,10 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { updateBusinessById, listAdminBusinesses } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Save, Loader2, Map as MapIcon, AlertCircle } from 'lucide-react';
-import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
+import type { ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
+const LocationPicker = lazy(() =>
+  import('@/components/dashboard/business-edit/LocationPicker').then((m) => ({ default: m.LocationPicker })),
+);
 
 interface BizRow {
   id: string;
@@ -140,13 +143,15 @@ const AdminBusinessCoordinates: React.FC = () => {
                   <p className="text-xs text-muted-foreground tech-content">{editor.ref_id}</p>
                 </div>
 
-                <LocationPicker
-                  isRTL
-                  latitude={editor.latitude}
-                  longitude={editor.longitude}
-                  onChange={(lat, lng) => setEditor({ ...editor, latitude: lat, longitude: lng })}
-                  onAutofill={handleAutofill}
-                />
+                <Suspense fallback={<Skeleton className="h-[320px] w-full rounded-md" />}>
+                  <LocationPicker
+                    isRTL
+                    latitude={editor.latitude}
+                    longitude={editor.longitude}
+                    onChange={(lat, lng) => setEditor({ ...editor, latitude: lat, longitude: lng })}
+                    onAutofill={handleAutofill}
+                  />
+                </Suspense>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1"><Label className="text-xs">المنطقة</Label><Input dir="auto" value={editor.region ?? ''} onChange={(e) => setEditor({ ...editor, region: e.target.value })} /></div>
