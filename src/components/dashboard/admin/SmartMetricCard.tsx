@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { Area, AreaChart, ResponsiveContainer, Bar, BarChart } from 'recharts';
 import { ArrowDownRight, ArrowUpRight, Minus, type LucideIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+
+const SmartMetricCardChart = lazy(() => import('./SmartMetricCard.chart'));
 
 export type SmartTone = 'primary' | 'accent' | 'success' | 'warning' | 'info' | 'destructive';
 
@@ -103,30 +104,14 @@ export function SmartMetricCard({
       </div>
       {hasSeries && (
         <div className="h-[42px] -mx-1" aria-hidden="true">
-          <ResponsiveContainer width="100%" height="100%">
-            {chart === 'bars' ? (
-              <BarChart data={data}>
-                <Bar dataKey="v" fill={t.stroke} radius={[3, 3, 0, 0]} />
-              </BarChart>
-            ) : (
-              <AreaChart data={data}>
-                <defs>
-                  <linearGradient id={`smart-grad-${tone}-${label}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={t.stroke} stopOpacity={0.35} />
-                    <stop offset="100%" stopColor={t.stroke} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Area
-                  type="monotone"
-                  dataKey="v"
-                  stroke={t.stroke}
-                  strokeWidth={1.75}
-                  fill={`url(#smart-grad-${tone}-${label})`}
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            )}
-          </ResponsiveContainer>
+          <Suspense fallback={<div className="h-full w-full" />}>
+            <SmartMetricCardChart
+              data={data}
+              chart={chart}
+              stroke={t.stroke}
+              gradId={`smart-grad-${tone}-${label}`}
+            />
+          </Suspense>
         </div>
       )}
       {insight && (

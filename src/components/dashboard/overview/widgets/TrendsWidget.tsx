@@ -1,15 +1,16 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listNotificationCreatedAtSeries } from '@/modules/notifications';
 import { listContractCreatedAtSeries } from '@/modules/contracts';
 import { Card, CardContent } from '@/components/ui/card';
-import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
-  ChartTooltipStyle,
   SectionHeader, SectionChip, SECTION_CARD_CLASS, SECTION_CONTENT_CLASS,
 } from '../shared';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const TrendsWidgetChart = lazy(() => import('./TrendsWidget.chart'));
 
 interface DayBucket { day: string; count: number }
 
@@ -108,14 +109,9 @@ export const TrendsWidget = React.memo(function TrendsWidget({
           {renderDelta(isRTL ? 'عقود (أسبوع)' : 'Contracts (week)', series.contractThis, series.contractLast)}
         </div>
         <div className="h-[80px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={series.merged} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-              <XAxis dataKey="day" hide />
-              <Tooltip contentStyle={ChartTooltipStyle} cursor={{ stroke: 'hsl(var(--border))' }} />
-              <Line type="monotone" dataKey="notifications" stroke="hsl(var(--accent))" strokeWidth={1.75} dot={false} />
-              <Line type="monotone" dataKey="contracts"     stroke="hsl(var(--primary))" strokeWidth={1.75} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<Skeleton className="h-full w-full" />}>
+            <TrendsWidgetChart data={series.merged} />
+          </Suspense>
         </div>
       </CardContent>
     </Card>
