@@ -1,189 +1,127 @@
-# Read-Only Audit — Routes, Flows, Code Organization
 
-Scope: `src/App.tsx` (706 lines, ~210 routes), core journeys, and modularization feasibility. **No code changes proposed inside this pass** — only findings + a phased plan that can each be executed and smoke-tested independently.
+# Deep Code-Quality Audit — Findings & Phased Plan
 
-Assumption: "safe to remove" = lazy import whose component is never used as a `element={<Component/>}` anywhere in `App.tsx` (only its former route path survives as a `<Navigate>`). All such removals are import-only cleanup; the URL stays live.
+Read-only pass. Scope excludes DB/RPC/edge functions and the three pending Phase-C route-guard decisions.
 
----
+## 1. Code Quality & Duplication
 
-## 1. Routes Audit
-
-### 1a. Dead lazy imports in `App.tsx` (mounted nowhere, only path retained via `<Navigate>`)
-
-Verified by scanning `element=` occurrences in `src/App.tsx`:
-
-| # | Import (line) | Reason |
-|---|---|---|
-| 1 | `AdminApiSettings` | route redirects to `/admin/system-settings?tab=api` |
-| 2 | `AdminAnalyticsSettings` | redirect to `system-settings?tab=analytics` |
-| 3 | `AdminBranding` | redirect to `system-settings?tab=branding` |
-| 4 | `AdminContractTemplates` | redirect to `contracts?tab=templates` |
-| 5 | `AdminPdfExportAudit` | redirect to `contracts?tab=exports` |
-| 6 | `AdminContractCreate` | redirect to `contracts?tab=create` |
-| 7 | `AdminContracts` | hub `AdminContractsHub` mounts `/admin/contracts` |
-| 8 | `AdminContractAnalytics` | redirect to `contracts?tab=analytics` |
-| 9 | `AdminMemberships` | hub `AdminMembershipsHub` mounts the path |
-| 10 | `AdminMembershipRejections` | redirect to `memberships?tab=rejections` |
-| 11 | `AdminMembershipEvents` | redirect to `memberships?tab=events` |
-| 12 | `AdminMembershipPayments` | redirect to `memberships?tab=payments` |
-| 13 | `AdminProviderSubscriptions` | redirect to `memberships?tab=providers` |
-| 14 | `AdminEmailDeliverability` | redirect to `email-center?tab=deliverability`; hub is `AdminEmailHub` |
-| 15 | `AdminEmailCenter` | never mounted (`AdminEmailHub` owns `/admin/email-center`) |
-| 16 | `AdminSiteAudit` | redirect to `sitemap-status?tab=audit` |
-| 17 | `AdminSitemapStatus` | needs verification — used in redirect target only |
-| 18 | `AdminSectorSeo`, `AdminMarketAnalytics` | rolled into `AdminSeoHub` |
-| 19 | `AdminAccessManagement`, `AdminSystemAccess` | rolled into hubs |
-| 20 | `AdminOperations`, `AdminOperationsConsole` | hub `AdminOperationsHub`; `/console` redirects |
-| 21 | `AdminIdentity`, `AdminIdentityHub` | `AdminIdentityCenter` is likely the current mount (needs 1 grep pass) |
-| 22 | `AdminSystemSettings`, `AdminSystemSettingsHub` | `AdminSettingsCenter` is canonical |
-| 23 | `AdminNotificationsConfig` | not mounted |
-| 24 | `AdminProviderReview` | replaced by `AdminProviderReviewHub` |
-| 25 | `AdminKpis`, `AdminReports` | replaced by `AdminReportsHub` |
-| 26 | `DashboardRfq`, `DashboardRfqInbox` | routes redirect to `/dashboard/opportunities/assigned` |
-| 27 | `DashboardWorkOrdersOverview` | route redirects to `/dashboard/work-orders` |
-| 28 | `DashboardContractAnalytics` | redirect to `contracts?tab=analytics` |
-| 29 | `DashboardContracts` | `DashboardContractsHub` owns `/dashboard/contracts` |
-| 30 | `DashboardLoyalty`, `DashboardLoyaltyStore` | `DashboardLoyaltyHub` owns both |
-| 31 | `DashboardTeamAccess`, `DashboardStaffCenter` | `DashboardStaffHub` owns `/dashboard/settings/staff` |
-| 32 | `DashboardMyRequests`, `DashboardLeads` | verify — `DashboardRequestsHub` owns `/dashboard/leads` |
-
-Each removal is a single-line delete; Phase A executes them in groups of 5–8 with a build between groups. Anything in the do-not-remove list of `docs/dead-code-audit.md` (e.g. `AdminLegacyTaxonomyReplaced`) stays.
-
-### 1b. `<Navigate>` targets — chains & dead targets
-
-- No redirect-to-redirect chains found. All `Navigate to="/admin/…?tab=…"` targets resolve to a real mounted page (`AdminMembershipsHub`, `AdminContractsHub`, `AdminEmailHub`, `AdminSeoHub`, `AdminSettingsCenter`, `AdminReportsHub`, `AdminOperationsHub`, `AdminContactCenter`, `DashboardContractsHub`, `DashboardStaffHub`, `DashboardLoyaltyHub`).
-- All read as static string literals — the existing `scripts/broken-links-audit.mjs` + `src/__tests__/adminRouteLinkIntegrity.test.ts` should confirm; recommend adding one static test that enumerates every `<Navigate to=...>` in `App.tsx` and asserts the target path (without query) is also declared as a `<Route path=...>`. (Test-only — Phase A.)
-
-### 1c. Route ordering vs `/:username` and catch-all
-
-- `route-ordering.test.ts` already enforces that `/:username` and `*` are last. Manual re-check: `/:username` is declared right before `/:username/:branchSlug` then `*`. All static public paths (`/rentals`, `/private-sectors`, `/sectors/*`, `/services/*`, `/brands/*`, `/help/*`, `/join/*`, `/showcase`, `/compare*`, etc.) are declared above it. **No shadowing.**
-- One nuance to add to the test: `/claim/:businessId` is a single-segment-plus-child pattern; safe because it's more specific than `/:username`.
-
-### 1d. Guard consistency
-
-Findings worth fixing (Phase A, cosmetic — no behavior change intended):
-
-1. **Redirect wrapped in `ProtectedRoute requireAdmin`**: dozens of `<Route element={<ProtectedRoute requireAdmin><Navigate .../></ProtectedRoute>}>` (e.g. `/admin/api-settings`, `/admin/branding`, `/admin/kpis`, `/admin/membership-*`, `/admin/quote-requests`, `/admin/site-audit`, `/admin/operations/console`, `/admin/analytics-settings`). Correct behavior, but unnecessary — the redirect target is itself guarded. Recommend replacing with bare `<Navigate>` for consistency with the `/dashboard/*` redirects that already use bare Navigate. Zero behavior change.
-2. **Bare `<Navigate>` for admin paths**: `/admin/contact-inbox-settings`, `/admin/contact-audit-log`, `/admin/contact-sla-dashboard`, `/admin/contact-notification-log` — bare, correct pattern.
-3. **`/admin/ai-center` uses `DashboardAiCenter`** (a dashboard page) under `requireAdmin` — verify this is intentional and not a leaked provider surface.
-4. **`/dashboard/blog` and `/dashboard/profile-systems`** use `requireAdmin` (not `requireProvider`). Confirm intent — these are labelled "dashboard" but only admins see them.
-5. **`/help/report-issue` and `/help/feature-request`** are `ProtectedRoute` (auth only, correct) — no admin/provider gap.
-6. **`/dashboard/business-completion`, `/dashboard/business-draft`, `/dashboard/entities/:id`, `/dashboard/credentials`** — all `ProtectedRoute` with no role. Sensitivity is provider-only; verify with product before tightening.
-
-### 1e. Cross-check with existing docs
-
-- `docs/dead-code-audit.md` currently claims "Components not used: None blocking." That file is stale for Phase-2 hub consolidation. Phase A updates it.
-- `docs/broken-links-audit-full.md` — will re-run `scripts/broken-links-audit.mjs` after Phase A; expected 0 broken.
-
----
-
-## 2. Flow Audit
-
-### 2a. Customer journey `/ → search → quote → offers → contract → tracking`
-
-| Step | Route | Status |
-|---|---|---|
-| Landing | `/` → `Index` | OK |
-| Search | `/search` → `Search` | OK |
-| Quote request | `/quote` → `Quote` | OK |
-| Offers | `/offers` → `Offers` | OK |
-| Contract | `/contracts` (list) + `/contracts/request` + `/contracts/:id` | OK, all `ProtectedRoute` |
-| Tracking | `/client/:refId` → `CustomerProjectPortal` | OK — public but token-scoped |
-
-No dead links along the primary path. The only friction is that quote submission still writes to `AdminQuoteRequests` (canonical) but bookmarked emails may hit `/admin/quote-requests/:id` — the `LegacyAdminQuoteRequestDetailRedirect` handles that correctly.
-
-### 2b. Provider journey `/for-providers → /join/qitaat → onboarding → dashboard → opportunities → quote → contract`
-
-| Step | Route | Status |
-|---|---|---|
-| Landing | `/for-providers` | OK |
-| Legacy landing | `/join-as-provider`, `/providers/join` | Both redirect correctly |
-| Signup wizard | `/join/qitaat`, `/join/qitaat/edit` | OK |
-| Post-signup | `/onboarding` (skipOnboarding) → `/start` → dashboard | OK |
-| Provider dashboard | `/dashboard` | OK |
-| Opportunities list | `/dashboard/opportunities/assigned` | **Verify route exists** — three redirects (`/dashboard/rfq`, `/dashboard/rfq/inbox`, and Requests-hub deep-link) point here. Path not visible in the excerpt; likely defined further down. If missing, this is the single biggest Phase C fix (RFQ inbox dead-ends). |
-| Quotation | `/dashboard/rfq/:id` → `DashboardRfqDetail` | OK |
-| Contract | `/dashboard/contracts` hub | OK |
-
-**Action for Phase C**: grep `App.tsx` for `/dashboard/opportunities/assigned` and confirm it renders. If it doesn't, Phase C step 1 wires it (component already imported in dashboard tree).
-
-### 2c. Auth journey `/auth → OTP → /start → role landing`
-
-- `/auth` → `Auth` (public) ✓
-- `/auth/verified` → `AuthVerified` ✓
-- `/reset-password` → `ResetPassword` ✓ (public — intentional for magic-link flow)
-- `/onboarding` and `/start` both use `ProtectedRoute skipOnboarding` — no loop possible.
-- `/register-entity` is fully public — verify this is intentional (may want `ProtectedRoute` to prevent anonymous entity creation).
-
-No loops or dead ends detected in the auth path itself.
-
----
-
-## 3. Code Organization
-
-### 3a. `App.tsx` split feasibility
-
-Very feasible and zero-risk if done as **imports-only extraction** — the `<Routes>` tree stays in `App.tsx`, only the lazy import block moves:
-
+### 1.1 Oversized page files (top 15 by LOC, real `wc -l`)
 ```text
-src/routes/
-├── publicRoutes.ts     (~80 lazyRetry entries: /, /search, /sectors, /brands, /blog, …)
-├── dashboardRoutes.ts  (~55 entries: Dashboard*, Provider*)
-├── adminRoutes.ts      (~75 entries: Admin*)
-└── index.ts            (re-export)
+3425  src/pages/ContractDetail.tsx
+3190  src/pages/dashboard/DashboardContracts.tsx
+2132  src/pages/dashboard/DashboardRentals.tsx
+1615  src/pages/dashboard/DashboardMessages.tsx
+1612  src/pages/admin/AdminContactMessages.tsx
+1516  src/pages/dashboard/DashboardSites.tsx
+1514  src/components/admin/data-enrichment/LegacySingleRowEnrichment.tsx
+1477  src/pages/dashboard/DashboardAiCenter.tsx
+1448  src/pages/admin/AdminBusinesses.tsx
+1390  src/pages/Onboarding.tsx
+1343  src/pages/dashboard/DashboardInstallments.tsx
+1336  src/pages/admin/AdminBarcodeRegistry.tsx
+1324  src/pages/dashboard/DashboardBlog.tsx
+1319  src/pages/Quote.tsx
+1280  src/pages/dashboard/DashboardBusinessEdit.tsx
+```
+All 15 mix data-fetching, mutations, JSX, and inline sub-components.
+
+### 1.2 Oversized hooks (>150 LOC)
+```text
+259 useActiveWorkspace.ts     251 useContractDraftAutosave.ts
+230 useThemeColors.ts         186 use-toast.ts
+178 useAdminFavorites.ts      174 useVisibleModules.ts
+167 usePageMeta.ts            153 useWorkspaceContext.ts
 ```
 
-Then `App.tsx` becomes ~200 lines: providers + `<Routes>` JSX only. No URL, guard, or component-boundary change. Route ordering (which is the invariant tests care about) is untouched because JSX order stays in `App.tsx`.
+### 1.3 Duplication hotspots
+- **Direct supabase client calls in UI**: 200 files under `src/components` + `src/pages` import `@/integrations/supabase/client` vs only 10 in `src/services/`. Same query patterns (my-business, profile, roles, memberships) are re-implemented in many pages.
+- **Silent catches**: ~155 empty `catch {}` / `catch { /* ignore */ }` blocks across `src/` — logs swallowed, no toast.
+- **`any` in critical paths**: 237 occurrences outside tests; concentrated in contracts, payments, RFQ pages.
+- **Formatting**: `src/lib/format.ts` exists but many pages still call `toLocaleString` / `new Intl.NumberFormat` inline (esp. `ContractDetail`, `DashboardInstallments`, `DashboardContracts`).
 
-**Optional Phase B follow-up (not blocking):** extract `<Routes>` itself into three `<Route>`-list components (`<PublicRoutes/>`, `<DashboardRoutes/>`, `<AdminRoutes/>`) and compose them in order. Slightly higher risk (route ordering is now split across files) — needs a new static test that asserts render order.
+## 2. Performance
 
-### 3b. Top-10 SRP-violating page/component files (candidates for extraction)
+- **React Query**: 661 `useQuery` call sites, only 286 declare `staleTime`. Global default is 5 min, so most are fine, but personal dashboards (already user-scoped keys) still often refetch too aggressively on remount because `gcTime` isn't tuned per hot key.
+- **Heavy libs imported eagerly** (candidates for lazy/dynamic import):
+  - `recharts` in `UserDashboardView`, `TrendsWidget`, `SmartMetricCard`, `IdentitySignupsChart`, `DashboardInstallments`, `AdminActivityLog`, `AdminCronRuns`, `AdminProviderLanding`
+  - `jspdf` + `jspdf-autotable` in `lib/export/exportTable.ts`, `DashboardRentalsAnalytics`, `exportLeadPdf.ts`
+  - `leaflet` in `LocationPicker`, `SearchMapV3`
+  - `qrcode` in `lib/badge/qr.ts`, `DashboardSitePrint`, `AdminSiteQrManager`, `BarcodeWidget`
+- **Re-render risk**: `LanguageContext` + `AuthContext` consumers span the whole app; large lists (DashboardContracts, DashboardRentals, DashboardSites) lack row-level `memo`.
 
-To be finalized in Phase D by running `wc -l src/pages src/components -R | sort -rn | head -50`, but the recurring offenders known from prior scans are:
+## 3. Error handling & resilience
 
-1. `src/App.tsx` (706 LOC — Phase B addresses)
-2. `src/pages/dashboard/DashboardOverview.tsx`
-3. `src/pages/dashboard/DashboardContractsHub.tsx`
-4. `src/pages/admin/AdminApprovalsCenter.tsx`
-5. `src/pages/admin/AdminOperationsCenterUnified.tsx`
-6. `src/pages/admin/AdminIdentityCenter.tsx`
-7. `src/pages/dashboard/DashboardMyRequests.tsx`
-8. `src/pages/Search.tsx`
-9. `src/pages/ContractDetail.tsx`
-10. `src/components/dashboard/DashboardSidebar.tsx`
+- 155 silent catches (see above) — biggest offenders in contract/rfq/messages pages.
+- Mutations: many `useMutation` sites lack `onError` toast and none use `onMutate`/rollback (checked contracts, installments, rentals pages).
+- **ErrorBoundary coverage** is thin: only `App.tsx` (root), `Index.tsx`, `Auth.tsx`. Dashboard and Admin shells are **not** wrapped — one crash in a hub tears the whole authenticated view down to root fallback.
 
-Extraction pattern for each: pull tab bodies into `./_tabs/`, extract data-fetching hooks into `src/hooks/`, keep the page as a thin composition layer.
+## 4. Consistency
 
----
+- **Service-layer bypass**: 200 UI files vs 10 service files (95% direct-call ratio). No enforcement lint.
+- **Loading states**: mix of `<Loader2>` spinners, shadcn `Skeleton`, and bare nulls across dashboard pages.
+- **i18n leakage** — files with the most inline Arabic literals outside `t()`:
+  ```text
+  360 ContractDetail.tsx            256 DashboardRentals.tsx
+  240 DashboardContracts.tsx        194 DashboardAiCenter.tsx
+  172 LegacySingleRowEnrichment.tsx 163 ProviderJoin.tsx
+  158 DashboardSites.tsx            157 Quote.tsx
+  152 DashboardBadge.tsx            151 AdminContactMessages.tsx
+  ```
+  Pattern is usually `{isRTL ? 'ع' : 'en'}` literals — should go through `translations` or at least `<Bi>` from `src/components/common/Bilingual.tsx`.
 
-## Phased Fix Plan
+## 5. Frontend security
 
-### Phase A — Zero-risk cleanup (imports + redirect consistency)
-- A1. Delete the ~32 dead lazy imports in §1a in groups of 5–8; build + `route-ordering.test.ts` between groups.
-- A2. Replace `<ProtectedRoute requireAdmin><Navigate/></ProtectedRoute>` with bare `<Navigate/>` for the ~15 admin redirects in §1d.1.
-- A3. Add a new test: every `<Navigate to=…>` target inside `App.tsx` resolves to a declared `<Route path=…>`.
-- A4. Refresh `docs/dead-code-audit.md` and re-run `scripts/broken-links-audit.mjs`.
+- **Cache-clear on signout**: OK. `AuthContext.resetForUser` + `signOut` both call `queryClient.clear()`, and account-switch cache isolation is covered by tests.
+- **localStorage**: audited keys are non-sensitive (language, saved searches, compare selection, recent routes, sidebar favorites, onboarding draft, lockout counter, chat draft). No tokens, PII, or role data stored client-side. ✅
+- **`dangerouslySetInnerHTML`**: every project call site already routes through `sanitizeBlogHtml` / `sanitizeSvgMarkup` / `sanitizeBadgeHtml`. The only unsanitized one is `src/components/ui/chart.tsx:70` — that's shadcn's CSS-vars string (recharts theme), built from a typed `config` object, not user input. ✅
 
-Smoke test: build, existing route-ordering + adminRouteLinkIntegrity tests, click one admin redirect per hub.
+## Phased Plan (safest → riskiest, each independently smoke-testable)
 
-### Phase B — Route module split (imports-only)
-- B1. Create `src/routes/{publicRoutes,dashboardRoutes,adminRoutes}.ts` with the lazy imports.
-- B2. Replace the import block in `App.tsx` with `import { … } from "@/routes"`. Zero JSX change.
-- B3. Re-run all route tests.
+### Phase B1 — Silent-catch triage (zero UI risk)
+Replace `catch {}` / `catch { /* ignore */ }` with a shared `logDiag('warn', ...)` helper in **non-UI** paths only (services, hooks). Keep behavior identical (no toast added yet). Target ~60 sites in `src/hooks` + `src/services`. Add a lint-style vitest that greps for bare-empty catches in those two folders.
+**Smoke test**: build + existing vitest suite; nothing user-visible changes.
 
-Smoke test: full build, homepage + one deep link per group.
+### Phase B2 — Lazy-load heavy libs
+Convert the 4 heavy libs to dynamic imports at their call sites:
+- Wrap all `recharts` chart components in `React.lazy` + `<Suspense fallback={<Skeleton/>}>`.
+- Move `jspdf` + `jspdf-autotable` behind `await import(...)` inside the export functions.
+- Move `qrcode` behind `await import(...)` in `lib/badge/qr.ts` and the three call sites.
+- Move `leaflet` behind `React.lazy` for `LocationPicker` + `SearchMapV3`.
+**Smoke test**: open each affected page (dashboard overview, installments, admin activity, rentals analytics, badge, sites map, search map) and confirm charts/PDF/QR/map render.
 
-### Phase C — Flow fixes
-- C1. Confirm `/dashboard/opportunities/assigned` renders; if not, wire it to the existing opportunities component (see §2b).
-- C2. Tighten guards flagged in §1d.6 (`business-completion`, `business-draft`, `entities/:id`, `credentials`) to `requireProvider` if product confirms.
-- C3. Decide on `/register-entity` — either add `ProtectedRoute` or document why it's public.
-- C4. Clarify `/admin/ai-center` (currently renders `DashboardAiCenter`) — either rename import or move to a real admin page.
+### Phase B3 — ErrorBoundary coverage
+Wrap the three main shells:
+- `DashboardLayout` (or the `dashboard/*` outlet) in an `<ErrorBoundary>`.
+- `AdminLayout` outlet in an `<ErrorBoundary>`.
+- `ContractDetail` (largest page, highest crash blast radius) in a page-local boundary.
+No new components; reuse existing `ErrorBoundary`. Add a test asserting each layout renders an `ErrorBoundary` in its tree.
+**Smoke test**: throw in a stub child, confirm boundary catches without unmounting nav.
 
-Smoke test: run the three journeys end-to-end via Playwright.
+### Phase B4 — Shared query hooks for the 3 hottest duplicated fetches
+Extract to `src/services/`:
+- `useMyBusiness(userId)` — currently redone in ~20 pages.
+- `useMyRoles(userId)` — duplicated alongside `AuthContext.roles` in several admin pages.
+- `useMyMembership(userId)` — duplicated in dashboard hubs.
+Migrate call sites in a follow-up (don't touch UI here — just introduce hooks + one pilot page: `DashboardOverview`).
+**Smoke test**: pilot page still renders identical data; unit test on the new hooks.
 
-### Phase D — Component extraction
-- D1. Regenerate the top-10 LOC list with a scripted `wc -l` pass; pick 3 files per iteration.
-- D2. Extract tabs / data hooks into siblings; keep public API identical.
-- D3. One PR per file; existing tests plus a fresh render smoke.
+### Phase B5 — Formatting + i18n literal cleanup (top 5 offenders)
+Pure text substitution — no logic change:
+- Replace inline `toLocaleString` with `fmtNum/fmtDate/fmtCurrency` in `ContractDetail`, `DashboardInstallments`, `DashboardContracts`.
+- Replace inline `{isRTL ? 'ع' : 'en'}` literals with `<Bi>` / `useBi()` in the top 5 files from §4. Do NOT add new `translations` keys yet — that's a separate content pass.
+**Smoke test**: language toggle on each touched page; visual diff.
 
-No DB, RPC, or edge-function changes are proposed in any phase.
+### Phase B6 — Component extraction (largest files only)
+Split — imports-only, no behavior change — the two biggest:
+- `ContractDetail.tsx` (3425 LOC) → extract per-tab sections (`ContractHeader`, `ContractPartiesPanel`, `ContractMilestonesPanel`, `ContractFinancialsPanel`, `ContractDocumentsPanel`).
+- `DashboardContracts.tsx` (3190 LOC) → extract list rows + filter bar + KPI strip.
+Everything stays under the same route, same props, same queries. Snapshot/route tests unchanged.
+**Smoke test**: contract detail + contracts list render; e2e navigation spec passes.
+
+### Explicitly out of scope
+- No DB / RPC / edge-function changes.
+- No route path or route-guard changes (Phase-C decisions on `register-entity`, `business-draft`, `ai-center` remain pending).
+- No new i18n translation keys or admin/permissions changes.
+- No package additions.
+
+Each phase is one PR-sized change, individually revertible, and can ship in the order listed.
