@@ -1,7 +1,17 @@
-import QRCode from 'qrcode';
+/**
+ * QR helpers — `qrcode` is loaded on demand so it stays out of the main
+ * bundle. Both callers here are already `async`, so dynamic import adds no
+ * observable latency beyond the first chunk fetch.
+ */
+
+async function loadQr() {
+  const mod = await import('qrcode');
+  return mod.default;
+}
 
 /** Generate a QR code as inline SVG string for the given URL. */
 export async function generateQrSvg(text: string, size = 200): Promise<string> {
+  const QRCode = await loadQr();
   return QRCode.toString(text, {
     type: 'svg',
     margin: 1,
@@ -13,6 +23,7 @@ export async function generateQrSvg(text: string, size = 200): Promise<string> {
 
 /** Trigger a PNG download of the QR for printing on flyers / cards. */
 export async function downloadQrPng(text: string, filename: string, size = 512): Promise<void> {
+  const QRCode = await loadQr();
   const dataUrl = await QRCode.toDataURL(text, {
     width: size,
     margin: 2,
