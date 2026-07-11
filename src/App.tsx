@@ -286,7 +286,10 @@ const AppRoutes = () => (
           <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
           {/* AUTH SIMPLIFICATION UX — post-login context selection */}
           <Route path="/start" element={<ProtectedRoute skipOnboarding><Start /></ProtectedRoute>} />
-          {/* ENTITY REGISTRATION SIMPLIFICATION — basic entity + account manager */}
+          {/* ENTITY REGISTRATION SIMPLIFICATION — basic entity + account manager.
+              INTENTIONALLY PUBLIC (Phase C audit): RegisterEntity handles inline
+              signup via authService.signUp for anonymous visitors as part of the
+              flow. Wrapping in <ProtectedRoute> would block first-time signups. */}
           <Route path="/register-entity" element={<RegisterEntity />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/search" element={<Search />} />
@@ -408,6 +411,12 @@ const AppRoutes = () => (
           <Route path="/dashboard/settings/staff-access" element={<Navigate to="/dashboard/settings/staff?tab=permissions" replace />} />
           <Route path="/dashboard/no-access" element={<ProtectedRoute><DashboardNoAccess /></ProtectedRoute>} />
           <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardProfile /></ProtectedRoute>} />
+          {/* Phase C audit — INTENTIONAL plain-auth guards (no requireProvider).
+              Both pages serve the pre-provider state: a user with a business
+              draft (approval_status='draft' | 'pending') who is BECOMING a
+              provider. Adding requireProvider would lock draft owners out of
+              the very pages that let them finish the application, creating a
+              dead redirect loop. */}
           <Route path="/dashboard/business-completion" element={<ProtectedRoute><DashboardBusinessCompletion /></ProtectedRoute>} />
           <Route path="/dashboard/business-draft" element={<ProtectedRoute><DashboardBusinessDraft /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 1 — Business Profile hub. */}
@@ -467,6 +476,12 @@ const AppRoutes = () => (
           <Route path="/dashboard/provider/membership" element={<ProtectedRoute requireProvider><ProviderMembership /></ProtectedRoute>} />
           <Route path="/dashboard/membership" element={<ProtectedRoute><DashboardMembership /></ProtectedRoute>} />
           <Route path="/dashboard/provider/service-areas" element={<ProtectedRoute requireProvider><ProviderServiceAreas /></ProtectedRoute>} />
+          {/* Phase C audit — NAMING DEBT (rename deferred to Phase D):
+              /admin/ai-center mounts DashboardAiCenter. The component is a
+              generic AI writing/chat surface with no provider-only mutations,
+              so mounting it behind requireAdmin is safe. The `Dashboard*` file
+              name is legacy; renaming to AdminAiCenter is deferred to Phase D
+              to keep this pass zero-behavior-change. */}
           <Route path="/admin/ai-center" element={<ProtectedRoute requireAdmin><DashboardAiCenter /></ProtectedRoute>} />
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
