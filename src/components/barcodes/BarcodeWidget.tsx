@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import QRCode from 'qrcode';
 import { Copy, Check, Download, Printer, QrCode as QrCodeIcon, Sticker, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,11 @@ import {
 } from '@/lib/barcodes/barcode-url';
 import { renderBarcodePrintCard } from './BarcodePrintCard';
 import { renderBarcodeLargeSticker } from './BarcodeLargeSticker';
+
+// `qrcode` is loaded on demand so it stays out of the main bundle. The widget
+// only draws once mounted, so the first-paint cost of the extra chunk is
+// negligible.
+const loadQr = () => import('qrcode').then((m) => m.default);
 
 export interface BarcodeWidgetProps {
   barcodeCode: string;
@@ -58,14 +62,18 @@ const BarcodeWidget: React.FC<BarcodeWidgetProps> = ({
 
   useEffect(() => {
     if (!showQr || !canvasRef.current || !code) return;
-    QRCode.toCanvas(canvasRef.current, url, {
-      width: px,
-      margin: 1,
-      errorCorrectionLevel: 'M',
-      color: { dark: '#0f172a', light: '#ffffff' },
-    }).catch(() => {
-      // silent — QR is best-effort
-    });
+    loadQr()
+      .then((QRCode) =>
+        QRCode.toCanvas(canvasRef.current!, url, {
+          width: px,
+          margin: 1,
+          errorCorrectionLevel: 'M',
+          color: { dark: '#0f172a', light: '#ffffff' },
+        }),
+      )
+      .catch(() => {
+        // silent — QR is best-effort
+      });
   }, [showQr, code, url, px]);
 
   const handleCopy = async () => {
@@ -81,6 +89,7 @@ const BarcodeWidget: React.FC<BarcodeWidgetProps> = ({
 
   const handleDownload = async () => {
     try {
+      const QRCode = await loadQr();
       const dataUrl = await QRCode.toDataURL(url, {
         width: 512,
         margin: 2,
@@ -100,6 +109,7 @@ const BarcodeWidget: React.FC<BarcodeWidgetProps> = ({
 
   const handlePrint = async () => {
     try {
+      const QRCode = await loadQr();
       const qrDataUrl = await QRCode.toDataURL(url, {
         width: 512,
         margin: 2,
@@ -121,6 +131,7 @@ const BarcodeWidget: React.FC<BarcodeWidgetProps> = ({
 
   const handlePrintLarge = async () => {
     try {
+      const QRCode = await loadQr();
       const qrDataUrl = await QRCode.toDataURL(url, {
         width: 1024,
         margin: 2,
