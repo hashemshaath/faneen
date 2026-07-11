@@ -13,7 +13,7 @@
  * A compact inline branches editor lets the user add additional branches
  * during onboarding (name + reuse main address by default).
  */
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Plus, Trash2, MapPin, Building2, ChevronDown, ChevronUp, Network, Phone, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,10 @@ import {
   NationalAddressForm,
   type NationalAddressValue,
 } from '@/modules/addresses/components/NationalAddressForm';
-import { LocationPicker } from '@/components/dashboard/business-edit/LocationPicker';
+import { Skeleton } from '@/components/ui/skeleton';
+const LocationPicker = lazy(() =>
+  import('@/components/dashboard/business-edit/LocationPicker').then((m) => ({ default: m.LocationPicker })),
+);
 
 export interface BranchDraft {
   name_ar: string;
@@ -108,12 +111,13 @@ export const AddressTab: React.FC<Props> = ({
             </Label>
           </div>
           <div className="p-2 space-y-2">
-            <LocationPicker
-              isRTL={isRTL}
-              latitude={latitude}
-              longitude={longitude}
-              onChange={onCoordsChange}
-              onAutofill={(d) => {
+            <Suspense fallback={<Skeleton className="h-[320px] w-full rounded-md" />}>
+              <LocationPicker
+                isRTL={isRTL}
+                latitude={latitude}
+                longitude={longitude}
+                onChange={onCoordsChange}
+                onAutofill={(d) => {
                 onPrimaryChange({
                   ...primary,
                   region: d.region_ar ?? primary.region,
@@ -124,8 +128,9 @@ export const AddressTab: React.FC<Props> = ({
                   address_en: d.address_en ?? primary.address_en,
                   address_manual: true,
                 });
-              }}
-            />
+                }}
+              />
+            </Suspense>
             <p className="text-[11px] text-muted-foreground px-1">
               {tt(isRTL,
                 'انقر أو اسحب الدبوس، ثم اضغط "تعبئة العنوان" لملء المنطقة والحي تلقائياً.',
