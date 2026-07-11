@@ -39,6 +39,7 @@ import { useWorkspacePreferences } from '@/hooks/useWorkspacePreferences';
 import { useWorkspaceStateSelfHeal } from '@/hooks/useWorkspaceStateSelfHeal';
 import { useEmbeddedPage } from '@/contexts/AdminTabsContext';
 import { BreadcrumbOverridesProvider } from '@/hooks/breadcrumbOverrides';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -428,7 +429,7 @@ const DashboardLayoutShell: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </div>
               </WorkspaceContextBar>
             )}
-            {children}
+            <ErrorBoundary>{children}</ErrorBoundary>
             <CommandPalette />
             <MobileWorkspaceActions />
           </main>

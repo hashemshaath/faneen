@@ -7,7 +7,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import QRCode from 'qrcode';
 import { Loader2, Printer, ArrowLeft, ShieldCheck, MapPin, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -17,6 +16,9 @@ import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
 import { buildBarcodeUrl } from '@/lib/barcodes/barcode-url';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+
+// `qrcode` is loaded on demand so it stays out of the main bundle.
+const loadQr = () => import('qrcode').then((m) => m.default);
 
 interface SiteRow {
   id: string;
@@ -56,12 +58,15 @@ export default function DashboardSitePrint() {
 
   useEffect(() => {
     if (!canvasRef.current || !url) return;
-    QRCode.toCanvas(canvasRef.current, url, {
-      width: 320,
-      margin: 1,
-      errorCorrectionLevel: 'M',
-      color: { dark: '#0f172a', light: '#ffffff' },
-    })
+    loadQr()
+      .then((QRCode) =>
+        QRCode.toCanvas(canvasRef.current!, url, {
+          width: 320,
+          margin: 1,
+          errorCorrectionLevel: 'M',
+          color: { dark: '#0f172a', light: '#ffffff' },
+        }),
+      )
       .then(() => setQrReady(true))
       .catch(() => setQrReady(false));
   }, [url]);

@@ -4,7 +4,6 @@
  * to Helvetica gracefully if the font fails to load (logs but still emits
  * a readable English-only sheet).
  */
-import jsPDF from 'jspdf';
 import { registerArabicFont } from '@/lib/pdf-arabic-font';
 import type { ProviderLeadRow } from '@/modules/providers';
 import {
@@ -26,6 +25,7 @@ export async function exportLeadPdf(
   lead: ProviderLeadRow,
   options: ExportLeadPdfOptions = {},
 ): Promise<void> {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const fontOk = await registerArabicFont(doc);
   // Full RTL layout: jsPDF mirrors text alignment and the default origin

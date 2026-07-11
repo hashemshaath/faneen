@@ -40,8 +40,8 @@ import { useBi } from '@/components/common/Bilingual';
 import { RentalItems, RentalOrders } from '@/modules/rentals';
 import type { RentalItem, RentalOrder, RentalOrderStatus } from '@/modules/rentals';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// jspdf + jspdf-autotable are dynamically imported inside `exportPdf` so
+// they stay out of the main bundle (only fetched when the user exports).
 import * as XLSX from 'xlsx';
 
 /* ---------------- helpers ---------------- */
@@ -374,6 +374,10 @@ const DashboardRentalsAnalytics: React.FC = () => {
   };
 
   const exportPdf = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageW = doc.internal.pageSize.getWidth();
     let y = 14;

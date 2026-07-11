@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useBi } from '@/components/common/Bilingual';
 import { ChevronDown, Download, Printer, QrCode, RefreshCw } from 'lucide-react';
+
+// `qrcode` is loaded on demand so admin bundles don't ship it eagerly.
+const loadQr = () => import('qrcode').then((m) => m.default);
 
 interface RotateResult {
   site_ref: string;
@@ -50,7 +52,8 @@ const AdminSiteQrManager: React.FC<Props> = ({ siteId, siteRef, visibility, qrEn
   useEffect(() => {
     if (!result || !canvasRef.current) return;
     const url = `${window.location.origin}${result.url}`;
-    QRCode.toCanvas(canvasRef.current, url, { width: 256, margin: 2, errorCorrectionLevel: 'M' })
+    loadQr()
+      .then((QRCode) => QRCode.toCanvas(canvasRef.current!, url, { width: 256, margin: 2, errorCorrectionLevel: 'M' }))
       .then(() => {
         try { setPngDataUrl(canvasRef.current!.toDataURL('image/png')); } catch { /* noop */ }
       })

@@ -24,6 +24,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { RelatedReferencesPanel } from '@/components/reference/RelatedReferencesPanel';
 import { UnifiedTimeline } from '@/components/timeline/UnifiedTimeline';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import type { ArabicFontDiagnostics } from '@/lib/pdf-arabic-font';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
@@ -1645,6 +1646,7 @@ const ContractDetail = () => {
   );
 
   return (
+    <ErrorBoundary>
     <div className="min-h-dvh bg-background">
       <Navbar />
 
@@ -3418,6 +3420,7 @@ const ContractDetail = () => {
         />
       )}
     </div>
+    </ErrorBoundary>
   );
 };
 
