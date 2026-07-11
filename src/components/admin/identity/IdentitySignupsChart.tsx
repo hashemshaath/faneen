@@ -5,9 +5,11 @@
  * avoid an extra DB round trip. Uses Recharts and the project's semantic
  * tokens. Includes RTL-aware axis ordering.
  */
-import React, { useMemo } from 'react';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import React, { useMemo, lazy, Suspense } from 'react';
 import { TrendingUp } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const IdentitySignupsChartInner = lazy(() => import('./IdentitySignupsChart.chart'));
 
 interface HasCreated { created_at: string }
 
@@ -75,51 +77,9 @@ export const IdentitySignupsChart: React.FC<Props> = ({ profiles, businesses, is
       </div>
 
       <div className="w-full h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 8, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="usersGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--info))" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="hsl(var(--info))" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="bizGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.25} vertical={false} />
-            <XAxis
-              dataKey="label"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              interval="preserveStartEnd"
-              reversed={isRTL}
-            />
-            <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              allowDecimals={false}
-              orientation={isRTL ? 'right' : 'left'}
-            />
-            <Tooltip
-              contentStyle={{
-                background: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: 12,
-                fontSize: 12,
-              }}
-              labelStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-            />
-            <Area type="monotone" dataKey="users" name={isRTL ? 'مستخدمون' : 'Users'}
-              stroke="hsl(var(--info))" strokeWidth={2} fill="url(#usersGrad)" />
-            <Area type="monotone" dataKey="businesses" name={isRTL ? 'منشآت' : 'Businesses'}
-              stroke="hsl(var(--success))" strokeWidth={2} fill="url(#bizGrad)" />
-          </AreaChart>
-        </ResponsiveContainer>
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
+          <IdentitySignupsChartInner data={data} isRTL={isRTL} />
+        </Suspense>
       </div>
     </div>
   );
