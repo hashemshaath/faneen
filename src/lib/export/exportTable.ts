@@ -2,9 +2,10 @@
  * Generic CSV + PDF export utility for dashboard tables.
  * - CSV: UTF-8 BOM, Excel-safe; safe for Arabic.
  * - PDF: jsPDF + autoTable, registers Arabic font when isRTL.
+ *
+ * `jspdf` + `jspdf-autotable` are loaded on demand (only when the user
+ * actually clicks "Export PDF") so they stay out of the main bundle.
  */
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { setupArabicDoc, getArabicTableStyles } from '@/lib/pdf-arabic-font';
 
 export type ExportColumn<T> = {
@@ -51,6 +52,10 @@ export async function exportToPDF<T>(
   options: { title: string; subtitle?: string; filename: string; isRTL?: boolean },
 ): Promise<void> {
   const { title, subtitle, filename, isRTL = false } = options;
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
   let fontLoaded = false;
