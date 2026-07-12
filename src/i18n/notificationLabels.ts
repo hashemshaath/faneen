@@ -102,6 +102,22 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   quote_contact_revealed:        { ar: 'كشف بيانات التواصل',         en: 'Contact Details Revealed' },
   lead_cancelled:                { ar: 'إلغاء الفرصة',              en: 'Lead Cancelled' },
 
+  // ── Opportunity lifecycle (Phase 15 + P1.1)
+  opportunity_created:                { ar: 'فرصة جديدة',                    en: 'New Opportunity' },
+  opportunity_provider_matched:       { ar: 'مطابقة مزوّد للفرصة',            en: 'Provider Matched' },
+  opportunity_assigned:               { ar: 'إسناد فرصة',                    en: 'Opportunity Assigned' },
+  opportunity_bid_submitted:          { ar: 'تقديم عرض على الفرصة',           en: 'Bid Submitted' },
+  opportunity_bid_revised:            { ar: 'تعديل عرض على الفرصة',           en: 'Bid Revised' },
+  opportunity_bid_shortlisted:        { ar: 'وصول العرض للقائمة القصيرة',      en: 'Bid Shortlisted' },
+  opportunity_bid_declined:           { ar: 'استبعاد العرض',                 en: 'Bid Declined' },
+  opportunity_bid_revision_requested: { ar: 'طلب تعديل على العرض',            en: 'Bid Revision Requested' },
+  opportunity_awarded:                { ar: 'ترسية الفرصة',                  en: 'Opportunity Awarded' },
+  opportunity_award_lost:             { ar: 'لم يتم الترسية عليك',            en: 'Award Not Granted' },
+  opportunity_contract_converted:     { ar: 'تحويل الفرصة إلى عقد',           en: 'Converted to Contract' },
+  opportunity_cancelled:              { ar: 'إلغاء الفرصة',                  en: 'Opportunity Cancelled' },
+  opportunity_expired:                { ar: 'انتهاء الفرصة',                 en: 'Opportunity Expired' },
+  rfq_clarification_posted:           { ar: 'استفسار جديد على طلب عرض السعر',  en: 'RFQ Clarification Posted' },
+
   // ── Brands / staff invitations
   brand_request_approved:        { ar: 'اعتماد طلب علامة تجارية',   en: 'Brand Request Approved' },
   brand_request_rejected:        { ar: 'رفض طلب علامة تجارية',      en: 'Brand Request Rejected' },
