@@ -15987,6 +15987,7 @@ export type Database = {
           budget_amount: number | null
           budget_note: string | null
           city: string
+          city_id: string | null
           closed_at: string | null
           created_at: string
           customer_email: string | null
@@ -15994,6 +15995,7 @@ export type Database = {
           customer_phone: string
           customer_type: string
           district: string | null
+          district_id: string | null
           execution_timeline: string
           has_budget: boolean
           id: string
@@ -16008,6 +16010,7 @@ export type Database = {
           quantity: string | null
           ref_id: string | null
           region: string | null
+          region_id: string | null
           requester_entity_id: string | null
           requires_sample: boolean
           sector: string
@@ -16033,6 +16036,7 @@ export type Database = {
           budget_amount?: number | null
           budget_note?: string | null
           city: string
+          city_id?: string | null
           closed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -16040,6 +16044,7 @@ export type Database = {
           customer_phone: string
           customer_type: string
           district?: string | null
+          district_id?: string | null
           execution_timeline: string
           has_budget?: boolean
           id?: string
@@ -16054,6 +16059,7 @@ export type Database = {
           quantity?: string | null
           ref_id?: string | null
           region?: string | null
+          region_id?: string | null
           requester_entity_id?: string | null
           requires_sample?: boolean
           sector: string
@@ -16079,6 +16085,7 @@ export type Database = {
           budget_amount?: number | null
           budget_note?: string | null
           city?: string
+          city_id?: string | null
           closed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -16086,6 +16093,7 @@ export type Database = {
           customer_phone?: string
           customer_type?: string
           district?: string | null
+          district_id?: string | null
           execution_timeline?: string
           has_budget?: boolean
           id?: string
@@ -16100,6 +16108,7 @@ export type Database = {
           quantity?: string | null
           ref_id?: string | null
           region?: string | null
+          region_id?: string | null
           requester_entity_id?: string | null
           requires_sample?: boolean
           sector?: string
@@ -16135,10 +16144,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quote_requests_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quote_requests_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
             referencedColumns: ["id"]
           },
           {
