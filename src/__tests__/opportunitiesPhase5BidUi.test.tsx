@@ -44,10 +44,11 @@ describe('opportunity bids — UI mounting', () => {
     expect(CLIENT_SECTION).toContain('لا توجد عروض بعد');
   });
 
-  it('no awarding UI is exposed in Phase 5', () => {
-    for (const src of [PROVIDER_SECTION, CLIENT_SECTION]) {
-      expect(src).not.toMatch(/awardBid|convertToContract|ترسية|اعتماد العرض/);
-    }
+  // R1 moved the award action into the client bids section; the
+  // Phase 5 "no awarding UI" freeze is preserved only on the
+  // provider side.
+  it('no awarding UI is exposed on the provider side (Phase 5 freeze preserved post-R1)', () => {
+    expect(PROVIDER_SECTION).not.toMatch(/awardBid|convertToContract|ترسية|اعتماد العرض/);
   });
 
   it('canonical opportunities routes are still mounted', () => {

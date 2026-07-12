@@ -125,6 +125,11 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   provider_brand_link_rejected:  { ar: 'رفض ربط العلامة بالمزوّد',    en: 'Provider Brand Link Rejected' },
   business_staff_invitation:     { ar: 'دعوة موظف للمنشأة',         en: 'Business Staff Invitation' },
 
+  // ── P3 — admin + owner platform lifecycle
+  provider_submission_new:       { ar: 'منشأة جديدة بانتظار المراجعة', en: 'New Provider Submission' },
+  business_verification_changed: { ar: 'تحديث توثيق المنشأة',           en: 'Business Verification Updated' },
+  account_contact_updated:       { ar: 'تحديث بيانات الاتصال',          en: 'Account Contact Updated' },
+
   // ── Maintenance / warranty
   maintenance_request:           { ar: 'طلب صيانة',                 en: 'Maintenance Request' },
   maintenance_update:            { ar: 'تحديث صيانة',               en: 'Maintenance Update' },

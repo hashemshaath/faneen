@@ -30,8 +30,10 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     // D2.4 — this edge function runs with service-role privileges and can delete any
-    // auth user. The UI route (/admin/users) is `requireSuperAdmin`, so mirror that
-    // boundary server-side: only super admins may invoke this function.
+    // auth user. The UI route (/admin/users) is requireSuperAdmin, so mirror that
+    // boundary server-side: only the 'super_admin' role in user_roles may invoke
+    // this function. `is_super_admin` is the SECURITY DEFINER wrapper over
+    // has_role(_user_id, 'super_admin') from public.user_roles.
     const { data: callerIsSuperAdmin } = await adminClient.rpc("is_super_admin", { _user_id: caller.id });
     if (!callerIsSuperAdmin) {
       return new Response(JSON.stringify({ error: "Forbidden: super_admin required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
