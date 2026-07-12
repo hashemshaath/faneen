@@ -35,6 +35,7 @@ import { CreateWorkOrderFromQuoteButton } from '@/components/workOrders/CreateWo
 import { ProviderBidSection } from '@/modules/opportunities/bids';
 import { OpportunityContractSection } from '@/modules/opportunities/contracts';
 import { OpportunityTimeline } from '@/modules/opportunities/timeline';
+import { SampleTrackerProvider } from '@/modules/opportunities/samples';
 
 interface LeadDetailRow {
   id: string;
@@ -339,6 +340,14 @@ const ProviderLeadDetails: React.FC = () => {
         {/* OPPORTUNITIES PHASE 7 — provider read-only contract status */}
         {q.id && (
           <OpportunityContractSection opportunityId={q.id} canConvert={false} />
+        )}
+
+        {/* R3 — provider-side sample surface (only renders when a sample is active) */}
+        {q.id && (
+          <SampleTrackerProvider
+            opportunityId={q.id}
+            providerBusinessId={lead.provider_id}
+          />
         )}
 
         {/* OPPORTUNITIES PHASE 11 — visual lifecycle timeline (read-only) */}

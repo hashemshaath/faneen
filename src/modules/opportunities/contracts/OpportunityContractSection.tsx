@@ -11,6 +11,7 @@ import {
   convertAwardedBidToContract,
   getContractForOpportunity,
 } from './services';
+import { getActiveSampleForBid } from '../samples/services';
 
 interface Props {
   opportunityId: string;
@@ -50,8 +51,13 @@ export const OpportunityContractSection: React.FC<Props> = ({
 
   const awardedBidId = award?.awarded_bid_id ?? null;
   const requiresSample = !!award?.requires_sample;
-  // R3 lands the actual approved-sample check; until then treat as unmet.
-  const sampleApproved = false;
+
+  const { data: activeSample } = useQuery({
+    queryKey: ['rfq-active-sample', opportunityId, awardedBidId],
+    enabled: !!opportunityId && !!awardedBidId && requiresSample,
+    queryFn: () => getActiveSampleForBid(opportunityId, awardedBidId!),
+  });
+  const sampleApproved = activeSample?.status === 'approved';
   const sampleGateOpen = !requiresSample || sampleApproved;
 
   const { data: contract, isLoading } = useQuery({

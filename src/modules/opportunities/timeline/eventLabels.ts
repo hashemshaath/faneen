@@ -11,6 +11,12 @@ export const OPPORTUNITY_EVENT_LABEL_AR: Record<string, string> = {
   'opportunity_bid_submitted': 'تم تقديم عرض جديد',
   'opportunity_bid_shortlisted': 'إشعار المورّد بإدراج عرضه في القائمة القصيرة',
   'opportunity_bid_awarded': 'تم تعميد عرض فائز',
+  // R3 — sample track
+  'sample.requested': 'طلب العميل عينة قبل التعاقد',
+  'sample.shipped': 'شحن المورّد العينة',
+  'sample.received': 'استلم العميل العينة',
+  'sample.approved': 'اعتمد العميل العينة',
+  'sample.rejected': 'رفض العميل العينة',
 };
 
 export function labelForOpportunityEvent(eventType: string | null | undefined): string {

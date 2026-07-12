@@ -17033,6 +17033,92 @@ export type Database = {
           },
         ]
       }
+      rfq_samples: {
+        Row: {
+          bid_id: string
+          created_at: string
+          decision_at: string | null
+          decision_by: string | null
+          decision_notes: string | null
+          id: string
+          photos: Json
+          provider_business_id: string | null
+          quote_request_id: string
+          received_at: string | null
+          requested_at: string
+          requested_by: string
+          shipped_at: string | null
+          status: string
+          tracking_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          bid_id: string
+          created_at?: string
+          decision_at?: string | null
+          decision_by?: string | null
+          decision_notes?: string | null
+          id?: string
+          photos?: Json
+          provider_business_id?: string | null
+          quote_request_id: string
+          received_at?: string | null
+          requested_at?: string
+          requested_by: string
+          shipped_at?: string | null
+          status?: string
+          tracking_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bid_id?: string
+          created_at?: string
+          decision_at?: string | null
+          decision_by?: string | null
+          decision_notes?: string | null
+          id?: string
+          photos?: Json
+          provider_business_id?: string | null
+          quote_request_id?: string
+          received_at?: string | null
+          requested_at?: string
+          requested_by?: string
+          shipped_at?: string | null
+          status?: string
+          tracking_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_samples_bid_id_fkey"
+            columns: ["bid_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_bids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_samples_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_samples_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_samples_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           permission_key: string
