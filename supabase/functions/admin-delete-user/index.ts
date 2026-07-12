@@ -29,23 +29,17 @@ Deno.serve(async (req) => {
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: hasAccess } = await adminClient.rpc("has_admin_access", { _user_id: caller.id });
-    if (!hasAccess) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // D2.4 — this edge function runs with service-role privileges and can delete any
+    // auth user. The UI route (/admin/users) is `requireSuperAdmin`, so mirror that
+    // boundary server-side: only super admins may invoke this function.
+    const { data: callerIsSuperAdmin } = await adminClient.rpc("is_super_admin", { _user_id: caller.id });
+    if (!callerIsSuperAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden: super_admin required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { target_user_id } = await req.json();
     if (!target_user_id || target_user_id === caller.id) {
       return new Response(JSON.stringify({ error: "Invalid target" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Check if target is super_admin - only super_admin can delete another super_admin
-    const { data: targetIsSuperAdmin } = await adminClient.rpc("is_super_admin", { _user_id: target_user_id });
-    if (targetIsSuperAdmin) {
-      const { data: callerIsSuperAdmin } = await adminClient.rpc("is_super_admin", { _user_id: caller.id });
-      if (!callerIsSuperAdmin) {
-        return new Response(JSON.stringify({ error: "Only super admins can delete other super admins" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
     }
 
     // Log the action

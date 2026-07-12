@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,10 +27,11 @@ import type { RentalItem, RentalCategory } from '@/modules/rentals';
 /** Provider asset hub — units of activated rental items, with serial numbers, maintenance & inspections. */
 const DashboardAssets: React.FC = () => {
   const { user } = useAuth();
+  const workspace = useActiveWorkspace();
   const { isRTL } = useLanguage();
   const bi = useBi();
 
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const businessId = workspace.active_entity_id;
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<RentalItem[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
@@ -59,15 +61,14 @@ const DashboardAssets: React.FC = () => {
 
   useEffect(() => {
     if (!user?.id) return;
+    if (workspace.isLoading) return;
     (async () => {
-      const { data: biz } = await supabase
-        .from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle();
-      const bizId = biz?.id ?? null;
-      setBusinessId(bizId);
-      if (bizId) await refresh(bizId);
+      // D2.1 — resolve owning business via active workspace so business staff
+      // (not just the owner) can load their business's assets.
+      if (businessId) await refresh(businessId);
       setLoading(false);
     })();
-  }, [user?.id, refresh]);
+  }, [user?.id, workspace.isLoading, businessId, refresh]);
 
   const unitsByItem = useMemo(() => {
     const map = new Map<string, Asset[]>();

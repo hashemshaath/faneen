@@ -17,6 +17,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeToggle";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import PermissionRouteGuard from "@/components/auth/PermissionRouteGuard";
 import AdminRoute from "@/components/auth/AdminRoute";
 import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
@@ -402,22 +403,23 @@ const AppRoutes = () => (
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContractsHub /></ProtectedRoute>} />
           <Route path="/dashboard/contracts/:id/review" element={<ProtectedRoute><DashboardContractReview /></ProtectedRoute>} />
           {/* RENTAL-MICROSERVICE-1 — provider + admin rental hubs */}
-          <Route path="/dashboard/rentals" element={<ProtectedRoute><DashboardRentals /></ProtectedRoute>} />
-          <Route path="/dashboard/rentals/calendar" element={<ProtectedRoute><DashboardRentalsCalendar /></ProtectedRoute>} />
-          <Route path="/dashboard/rentals/analytics" element={<ProtectedRoute><DashboardRentalsAnalytics /></ProtectedRoute>} />
+          {/* D2.2 — provider-only surfaces (query provider business data exclusively). */}
+          <Route path="/dashboard/rentals" element={<ProtectedRoute requireProvider><DashboardRentals /></ProtectedRoute>} />
+          <Route path="/dashboard/rentals/calendar" element={<ProtectedRoute requireProvider><DashboardRentalsCalendar /></ProtectedRoute>} />
+          <Route path="/dashboard/rentals/analytics" element={<ProtectedRoute requireProvider><DashboardRentalsAnalytics /></ProtectedRoute>} />
           <Route path="/admin/rentals" element={<ProtectedRoute requireAdmin><AdminRentals /></ProtectedRoute>} />
           {/* ASSET-MANAGEMENT-MICROSERVICE-1 — provider + admin asset hubs (never public) */}
-          <Route path="/dashboard/assets" element={<ProtectedRoute><DashboardAssets /></ProtectedRoute>} />
+          <Route path="/dashboard/assets" element={<ProtectedRoute requireProvider><DashboardAssets /></ProtectedRoute>} />
           <Route path="/admin/assets" element={<ProtectedRoute requireAdmin><AdminAssets /></ProtectedRoute>} />
           <Route path="/admin/assets/overrides" element={<ProtectedRoute requireAdmin><AdminAssetOverrides /></ProtectedRoute>} />
           <Route path="/dashboard/contract-analytics" element={<Navigate to="/dashboard/contracts?tab=analytics" replace />} />
-          <Route path="/dashboard/work-orders" element={<ProtectedRoute><DashboardWorkOrders /></ProtectedRoute>} />
+          <Route path="/dashboard/work-orders" element={<ProtectedRoute requireProvider><DashboardWorkOrders /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 (group 5): legacy overview merged into main work-orders */}
           <Route path="/dashboard/work-orders/overview" element={<Navigate to="/dashboard/work-orders" replace />} />
-          <Route path="/dashboard/work-orders/board" element={<ProtectedRoute><ProductionBoardPage /></ProtectedRoute>} />
-          <Route path="/dashboard/work-orders/:refId" element={<ProtectedRoute><DashboardWorkOrderDetail /></ProtectedRoute>} />
-          <Route path="/dashboard/procurement" element={<ProtectedRoute><DashboardProcurement /></ProtectedRoute>} />
-          <Route path="/dashboard/procurement/:id" element={<ProtectedRoute><DashboardProcurementDetail /></ProtectedRoute>} />
+          <Route path="/dashboard/work-orders/board" element={<ProtectedRoute requireProvider><ProductionBoardPage /></ProtectedRoute>} />
+          <Route path="/dashboard/work-orders/:refId" element={<ProtectedRoute requireProvider><DashboardWorkOrderDetail /></ProtectedRoute>} />
+          <Route path="/dashboard/procurement" element={<ProtectedRoute requireProvider><DashboardProcurement /></ProtectedRoute>} />
+          <Route path="/dashboard/procurement/:id" element={<ProtectedRoute requireProvider><DashboardProcurementDetail /></ProtectedRoute>} />
           <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
           <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
           <Route path="/dashboard/notifications" element={<ProtectedRoute><DashboardNotifications /></ProtectedRoute>} />
@@ -425,7 +427,17 @@ const AppRoutes = () => (
           <Route path="/dashboard/bookings" element={<ProtectedRoute><DashboardBookings /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 8 — Staff hub. */}
-          <Route path="/dashboard/settings/staff" element={<ProtectedRoute><DashboardStaffHub /></ProtectedRoute>} />
+          {/* D2.2 + D2.5 — provider-only + PermissionRouteGuard defense-in-depth (staff.view). */}
+          <Route
+            path="/dashboard/settings/staff"
+            element={
+              <ProtectedRoute requireProvider>
+                <PermissionRouteGuard route="/dashboard/settings/staff">
+                  <DashboardStaffHub />
+                </PermissionRouteGuard>
+              </ProtectedRoute>
+            }
+          />
           <Route path="/dashboard/settings/staff-access" element={<Navigate to="/dashboard/settings/staff?tab=permissions" replace />} />
           <Route path="/dashboard/no-access" element={<ProtectedRoute><DashboardNoAccess /></ProtectedRoute>} />
           <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardProfile /></ProtectedRoute>} />

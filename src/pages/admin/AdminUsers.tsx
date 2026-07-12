@@ -632,6 +632,12 @@ const AdminUsers = () => {
   });
 
   const toggleBanMutation = useMutation({
+    // D2.3 — true server-side boundary for ban/suspend/staff-link writes is
+    // `has_admin_access` (see profiles + business_staff RLS). The /admin/users
+    // route is declared `requireSuperAdmin`, but the same columns are also
+    // written by admin-level surfaces (e.g. BusinessOwnerPanel under
+    // /admin/businesses, which is `requireAdmin`). RLS is therefore NOT
+    // tightened to super_admin — the effective boundary is `has_admin_access`.
     mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
       // When toggling off, clear the temporary-ban metadata so the row is fully reset.
       const values: Partial<Profile> & { banned_until?: string | null; ban_reason?: string | null } = isBanned
