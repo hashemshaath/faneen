@@ -266,6 +266,10 @@ const Quote: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [submittedRefId, setSubmittedRefId] = useState<string | null>(null);
+  // Q4 — capture the RPC-backed match summary so we can render honest copy
+  // (matched N vs zero-coverage vs manual-routing) on the success view.
+  const [submittedMatchedCount, setSubmittedMatchedCount] = useState<number>(0);
+  const [submittedMatchSource, setSubmittedMatchSource] = useState<string>('unknown');
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const initialDraftHadSector = useRef<boolean>(!!loadDraft().sector);
