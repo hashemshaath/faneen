@@ -1,4 +1,4 @@
-import { Building2, Eye, MapPinned, ShieldCheck } from 'lucide-react';
+import { Building2, Eye, MapPin, MapPinned, ShieldCheck } from 'lucide-react';
 import { TabbedShell } from '@/components/dashboard/TabbedShell';
 
 /** NAVIGATION-CONSOLIDATION-1 group 1 — Business Profile hub. */
@@ -30,6 +30,16 @@ const DashboardBusinessProfileHub = () => (
           en: 'Create branches, pick the main one, and link services and offers per branch.',
         },
         loader: () => import('./DashboardBranches'),
+      },
+      {
+        key: 'coverage',
+        label: { ar: 'مناطق التغطية', en: 'Coverage Areas' },
+        icon: MapPin,
+        hint: {
+          ar: 'حدد المدن والأحياء التي تغطيها منشأتك ليصلك طلبات عروض الأسعار من عملاء تلك المناطق مباشرة.',
+          en: 'Define which cities and districts you serve so matching quote requests reach you.',
+        },
+        loader: () => import('./DashboardBusinessCoverage'),
       },
       {
         key: 'credentials',

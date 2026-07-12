@@ -8,9 +8,11 @@ import { listProviderLeads, type ProviderLeadRow } from '@/modules/leads/service
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Inbox, MapPin, Tag, Calendar, ChevronLeft, Sparkles, ShieldCheck, Activity } from 'lucide-react';
+import { Inbox, MapPin, Tag, Calendar, ChevronLeft, Sparkles, ShieldCheck, Activity, MapPinned, X } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { supabase } from '@/integrations/supabase/client';
 import {
   LEAD_STATUS_LABEL_AR, LEAD_STATUS_TONE, type LeadStatus,
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR,
@@ -30,6 +32,30 @@ const ProviderLeads: React.FC = () => {
   useNoIndex();
   const { user } = useAuth();
   useProviderActivityPing(!!user);
+  const workspace = useActiveWorkspace();
+  const businessId = workspace.active_entity_id;
+
+  // Q2-UI — nudge when the provider has zero coverage rows.
+  const coverageCountQ = useQuery({
+    queryKey: ['coverage-areas-count', user?.id, businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('business_service_areas')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', businessId!);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+  const [nudgeDismissed, setNudgeDismissed] = React.useState<boolean>(() => {
+    try { return localStorage.getItem('qitaat_coverage_nudge_dismissed') === '1'; } catch { return false; }
+  });
+  const showCoverageNudge = !!businessId && !coverageCountQ.isLoading && (coverageCountQ.data ?? 0) === 0 && !nudgeDismissed;
+  const dismissNudge = () => {
+    setNudgeDismissed(true);
+    try { localStorage.setItem('qitaat_coverage_nudge_dismissed', '1'); } catch { /* noop */ }
+  };
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ['provider-leads', user?.id],
@@ -96,6 +122,26 @@ const ProviderLeads: React.FC = () => {
           title="فرص عروض الأسعار"
           subtitle="طلبات جديدة تم توجيهها لك بناءً على قطاعك ومدينة خدمتك."
         />
+
+        {showCoverageNudge && (
+          <div className="rounded-lg border border-amber-400/40 bg-amber-50 dark:bg-amber-950/20 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <MapPinned className="h-5 w-5 text-amber-600 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-sm">لم تحدد مناطق التغطية بعد</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                حدد المناطق التي تغطيها لتصلك طلبات عروض الأسعار من عملاء هذه المناطق مباشرة.
+              </p>
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <Button asChild size="sm" className="min-h-[36px]">
+                <Link to="/dashboard/business/coverage">تحديد مناطق التغطية</Link>
+              </Button>
+              <Button size="sm" variant="ghost" onClick={dismissNudge} aria-label="إخفاء التنبيه" className="h-9 w-9 p-0">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <Sparkles className="h-5 w-5 text-primary shrink-0" />

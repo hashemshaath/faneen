@@ -169,6 +169,7 @@ import {
   DashboardEntityDetail,
   DashboardBusinessProfileHub,
   DashboardBranches,
+  DashboardBusinessCoverage,
   DashboardRequestsHub,
   DashboardContractsHub,
   DashboardLoyaltyHub,
@@ -452,6 +453,9 @@ const AppRoutes = () => (
           {/* NAVIGATION-CONSOLIDATION-1 group 1 — Business Profile hub. */}
           <Route path="/dashboard/business-edit" element={<ProtectedRoute><DashboardBusinessProfileHub /></ProtectedRoute>} />
           <Route path="/dashboard/branches" element={<ProtectedRoute><DashboardBranches /></ProtectedRoute>} />
+          {/* Q2-UI — Provider Service Coverage (مناطق التغطية). Registered above the
+              /:username catch-all; provider-only guard. */}
+          <Route path="/dashboard/business/coverage" element={<ProtectedRoute requireProvider><DashboardBusinessCoverage /></ProtectedRoute>} />
           <Route path="/dashboard/entities" element={<Navigate to="/dashboard/business-edit?tab=entities" replace />} />
           <Route path="/dashboard/entities/:id" element={<ProtectedRoute><DashboardEntityDetail /></ProtectedRoute>} />
           <Route path="/dashboard/credentials" element={<Navigate to="/dashboard/business-edit?tab=credentials" replace />} />
