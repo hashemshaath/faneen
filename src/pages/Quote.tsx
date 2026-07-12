@@ -242,13 +242,13 @@ const QuoteSpecialtyPicker: React.FC<{
 
 /* ---------------- main page ---------------- */
 
-const TOTAL_STEPS = 5;
+// Q3-UI — collapsed from 5 → 4 steps: timeline + budget merged into Details.
+const TOTAL_STEPS = 4;
 
 const STEP_LABELS = [
   { ar: 'القطاع',     en: 'Sector' },
   { ar: 'الموقع',     en: 'Location' },
   { ar: 'التفاصيل',   en: 'Details' },
-  { ar: 'الموعد',     en: 'Timeline' },
   { ar: 'التواصل',    en: 'Contact' },
 ];
 
