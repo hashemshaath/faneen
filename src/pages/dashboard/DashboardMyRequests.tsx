@@ -823,7 +823,7 @@ const DashboardMyRequests: React.FC = () => {
                   </p>
                   {(quoteRequests?.length ?? 0) === 0 && (
                     <Button asChild className="min-h-[44px]">
-                      <Link to="/quote"><Plus /> {isRTL ? 'ابدأ فرصة جديدة' : 'Start a new opportunity'}</Link>
+                      <Link to="/dashboard/my-requests/new"><Plus /> {isRTL ? 'ابدأ فرصة جديدة' : 'Start a new opportunity'}</Link>
                     </Button>
                   )}
                 </CardContent>
