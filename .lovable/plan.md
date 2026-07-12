@@ -1,139 +1,240 @@
-# Performance + SEO/GEO/AEO Audit — Read-only Findings & Phased Plan
 
-Read-only inspection of build output, data hooks, route shell, `index.html`, `robots.txt`, `llms.txt`, `sitemap.xml`, and hot pages (`Index.tsx`, `SearchV3.tsx`). Concrete numbers below come from `bun run build` and file inspection.
+# RFQ → Award → Sample → Contract — Audit & Design Plan
+
+Read-only audit of the current RFQ stack, gap analysis vs the target professional procurement journey, and a 5-phase execution plan. Arabic-first labels, no URL changes.
 
 ---
 
-## 1. Root causes ranked by user impact
+## 1. Current State Inventory
 
-### P0 — Directly explains "slow /search" and "empty then pop" flashes
+### Pages & routes
+- `src/pages/dashboard/DashboardRfqHub.tsx` — tabbed shell (Requests / Inbox).
+- `src/pages/dashboard/DashboardRfq.tsx` (180 lines) — customer list of their RFQs.
+- `src/pages/dashboard/DashboardRfqInbox.tsx` (451 lines) — provider inbox of matched RFQs.
+- `src/pages/dashboard/DashboardRfqDetail.tsx` (318 lines) — RFQ detail (client view).
+- `src/pages/dashboard/QuoteRequestDetails.tsx` (519 lines) — admin/ops view.
+- Public intake: `/quote` (see `docs/rfq-conversion-audit.md`) — 3-step wizard (sector+service → project → contact).
 
-**RC1. `/search` fires a single 500-row mega-query on every mount, and cache is deliberately bypassed.**
-`src/services/search/useSearch.ts` L220–269 — `useBusinesses()`:
-- `.from('businesses_public').select('…, cities(...), business_services(...), promotions(...)').limit(500)` — one wide join fetching up to 500 providers with nested arrays, then filtered client-side by `filterAndSort`.
-- `staleTime: 30_000`, but `refetchOnMount: 'always'` **and** `refetchOnWindowFocus: true` — every visit and every tab refocus refetches the full 500 rows, defeating the cache. Same anti-pattern on `useCategories` (L181) and `useCities` (L203).
-- Plus `useDirectoryRealtimeInvalidation()` opens a Realtime WS channel on `/search` mount and invalidates 7 query keys on any `directory_sync_events` change.
+### Domain modules
+- `src/modules/quotes/*` — submit/list/read services for the intake side.
+- `src/modules/leads/*` — provider-side matching (`quote_request_leads`), reveal-contact, notifications, `adminConvertLeadToContract`, `lifecycle`, `conversion`.
+- `src/modules/opportunities/*` — the *newer* layer that treats an RFQ as an "opportunity":
+  - `bids/` — `opportunity_bids` (offer submission, statuses `draft|submitted|under_review|shortlisted|revised|withdrawn|rejected|awarded`, `awardOpportunityBid`).
+  - `contracts/` — `convert_awarded_bid_to_contract` RPC + `getContractForOpportunity`.
+  - `timeline/`, `status.ts`, `analytics/`.
+- Legacy `src/modules/rfq/services.ts` — separate `rfq_requests` / `rfq_quotes` tables (parallel small marketplace flow, not the primary path).
 
-**RC2. Route-lazy + data-lazy are sequential, gated by a full-screen loader.**
-`src/App.tsx` L281 wraps every route in `<Suspense fallback={<PageLoader />}>`; `PageLoader` is a `min-h-dvh` centered spinner (L250). So a cold visit to `/search` is: download `Search-*.js` (60 KB gz) → mount → *then* fire the 500-row query → *then* fire taxonomy context + service-category queries. Nothing is parallel-prefetched.
+### DB tables (public schema)
+- `quote_requests` (41 cols) — the RFQ itself. Status text: currently only `new`/`matched` present. Award fields already exist: `awarded_bid_id`, `awarded_provider_business_id`, `awarded_at`, `awarded_by`, `award_status`. Rich intake fields (`preferred_brand_ids`, `brand_preference_mode`, `location_id`, `site_id`, `project_id`, `taxonomy_category_id`, `ref_id`).
+- `quote_request_leads` (19 cols) — provider assignment/matching row, `contact_revealed`, `match_score`, statuses text (currently `new`).
+- `quote_request_files` — attachments (name/path/size/type, no captions/categories).
+- `quote_request_events` / `quote_request_lead_events` — audit trail (event_type + jsonb metadata).
+- `opportunity_bids` (18 cols) — offer with price/currency/duration/scope/terms/warranty/status/expires_at/attachments_count. **No line-item breakdown, no payment_terms/validity/materials columns.**
+- `contracts` (52 cols) — full contract model, already links via `opportunity_id`, `opportunity_bid_id`, `source_lead_id`. Enum `contract_status`: `draft, pending_approval, active, completed, cancelled, disputed`.
 
-**RC3. No client-side cache persistence.**
-`src/lib/queryClient.ts` uses default in-memory store. React Query `persist` plugin is not installed. Every hard refresh / new tab starts from zero data — this is the "blank shell then pop" the user sees on return visits.
+### RLS (already in place)
+- `quote_requests`: owner select/update-when-open, admin ALL, anyone can INSERT.
+- `quote_request_leads`: provider select/update own, admin ALL.
+- `opportunity_bids`: submitter (provider) insert when assigned, client select on owned opp, staff select, admin ALL.
+- `contracts`: parties select/update, clients & providers can INSERT, admin ALL.
 
-**RC4. Empty renders during `isLoading` instead of skeletons on public pages.**
-Home has proper `SectionFallback` skeletons (Index.tsx L35–100). `/search` uses `LoadingProgressV3` (a top progress bar) — the results grid area itself renders empty during initial `isLoading` until businesses arrive. Same pattern likely on `BusinessProfile`, `BranchDetail`, `Projects`, `Blog` (worth verifying).
+### What already exists in code
+- Award action: `awardOpportunityBid` + RPC + client UI (`ClientBidsSection`) with "تعميد العرض" CTA and winner lock-out.
+- Contract conversion bridge: `convert_awarded_bid_to_contract` RPC + `OpportunityContractSection`.
+- Timeline component: `OpportunityTimeline` (audit-log driven).
+- Basic bid submission from provider side (`ProviderBidSection`).
+- Attachment upload on RFQ intake.
+- Notifications: `createNotification` hooks fire on award; lead-side notification services exist.
 
-### P1 — Bundle bloat pulling extra bytes into hot paths
+### What is missing or thin
+- No **side-by-side comparison table** across bids (only vertical list of cards).
+- No **weighted scoring / shortlist toggle** in UI (status `shortlisted` exists but no CTA writes it).
+- No **line-item price breakdown** on bids (`opportunity_bids` has only `price_amount` scalar).
+- No **payment terms / validity_until / materials-brand / delivery structured fields** on bids.
+- No **clarification Q&A thread** attached to an RFQ (messages module is generic conversations; not wired here).
+- No **revision request** action ("طلب تعديل العرض") — bid has `revised` status but no request/response flow.
+- No **sample track** at all — no `rfq_samples` table, no UI, no status gate before contract conversion.
+- No **polite auto-decline** notification to losing bidders on award.
+- No **multi-step RFQ wizard** on the customer *dashboard* creation path (public `/quote` is 3-step; dashboard-side creation is thin).
+- Notification coverage: award notifies winner, but transitions (shortlisted, revision requested, sample requested/approved, converted) are not systematically fanned out.
 
-Top 15 built chunks (production, from `bun run build`):
+---
 
-| Chunk | Size | Gzip | Notes |
-|---|---:|---:|---|
-| `heic2any` | 1352 KB | 341 KB | Should be dynamic-only on image upload |
-| `vendor-icons` (lucide-react) | 781 KB | 138 KB | **Star-import problem** — all icons bundled globally |
-| `xlsx` | 499 KB | 162 KB | Verify only lazy-loaded from export flows |
-| `index-*.js` (entry) | 453 KB | 145 KB | Entry chunk still heavy |
-| `vendor-charts` (recharts) | 442 KB | 115 KB | Should never appear on `/` or `/search` |
-| `jspdf.es.min` | 390 KB | 127 KB | Confirm no eager import remains |
-| `pdf-ksa` | 334 KB | 98 KB | Dynamic-only expected |
-| `DashboardContracts` | 285 KB | 78 KB | Page-split candidate |
-| `ContractDetail` | 220 KB | 54 KB | Page-split candidate |
-| `AdminBusinesses` | 218 KB | 59 KB | Admin — lower priority |
-| `vendor-supabase` | 210 KB | 55 KB | Expected |
-| `html2canvas.esm` | 201 KB | 48 KB | Dynamic-only expected |
-| `vendor-react` | 157 KB | 51 KB | Expected |
-| `index.es` | 151 KB | 51 KB | Investigate — likely a stray dep |
-| `vendor-map` (leaflet) | 150 KB | 43 KB | Already lazy ✔ |
+## 2. Gap Analysis vs Target Journey
 
-Key concern: `vendor-icons` at **138 KB gzipped** is loaded early because most public components import `lucide-react` via named imports which don't tree-shake through the `manualChunks: { 'vendor-icons': ['lucide-react'] }` bucket. That single chunk is a bigger perf hit than most page code.
+| # | Stage | State | Evidence |
+|---|---|---|---|
+| a | Multi-step RFQ wizard (sector→site→measurements/drawings→specs→timeline/warranty→review) | PARTIAL | `/quote` 3-step exists; sections for measurements/warranty/conditions absent. `quote_requests` schema supports it (site_id, project_id, brand prefs). |
+| b | Structured provider offer (price lines, delivery, warranty, materials brand, payment terms, validity, notes) | PARTIAL | `opportunity_bids` has price/duration/warranty/terms/scope only. No line items, no `payment_terms`, no `valid_until`, no `materials_brand_ids`. |
+| c | Offer clarification Q&A on RFQ | MISSING | No table, no UI. Generic `conversations/messages` not linked to `opportunity_bids`. |
+| d | Side-by-side comparison + scoring + shortlist | MISSING (list only) | `ClientBidsSection` renders vertical cards; no matrix, no `weightedScore`, no shortlist toggle. |
+| e | Quotation revision request | PARTIAL | `revised` status enum exists; no "Request revision" action or reason column. |
+| f | Award with reason + winner notify + polite decline losers + RFQ close | PARTIAL | Award works; winner toast + notification. No `award_reason`, no bulk decline notifications, RFQ status not auto-closed. |
+| g | Sample track (request → sent → received → approved/rejected + photos/notes, gate before contract) | MISSING | No `rfq_samples` table, no UI, `convert_awarded_bid_to_contract` runs immediately. |
+| h | Convert-to-contract prefill from RFQ + winning bid | EXISTS (basic) | RPC `convert_awarded_bid_to_contract` + `OpportunityContractSection`. Prefill breadth (attachments carry-over, brand prefs → contract, warranty text) not verified — likely partial. |
+| i | Journey timeline / audit trail on RFQ page | EXISTS | `OpportunityTimeline` reads `quote_request_events`. |
+| j | Notifications at each transition | PARTIAL | Wired on submit/award; not on shortlist/revise/sample/decline/convert. |
 
-### P2 — SEO/GEO/AEO gaps (Vite SPA reality)
+---
 
-**SR1. Crawlers get an empty shell.** `index.html` contains only the sitewide title/description/OG and a `<div id="root">` with a hero placeholder. All per-route titles, descriptions, canonicals, OG per page, and every JSON-LD block (LocalBusiness on `/:username`, Article on `/blog/:slug`, ItemList on sectors, BreadcrumbList, FAQPage) are injected client-side by `usePageMeta` + `useMultiJsonLd`. Googlebot renders JS (usually fine), but **Bingbot, PerplexityBot, GPTBot, ClaudeBot, and Facebook/Twitter/LinkedIn preview scrapers do not execute JS reliably** — they see the homepage's static meta on *every* URL.
+## 3. Design Proposal
 
-**SR2. hreflang is misconfigured.** `index.html` L40–42:
-```html
-<link rel="alternate" hreflang="ar" href="https://qitaat.com" />
-<link rel="alternate" hreflang="en" href="https://qitaat.com" />
+### 3.1 Status machines
+
+**quote_requests.status** (text, keep column, extend allowed values):
+
+```text
+draft → published → receiving_bids → under_review
+   → (shortlisted) → awarded → sample_pending → sample_approved → contract_drafted → contract_active
+   ↘ cancelled            ↘ sample_rejected → (back to under_review or cancelled)
 ```
-Both point to the same URL, and the app has no `/en` variant. Google ignores/warns on this. Either drop both or provide real language variants.
 
-**SR3. Sitemap coverage risk.** `public/sitemap.xml` is a sitemap-index pointing to `functions/v1/sitemap?type=…` edge function. Not audited here whether the businesses/blog/projects segments are actually returning fresh data — worth an edge-function smoke check.
+Skip path (no sample required): `awarded → contract_drafted → contract_active`.
 
-**SR4. Font strategy is decent but not optimal.** IBM Plex Sans Arabic + Inter + Plex Mono all preloaded from Google Fonts as one stylesheet with `display=swap` and `fetchpriority=high` (L51). Fine, but subsetting Arabic weights or self-hosting would cut LCP by ~150–300 ms on 3G.
+**opportunity_bids.status** (already text, extend enum values used):
 
-**SR5. LCP element on `/` is a background hero image, but its preload is deferred until `HeroSection` module mounts** (comment L53–55). This means preload happens *after* the JS parses — losing the critical-path win.
+```text
+draft → submitted → under_review → shortlisted → revision_requested
+   → revised → awarded
+   ↘ rejected / withdrawn / expired
+```
 
-### GEO/AEO (AI answer engines)
+**rfq_samples.status** (NEW): `requested → shipped → received → approved | rejected`.
 
-**Good:**
-- `public/llms.txt` exists, comprehensive.
-- `robots.txt` explicitly allows GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, cohere-ai, CCBot missing but not blocked.
+### 3.2 Minimal schema changes (require separate migration approval)
 
-**Gaps:**
-- Same SR1 problem — AI crawlers see the shell. They rely on `llms.txt` links plus initial HTML text. The homepage `<h1 class="sr-only">` provides one line of text; the rest of what Qitaat *is* only exists once React renders.
-- No FAQ block in static HTML — FAQ JSON-LD is client-injected, so ChatGPT/Perplexity won't extract it.
-- No CCBot entry in robots.txt (Common Crawl feeds most open LLM training).
+All flagged — none applied in this pass.
+
+```sql
+-- Bid: structured commercial fields (nullable, backward-compatible)
+ALTER TABLE public.opportunity_bids
+  ADD COLUMN payment_terms text,
+  ADD COLUMN valid_until timestamptz,
+  ADD COLUMN materials_brand_ids uuid[],
+  ADD COLUMN vat_inclusive boolean NOT NULL DEFAULT true,
+  ADD COLUMN price_breakdown jsonb NOT NULL DEFAULT '[]'::jsonb,   -- [{label, qty, unit, unit_price, total}]
+  ADD COLUMN revision_of uuid REFERENCES public.opportunity_bids(id),
+  ADD COLUMN revision_reason text,
+  ADD COLUMN decline_reason text,
+  ADD COLUMN shortlisted_at timestamptz;
+
+-- RFQ: award reason + close timestamps + sample requirement flag
+ALTER TABLE public.quote_requests
+  ADD COLUMN award_reason text,
+  ADD COLUMN closed_at timestamptz,
+  ADD COLUMN requires_sample boolean NOT NULL DEFAULT false;
+
+-- Clarification thread (one thread per RFQ; messages inside)
+CREATE TABLE public.rfq_clarifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_request_id uuid NOT NULL REFERENCES public.quote_requests(id) ON DELETE CASCADE,
+  bid_id uuid REFERENCES public.opportunity_bids(id) ON DELETE CASCADE, -- nullable = general
+  author_user_id uuid NOT NULL,
+  author_role text NOT NULL,          -- 'client' | 'provider' | 'admin'
+  body text NOT NULL,
+  attachments jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Sample track
+CREATE TABLE public.rfq_samples (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_request_id uuid NOT NULL REFERENCES public.quote_requests(id) ON DELETE CASCADE,
+  bid_id uuid NOT NULL REFERENCES public.opportunity_bids(id) ON DELETE CASCADE,
+  provider_business_id uuid,
+  status text NOT NULL DEFAULT 'requested',    -- requested|shipped|received|approved|rejected
+  requested_by uuid NOT NULL,
+  requested_at timestamptz NOT NULL DEFAULT now(),
+  shipped_at timestamptz, tracking_ref text,
+  received_at timestamptz,
+  decision_at timestamptz, decision_by uuid, decision_notes text,
+  photos jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+-- + standard GRANT block + RLS (client of RFQ, awarded provider, admin) + updated_at trigger.
+```
+
+All new tables follow the mandatory GRANT-then-RLS-then-POLICY structure.
+
+### 3.3 UI proposal
+
+Customer journey (`DashboardRfqDetail`):
+- Hero header shows status chip + progress stepper (استلام العروض → مقارنة → ترسية → عيّنة → عقد).
+- **BidComparisonTable** component (sticky first column: criterion; columns: each bid; rows: السعر الإجمالي, بنود السعر, مدة التنفيذ, الضمان, شروط الدفع, صلاحية العرض, الماركات/الخامات, التقييم, ملاحظات; footer row: نقاط الترجيح weightedScore + actions "ضم للقائمة القصيرة / طلب تعديل / ترسية").
+- **AwardDialog** inline card (no popup per project rule → inline expand): reason field + checkbox "طلب عيّنة قبل العقد".
+- **SampleTracker** panel appears when `requires_sample` — timeline (طلب → إرسال → استلام → اعتماد/رفض) + photo upload + decision notes.
+- **ConvertToContractCard** — visible only when award done AND (sample not required OR sample approved). Single CTA "تحويل إلى عقد" → routes into existing contract flow with prefilled draft.
+- **ClarificationThread** — inline chat card scoped per bid (tab per bid) using `rfq_clarifications`.
+
+Provider journey (`DashboardRfqInbox` + bid detail):
+- Structured **BidSubmitForm** with line-items repeater, payment terms select, validity date, materials-brand multi-select, warranty text.
+- **RevisionRequestBanner** when `status = revision_requested` with client reason; "تقديم عرض معدّل" opens form pre-seeded from previous bid, creates new row with `revision_of` FK.
+- Polite decline notification on losing (auto-generated).
+- Sample-request card mirroring customer tracker for the awarded provider.
+
+Shared timeline: extend `OpportunityTimeline` with new event types (`bid.shortlisted`, `bid.revision_requested`, `bid.revised`, `bid.rejected`, `rfq.award_reason_set`, `sample.requested/shipped/received/approved/rejected`, `contract.drafted_from_rfq`).
+
+### 3.4 Notifications matrix (in-app + email where available)
+
+| Trigger | To | Channel |
+|---|---|---|
+| Bid submitted | RFQ owner | in-app |
+| Shortlisted | provider | in-app |
+| Revision requested | provider | in-app + email |
+| Bid revised | client | in-app |
+| Awarded | winner | in-app + email |
+| Awarded — losers | each losing provider | in-app (polite decline) |
+| Sample requested / decision | provider / client | in-app |
+| Converted to contract | both parties | in-app + email |
 
 ---
 
-## 2. Phased fix plan
+## 4. Phased Plan
 
-### Phase P1 — Quick wins (no infra changes, no schema, mostly config + hooks)
+Each phase is independently smoke-testable. **Schema-change phases are called out and require separate migration approval.**
 
-**P1.1 Fix React Query cache leaks (biggest single win for `/search`)**
-- `src/services/search/useSearch.ts`: change `useCategories`, `useCities`, `useBusinesses` to `refetchOnMount: false, refetchOnWindowFocus: false`. Bump `useBusinesses` staleTime to 5 min (matches `queryClient.ts` default).
-- Consider narrowing `useBusinesses` PARENT_SELECT or splitting the nested `business_services` into a lazy per-card fetch (only when a card enters viewport / user filters by service).
+### R1 — Comparison + Award polish  *(no schema change)*
+- New `BidComparisonTable` component (Arabic-first, RTL, sticky criterion column).
+- Add "قائمة قصيرة" toggle (writes existing `shortlisted` status via existing update path).
+- `AwardDialog` inline card with `award_reason` — will store in event metadata for now (real column added in R2 if approved).
+- Polite-decline notification fan-out on award (loop over non-winning bids in existing award mutation).
+- Extend `OpportunityTimeline` event labels for shortlist/decline.
+- Verify: build + existing opportunities tests still green; manual click-through in `DashboardRfqDetail`.
 
-**P1.2 Add React Query cache persistence**
-- Install `@tanstack/react-query-persist-client` + `createSyncStoragePersister` (localStorage, 24 h max age, key-allowlist for public queries only).
-- Returning visitors see instant cached content — kills the "empty then pop" flash for anyone who's been here before.
+### R2 — Convert-to-contract bridge hardening  *(schema: small ALTERs)*
+Requires migration:
+- `ALTER quote_requests ADD award_reason, closed_at, requires_sample`.
+- `ALTER opportunity_bids ADD payment_terms, valid_until, materials_brand_ids, vat_inclusive, price_breakdown, shortlisted_at, decline_reason`.
+- Extend `convert_awarded_bid_to_contract` RPC to prefill new fields into `contracts` (payment terms → `terms_ar`, materials brand → contract line items snapshot, warranty carry-over, attachments cloned).
+- UI: `ConvertToContractCard` gate uses `requires_sample`.
 
-**P1.3 Skeleton coverage on public pages**
-- Add `SearchResultsV3` grid skeleton (mimic 12 card placeholders) during first `isLoading`.
-- Audit `BusinessProfile`, `BranchDetail`, `Projects`, `Blog`, `Offers` and add matching skeletons where the current `isLoading` returns `null`.
+### R3 — Sample track  *(schema: new table)*
+Requires migration:
+- `CREATE TABLE rfq_samples` + GRANT + RLS + trigger.
+- Storage folder for sample photos (`rfq-samples/`).
+- Service module `src/modules/rfq-samples/` (types + services barrel).
+- UI: `SampleTracker` (customer + provider mirror).
+- Convert-to-contract CTA disabled until `sample.status = 'approved'` when `requires_sample = true`.
 
-**P1.4 Slim `PageLoader`**
-- Replace full-screen spinner with a top progress bar (nprogress-style, 3-line component) so the previous page stays visible while the next lazy chunk loads. Eliminates the "flash to blank" between route transitions.
+### R4 — Clarifications Q&A + revision requests  *(schema: new table + bid FK)*
+Requires migration:
+- `CREATE TABLE rfq_clarifications` + GRANT + RLS + trigger.
+- `ALTER opportunity_bids ADD revision_of uuid, revision_reason text`.
+- UI: `ClarificationThread` (per-bid tabs), `RequestRevisionDialog` inline.
+- Revised bid = new row with `revision_of` FK, superseding parent visually.
 
-**P1.5 SEO / GEO tweaks**
-- Fix hreflang in `index.html` (remove duplicate `en` or add real `/en` route later).
-- Expand static `<div id="root">` content: add a real `<h1>`, one paragraph describing Qitaat, and a small `<ul>` of the six main sectors, all inside the placeholder. Crawlers and AI bots will index this even without JS.
-- Add a static FAQ block in `index.html` (`<section aria-hidden="true" hidden>`) with the same Q&A as `useHomeFaq`'s fallback, so FAQPage JSON-LD + text is visible to non-JS crawlers.
-- Add `CCBot` allow to `robots.txt` for training-corpus inclusion.
-- Preload the hero LCP image with a direct `<link rel="preload" as="image">` in `index.html` (accept one hashed-asset maintenance burden; use `?url` import at build time or a small predev script that writes the tag).
-
-**P1.6 Kill lucide-react bloat**
-- Replace `manualChunks: { 'vendor-icons': ['lucide-react'] }` with per-icon imports (`lucide-react/dist/esm/icons/x`) OR remove the manualChunks bucket and let Rollup tree-shake per-page. Target: cut the ~138 KB gz global icon chunk to <30 KB gz on hot pages.
-
-Testable independently: `/search` cold-load timing, Lighthouse before/after, `view-source:` on `/` for the added static content.
-
-### Phase P2 — Prerendering strategy for public pages
-
-The only durable fix for SR1 (empty shell to non-JS crawlers) is prerendering. Options in order of effort:
-
-**P2.1 Static prerender via `vite-plugin-prerender` or `react-snap`** for the fully-static routes: `/`, `/about`, `/contact`, `/privacy`, `/terms`, `/sectors`, `/sectors/:slug`, `/for-providers`, `/help`, `/help/:slug`, `/blog`. Build-time renders these to HTML with real titles/descriptions/JSON-LD baked in. No runtime backend change.
-
-**P2.2 On-demand SSR at the edge for dynamic pages** (`/:username`, `/:username/:branch`, `/blog/:slug`, `/projects/:slug`): a small Supabase edge function that fetches the page's canonical data and returns HTML with server-rendered head + first-paint content, then hydrates client-side. Higher effort but essential for social-preview parity and AI-engine indexing of provider profiles.
-
-**P2.3 (Alternative)** Migrate the public shell to TanStack Start / Next.js in a separate `apps/public` project, keep the auth'd app as-is. Largest change; defer until P2.1+P2.2 prove insufficient.
-
-### Phase P3 — Chunk/vendor optimization
-
-- **Split `vendor-charts`**: audit which public routes still pull recharts; move remaining call sites to `.chart.tsx` + `React.lazy` (Phase B2 pattern already established).
-- **Investigate `index.es-*.js` (151 KB)**: identify which dep landed there (likely `xlsx` internals or a stray) and manual-chunk or lazy it.
-- **Confirm `jspdf`, `xlsx`, `html2canvas`, `heic2any` have zero eager imports.** Grep already done for jspdf/qrcode in Phase B2; extend to the other three.
-- **Split top pages ≥200 KB**: `DashboardContracts` (285 KB), `ContractDetail` (220 KB), `AdminBusinesses` (218 KB) — extract tabs into sub-routes or `React.lazy` panels.
-- **Entry chunk (`index-*.js` 453 KB)**: profile with `rollup-plugin-visualizer`, identify what's forced eager by `App.tsx`/`main.tsx`.
-
-Target after P3: entry + hot-vendor combined ≤ 300 KB gz on `/` and `/search`.
+### R5 — Wizard polish + notification completeness  *(no schema change)*
+- Rebuild dashboard-side RFQ create as 6-step wizard mirroring `/quote` but richer (measurements/drawings/warranty/conditions).
+- Fill every notification matrix row above; write `notification_event_templates` entries.
+- Ops/admin dashboards: add filters (status ∈ new values), analytics for time-to-award, time-to-contract, sample approval rate.
+- Backfill Arabic labels & bilingual tests.
 
 ---
 
-## 3. Not in scope (per user)
-
-No DB schema changes, no RPC/edge-function work, no route re-orderings.
-
-## 4. Recommended execution order
-
-P1 first (biggest UX delta for lowest risk). Then P2.1 (static prerender — unblocks non-JS crawlers for the highest-traffic public pages). Then P3 (bundle diet). P2.2 (dynamic SSR) is the largest lift and should follow only if P2.1 metrics show clear ROI.
+## Risks & Assumptions
+- **Assumption**: primary path is `quote_requests` + `opportunity_bids`; legacy `rfq_requests`/`rfq_quotes` stays untouched.
+- **Assumption**: existing RPC `convert_awarded_bid_to_contract` can be extended without breaking Phase-7 tests.
+- Award/status extensions are additive text values — no enum ALTER pain since these columns are `text`, not enums.
+- `contract_status` enum is unchanged.
+- No route/URL changes anywhere.
