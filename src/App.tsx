@@ -169,7 +169,6 @@ import {
   DashboardBusinessProfileHub,
   DashboardBranches,
   DashboardRequestsHub,
-  DashboardRfqHub,
   DashboardContractsHub,
   DashboardLoyaltyHub,
   DashboardStaffHub,
