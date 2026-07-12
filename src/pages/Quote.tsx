@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
 import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
 import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
+import { RegionCityDistrictSelect } from '@/components/location/RegionCityDistrictSelect';
 import {
   CANONICAL_PRIMARY_SLUGS,
   CANONICAL_PRIMARY_LABELS,
@@ -47,8 +48,17 @@ interface QuoteForm {
   sector: Sector;
   /** Optional canonical sub-specialty slug (child of `sector`). */
   specialty: string;
+  /** Q3-UI — structured DB-backed location IDs (source of truth for matching). */
+  regionId: string | null;
+  cityId: string | null;
+  districtId: string | null;
+  /** Q3-UI — Arabic reference text mirrored from the selected IDs
+   * (kept for legacy consumers + display + free-text escape hatch). */
+  region: string;
   city: string;
   district: string;
+  /** Q3-UI — escape hatch: user picked "my city isn't listed" and used free text. */
+  noLocationSelected: boolean;
   serviceLocation: ServiceLocation | '';
   description: string;
   measurements: string;
@@ -71,7 +81,10 @@ interface QuoteForm {
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
 
 const emptyForm: QuoteForm = {
-  sector: '', specialty: '', city: '', district: '', serviceLocation: '',
+  sector: '', specialty: '',
+  regionId: null, cityId: null, districtId: null,
+  region: '', city: '', district: '', noLocationSelected: false,
+  serviceLocation: '',
   description: '', measurements: '', quantity: '', files: [],
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
