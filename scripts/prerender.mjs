@@ -67,6 +67,13 @@ function renderPage(p) {
     `<link rel="alternate" hreflang="ar" href="${esc(canonical)}" />\n    <link rel="alternate" hreflang="x-default" href="${esc(canonical)}" />`,
   );
 
+  // Strip pre-existing og:* / twitter:* meta tags from the shell so we
+  // don't emit duplicates. Our fresh per-page block is injected below.
+  html = html.replace(
+    /\s*<meta\s+(?:property|name)=["'](?:og:[^"']+|twitter:[^"']+)["'][^>]*>/gi,
+    "",
+  );
+
   const ogBlock =
     `\n    <meta property="og:type" content="${p.ogType || "website"}" />` +
     `\n    <meta property="og:site_name" content="قِطاعات Qitaat" />` +
