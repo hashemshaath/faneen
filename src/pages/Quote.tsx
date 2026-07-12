@@ -565,23 +565,49 @@ const Quote: React.FC = () => {
   /* ---------------- success view ---------------- */
 
   if (submitted) {
+    // Q4 — honest post-submit copy based on match summary.
+    const matched = submittedMatchedCount;
+    const source  = submittedMatchSource;
+    const manualRouting =
+      matched === 0 && (source === 'manual_routing' || source === 'unknown' || source === 'skipped_status');
+    const noCoverage =
+      matched === 0 && !manualRouting;
+    const successAr = matched > 0
+      ? `تم توجيه طلبك إلى ${matched} من المزودين الذين يغطون منطقتك`
+      : manualRouting
+        ? 'استلمنا طلبك — سيتولى فريقنا توجيهه يدوياً والتواصل معك'
+        : 'استلمنا طلبك — لا يوجد لدينا حالياً مزود يغطي منطقتك، وسيتولى فريقنا توجيه الطلب يدوياً والتواصل معك';
+    const successEn = matched > 0
+      ? `Your request was routed to ${matched} provider(s) covering your area`
+      : manualRouting
+        ? 'We received your request — our team will route it manually and contact you.'
+        : 'We received your request — no provider currently covers your area; our team will route it manually and contact you.';
     return (
       <div className="min-h-dvh bg-background">
         <Navbar />
         <main className="container-app pt-24 sm:pt-32 pb-16 sm:pb-24">
           <Card className="max-w-2xl mx-auto p-8 sm:p-12 text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-5">
-              <CheckCircle2 className="w-9 h-9 text-emerald-500" />
+            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-5 ${
+              matched > 0 ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+            }`}>
+              <CheckCircle2 className={`w-9 h-9 ${
+                matched > 0 ? 'text-emerald-500' : 'text-amber-500'
+              }`} />
             </div>
             <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground mb-3">
               <Bi ar="تم استلام طلبك بنجاح" en="Your request was received" />
             </h1>
             <p className="text-muted-foreground leading-relaxed mb-8">
-              <Bi
-                ar="وصلتنا تفاصيل طلبك. سيتم توجيهه حسب القطاع والمدينة لمساعدة مزودي الخدمة على فهم احتياجك والرد عليك بطريقة أوضح."
-                en="We received your request. It will be routed by sector and city so providers can respond clearly."
-              />
+              <Bi ar={successAr} en={successEn} />
             </p>
+            {noCoverage && (
+              <p className="text-xs text-amber-700 dark:text-amber-400 mb-4">
+                <Bi
+                  ar="سنبذل جهدنا لإيجاد مزود مناسب أو توسيع التغطية في منطقتك قريبًا."
+                  en="We'll work to find a suitable provider or expand coverage in your area soon."
+                />
+              </p>
+            )}
             {(submittedRefId || submittedId) && (
               <p className="text-xs text-muted-foreground mb-4 tech-content">
                 <Bi ar="رقم الطلب: " en="Request ID: " />
