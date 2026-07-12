@@ -46,6 +46,7 @@ import {
 } from '@/modules/taxonomy/canonical-primaries';
 import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
 import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
+import { RegionCityDistrictSelect } from '@/components/location/RegionCityDistrictSelect';
 
 const STEPS: { id: number; ar: string; en: string }[] = [
   { id: 1, ar: 'القطاع ونوع العمل', en: 'Sector & type' },
@@ -76,6 +77,11 @@ const DashboardNewRfq: React.FC = () => {
   const [projectDescription, setProjectDescription] = useState('');
   const [city, setCity] = useState('');
   const [district, setDistrict] = useState('');
+  // Q3-UI — structured DB-backed location IDs (dual-write with text fields).
+  const [regionId, setRegionId] = useState<string | null>(null);
+  const [cityId, setCityId] = useState<string | null>(null);
+  const [districtId, setDistrictId] = useState<string | null>(null);
+  const [regionText, setRegionText] = useState('');
   const [siteId, setSiteId] = useState<string>('');
   const [approxDimensions, setApproxDimensions] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -131,6 +137,10 @@ const DashboardNewRfq: React.FC = () => {
         sector,
         city: city.trim(),
         district: district.trim() || null,
+        // Q3-UI — dual-write structured IDs (matcher SOT); text stays for legacy consumers.
+        region_id: regionId,
+        city_id: cityId,
+        district_id: districtId,
         service_location_type: 'on_site',
         project_description: projectDescription.trim(),
         approx_dimensions: approxDimensions.trim() || null,
@@ -149,6 +159,7 @@ const DashboardNewRfq: React.FC = () => {
           warranty: warranty.trim() || null,
           special_conditions: specialConditions.trim() || null,
           requires_sample: requiresSample,
+          region_text: regionText || null,
         },
       };
       const result = await submitQuoteRequest(payload);
