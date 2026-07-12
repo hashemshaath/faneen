@@ -5021,6 +5021,7 @@ export type Database = {
           is_active: boolean
           name_ar: string
           name_en: string
+          region_id: string | null
           updated_at: string
         }
         Insert: {
@@ -5030,6 +5031,7 @@ export type Database = {
           is_active?: boolean
           name_ar: string
           name_en: string
+          region_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -5039,6 +5041,7 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          region_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -5047,6 +5050,13 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cities_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
             referencedColumns: ["id"]
           },
         ]
@@ -8987,6 +8997,7 @@ export type Database = {
           city: string
           city_ar: string | null
           city_en: string | null
+          city_id: string | null
           country_code: string
           created_at: string
           district_ar: string
@@ -8996,6 +9007,7 @@ export type Database = {
           region: string
           region_ar: string | null
           region_en: string | null
+          region_id: string | null
           source: string
           updated_at: string
         }
@@ -9003,6 +9015,7 @@ export type Database = {
           city: string
           city_ar?: string | null
           city_en?: string | null
+          city_id?: string | null
           country_code?: string
           created_at?: string
           district_ar: string
@@ -9012,6 +9025,7 @@ export type Database = {
           region: string
           region_ar?: string | null
           region_en?: string | null
+          region_id?: string | null
           source?: string
           updated_at?: string
         }
@@ -9019,6 +9033,7 @@ export type Database = {
           city?: string
           city_ar?: string | null
           city_en?: string | null
+          city_id?: string | null
           country_code?: string
           created_at?: string
           district_ar?: string
@@ -9028,10 +9043,26 @@ export type Database = {
           region?: string
           region_ar?: string | null
           region_en?: string | null
+          region_id?: string | null
           source?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "districts_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "districts_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_deliverability_alerts: {
         Row: {
@@ -17240,6 +17271,39 @@ export type Database = {
           label_ar?: string
           label_en?: string
           scope?: string
+        }
+        Relationships: []
+      }
+      saudi_regions: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
