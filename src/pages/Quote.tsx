@@ -742,31 +742,104 @@ const Quote: React.FC = () => {
                         en: 'Location helps route the request to nearer providers.',
                       }}
                     />
-                    <div>
-                      <Label htmlFor="q-city"><Bi ar="المدينة" en="City" /></Label>
-                      <Input
-                        id="q-city"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        className="h-12 mt-1.5"
-                        placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
-                        value={form.city}
-                        onChange={(e) => update('city', e.target.value)}
-                      />
-                      <FieldError message={errors.city} />
-                    </div>
-                    <div>
-                      <Label htmlFor="q-district">
-                        <Bi ar="الحي (اختياري)" en="District (optional)" />
-                      </Label>
-                      <Input
-                        id="q-district"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        className="h-12 mt-1.5"
-                        placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
-                        value={form.district}
-                        onChange={(e) => update('district', e.target.value)}
-                      />
-                    </div>
+                    {!form.noLocationSelected ? (
+                      <>
+                        <RegionCityDistrictSelect
+                          value={{
+                            regionId: form.regionId,
+                            cityId: form.cityId,
+                            districtId: form.districtId,
+                          }}
+                          requiredRegion
+                          requiredCity
+                          onChange={(v, resolved) => {
+                            setForm((p) => ({
+                              ...p,
+                              regionId: v.regionId,
+                              cityId: v.cityId,
+                              districtId: v.districtId,
+                              region: resolved.regionText,
+                              city: resolved.cityText,
+                              district: resolved.districtText,
+                            }));
+                            setErrors((p) => ({ ...p, city: undefined }));
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          <Bi
+                            ar="تحديد الحي يساعدنا في إيصال طلبك للمزودين الأقرب."
+                            en="Selecting a district helps route your request to the nearest providers."
+                          />
+                        </p>
+                        <FieldError message={errors.city} />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((p) => ({
+                              ...p,
+                              noLocationSelected: true,
+                              regionId: null,
+                              cityId: null,
+                              districtId: null,
+                              region: '',
+                              city: '',
+                              district: '',
+                            }));
+                          }}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          <Bi ar="مدينتي غير موجودة" en="My city isn't listed" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+                          <Bi
+                            ar="سنمرر طلبك يدويًا لأن مدينتك غير مسجّلة في القائمة."
+                            en="We'll route this request manually because your city isn't in the list."
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="q-city-free"><Bi ar="المدينة" en="City" /></Label>
+                          <Input
+                            id="q-city-free"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className="h-12 mt-1.5"
+                            placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
+                            value={form.city}
+                            onChange={(e) => update('city', e.target.value)}
+                          />
+                          <FieldError message={errors.city} />
+                        </div>
+                        <div>
+                          <Label htmlFor="q-district-free">
+                            <Bi ar="الحي (اختياري)" en="District (optional)" />
+                          </Label>
+                          <Input
+                            id="q-district-free"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className="h-12 mt-1.5"
+                            placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
+                            value={form.district}
+                            onChange={(e) => update('district', e.target.value)}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((p) => ({
+                              ...p,
+                              noLocationSelected: false,
+                              city: '',
+                              district: '',
+                            }))
+                          }
+                          className="text-sm text-primary hover:underline"
+                        >
+                          <Bi ar="العودة لاختيار المدينة من القائمة" en="Back to city picker" />
+                        </button>
+                      </div>
+                    )}
                     <div>
                       <div className="mb-2 text-sm font-semibold text-foreground">
                         <Bi ar="هل الخدمة مطلوبة في موقع العميل أم لدى المزود؟" en="On client site or at provider?" />
