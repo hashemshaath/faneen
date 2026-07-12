@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
