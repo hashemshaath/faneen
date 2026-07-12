@@ -73,6 +73,12 @@ interface Props {
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
+/**
+ * D2.3 — Writes `is_banned` on `profiles`. Rendered under /admin/businesses
+ * (`requireAdmin`). This is one of the reasons the profiles ban/suspend
+ * RLS is NOT tightened to super_admin: the effective server-side boundary
+ * for these writes is `has_admin_access`, matching the current RLS policy.
+ */
 export const BusinessOwnerPanel: React.FC<Props> = ({
   businessId,
   businessRef,
