@@ -35,6 +35,12 @@ import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import type { LucideIcon } from 'lucide-react';
+import {
+  RFQ_JOURNEY_STATE_LABEL_AR,
+  type RfqJourneyState,
+} from '@/modules/opportunities/journeyState';
+import { loadJourneyAggregatesForQuotes } from '@/modules/opportunities/journeyStateService';
+import { JourneyStateBadge } from '@/modules/opportunities/JourneyStateBadge';
 
 /** Premium KPI tile used on the executive hero. */
 type HeroKpiAccent = 'emerald' | 'blue' | 'amber' | 'orange' | 'slate';
@@ -259,6 +265,15 @@ const DashboardMyRequests: React.FC = () => {
     enabled: quoteIds.length > 0,
     queryFn: () => countQuoteRequestFiles(quoteIds),
   });
+
+  // R5.3 — Journey-state aggregate for the loaded page.
+  const { data: journeyAgg } = useQuery({
+    queryKey: ['my-quote-journey-states', user?.id, quoteIds.join(',')],
+    enabled: quoteIds.length > 0,
+    queryFn: () => loadJourneyAggregatesForQuotes(quoteIds),
+  });
+  const journeyStates = journeyAgg?.states;
+  const [journeyFilter, setJourneyFilter] = useState<RfqJourneyState | 'all'>('all');
 
   const businessIds = useMemo(
     () => Array.from(new Set((leads ?? []).map((l) => l.business_id))).filter(Boolean),
