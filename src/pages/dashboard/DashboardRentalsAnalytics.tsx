@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import { RentalItems, RentalOrders } from '@/modules/rentals';
@@ -90,10 +91,11 @@ type AlertItem = {
 /* ---------------- page ---------------- */
 const DashboardRentalsAnalytics: React.FC = () => {
   const { user } = useAuth();
+  const workspace = useActiveWorkspace();
   const { isRTL } = useLanguage();
   const bi = useBi();
 
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const businessId = workspace.active_entity_id;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [items, setItems] = useState<RentalItem[]>([]);
@@ -131,16 +133,14 @@ const DashboardRentalsAnalytics: React.FC = () => {
 
   useEffect(() => {
     if (!user?.id) return;
+    if (workspace.isLoading) return;
     (async () => {
       setLoading(true);
-      const { data: biz } = await supabase
-        .from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle();
-      const bizId = biz?.id ?? null;
-      setBusinessId(bizId);
-      if (bizId) await fetchAll(bizId);
+      // D2.1 — resolve owning business via active workspace (owner + staff).
+      if (businessId) await fetchAll(businessId);
       setLoading(false);
     })();
-  }, [user?.id]);
+  }, [user?.id, workspace.isLoading, businessId]);
 
   const handleRefresh = async () => {
     if (!businessId) return;

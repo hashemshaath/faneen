@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { Card } from '@/components/ui/card';
@@ -78,10 +79,11 @@ function findConflicts(orders: RentalOrder[], itemId: string, start: string, end
 /* --------------------------- Page --------------------------- */
 const DashboardRentalsCalendar: React.FC = () => {
   const { user } = useAuth();
+  const workspace = useActiveWorkspace();
   const { isRTL } = useLanguage();
   const bi = useBi();
 
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const businessId = workspace.active_entity_id;
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<RentalItem[]>([]);
   const [orders, setOrders] = useState<RentalOrder[]>([]);
@@ -94,11 +96,10 @@ const DashboardRentalsCalendar: React.FC = () => {
 
   useEffect(() => {
     if (!user?.id) return;
+    if (workspace.isLoading) return;
     (async () => {
-      const { data: biz } = await supabase
-        .from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle();
-      const bizId = biz?.id ?? null;
-      setBusinessId(bizId);
+      // D2.1 — resolve owning business via active workspace (owner + staff).
+      const bizId = businessId;
       const [it, ord] = await Promise.all([
         bizId ? RentalItems.listProviderItems(bizId) : Promise.resolve({ data: [], error: null }),
         bizId ? RentalOrders.listOrdersForProvider(bizId) : Promise.resolve({ data: [], error: null }),
@@ -107,7 +108,7 @@ const DashboardRentalsCalendar: React.FC = () => {
       setOrders(ord.data ?? []);
       setLoading(false);
     })();
-  }, [user?.id]);
+  }, [user?.id, workspace.isLoading, businessId]);
 
   const refreshOrders = useCallback(async () => {
     if (!businessId) return;
