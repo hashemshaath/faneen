@@ -25,9 +25,11 @@ export async function setBidShortlisted(
   shortlisted: boolean,
 ): Promise<OpportunityBidRow> {
   const next = shortlisted ? 'shortlisted' : 'under_review';
+  const patch: { status: string; shortlisted_at?: string | null } = { status: next };
+  if (shortlisted) patch.shortlisted_at = new Date().toISOString();
   const { data, error } = await supabase
     .from('opportunity_bids')
-    .update({ status: next })
+    .update(patch)
     .eq('id', bidId)
     .select('*')
     .single();
@@ -117,6 +119,15 @@ export async function recordAwardReason(
 ): Promise<void> {
   const trimmed = reason.trim();
   if (!trimmed) return;
+  // R2: also persist on the quote request itself (owner/admin RLS only).
+  try {
+    await supabase
+      .from('quote_requests')
+      .update({ award_reason: trimmed })
+      .eq('id', opportunityId);
+  } catch {
+    /* best-effort — the event log below is the source of truth */
+  }
   const { data: auth } = await supabase.auth.getUser();
   await supabase.from('quote_request_events').insert({
     quote_request_id: opportunityId,
@@ -191,6 +202,11 @@ export async function submitOpportunityBid(
       warranty: input.warranty ?? null,
       status: 'submitted',
       submitted_at: nowIso,
+      payment_terms: input.paymentTerms ?? null,
+      valid_until: input.validUntil ?? null,
+      vat_inclusive: input.vatInclusive ?? true,
+      materials_brand_ids: input.materialsBrandIds ?? null,
+      price_breakdown: (input.priceBreakdown ?? []) as unknown as never,
     })
     .select('*')
     .single();
@@ -236,6 +252,13 @@ export async function updateDraftOpportunityBid(
       scope_summary: patch.scopeSummary ?? undefined,
       terms: patch.terms ?? undefined,
       warranty: patch.warranty ?? undefined,
+      payment_terms: patch.paymentTerms ?? undefined,
+      valid_until: patch.validUntil ?? undefined,
+      vat_inclusive: patch.vatInclusive ?? undefined,
+      materials_brand_ids: patch.materialsBrandIds ?? undefined,
+      price_breakdown: patch.priceBreakdown
+        ? (patch.priceBreakdown as unknown as never)
+        : undefined,
     })
     .eq('id', bidId)
     .select('*')
@@ -266,11 +289,40 @@ export async function withdrawOpportunityBid(
 export async function awardOpportunityBid(
   opportunityId: string,
   bidId: string,
+  opts?: { awardReason?: string | null },
 ): Promise<string> {
   const { data, error } = await supabase.rpc('award_opportunity_bid', {
     p_opportunity_id: opportunityId,
     p_bid_id: bidId,
   });
   if (error) throw error;
+  // R2: stamp award_reason + closed_at on the opportunity (owner/admin RLS).
+  try {
+    const patch: { closed_at: string; award_reason?: string } = {
+      closed_at: new Date().toISOString(),
+    };
+    const trimmed = opts?.awardReason?.trim();
+    if (trimmed) patch.award_reason = trimmed;
+    await supabase.from('quote_requests').update(patch).eq('id', opportunityId);
+  } catch {
+    /* best-effort */
+  }
   return (data as string) ?? bidId;
+}
+
+/**
+ * R2 — Record a polite decline reason for a specific losing bid.
+ * Visible only to the bidder themselves + provider staff + client + admin
+ * per existing opportunity_bids RLS. Idempotent overwrite.
+ */
+export async function setBidDeclineReason(
+  bidId: string,
+  reason: string,
+): Promise<void> {
+  const trimmed = reason.trim();
+  if (!trimmed) return;
+  await supabase
+    .from('opportunity_bids')
+    .update({ decline_reason: trimmed })
+    .eq('id', bidId);
 }
