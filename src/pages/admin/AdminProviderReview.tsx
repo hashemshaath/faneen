@@ -347,7 +347,7 @@ export default function AdminProviderReview() {
                 </Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl h-10">
-                <Link to="/admin/provider-analytics">
+                <Link to="/admin/provider-review?tab=analytics">
                   <Eye className="h-4 w-4" />
                   {isRTL ? 'التحليلات' : 'Analytics'}
                 </Link>

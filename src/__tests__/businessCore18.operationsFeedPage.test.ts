@@ -18,10 +18,6 @@ const SIDEBAR_CONFIG = readFileSync(
   'utf8',
 );
 const SIDEBAR = SIDEBAR_SHELL + '\n' + SIDEBAR_CONFIG;
-const OVERVIEW = readFileSync(
-  resolve(__dirname, '../pages/dashboard/DashboardWorkOrdersOverview.tsx'),
-  'utf8',
-);
 
 describe('BUSINESS-CORE-18 — Operations Feed page wiring', () => {
   it('route /dashboard/operations/feed is registered before catch-all', () => {
@@ -41,10 +37,6 @@ describe('BUSINESS-CORE-18 — Operations Feed page wiring', () => {
     expect(SIDEBAR).toMatch(/\/dashboard\/operations\/feed/);
     expect(SIDEBAR).toMatch(/Operations Feed/);
     expect(SIDEBAR).toMatch(/سجل العمليات/);
-  });
-
-  it('UnifiedOperationsFeed remains embedded in the overview page', () => {
-    expect(OVERVIEW).toMatch(/UnifiedOperationsFeed/);
   });
 });
 

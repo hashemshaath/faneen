@@ -207,6 +207,7 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
     descriptionEn: 'Identity, settings, integrations and audit',
     items: [
       { id: 'settings-center', labelAr: 'الإعدادات', labelEn: 'Settings', route: '/admin/settings', icon: Sliders, keywords: ['settings', 'system', 'integrations', 'إعدادات'] },
+      { id: 'notifications-config', labelAr: 'إعدادات الإشعارات', labelEn: 'Notifications Config', route: '/admin/notifications-config', icon: Sliders, keywords: ['notifications', 'templates', 'إشعارات'] },
       { id: 'identity-center', labelAr: 'مركز الهوية', labelEn: 'Identity Center', route: '/admin/system/identity', icon: Sparkles, permission: 'super_admin', keywords: ['identity', 'tokens', 'هوية'] },
       { id: 'system-settings', labelAr: 'إعدادات النظام', labelEn: 'System Settings', route: '/admin/system-settings', icon: Sliders, hiddenInSidebar: true },
       { id: 'branding', labelAr: 'الهوية البصرية', labelEn: 'Branding', route: '/admin/branding', icon: Sparkles, hiddenInSidebar: true },

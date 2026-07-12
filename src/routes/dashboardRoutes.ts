@@ -68,7 +68,6 @@ export const DashboardEntityDetail = lazyRetry(() => import("../pages/dashboard/
 export const DashboardBusinessProfileHub = lazyRetry(() => import("../pages/dashboard/DashboardBusinessProfileHub"));
 export const DashboardBranches = lazyRetry(() => import("../pages/dashboard/DashboardBranches"));
 export const DashboardRequestsHub = lazyRetry(() => import("../pages/dashboard/DashboardRequestsHub"));
-export const DashboardRfqHub = lazyRetry(() => import("../pages/dashboard/DashboardRfqHub"));
 export const DashboardContractsHub = lazyRetry(() => import("../pages/dashboard/DashboardContractsHub"));
 export const DashboardLoyaltyHub = lazyRetry(() => import("../pages/dashboard/DashboardLoyaltyHub"));
 export const DashboardStaffHub = lazyRetry(() => import("../pages/dashboard/DashboardStaffHub"));

@@ -20,7 +20,6 @@ const APP = join(SRC, "App.tsx");
 // both so the IA-string assertions still find their targets.
 const SIDEBAR_SHELL  = join(SRC, "components/dashboard/DashboardSidebar.tsx");
 const SIDEBAR_CONFIG = join(SRC, "modules/dashboard/navigation/dashboardNavigation.config.ts");
-const PAGE = join(SRC, "pages/dashboard/DashboardWorkOrdersOverview.tsx");
 const COMP_DIR = join(SRC, "components/workOrders");
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -103,7 +102,6 @@ describe("BUSINESS-CORE-4: route + sidebar", () => {
 
   it("registers /dashboard/work-orders/overview route", () => {
     expect(app).toMatch(/\/dashboard\/work-orders\/overview/);
-    expect(app).toMatch(/DashboardWorkOrdersOverview/);
   });
 
   // NAVIGATION-CONSOLIDATION-1 (group 5): the dedicated Operations
@@ -117,38 +115,6 @@ describe("BUSINESS-CORE-4: route + sidebar", () => {
 
   it("does not modify /dashboard/operations route", () => {
     expect(app).toMatch(/path="\/dashboard\/operations"/);
-  });
-});
-
-describe("BUSINESS-CORE-4: page hygiene", () => {
-  const page = readFileSync(PAGE, "utf8");
-
-  it("does not call supabase.from directly", () => {
-    expect(page).not.toMatch(/supabase\.from\s*\(/);
-  });
-
-  it("imports only from work-orders module barrel for WO data", () => {
-    expect(page).toMatch(/from\s+["']@\/modules\/workOrders["']/);
-  });
-
-  it("does not import payment/auth/cron/notification modules", () => {
-    expect(page).not.toMatch(/payments?\//i);
-    expect(page).not.toMatch(/\/auth\//i);
-    expect(page).not.toMatch(/cron|scheduler/i);
-    expect(page).not.toMatch(/notifications?\//i);
-    expect(page).not.toMatch(/sendTransactionalEmail|email-queue/i);
-    expect(page).not.toMatch(/realtime|channel\(/i);
-  });
-
-  it("uses ReferenceBadge — no raw UUID primary display", () => {
-    expect(page).toMatch(/ReferenceBadge/);
-    expect(page).not.toMatch(/>\s*\{[a-zA-Z_.]+\.id\}\s*</);
-  });
-
-  it("uses noindex + loading + no-entity states", () => {
-    expect(page).toMatch(/useNoIndex/);
-    expect(page).toMatch(/active_entity_id/);
-    expect(page).toMatch(/Loading|loading|جارٍ/);
   });
 });
 
@@ -183,7 +149,7 @@ describe("BUSINESS-CORE-4: UI primitives hygiene", () => {
 });
 
 describe("BUSINESS-CORE-4: isolation — overview does not bypass module", () => {
-  const files = walk(join(SRC, "components/workOrders")).concat([PAGE]);
+  const files = walk(join(SRC, "components/workOrders"));
   it("no work_order_* table access outside modules/workOrders/", () => {
     for (const f of files) {
       const src = readFileSync(f, "utf8");

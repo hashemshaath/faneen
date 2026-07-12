@@ -803,7 +803,7 @@ const AdminOperations = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm space-y-2">
-            <Link to="/admin/operations/console" className="flex items-center justify-between rounded-lg border px-3 py-2 hover:bg-muted/40 transition-colors">
+            <Link to="/admin/operations?tab=console" className="flex items-center justify-between rounded-lg border px-3 py-2 hover:bg-muted/40 transition-colors">
               <span className="flex items-center gap-2"><Terminal className="w-4 h-4 text-primary" /> {bi('مركز العمليات الكامل', 'Full Operations Console')}</span>
               <ArrowFwd className="w-3.5 h-3.5 text-muted-foreground" />
             </Link>

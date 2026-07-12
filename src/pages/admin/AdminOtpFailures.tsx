@@ -6,6 +6,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertTriangle, ShieldAlert, Loader2, RefreshCw, ListChecks,
 } from 'lucide-react';
@@ -39,7 +40,7 @@ const AdminOtpFailures = () => {
   const { isRTL } = useLanguage();
   const [hours, setHours] = useState<24 | 72 | 168>(24);
 
-  const { data: rows = [], isFetching, refetch } = useQuery({
+  const { data: rows = [], isFetching, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-otp-failures', hours],
     queryFn: async (): Promise<OtpFailureRow[]> => {
       const sinceIso = new Date(Date.now() - hours * 3600 * 1000).toISOString();
@@ -75,6 +76,31 @@ const AdminOtpFailures = () => {
   );
 
   const total = rows.length;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-24 rounded-xl" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
+  }
+  if (isError) {
+    return (
+      <Card><CardContent className="py-10 text-center space-y-3">
+        <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
+        <div className="text-sm text-muted-foreground">
+          {isRTL ? 'تعذّر تحميل سجل فشل OTP.' : 'Failed to load OTP failure log.'}
+        </div>
+        <Button variant="outline" onClick={() => refetch()}>
+          {isRTL ? 'إعادة المحاولة' : 'Retry'}
+        </Button>
+      </CardContent></Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

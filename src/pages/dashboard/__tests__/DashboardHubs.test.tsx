@@ -36,7 +36,6 @@ vi.mock('@/hooks/useNoIndex', () => ({ useNoIndex: () => undefined }));
 // Import hubs *after* mocks so they pick them up.
 import DashboardLoyaltyHub from '../DashboardLoyaltyHub';
 import DashboardContractsHub from '../DashboardContractsHub';
-import DashboardRfqHub from '../DashboardRfqHub';
 import DashboardStaffHub from '../DashboardStaffHub';
 import DashboardRequestsHub from '../DashboardRequestsHub';
 import DashboardBusinessProfileHub from '../DashboardBusinessProfileHub';
@@ -69,15 +68,6 @@ const cases: HubCase[] = [
     firstTabLabelAr: 'العقود',
     secondTabLabelAr: 'التحليلات',
     secondTabKey: 'analytics',
-  },
-  {
-    name: 'RfqHub',
-    Component: DashboardRfqHub,
-    titleAr: 'عروض الأسعار RFQ',
-    tabKeys: ['requests', 'inbox'],
-    firstTabLabelAr: 'الطلبات',
-    secondTabLabelAr: 'الوارد',
-    secondTabKey: 'inbox',
   },
   {
     name: 'StaffHub',

@@ -109,7 +109,7 @@ export default function AdminContracts() {
         )}
         actionsSlot={
           <Button asChild size="sm" className="h-10 gap-1.5 rounded-xl">
-            <Link to="/admin/contracts/create">
+            <Link to="/admin/contracts?tab=create">
               <Plus className="w-4 h-4" />
               <Bi ar="إنشاء عقد بالنيابة" en="Create on Behalf" />
             </Link>

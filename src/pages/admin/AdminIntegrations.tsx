@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bi, useBi } from "@/components/common/Bilingual";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { probeIntegrationHealth } from "@/modules/integrations/services/probeIntegrationHealth";
@@ -294,7 +295,7 @@ const AdminIntegrations = () => {
   const [recheckingId, setRecheckingId] = useState<string | null>(null);
   const [tick, setTick] = useState(0); // forces relativeTime re-render
 
-  const { data, isFetching, refetch } = useQuery({
+  const { data, isFetching, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "integrations", nonce],
     queryFn: async () => {
       const entries = await Promise.all(
@@ -363,6 +364,39 @@ const AdminIntegrations = () => {
   const healthPct = counts.total > 0 ? Math.round((counts.ok / counts.total) * 100) : 0;
   // touch `tick` so relative timestamps re-render on interval
   void tick;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto max-w-6xl px-4 py-6 space-y-4">
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+  if (isError) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto max-w-6xl px-4 py-10">
+          <Card className="p-8 text-center space-y-3">
+            <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
+            <div className="text-sm text-muted-foreground">
+              <Bi ar="تعذّر تحميل حالة التكاملات." en="Failed to load integrations status." />
+            </div>
+            <Button variant="outline" onClick={() => refetch()}>
+              <Bi ar="إعادة المحاولة" en="Retry" />
+            </Button>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

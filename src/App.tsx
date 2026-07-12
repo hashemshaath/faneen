@@ -169,7 +169,6 @@ import {
   DashboardBusinessProfileHub,
   DashboardBranches,
   DashboardRequestsHub,
-  DashboardRfqHub,
   DashboardContractsHub,
   DashboardLoyaltyHub,
   DashboardStaffHub,
@@ -233,7 +232,6 @@ import {
   AdminProviderAnalytics,
   AdminAuditLog,
   AdminProviderLeads,
-  AdminProviderLanding,
   AdminPdfVisualQa,
   AdminOperationsHub,
   AdminOperationsCenterUnified,
@@ -590,7 +588,6 @@ const AppRoutes = () => (
           <Route path="/admin/market-analytics" element={<ProtectedRoute requireAdmin><AdminMarketAnalytics /></ProtectedRoute>} />
           <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSeoHub /></ProtectedRoute>} />
           <Route path="/admin/provider-analytics" element={<Navigate to="/admin/provider-review?tab=analytics" replace />} />
-          <Route path="/admin/provider-landing" element={<Navigate to="/admin/provider-review?tab=landing" replace />} />
           <Route path="/admin/access-management" element={<ProtectedRoute requireSuperAdmin><AdminAccessManagement /></ProtectedRoute>} />
           <Route path="/admin/system-access" element={<ProtectedRoute requireAdmin><AdminSystemAccess /></ProtectedRoute>} />
 
