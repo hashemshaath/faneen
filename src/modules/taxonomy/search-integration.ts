@@ -394,13 +394,19 @@ export function useSearchTaxonomyContext(params: SearchTaxonomyParams) {
       params.service ?? '',
     ],
     queryFn: () => buildSearchTaxonomyContext(params),
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
+    // P1-sector — was staleTime:30s + refetchOnMount:'always', which meant every
+    // sector-card click into /search?category=… blocked results on a fresh
+    // taxonomy roundtrip (empty grid until it returned, because filterAndSort
+    // treats missing taxonomyBusinessIds as "no matches"). Matches the rest
+    // of the public directory queries: 5 min stale, no refetch on
+    // mount/focus, cache persisted via the 'search-taxonomy-context' key.
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     // Don't block the page on this — search must work even if taxonomy is slow.
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     enabled: Boolean(
       (params.q && params.q.trim().length >= 3) ||
       (params.sector && params.sector !== 'all') ||
