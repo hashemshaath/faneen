@@ -40,7 +40,8 @@ describe('queryPersist leak guard', () => {
   it('rejects allowlisted first-segment when a deny token appears in any later segment', () => {
     expect(shouldPersistQuery(q(['business', 'draft', 'x']))).toBe(false);
     expect(shouldPersistQuery(q(['business', 'admin']))).toBe(false);
-    expect(shouldPersistQuery(q(['home', 'user', 'private']))).toBe(false);
+    expect(shouldPersistQuery(q(['home', 'user']))).toBe(false);
+    expect(shouldPersistQuery(q(['business', 'my-something']))).toBe(false);
   });
 
   it('rejects non-array or empty keys', () => {
