@@ -50,7 +50,9 @@ export const ClientBidsSection: React.FC<Props> = ({
 
   const awardMut = useMutation({
     mutationFn: async (bid: OpportunityBidRow) => {
-      await awardOpportunityBid(opportunityId, bid.id);
+      await awardOpportunityBid(opportunityId, bid.id, {
+        awardReason: awardReason.trim() || null,
+      });
       if (awardReason.trim()) {
         try {
           await recordAwardReason(opportunityId, bid.id, awardReason);

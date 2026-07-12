@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Send, X } from 'lucide-react';
+import { Loader2, Send, X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { OPPORTUNITY_LABELS } from '../opportunityLabels';
@@ -16,6 +16,23 @@ import {
   submitOpportunityBid,
   withdrawOpportunityBid,
 } from './services';
+import type { BidPriceBreakdownItem } from './types';
+
+const PAYMENT_TERMS_PRESETS = [
+  'دفعة واحدة عند التسليم',
+  '50% مقدم و50% عند التسليم',
+  'دفعات مرحلية',
+  'أخرى',
+] as const;
+
+const defaultValidUntil = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + 14);
+  return d.toISOString().slice(0, 10);
+};
+
+const sumBreakdown = (items: BidPriceBreakdownItem[]): number =>
+  items.reduce((acc, it) => acc + (Number(it.quantity) || 0) * (Number(it.unit_price) || 0), 0);
 
 interface Props {
   opportunityId: string;
@@ -40,6 +57,17 @@ export const ProviderBidSection: React.FC<Props> = ({
   const [scope, setScope] = useState('');
   const [terms, setTerms] = useState('');
   const [warranty, setWarranty] = useState('');
+  const [paymentPreset, setPaymentPreset] = useState<string>(PAYMENT_TERMS_PRESETS[0]);
+  const [paymentOther, setPaymentOther] = useState('');
+  const [validUntil, setValidUntil] = useState(defaultValidUntil());
+  const [vatInclusive, setVatInclusive] = useState(true);
+  const [breakdown, setBreakdown] = useState<BidPriceBreakdownItem[]>([]);
+  const [priceManuallyOverridden, setPriceManuallyOverridden] = useState(false);
+
+  const breakdownTotal = sumBreakdown(breakdown);
+  const priceMismatch =
+    breakdown.length > 0 && Number(price) > 0 &&
+    Math.abs(Number(price) - breakdownTotal) > 0.01;
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['opportunity-bid-mine', opportunityId, user?.id],
@@ -54,6 +82,11 @@ export const ProviderBidSection: React.FC<Props> = ({
       if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
         throw new Error('السعر مطلوب');
       }
+      const paymentTerms =
+        paymentPreset === 'أخرى' ? paymentOther.trim() || null : paymentPreset;
+      const validUntilIso = validUntil
+        ? new Date(`${validUntil}T23:59:59`).toISOString()
+        : null;
       return submitOpportunityBid({
         opportunityId,
         assignmentId: assignmentId ?? null,
@@ -65,6 +98,10 @@ export const ProviderBidSection: React.FC<Props> = ({
         scopeSummary: scope || null,
         terms: terms || null,
         warranty: warranty || null,
+        paymentTerms,
+        validUntil: validUntilIso,
+        vatInclusive,
+        priceBreakdown: breakdown.length > 0 ? breakdown : null,
       });
     },
     onSuccess: () => {
@@ -153,13 +190,160 @@ export const ProviderBidSection: React.FC<Props> = ({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <Label>السعر (ريال)</Label>
-            <Input type="number" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <Input
+              type="number"
+              inputMode="decimal"
+              value={price}
+              onChange={(e) => {
+                setPrice(e.target.value);
+                setPriceManuallyOverridden(breakdown.length > 0);
+              }}
+            />
+            {priceMismatch && priceManuallyOverridden && (
+              <div className="text-xs text-amber-600">
+                تنبيه: السعر يختلف عن مجموع بنود التسعير ({breakdownTotal.toLocaleString()}).
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <Label>المدة (يوم)</Label>
             <Input type="number" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} />
           </div>
         </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label>شروط الدفع</Label>
+            <select
+              value={paymentPreset}
+              onChange={(e) => setPaymentPreset(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {PAYMENT_TERMS_PRESETS.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+            {paymentPreset === 'أخرى' && (
+              <Input
+                placeholder="حدد شروط الدفع"
+                value={paymentOther}
+                onChange={(e) => setPaymentOther(e.target.value)}
+                dir="auto"
+              />
+            )}
+          </div>
+          <div className="space-y-1">
+            <Label>صلاحية العرض حتى</Label>
+            <Input
+              type="date"
+              value={validUntil}
+              onChange={(e) => setValidUntil(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={vatInclusive}
+            onChange={(e) => setVatInclusive(e.target.checked)}
+            className="h-4 w-4"
+          />
+          السعر شامل ضريبة القيمة المضافة
+        </label>
+
+        <div className="space-y-2 rounded-lg border p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold">بنود السعر (اختياري)</div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setBreakdown((prev) => [
+                  ...prev,
+                  { name: '', quantity: 1, unit: '', unit_price: 0 },
+                ])
+              }
+            >
+              <Plus className="h-4 w-4 me-1" /> إضافة بند
+            </Button>
+          </div>
+          {breakdown.length === 0 && (
+            <div className="text-xs text-muted-foreground">أضف بنودًا لعرض تفاصيل التسعير للعميل.</div>
+          )}
+          {breakdown.map((item, idx) => (
+            <div key={idx} className="grid grid-cols-12 gap-2 items-start">
+              <Input
+                className="col-span-4"
+                placeholder="البند"
+                value={item.name}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setBreakdown((prev) => prev.map((x, i) => (i === idx ? { ...x, name: v } : x)));
+                }}
+                dir="auto"
+              />
+              <Input
+                className="col-span-2"
+                type="number"
+                placeholder="الكمية"
+                value={item.quantity}
+                onChange={(e) => {
+                  const v = Number(e.target.value) || 0;
+                  setBreakdown((prev) => prev.map((x, i) => (i === idx ? { ...x, quantity: v } : x)));
+                }}
+              />
+              <Input
+                className="col-span-2"
+                placeholder="الوحدة"
+                value={item.unit ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setBreakdown((prev) => prev.map((x, i) => (i === idx ? { ...x, unit: v } : x)));
+                }}
+                dir="auto"
+              />
+              <Input
+                className="col-span-3"
+                type="number"
+                placeholder="سعر الوحدة"
+                value={item.unit_price}
+                onChange={(e) => {
+                  const v = Number(e.target.value) || 0;
+                  setBreakdown((prev) => prev.map((x, i) => (i === idx ? { ...x, unit_price: v } : x)));
+                }}
+              />
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="col-span-1 h-10 w-10"
+                aria-label="حذف البند"
+                onClick={() => setBreakdown((prev) => prev.filter((_, i) => i !== idx))}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          {breakdown.length > 0 && (
+            <div className="flex items-center justify-between text-sm pt-1 border-t">
+              <span className="text-muted-foreground">إجمالي البنود</span>
+              <span className="tech-content font-semibold">{breakdownTotal.toLocaleString()}</span>
+              {!priceManuallyOverridden && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setPrice(String(breakdownTotal))}
+                >
+                  استخدام كسعر إجمالي
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="space-y-1">
           <Label>ملخص النطاق</Label>
           <Textarea rows={3} value={scope} onChange={(e) => setScope(e.target.value)} dir="auto" />

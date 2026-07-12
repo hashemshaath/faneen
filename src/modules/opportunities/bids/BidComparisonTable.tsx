@@ -11,8 +11,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Award, Loader2, Star, StarOff } from 'lucide-react';
+import { Award, ChevronDown, ChevronUp, Loader2, Star, StarOff } from 'lucide-react';
 import type { OpportunityBidRow } from './types';
+import type { BidPriceBreakdownItem } from './types';
 
 interface Props {
   bids: OpportunityBidRow[];
@@ -89,6 +90,7 @@ export const BidComparisonTable: React.FC<Props> = ({
   pendingKind = null,
 }) => {
   const [providerNames, setProviderNames] = useState<Record<string, string>>({});
+  const [breakdownOpen, setBreakdownOpen] = useState<Record<string, boolean>>({});
 
   // Fetch provider business names for column headers (best-effort).
   useEffect(() => {
@@ -130,6 +132,13 @@ export const BidComparisonTable: React.FC<Props> = ({
   }, [bids]);
 
   const hasWinner = !!awardedBidId || bids.some((b) => b.status === 'awarded');
+  const nowMs = Date.now();
+
+  const readBreakdown = (b: OpportunityBidRow): BidPriceBreakdownItem[] => {
+    const raw = (b as unknown as { price_breakdown?: unknown }).price_breakdown;
+    if (!Array.isArray(raw)) return [];
+    return raw as BidPriceBreakdownItem[];
+  };
 
   const criteria: Array<{
     key: string;
@@ -172,7 +181,72 @@ export const BidComparisonTable: React.FC<Props> = ({
     {
       key: 'expires',
       label: 'صلاحية العرض',
-      render: (b) => <span className="tech-content">{fmtDate(b.expires_at)}</span>,
+      render: (b) => {
+        const vu = (b as unknown as { valid_until?: string | null }).valid_until ?? b.expires_at;
+        const expired = vu ? new Date(vu).getTime() < nowMs : false;
+        return (
+          <span className="inline-flex items-center gap-1">
+            <span className="tech-content">{fmtDate(vu)}</span>
+            {expired && vu && (
+              <Badge variant="destructive" className="text-[10px]">منتهي</Badge>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'payment_terms',
+      label: 'شروط الدفع',
+      render: (b) => (
+        <span className="whitespace-pre-wrap">
+          {(b as unknown as { payment_terms?: string | null }).payment_terms || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'vat',
+      label: 'ضريبة القيمة المضافة',
+      render: (b) => {
+        const inc = (b as unknown as { vat_inclusive?: boolean | null }).vat_inclusive;
+        return <span>{inc === false ? 'غير شامل الضريبة' : 'شامل الضريبة'}</span>;
+      },
+    },
+    {
+      key: 'breakdown',
+      label: 'بنود السعر',
+      render: (b) => {
+        const items = readBreakdown(b);
+        if (!items.length) return <span className="text-muted-foreground">—</span>;
+        const open = !!breakdownOpen[b.id];
+        return (
+          <div className="space-y-1">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              onClick={() => setBreakdownOpen((s) => ({ ...s, [b.id]: !open }))}
+            >
+              {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {items.length} بند
+            </button>
+            {open && (
+              <ul className="text-xs space-y-1 mt-1">
+                {items.map((it, i) => {
+                  const total = (Number(it.quantity) || 0) * (Number(it.unit_price) || 0);
+                  return (
+                    <li key={i} className="flex justify-between gap-2 border-t pt-1">
+                      <span className="truncate">{it.name || '—'}</span>
+                      <span className="tech-content text-muted-foreground shrink-0">
+                        {Number(it.quantity) || 0}
+                        {it.unit ? ` ${it.unit}` : ''} × {Number(it.unit_price) || 0} = {total.toLocaleString()}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'status',

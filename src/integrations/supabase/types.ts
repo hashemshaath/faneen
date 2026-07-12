@@ -12329,19 +12329,26 @@ export type Database = {
           attachments_count: number
           created_at: string
           currency: string
+          decline_reason: string | null
           duration_unit: string | null
           duration_value: number | null
           expires_at: string | null
           id: string
+          materials_brand_ids: string[] | null
           opportunity_id: string
+          payment_terms: string | null
           price_amount: number | null
+          price_breakdown: Json
           provider_business_id: string | null
           scope_summary: string | null
+          shortlisted_at: string | null
           status: string
           submitted_at: string | null
           submitted_by: string
           terms: string | null
           updated_at: string
+          valid_until: string | null
+          vat_inclusive: boolean
           warranty: string | null
         }
         Insert: {
@@ -12349,19 +12356,26 @@ export type Database = {
           attachments_count?: number
           created_at?: string
           currency?: string
+          decline_reason?: string | null
           duration_unit?: string | null
           duration_value?: number | null
           expires_at?: string | null
           id?: string
+          materials_brand_ids?: string[] | null
           opportunity_id: string
+          payment_terms?: string | null
           price_amount?: number | null
+          price_breakdown?: Json
           provider_business_id?: string | null
           scope_summary?: string | null
+          shortlisted_at?: string | null
           status?: string
           submitted_at?: string | null
           submitted_by: string
           terms?: string | null
           updated_at?: string
+          valid_until?: string | null
+          vat_inclusive?: boolean
           warranty?: string | null
         }
         Update: {
@@ -12369,19 +12383,26 @@ export type Database = {
           attachments_count?: number
           created_at?: string
           currency?: string
+          decline_reason?: string | null
           duration_unit?: string | null
           duration_value?: number | null
           expires_at?: string | null
           id?: string
+          materials_brand_ids?: string[] | null
           opportunity_id?: string
+          payment_terms?: string | null
           price_amount?: number | null
+          price_breakdown?: Json
           provider_business_id?: string | null
           scope_summary?: string | null
+          shortlisted_at?: string | null
           status?: string
           submitted_at?: string | null
           submitted_by?: string
           terms?: string | null
           updated_at?: string
+          valid_until?: string | null
+          vat_inclusive?: boolean
           warranty?: string | null
         }
         Relationships: [
@@ -15865,6 +15886,7 @@ export type Database = {
       quote_requests: {
         Row: {
           approx_dimensions: string | null
+          award_reason: string | null
           award_status: string
           awarded_at: string | null
           awarded_bid_id: string | null
@@ -15875,6 +15897,7 @@ export type Database = {
           budget_amount: number | null
           budget_note: string | null
           city: string
+          closed_at: string | null
           created_at: string
           customer_email: string | null
           customer_name: string
@@ -15896,6 +15919,7 @@ export type Database = {
           ref_id: string | null
           region: string | null
           requester_entity_id: string | null
+          requires_sample: boolean
           sector: string
           service_location_type: string
           site_id: string | null
@@ -15908,6 +15932,7 @@ export type Database = {
         }
         Insert: {
           approx_dimensions?: string | null
+          award_reason?: string | null
           award_status?: string
           awarded_at?: string | null
           awarded_bid_id?: string | null
@@ -15918,6 +15943,7 @@ export type Database = {
           budget_amount?: number | null
           budget_note?: string | null
           city: string
+          closed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name: string
@@ -15939,6 +15965,7 @@ export type Database = {
           ref_id?: string | null
           region?: string | null
           requester_entity_id?: string | null
+          requires_sample?: boolean
           sector: string
           service_location_type: string
           site_id?: string | null
@@ -15951,6 +15978,7 @@ export type Database = {
         }
         Update: {
           approx_dimensions?: string | null
+          award_reason?: string | null
           award_status?: string
           awarded_at?: string | null
           awarded_bid_id?: string | null
@@ -15961,6 +15989,7 @@ export type Database = {
           budget_amount?: number | null
           budget_note?: string | null
           city?: string
+          closed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string
@@ -15982,6 +16011,7 @@ export type Database = {
           ref_id?: string | null
           region?: string | null
           requester_entity_id?: string | null
+          requires_sample?: boolean
           sector?: string
           service_location_type?: string
           site_id?: string | null

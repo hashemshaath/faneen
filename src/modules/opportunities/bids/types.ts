@@ -34,6 +34,17 @@ export const OPPORTUNITY_BID_EDITABLE_STATUSES: ReadonlyArray<OpportunityBidStat
 
 export type DurationUnit = 'hour' | 'day' | 'week' | 'month';
 
+/** R2 — single line-item inside a bid price breakdown. */
+export interface BidPriceBreakdownItem {
+  name: string;
+  description?: string | null;
+  quantity: number;
+  unit?: string | null;
+  unit_price: number;
+  /** Optional cached line total (quantity * unit_price). */
+  total?: number | null;
+}
+
 export interface SubmitOpportunityBidInput {
   opportunityId: string;
   assignmentId?: string | null;
@@ -46,6 +57,12 @@ export interface SubmitOpportunityBidInput {
   scopeSummary?: string | null;
   terms?: string | null;
   warranty?: string | null;
+  // R2 additive fields — all optional / backward compatible.
+  paymentTerms?: string | null;
+  validUntil?: string | null;
+  vatInclusive?: boolean | null;
+  materialsBrandIds?: string[] | null;
+  priceBreakdown?: BidPriceBreakdownItem[] | null;
 }
 
 export interface UpdateOpportunityBidDraftInput {
@@ -56,4 +73,9 @@ export interface UpdateOpportunityBidDraftInput {
   scopeSummary?: string | null;
   terms?: string | null;
   warranty?: string | null;
+  paymentTerms?: string | null;
+  validUntil?: string | null;
+  vatInclusive?: boolean | null;
+  materialsBrandIds?: string[] | null;
+  priceBreakdown?: BidPriceBreakdownItem[] | null;
 }

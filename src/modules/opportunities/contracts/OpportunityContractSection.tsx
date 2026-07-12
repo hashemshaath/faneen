@@ -21,6 +21,7 @@ interface Props {
 interface AwardSnapshot {
   awarded_bid_id: string | null;
   award_status: string | null;
+  requires_sample?: boolean | null;
 }
 
 /**
@@ -39,7 +40,7 @@ export const OpportunityContractSection: React.FC<Props> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quote_requests')
-        .select('awarded_bid_id, award_status')
+        .select('awarded_bid_id, award_status, requires_sample')
         .eq('id', opportunityId)
         .maybeSingle();
       if (error) throw error;
@@ -48,6 +49,10 @@ export const OpportunityContractSection: React.FC<Props> = ({
   });
 
   const awardedBidId = award?.awarded_bid_id ?? null;
+  const requiresSample = !!award?.requires_sample;
+  // R3 lands the actual approved-sample check; until then treat as unmet.
+  const sampleApproved = false;
+  const sampleGateOpen = !requiresSample || sampleApproved;
 
   const { data: contract, isLoading } = useQuery({
     queryKey: ['opportunity-contract', opportunityId],
@@ -100,12 +105,15 @@ export const OpportunityContractSection: React.FC<Props> = ({
         ) : canConvert && awardedBidId ? (
           <div className="flex items-center justify-between gap-3">
             <div className="text-sm text-muted-foreground">
-              يمكنك تحويل العرض الفائز إلى عقد مبدئي.
+              {sampleGateOpen
+                ? 'يمكنك تحويل العرض الفائز إلى عقد مبدئي.'
+                : 'بانتظار اعتماد العينة قبل تحويل العرض إلى عقد.'}
             </div>
             <Button
               size="sm"
               onClick={() => convertMut.mutate()}
-              disabled={convertMut.isPending}
+              disabled={convertMut.isPending || !sampleGateOpen}
+              title={!sampleGateOpen ? 'بانتظار اعتماد العينة' : undefined}
               className="min-h-[40px]"
             >
               {convertMut.isPending ? (
