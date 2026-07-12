@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LifeBuoy, BookOpen, FolderTree, AlertTriangle, Lightbulb, BarChart3 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   listHelpArticles,
@@ -54,12 +56,21 @@ const AdminHelpCenter: React.FC = () => {
   const { isRTL } = useLanguage();
   const qc = useQueryClient();
 
-  const { data: articles = [] } = useQuery({ queryKey: ['admin', 'help', 'articles'], queryFn: listHelpArticles });
-  const { data: categories = [] } = useQuery({ queryKey: ['admin', 'help', 'categories'], queryFn: adminListAllCategories });
-  const { data: issues = [] } = useQuery({ queryKey: ['admin', 'help', 'issues'], queryFn: () => listHelpIssueReports({}) });
-  const { data: features = [] } = useQuery({ queryKey: ['admin', 'help', 'features'], queryFn: () => listHelpFeatureRequests({}) });
-  const { data: searchLogs = [] } = useQuery({ queryKey: ['admin', 'help', 'search-logs'], queryFn: () => adminListSearchLogs(1000) });
-  const { data: contentGaps = [] } = useQuery({ queryKey: ['admin', 'help', 'content-gaps'], queryFn: () => adminListContentGaps(200) });
+  const articlesQ = useQuery({ queryKey: ['admin', 'help', 'articles'], queryFn: listHelpArticles });
+  const categoriesQ = useQuery({ queryKey: ['admin', 'help', 'categories'], queryFn: adminListAllCategories });
+  const issuesQ = useQuery({ queryKey: ['admin', 'help', 'issues'], queryFn: () => listHelpIssueReports({}) });
+  const featuresQ = useQuery({ queryKey: ['admin', 'help', 'features'], queryFn: () => listHelpFeatureRequests({}) });
+  const searchLogsQ = useQuery({ queryKey: ['admin', 'help', 'search-logs'], queryFn: () => adminListSearchLogs(1000) });
+  const contentGapsQ = useQuery({ queryKey: ['admin', 'help', 'content-gaps'], queryFn: () => adminListContentGaps(200) });
+  const articles = articlesQ.data ?? [];
+  const categories = categoriesQ.data ?? [];
+  const issues = issuesQ.data ?? [];
+  const features = featuresQ.data ?? [];
+  const searchLogs = searchLogsQ.data ?? [];
+  const contentGaps = contentGapsQ.data ?? [];
+  const isLoading = articlesQ.isLoading || categoriesQ.isLoading || issuesQ.isLoading || featuresQ.isLoading || searchLogsQ.isLoading || contentGapsQ.isLoading;
+  const isError = articlesQ.isError || categoriesQ.isError || issuesQ.isError || featuresQ.isError || searchLogsQ.isError || contentGapsQ.isError;
+  const retryAll = () => { articlesQ.refetch(); categoriesQ.refetch(); issuesQ.refetch(); featuresQ.refetch(); searchLogsQ.refetch(); contentGapsQ.refetch(); };
 
   const invalidate = (k: string) => qc.invalidateQueries({ queryKey: ['admin', 'help', k] });
 
@@ -105,6 +116,34 @@ const AdminHelpCenter: React.FC = () => {
 
   const [featStatusFilter, setFeatStatusFilter] = useState<string>('all');
   const filteredFeatures = features.filter((f) => featStatusFilter === 'all' || f.status === featStatusFilter);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-4 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          </div>
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+  if (isError) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-3 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Card><CardContent className="py-10 text-center space-y-3">
+            <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
+            <div className="text-sm text-muted-foreground">{isRTL ? 'تعذّر تحميل مركز المساعدة.' : 'Failed to load Help Center.'}</div>
+            <Button variant="outline" onClick={retryAll}>{isRTL ? 'إعادة المحاولة' : 'Retry'}</Button>
+          </CardContent></Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
