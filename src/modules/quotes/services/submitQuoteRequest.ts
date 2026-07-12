@@ -44,6 +44,9 @@ export interface SubmitQuoteRequestResult {
   quote_request_id: string;
   ref_id?: string | null;
   message?: string;
+  // Q4 — match summary from match_quote_to_providers RPC.
+  matched_count?: number;
+  match_source?: string;
 }
 
 export async function submitQuoteRequest(
@@ -81,6 +84,8 @@ export async function submitQuoteRequest(
     quote_request_id?: string;
     ref_id?: string | null;
     message?: string;
+    matched_count?: number;
+    match_source?: string;
   };
   if (!result?.success || !result.quote_request_id) {
     throw new Error(result?.message || 'submit_failed');
@@ -90,5 +95,7 @@ export async function submitQuoteRequest(
     quote_request_id: result.quote_request_id,
     ref_id: result.ref_id ?? null,
     message: result.message,
+    matched_count: result.matched_count,
+    match_source: result.match_source,
   };
 }
