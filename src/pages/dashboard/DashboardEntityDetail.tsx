@@ -350,7 +350,7 @@ const DashboardEntityDetail: React.FC = () => {
         <Card className="p-12 text-center">
           <Building2 className="w-12 h-12 mx-auto mb-3 opacity-40" />
           <p>{pickBi(isRTL, 'الكيان غير موجود', 'Entity not found')}</p>
-          <Link to="/dashboard/entities" className="text-primary text-sm mt-4 inline-block">
+          <Link to="/dashboard/business-edit?tab=entities" className="text-primary text-sm mt-4 inline-block">
             {pickBi(isRTL, 'العودة للقائمة', 'Back to list')}
           </Link>
         </Card>
@@ -371,7 +371,7 @@ const DashboardEntityDetail: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <Link to="/dashboard/entities" className="text-sm text-muted-foreground inline-flex items-center gap-1 hover:text-primary">
+        <Link to="/dashboard/business-edit?tab=entities" className="text-sm text-muted-foreground inline-flex items-center gap-1 hover:text-primary">
           <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
           {pickBi(isRTL, 'كل الكيانات', 'All entities')}
         </Link>

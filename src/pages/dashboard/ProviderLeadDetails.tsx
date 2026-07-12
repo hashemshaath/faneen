@@ -188,7 +188,7 @@ const ProviderLeadDetails: React.FC = () => {
           <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
           <h1 className="font-heading font-bold text-xl">لم يتم العثور على الفرصة</h1>
           <Button asChild className="min-h-[44px]">
-            <Link to="/dashboard/provider/leads"><Back className="h-4 w-4" /> الرجوع للفرص</Link>
+            <Link to="/dashboard/opportunities/assigned"><Back className="h-4 w-4" /> الرجوع للفرص</Link>
           </Button>
         </CardContent></Card>
       </DashboardLayout>
@@ -214,7 +214,7 @@ const ProviderLeadDetails: React.FC = () => {
         <div className="flex items-center justify-between gap-3">
           <h1 className="font-heading font-bold text-xl sm:text-2xl">تفاصيل الفرصة</h1>
           <Button variant="outline" size="sm" asChild className="min-h-[40px] shrink-0">
-            <Link to="/dashboard/provider/leads"><Back className="h-4 w-4" /> الرجوع للفرص</Link>
+            <Link to="/dashboard/opportunities/assigned"><Back className="h-4 w-4" /> الرجوع للفرص</Link>
           </Button>
         </div>
 

@@ -202,7 +202,7 @@ export default function DashboardOperationsFeed() {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Button asChild variant="ghost" size="sm" className="dash-hero-chip h-9 rounded-full">
-                <Link to="/dashboard/work-orders/overview">
+                <Link to="/dashboard/work-orders">
                   <ArrowUpRight className="w-3.5 h-3.5 me-1" />
                   {tx.backOverview}
                 </Link>

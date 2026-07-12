@@ -390,7 +390,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
           <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
           <h1 className="font-heading font-bold text-xl">لم يتم العثور على الطلب</h1>
           <Button asChild className="min-h-[44px]">
-            <Link to="/admin/quote-requests"><Back className="h-4 w-4" /> العودة للقائمة</Link>
+            <Link to="/admin/opportunities/list"><Back className="h-4 w-4" /> العودة للقائمة</Link>
           </Button>
         </CardContent></Card>
       </DashboardLayout>
@@ -428,7 +428,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
             <p className="text-sm text-muted-foreground mt-1">إدارة الطلب وتحديث حالته.</p>
           </div>
           <Button variant="outline" size="sm" asChild className="min-h-[40px] shrink-0">
-            <Link to="/admin/quote-requests"><Back className="h-4 w-4" /> العودة للقائمة</Link>
+            <Link to="/admin/opportunities/list"><Back className="h-4 w-4" /> العودة للقائمة</Link>
           </Button>
         </div>
 

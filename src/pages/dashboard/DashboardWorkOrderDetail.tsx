@@ -228,7 +228,7 @@ export default function DashboardWorkOrderDetail() {
           </Link>
         </Button>
         <Button asChild variant="ghost" size="sm" className="rounded-lg">
-          <Link to="/dashboard/work-orders/overview">{tx.overview}</Link>
+          <Link to="/dashboard/work-orders">{tx.overview}</Link>
         </Button>
         <Button asChild variant="ghost" size="sm" className="rounded-lg">
           <Link to="/dashboard/operations/feed">{tx.feed}</Link>

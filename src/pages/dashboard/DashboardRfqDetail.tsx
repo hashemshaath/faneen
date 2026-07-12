@@ -137,7 +137,7 @@ const DashboardRfqDetail: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <Link to="/dashboard/rfq" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link to="/dashboard/opportunities/assigned" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
           <Bi ar="عودة لطلباتي" en="Back to my RFQs" />
         </Link>
