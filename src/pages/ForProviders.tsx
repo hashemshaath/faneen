@@ -2,7 +2,6 @@ import { useEffect, useMemo } from 'react';
 import { useBi } from '@/components/common/Bilingual';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import * as Icons from 'lucide-react';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, Sparkles,
   TrendingUp, ShieldCheck, Zap, Award,

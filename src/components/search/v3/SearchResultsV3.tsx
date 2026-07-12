@@ -55,7 +55,10 @@ export const SearchResultsV3 = ({
   }, [hasMore, onLoadMore, businesses.length]);
 
   if (isError) return <SearchErrorStateV3 onRetry={onRetry} />;
-  if (isLoading) return <SearchSkeletonV3 view={cardView} count={8} />;
+  // P1.3 — render a full page's worth of card placeholders (matches
+  // ITEMS_PER_PAGE=12 in SearchV3) so the results area never collapses to
+  // an empty region during the initial load.
+  if (isLoading) return <SearchSkeletonV3 view={cardView} count={12} />;
   if (totalCount === 0) {
     return (
       <SearchEmptyStateV3

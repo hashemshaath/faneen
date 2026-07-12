@@ -53,7 +53,12 @@ export default defineConfig(({ mode }) => ({
           'vendor-sanitize': ['dompurify'],
           'vendor-charts': ['recharts'],
           'vendor-date': ['date-fns'],
-          'vendor-icons': ['lucide-react'],
+          // P1.6 — 'vendor-icons' bucket removed. It forced every lucide icon
+          // in the app into one 780 KB (138 KB gz) chunk that loaded on hot
+          // paths. Per-icon named imports are tree-shaken into route chunks by
+          // default; only the three files that use `import * as Icons`
+          // (IconPicker, QuickActionGrid — both admin/dashboard-only) pull the
+          // full package, and only into their lazy chunks.
         },
       },
     },

@@ -14,6 +14,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* P1.4 — indeterminate progress bar used by the route-lazy PageLoader.
+   Sweeps a narrow bar left→right; auto-reverses on RTL layouts so it
+   still reads as "loading" for Arabic users. */
+@keyframes progress-indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
 @layer base {
   /* Theme transitions only on interactive elements — NOT on * which kills perf */
   button, a, input, select, textarea, [role="button"],

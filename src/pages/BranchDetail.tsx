@@ -394,8 +394,19 @@ const BranchDetail: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      // P1.3 — skeleton mirrors the real branch layout (cover band + card
+      // stack) so users see structure immediately instead of a lone spinner.
+      <div className="min-h-dvh bg-background">
+        <div className="h-28 sm:h-52 md:h-64 w-full bg-muted animate-pulse" />
+        <div className="container-app -mt-10 sm:-mt-16 space-y-4">
+          <div className="h-40 sm:h-52 w-full rounded-3xl bg-muted animate-pulse" />
+          <div className="h-10 w-2/3 rounded-xl bg-muted animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-56 rounded-2xl bg-muted animate-pulse md:col-span-2" />
+            <div className="h-56 rounded-2xl bg-muted animate-pulse" />
+          </div>
+          <div className="h-64 w-full rounded-2xl bg-muted animate-pulse" />
+        </div>
       </div>
     );
   }
