@@ -8,13 +8,21 @@ import { listProviderLeads, type ProviderLeadRow } from '@/modules/leads/service
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Inbox, MapPin, Tag, Calendar, ChevronLeft, Sparkles, ShieldCheck } from 'lucide-react';
+import { Inbox, MapPin, Tag, Calendar, ChevronLeft, Sparkles, ShieldCheck, Activity } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import {
   LEAD_STATUS_LABEL_AR, LEAD_STATUS_TONE, type LeadStatus,
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR,
 } from '@/lib/quoteRequests';
+import {
+  computeProviderBidState,
+  PROVIDER_BID_STATE_LABEL_AR,
+  PROVIDER_BID_STATE_TONE,
+  type ProviderBidState,
+} from '@/modules/opportunities/journeyState';
+import { listMySubmittedBidsForProvider } from '@/modules/opportunities/bids/services';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 
 type LeadRow = ProviderLeadRow;
 
@@ -28,6 +36,55 @@ const ProviderLeads: React.FC = () => {
     enabled: !!user,
     queryFn: () => listProviderLeads(),
   });
+
+  // R5.3 — my bids across all opportunities, for chip-state computation.
+  const { data: myBids } = useQuery({
+    queryKey: ['provider-my-bids', user?.id],
+    enabled: !!user?.id,
+    queryFn: () => listMySubmittedBidsForProvider(user!.id),
+  });
+
+  const [bidStateFilter, setBidStateFilter] = React.useState<ProviderBidState | 'all'>('all');
+
+  // Latest bid per opportunity_id (services returns newest-first).
+  const myBidByOpp = React.useMemo(() => {
+    const m = new Map<string, { id: string; status: string }>();
+    (myBids ?? []).forEach((b) => {
+      if (!m.has(b.opportunity_id)) m.set(b.opportunity_id, { id: b.id, status: b.status });
+    });
+    return m;
+  }, [myBids]);
+
+  const stateByLead = React.useMemo(() => {
+    const m = new Map<string, ProviderBidState>();
+    (leads ?? []).forEach((l) => {
+      const oppId = l.quote_request?.id;
+      if (!oppId) return;
+      m.set(l.id, computeProviderBidState(myBidByOpp.get(oppId) ?? null, null));
+    });
+    return m;
+  }, [leads, myBidByOpp]);
+
+  const filteredLeads = React.useMemo(() => {
+    if (bidStateFilter === 'all') return leads ?? [];
+    return (leads ?? []).filter((l) => stateByLead.get(l.id) === bidStateFilter);
+  }, [leads, stateByLead, bidStateFilter]);
+
+  const stateCounts = React.useMemo(() => {
+    const m = new Map<ProviderBidState | 'all', number>();
+    m.set('all', leads?.length ?? 0);
+    (leads ?? []).forEach((l) => {
+      const st = stateByLead.get(l.id);
+      if (!st) return;
+      m.set(st, (m.get(st) ?? 0) + 1);
+    });
+    return m;
+  }, [leads, stateByLead]);
+
+  const CHIPS: (ProviderBidState | 'all')[] = [
+    'all', 'not_submitted', 'submitted', 'revision_requested_by_client',
+    'shortlisted', 'won', 'lost',
+  ];
 
   return (
     <DashboardLayout>
@@ -77,12 +134,45 @@ const ProviderLeads: React.FC = () => {
           </CardContent></Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {leads!.map((lead) => {
+            {(leads?.length ?? 0) > 0 && (
+              <div className="md:col-span-2 flex flex-wrap items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
+                {CHIPS.map((k) => {
+                  const active = bidStateFilter === k;
+                  const label = k === 'all' ? 'الكل' : PROVIDER_BID_STATE_LABEL_AR[k as ProviderBidState];
+                  const count = stateCounts.get(k) ?? 0;
+                  if (k !== 'all' && count === 0 && !active) return null;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setBidStateFilter(k)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors inline-flex items-center gap-1.5 ${
+                        active
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-card hover:bg-muted/60 border-border text-muted-foreground'
+                      }`}
+                      aria-pressed={active}
+                    >
+                      <span>{label}</span>
+                      <span className={`tech-content text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {filteredLeads.length === 0 && (
+              <div className="md:col-span-2 text-sm text-muted-foreground py-6 text-center">
+                لا توجد فرص مطابقة للفلتر الحالي.
+              </div>
+            )}
+            {filteredLeads.map((lead) => {
               const q = lead.quote_request;
               const status = lead.status as LeadStatus;
               const tone = LEAD_STATUS_TONE[status] ?? 'bg-muted';
               const showRevealed = lead.contact_revealed;
               const showAwaiting = status === 'interested' && !lead.contact_revealed;
+              const providerState = stateByLead.get(lead.id);
               return (
                 <Card key={lead.id} className="hover-lift">
                   <CardContent className="p-4 space-y-3">
@@ -91,6 +181,12 @@ const ProviderLeads: React.FC = () => {
                         <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
                           {LEAD_STATUS_LABEL_AR[status] ?? status}
                         </span>
+                        {providerState && (
+                          <StatusBadge
+                            tone={PROVIDER_BID_STATE_TONE[providerState]}
+                            label={PROVIDER_BID_STATE_LABEL_AR[providerState]}
+                          />
+                        )}
                         {showRevealed && (
                           <span className="text-[11px] px-2 py-0.5 rounded-full border border-success/30 bg-success/5 text-success inline-flex items-center gap-1">
                             <ShieldCheck className="h-3 w-3" /> بيانات التواصل متاحة

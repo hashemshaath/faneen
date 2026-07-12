@@ -35,6 +35,12 @@ import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import type { LucideIcon } from 'lucide-react';
+import {
+  RFQ_JOURNEY_STATE_LABEL_AR,
+  type RfqJourneyState,
+} from '@/modules/opportunities/journeyState';
+import { loadJourneyAggregatesForQuotes } from '@/modules/opportunities/journeyStateService';
+import { JourneyStateBadge } from '@/modules/opportunities/JourneyStateBadge';
 
 /** Premium KPI tile used on the executive hero. */
 type HeroKpiAccent = 'emerald' | 'blue' | 'amber' | 'orange' | 'slate';
@@ -260,6 +266,15 @@ const DashboardMyRequests: React.FC = () => {
     queryFn: () => countQuoteRequestFiles(quoteIds),
   });
 
+  // R5.3 — Journey-state aggregate for the loaded page.
+  const { data: journeyAgg } = useQuery({
+    queryKey: ['my-quote-journey-states', user?.id, quoteIds.join(',')],
+    enabled: quoteIds.length > 0,
+    queryFn: () => loadJourneyAggregatesForQuotes(quoteIds),
+  });
+  const journeyStates = journeyAgg?.states;
+  const [journeyFilter, setJourneyFilter] = useState<RfqJourneyState | 'all'>('all');
+
   const businessIds = useMemo(
     () => Array.from(new Set((leads ?? []).map((l) => l.business_id))).filter(Boolean),
     [leads],
@@ -388,6 +403,10 @@ const DashboardMyRequests: React.FC = () => {
       if (pinnedOnly && !pins.has(q.id)) return false;
       if (statusFilter !== 'all' && q.status !== statusFilter) return false;
       if (sectorFilter !== 'all' && q.sector !== sectorFilter) return false;
+      if (journeyFilter !== 'all') {
+        const st = journeyStates?.get(q.id);
+        if (st !== journeyFilter) return false;
+      }
       if (!term) return true;
       return (
         (q.ref_id ?? '').toLowerCase().includes(term) ||
@@ -396,7 +415,30 @@ const DashboardMyRequests: React.FC = () => {
         (q.city ?? '').toLowerCase().includes(term)
       );
     });
-  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins, sectorFilter]);
+  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins, sectorFilter, journeyFilter, journeyStates]);
+
+  // Journey chip counts computed against the loaded page (server pagination note).
+  const journeyCounts = useMemo(() => {
+    const m = new Map<RfqJourneyState | 'all', number>();
+    m.set('all', quoteRequests?.length ?? 0);
+    (quoteRequests ?? []).forEach((q) => {
+      const st = journeyStates?.get(q.id);
+      if (!st) return;
+      m.set(st, (m.get(st) ?? 0) + 1);
+    });
+    return m;
+  }, [quoteRequests, journeyStates]);
+
+  const JOURNEY_CHIPS: (RfqJourneyState | 'all')[] = [
+    'all',
+    'awaiting_bids',
+    'bids_in',
+    'shortlisted',
+    'revision_requested',
+    'awarded',
+    'sample_pending',
+    'converted',
+  ];
 
   // Top sectors (for quick-filter chips on the quotes tab)
   const topSectors = useMemo(() => {
@@ -763,6 +805,44 @@ const DashboardMyRequests: React.FC = () => {
 
           {/* === QUOTES TAB === */}
           <TabsContent value="quotes" className="space-y-3 mt-0">
+            {/* R5.3 — Journey-state chip strip */}
+            {(quoteRequests?.length ?? 0) > 0 && (
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Activity className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
+                  {JOURNEY_CHIPS.map((k) => {
+                    const active = journeyFilter === k;
+                    const label = k === 'all'
+                      ? (isRTL ? 'الكل' : 'All')
+                      : RFQ_JOURNEY_STATE_LABEL_AR[k as RfqJourneyState];
+                    const count = journeyCounts.get(k) ?? 0;
+                    if (k !== 'all' && count === 0 && !active) return null;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => setJourneyFilter(k)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors inline-flex items-center gap-1.5 ${
+                          active
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-card hover:bg-muted/60 border-border text-muted-foreground'
+                        }`}
+                        aria-pressed={active}
+                      >
+                        <span>{label}</span>
+                        <span className={`tech-content text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {journeyFilter !== 'all' && (
+                  <p className="text-[11px] text-muted-foreground ps-6">
+                    {isRTL ? 'تصفية النتائج المعروضة على الصفحة الحالية.' : 'Filtering results shown on the current page.'}
+                  </p>
+                )}
+              </div>
+            )}
+
             {topSectors.length > 1 && (
               <div className="flex flex-wrap items-center gap-1.5 text-xs">
                 <Tag className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
@@ -839,6 +919,7 @@ const DashboardMyRequests: React.FC = () => {
                 density={density}
                 pinned={pins.has(q.id)}
                 onTogglePin={togglePin}
+                journeyState={journeyStates?.get(q.id) ?? null}
               />
             ))}
           </TabsContent>
@@ -1089,7 +1170,8 @@ const QuoteRequestRowCardImpl: React.FC<{
   density?: Density;
   pinned?: boolean;
   onTogglePin?: (id: string) => void;
-}> = ({ q, fileCount, isRTL, density = 'comfortable', pinned = false, onTogglePin }) => {
+  journeyState?: RfqJourneyState | null;
+}> = ({ q, fileCount, isRTL, density = 'comfortable', pinned = false, onTogglePin, journeyState }) => {
   const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
   const compact = density === 'compact';
   const createdAbs = new Date(q.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
@@ -1169,6 +1251,7 @@ const QuoteRequestRowCardImpl: React.FC<{
               <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${tone}`}>
                 {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
               </span>
+              {journeyState && <JourneyStateBadge state={journeyState} />}
               {isStale && (
                 <Tooltip>
                   <TooltipTrigger asChild>
