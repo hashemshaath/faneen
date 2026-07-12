@@ -5,7 +5,7 @@
  * and via HomeCategoryRows further down.
  */
 import { Link } from 'react-router-dom';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { buildSearchTaxonomyContext } from '@/modules/taxonomy/search-integration';
 import {
@@ -98,7 +98,7 @@ const HomeSectorGrid = () => {
   // → business-id set. Prefetch both the Search route chunk and the
   // taxonomy-context query on hover / touch / focus so the actual click
   // lands on already-warmed data. Idempotent: React Query dedupes.
-  const prefetchedRef = React.useRef<Set<string>>(new Set());
+  const prefetchedRef = useRef<Set<string>>(new Set());
   const prefetchSector = useCallback(
     (slug: string) => {
       if (prefetchedRef.current.has(slug)) return;
