@@ -9,6 +9,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { recordWorkOrderAudit } from "./recordWorkOrderAudit";
+import { dispatchCustomerProjectNotification } from "@/modules/operations/customerCommunications/dispatcher";
 import type { WorkOrderQuotationRow } from "../types";
 
 const HEX = "0123456789abcdef";
@@ -105,6 +106,18 @@ export async function sendWorkOrderQuotation(
       ref_id: data.ref_id,
     },
   });
+
+  // P2.2 — Fire customer-facing "quotation.sent" via the dispatcher.
+  // Customer email is currently not persisted on the work-order row;
+  // dispatcher gracefully falls back to `queued_internal` when missing.
+  void dispatchCustomerProjectNotification({
+    eventType: 'quotation.sent',
+    businessId: data.business_id,
+    workOrderId: data.work_order_id,
+    quotationId: data.id,
+    customerEmail: null,
+    idempotencyKey: `wo-quotation-sent-${data.id}`,
+  }).catch(() => undefined);
 
   return { quotation: data as WorkOrderQuotationRow, token, error: null };
 }
