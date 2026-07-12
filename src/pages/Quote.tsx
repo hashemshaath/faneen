@@ -547,6 +547,8 @@ const Quote: React.FC = () => {
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       setSubmittedId(quoteId);
       setSubmittedRefId(result.ref_id ?? null);
+      setSubmittedMatchedCount(Number(result.matched_count ?? 0));
+      setSubmittedMatchSource(String(result.match_source ?? 'unknown'));
       setSubmitted(true);
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
