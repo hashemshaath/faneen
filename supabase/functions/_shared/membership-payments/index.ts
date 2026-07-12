@@ -547,7 +547,11 @@ export async function dispatchPaymentSucceededSideEffects(args: {
           apikey: serviceRoleKey,
         },
         body: JSON.stringify({
-          templateName: 'membership-payment-marked-paid',
+          // P2.4 — Auto-payment success sends the subscription-activated
+          // template. `membership-payment-marked-paid` is reserved for the
+          // admin manual mark-paid action (see manualMarkPaid.ts). Same
+          // idempotency key so retries never fan out twice.
+          templateName: 'membership-subscription-activated',
           recipientEmail: recipient.email,
           idempotencyKey: `mp-succeeded-${intent.id}`,
           templateData: {
