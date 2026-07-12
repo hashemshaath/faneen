@@ -23653,6 +23653,7 @@ export type Database = {
           visits: number
         }[]
       }
+      match_quote_to_providers: { Args: { p_quote_id: string }; Returns: Json }
       membership_tier_rank: {
         Args: { _tier: Database["public"]["Enums"]["membership_tier"] }
         Returns: number
