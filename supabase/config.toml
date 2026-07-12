@@ -39,3 +39,5 @@ project_id = "hckpxwhjycmdflaneihd"
     verify_jwt = true
   [functions.get-revealed-contact]
     verify_jwt = true
+  [functions.upload-provider-lead-doc]
+    verify_jwt = false
