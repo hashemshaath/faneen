@@ -3854,36 +3854,62 @@ export type Database = {
       }
       business_service_areas: {
         Row: {
+          branch_id: string | null
           business_id: string
           city: string
+          city_id: string | null
           country_id: string | null
           created_at: string
           district: string | null
+          district_ids: string[]
           id: string
           is_primary: boolean
+          region_id: string | null
           updated_at: string
         }
         Insert: {
+          branch_id?: string | null
           business_id: string
           city: string
+          city_id?: string | null
           country_id?: string | null
           created_at?: string
           district?: string | null
+          district_ids?: string[]
           id?: string
           is_primary?: boolean
+          region_id?: string | null
           updated_at?: string
         }
         Update: {
+          branch_id?: string | null
           business_id?: string
           city?: string
+          city_id?: string | null
           country_id?: string | null
           created_at?: string
           district?: string | null
+          district_ids?: string[]
           id?: string
           is_primary?: boolean
+          region_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "business_service_areas_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_areas_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "business_service_areas_business_id_fkey"
             columns: ["business_id"]
@@ -3899,10 +3925,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "business_service_areas_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "business_service_areas_country_id_fkey"
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_areas_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
             referencedColumns: ["id"]
           },
         ]
