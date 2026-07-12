@@ -171,7 +171,7 @@ export const ProviderBidSection: React.FC<Props> = ({
     );
   }
 
-  if (existing) {
+  if (existing && !revising) {
     const statusLabel = getAssignmentStatusLabel(existing.status).ar;
     const canWithdraw = ['submitted', 'draft', 'revised'].includes(existing.status);
     const isAwarded = existing.status === 'awarded';
@@ -257,7 +257,7 @@ export const ProviderBidSection: React.FC<Props> = ({
     );
   }
 
-  if (!formOpen) {
+  if (!existing && !formOpen) {
     return (
       <Card>
         <CardContent className="p-4 flex items-center justify-between gap-2 flex-wrap">
