@@ -482,6 +482,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/clients" element={<ProtectedRoute requireProvider><DashboardClients /></ProtectedRoute>} />
           <Route path="/dashboard/badge" element={<ProtectedRoute requireProvider><DashboardBadge /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
+          <Route path="/dashboard/my-requests/new" element={<ProtectedRoute><DashboardNewRfq /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
           {/* OPPORTUNITIES PHASE 2 — UI-only route aliases. Internal naming
               (`quote_requests`, `provider_leads`) is preserved; old routes
