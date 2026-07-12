@@ -112,7 +112,9 @@ function renderPage(p) {
       `<div id="root">` +
       `<div class="sr-only" aria-hidden="true">${p.crawlableHtml}</div>` +
       `</div>`;
-    const populatedRoot = /<div id="root">[\s\S]*?<\/div>\s*(?=<script)/;
+    // Greedy match: #root is the last block before the module <script>, so
+    // consume up to the last </div> preceding the script tag.
+    const populatedRoot = /<div id="root">[\s\S]*<\/div>(?=\s*<script)/;
     if (populatedRoot.test(html)) {
       html = html.replace(populatedRoot, inject + "\n    ");
     } else {
