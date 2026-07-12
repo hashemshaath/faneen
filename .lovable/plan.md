@@ -1,177 +1,197 @@
-## Current State (evidence)
 
-**/quote page (`src/pages/Quote.tsx`, 1,319 lines, 5 steps):**
-1. Sector — taxonomy dropdown ✅
-2. Location + service-location — **free-text `city` + free-text `district`** (`Input` fields at lines 715, 729). Region not captured.
-3. Description + measurements + quantity
-4. Timeline + budget + optional preferred brands (uses R5.1 `ApprovedBrandPicker`)
-5. Contact + OTP + submit → `submitQuoteRequest()` → edge fn `submit-quote-request` → `quote_requests` row → post-insert edge fn `match-quote-request` creates `quote_request_leads`.
+# Dashboard Comprehensive Audit — Findings & Phased Fix Plan
 
-**Location data model (actual):**
-| Table | Rows | Shape |
+Read-only audit across client dashboard, provider dashboard, and admin panel. 178 routes (74 `/dashboard/*`, 104 `/admin/*`) across 215 page files. Evidence gathered via 4 parallel static analyses (navigation, duplication/structure, permissions, functionality+profile). No fixes applied in this plan.
+
+---
+
+## SECTION 1 — Navigation Integrity
+
+### Findings
+
+| Sev | Finding | Evidence |
 |---|---|---|
-| `regions` / `saudi_regions` | **does not exist** | — |
-| `cities` | 142 (all active) | `id, name_ar, name_en, country_id` — **no `region_id`** |
-| `districts` | 2,582 (all active; 82 in Jeddah; all 13 SA regions covered) | `region_ar/en`, `city_ar/en`, `district_ar/en` — **text-linked, no FKs** |
-| `location_catalog` | 14 | secondary; unrelated to this flow |
+| — | **Zero broken links.** All 226 extracted internal targets resolve to a registered `<Route>` in `src/App.tsx`. | 4 scoped roots scanned |
+| MEDIUM | **Quick Create registry drift** — Quick Create shortcuts point at pre-Opportunities-Phase-2 legacy URLs. | `menuArchitecture.ts:50,64` → `/dashboard/rfq`, `/dashboard/rfq/inbox` (both redirect stubs; canonical is `/dashboard/opportunities/assigned`) |
+| LOW | **Live CTAs routing through legacy redirect stubs** (extra hop, breaks back button). | `DashboardRfqDetail.tsx:140`, `ProviderLeadDetails.tsx:191,217`, `DashboardOperationsFeed.tsx:205`, `DashboardWorkOrderDetail.tsx:231`, `AdminQuoteRequestDetails.tsx:393,431`, `AdminProviderReview.tsx:350`, `AdminOperations.tsx:806`, `DashboardEntityDetail.tsx:353,374`, `AdminContracts.tsx:112` |
+| LOW | **High-confidence orphan routes** — reachable only by URL, not from any sidebar/hub/menu config. | `/admin/provider-landing` (stub, no inbound refs), `/admin/notifications-config` (`App.tsx:607`), `/dashboard/showcase` (`:518`), `/dashboard/bookmarks` (`:424`), `/dashboard/inquiries` (`:426`) |
+| LOW | **Route triples for same domain** — `/dashboard/operations` vs `/operations-center` vs `/operations/feed` (`App.tsx:473-475`) create confusion; only `feed` is linked from scoped nav. | See Duplication §1 |
+| — | **No cross-guard mismatches.** Only cross-surface link (`AdminDashboardView` → `/admin/*`) is `isAdmin`-gated in `DashboardOverview.tsx:35-36`. | |
+| — | **Journey CTAs verified** — client/provider bid/sample components share `opportunityId` composition; no routing hole. | `QuoteRequestDetails.tsx:493,504` ↔ `ProviderLeadDetails.tsx:335-357` |
 
-**`quote_requests` already has structured columns (unused by UI):**
-`region text`, `city text`, `district text`, `location_id uuid`, `location_precision text`, `no_location_selected bool`. Schema is ready; the page writes text into `city`/`district` only.
+---
 
-**Provider coverage (actual):**
-- `business_service_areas` — only **2 rows across the whole platform** (`city text, district text, is_primary`). Effectively empty.
-- `businesses.city_id` filled on 5 rows; `businesses.district` text; `businesses.region` text.
-- `business_branches.city_id` filled on 14/15; `business_branches.district` text.
-- **No provider-facing dashboard UI to declare covered cities/districts.**
+## SECTION 2 — Duplication & Structure
 
-**Matching (`supabase/functions/match-quote-request/index.ts`):**
-- Filters by (a) sector taxonomy match, (b) fuzzy city name match via `citiesMatch()` string normalizer against `business_service_areas.city` OR `businesses.city_id → cities.name`, (c) optional district string equality.
-- On zero matches: writes `quote_matching_failed` event; requester sees success page anyway. No admin fallback notification.
-- **Region never used.** IDs never used. Depends on brittle name normalization.
+### Duplicate/overlapping pages
 
-## Gap Analysis
-
-| Stage | Status | Evidence |
+| Sev | Group | Recommendation |
 |---|---|---|
-| Sector | EXISTS | Step 1 uses taxonomy |
-| Structured region → city → district | **MISSING** in UI; PARTIAL in DB (no regions table, no `cities.region_id`) | Free-text inputs, no cascading selectors |
-| Work details + attachments | EXISTS | Steps 3–4 |
-| Contact + OTP | EXISTS | Step 5 |
-| Provider coverage declaration | **MISSING (UI)** + effectively unused (DB) | 2 rows in `business_service_areas`; no dashboard page |
-| Auto-match to covering providers | PARTIAL | Text-based, region-blind, empty-coverage falls back to business city_id |
-| Leads + provider notifications | EXISTS | `quote_request_leads` (2 rows), triggers wired |
-| Admin fallback on zero matches | **MISSING** | Only silent event log |
+| HIGH | **`AdminMembershipsHub` vs `AdminFinanceCenter`** — two live top-level routes (`/admin/memberships`, `/admin/finance`) wrap identical 5-child tab sets. | **Merge** — canonicalize `/admin/finance`, redirect the other. |
+| HIGH | **`AdminSystemSettingsHub` vs `AdminSettingsCenter`** — overlapping tab sets, two settings entry points. | **Merge** — absorb Center's tabs into Hub or redirect. |
+| HIGH | **Admin identity triple** — `/admin/identity`, `/admin/identity/dashboard`, `/admin/system/identity` are 3 separate live routes (`App.tsx:598-602`). | **Merge** `AdminIdentity` + `AdminIdentityCenter` as tabs inside `AdminIdentityHub`. |
+| MEDIUM | **`AdminQuoteOperations` vs `AdminOpportunitiesOperations`** — confusing "operations" naming twins. | Rename or merge. |
+| MEDIUM | **`DashboardBusinessProfileMerged` is a thin wrapper** re-exporting `DashboardBusinessEdit` (`Merged.tsx:16-23`). | Inline `DashboardBusinessEdit` into hub tab loader; delete wrapper. |
+| MEDIUM | **`/dashboard/my-requests` vs `/dashboard/opportunities`** — different URLs, same component. | Pick one canonical, redirect the other. |
+| LOW | **`AdminIdentity` vs `AdminIdentityHub` vs `AdminIdentityCenter`** — see identity triple above. | — |
 
-## Design Proposal
+### Duplicate logic
 
-### 3a. Location reference data — minimal, additive
-Add `saudi_regions` and normalize `cities.region_id`; enrich `districts` with FKs. Do **not** drop existing text columns (backward compatibility during rollout).
+| Sev | Duplication | Canonical home |
+|---|---|---|
+| MEDIUM | **6+ ad-hoc status-label maps** hand-rolled in pages: `DashboardMembership.tsx:92`, `DashboardInstallments.tsx:58`, `DashboardEntities.tsx:35`, `SiteLicensesTab.tsx:62`, `TaxonomyMigrationPanel.tsx:36`, `AdminLeadRequests.tsx:75`. | Move each into its domain's `modules/<domain>/status.ts` (pattern already exists for opportunities/workOrders/rentals/assets). |
+| MEDIUM | **`<AdminRoute>` migration 99% incomplete** — only `/admin/taxonomy` (`App.tsx:526`) uses the wrapper; ~90 other admin routes still repeat `<ProtectedRoute requireAdmin>`. | Complete the migration documented at `AdminRoute.tsx:9-14`. |
+| INFO | No shared `useNotifications` wrapper exists — every page calls `sonner`/`toaster` directly. | Missing abstraction, not duplication; optional to introduce. |
+| — | Currency/date formatters already centralized (`contract-financials.ts:formatMoney`). No offenders. | — |
 
-```sql
--- 13 KSA regions, stable slug
-CREATE TABLE public.saudi_regions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  code text UNIQUE NOT NULL,          -- 'riyadh','makkah',...
-  name_ar text NOT NULL, name_en text NOT NULL,
-  is_active boolean NOT NULL DEFAULT true,
-  sort_order int NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-GRANT SELECT ON public.saudi_regions TO anon, authenticated;
-GRANT ALL ON public.saudi_regions TO service_role;
-ALTER TABLE public.saudi_regions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public read active regions" ON public.saudi_regions
-  FOR SELECT USING (is_active);
+### Oversized files (top 15)
 
--- Link cities → region (nullable during backfill, tighten after)
-ALTER TABLE public.cities ADD COLUMN region_id uuid REFERENCES public.saudi_regions(id);
-CREATE INDEX idx_cities_region ON public.cities(region_id) WHERE is_active;
+| Lines | File | Concern |
+|---|---|---|
+| 3190 | `DashboardContracts.tsx` | Split by concern (list / actions / analytics) |
+| 2132 | `DashboardRentals.tsx` | Split by tab |
+| 1615 | `DashboardMessages.tsx` | Split composer / list / preview |
+| 1612 | `AdminContactMessages.tsx` | Single tab of ContactCenter — extract subsections |
+| 1516 | `DashboardSites.tsx` | Split site-list / KPIs |
+| 1477 | `DashboardAiCenter.tsx` | Split by feature panel |
+| 1448 | `AdminBusinesses.tsx` | Extract row actions / filters |
+| 1343 | `DashboardInstallments.tsx` | Extract status maps + row cards |
+| 1336 | `AdminBarcodeRegistry.tsx` | Split table + detail drawer |
+| 1333 | `DashboardMyRequests.tsx` | Split filters + row |
+| 1324 | `DashboardBlog.tsx` | Split editor from list |
+| 1283 | **`DashboardBusinessEdit.tsx` — confirmed god-component** (info + branches + credentials + entities + reps + location) | Priority split |
+| 1272 | `DashboardBadge.tsx` | — |
+| 1271 | `AdminUsers.tsx` | Split actions modal / row |
+| 1197 | `ProductionBoardPage.tsx` | — |
 
--- Link districts → city + region (nullable during backfill)
-ALTER TABLE public.districts
-  ADD COLUMN city_id uuid REFERENCES public.cities(id),
-  ADD COLUMN region_id uuid REFERENCES public.saudi_regions(id);
-CREATE INDEX idx_districts_city ON public.districts(city_id) WHERE is_active;
-```
+### Orphan page files (safe to delete)
 
-**Seed strategy:** static seed migration is the pragmatic choice — 13 regions + text-match backfill of `cities.region_id` and `districts.city_id/region_id` from the existing text columns (`region_ar`, `city_ar`). All names already present; National Address API is heavier and adds an ops dependency for data that changes rarely. Keep existing 2,582 districts (Jeddah has 82 — sufficient for phase 1). Add a lightweight admin page later for corrections.
+| Sev | File | Evidence |
+|---|---|---|
+| LOW | `src/pages/dashboard/DashboardWorkOrdersOverview.tsx` | Not in `App.tsx`, not in `routes/dashboardRoutes.ts`; only 6 test files reference it. Route `/dashboard/work-orders/overview` is a `Navigate` stub. |
+| LOW (unconfirmed) | `DashboardRfqHub.tsx` + tab children `DashboardRfq.tsx`, `DashboardRfqInbox.tsx` | No `<Route>` mount found; only self-tests. Confirm before delete. |
 
-### 3b. Provider coverage — additive per-branch join table
-`business_service_areas` is nearly empty; repurpose it or add a proper join. Chosen: **add IDs to existing table** (preserves 2 rows, avoids new table):
+---
 
-```sql
-ALTER TABLE public.business_service_areas
-  ADD COLUMN branch_id uuid REFERENCES public.business_branches(id) ON DELETE CASCADE,
-  ADD COLUMN city_id uuid REFERENCES public.cities(id),
-  ADD COLUMN region_id uuid REFERENCES public.saudi_regions(id),
-  ADD COLUMN district_ids uuid[] NOT NULL DEFAULT '{}';  -- optional narrowing
-CREATE INDEX idx_bsa_city ON public.business_service_areas(city_id);
-CREATE INDEX idx_bsa_region ON public.business_service_areas(region_id);
-CREATE INDEX idx_bsa_business ON public.business_service_areas(business_id);
-CREATE INDEX idx_bsa_district_gin ON public.business_service_areas USING gin(district_ids);
-```
+## SECTION 3 — Permissions & Guards
 
-Provider dashboard: new section in `DashboardBusinessProfileHub` → **"Service Coverage"** tab. Per branch: multi-select region-city grouped picker + optional district multi-select for cities where districts exist (searchable, RTL, Arabic-first, reuses shadcn `Command` component). Include "covers entire city" (empty `district_ids`) vs "specific districts".
+### Findings
 
-### 3c. Matching — replace name-normalization with ID lookup
-New RPC `public.match_quote_to_providers(p_quote_id uuid)` (SECURITY DEFINER, `SET search_path = public`), called by `match-quote-request` edge fn or a trigger:
+| Sev | Finding | Evidence |
+|---|---|---|
+| HIGH | **Provider-scope resolved by `.eq('user_id', user.id)` instead of `useActiveWorkspace()`** — breaks staff-member access, ignores active-workspace switcher. | `DashboardAssets.tsx:64`, `DashboardRentals.tsx:620`, `DashboardRentalsAnalytics.tsx:137`, `DashboardRentalsCalendar.tsx:99` |
+| MEDIUM | **`/dashboard/settings/staff`** has no route-level `requireProvider`/business-scope guard; relies entirely on in-page checks. | `App.tsx:430` |
+| MEDIUM | **UI/RLS boundary mismatch** — `AdminUsers.tsx` ban/suspend/staff-link mutations (`:634-720`) are reachable by any admin via RLS, though route is `requireSuperAdmin`. Not exploitable by lower-privilege roles but "super-admin only" is a UI fiction. | `App.tsx:597`; `20260410104708_...sql:82-86` |
+| LOW | **`PermissionRouteGuard` fully implemented but wired to zero routes** — dead defense-in-depth layer. | Referenced only in tests + `DashboardNoAccess` comment |
+| LOW | **`/dashboard/rentals`, `/dashboard/assets`, `/dashboard/work-orders`, `/dashboard/procurement`** lack `requireProvider` at route level. Acceptable if dual-sided; otherwise under-guarded. | `App.tsx:404-422` |
+| — | Provider approval & username-status RPCs re-check `has_admin_access` server-side ✅ | `20260605113107_...sql:25-27`, `20260507151934_...sql:72-74` |
+| — | `user_roles` RLS restricts writes to `is_super_admin` ✅ (matches `requireSuperAdmin` route) | `20260412080903_...sql:13-27` |
 
-Logic:
-1. Read `quote_requests.region`/`city_id`/`district_id` (new columns — see 3d).
-2. Candidate providers: `INNER JOIN business_service_areas bsa` where `bsa.city_id = quote.city_id` **AND** (`array_length(bsa.district_ids,1) IS NULL` OR `quote.district_id = ANY(bsa.district_ids)`).
-3. Sector filter on `business_taxonomy_categories`.
-4. Insert into `quote_request_leads` (dedupe on `(quote_request_id, business_id)`), fire notifications via existing triggers.
-5. Fallback: if 0 candidates, insert an `operational_alerts` row (`type='quote_no_coverage'`) + notify `admin` role + surface honest message to requester ("لم نجد مزودًا يغطي حي/مدينتك حاليًا — سيتواصل فريقنا").
+### Open server-side checks needed
+- Edge functions `admin-delete-user`, `admin-reset-password` — verify service-role code re-checks super-admin (edge functions bypass RLS).
+- `business_staff` write path — RLS appears to allow only *owner*; `DashboardTeamAccess` also permits `isAdmin` client-side. Confirm admin-specific policy exists.
+- `AdminContracts` mutation/RPC path not fully traced.
 
-Keep `match-quote-request` edge fn as thin wrapper that calls the RPC (preserves existing invocation sites and tests).
+---
 
-### 3d. /quote wizard — simplified, structured location
-Also add structured columns to `quote_requests`:
+## SECTION 4 — Functionality & Quality
 
-```sql
-ALTER TABLE public.quote_requests
-  ADD COLUMN region_id uuid REFERENCES public.saudi_regions(id),
-  ADD COLUMN city_id uuid REFERENCES public.cities(id),
-  ADD COLUMN district_id uuid REFERENCES public.districts(id);
-CREATE INDEX idx_qr_city ON public.quote_requests(city_id);
-CREATE INDEX idx_qr_region ON public.quote_requests(region_id);
-```
-(Keep existing `city`, `district`, `region` text columns for backward compat; edge fn writes both during transition.)
+### Inert UI
+**Zero true dead handlers.** Regex sweeps for empty `onClick`, `console.log`-only handlers, alert-stubs returned no matches. Only intentional "Coming Soon" tabs (`DashboardWorkspaceDetail.tsx:5`).
 
-**Redesigned 4-step wizard** (down from 5 by merging timeline+budget into step 3):
+### RPC / Edge Function integrity
+**Zero mismatches.** All 40 `.rpc()` names + 6 `functions.invoke()` targets resolve to existing definitions.
 
-```text
-Step 1  What?    Sector → specialty (taxonomy) + optional preferred brands
-Step 2  Where?   Region → City → District (cascading DB dropdowns, searchable RTL Arabic)
-                  + service_location_type (project_site / provider_location / not_sure)
-Step 3  Details  Description + measurements + quantity + timeline + budget + attachments
-Step 4  Contact  Name + phone + email + client_type + preferred contact + OTP → Submit
-```
+### Loading / error states (worst offenders)
 
-- Region selector: 13 chips (fast) OR searchable list.
-- City selector: filtered by region; searchable; falls back to "المدينة غير موجودة؟" free-text opt-out for edge cases (still writes to `city` text, `no_location_selected=true`, admin routes manually).
-- District selector: filtered by city; **only shown if districts exist for that city** (avoids empty dropdowns outside Jeddah/major cities). Optional field.
-- Reuse existing OTP mechanism, brand picker, file upload.
-- Draft autosave in localStorage keyed on new field IDs.
+| Sev | File | Issue |
+|---|---|---|
+| HIGH | `DashboardHelpCenter.tsx:27-29` | 4 queries, zero `isLoading` / `isError` / skeleton |
+| HIGH | `AdminHelpCenter.tsx:57-62` | 14 query/mutation calls; 3 loading refs, **zero** `isError`, **zero** skeleton |
+| MEDIUM | `AdminContractCreate.tsx:42-166` | Form queries lack loading/error |
+| MEDIUM | `AdminProviderLanding.tsx` | 8 queries, error refs but no spinners |
+| MEDIUM | `AdminIntegrations.tsx`, `AdminOtpFailures.tsx` | Missing loading refs |
 
-## Phased Plan (each phase independently smoke-testable, no URL changes)
+### Perf (heaviest mount paths)
 
-### Q1 — Location reference tables + seed
-- Migration: create `saudi_regions`; ALTER `cities` + `districts` to add FK columns.
-- Seed 13 regions (static INSERT with stable codes).
-- Backfill `cities.region_id` and `districts.city_id`/`region_id` from existing text via one-shot UPDATE using name matches.
-- Smoke: `SELECT count(*)` per region; every `districts` row has non-null `city_id`.
-- **No UI change.**
+| Sev | File:line | Issue |
+|---|---|---|
+| HIGH | `DashboardContractReview.tsx:173-174` | Only `.from('contracts').select('*')` in scope — wide table |
+| HIGH | `DashboardSiteDetail.tsx:96-219` | 3-level dependent-query waterfall (base → 7 site-dependent → 1 contract-dependent) |
+| MEDIUM | `DashboardSites.tsx:435-438` | `.in('execution_site_id', siteIds)` unbounded, no `.limit()` |
+| MEDIUM | `AdminBrandDetail.tsx:101-668` | 10 gated queries (mostly parallel, verify) |
+| LOW | `DashboardContracts.tsx:339-1256` | 7 gated queries (fan-out, not waterfall) |
+| — | No `staleTime: 0` / `refetchOnMount: 'always'` remnants | Clean |
 
-### Q2 — Coverage model + provider dashboard UI
-- Migration: ALTER `business_service_areas` (add `branch_id`, `city_id`, `region_id`, `district_ids`, indexes). Keep old text columns.
-- New RLS policies: providers manage their own rows (already scoped via `business_id`); admin full access; public **no read** (coverage isn't public).
-- Backfill 2 existing rows by resolving text → IDs.
-- New dashboard section: `src/pages/dashboard/DashboardBusinessCoverage.tsx` under Business Profile hub. Per branch, save coverage rows. Include "Covers all of {city}" toggle.
-- Smoke: provider adds coverage → row visible in DB; unauthorized user cannot read.
+---
 
-### Q3 — /quote wizard rebuild (structured selectors)
-- Migration: ALTER `quote_requests` (add `region_id`, `city_id`, `district_id`).
-- New shared component: `src/components/location/RegionCityDistrictSelect.tsx` (RTL, searchable, cascade).
-- Rewrite Step 2 of `Quote.tsx`; keep text columns populated too (dual-write).
-- Same route `/quote`. Merge budget+timeline into step 3 to drop total to 4 steps.
-- Also reuse in dashboard New RFQ wizard (`DashboardNewRfq.tsx`) for parity.
-- Smoke: submit end-to-end; new row has non-null `city_id`.
+## SECTION 5 — Profile Surfaces (Business Edit)
 
-### Q4 — Matching + routing + notifications + admin fallback
-- New RPC `match_quote_to_providers(uuid)` (SECURITY DEFINER, `search_path = public`).
-- Rewrite `match-quote-request/index.ts` to call the RPC.
-- Add `operational_alerts` insertion + admin notification for zero-match case.
-- Update requester success page copy to reflect honest "we found N providers who cover your area" / "we didn't find coverage — our team will help".
-- Retire text-based `citiesMatch` normalizer (keep for one release behind a feature flag as safety net).
-- Smoke: submit quote in a covered city → N `quote_request_leads`; submit in uncovered city → alert + zero leads + honest UI.
+### Missing coverage
 
-**All existing URLs preserved.** No breaking changes to edge fn signatures (payload gains optional `region_id/city_id/district_id`; text fields kept).
+| Sev | Column | Issue |
+|---|---|---|
+| HIGH | `seo_title_ar/en`, `seo_description_ar/en`, `seo_keywords`, `og_image` | Owner cannot self-manage SEO metadata — admin-only (`BusinessSeoSection.tsx`, `AdminBrandDetail.tsx`) |
+| MEDIUM | `capabilities` (Json) | Zero references anywhere — orphan column or missing UI |
+| LOW | `default_currency`, `default_locale`, `timezone` | Not surfaced in owner UI; intent unclear |
+| — | `country_code`, `phone_country_code`, `phone_national` | Likely derived by `PhoneField`; acceptable |
+| — | `cr_document_mime/path`, `approval_notes` | System-managed / reviewer-only ✅ |
 
-## Open Questions (for you to confirm before implementation)
+### Validation gaps
+| Sev | Issue | Evidence |
+|---|---|---|
+| MEDIUM | `name_ar` missing is only a warning — profile publishable with no Arabic name | `validation.ts:178-182` |
+| MEDIUM | Missing `latitude`/`longitude` is warning-only — publishable without map pin | `validation.ts:204-207` |
+| LOW | No client-side `username` uniqueness/format in `validateBusinessForm` | `validation.ts:124-147` |
 
-1. **Seed source**: OK with static seed migration for regions + text-match backfill of the 142 cities and 2,582 districts? Or prefer we validate against National Address API?
-2. **Coverage granularity default**: when a provider picks a city with districts (Jeddah), is the sensible default "covers entire city" (empty `district_ids`), or force them to pick districts?
-3. **Zero-coverage UX**: should the requester still be allowed to submit (with admin fallback), or should we hard-block with "no providers in your area yet — leave your contact"? I'm assuming the softer allow+alert path — confirm.
-4. **Wizard step count**: OK collapsing timeline+budget into step 3 to reach 4 steps, or keep 5?
+Public profile (`BusinessProfile.tsx`) fields are a subset of editable fields — **no missing-editability gap**.
+
+---
+
+## Phased Fix Plan
+
+### D1 — Links, dead files, inert-UI cleanup (zero risk)
+1. Fix Quick Create URLs in `menuArchitecture.ts:50,64` to canonical `/dashboard/opportunities/assigned` (removes 2 redirect hops for the most-used shortcut).
+2. Update the 9 live CTAs listed in §1 to point at canonical hub+`?tab=` URLs instead of legacy redirect stubs.
+3. Delete `DashboardWorkOrdersOverview.tsx` + prune 6 test references.
+4. Confirm and delete `DashboardRfqHub`/`DashboardRfq`/`DashboardRfqInbox` if no runtime references exist.
+5. Add the 5 orphan routes to the correct sidebar/hub OR remove the routes: `/admin/provider-landing`, `/admin/notifications-config`, `/dashboard/showcase`, `/dashboard/bookmarks`, `/dashboard/inquiries`.
+6. Add loading skeleton + `isError` branches to `DashboardHelpCenter`, `AdminHelpCenter`, `AdminContractCreate`, `AdminProviderLanding`, `AdminIntegrations`, `AdminOtpFailures`.
+
+### D2 — Permission corrections (some may need DB approval)
+1. Refactor `DashboardAssets`/`DashboardRentals`/`DashboardRentalsAnalytics`/`DashboardRentalsCalendar` to use `useActiveWorkspace().active_business_id` instead of `.eq('user_id', user.id)`. Fixes staff-access + multi-business scoping.
+2. Add `requireProvider` to `/dashboard/settings/staff` (and evaluate `/dashboard/rentals|assets|procurement|work-orders`).
+3. Tighten RLS on admin-only writes (`profiles` ban/suspend, `business_staff` link) to `is_super_admin` if that is the true boundary — **flag for approval**.
+4. Verify edge functions `admin-delete-user`, `admin-reset-password` re-check super-admin server-side; add missing check if absent — **flag for approval**.
+5. Either wire `PermissionRouteGuard` into workspace-role routes as defense-in-depth or delete the dead component.
+
+### D3 — Dedup & oversized-file splits
+1. Merge duplicate admin hubs: `AdminMembershipsHub` ↔ `AdminFinanceCenter`, `AdminSystemSettingsHub` ↔ `AdminSettingsCenter`, admin identity triple.
+2. Rename or merge `AdminQuoteOperations` / `AdminOpportunitiesOperations`.
+3. Inline `DashboardBusinessProfileMerged` wrapper; delete file.
+4. Choose canonical URL between `/dashboard/my-requests` and `/dashboard/opportunities`; redirect the other.
+5. Consolidate the 6 ad-hoc status-label maps into their respective `modules/<domain>/status.ts`.
+6. Complete `<AdminRoute>` migration for the ~90 remaining admin routes (mechanical, low risk).
+7. Split top-3 god-components: `DashboardContracts.tsx` (3190), `DashboardRentals.tsx` (2132), `DashboardBusinessEdit.tsx` (1283 — confirmed multi-domain).
+8. Add owner-editable SEO section (`seo_title/description/keywords/og_image`) to business-edit UI; upgrade `name_ar` and coordinates from warnings → hard errors.
+
+### D4 — Perf on heaviest mounts
+1. `DashboardContractReview.tsx:173-174` — replace `select('*')` with explicit column list.
+2. `DashboardSiteDetail.tsx:96-219` — flatten 3-level waterfall (batch initial site + first-hop reads via one RPC, mirror `usePublicBusinessProfile` pattern).
+3. `DashboardSites.tsx:435-438` — add `.limit()` on unbounded `.in(...)` query.
+4. Audit `AdminBrandDetail.tsx` 10-query mount for true parallelism vs. hidden chaining.
+
+---
+
+## Verdict per area
+
+| Area | Verdict | Rationale |
+|---|---|---|
+| Navigation | READY-WITH-NOTES | 0 broken; drift + legacy redirect hops need D1 |
+| Permissions | READY-WITH-NOTES | 1 HIGH scoping bug (Assets/Rentals family); UI/RLS boundary mismatches need D2 |
+| Duplication | HIGH-DEBT | 3 duplicate hubs + god-components; D3 |
+| Functionality | READY-WITH-NOTES | 0 broken RPCs / dead handlers; help centers need loading states |
+| Perf | READY-WITH-NOTES | 1 wide `select('*')`, 1 real waterfall — D4 fixes both |
+| Profile | READY-WITH-NOTES | SEO ownership gap + soft-validation on required fields |
+
+Approve to proceed with D1, or reorder phases as preferred.
