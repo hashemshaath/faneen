@@ -218,6 +218,55 @@ export const ClientBidsSection: React.FC<Props> = ({
           </div>
         )}
 
+        {reviseTarget && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold">طلب تعديل العرض</div>
+              <button
+                type="button"
+                aria-label="إلغاء"
+                onClick={() => {
+                  setReviseTarget(null);
+                  setReviseReason('');
+                }}
+                className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-accent"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <Textarea
+              value={reviseReason}
+              onChange={(e) => setReviseReason(e.target.value)}
+              placeholder="اذكر بوضوح ما تطلب تعديله (السعر، المدة، النطاق، شروط الدفع...)"
+              rows={3}
+              dir="rtl"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setReviseTarget(null);
+                  setReviseReason('');
+                }}
+                disabled={reviseMut.isPending}
+              >
+                إلغاء
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => reviseMut.mutate({ bidId: reviseTarget.id, reason: reviseReason })}
+                disabled={reviseMut.isPending || !reviseReason.trim()}
+              >
+                {reviseMut.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin me-1" />
+                ) : null}
+                إرسال طلب التعديل
+              </Button>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="text-sm text-muted-foreground">جارٍ التحميل...</div>
         ) : bids.length === 0 ? (
@@ -251,11 +300,12 @@ export const ClientBidsSection: React.FC<Props> = ({
                 !hasWinner &&
                 ['submitted', 'under_review', 'shortlisted', 'revised'].includes(bid.status);
               const shortlisted = bid.status === 'shortlisted';
+              const canRevise =
+                canAward && !hasWinner &&
+                ['submitted', 'under_review', 'shortlisted'].includes(bid.status);
               return (
-                <li
-                  key={bid.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl border bg-card"
-                >
+                <li key={bid.id} className="p-3 rounded-xl border bg-card space-y-2">
+                  <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-lg font-bold tech-content">
                       {Number(bid.price_amount ?? 0).toLocaleString()}{' '}
