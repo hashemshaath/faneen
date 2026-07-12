@@ -275,16 +275,22 @@ const DashboardNewRfq: React.FC = () => {
 
             {step === 2 && (
               <>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label>المدينة</Label>
-                    <Input value={city} onChange={(e) => setCity(e.target.value)} dir="auto" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>الحي (اختياري)</Label>
-                    <Input value={district} onChange={(e) => setDistrict(e.target.value)} dir="auto" />
-                  </div>
-                </div>
+                <RegionCityDistrictSelect
+                  value={{ regionId, cityId, districtId }}
+                  requiredRegion
+                  requiredCity
+                  onChange={(v, resolved) => {
+                    setRegionId(v.regionId);
+                    setCityId(v.cityId);
+                    setDistrictId(v.districtId);
+                    setRegionText(resolved.regionText);
+                    setCity(resolved.cityText);
+                    setDistrict(resolved.districtText);
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  تحديد الحي يساعدنا في إيصال طلبك للمزودين الأقرب.
+                </p>
                 {mySites.length > 0 && (
                   <div className="space-y-1">
                     <Label>ربط بموقع مسجّل (اختياري)</Label>
