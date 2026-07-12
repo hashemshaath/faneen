@@ -1,8 +1,8 @@
 /**
  * R5.2 — Best-effort in-app notifications after an awarded bid is
  * converted into a contract. Notifies BOTH parties:
- *   - RFQ owner (client) — "تم إنشاء عقد مبدئي من العرض الفائز"
- *   - Winning provider (submitted_by of awarded bid) — "تم إنشاء عقدك"
+ *   - RFQ owner (client)
+ *   - Winning provider (submitted_by of awarded bid)
  * Failures are swallowed so the primary conversion flow never breaks.
  */
 import { supabase } from '@/integrations/supabase/client';
@@ -13,28 +13,25 @@ export async function notifyContractConvertedBothParties(
   contractId: string,
 ): Promise<void> {
   try {
-    const [{ data: qr }, { data: bid }] = await Promise.all([
-      supabase
-        .from('quote_requests')
-        .select('id, user_id, awarded_bid_id, ref_id')
-        .eq('id', opportunityId)
-        .maybeSingle(),
-      supabase
+    const { data: qr } = await supabase
+      .from('quote_requests')
+      .select('user_id, awarded_bid_id')
+      .eq('id', opportunityId)
+      .maybeSingle();
+    if (!qr) return;
+
+    let winnerUserId: string | null = null;
+    if (qr.awarded_bid_id) {
+      const { data: bid } = await supabase
         .from('opportunity_bids')
-        .select('id, submitted_by, provider_business_id')
-        .eq('id', await (async () => {
-          const { data } = await supabase
-            .from('quote_requests')
-            .select('awarded_bid_id')
-            .eq('id', opportunityId)
-            .maybeSingle();
-          return (data?.awarded_bid_id as string) ?? '';
-        })())
-        .maybeSingle(),
-    ]);
+        .select('submitted_by')
+        .eq('id', qr.awarded_bid_id)
+        .maybeSingle();
+      winnerUserId = (bid?.submitted_by as string | null) ?? null;
+    }
 
     const tasks: Promise<unknown>[] = [];
-    if (qr?.user_id) {
+    if (qr.user_id) {
       tasks.push(
         createNotification({
           user_id: qr.user_id,
@@ -42,16 +39,16 @@ export async function notifyContractConvertedBothParties(
           title_ar: 'تم إنشاء عقد مبدئي',
           title_en: 'A draft contract was created',
           body_ar: 'تم تحويل العرض الفائز إلى عقد مبدئي. يمكنك مراجعته الآن.',
-          body_en: 'The winning bid was converted to a draft contract. You can review it now.',
+          body_en: 'The winning bid was converted to a draft contract.',
           reference_id: contractId,
           reference_type: 'contract',
         }).catch(() => undefined),
       );
     }
-    if (bid?.submitted_by) {
+    if (winnerUserId && winnerUserId !== qr.user_id) {
       tasks.push(
         createNotification({
-          user_id: bid.submitted_by,
+          user_id: winnerUserId,
           notification_type: 'opportunity_contract_converted',
           title_ar: 'تم إنشاء عقدك',
           title_en: 'Your contract was created',
