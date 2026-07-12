@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LifeBuoy, MessageSquare, Lightbulb, BookOpen } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle } from 'lucide-react';
 import {
   listMyIssueReports,
   listMyFeatureRequests,
@@ -24,9 +26,40 @@ const DashboardHelpCenter: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
 
-  const { data: myIssues = [] } = useQuery({ queryKey: ['dash', 'help', 'my-issues'], queryFn: listMyIssueReports });
-  const { data: myFeatures = [] } = useQuery({ queryKey: ['dash', 'help', 'my-features'], queryFn: listMyFeatureRequests });
-  const { data: popular = [] } = useQuery({ queryKey: ['dash', 'help', 'popular'], queryFn: () => listPopularArticles(6) });
+  const issuesQ = useQuery({ queryKey: ['dash', 'help', 'my-issues'], queryFn: listMyIssueReports });
+  const featuresQ = useQuery({ queryKey: ['dash', 'help', 'my-features'], queryFn: listMyFeatureRequests });
+  const popularQ = useQuery({ queryKey: ['dash', 'help', 'popular'], queryFn: () => listPopularArticles(6) });
+  const myIssues = issuesQ.data ?? [];
+  const myFeatures = featuresQ.data ?? [];
+  const popular = popularQ.data ?? [];
+  const isLoading = issuesQ.isLoading || featuresQ.isLoading || popularQ.isLoading;
+  const isError = issuesQ.isError || featuresQ.isError || popularQ.isError;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-4 max-w-5xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <div className="flex gap-2"><Skeleton className="h-10 w-32 rounded-xl" /><Skeleton className="h-10 w-40 rounded-xl" /><Skeleton className="h-10 w-40 rounded-xl" /></div>
+          <div className="grid md:grid-cols-2 gap-4"><Skeleton className="h-48 rounded-xl" /><Skeleton className="h-48 rounded-xl" /></div>
+          <Skeleton className="h-40 rounded-xl" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+  if (isError) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-3 max-w-5xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Card><CardContent className="py-10 text-center space-y-3">
+            <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
+            <div className="text-sm text-muted-foreground">{isRTL ? 'تعذّر تحميل مركز المساعدة.' : 'Failed to load Help Center.'}</div>
+            <Button variant="outline" onClick={() => { issuesQ.refetch(); featuresQ.refetch(); popularQ.refetch(); }}>{isRTL ? 'إعادة المحاولة' : 'Retry'}</Button>
+          </CardContent></Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
