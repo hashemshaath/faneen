@@ -91,6 +91,75 @@ Deno.serve(async (req) => {
   const matchedCount = Number(result.matched_count ?? 0);
   const source = String(result.match_source ?? 'unknown');
 
+  // P2.1 — Best-effort provider fan-out emails ("opportunity-new-match-provider").
+  // The matching RPC just inserted quote_request_leads rows. We look them up
+  // and dispatch ONE email per (quote, provider). Idempotency key per pair
+  // prevents duplicate sends even if the match function is re-invoked.
+  if (matchedCount > 0) {
+    try {
+      const { data: leads } = await admin
+        .from('quote_request_leads')
+        .select('id, provider_business_id')
+        .eq('quote_request_id', quoteId)
+        .limit(20);
+      const { data: quote } = await admin
+        .from('quote_requests')
+        .select('ref_id, sector, city')
+        .eq('id', quoteId)
+        .maybeSingle();
+      const providerBusinessIds = Array.from(
+        new Set(
+          (leads ?? [])
+            .map((l: { provider_business_id?: string | null }) => l.provider_business_id ?? null)
+            .filter((v): v is string => !!v),
+        ),
+      ).slice(0, 15); // hard cap
+      for (const bizId of providerBusinessIds) {
+        try {
+          const { data: biz } = await admin
+            .from('businesses')
+            .select('name_ar, name_en, user_id, email')
+            .eq('id', bizId)
+            .maybeSingle();
+          if (!biz) continue;
+          let recipient: string | null = (biz as { email?: string | null }).email ?? null;
+          const ownerId = (biz as { user_id?: string | null }).user_id ?? null;
+          if (!recipient && ownerId) {
+            const { data: prof } = await admin
+              .from('profiles')
+              .select('email')
+              .eq('user_id', ownerId)
+              .maybeSingle();
+            recipient = (prof as { email?: string | null } | null)?.email ?? null;
+          }
+          if (!recipient) continue;
+          const bizName =
+            (biz as { name_ar?: string | null }).name_ar ||
+            (biz as { name_en?: string | null }).name_en ||
+            undefined;
+          await admin.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'opportunity-new-match-provider',
+              recipientEmail: recipient,
+              idempotencyKey: `opp-match-${quoteId}-${bizId}`,
+              templateData: {
+                ref: (quote as { ref_id?: string | null } | null)?.ref_id ?? quoteId,
+                businessName: bizName,
+                sector: (quote as { sector?: string | null } | null)?.sector ?? undefined,
+                city: (quote as { city?: string | null } | null)?.city ?? undefined,
+                url: `https://qitaat.com/dashboard/opportunities/${quoteId}`,
+              },
+            },
+          });
+        } catch (e) {
+          console.warn('opportunity-new-match-provider send failed', { biz: bizId, e: String(e) });
+        }
+      }
+    } catch (e) {
+      console.warn('provider match email fan-out failed', String(e));
+    }
+  }
+
   const message =
     matchedCount > 0
       ? `تم توجيه طلبك إلى ${matchedCount} من المزودين الذين يغطون منطقتك`
