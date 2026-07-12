@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, MapPin, Star } from 'lucide-react';
+import { businessProfileHoverProps } from '@/lib/prefetch/routeChunks';
 import { useBi } from '@/components/common/Bilingual';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
@@ -169,6 +170,7 @@ const HomeCategoryRow = ({ row, providers = [], providersBySlug = {}, providersL
                     <Link
                       key={`${row.id}-${business.id}`}
                       to={href}
+                      {...businessProfileHoverProps()}
                       className="group shrink-0 snap-start w-[76%] sm:w-[280px] rounded-2xl border border-border/60 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-[var(--elev-2)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       aria-label={name || bi('مزوّد', 'Provider')}
                     >

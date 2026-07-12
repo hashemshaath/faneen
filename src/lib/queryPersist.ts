@@ -27,6 +27,19 @@ export const PUBLIC_PERSIST_KEY_PREFIXES: ReadonlyArray<string> = [
   'projects:public',               // public projects
   'offers:public',                 // public offers
   'sectors:public',                // sector hub/landing
+  // Public business-profile page — safe to persist because these all read
+  // through `businesses_public` / RLS-scoped public views. Persisting
+  // makes repeat visits render instantly from cache; live edits still
+  // invalidate via the existing realtime hooks.
+  'business',                      // ['business', username] — headline row
+  'branches',                      // ['branches', businessId]
+  'services',                      // ['services', businessId]
+  'business-projects',             // ['business-projects', businessId]
+  'reviews',                       // ['reviews', businessId]
+  'certifications',                // ['certifications', businessId]
+  'awards',                        // ['awards', businessId]
+  'portfolio',                     // ['portfolio', businessId]
+  'promotions-active-count',       // header offers badge count
 ];
 
 /** Hard denylist — never persist these even if a prefix accidentally matches. */
