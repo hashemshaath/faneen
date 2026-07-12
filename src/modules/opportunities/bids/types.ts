@@ -22,6 +22,7 @@ export type OpportunityBidStatus =
   | 'under_review'
   | 'shortlisted'
   | 'revised'
+  | 'revision_requested'
   | 'withdrawn'
   | 'rejected'
   | 'awarded';

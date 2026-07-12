@@ -17,6 +17,10 @@ export const OPPORTUNITY_EVENT_LABEL_AR: Record<string, string> = {
   'sample.received': 'استلم العميل العينة',
   'sample.approved': 'اعتمد العميل العينة',
   'sample.rejected': 'رفض العميل العينة',
+  // R4 — clarifications + revisions
+  'clarification.posted': 'رسالة توضيحية جديدة',
+  'bid.revision_requested': 'طلب العميل تعديل العرض',
+  'bid.revised': 'قدّم المورّد عرضاً معدّلاً',
 };
 
 export function labelForOpportunityEvent(eventType: string | null | undefined): string {

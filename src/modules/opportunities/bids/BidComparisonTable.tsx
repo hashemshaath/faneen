@@ -21,8 +21,9 @@ interface Props {
   awardedBidId?: string | null;
   onShortlistToggle?: (bid: OpportunityBidRow, next: boolean) => void;
   onAward?: (bid: OpportunityBidRow) => void;
+  onRequestRevision?: (bid: OpportunityBidRow) => void;
   pendingBidId?: string | null;
-  pendingKind?: 'shortlist' | 'award' | null;
+  pendingKind?: 'shortlist' | 'award' | 'revision' | null;
 }
 
 function fmtDate(iso: string | null | undefined): string {
@@ -74,7 +75,8 @@ const STATUS_LABEL_AR: Record<string, string> = {
   submitted: 'مقدَّم',
   under_review: 'قيد المراجعة',
   shortlisted: 'في القائمة القصيرة',
-  revised: 'معدَّل',
+  revised: 'نسخة سابقة',
+  revision_requested: 'طلب تعديل',
   awarded: 'الفائز',
   rejected: 'مرفوض',
   withdrawn: 'مسحوب',
@@ -86,6 +88,7 @@ export const BidComparisonTable: React.FC<Props> = ({
   awardedBidId = null,
   onShortlistToggle,
   onAward,
+  onRequestRevision,
   pendingBidId = null,
   pendingKind = null,
 }) => {
@@ -278,12 +281,14 @@ export const BidComparisonTable: React.FC<Props> = ({
             {bids.map((b) => {
               const isWinner = b.status === 'awarded' || (awardedBidId && b.id === awardedBidId);
               const shortlisted = b.status === 'shortlisted';
+              const isSuperseded = b.status === 'revised';
+              const isRevision = !!(b as unknown as { revision_of?: string | null }).revision_of;
               const name = (b.provider_business_id && providerNames[b.provider_business_id]) || 'مورّد';
               return (
                 <th
                   scope="col"
                   key={b.id}
-                  className={`p-3 text-start align-top min-w-[180px] ${isWinner ? 'bg-emerald-50 dark:bg-emerald-950/30' : ''}`}
+                  className={`p-3 text-start align-top min-w-[180px] ${isWinner ? 'bg-emerald-50 dark:bg-emerald-950/30' : ''} ${isSuperseded ? 'opacity-60' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -292,6 +297,12 @@ export const BidComparisonTable: React.FC<Props> = ({
                         <Badge className="mt-1 bg-emerald-600 hover:bg-emerald-600 text-white">
                           الفائز
                         </Badge>
+                      )}
+                      {isSuperseded && (
+                        <Badge variant="outline" className="mt-1 text-[10px]">نسخة سابقة</Badge>
+                      )}
+                      {isRevision && !isSuperseded && (
+                        <Badge className="mt-1 bg-sky-600 hover:bg-sky-600 text-white text-[10px]">عرض معدّل</Badge>
                       )}
                     </div>
                     {onShortlistToggle && !isWinner && !hasWinner && (
@@ -355,24 +366,42 @@ export const BidComparisonTable: React.FC<Props> = ({
                 const awardable = ['submitted', 'under_review', 'shortlisted', 'revised'].includes(
                   b.status,
                 );
+                const canRevise = onRequestRevision &&
+                  ['submitted', 'under_review', 'shortlisted'].includes(b.status);
                 return (
                   <td key={b.id} className="p-3 align-top min-w-[180px]">
-                    <Button
-                      size="sm"
-                      onClick={() => onAward(b)}
-                      disabled={
-                        !awardable ||
-                        (pendingBidId === b.id && pendingKind === 'award')
-                      }
-                      className="min-h-[36px] w-full"
-                    >
-                      {pendingBidId === b.id && pendingKind === 'award' ? (
-                        <Loader2 className="h-4 w-4 animate-spin me-1" />
-                      ) : (
-                        <Award className="h-4 w-4 me-1" />
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        onClick={() => onAward(b)}
+                        disabled={
+                          !awardable ||
+                          (pendingBidId === b.id && pendingKind === 'award')
+                        }
+                        className="min-h-[36px] w-full"
+                      >
+                        {pendingBidId === b.id && pendingKind === 'award' ? (
+                          <Loader2 className="h-4 w-4 animate-spin me-1" />
+                        ) : (
+                          <Award className="h-4 w-4 me-1" />
+                        )}
+                        تعميد العرض
+                      </Button>
+                      {canRevise && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onRequestRevision!(b)}
+                          disabled={pendingBidId === b.id && pendingKind === 'revision'}
+                          className="min-h-[32px] w-full text-xs"
+                        >
+                          {pendingBidId === b.id && pendingKind === 'revision' ? (
+                            <Loader2 className="h-3 w-3 animate-spin me-1" />
+                          ) : null}
+                          طلب تعديل العرض
+                        </Button>
                       )}
-                      تعميد العرض
-                    </Button>
+                    </div>
                   </td>
                 );
               })}

@@ -36,6 +36,7 @@ import { ProviderBidSection } from '@/modules/opportunities/bids';
 import { OpportunityContractSection } from '@/modules/opportunities/contracts';
 import { OpportunityTimeline } from '@/modules/opportunities/timeline';
 import { SampleTrackerProvider } from '@/modules/opportunities/samples';
+import { ClarificationThread } from '@/modules/opportunities/clarifications';
 
 interface LeadDetailRow {
   id: string;
@@ -334,6 +335,14 @@ const ProviderLeadDetails: React.FC = () => {
             opportunityId={q.id}
             assignmentId={lead.id}
             providerBusinessId={lead.provider_id}
+          />
+        )}
+        {q.id && (
+          <ClarificationThread
+            opportunityId={q.id}
+            bidId={null}
+            authorRole="provider"
+            title="استفسارات عامة"
           />
         )}
 

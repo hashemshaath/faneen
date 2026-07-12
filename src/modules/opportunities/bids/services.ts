@@ -15,6 +15,145 @@ import type {
 } from './types';
 
 /**
+ * R4 — Client requests a revision on a submitted bid before award.
+ * Flips the bid to `status='revision_requested'`, records reason + actor,
+ * notifies the provider, and logs `bid.revision_requested`.
+ */
+export async function requestBidRevision(
+  bidId: string,
+  reason: string,
+): Promise<OpportunityBidRow> {
+  const trimmed = reason.trim();
+  if (!trimmed) throw new Error('سبب طلب التعديل مطلوب');
+  const { data: auth } = await supabase.auth.getUser();
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('opportunity_bids')
+    .update({
+      status: 'revision_requested',
+      revision_reason: trimmed,
+      revision_requested_at: nowIso,
+      revision_requested_by: auth?.user?.id ?? null,
+    })
+    .eq('id', bidId)
+    .select('*')
+    .single();
+  if (error) throw error;
+
+  try {
+    await supabase.from('quote_request_events').insert({
+      quote_request_id: data.opportunity_id,
+      event_type: 'bid.revision_requested',
+      actor_user_id: auth?.user?.id ?? null,
+      metadata: { bid_id: bidId, reason: trimmed },
+    });
+  } catch {
+    /* best-effort */
+  }
+
+  try {
+    if (data.submitted_by) {
+      await createNotification({
+        user_id: data.submitted_by,
+        notification_type: 'opportunity_bid_revision_requested',
+        title_ar: 'طلب العميل تعديل عرضك',
+        title_en: 'The client requested a revision on your bid',
+        body_ar: `سبب الطلب: ${trimmed}`,
+        body_en: `Reason: ${trimmed}`,
+        reference_id: data.id,
+        reference_type: 'opportunity_bid',
+      });
+    }
+  } catch {
+    /* best-effort */
+  }
+  return data;
+}
+
+/**
+ * R4 — Provider submits a revised bid. Creates a NEW row with
+ * `revision_of=originalBidId` and marks the original as `revised`.
+ * Notifies the client and logs `bid.revised`.
+ */
+export async function submitRevisedBid(
+  originalBidId: string,
+  input: SubmitOpportunityBidInput,
+): Promise<OpportunityBidRow> {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('opportunity_bids')
+    .insert({
+      opportunity_id: input.opportunityId,
+      assignment_id: input.assignmentId ?? null,
+      provider_business_id: input.providerBusinessId ?? null,
+      submitted_by: input.submittedBy,
+      price_amount: input.priceAmount,
+      currency: input.currency ?? 'SAR',
+      duration_value: input.durationValue ?? null,
+      duration_unit: input.durationUnit ?? null,
+      scope_summary: input.scopeSummary ?? null,
+      terms: input.terms ?? null,
+      warranty: input.warranty ?? null,
+      status: 'submitted',
+      submitted_at: nowIso,
+      payment_terms: input.paymentTerms ?? null,
+      valid_until: input.validUntil ?? null,
+      vat_inclusive: input.vatInclusive ?? true,
+      materials_brand_ids: input.materialsBrandIds ?? null,
+      price_breakdown: (input.priceBreakdown ?? []) as unknown as never,
+      revision_of: originalBidId,
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+
+  try {
+    await supabase
+      .from('opportunity_bids')
+      .update({ status: 'revised' })
+      .eq('id', originalBidId);
+  } catch {
+    /* best-effort */
+  }
+
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    await supabase.from('quote_request_events').insert({
+      quote_request_id: input.opportunityId,
+      event_type: 'bid.revised',
+      actor_user_id: auth?.user?.id ?? null,
+      metadata: { original_bid_id: originalBidId, new_bid_id: data.id },
+    });
+  } catch {
+    /* best-effort */
+  }
+
+  try {
+    const { data: opp } = await supabase
+      .from('quote_requests')
+      .select('user_id, ref_id')
+      .eq('id', input.opportunityId)
+      .maybeSingle();
+    if (opp?.user_id) {
+      await createNotification({
+        user_id: opp.user_id,
+        notification_type: 'opportunity_bid_revised',
+        title_ar: 'قدّم المورّد عرضاً معدّلاً',
+        title_en: 'The provider submitted a revised bid',
+        body_ar: opp.ref_id ? `على الفرصة ${opp.ref_id}` : 'تم تقديم عرض معدّل.',
+        body_en: opp.ref_id ? `Opportunity ${opp.ref_id}` : 'A revised bid has been submitted.',
+        reference_id: data.id,
+        reference_type: 'opportunity_bid',
+      });
+    }
+  } catch {
+    /* best-effort */
+  }
+
+  return data;
+}
+
+/**
  * R1 — Toggle shortlist state on a bid (client/admin action).
  * shortlisted=true  → status 'shortlisted'
  * shortlisted=false → status 'under_review'

@@ -13,10 +13,12 @@ import {
   listOpportunityBidsForClient,
   notifyLosingBiddersAfterAward,
   recordAwardReason,
+  requestBidRevision,
   setBidShortlisted,
 } from './services';
 import { BidComparisonTable } from './BidComparisonTable';
 import type { OpportunityBidRow } from './types';
+import { ClarificationThread } from '../clarifications';
 
 interface Props {
   opportunityId: string;
@@ -47,6 +49,8 @@ export const ClientBidsSection: React.FC<Props> = ({
   const [view, setView] = useState<'cards' | 'compare'>('cards');
   const [awardTarget, setAwardTarget] = useState<OpportunityBidRow | null>(null);
   const [awardReason, setAwardReason] = useState('');
+  const [reviseTarget, setReviseTarget] = useState<OpportunityBidRow | null>(null);
+  const [reviseReason, setReviseReason] = useState('');
 
   const awardMut = useMutation({
     mutationFn: async (bid: OpportunityBidRow) => {
@@ -93,6 +97,21 @@ export const ClientBidsSection: React.FC<Props> = ({
     },
   });
 
+  const reviseMut = useMutation({
+    mutationFn: async ({ bidId, reason }: { bidId: string; reason: string }) =>
+      requestBidRevision(bidId, reason),
+    onSuccess: () => {
+      toast.success('تم إرسال طلب التعديل للمورّد');
+      setReviseTarget(null);
+      setReviseReason('');
+      qc.invalidateQueries({ queryKey: ['opportunity-bids-list', opportunityId] });
+      qc.invalidateQueries({ queryKey: ['quote-request-events', opportunityId] });
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : 'تعذر إرسال طلب التعديل');
+    },
+  });
+
   const bids = data ?? [];
   const hasWinner = !!awardedBidId || bids.some((b) => b.status === 'awarded');
   const canCompare = bids.length >= 2;
@@ -101,11 +120,20 @@ export const ClientBidsSection: React.FC<Props> = ({
     : awardMut.isPending
       ? awardMut.variables?.id ?? null
       : null;
-  const pendingKind: 'shortlist' | 'award' | null = shortlistMut.isPending
+  const pendingKind: 'shortlist' | 'award' | 'revision' | null = shortlistMut.isPending
     ? 'shortlist'
     : awardMut.isPending
       ? 'award'
-      : null;
+      : reviseMut.isPending
+        ? 'revision'
+        : null;
+  const pendingIdForKind = shortlistMut.isPending
+    ? shortlistMut.variables?.bidId ?? null
+    : awardMut.isPending
+      ? awardMut.variables?.id ?? null
+      : reviseMut.isPending
+        ? reviseMut.variables?.bidId ?? null
+        : null;
 
   return (
     <Card>
@@ -190,6 +218,55 @@ export const ClientBidsSection: React.FC<Props> = ({
           </div>
         )}
 
+        {reviseTarget && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold">طلب تعديل العرض</div>
+              <button
+                type="button"
+                aria-label="إلغاء"
+                onClick={() => {
+                  setReviseTarget(null);
+                  setReviseReason('');
+                }}
+                className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-accent"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <Textarea
+              value={reviseReason}
+              onChange={(e) => setReviseReason(e.target.value)}
+              placeholder="اذكر بوضوح ما تطلب تعديله (السعر، المدة، النطاق، شروط الدفع...)"
+              rows={3}
+              dir="rtl"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setReviseTarget(null);
+                  setReviseReason('');
+                }}
+                disabled={reviseMut.isPending}
+              >
+                إلغاء
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => reviseMut.mutate({ bidId: reviseTarget.id, reason: reviseReason })}
+                disabled={reviseMut.isPending || !reviseReason.trim()}
+              >
+                {reviseMut.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin me-1" />
+                ) : null}
+                إرسال طلب التعديل
+              </Button>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="text-sm text-muted-foreground">جارٍ التحميل...</div>
         ) : bids.length === 0 ? (
@@ -206,7 +283,11 @@ export const ClientBidsSection: React.FC<Props> = ({
               setAwardTarget(bid);
               setAwardReason('');
             }}
-            pendingBidId={pendingBidId}
+            onRequestRevision={(bid) => {
+              setReviseTarget(bid);
+              setReviseReason('');
+            }}
+            pendingBidId={pendingIdForKind}
             pendingKind={pendingKind}
           />
         ) : (
@@ -219,11 +300,12 @@ export const ClientBidsSection: React.FC<Props> = ({
                 !hasWinner &&
                 ['submitted', 'under_review', 'shortlisted', 'revised'].includes(bid.status);
               const shortlisted = bid.status === 'shortlisted';
+              const canRevise =
+                canAward && !hasWinner &&
+                ['submitted', 'under_review', 'shortlisted'].includes(bid.status);
               return (
-                <li
-                  key={bid.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl border bg-card"
-                >
+                <li key={bid.id} className="p-3 rounded-xl border bg-card space-y-2">
+                  <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-lg font-bold tech-content">
                       {Number(bid.price_amount ?? 0).toLocaleString()}{' '}
@@ -269,7 +351,28 @@ export const ClientBidsSection: React.FC<Props> = ({
                         تعميد العرض
                       </Button>
                     )}
+                    {canRevise && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setReviseTarget(bid);
+                          setReviseReason('');
+                        }}
+                        disabled={reviseMut.isPending}
+                        className="min-h-[36px]"
+                      >
+                        طلب تعديل العرض
+                      </Button>
+                    )}
                   </div>
+                  </div>
+                  <ClarificationThread
+                    opportunityId={opportunityId}
+                    bidId={bid.id}
+                    authorRole="client"
+                    notifyUserId={bid.submitted_by}
+                  />
                 </li>
               );
             })}
