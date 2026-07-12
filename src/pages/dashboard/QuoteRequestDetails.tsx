@@ -35,6 +35,7 @@ import { ClientBidsSection } from '@/modules/opportunities/bids';
 import { OpportunityContractSection } from '@/modules/opportunities/contracts';
 import { OpportunityTimeline } from '@/modules/opportunities/timeline';
 import { SampleTrackerClient } from '@/modules/opportunities/samples';
+import { ClarificationThread } from '@/modules/opportunities/clarifications';
 
 interface QuoteRow {
   id: string;
@@ -490,6 +491,14 @@ const QuoteRequestDetails: React.FC = () => {
 
         {/* OPPORTUNITIES PHASE 5 — bids on this opportunity (client view) */}
         {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} canAward />}
+        {quoteUuid && (
+          <ClarificationThread
+            opportunityId={quoteUuid}
+            bidId={null}
+            authorRole="client"
+            title="استفسارات عامة على الطلب"
+          />
+        )}
 
         {/* R3 — sample track between award and contract */}
         {quoteUuid && <SampleTrackerClient opportunityId={quoteUuid} />}
