@@ -370,10 +370,13 @@ const DashboardBusinessEdit: React.FC = () => {
       if (newUsername) {
         qc.invalidateQueries({ queryKey: ['business', newUsername] });
         qc.invalidateQueries({ queryKey: ['username-kind', newUsername] });
+        // PROFILE-AGGREGATE — invalidate the one-shot public profile RPC too.
+        qc.invalidateQueries({ queryKey: ['public-business-profile', newUsername] });
       }
       if (oldUsername && oldUsername !== newUsername) {
         qc.invalidateQueries({ queryKey: ['business', oldUsername] });
         qc.invalidateQueries({ queryKey: ['username-kind', oldUsername] });
+        qc.invalidateQueries({ queryKey: ['public-business-profile', oldUsername] });
       }
       // Keep /dashboard/services in sync with the changes above.
       qc.invalidateQueries({ queryKey: ['my-business-services-page'] });

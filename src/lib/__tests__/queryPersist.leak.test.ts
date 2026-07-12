@@ -37,6 +37,12 @@ describe('queryPersist leak guard', () => {
     }
   });
 
+  it('accepts the new public-business-* aggregate + below-fold keys', () => {
+    for (const seg of ['public-business-profile', 'public-business-reviews', 'public-business-projects']) {
+      expect(shouldPersistQuery(q([seg, 'acme']))).toBe(true);
+    }
+  });
+
   it('rejects allowlisted first-segment when a deny token appears in any later segment', () => {
     expect(shouldPersistQuery(q(['business', 'draft', 'x']))).toBe(false);
     expect(shouldPersistQuery(q(['business', 'admin']))).toBe(false);
