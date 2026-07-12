@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
 import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
 import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
+import { RegionCityDistrictSelect } from '@/components/location/RegionCityDistrictSelect';
 import {
   CANONICAL_PRIMARY_SLUGS,
   CANONICAL_PRIMARY_LABELS,
@@ -47,8 +48,17 @@ interface QuoteForm {
   sector: Sector;
   /** Optional canonical sub-specialty slug (child of `sector`). */
   specialty: string;
+  /** Q3-UI — structured DB-backed location IDs (source of truth for matching). */
+  regionId: string | null;
+  cityId: string | null;
+  districtId: string | null;
+  /** Q3-UI — Arabic reference text mirrored from the selected IDs
+   * (kept for legacy consumers + display + free-text escape hatch). */
+  region: string;
   city: string;
   district: string;
+  /** Q3-UI — escape hatch: user picked "my city isn't listed" and used free text. */
+  noLocationSelected: boolean;
   serviceLocation: ServiceLocation | '';
   description: string;
   measurements: string;
@@ -71,7 +81,10 @@ interface QuoteForm {
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
 
 const emptyForm: QuoteForm = {
-  sector: '', specialty: '', city: '', district: '', serviceLocation: '',
+  sector: '', specialty: '',
+  regionId: null, cityId: null, districtId: null,
+  region: '', city: '', district: '', noLocationSelected: false,
+  serviceLocation: '',
   description: '', measurements: '', quantity: '', files: [],
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
@@ -229,13 +242,13 @@ const QuoteSpecialtyPicker: React.FC<{
 
 /* ---------------- main page ---------------- */
 
-const TOTAL_STEPS = 5;
+// Q3-UI — collapsed from 5 → 4 steps: timeline + budget merged into Details.
+const TOTAL_STEPS = 4;
 
 const STEP_LABELS = [
   { ar: 'القطاع',     en: 'Sector' },
   { ar: 'الموقع',     en: 'Location' },
   { ar: 'التفاصيل',   en: 'Details' },
-  { ar: 'الموعد',     en: 'Timeline' },
   { ar: 'التواصل',    en: 'Contact' },
 ];
 
@@ -349,16 +362,28 @@ const Quote: React.FC = () => {
       e.sector = bi('اختر القطاع الأقرب لطلبك للمتابعة.', 'Pick the closest sector to continue.');
     }
     if (s === 2) {
-      if (!form.city.trim()) e.city = bi('أضف المدينة حتى نتمكن من توجيه الطلب بشكل أفضل.', 'Add the city so we can route your request.');
+      // Q3-UI — either the user picked a DB city, or used the escape-hatch
+      // free text with noLocationSelected=true.
+      const hasStructuredCity = !!form.cityId;
+      const hasFreeCity = form.noLocationSelected && form.city.trim().length >= 2;
+      if (!hasStructuredCity && !hasFreeCity) {
+        e.city = bi(
+          'اختر المنطقة والمدينة من القائمة، أو استخدم "مدينتي غير موجودة".',
+          'Select region and city, or use "my city isn\'t listed".',
+        );
+      }
       if (!form.serviceLocation) e.serviceLocation = bi('اختر مكان تنفيذ الخدمة.', 'Choose where the service will be delivered.');
     }
-    if (s === 3 && form.description.trim().length < 10) {
-      e.description = bi('اكتب وصفًا مختصرًا للمشروع ليساعد المزود على فهم احتياجك.', 'Add a short description so providers understand your need.');
+    if (s === 3) {
+      if (form.description.trim().length < 10) {
+        e.description = bi('اكتب وصفًا مختصرًا للمشروع ليساعد المزود على فهم احتياجك.', 'Add a short description so providers understand your need.');
+      }
+      // Q3-UI — timeline merged into Details.
+      if (!form.timeline) {
+        e.timeline = bi('اختر الموعد المناسب للتنفيذ.', 'Choose your preferred timeline.');
+      }
     }
-    if (s === 4 && !form.timeline) {
-      e.timeline = bi('اختر الموعد المناسب للتنفيذ.', 'Choose your preferred timeline.');
-    }
-    if (s === 5) {
+    if (s === 4) {
       if (!form.name.trim()) e.name = bi('أضف اسمك للمتابعة.', 'Add your name to continue.');
       if (!SAUDI_PHONE.test(form.phone.trim())) e.phone = bi('أضف رقم جوال صحيح للتواصل حول الطلب.', 'Add a valid mobile number.');
       if (!form.clientType) e.clientType = bi('اختر نوع العميل.', 'Choose your client type.');
@@ -399,7 +424,7 @@ const Quote: React.FC = () => {
   };
 
   const submit = async () => {
-    if (!validateStep(5)) return;
+    if (!validateStep(4)) return;
     if (submitting) return;
     setSubmitting(true);
     setSubmitError(null);
@@ -428,6 +453,11 @@ const Quote: React.FC = () => {
       sector: form.sector,
       city: form.city.trim(),
       district: form.district.trim() || null,
+      // Q3-UI — dual-write: send structured IDs alongside Arabic text.
+      // Text stays as source of truth for existing consumers during transition.
+      region_id: form.regionId,
+      city_id: form.cityId,
+      district_id: form.districtId,
       service_location_type: serviceLocationMap[form.serviceLocation as string] ?? 'not_sure',
       project_description: form.description.trim(),
       approx_dimensions: form.measurements.trim() || null,
@@ -444,6 +474,9 @@ const Quote: React.FC = () => {
         // the matcher / future analytics never have to re-resolve.
         taxonomy_primary_slug: form.sector || null,
         taxonomy_specialty_slug: form.specialty || null,
+        // Q3-UI — free-text escape hatch marker (city_id absent, city text present).
+        region_text: form.region || null,
+        no_location_selected: form.noLocationSelected || false,
       },
       preferred_brand_ids: form.preferredBrandIds.length ? form.preferredBrandIds : null,
       brand_preference_mode: form.preferredBrandIds.length && form.brandPreferenceMode
@@ -709,31 +742,104 @@ const Quote: React.FC = () => {
                         en: 'Location helps route the request to nearer providers.',
                       }}
                     />
-                    <div>
-                      <Label htmlFor="q-city"><Bi ar="المدينة" en="City" /></Label>
-                      <Input
-                        id="q-city"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        className="h-12 mt-1.5"
-                        placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
-                        value={form.city}
-                        onChange={(e) => update('city', e.target.value)}
-                      />
-                      <FieldError message={errors.city} />
-                    </div>
-                    <div>
-                      <Label htmlFor="q-district">
-                        <Bi ar="الحي (اختياري)" en="District (optional)" />
-                      </Label>
-                      <Input
-                        id="q-district"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        className="h-12 mt-1.5"
-                        placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
-                        value={form.district}
-                        onChange={(e) => update('district', e.target.value)}
-                      />
-                    </div>
+                    {!form.noLocationSelected ? (
+                      <>
+                        <RegionCityDistrictSelect
+                          value={{
+                            regionId: form.regionId,
+                            cityId: form.cityId,
+                            districtId: form.districtId,
+                          }}
+                          requiredRegion
+                          requiredCity
+                          onChange={(v, resolved) => {
+                            setForm((p) => ({
+                              ...p,
+                              regionId: v.regionId,
+                              cityId: v.cityId,
+                              districtId: v.districtId,
+                              region: resolved.regionText,
+                              city: resolved.cityText,
+                              district: resolved.districtText,
+                            }));
+                            setErrors((p) => ({ ...p, city: undefined }));
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          <Bi
+                            ar="تحديد الحي يساعدنا في إيصال طلبك للمزودين الأقرب."
+                            en="Selecting a district helps route your request to the nearest providers."
+                          />
+                        </p>
+                        <FieldError message={errors.city} />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((p) => ({
+                              ...p,
+                              noLocationSelected: true,
+                              regionId: null,
+                              cityId: null,
+                              districtId: null,
+                              region: '',
+                              city: '',
+                              district: '',
+                            }));
+                          }}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          <Bi ar="مدينتي غير موجودة" en="My city isn't listed" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+                          <Bi
+                            ar="سنمرر طلبك يدويًا لأن مدينتك غير مسجّلة في القائمة."
+                            en="We'll route this request manually because your city isn't in the list."
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="q-city-free"><Bi ar="المدينة" en="City" /></Label>
+                          <Input
+                            id="q-city-free"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className="h-12 mt-1.5"
+                            placeholder={bi('مثال: الرياض', 'e.g. Riyadh')}
+                            value={form.city}
+                            onChange={(e) => update('city', e.target.value)}
+                          />
+                          <FieldError message={errors.city} />
+                        </div>
+                        <div>
+                          <Label htmlFor="q-district-free">
+                            <Bi ar="الحي (اختياري)" en="District (optional)" />
+                          </Label>
+                          <Input
+                            id="q-district-free"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className="h-12 mt-1.5"
+                            placeholder={bi('مثال: العليا', 'e.g. Al Olaya')}
+                            value={form.district}
+                            onChange={(e) => update('district', e.target.value)}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((p) => ({
+                              ...p,
+                              noLocationSelected: false,
+                              city: '',
+                              district: '',
+                            }))
+                          }
+                          className="text-sm text-primary hover:underline"
+                        >
+                          <Bi ar="العودة لاختيار المدينة من القائمة" en="Back to city picker" />
+                        </button>
+                      </div>
+                    )}
                     <div>
                       <div className="mb-2 text-sm font-semibold text-foreground">
                         <Bi ar="هل الخدمة مطلوبة في موقع العميل أم لدى المزود؟" en="On client site or at provider?" />
@@ -948,69 +1054,62 @@ const Quote: React.FC = () => {
                         </>
                       )}
                     </div>
+                    {/* Q3-UI — Timeline + Budget merged into Details */}
+                    <div className="pt-4 border-t border-border/50 space-y-5">
+                      <div>
+                        <div className="mb-2 text-sm font-semibold text-foreground">
+                          <Bi ar="متى تحتاج التنفيذ؟" en="When do you need it done?" />
+                        </div>
+                        <ChoiceGrid
+                          name={bi('الموعد', 'Timeline')}
+                          options={[
+                            { value: 'week',         ar: 'خلال أسبوع',                  en: 'Within a week' },
+                            { value: 'two-weeks',    ar: 'خلال أسبوعين',                en: 'Within two weeks' },
+                            { value: 'month',        ar: 'خلال شهر',                    en: 'Within a month' },
+                            { value: 'flexible',     ar: 'غير مستعجل',                  en: 'Flexible' },
+                            { value: 'ask-provider', ar: 'أريد معرفة المدة من المزود',  en: 'Ask the provider' },
+                          ]}
+                          value={form.timeline}
+                          onChange={(v) => update('timeline', v as Timeline)}
+                        />
+                        <FieldError message={errors.timeline} />
+                      </div>
+                      <div>
+                        <div className="mb-2 text-sm font-semibold text-foreground">
+                          <Bi ar="هل لديك ميزانية تقريبية؟" en="Do you have an approximate budget?" />
+                        </div>
+                        <ChoiceGrid
+                          name={bi('الميزانية', 'Budget')}
+                          cols="sm:grid-cols-3"
+                          options={[
+                            { value: 'yes',          ar: 'نعم',                          en: 'Yes' },
+                            { value: 'no',           ar: 'لا',                           en: 'No' },
+                            { value: 'after-quotes', ar: 'أفضل استلام عروض أولًا',      en: 'Receive quotes first' },
+                          ]}
+                          value={form.budgetMode}
+                          onChange={(v) => update('budgetMode', v as BudgetMode)}
+                        />
+                        {form.budgetMode === 'yes' && (
+                          <div className="mt-3">
+                            <Label htmlFor="q-budget">
+                              <Bi ar="الميزانية التقريبية (ريال)" en="Approx. budget (SAR)" />
+                            </Label>
+                            <Input
+                              id="q-budget"
+                              inputMode="numeric"
+                              className="h-12 mt-1.5 tech-content"
+                              placeholder={bi('مثال: 5000', 'e.g. 5000')}
+                              value={form.budget}
+                              onChange={(e) => update('budget', e.target.value.replace(/[^\d]/g, ''))}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {step === 4 && (
-                  <div className="space-y-6">
-                    <StepHeading
-                      ar="متى تحتاج التنفيذ؟"
-                      en="When do you need it done?"
-                      help={{
-                        ar: 'الموعد والميزانية يساعدان المزود على تقديم عرض أقرب لاحتياجك.',
-                        en: 'Timeline and budget help providers send a closer match.',
-                      }}
-                    />
-                    <div>
-                      <ChoiceGrid
-                        name={bi('الموعد', 'Timeline')}
-                        options={[
-                          { value: 'week',         ar: 'خلال أسبوع',                  en: 'Within a week' },
-                          { value: 'two-weeks',    ar: 'خلال أسبوعين',                en: 'Within two weeks' },
-                          { value: 'month',        ar: 'خلال شهر',                    en: 'Within a month' },
-                          { value: 'flexible',     ar: 'غير مستعجل',                  en: 'Flexible' },
-                          { value: 'ask-provider', ar: 'أريد معرفة المدة من المزود',  en: 'Ask the provider' },
-                        ]}
-                        value={form.timeline}
-                        onChange={(v) => update('timeline', v as Timeline)}
-                      />
-                      <FieldError message={errors.timeline} />
-                    </div>
-                    <div>
-                      <div className="mb-2 text-sm font-semibold text-foreground">
-                        <Bi ar="هل لديك ميزانية تقريبية؟" en="Do you have an approximate budget?" />
-                      </div>
-                      <ChoiceGrid
-                        name={bi('الميزانية', 'Budget')}
-                        cols="sm:grid-cols-3"
-                        options={[
-                          { value: 'yes',          ar: 'نعم',                          en: 'Yes' },
-                          { value: 'no',           ar: 'لا',                           en: 'No' },
-                          { value: 'after-quotes', ar: 'أفضل استلام عروض أولًا',      en: 'Receive quotes first' },
-                        ]}
-                        value={form.budgetMode}
-                        onChange={(v) => update('budgetMode', v as BudgetMode)}
-                      />
-                      {form.budgetMode === 'yes' && (
-                        <div className="mt-3">
-                          <Label htmlFor="q-budget">
-                            <Bi ar="الميزانية التقريبية (ريال)" en="Approx. budget (SAR)" />
-                          </Label>
-                          <Input
-                            id="q-budget"
-                            inputMode="numeric"
-                            className="h-12 mt-1.5 tech-content"
-                            placeholder={bi('مثال: 5000', 'e.g. 5000')}
-                            value={form.budget}
-                            onChange={(e) => update('budget', e.target.value.replace(/[^\d]/g, ''))}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {step === 5 && (
                   <div className="space-y-5">
                     <StepHeading ar="بيانات التواصل" en="Contact details" />
                     {/* Review Summary — compact recap before final submit */}

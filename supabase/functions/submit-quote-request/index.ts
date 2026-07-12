@@ -118,6 +118,10 @@ interface Body {
   preferred_brand_ids?: string[] | null;
   brand_preference_mode?: string | null;
   brand_notes?: string | null;
+  // Q3-UI — optional structured location IDs (dual-write; text fields remain SOT).
+  region_id?: string | null;
+  city_id?: string | null;
+  district_id?: string | null;
 }
 
 function err(msg: string, status = 400) {
@@ -196,6 +200,16 @@ Deno.serve(async (req) => {
       ? body.brand_notes.trim().slice(0, 2000)
       : null;
 
+  // Q3-UI — validate optional location IDs (UUIDs only; ignored if malformed).
+  const cleanUuid = (v: unknown): string | null => {
+    if (typeof v !== 'string') return null;
+    const s = v.trim();
+    return UUID_RE.test(s) ? s : null;
+  };
+  const regionId   = cleanUuid(body.region_id);
+  const cityId     = cleanUuid(body.city_id);
+  const districtId = cleanUuid(body.district_id);
+
   const url = Deno.env.get('SUPABASE_URL')!;
   const anon = Deno.env.get('SUPABASE_ANON_KEY')!;
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -263,6 +277,9 @@ Deno.serve(async (req) => {
     sector,
     city,
     district: body.district?.toString().trim() || null,
+    region_id: regionId,
+    city_id: cityId,
+    district_id: districtId,
     service_location_type: serviceLoc,
     project_description: desc,
     approx_dimensions: body.approx_dimensions?.toString().trim() || null,

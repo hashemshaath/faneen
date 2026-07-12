@@ -33,6 +33,10 @@ export interface SubmitQuoteRequestPayload {
   preferred_brand_ids?: string[] | null;
   brand_preference_mode?: 'exact' | 'preferred' | 'flexible' | null;
   brand_notes?: string | null;
+  // Q3-UI — optional structured location IDs (dual-write; text fields remain SOT).
+  region_id?: string | null;
+  city_id?: string | null;
+  district_id?: string | null;
 }
 
 export interface SubmitQuoteRequestResult {
