@@ -156,6 +156,7 @@ import {
   DashboardClients,
   DashboardBadge,
   DashboardMyRequests,
+  DashboardNewRfq,
   DashboardAccountDiagnostics,
   ProviderJoin,
   ProviderJoinEdit,
