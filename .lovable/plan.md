@@ -1,127 +1,139 @@
+# Performance + SEO/GEO/AEO Audit — Read-only Findings & Phased Plan
 
-# Deep Code-Quality Audit — Findings & Phased Plan
+Read-only inspection of build output, data hooks, route shell, `index.html`, `robots.txt`, `llms.txt`, `sitemap.xml`, and hot pages (`Index.tsx`, `SearchV3.tsx`). Concrete numbers below come from `bun run build` and file inspection.
 
-Read-only pass. Scope excludes DB/RPC/edge functions and the three pending Phase-C route-guard decisions.
+---
 
-## 1. Code Quality & Duplication
+## 1. Root causes ranked by user impact
 
-### 1.1 Oversized page files (top 15 by LOC, real `wc -l`)
-```text
-3425  src/pages/ContractDetail.tsx
-3190  src/pages/dashboard/DashboardContracts.tsx
-2132  src/pages/dashboard/DashboardRentals.tsx
-1615  src/pages/dashboard/DashboardMessages.tsx
-1612  src/pages/admin/AdminContactMessages.tsx
-1516  src/pages/dashboard/DashboardSites.tsx
-1514  src/components/admin/data-enrichment/LegacySingleRowEnrichment.tsx
-1477  src/pages/dashboard/DashboardAiCenter.tsx
-1448  src/pages/admin/AdminBusinesses.tsx
-1390  src/pages/Onboarding.tsx
-1343  src/pages/dashboard/DashboardInstallments.tsx
-1336  src/pages/admin/AdminBarcodeRegistry.tsx
-1324  src/pages/dashboard/DashboardBlog.tsx
-1319  src/pages/Quote.tsx
-1280  src/pages/dashboard/DashboardBusinessEdit.tsx
+### P0 — Directly explains "slow /search" and "empty then pop" flashes
+
+**RC1. `/search` fires a single 500-row mega-query on every mount, and cache is deliberately bypassed.**
+`src/services/search/useSearch.ts` L220–269 — `useBusinesses()`:
+- `.from('businesses_public').select('…, cities(...), business_services(...), promotions(...)').limit(500)` — one wide join fetching up to 500 providers with nested arrays, then filtered client-side by `filterAndSort`.
+- `staleTime: 30_000`, but `refetchOnMount: 'always'` **and** `refetchOnWindowFocus: true` — every visit and every tab refocus refetches the full 500 rows, defeating the cache. Same anti-pattern on `useCategories` (L181) and `useCities` (L203).
+- Plus `useDirectoryRealtimeInvalidation()` opens a Realtime WS channel on `/search` mount and invalidates 7 query keys on any `directory_sync_events` change.
+
+**RC2. Route-lazy + data-lazy are sequential, gated by a full-screen loader.**
+`src/App.tsx` L281 wraps every route in `<Suspense fallback={<PageLoader />}>`; `PageLoader` is a `min-h-dvh` centered spinner (L250). So a cold visit to `/search` is: download `Search-*.js` (60 KB gz) → mount → *then* fire the 500-row query → *then* fire taxonomy context + service-category queries. Nothing is parallel-prefetched.
+
+**RC3. No client-side cache persistence.**
+`src/lib/queryClient.ts` uses default in-memory store. React Query `persist` plugin is not installed. Every hard refresh / new tab starts from zero data — this is the "blank shell then pop" the user sees on return visits.
+
+**RC4. Empty renders during `isLoading` instead of skeletons on public pages.**
+Home has proper `SectionFallback` skeletons (Index.tsx L35–100). `/search` uses `LoadingProgressV3` (a top progress bar) — the results grid area itself renders empty during initial `isLoading` until businesses arrive. Same pattern likely on `BusinessProfile`, `BranchDetail`, `Projects`, `Blog` (worth verifying).
+
+### P1 — Bundle bloat pulling extra bytes into hot paths
+
+Top 15 built chunks (production, from `bun run build`):
+
+| Chunk | Size | Gzip | Notes |
+|---|---:|---:|---|
+| `heic2any` | 1352 KB | 341 KB | Should be dynamic-only on image upload |
+| `vendor-icons` (lucide-react) | 781 KB | 138 KB | **Star-import problem** — all icons bundled globally |
+| `xlsx` | 499 KB | 162 KB | Verify only lazy-loaded from export flows |
+| `index-*.js` (entry) | 453 KB | 145 KB | Entry chunk still heavy |
+| `vendor-charts` (recharts) | 442 KB | 115 KB | Should never appear on `/` or `/search` |
+| `jspdf.es.min` | 390 KB | 127 KB | Confirm no eager import remains |
+| `pdf-ksa` | 334 KB | 98 KB | Dynamic-only expected |
+| `DashboardContracts` | 285 KB | 78 KB | Page-split candidate |
+| `ContractDetail` | 220 KB | 54 KB | Page-split candidate |
+| `AdminBusinesses` | 218 KB | 59 KB | Admin — lower priority |
+| `vendor-supabase` | 210 KB | 55 KB | Expected |
+| `html2canvas.esm` | 201 KB | 48 KB | Dynamic-only expected |
+| `vendor-react` | 157 KB | 51 KB | Expected |
+| `index.es` | 151 KB | 51 KB | Investigate — likely a stray dep |
+| `vendor-map` (leaflet) | 150 KB | 43 KB | Already lazy ✔ |
+
+Key concern: `vendor-icons` at **138 KB gzipped** is loaded early because most public components import `lucide-react` via named imports which don't tree-shake through the `manualChunks: { 'vendor-icons': ['lucide-react'] }` bucket. That single chunk is a bigger perf hit than most page code.
+
+### P2 — SEO/GEO/AEO gaps (Vite SPA reality)
+
+**SR1. Crawlers get an empty shell.** `index.html` contains only the sitewide title/description/OG and a `<div id="root">` with a hero placeholder. All per-route titles, descriptions, canonicals, OG per page, and every JSON-LD block (LocalBusiness on `/:username`, Article on `/blog/:slug`, ItemList on sectors, BreadcrumbList, FAQPage) are injected client-side by `usePageMeta` + `useMultiJsonLd`. Googlebot renders JS (usually fine), but **Bingbot, PerplexityBot, GPTBot, ClaudeBot, and Facebook/Twitter/LinkedIn preview scrapers do not execute JS reliably** — they see the homepage's static meta on *every* URL.
+
+**SR2. hreflang is misconfigured.** `index.html` L40–42:
+```html
+<link rel="alternate" hreflang="ar" href="https://qitaat.com" />
+<link rel="alternate" hreflang="en" href="https://qitaat.com" />
 ```
-All 15 mix data-fetching, mutations, JSX, and inline sub-components.
+Both point to the same URL, and the app has no `/en` variant. Google ignores/warns on this. Either drop both or provide real language variants.
 
-### 1.2 Oversized hooks (>150 LOC)
-```text
-259 useActiveWorkspace.ts     251 useContractDraftAutosave.ts
-230 useThemeColors.ts         186 use-toast.ts
-178 useAdminFavorites.ts      174 useVisibleModules.ts
-167 usePageMeta.ts            153 useWorkspaceContext.ts
-```
+**SR3. Sitemap coverage risk.** `public/sitemap.xml` is a sitemap-index pointing to `functions/v1/sitemap?type=…` edge function. Not audited here whether the businesses/blog/projects segments are actually returning fresh data — worth an edge-function smoke check.
 
-### 1.3 Duplication hotspots
-- **Direct supabase client calls in UI**: 200 files under `src/components` + `src/pages` import `@/integrations/supabase/client` vs only 10 in `src/services/`. Same query patterns (my-business, profile, roles, memberships) are re-implemented in many pages.
-- **Silent catches**: ~155 empty `catch {}` / `catch { /* ignore */ }` blocks across `src/` — logs swallowed, no toast.
-- **`any` in critical paths**: 237 occurrences outside tests; concentrated in contracts, payments, RFQ pages.
-- **Formatting**: `src/lib/format.ts` exists but many pages still call `toLocaleString` / `new Intl.NumberFormat` inline (esp. `ContractDetail`, `DashboardInstallments`, `DashboardContracts`).
+**SR4. Font strategy is decent but not optimal.** IBM Plex Sans Arabic + Inter + Plex Mono all preloaded from Google Fonts as one stylesheet with `display=swap` and `fetchpriority=high` (L51). Fine, but subsetting Arabic weights or self-hosting would cut LCP by ~150–300 ms on 3G.
 
-## 2. Performance
+**SR5. LCP element on `/` is a background hero image, but its preload is deferred until `HeroSection` module mounts** (comment L53–55). This means preload happens *after* the JS parses — losing the critical-path win.
 
-- **React Query**: 661 `useQuery` call sites, only 286 declare `staleTime`. Global default is 5 min, so most are fine, but personal dashboards (already user-scoped keys) still often refetch too aggressively on remount because `gcTime` isn't tuned per hot key.
-- **Heavy libs imported eagerly** (candidates for lazy/dynamic import):
-  - `recharts` in `UserDashboardView`, `TrendsWidget`, `SmartMetricCard`, `IdentitySignupsChart`, `DashboardInstallments`, `AdminActivityLog`, `AdminCronRuns`, `AdminProviderLanding`
-  - `jspdf` + `jspdf-autotable` in `lib/export/exportTable.ts`, `DashboardRentalsAnalytics`, `exportLeadPdf.ts`
-  - `leaflet` in `LocationPicker`, `SearchMapV3`
-  - `qrcode` in `lib/badge/qr.ts`, `DashboardSitePrint`, `AdminSiteQrManager`, `BarcodeWidget`
-- **Re-render risk**: `LanguageContext` + `AuthContext` consumers span the whole app; large lists (DashboardContracts, DashboardRentals, DashboardSites) lack row-level `memo`.
+### GEO/AEO (AI answer engines)
 
-## 3. Error handling & resilience
+**Good:**
+- `public/llms.txt` exists, comprehensive.
+- `robots.txt` explicitly allows GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, cohere-ai, CCBot missing but not blocked.
 
-- 155 silent catches (see above) — biggest offenders in contract/rfq/messages pages.
-- Mutations: many `useMutation` sites lack `onError` toast and none use `onMutate`/rollback (checked contracts, installments, rentals pages).
-- **ErrorBoundary coverage** is thin: only `App.tsx` (root), `Index.tsx`, `Auth.tsx`. Dashboard and Admin shells are **not** wrapped — one crash in a hub tears the whole authenticated view down to root fallback.
+**Gaps:**
+- Same SR1 problem — AI crawlers see the shell. They rely on `llms.txt` links plus initial HTML text. The homepage `<h1 class="sr-only">` provides one line of text; the rest of what Qitaat *is* only exists once React renders.
+- No FAQ block in static HTML — FAQ JSON-LD is client-injected, so ChatGPT/Perplexity won't extract it.
+- No CCBot entry in robots.txt (Common Crawl feeds most open LLM training).
 
-## 4. Consistency
+---
 
-- **Service-layer bypass**: 200 UI files vs 10 service files (95% direct-call ratio). No enforcement lint.
-- **Loading states**: mix of `<Loader2>` spinners, shadcn `Skeleton`, and bare nulls across dashboard pages.
-- **i18n leakage** — files with the most inline Arabic literals outside `t()`:
-  ```text
-  360 ContractDetail.tsx            256 DashboardRentals.tsx
-  240 DashboardContracts.tsx        194 DashboardAiCenter.tsx
-  172 LegacySingleRowEnrichment.tsx 163 ProviderJoin.tsx
-  158 DashboardSites.tsx            157 Quote.tsx
-  152 DashboardBadge.tsx            151 AdminContactMessages.tsx
-  ```
-  Pattern is usually `{isRTL ? 'ع' : 'en'}` literals — should go through `translations` or at least `<Bi>` from `src/components/common/Bilingual.tsx`.
+## 2. Phased fix plan
 
-## 5. Frontend security
+### Phase P1 — Quick wins (no infra changes, no schema, mostly config + hooks)
 
-- **Cache-clear on signout**: OK. `AuthContext.resetForUser` + `signOut` both call `queryClient.clear()`, and account-switch cache isolation is covered by tests.
-- **localStorage**: audited keys are non-sensitive (language, saved searches, compare selection, recent routes, sidebar favorites, onboarding draft, lockout counter, chat draft). No tokens, PII, or role data stored client-side. ✅
-- **`dangerouslySetInnerHTML`**: every project call site already routes through `sanitizeBlogHtml` / `sanitizeSvgMarkup` / `sanitizeBadgeHtml`. The only unsanitized one is `src/components/ui/chart.tsx:70` — that's shadcn's CSS-vars string (recharts theme), built from a typed `config` object, not user input. ✅
+**P1.1 Fix React Query cache leaks (biggest single win for `/search`)**
+- `src/services/search/useSearch.ts`: change `useCategories`, `useCities`, `useBusinesses` to `refetchOnMount: false, refetchOnWindowFocus: false`. Bump `useBusinesses` staleTime to 5 min (matches `queryClient.ts` default).
+- Consider narrowing `useBusinesses` PARENT_SELECT or splitting the nested `business_services` into a lazy per-card fetch (only when a card enters viewport / user filters by service).
 
-## Phased Plan (safest → riskiest, each independently smoke-testable)
+**P1.2 Add React Query cache persistence**
+- Install `@tanstack/react-query-persist-client` + `createSyncStoragePersister` (localStorage, 24 h max age, key-allowlist for public queries only).
+- Returning visitors see instant cached content — kills the "empty then pop" flash for anyone who's been here before.
 
-### Phase B1 — Silent-catch triage (zero UI risk)
-Replace `catch {}` / `catch { /* ignore */ }` with a shared `logDiag('warn', ...)` helper in **non-UI** paths only (services, hooks). Keep behavior identical (no toast added yet). Target ~60 sites in `src/hooks` + `src/services`. Add a lint-style vitest that greps for bare-empty catches in those two folders.
-**Smoke test**: build + existing vitest suite; nothing user-visible changes.
+**P1.3 Skeleton coverage on public pages**
+- Add `SearchResultsV3` grid skeleton (mimic 12 card placeholders) during first `isLoading`.
+- Audit `BusinessProfile`, `BranchDetail`, `Projects`, `Blog`, `Offers` and add matching skeletons where the current `isLoading` returns `null`.
 
-### Phase B2 — Lazy-load heavy libs
-Convert the 4 heavy libs to dynamic imports at their call sites:
-- Wrap all `recharts` chart components in `React.lazy` + `<Suspense fallback={<Skeleton/>}>`.
-- Move `jspdf` + `jspdf-autotable` behind `await import(...)` inside the export functions.
-- Move `qrcode` behind `await import(...)` in `lib/badge/qr.ts` and the three call sites.
-- Move `leaflet` behind `React.lazy` for `LocationPicker` + `SearchMapV3`.
-**Smoke test**: open each affected page (dashboard overview, installments, admin activity, rentals analytics, badge, sites map, search map) and confirm charts/PDF/QR/map render.
+**P1.4 Slim `PageLoader`**
+- Replace full-screen spinner with a top progress bar (nprogress-style, 3-line component) so the previous page stays visible while the next lazy chunk loads. Eliminates the "flash to blank" between route transitions.
 
-### Phase B3 — ErrorBoundary coverage
-Wrap the three main shells:
-- `DashboardLayout` (or the `dashboard/*` outlet) in an `<ErrorBoundary>`.
-- `AdminLayout` outlet in an `<ErrorBoundary>`.
-- `ContractDetail` (largest page, highest crash blast radius) in a page-local boundary.
-No new components; reuse existing `ErrorBoundary`. Add a test asserting each layout renders an `ErrorBoundary` in its tree.
-**Smoke test**: throw in a stub child, confirm boundary catches without unmounting nav.
+**P1.5 SEO / GEO tweaks**
+- Fix hreflang in `index.html` (remove duplicate `en` or add real `/en` route later).
+- Expand static `<div id="root">` content: add a real `<h1>`, one paragraph describing Qitaat, and a small `<ul>` of the six main sectors, all inside the placeholder. Crawlers and AI bots will index this even without JS.
+- Add a static FAQ block in `index.html` (`<section aria-hidden="true" hidden>`) with the same Q&A as `useHomeFaq`'s fallback, so FAQPage JSON-LD + text is visible to non-JS crawlers.
+- Add `CCBot` allow to `robots.txt` for training-corpus inclusion.
+- Preload the hero LCP image with a direct `<link rel="preload" as="image">` in `index.html` (accept one hashed-asset maintenance burden; use `?url` import at build time or a small predev script that writes the tag).
 
-### Phase B4 — Shared query hooks for the 3 hottest duplicated fetches
-Extract to `src/services/`:
-- `useMyBusiness(userId)` — currently redone in ~20 pages.
-- `useMyRoles(userId)` — duplicated alongside `AuthContext.roles` in several admin pages.
-- `useMyMembership(userId)` — duplicated in dashboard hubs.
-Migrate call sites in a follow-up (don't touch UI here — just introduce hooks + one pilot page: `DashboardOverview`).
-**Smoke test**: pilot page still renders identical data; unit test on the new hooks.
+**P1.6 Kill lucide-react bloat**
+- Replace `manualChunks: { 'vendor-icons': ['lucide-react'] }` with per-icon imports (`lucide-react/dist/esm/icons/x`) OR remove the manualChunks bucket and let Rollup tree-shake per-page. Target: cut the ~138 KB gz global icon chunk to <30 KB gz on hot pages.
 
-### Phase B5 — Formatting + i18n literal cleanup (top 5 offenders)
-Pure text substitution — no logic change:
-- Replace inline `toLocaleString` with `fmtNum/fmtDate/fmtCurrency` in `ContractDetail`, `DashboardInstallments`, `DashboardContracts`.
-- Replace inline `{isRTL ? 'ع' : 'en'}` literals with `<Bi>` / `useBi()` in the top 5 files from §4. Do NOT add new `translations` keys yet — that's a separate content pass.
-**Smoke test**: language toggle on each touched page; visual diff.
+Testable independently: `/search` cold-load timing, Lighthouse before/after, `view-source:` on `/` for the added static content.
 
-### Phase B6 — Component extraction (largest files only)
-Split — imports-only, no behavior change — the two biggest:
-- `ContractDetail.tsx` (3425 LOC) → extract per-tab sections (`ContractHeader`, `ContractPartiesPanel`, `ContractMilestonesPanel`, `ContractFinancialsPanel`, `ContractDocumentsPanel`).
-- `DashboardContracts.tsx` (3190 LOC) → extract list rows + filter bar + KPI strip.
-Everything stays under the same route, same props, same queries. Snapshot/route tests unchanged.
-**Smoke test**: contract detail + contracts list render; e2e navigation spec passes.
+### Phase P2 — Prerendering strategy for public pages
 
-### Explicitly out of scope
-- No DB / RPC / edge-function changes.
-- No route path or route-guard changes (Phase-C decisions on `register-entity`, `business-draft`, `ai-center` remain pending).
-- No new i18n translation keys or admin/permissions changes.
-- No package additions.
+The only durable fix for SR1 (empty shell to non-JS crawlers) is prerendering. Options in order of effort:
 
-Each phase is one PR-sized change, individually revertible, and can ship in the order listed.
+**P2.1 Static prerender via `vite-plugin-prerender` or `react-snap`** for the fully-static routes: `/`, `/about`, `/contact`, `/privacy`, `/terms`, `/sectors`, `/sectors/:slug`, `/for-providers`, `/help`, `/help/:slug`, `/blog`. Build-time renders these to HTML with real titles/descriptions/JSON-LD baked in. No runtime backend change.
+
+**P2.2 On-demand SSR at the edge for dynamic pages** (`/:username`, `/:username/:branch`, `/blog/:slug`, `/projects/:slug`): a small Supabase edge function that fetches the page's canonical data and returns HTML with server-rendered head + first-paint content, then hydrates client-side. Higher effort but essential for social-preview parity and AI-engine indexing of provider profiles.
+
+**P2.3 (Alternative)** Migrate the public shell to TanStack Start / Next.js in a separate `apps/public` project, keep the auth'd app as-is. Largest change; defer until P2.1+P2.2 prove insufficient.
+
+### Phase P3 — Chunk/vendor optimization
+
+- **Split `vendor-charts`**: audit which public routes still pull recharts; move remaining call sites to `.chart.tsx` + `React.lazy` (Phase B2 pattern already established).
+- **Investigate `index.es-*.js` (151 KB)**: identify which dep landed there (likely `xlsx` internals or a stray) and manual-chunk or lazy it.
+- **Confirm `jspdf`, `xlsx`, `html2canvas`, `heic2any` have zero eager imports.** Grep already done for jspdf/qrcode in Phase B2; extend to the other three.
+- **Split top pages ≥200 KB**: `DashboardContracts` (285 KB), `ContractDetail` (220 KB), `AdminBusinesses` (218 KB) — extract tabs into sub-routes or `React.lazy` panels.
+- **Entry chunk (`index-*.js` 453 KB)**: profile with `rollup-plugin-visualizer`, identify what's forced eager by `App.tsx`/`main.tsx`.
+
+Target after P3: entry + hot-vendor combined ≤ 300 KB gz on `/` and `/search`.
+
+---
+
+## 3. Not in scope (per user)
+
+No DB schema changes, no RPC/edge-function work, no route re-orderings.
+
+## 4. Recommended execution order
+
+P1 first (biggest UX delta for lowest risk). Then P2.1 (static prerender — unblocks non-JS crawlers for the highest-traffic public pages). Then P3 (bundle diet). P2.2 (dynamic SSR) is the largest lift and should follow only if P2.1 metrics show clear ROI.
