@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import "@/lib/accent-colors";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
@@ -255,9 +255,21 @@ import {
 } from "@/routes";
 
 const PageLoader = () => (
-  <div className="flex min-h-dvh items-center justify-center bg-background">
-    <div className="animate-pulse">
-      <BrandLogo variant="mark" tone="auto" size="loader" priority alt="قِطاعات" />
+  // P1.4 — slim, non-blocking route loader. Renders a top progress bar plus
+  // a subtle centered brand pulse on a plain background instead of the old
+  // full-screen dvh-height spinner, so the next route's shell feels lighter.
+  <div className="min-h-[40vh] bg-background">
+    <div
+      role="progressbar"
+      aria-label="Loading"
+      className="fixed inset-x-0 top-0 z-[80] h-0.5 overflow-hidden bg-transparent"
+    >
+      <div className="h-full w-1/3 animate-[progress-indeterminate_1.1s_ease-in-out_infinite] bg-primary/70" />
+    </div>
+    <div className="flex items-center justify-center pt-24 pb-12 opacity-70">
+      <div className="animate-pulse">
+        <BrandLogo variant="mark" tone="auto" size="loader" priority alt="قِطاعات" />
+      </div>
     </div>
   </div>
 );
@@ -650,6 +662,26 @@ const AppRoutes = () => (
     </AppDirectionShell>
   </BrowserRouter>
 );
+
+// P1.2 — persist public directory queries once at module scope.
+// Runs before React mounts so cached data is available on the very first render.
+(() => {
+  const persister = createQueryPersister();
+  if (!persister) return;
+  try {
+    persistQueryClient({
+      queryClient,
+      persister,
+      maxAge: PERSIST_MAX_AGE_MS,
+      buster: PERSIST_BUSTER,
+      dehydrateOptions: {
+        shouldDehydrateQuery: (q) => q.state.status === 'success' && shouldPersistQuery(q),
+      },
+    });
+  } catch {
+    /* persistence is best-effort — never break boot */
+  }
+})();
 
 const App = () => (
   <ErrorBoundary>
