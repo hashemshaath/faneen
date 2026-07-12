@@ -12,6 +12,7 @@ import {
   getContractForOpportunity,
 } from './services';
 import { getActiveSampleForBid } from '../samples/services';
+import { notifyContractConvertedBothParties } from './notifyContractConverted';
 
 interface Props {
   opportunityId: string;
@@ -71,9 +72,13 @@ export const OpportunityContractSection: React.FC<Props> = ({
       if (!awardedBidId) throw new Error('no_awarded_bid');
       return convertAwardedBidToContract(opportunityId, awardedBidId);
     },
-    onSuccess: () => {
+    onSuccess: (contractId) => {
       toast.success('تم إنشاء عقد مبدئي');
       qc.invalidateQueries({ queryKey: ['opportunity-contract', opportunityId] });
+      // Best-effort — fan out in-app notifications to both parties.
+      if (typeof contractId === 'string') {
+        void notifyContractConvertedBothParties(opportunityId, contractId);
+      }
     },
     onError: (e: unknown) => {
       toast.error(e instanceof Error ? e.message : 'تعذر إنشاء العقد');

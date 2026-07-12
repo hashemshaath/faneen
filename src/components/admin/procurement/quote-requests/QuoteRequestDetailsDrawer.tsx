@@ -17,6 +17,7 @@ import {
   QuoteStatusBadge,
   ProcurementTimelineCard,
 } from '@/components/admin/procurement/shared';
+import { RfqJourneySummary } from '@/modules/opportunities/admin';
 
 export interface QuoteRequestDrawerField {
   label: React.ReactNode;
@@ -126,6 +127,8 @@ export const QuoteRequestDetailsDrawer: React.FC<QuoteRequestDetailsDrawerProps>
         isRTL={isRTL}
         title={isRTL ? 'المسار' : 'Lifecycle'}
       />
+
+      <RfqJourneySummary opportunityId={id} />
 
       <Button asChild size="sm" variant="outline" className="h-9 rounded-xl gap-1.5 self-start">
         <Link to={href}>

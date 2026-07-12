@@ -54,6 +54,7 @@ export const DashboardAiCenter = lazyRetry(() => import("../pages/dashboard/Dash
 export const DashboardClients = lazyRetry(() => import("../pages/dashboard/DashboardClients"));
 export const DashboardBadge = lazyRetry(() => import("../pages/dashboard/DashboardBadge"));
 export const DashboardMyRequests = lazyRetry(() => import("../pages/dashboard/DashboardMyRequests"));
+export const DashboardNewRfq = lazyRetry(() => import("../pages/dashboard/DashboardNewRfq"));
 export const DashboardAccountDiagnostics = lazyRetry(() => import("../pages/dashboard/DashboardAccountDiagnostics"));
 export const ProviderJoin = lazyRetry(() => import("../pages/ProviderJoin"));
 export const ProviderJoinEdit = lazyRetry(() => import("../pages/ProviderJoinEdit"));

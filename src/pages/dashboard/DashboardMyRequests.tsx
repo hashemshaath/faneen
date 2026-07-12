@@ -577,7 +577,7 @@ const DashboardMyRequests: React.FC = () => {
                   <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
                 </Button>
                 <Button asChild size="sm" className="min-h-[40px] shadow-md shadow-primary/20">
-                  <Link to="/quote">
+                  <Link to="/dashboard/my-requests/new">
                     <Plus />
                     <span>{isRTL ? 'طلب جديد' : 'New request'}</span>
                   </Link>
@@ -823,7 +823,7 @@ const DashboardMyRequests: React.FC = () => {
                   </p>
                   {(quoteRequests?.length ?? 0) === 0 && (
                     <Button asChild className="min-h-[44px]">
-                      <Link to="/quote"><Plus /> {isRTL ? 'ابدأ فرصة جديدة' : 'Start a new opportunity'}</Link>
+                      <Link to="/dashboard/my-requests/new"><Plus /> {isRTL ? 'ابدأ فرصة جديدة' : 'Start a new opportunity'}</Link>
                     </Button>
                   )}
                 </CardContent>
