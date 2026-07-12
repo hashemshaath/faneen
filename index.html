@@ -36,10 +36,11 @@
     <meta name="msapplication-TileColor" content="#0E9E6F" />
     <meta name="msapplication-TileImage" content="/icons-192.png" />
 
-    <!-- hreflang for bilingual support -->
-    <link rel="alternate" hreflang="ar" href="https://qitaat.com" />
-    <link rel="alternate" hreflang="en" href="https://qitaat.com" />
-    <link rel="alternate" hreflang="x-default" href="https://qitaat.com" />
+    <!-- hreflang: Arabic is the only rendered language today, so only the
+         ar + x-default pair is advertised. The previous en tag pointed at
+         the same URL as ar, which Google flags as a self-referring loop. -->
+    <link rel="alternate" hreflang="ar" href="https://qitaat.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://qitaat.com/" />
 
     <!-- Sitemap Discovery -->
     <link rel="sitemap" type="application/xml" href="/sitemap.xml">
@@ -48,6 +49,18 @@
     <link rel="preconnect" href="https://hckpxwhjycmdflaneihd.supabase.co" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- P1.5 — LCP hero preload. Stable /public/hero/* path (same URL that
+         HeroV2's slide 1 renders), so the browser can start fetching the
+         hero WebP in parallel with the main JS/CSS bundles. imagesrcset
+         mirrors the responsive picture in HeroV2. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/hero/slide-1-1920.webp"
+      imagesrcset="/hero/slide-1-768.webp 768w, /hero/slide-1-1280.webp 1280w, /hero/slide-1-1920.webp 1920w"
+      imagesizes="100vw"
+      fetchpriority="high"
+    />
      <link rel="preload" as="style" crossorigin href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'" fetchpriority="high" />
      <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" /></noscript>
     <!-- LCP hero preload is now injected by the HeroSection module itself
@@ -279,11 +292,47 @@
     </a>
     <div id="root">
       <h1 class="sr-only">قِطاعات — مزودو الألمنيوم والحديد والخشب والزجاج في مكان واحد</h1>
+      <!-- P1.5 — Crawlable static content inside #root.
+           Non-JS crawlers (Bingbot, PerplexityBot, GPTBot, ClaudeBot,
+           social preview scrapers) index this before React hydrates.
+           React's createRoot() replaces the entire #root subtree on
+           first commit, so there is no hydration-mismatch flash for
+           JS-capable visitors — the swap happens in one paint. -->
+      <section class="sr-only" aria-label="عن قِطاعات">
+        <h1>قِطاعات — منصة التعاقد الرقمي للصناعات الخفيفة</h1>
+        <p>
+          قِطاعات هي منصة سعودية متكاملة تجمع مزودي خدمات الصناعات الخفيفة
+          (ألمنيوم، حديد، زجاج، خشب، مطابخ، واجهات، أبواب ونوافذ) مع العملاء
+          والمقاولين. تدعم المنصة البحث عن مزودي الخدمة، وطلب عروض الأسعار،
+          وإنشاء عقود رقمية، وتوثيق أوامر العمل، ومتابعة المشاريع من الطلب
+          حتى التسليم — كل ذلك بواجهة عربية وتغطية لمدن المملكة العربية
+          السعودية.
+        </p>
+        <ul>
+          <li>ألمنيوم</li>
+          <li>حديد</li>
+          <li>زجاج</li>
+          <li>خشب</li>
+          <li>مطابخ</li>
+          <li>واجهات</li>
+          <li>أبواب ونوافذ</li>
+        </ul>
+        <h2>الأسئلة الشائعة</h2>
+        <dl>
+          <dt>ما هي قِطاعات؟</dt>
+          <dd>منصة تساعدك على الوصول إلى مزودي خدمات الصناعات الخفيفة وطلب عروض أسعار بطريقة منظمة.</dd>
+          <dt>هل قِطاعات تنفذ الأعمال؟</dt>
+          <dd>لا. قِطاعات تساعد على الربط بين العميل ومزودي الخدمة، ولا تنفذ الأعمال مباشرة.</dd>
+          <dt>كيف أطلب عرض سعر؟</dt>
+          <dd>اختر القطاع، أضف تفاصيل مشروعك، ثم أرسل الطلب للمزودين المناسبين.</dd>
+          <dt>هل يمكن للمزودين التسجيل؟</dt>
+          <dd>نعم. يمكن للورش والمصانع والمعارض وفرق التنفيذ إنشاء ملف لعرض خدماتهم.</dd>
+          <dt>هل المنصة مناسبة للمقاولين؟</dt>
+          <dd>نعم. تساعد المقاولين على الوصول إلى مزودي تنفيذ حسب القطاع والمدينة.</dd>
+        </dl>
+      </section>
       <!-- CLS-stable placeholder reserving the hero's viewport height.
-           Replaced by <HeroV2 /> when React commits. No visible text
-           or imagery — the previous static pre-hydration hero was
-           removed because it duplicated HeroV2 and flashed before
-           hydration. -->
+           Replaced by <HeroV2 /> when React commits. -->
       <div class="qh-pre" aria-hidden="true"></div>
     </div>
     <script type="module" src="/src/main.tsx"></script>

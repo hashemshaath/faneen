@@ -88,5 +88,9 @@ Allow: /
 User-agent: cohere-ai
 Allow: /
 
+# Common Crawl feeds most open-source LLM training corpora; explicit allow.
+User-agent: CCBot
+Allow: /
+
 Sitemap: https://qitaat.com/sitemap.xml
 Sitemap: https://qitaat.com/functions/v1/sitemap

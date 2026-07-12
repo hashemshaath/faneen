@@ -191,12 +191,15 @@ export const useCategories = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 60 * 1000,
+    // P1.1 — trust the cache; realtime invalidation (useDirectoryRealtimeInvalidation)
+    // + persist layer keep this fresh. Previously refetchOnMount:'always' +
+    // refetchOnWindowFocus:true silently defeated the cache on every /search visit.
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });
 
@@ -208,12 +211,12 @@ export const useCities = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });
 
@@ -257,12 +260,15 @@ export const useBusinesses = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 30 * 1000,
+    // P1.1 — 5 min staleTime + no refetchOnMount/focus. Realtime channel
+    // (useDirectoryRealtimeInvalidation) invalidates on directory_sync_events
+    // so freshness is event-driven rather than every-mount.
+    staleTime: 5 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     // Keep previous results visible while a refetch is in flight — prevents
     // the "flash of empty state" when filters/sort change.
     placeholderData: keepPreviousData,
