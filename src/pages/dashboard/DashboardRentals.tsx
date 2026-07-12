@@ -604,10 +604,11 @@ const BrandInfoDetails: React.FC<{
 /** Provider rentals dashboard — items + orders + extensions in one shell. */
 const DashboardRentals: React.FC = () => {
   const { user } = useAuth();
+  const workspace = useActiveWorkspace();
   const { isRTL } = useLanguage();
   const bi = useBi();
 
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const businessId = workspace.active_entity_id;
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<RentalItem[]>([]);
   const [orders, setOrders] = useState<RentalOrder[]>([]);
@@ -616,11 +617,10 @@ const DashboardRentals: React.FC = () => {
 
   useEffect(() => {
     if (!user?.id) return;
+    if (workspace.isLoading) return;
     (async () => {
-      const { data: biz } = await supabase
-        .from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle();
-      const bizId = biz?.id ?? null;
-      setBusinessId(bizId);
+      // D2.1 — resolve owning business via active workspace (owner + staff).
+      const bizId = businessId;
       const [cats, it, ord, tpl] = await Promise.all([
         RentalCategories.listCategories(),
         bizId ? RentalItems.listProviderItems(bizId) : Promise.resolve({ data: [], error: null }),
@@ -633,7 +633,7 @@ const DashboardRentals: React.FC = () => {
       setTermTemplates(indexByCategory(tpl.data ?? []));
       setLoading(false);
     })();
-  }, [user?.id]);
+  }, [user?.id, workspace.isLoading, businessId]);
 
   const { stats: orderStats } = useRentalListDerivations({ items: [], orders, listQuery: '', listStatus: 'all' });
   const { active: activeOrders, expiring: expiringOrders, overdue: overdueOrders } = orderStats;
