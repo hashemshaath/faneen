@@ -18,7 +18,7 @@ async function logEvent(
       quote_request_id: quoteRequestId,
       event_type: type,
       actor_user_id: auth?.user?.id ?? null,
-      metadata,
+      metadata: metadata as unknown as never,
     });
   } catch {
     /* best-effort */
