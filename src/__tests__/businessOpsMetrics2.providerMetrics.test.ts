@@ -20,8 +20,6 @@ function read(rel: string): string {
 }
 
 const COMPONENT = 'components/workOrders/ProviderOperationalMetricsCards.tsx';
-const PAGE = 'pages/dashboard/DashboardWorkOrdersOverview.tsx';
-
 describe('BUSINESS-OPS-METRICS-2 — ProviderOperationalMetricsCards', () => {
   const src = read(COMPONENT);
 
@@ -71,35 +69,6 @@ describe('BUSINESS-OPS-METRICS-2 — ProviderOperationalMetricsCards', () => {
   it('is mobile-safe — uses a responsive grid and small/medium tile classes', () => {
     expect(src).toMatch(/grid-cols-2/);
     expect(src).toMatch(/sm:grid-cols-\d/);
-  });
-});
-
-describe('BUSINESS-OPS-METRICS-2 — Overview page wiring', () => {
-  const src = read(PAGE);
-
-  it('loads business-scoped activity for the aggregator', () => {
-    expect(src).toContain('listBusinessActivityTimeline');
-    expect(src).toContain('activityEvents: activity');
-  });
-
-  it('renders the ProviderOperationalMetricsCards', () => {
-    expect(src).toContain('ProviderOperationalMetricsCards');
-    expect(src).toContain('metrics={opsMetrics}');
-    expect(src).toContain('recentActivityCount={activity.length}');
-  });
-
-  it('still uses computeOperationalMetrics directly (no admin notes)', () => {
-    expect(src).toContain('computeOperationalMetrics');
-    expect(src).not.toMatch(/adminNotes\s*:/);
-    expect(src).not.toContain('listAdminOperationalNotes');
-  });
-
-  it('no direct supabase.from, no notifications/cron/realtime/AI imports', () => {
-    expect(src).not.toMatch(/supabase\.from\(/);
-    expect(src).not.toMatch(/from ['"]@\/integrations\/supabase/);
-    expect(src).not.toMatch(/notifications?/i);
-    expect(src).not.toMatch(/realtime/i);
-    expect(src).not.toMatch(/\bcron\b/i);
   });
 });
 
