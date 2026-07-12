@@ -16940,7 +16940,7 @@ export type Database = {
         Row: {
           attachments: Json
           author_role: string
-          author_user_id: string
+          author_user_id: string | null
           bid_id: string | null
           body: string
           created_at: string
@@ -16950,7 +16950,7 @@ export type Database = {
         Insert: {
           attachments?: Json
           author_role: string
-          author_user_id: string
+          author_user_id?: string | null
           bid_id?: string | null
           body: string
           created_at?: string
@@ -16960,7 +16960,7 @@ export type Database = {
         Update: {
           attachments?: Json
           author_role?: string
-          author_user_id?: string
+          author_user_id?: string | null
           bid_id?: string | null
           body?: string
           created_at?: string
