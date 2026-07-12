@@ -47,7 +47,7 @@ export const quickCreateActions: ReadonlyArray<QuickCreateAction> = [
   {
     id: 'qc-quote',
     label: { ar: 'عرض سعر', en: 'New quote' },
-    url: '/dashboard/rfq',
+    url: '/dashboard/opportunities/assigned',
     icon: Receipt,
     audience: ['provider', 'admin'],
   },
@@ -61,7 +61,7 @@ export const quickCreateActions: ReadonlyArray<QuickCreateAction> = [
   {
     id: 'qc-rfq',
     label: { ar: 'طلب RFQ', en: 'New RFQ' },
-    url: '/dashboard/rfq/inbox',
+    url: '/dashboard/opportunities/assigned',
     icon: Inbox,
     audience: ['provider', 'admin'],
   },
