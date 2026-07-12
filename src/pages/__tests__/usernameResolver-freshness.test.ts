@@ -43,7 +43,12 @@ describe('username resolver routing', () => {
 
   it('normalizes the username before using it as a cache key', () => {
     expect(resolverSrc).toMatch(/normalizeUsername\(username\)/);
-    expect(resolverSrc).toMatch(/queryKey:\s*\['username-kind',\s*normalized\]/);
+    // PERF — the resolver now delegates to `useBusinessByUsername` directly
+    // (shared `['business', normalized]` cache key) instead of firing a
+    // separate `['username-kind', normalized]` lookup. This collapses the
+    // resolver → profile waterfall into a single query.
+    expect(resolverSrc).toMatch(/useBusinessByUsername\(/);
+    expect(resolverSrc).not.toMatch(/username-kind/);
   });
 });
 
