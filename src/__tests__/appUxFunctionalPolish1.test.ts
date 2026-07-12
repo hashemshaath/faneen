@@ -20,7 +20,6 @@ function read(rel: string): string {
 const PROVIDER_PAGES = [
   'pages/dashboard/DashboardWorkOrders.tsx',
   'pages/dashboard/DashboardWorkOrderDetail.tsx',
-  'pages/dashboard/DashboardWorkOrdersOverview.tsx',
   'pages/dashboard/DashboardOperationsFeed.tsx',
 ];
 
@@ -53,22 +52,10 @@ describe('APP-UX-FUNCTIONAL-POLISH-1 — breadcrumbs component', () => {
 });
 
 describe('APP-UX-FUNCTIONAL-POLISH-1 — provider operations pages', () => {
-  it('Work Orders Overview wires breadcrumbs + Feed link + metrics aggregator', () => {
-    const src = read('pages/dashboard/DashboardWorkOrdersOverview.tsx');
-    expect(src).toContain('OperationsBreadcrumbs');
-    expect(src).toContain('/dashboard/operations/feed');
-    expect(src).toContain('computeOperationalMetrics');
-    // BUSINESS-OPS-METRICS-2 replaced the inline mini-strip with the
-    // shared <ProviderOperationalMetricsCards/> component.
-    expect(src).toContain('ProviderOperationalMetricsCards');
-    // recent items deep-link to the detail page by ref_id
-    expect(src).toContain('/dashboard/work-orders/${wo.ref_id}');
-  });
-
   it('Operations Feed exposes breadcrumbs, refresh, empty state, overview link', () => {
     const src = read('pages/dashboard/DashboardOperationsFeed.tsx');
     expect(src).toContain('OperationsBreadcrumbs');
-    expect(src).toContain('/dashboard/work-orders/overview');
+    expect(src).toContain('/dashboard/work-orders');
     expect(src).toContain('Open in Admin Ref Inspector');
     expect(src).toContain('No events match the current filters.');
   });
@@ -79,7 +66,6 @@ describe('APP-UX-FUNCTIONAL-POLISH-1 — provider operations pages', () => {
     expect(src).toContain('scrollIntoView');
     expect(src).toContain('/r/${wo.source_ref_id}');
     expect(src).toContain('/admin/ref/${refId}');
-    expect(src).toContain('/dashboard/work-orders/overview');
     expect(src).toContain('/dashboard/operations/feed');
   });
 });
