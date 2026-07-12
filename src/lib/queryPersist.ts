@@ -46,10 +46,15 @@ export const PUBLIC_PERSIST_FIRST_SEGMENTS: ReadonlySet<string> = new Set([
  * even if its first segment is allowlisted. Belt-and-braces protection.
  */
 const DENY_ANY_SEGMENT_SUBSTRINGS: ReadonlyArray<string> = [
-  'auth', 'user', 'me:', 'admin', 'dashboard', 'membership',
+  'auth', 'admin', 'dashboard', 'membership',
   'contract', 'workspace', 'staff', 'invitation', 'notification',
   'credit', 'billing', 'quote-request', 'rfq', 'lead',
-  'edit', 'draft', 'private', 'internal', 'inbox', 'my-',
+  'draft', 'private', 'internal', 'inbox',
+];
+
+/** Deny if a segment STARTS WITH one of these tokens. */
+const DENY_SEGMENT_PREFIXES: ReadonlyArray<string> = [
+  'my-', 'me-', 'user-', 'edit-',
 ];
 
 const segmentToString = (seg: unknown): string =>
@@ -63,6 +68,8 @@ export const shouldPersistQuery = (q: Query): boolean => {
   for (const seg of key) {
     const s = segmentToString(seg).toLowerCase();
     if (DENY_ANY_SEGMENT_SUBSTRINGS.some((d) => s.includes(d))) return false;
+    if (DENY_SEGMENT_PREFIXES.some((d) => s.startsWith(d))) return false;
+    if (s === 'me' || s === 'user') return false;
   }
   return true;
 };
