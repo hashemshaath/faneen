@@ -5,7 +5,9 @@
  * and via HomeCategoryRows further down.
  */
 import { Link } from 'react-router-dom';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { buildSearchTaxonomyContext } from '@/modules/taxonomy/search-integration';
 import {
   ArrowLeft, ArrowRight,
   Square, Layers, Hammer, Sparkles, TreePine, ChefHat,
@@ -90,6 +92,32 @@ const HomeSectorGrid = () => {
   // until an admin actively edits a tile.
   const { tiles } = useHomeSectorTiles(SECTORS);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
+  const queryClient = useQueryClient();
+  // P1-sector — sector tiles link to /search?category=<slug>. That page's
+  // grid stays empty until `useSearchTaxonomyContext` resolves the slug
+  // → business-id set. Prefetch both the Search route chunk and the
+  // taxonomy-context query on hover / touch / focus so the actual click
+  // lands on already-warmed data. Idempotent: React Query dedupes.
+  const prefetchedRef = useRef<Set<string>>(new Set());
+  const prefetchSector = useCallback(
+    (slug: string) => {
+      if (prefetchedRef.current.has(slug)) return;
+      prefetchedRef.current.add(slug);
+      // Warm the Search route chunk.
+      import('@/pages/SearchV3').catch(() => {});
+      // Warm the taxonomy-context query keyed exactly the way
+      // useSearchTaxonomyContext keys it on the Search page.
+      queryClient
+        .prefetchQuery({
+          queryKey: ['search-taxonomy-context', '', '', slug, ''],
+          queryFn: () =>
+            buildSearchTaxonomyContext({ q: '', sector: null, category: slug, service: null }),
+          staleTime: 5 * 60 * 1000,
+        })
+        .catch(() => {});
+    },
+    [queryClient],
+  );
   // Ref callback: if image is already cached by the browser, the `load`
   // event may not fire — flip the loaded flag synchronously so we avoid
   // a one-frame skeleton flash on repeat visits / back-forward cache.
@@ -114,6 +142,9 @@ const HomeSectorGrid = () => {
               key={s.slug}
               to={homeCategoryHref(s.slug)}
               aria-label={bi(s.titleAr, s.titleEn)}
+              onMouseEnter={() => prefetchSector(s.slug)}
+              onFocus={() => prefetchSector(s.slug)}
+              onTouchStart={() => prefetchSector(s.slug)}
               className="group relative overflow-hidden rounded-[clamp(0.5rem,1vw,1rem)] border border-border/60 bg-card hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-muted">
