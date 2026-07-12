@@ -43,11 +43,12 @@ describe('username resolver routing', () => {
 
   it('normalizes the username before using it as a cache key', () => {
     expect(resolverSrc).toMatch(/normalizeUsername\(username\)/);
-    // PERF — the resolver now delegates to `useBusinessByUsername` directly
-    // (shared `['business', normalized]` cache key) instead of firing a
-    // separate `['username-kind', normalized]` lookup. This collapses the
-    // resolver → profile waterfall into a single query.
-    expect(resolverSrc).toMatch(/useBusinessByUsername\(/);
+    // PROFILE-AGGREGATE — the resolver now calls the aggregate RPC hook
+    // (`usePublicBusinessProfile`) which returns business + branches +
+    // services + certifications + awards + offers count in one round-trip
+    // and seeds every per-collection cache. This removes the post-chunk
+    // fetch waterfall that made sections pop in after the header.
+    expect(resolverSrc).toMatch(/usePublicBusinessProfile\(/);
     expect(resolverSrc).not.toMatch(/username-kind/);
   });
 });
