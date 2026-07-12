@@ -34,6 +34,7 @@ import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import { ClientBidsSection } from '@/modules/opportunities/bids';
 import { OpportunityContractSection } from '@/modules/opportunities/contracts';
 import { OpportunityTimeline } from '@/modules/opportunities/timeline';
+import { SampleTrackerClient } from '@/modules/opportunities/samples';
 
 interface QuoteRow {
   id: string;
@@ -489,6 +490,9 @@ const QuoteRequestDetails: React.FC = () => {
 
         {/* OPPORTUNITIES PHASE 5 — bids on this opportunity (client view) */}
         {quoteUuid && <ClientBidsSection opportunityId={quoteUuid} canAward />}
+
+        {/* R3 — sample track between award and contract */}
+        {quoteUuid && <SampleTrackerClient opportunityId={quoteUuid} />}
 
         {/* OPPORTUNITIES PHASE 7 — contract conversion from awarded bid */}
         {quoteUuid && (

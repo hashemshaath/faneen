@@ -33,8 +33,9 @@ import {
 
 interface Props {
   opportunityId: string;
-  awardedBidId: string | null;
-  clientUserId: string | null;
+  /** Optional overrides — otherwise discovered from the RFQ row. */
+  awardedBidId?: string | null;
+  clientUserId?: string | null;
 }
 
 const STAGE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -90,16 +91,31 @@ function SampleThumbs({ photos }: { photos: RfqSamplePhoto[] }) {
 
 export const SampleTrackerClient: React.FC<Props> = ({
   opportunityId,
-  awardedBidId,
-  clientUserId,
+  awardedBidId: awardedBidIdProp,
+  clientUserId: clientUserIdProp,
 }) => {
   const qc = useQueryClient();
   const [decisionNotes, setDecisionNotes] = useState('');
   const [openDecision, setOpenDecision] = useState(false);
 
+  const { data: rfq } = useQuery({
+    queryKey: ['rfq-context-for-samples', opportunityId],
+    enabled: !!opportunityId && (!awardedBidIdProp || !clientUserIdProp),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('quote_requests')
+        .select('user_id, awarded_bid_id, award_status')
+        .eq('id', opportunityId)
+        .maybeSingle();
+      return data;
+    },
+  });
+  const awardedBidId = awardedBidIdProp ?? rfq?.awarded_bid_id ?? null;
+  const clientUserId = clientUserIdProp ?? rfq?.user_id ?? null;
+
   const { data: samples, isLoading } = useQuery({
     queryKey: ['rfq-samples', opportunityId],
-    enabled: !!opportunityId,
+    enabled: !!opportunityId && !!awardedBidId,
     queryFn: () => listSamplesForOpportunity(opportunityId),
   });
 
