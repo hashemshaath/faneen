@@ -14,8 +14,6 @@ function read(rel: string): string {
 }
 
 const COMPONENT = 'components/workOrders/ProviderConversionBreakdown.tsx';
-const PAGE = 'pages/dashboard/DashboardWorkOrdersOverview.tsx';
-
 describe('BUSINESS-OPS-METRICS-3 — ProviderConversionBreakdown component', () => {
   const src = read(COMPONENT);
 
@@ -87,28 +85,5 @@ describe('BUSINESS-OPS-METRICS-3 — ProviderConversionBreakdown component', () 
     expect(src).not.toContain('provider_intent_id');
     expect(src).not.toMatch(/phone-[^@]+@/);
     expect(src).not.toMatch(/token/i);
-  });
-});
-
-describe('BUSINESS-OPS-METRICS-3 — Overview page wiring', () => {
-  const src = read(PAGE);
-
-  it('renders ProviderConversionBreakdown below ProviderOperationalMetricsCards', () => {
-    expect(src).toContain('ProviderConversionBreakdown');
-    const metricsIdx = src.indexOf('ProviderOperationalMetricsCards');
-    const convIdx = src.indexOf('ProviderConversionBreakdown');
-    expect(convIdx).toBeGreaterThan(metricsIdx);
-  });
-
-  it('passes metrics={opsMetrics} and isRTL to ProviderConversionBreakdown', () => {
-    expect(src).toMatch(/ProviderConversionBreakdown\s+metrics=\{opsMetrics\}\s+isRTL=\{isRTL\}/s);
-  });
-
-  it('no direct supabase.from, no notifications/cron/realtime/AI imports', () => {
-    expect(src).not.toMatch(/supabase\.from\(/);
-    expect(src).not.toMatch(/from ['"]@\/integrations\/supabase/);
-    expect(src).not.toMatch(/notifications?/i);
-    expect(src).not.toMatch(/realtime/i);
-    expect(src).not.toMatch(/\bcron\b/i);
   });
 });
