@@ -96,10 +96,14 @@ const DashboardNewRfq: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('client_sites')
-        .select('id, name, city')
+        .select('id, site_name, city_name')
         .eq('owner_user_id', user!.id)
         .limit(50);
-      return (data as Array<{ id: string; name: string; city: string | null }>) ?? [];
+      return (data ?? []) as unknown as Array<{
+        id: string;
+        site_name: string | null;
+        city_name: string | null;
+      }>;
     },
   });
 
@@ -168,18 +172,16 @@ const DashboardNewRfq: React.FC = () => {
       if (result.quote_request_id && attachments.length && user?.id) {
         for (const a of attachments) {
           try {
-            const uploaded = await uploadQuoteRequestFile(
-              result.quote_request_id,
-              user.id,
-              a.file,
-            );
+            const safeName = a.file.name.replace(/[^\w.\-]+/g, '_');
+            const path = `${user.id}/${result.quote_request_id}/${Date.now()}_${safeName}`;
+            const uploaded = await uploadQuoteRequestFile({ path, file: a.file });
             await createQuoteRequestFileRecord({
               quote_request_id: result.quote_request_id,
-              storage_path: uploaded.storage_path,
+              user_id: user.id,
               file_name: a.file.name,
+              file_path: uploaded.path,
               file_size: a.file.size,
-              mime_type: a.file.type,
-              uploaded_by: user.id,
+              file_type: a.file.type || null,
             });
           } catch { /* best-effort */ }
         }
@@ -348,11 +350,23 @@ const DashboardNewRfq: React.FC = () => {
                 <div className="space-y-1">
                   <Label>المواد / الماركات المفضّلة</Label>
                   <ApprovedBrandPicker
+                    mode="multi"
                     value={preferredBrandIds}
                     onChange={setPreferredBrandIds}
-                    mode={brandPreferenceMode}
-                    onModeChange={setBrandPreferenceMode}
                   />
+                  <Select
+                    value={brandPreferenceMode}
+                    onValueChange={(v) => setBrandPreferenceMode(v as BrandPreferenceMode)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="نمط تفضيل الماركات" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="exact">حصريًا هذه الماركات</SelectItem>
+                      <SelectItem value="preferred">مفضّلة</SelectItem>
+                      <SelectItem value="flexible">مرن</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Textarea
                     rows={2}
                     placeholder="ملاحظات إضافية حول الماركات (اختياري)"
