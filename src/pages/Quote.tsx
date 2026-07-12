@@ -362,16 +362,28 @@ const Quote: React.FC = () => {
       e.sector = bi('اختر القطاع الأقرب لطلبك للمتابعة.', 'Pick the closest sector to continue.');
     }
     if (s === 2) {
-      if (!form.city.trim()) e.city = bi('أضف المدينة حتى نتمكن من توجيه الطلب بشكل أفضل.', 'Add the city so we can route your request.');
+      // Q3-UI — either the user picked a DB city, or used the escape-hatch
+      // free text with noLocationSelected=true.
+      const hasStructuredCity = !!form.cityId;
+      const hasFreeCity = form.noLocationSelected && form.city.trim().length >= 2;
+      if (!hasStructuredCity && !hasFreeCity) {
+        e.city = bi(
+          'اختر المنطقة والمدينة من القائمة، أو استخدم "مدينتي غير موجودة".',
+          'Select region and city, or use "my city isn\'t listed".',
+        );
+      }
       if (!form.serviceLocation) e.serviceLocation = bi('اختر مكان تنفيذ الخدمة.', 'Choose where the service will be delivered.');
     }
-    if (s === 3 && form.description.trim().length < 10) {
-      e.description = bi('اكتب وصفًا مختصرًا للمشروع ليساعد المزود على فهم احتياجك.', 'Add a short description so providers understand your need.');
+    if (s === 3) {
+      if (form.description.trim().length < 10) {
+        e.description = bi('اكتب وصفًا مختصرًا للمشروع ليساعد المزود على فهم احتياجك.', 'Add a short description so providers understand your need.');
+      }
+      // Q3-UI — timeline merged into Details.
+      if (!form.timeline) {
+        e.timeline = bi('اختر الموعد المناسب للتنفيذ.', 'Choose your preferred timeline.');
+      }
     }
-    if (s === 4 && !form.timeline) {
-      e.timeline = bi('اختر الموعد المناسب للتنفيذ.', 'Choose your preferred timeline.');
-    }
-    if (s === 5) {
+    if (s === 4) {
       if (!form.name.trim()) e.name = bi('أضف اسمك للمتابعة.', 'Add your name to continue.');
       if (!SAUDI_PHONE.test(form.phone.trim())) e.phone = bi('أضف رقم جوال صحيح للتواصل حول الطلب.', 'Add a valid mobile number.');
       if (!form.clientType) e.clientType = bi('اختر نوع العميل.', 'Choose your client type.');
