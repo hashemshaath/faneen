@@ -4,7 +4,7 @@ import BusinessProfile from './BusinessProfile';
 import PublicUserProfile from './PublicUserProfile';
 import NotFound from './NotFound';
 import { isReservedUsername, normalizeUsername } from '@/lib/business/profileHref';
-import { useBusinessByUsername } from '@/components/business-profile/business-profile.data';
+import { usePublicBusinessProfile } from '@/lib/publicBusinessProfile';
 
 /**
  * Resolves `/:username` to either a business profile or a public user profile.
@@ -14,14 +14,16 @@ export const UsernameResolver: React.FC = () => {
   const { username = '' } = useParams<{ username: string }>();
   const normalized = normalizeUsername(username);
 
-  // PERF — collapse the 2-stage waterfall (kind lookup → full row fetch)
-  // into a single query. `useBusinessByUsername` selects the full public
-  // business row; if it returns null we fall through to PublicUserProfile
-  // (the /:username handle belongs to a user, not a business). This
-  // removes an entire round-trip from provider profile opens.
-  const { data: businessRow, isLoading } = useBusinessByUsername(
+  // PROFILE-AGGREGATE — the resolver now fetches the WHOLE public profile
+  // (business + branches + services + certifications + awards + offers count)
+  // in a single RPC round-trip, and seeds every per-collection cache used
+  // by BusinessProfile.tsx. This removes the post-chunk fetch waterfall
+  // that made sections pop in after the header. Falls through to the
+  // public user profile when no business matches the handle.
+  const { data: aggregate, isLoading } = usePublicBusinessProfile(
     isReservedUsername(normalized) ? '' : normalized,
   );
+  const businessRow = aggregate?.business ?? null;
 
   // Reserved top-level slugs (admin, dashboard, quote, ...) must never
   // resolve as a username — happens when the URL case differs from the
