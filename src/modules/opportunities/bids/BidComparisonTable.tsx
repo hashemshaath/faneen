@@ -21,8 +21,9 @@ interface Props {
   awardedBidId?: string | null;
   onShortlistToggle?: (bid: OpportunityBidRow, next: boolean) => void;
   onAward?: (bid: OpportunityBidRow) => void;
+  onRequestRevision?: (bid: OpportunityBidRow) => void;
   pendingBidId?: string | null;
-  pendingKind?: 'shortlist' | 'award' | null;
+  pendingKind?: 'shortlist' | 'award' | 'revision' | null;
 }
 
 function fmtDate(iso: string | null | undefined): string {
@@ -74,7 +75,8 @@ const STATUS_LABEL_AR: Record<string, string> = {
   submitted: 'مقدَّم',
   under_review: 'قيد المراجعة',
   shortlisted: 'في القائمة القصيرة',
-  revised: 'معدَّل',
+  revised: 'نسخة سابقة',
+  revision_requested: 'طلب تعديل',
   awarded: 'الفائز',
   rejected: 'مرفوض',
   withdrawn: 'مسحوب',
@@ -86,6 +88,7 @@ export const BidComparisonTable: React.FC<Props> = ({
   awardedBidId = null,
   onShortlistToggle,
   onAward,
+  onRequestRevision,
   pendingBidId = null,
   pendingKind = null,
 }) => {
