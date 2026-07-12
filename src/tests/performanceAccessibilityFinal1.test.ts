@@ -11,12 +11,21 @@ const root = process.cwd();
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
 
 const APP = read('src/App.tsx');
+// STALE-ASSERTION UPDATE: page-level lazyRetry declarations were moved out of
+// App.tsx into src/routes/{publicRoutes,dashboardRoutes,adminRoutes}.ts to
+// keep the App shell small. App.tsx now re-exports them via a barrel, so we
+// verify the lazyRetry declarations against the route files instead.
+const ROUTES = [
+  read('src/routes/publicRoutes.ts'),
+  read('src/routes/dashboardRoutes.ts'),
+  read('src/routes/adminRoutes.ts'),
+].join('\n');
 const PICKER = read('src/components/brands/ApprovedBrandPicker.tsx');
 const BOQ = read('src/components/workOrders/WorkOrderBoqSection.tsx');
 const QUOTE = read('src/pages/Quote.tsx');
 
 describe('PERFORMANCE-ACCESSIBILITY-FINAL-1', () => {
-  it('major heavy pages registered via lazyRetry in App.tsx', () => {
+  it('major heavy pages registered via lazyRetry in route files', () => {
     const required = [
       'pages/Index',
       'pages/Search',
@@ -27,14 +36,18 @@ describe('PERFORMANCE-ACCESSIBILITY-FINAL-1', () => {
       'pages/dashboard/ProductionBoardPage',
       'pages/dashboard/DashboardProcurement',
       'pages/dashboard/DashboardWorkOrders',
-      'pages/dashboard/DashboardContracts',
+      // STALE-ASSERTION UPDATE: legacy DashboardContracts was consolidated
+      // into the DashboardContractsHub route (nav-consolidation group 11).
+      'pages/dashboard/DashboardContractsHub',
       'pages/admin/AdminBrands',
-      'pages/admin/AdminProviderReview',
+      // STALE-ASSERTION UPDATE: AdminProviderReview was consolidated into
+      // AdminProviderReviewHub (tabbed hub) in admin UX reconsolidation.
+      'pages/admin/AdminProviderReviewHub',
       'pages/admin/AdminHelpCenter',
     ];
     for (const p of required) {
-      const re = new RegExp(`lazyRetry\\(\\(\\)\\s*=>\\s*import\\(["']\\./${p}["']\\)\\)`);
-      expect(APP, `missing lazyRetry for ${p}`).toMatch(re);
+      const re = new RegExp(`lazyRetry\\(\\(\\)\\s*=>\\s*import\\(["']\\.\\./${p}["']\\)\\)`);
+      expect(ROUTES, `missing lazyRetry for ${p}`).toMatch(re);
     }
   });
 
