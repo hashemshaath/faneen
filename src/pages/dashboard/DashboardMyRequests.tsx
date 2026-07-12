@@ -805,6 +805,44 @@ const DashboardMyRequests: React.FC = () => {
 
           {/* === QUOTES TAB === */}
           <TabsContent value="quotes" className="space-y-3 mt-0">
+            {/* R5.3 — Journey-state chip strip */}
+            {(quoteRequests?.length ?? 0) > 0 && (
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Activity className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
+                  {JOURNEY_CHIPS.map((k) => {
+                    const active = journeyFilter === k;
+                    const label = k === 'all'
+                      ? (isRTL ? 'الكل' : 'All')
+                      : RFQ_JOURNEY_STATE_LABEL_AR[k as RfqJourneyState];
+                    const count = journeyCounts.get(k) ?? 0;
+                    if (k !== 'all' && count === 0 && !active) return null;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => setJourneyFilter(k)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors inline-flex items-center gap-1.5 ${
+                          active
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-card hover:bg-muted/60 border-border text-muted-foreground'
+                        }`}
+                        aria-pressed={active}
+                      >
+                        <span>{label}</span>
+                        <span className={`tech-content text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {journeyFilter !== 'all' && (
+                  <p className="text-[11px] text-muted-foreground ps-6">
+                    {isRTL ? 'تصفية النتائج المعروضة على الصفحة الحالية.' : 'Filtering results shown on the current page.'}
+                  </p>
+                )}
+              </div>
+            )}
+
             {topSectors.length > 1 && (
               <div className="flex flex-wrap items-center gap-1.5 text-xs">
                 <Tag className="h-3.5 w-3.5 text-muted-foreground me-1" aria-hidden />
@@ -881,6 +919,7 @@ const DashboardMyRequests: React.FC = () => {
                 density={density}
                 pinned={pins.has(q.id)}
                 onTogglePin={togglePin}
+                journeyState={journeyStates?.get(q.id) ?? null}
               />
             ))}
           </TabsContent>
