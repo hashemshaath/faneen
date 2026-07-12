@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { dispatchCustomerProjectNotification } from "@/modules/operations/customerCommunications/dispatcher";
 
 /**
  * BUSINESS-WORKFLOW-6 — Forward-only pipeline stage transition.
@@ -62,5 +63,27 @@ export async function transitionWorkOrderStage(
   );
   if (error) return { data: null, error };
   const payload = (data ?? null) as unknown as TransitionWorkOrderStageResult | null;
+  // P2.2 — When a work order transitions to `completed`, fire the
+  // customer-facing "project.completed" notification via the dispatcher.
+  // Best-effort: never disturb the transition result.
+  if (payload?.to === 'completed') {
+    try {
+      const { data: wo } = await supabase
+        .from('work_orders')
+        .select('business_id')
+        .eq('id', input.workOrderId)
+        .maybeSingle();
+      const businessId = (wo as { business_id?: string | null } | null)?.business_id ?? null;
+      if (businessId) {
+        void dispatchCustomerProjectNotification({
+          eventType: 'project.completed',
+          businessId,
+          workOrderId: input.workOrderId,
+          customerEmail: null,
+          idempotencyKey: `wo-project-completed-${input.workOrderId}`,
+        }).catch(() => undefined);
+      }
+    } catch { /* best-effort */ }
+  }
   return { data: payload, error: null };
 }
