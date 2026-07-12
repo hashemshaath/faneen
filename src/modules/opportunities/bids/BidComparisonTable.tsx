@@ -100,12 +100,12 @@ export const BidComparisonTable: React.FC<Props> = ({
     (async () => {
       const { data } = await supabase
         .from('businesses')
-        .select('id, name, name_ar')
+        .select('id, name_ar, name_en')
         .in('id', ids);
       if (cancelled || !data) return;
       const map: Record<string, string> = {};
-      for (const row of data as Array<{ id: string; name?: string | null; name_ar?: string | null }>) {
-        map[row.id] = row.name_ar || row.name || '';
+      for (const row of data as Array<{ id: string; name_ar?: string | null; name_en?: string | null }>) {
+        map[row.id] = row.name_ar || row.name_en || '';
       }
       setProviderNames(map);
     })();
