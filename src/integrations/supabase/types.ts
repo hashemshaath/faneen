@@ -22780,6 +22780,7 @@ export type Database = {
         Args: { p_business_id: string }
         Returns: Json
       }
+      get_business_public_profile: { Args: { p_slug: string }; Returns: Json }
       get_business_sensitive_fields: {
         Args: { p_business_id: string }
         Returns: {

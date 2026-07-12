@@ -44,6 +44,13 @@ export const PUBLIC_PERSIST_FIRST_SEGMENTS: ReadonlySet<string> = new Set([
   'saudi-regions-public',
   'cities-by-region-public',
   'districts-by-city-public',
+  // PROFILE-AGGREGATE — public /{username} profile: one RPC that returns
+  // {business, branches, services, certifications, awards, offers_count}.
+  // Explicit `public-*` prefix so it cannot collide with dashboard keys
+  // (which were stripped from this allowlist in Pass-S).
+  'public-business-profile',
+  'public-business-reviews',
+  'public-business-projects',
 ]);
 
 /**
