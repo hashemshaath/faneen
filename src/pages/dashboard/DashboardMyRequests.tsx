@@ -1170,7 +1170,8 @@ const QuoteRequestRowCardImpl: React.FC<{
   density?: Density;
   pinned?: boolean;
   onTogglePin?: (id: string) => void;
-}> = ({ q, fileCount, isRTL, density = 'comfortable', pinned = false, onTogglePin }) => {
+  journeyState?: RfqJourneyState | null;
+}> = ({ q, fileCount, isRTL, density = 'comfortable', pinned = false, onTogglePin, journeyState }) => {
   const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
   const compact = density === 'compact';
   const createdAbs = new Date(q.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
@@ -1250,6 +1251,7 @@ const QuoteRequestRowCardImpl: React.FC<{
               <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${tone}`}>
                 {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
               </span>
+              {journeyState && <JourneyStateBadge state={journeyState} />}
               {isStale && (
                 <Tooltip>
                   <TooltipTrigger asChild>
