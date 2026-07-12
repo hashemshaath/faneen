@@ -403,6 +403,10 @@ const DashboardMyRequests: React.FC = () => {
       if (pinnedOnly && !pins.has(q.id)) return false;
       if (statusFilter !== 'all' && q.status !== statusFilter) return false;
       if (sectorFilter !== 'all' && q.sector !== sectorFilter) return false;
+      if (journeyFilter !== 'all') {
+        const st = journeyStates?.get(q.id);
+        if (st !== journeyFilter) return false;
+      }
       if (!term) return true;
       return (
         (q.ref_id ?? '').toLowerCase().includes(term) ||
@@ -411,7 +415,30 @@ const DashboardMyRequests: React.FC = () => {
         (q.city ?? '').toLowerCase().includes(term)
       );
     });
-  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins, sectorFilter]);
+  }, [quoteRequests, statusFilter, deferredSearch, pinnedOnly, pins, sectorFilter, journeyFilter, journeyStates]);
+
+  // Journey chip counts computed against the loaded page (server pagination note).
+  const journeyCounts = useMemo(() => {
+    const m = new Map<RfqJourneyState | 'all', number>();
+    m.set('all', quoteRequests?.length ?? 0);
+    (quoteRequests ?? []).forEach((q) => {
+      const st = journeyStates?.get(q.id);
+      if (!st) return;
+      m.set(st, (m.get(st) ?? 0) + 1);
+    });
+    return m;
+  }, [quoteRequests, journeyStates]);
+
+  const JOURNEY_CHIPS: (RfqJourneyState | 'all')[] = [
+    'all',
+    'awaiting_bids',
+    'bids_in',
+    'shortlisted',
+    'revision_requested',
+    'awarded',
+    'sample_pending',
+    'converted',
+  ];
 
   // Top sectors (for quick-filter chips on the quotes tab)
   const topSectors = useMemo(() => {
