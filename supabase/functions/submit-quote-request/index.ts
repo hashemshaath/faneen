@@ -329,11 +329,24 @@ Deno.serve(async (req) => {
   }
 
   // Optionally trigger automatic matching right after submission.
+  // Q4 — capture the RPC-backed match summary so the client can show
+  // honest success copy (matched N vs zero-coverage vs manual routing).
+  let matchSummary: {
+    matched_count: number;
+    match_source: string;
+  } = { matched_count: 0, match_source: 'unknown' };
   if (AUTO_MATCH_ON_SUBMISSION) {
     try {
-      await admin.functions.invoke('match-quote-request', {
+      const { data: mData } = await admin.functions.invoke('match-quote-request', {
         body: { quote_request_id: inserted.id, limit: 10 },
       });
+      if (mData && typeof mData === 'object') {
+        const d = mData as { matched_count?: number; match_source?: string };
+        matchSummary = {
+          matched_count: Number(d.matched_count ?? 0),
+          match_source: String(d.match_source ?? 'unknown'),
+        };
+      }
     } catch (e) {
       console.warn('auto-match invoke failed (non-fatal)', e);
     }
