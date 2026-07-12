@@ -17,7 +17,7 @@ import {
   CreditCard, Megaphone, FolderOpen, Layers, MessageSquare, Users,
   Building2, Bell, Activity, Crown, BarChart3, MapPin, User,
   ClipboardList, Sparkles, Award, Truck, Package, Inbox, Settings2,
-  CalendarClock, ShieldCheck, Mail,
+  CalendarClock, ShieldCheck, Mail, Bookmark,
 } from 'lucide-react';
 import { ADMIN_NAV_GROUPS } from '@/modules/admin-shell';
 import {
@@ -55,6 +55,7 @@ export const providerNavGroups: DashboardNavGroup[] = [
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/dashboard/private-sectors', icon: Layers },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
       { label: UNIFIED_ITEM_LABELS.visibility, url: '/dashboard/badge', icon: ShieldCheck },
+      { label: { ar: 'معرض الأعمال', en: 'Showcase' }, url: '/dashboard/showcase', icon: Image },
     ],
   },
   {
@@ -67,6 +68,7 @@ export const providerNavGroups: DashboardNavGroup[] = [
       { label: UNIFIED_ITEM_LABELS.offers, url: '/dashboard/rfq', icon: FileText },
       { label: UNIFIED_ITEM_LABELS.clients, url: '/dashboard/clients', icon: Users },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
+      { label: { ar: 'استفسارات الفروع', en: 'Branch Inquiries' }, url: '/dashboard/inquiries', icon: Inbox },
     ],
   },
   {
@@ -175,6 +177,7 @@ export const userNavGroups: DashboardNavGroup[] = [
       { label: UNIFIED_ITEM_LABELS.notifications, url: '/dashboard/notifications', icon: Bell },
       { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
+      { label: { ar: 'المحفوظات', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
     ],
   },
 ];
