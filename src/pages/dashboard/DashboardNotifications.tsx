@@ -24,7 +24,7 @@ import {
 import { formatDistanceToNow, format, isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
+import { getNotificationMeta, isUrgentNotification, typeFilterLabels, notificationMatchesTypeFilter } from '@/components/notifications/notification-types';
 import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { PageHeader } from '@/components/shared';
@@ -198,7 +198,7 @@ const DashboardNotifications = () => {
 
   const filtered = useMemo(() => {
     return notifications.filter((n: any) => {
-      if (typeFilter !== 'all' && n.notification_type !== typeFilter) return false;
+      if (!notificationMatchesTypeFilter(n, typeFilter)) return false;
       if (readFilter === 'unread' && n.is_read) return false;
       if (readFilter === 'read' && !n.is_read) return false;
       if (searchQuery.trim()) {
