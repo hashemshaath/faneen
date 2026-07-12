@@ -273,7 +273,16 @@ export const ProviderBidSection: React.FC<Props> = ({
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
-        <div className="text-base font-semibold">{OPPORTUNITY_LABELS.submitBid.ar}</div>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="text-base font-semibold">
+            {revising ? 'تقديم عرض معدّل' : OPPORTUNITY_LABELS.submitBid.ar}
+          </div>
+          {revising && (
+            <Badge className="bg-amber-500 hover:bg-amber-500 text-white">
+              تعديل عرض سابق
+            </Badge>
+          )}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <Label>السعر (ريال)</Label>
@@ -446,11 +455,23 @@ export const ProviderBidSection: React.FC<Props> = ({
           </div>
         </div>
         <div className="flex items-center gap-2 pt-2">
-          <Button onClick={() => submitMut.mutate()} disabled={submitMut.isPending} className="min-h-[44px]">
-            {submitMut.isPending ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : <Send className="h-4 w-4 me-1" />}
-            تقديم
+          <Button
+            onClick={() => (revising ? reviseMut.mutate() : submitMut.mutate())}
+            disabled={revising ? reviseMut.isPending : submitMut.isPending}
+            className="min-h-[44px]"
+          >
+            {(revising ? reviseMut.isPending : submitMut.isPending) ? (
+              <Loader2 className="h-4 w-4 animate-spin me-1" />
+            ) : (
+              <Send className="h-4 w-4 me-1" />
+            )}
+            {revising ? 'تقديم العرض المعدّل' : 'تقديم'}
           </Button>
-          <Button variant="ghost" onClick={() => setFormOpen(false)} className="min-h-[44px]">
+          <Button
+            variant="ghost"
+            onClick={() => (revising ? setRevising(false) : setFormOpen(false))}
+            className="min-h-[44px]"
+          >
             إلغاء
           </Button>
         </div>
