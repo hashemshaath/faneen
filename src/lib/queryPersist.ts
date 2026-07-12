@@ -38,6 +38,12 @@ export const PUBLIC_PERSIST_FIRST_SEGMENTS: ReadonlySet<string> = new Set([
   'business',                 // public business-profile headline only; dashboard uses 'business-edit', 'business-recent-activity', etc.
   'business-projects',        // public portfolio-projects only
   'promotions-active-count',
+  // Q3-UI — public location reference data (saudi_regions / cities / districts)
+  // used by RegionCityDistrictSelect in the public /quote flow. Reference-only,
+  // never contains per-user data.
+  'saudi-regions-public',
+  'cities-by-region-public',
+  'districts-by-city-public',
 ]);
 
 /**
