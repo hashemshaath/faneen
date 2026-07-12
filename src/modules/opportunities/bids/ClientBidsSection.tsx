@@ -13,10 +13,12 @@ import {
   listOpportunityBidsForClient,
   notifyLosingBiddersAfterAward,
   recordAwardReason,
+  requestBidRevision,
   setBidShortlisted,
 } from './services';
 import { BidComparisonTable } from './BidComparisonTable';
 import type { OpportunityBidRow } from './types';
+import { ClarificationThread } from '../clarifications';
 
 interface Props {
   opportunityId: string;
@@ -47,6 +49,8 @@ export const ClientBidsSection: React.FC<Props> = ({
   const [view, setView] = useState<'cards' | 'compare'>('cards');
   const [awardTarget, setAwardTarget] = useState<OpportunityBidRow | null>(null);
   const [awardReason, setAwardReason] = useState('');
+  const [reviseTarget, setReviseTarget] = useState<OpportunityBidRow | null>(null);
+  const [reviseReason, setReviseReason] = useState('');
 
   const awardMut = useMutation({
     mutationFn: async (bid: OpportunityBidRow) => {
@@ -93,6 +97,21 @@ export const ClientBidsSection: React.FC<Props> = ({
     },
   });
 
+  const reviseMut = useMutation({
+    mutationFn: async ({ bidId, reason }: { bidId: string; reason: string }) =>
+      requestBidRevision(bidId, reason),
+    onSuccess: () => {
+      toast.success('تم إرسال طلب التعديل للمورّد');
+      setReviseTarget(null);
+      setReviseReason('');
+      qc.invalidateQueries({ queryKey: ['opportunity-bids-list', opportunityId] });
+      qc.invalidateQueries({ queryKey: ['quote-request-events', opportunityId] });
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : 'تعذر إرسال طلب التعديل');
+    },
+  });
+
   const bids = data ?? [];
   const hasWinner = !!awardedBidId || bids.some((b) => b.status === 'awarded');
   const canCompare = bids.length >= 2;
@@ -101,11 +120,20 @@ export const ClientBidsSection: React.FC<Props> = ({
     : awardMut.isPending
       ? awardMut.variables?.id ?? null
       : null;
-  const pendingKind: 'shortlist' | 'award' | null = shortlistMut.isPending
+  const pendingKind: 'shortlist' | 'award' | 'revision' | null = shortlistMut.isPending
     ? 'shortlist'
     : awardMut.isPending
       ? 'award'
-      : null;
+      : reviseMut.isPending
+        ? 'revision'
+        : null;
+  const pendingIdForKind = shortlistMut.isPending
+    ? shortlistMut.variables?.bidId ?? null
+    : awardMut.isPending
+      ? awardMut.variables?.id ?? null
+      : reviseMut.isPending
+        ? reviseMut.variables?.bidId ?? null
+        : null;
 
   return (
     <Card>
@@ -206,7 +234,11 @@ export const ClientBidsSection: React.FC<Props> = ({
               setAwardTarget(bid);
               setAwardReason('');
             }}
-            pendingBidId={pendingBidId}
+            onRequestRevision={(bid) => {
+              setReviseTarget(bid);
+              setReviseReason('');
+            }}
+            pendingBidId={pendingIdForKind}
             pendingKind={pendingKind}
           />
         ) : (
