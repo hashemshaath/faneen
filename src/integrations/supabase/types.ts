@@ -12340,6 +12340,10 @@ export type Database = {
           price_amount: number | null
           price_breakdown: Json
           provider_business_id: string | null
+          revision_of: string | null
+          revision_reason: string | null
+          revision_requested_at: string | null
+          revision_requested_by: string | null
           scope_summary: string | null
           shortlisted_at: string | null
           status: string
@@ -12367,6 +12371,10 @@ export type Database = {
           price_amount?: number | null
           price_breakdown?: Json
           provider_business_id?: string | null
+          revision_of?: string | null
+          revision_reason?: string | null
+          revision_requested_at?: string | null
+          revision_requested_by?: string | null
           scope_summary?: string | null
           shortlisted_at?: string | null
           status?: string
@@ -12394,6 +12402,10 @@ export type Database = {
           price_amount?: number | null
           price_breakdown?: Json
           provider_business_id?: string | null
+          revision_of?: string | null
+          revision_reason?: string | null
+          revision_requested_at?: string | null
+          revision_requested_by?: string | null
           scope_summary?: string | null
           shortlisted_at?: string | null
           status?: string
@@ -12432,6 +12444,13 @@ export type Database = {
             columns: ["provider_business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_bids_revision_of_fkey"
+            columns: ["revision_of"]
+            isOneToOne: false
+            referencedRelation: "opportunity_bids"
             referencedColumns: ["id"]
           },
         ]
@@ -16913,6 +16932,54 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_clarifications: {
+        Row: {
+          attachments: Json
+          author_role: string
+          author_user_id: string
+          bid_id: string | null
+          body: string
+          created_at: string
+          id: string
+          quote_request_id: string
+        }
+        Insert: {
+          attachments?: Json
+          author_role: string
+          author_user_id: string
+          bid_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          quote_request_id: string
+        }
+        Update: {
+          attachments?: Json
+          author_role?: string
+          author_user_id?: string
+          bid_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          quote_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_clarifications_bid_id_fkey"
+            columns: ["bid_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_bids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_clarifications_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
             referencedColumns: ["id"]
           },
         ]
