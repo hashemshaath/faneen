@@ -1054,6 +1054,58 @@ const Quote: React.FC = () => {
                         </>
                       )}
                     </div>
+                    {/* Q3-UI — Timeline + Budget merged into Details */}
+                    <div className="pt-4 border-t border-border/50 space-y-5">
+                      <div>
+                        <div className="mb-2 text-sm font-semibold text-foreground">
+                          <Bi ar="متى تحتاج التنفيذ؟" en="When do you need it done?" />
+                        </div>
+                        <ChoiceGrid
+                          name={bi('الموعد', 'Timeline')}
+                          options={[
+                            { value: 'week',         ar: 'خلال أسبوع',                  en: 'Within a week' },
+                            { value: 'two-weeks',    ar: 'خلال أسبوعين',                en: 'Within two weeks' },
+                            { value: 'month',        ar: 'خلال شهر',                    en: 'Within a month' },
+                            { value: 'flexible',     ar: 'غير مستعجل',                  en: 'Flexible' },
+                            { value: 'ask-provider', ar: 'أريد معرفة المدة من المزود',  en: 'Ask the provider' },
+                          ]}
+                          value={form.timeline}
+                          onChange={(v) => update('timeline', v as Timeline)}
+                        />
+                        <FieldError message={errors.timeline} />
+                      </div>
+                      <div>
+                        <div className="mb-2 text-sm font-semibold text-foreground">
+                          <Bi ar="هل لديك ميزانية تقريبية؟" en="Do you have an approximate budget?" />
+                        </div>
+                        <ChoiceGrid
+                          name={bi('الميزانية', 'Budget')}
+                          cols="sm:grid-cols-3"
+                          options={[
+                            { value: 'yes',          ar: 'نعم',                          en: 'Yes' },
+                            { value: 'no',           ar: 'لا',                           en: 'No' },
+                            { value: 'after-quotes', ar: 'أفضل استلام عروض أولًا',      en: 'Receive quotes first' },
+                          ]}
+                          value={form.budgetMode}
+                          onChange={(v) => update('budgetMode', v as BudgetMode)}
+                        />
+                        {form.budgetMode === 'yes' && (
+                          <div className="mt-3">
+                            <Label htmlFor="q-budget">
+                              <Bi ar="الميزانية التقريبية (ريال)" en="Approx. budget (SAR)" />
+                            </Label>
+                            <Input
+                              id="q-budget"
+                              inputMode="numeric"
+                              className="h-12 mt-1.5 tech-content"
+                              placeholder={bi('مثال: 5000', 'e.g. 5000')}
+                              value={form.budget}
+                              onChange={(e) => update('budget', e.target.value.replace(/[^\d]/g, ''))}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
