@@ -100,6 +100,10 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   opportunity_award_lost:             { icon: XCircle,       colorClass: 'bg-muted text-muted-foreground',                    label: { ar: 'لم يتم الترسية عليك',      en: 'Award Not Granted' },        urgency: 'info',      category: 'bids' },
   opportunity_contract_converted:     { icon: FileText,      colorClass: 'bg-success/10 text-success',                        label: { ar: 'تحويل الفرصة إلى عقد',     en: 'Converted to Contract' },    urgency: 'important', category: 'contracts' },
   rfq_clarification_posted:           { icon: HelpCircle,    colorClass: 'bg-info/10 text-info',                              label: { ar: 'استفسار على الطلب',        en: 'RFQ Clarification Posted' }, urgency: 'important', category: 'requests' },
+  opportunity_cancelled:              { icon: XCircle,       colorClass: 'bg-destructive/10 text-destructive',                label: { ar: 'إلغاء الفرصة',            en: 'Opportunity Cancelled' },     urgency: 'info',      category: 'requests' },
+  opportunity_expired:                { icon: Clock,         colorClass: 'bg-muted text-muted-foreground',                    label: { ar: 'انتهاء الفرصة',           en: 'Opportunity Expired' },       urgency: 'info',      category: 'requests' },
+  lead_cancelled:                     { icon: XCircle,       colorClass: 'bg-muted text-muted-foreground',                    label: { ar: 'إلغاء الفرصة',            en: 'Lead Cancelled' },            urgency: 'info',      category: 'requests' },
+  quote_contact_revealed:             { icon: Eye,           colorClass: 'bg-accent/10 text-accent',                          label: { ar: 'كشف بيانات التواصل',       en: 'Contact Revealed' },         urgency: 'important', category: 'requests' },
 
   // ── Requests / leads / quotes fan-out (P1.1)
   quote_request_submitted:      { icon: FileText,      colorClass: 'bg-info/10 text-info',        label: { ar: 'إرسال طلب عرض سعر',       en: 'Quote Request Submitted' },     urgency: 'important', category: 'requests' },
@@ -115,6 +119,8 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   membership_payment_succeeded:       { icon: CreditCard,   colorClass: 'bg-success/10 text-success',    label: { ar: 'نجاح دفعة العضوية',              en: 'Membership Payment Succeeded' }, urgency: 'important', category: 'membership' },
   membership_payment_marked_paid:     { icon: DollarSign,   colorClass: 'bg-success/10 text-success',    label: { ar: 'تأكيد دفعة العضوية يدويًا',       en: 'Membership Payment Marked Paid' }, urgency: 'info',      category: 'membership' },
   membership_payment_marked_refunded: { icon: DollarSign,   colorClass: 'bg-warning/10 text-warning',    label: { ar: 'استرداد دفعة العضوية يدويًا',     en: 'Membership Payment Marked Refunded' }, urgency: 'info',   category: 'membership' },
+  membership_payment_failed:          { icon: AlertTriangle,colorClass: 'bg-destructive/10 text-destructive', label: { ar: 'فشل دفعة العضوية',            en: 'Membership Payment Failed' },   urgency: 'urgent',    category: 'membership' },
+  membership_payment_refunded:        { icon: DollarSign,   colorClass: 'bg-warning/10 text-warning',    label: { ar: 'استرداد دفعة العضوية',            en: 'Membership Payment Refunded' }, urgency: 'info',      category: 'membership' },
 
   // ── Team / invitations / brand approvals (P1.1)
   business_staff_invitation:    { icon: UserPlus,   colorClass: 'bg-accent/10 text-accent',       label: { ar: 'دعوة موظف للمنشأة',       en: 'Staff Invitation' },        urgency: 'important', category: 'team' },
