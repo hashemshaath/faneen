@@ -67,6 +67,7 @@ export const DashboardEntityDetail = lazyRetry(() => import("../pages/dashboard/
 // NAVIGATION-CONSOLIDATION-1 — unified tabbed hubs (Phase 2).
 export const DashboardBusinessProfileHub = lazyRetry(() => import("../pages/dashboard/DashboardBusinessProfileHub"));
 export const DashboardBranches = lazyRetry(() => import("../pages/dashboard/DashboardBranches"));
+export const DashboardBusinessCoverage = lazyRetry(() => import("../pages/dashboard/DashboardBusinessCoverage"));
 export const DashboardRequestsHub = lazyRetry(() => import("../pages/dashboard/DashboardRequestsHub"));
 export const DashboardContractsHub = lazyRetry(() => import("../pages/dashboard/DashboardContractsHub"));
 export const DashboardLoyaltyHub = lazyRetry(() => import("../pages/dashboard/DashboardLoyaltyHub"));
