@@ -424,7 +424,7 @@ const Quote: React.FC = () => {
   };
 
   const submit = async () => {
-    if (!validateStep(5)) return;
+    if (!validateStep(4)) return;
     if (submitting) return;
     setSubmitting(true);
     setSubmitError(null);
@@ -453,6 +453,11 @@ const Quote: React.FC = () => {
       sector: form.sector,
       city: form.city.trim(),
       district: form.district.trim() || null,
+      // Q3-UI — dual-write: send structured IDs alongside Arabic text.
+      // Text stays as source of truth for existing consumers during transition.
+      region_id: form.regionId,
+      city_id: form.cityId,
+      district_id: form.districtId,
       service_location_type: serviceLocationMap[form.serviceLocation as string] ?? 'not_sure',
       project_description: form.description.trim(),
       approx_dimensions: form.measurements.trim() || null,
@@ -469,6 +474,9 @@ const Quote: React.FC = () => {
         // the matcher / future analytics never have to re-resolve.
         taxonomy_primary_slug: form.sector || null,
         taxonomy_specialty_slug: form.specialty || null,
+        // Q3-UI — free-text escape hatch marker (city_id absent, city text present).
+        region_text: form.region || null,
+        no_location_selected: form.noLocationSelected || false,
       },
       preferred_brand_ids: form.preferredBrandIds.length ? form.preferredBrandIds : null,
       brand_preference_mode: form.preferredBrandIds.length && form.brandPreferenceMode
