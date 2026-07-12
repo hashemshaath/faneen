@@ -14,9 +14,11 @@ import { getAssignmentStatusLabel } from '../status';
 import {
   getMyBidForOpportunity,
   submitOpportunityBid,
+  submitRevisedBid,
   withdrawOpportunityBid,
 } from './services';
 import type { BidPriceBreakdownItem } from './types';
+import { ClarificationThread } from '../clarifications';
 
 const PAYMENT_TERMS_PRESETS = [
   'دفعة واحدة عند التسليم',
@@ -122,6 +124,45 @@ export const ProviderBidSection: React.FC<Props> = ({
     },
   });
 
+  const [revising, setRevising] = useState(false);
+  const reviseMut = useMutation({
+    mutationFn: () => {
+      if (!user?.id) throw new Error('not authenticated');
+      if (!existing) throw new Error('no existing bid');
+      const priceNumber = Number(price);
+      if (!Number.isFinite(priceNumber) || priceNumber <= 0) throw new Error('السعر مطلوب');
+      const paymentTerms =
+        paymentPreset === 'أخرى' ? paymentOther.trim() || null : paymentPreset;
+      const validUntilIso = validUntil
+        ? new Date(`${validUntil}T23:59:59`).toISOString()
+        : null;
+      return submitRevisedBid(existing.id, {
+        opportunityId,
+        assignmentId: assignmentId ?? null,
+        providerBusinessId: providerBusinessId ?? null,
+        submittedBy: user.id,
+        priceAmount: priceNumber,
+        durationValue: durationDays ? Number(durationDays) : null,
+        durationUnit: durationDays ? 'day' : null,
+        scopeSummary: scope || null,
+        terms: terms || null,
+        warranty: warranty || null,
+        paymentTerms,
+        validUntil: validUntilIso,
+        vatInclusive,
+        priceBreakdown: breakdown.length > 0 ? breakdown : null,
+      });
+    },
+    onSuccess: () => {
+      toast.success('تم تقديم العرض المعدّل');
+      setRevising(false);
+      qc.invalidateQueries({ queryKey: ['opportunity-bid-mine', opportunityId] });
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : 'تعذر تقديم العرض المعدّل');
+    },
+  });
+
   if (isLoading) {
     return (
       <Card>
@@ -134,6 +175,7 @@ export const ProviderBidSection: React.FC<Props> = ({
     const statusLabel = getAssignmentStatusLabel(existing.status).ar;
     const canWithdraw = ['submitted', 'draft', 'revised'].includes(existing.status);
     const isAwarded = existing.status === 'awarded';
+    const revisionRequested = existing.status === 'revision_requested';
     return (
       <Card>
         <CardContent className="p-4 space-y-3">
@@ -143,10 +185,50 @@ export const ProviderBidSection: React.FC<Props> = ({
               <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white">
                 تم تعميد عرضك
               </Badge>
+            ) : revisionRequested ? (
+              <Badge className="bg-amber-500 hover:bg-amber-500 text-white">طُلب تعديل</Badge>
             ) : (
               <Badge variant="outline">{statusLabel}</Badge>
             )}
           </div>
+          {revisionRequested && !revising && (
+            <div className="rounded-lg border border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20 p-3 space-y-2">
+              <div className="text-sm font-semibold">طلب العميل تعديل عرضك</div>
+              {existing.revision_reason && (
+                <p className="text-sm whitespace-pre-wrap">{existing.revision_reason}</p>
+              )}
+              <Button
+                size="sm"
+                onClick={() => {
+                  setPrice(String(existing.price_amount ?? ''));
+                  setDurationDays(existing.duration_value ? String(existing.duration_value) : '');
+                  setScope(existing.scope_summary ?? '');
+                  setTerms(existing.terms ?? '');
+                  setWarranty(existing.warranty ?? '');
+                  setPaymentPreset(
+                    (PAYMENT_TERMS_PRESETS as readonly string[]).includes(existing.payment_terms ?? '')
+                      ? (existing.payment_terms as string)
+                      : 'أخرى',
+                  );
+                  setPaymentOther(existing.payment_terms ?? '');
+                  setValidUntil(
+                    existing.valid_until
+                      ? new Date(existing.valid_until).toISOString().slice(0, 10)
+                      : defaultValidUntil(),
+                  );
+                  setVatInclusive(existing.vat_inclusive ?? true);
+                  setBreakdown(
+                    Array.isArray(existing.price_breakdown)
+                      ? (existing.price_breakdown as unknown as BidPriceBreakdownItem[])
+                      : [],
+                  );
+                  setRevising(true);
+                }}
+              >
+                تقديم عرض معدّل
+              </Button>
+            </div>
+          )}
           <div className="text-2xl font-bold tech-content">
             {Number(existing.price_amount ?? 0).toLocaleString()}{' '}
             <span className="text-sm font-normal text-muted-foreground">{existing.currency}</span>
@@ -165,6 +247,11 @@ export const ProviderBidSection: React.FC<Props> = ({
               <X className="h-4 w-4 me-1" /> سحب العرض
             </Button>
           )}
+          <ClarificationThread
+            opportunityId={opportunityId}
+            bidId={existing.id}
+            authorRole="provider"
+          />
         </CardContent>
       </Card>
     );
