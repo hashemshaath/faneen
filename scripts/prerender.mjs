@@ -100,11 +100,25 @@ function renderPage(p) {
   );
 
   if (p.crawlableHtml) {
+    // FIX-1 (Pass-L batch c): the built shell ships with a populated
+    // `<div id="root">…sitewide sr-only content…</div>` (see index.html).
+    // The prior injection targeted an empty `<div id="root"></div>` which
+    // never matched, so per-page crawlable text was silently dropped from
+    // every prerendered page. We now replace the entire populated #root
+    // with a page-specific crawlable block wrapped in the same sr-only
+    // pattern; React's createRoot() atomically replaces this subtree on
+    // first commit, so JS-capable visitors see zero flash.
     const inject =
-      `<div id="prerender-content" aria-hidden="true" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;">${p.crawlableHtml}</div>` +
-      `\n    <script>(function(){var el=document.getElementById('prerender-content');if(el)el.parentNode.removeChild(el);})();</script>` +
-      `\n    <div id="root"></div>`;
-    html = html.replace(/<div id="root"><\/div>/, inject);
+      `<div id="root">` +
+      `<div class="sr-only" aria-hidden="true">${p.crawlableHtml}</div>` +
+      `</div>`;
+    const populatedRoot = /<div id="root">[\s\S]*?<\/div>\s*(?=<script)/;
+    if (populatedRoot.test(html)) {
+      html = html.replace(populatedRoot, inject + "\n    ");
+    } else {
+      // Fallback for the (unexpected) empty-root shell form.
+      html = html.replace(/<div id="root"><\/div>/, inject);
+    }
   }
 
   return html;
