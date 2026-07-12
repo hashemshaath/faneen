@@ -138,7 +138,13 @@ describe('RFQ-BRAND-PICKER-1C — Scope discipline (downstream not wired this ph
         !m.includes('/tests/') &&
         !m.includes('/__tests__/') &&
         // RFQ-BRAND-PICKER-1D wires the picker into the procurement detail page.
-        m !== 'src/pages/dashboard/DashboardProcurementDetail.tsx',
+        m !== 'src/pages/dashboard/DashboardProcurementDetail.tsx' &&
+        // STALE-ASSERTION UPDATE: R5.2 client-side New RFQ wizard reuses
+        // ApprovedBrandPicker for brand selection on the request form. It
+        // does NOT wire requested_brand_id into procurement RFQ item rows
+        // (which is what this guard actually protects) — the wizard writes
+        // to quote_requests brand columns via the R5.1a picker path.
+        m !== 'src/pages/dashboard/DashboardNewRfq.tsx',
     );
     // Only the BOQ section (1C) and Quote.tsx (1B) may import it — neither lives in
     // dashboard/procurement/components-procurement trees.

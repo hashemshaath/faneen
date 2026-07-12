@@ -120,6 +120,15 @@ describe("SECURITY-DEEP-REVIEW-3 static guards", () => {
       // phone-id from env, no user-controlled URL input. Reviewed under
       // deep-review-3 host policy (Meta Graph API is project-approved).
       "supabase/functions/send-opportunity-whatsapp/index.ts",
+      // R5 / security-hardening additions — audited under deep-review-3:
+      // - mcp: fetches `${SUPABASE_URL}/rest/v1/...` only; URL host is the
+      //   project's own Supabase (env), no user-controlled host input.
+      "supabase/functions/mcp/index.ts",
+      // - send-email-login-otp: hardcoded `https://api.resend.com/emails`.
+      "supabase/functions/send-email-login-otp/index.ts",
+      // - verify-email-login-otp: `${SUPABASE_URL}/auth/v1/verify`,
+      //   host from env, no user-controlled URL input.
+      "supabase/functions/verify-email-login-otp/index.ts",
     ]);
     const offenders: string[] = [];
     for (const file of edgeFiles) {
