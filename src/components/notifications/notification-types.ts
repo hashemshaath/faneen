@@ -129,6 +129,11 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   provider_brand_link_approved: { icon: Link2,      colorClass: 'bg-success/10 text-success',     label: { ar: 'اعتماد ربط العلامة',      en: 'Brand Link Approved' },      urgency: 'info',      category: 'team' },
   provider_brand_link_rejected: { icon: Link2,      colorClass: 'bg-muted text-muted-foreground', label: { ar: 'رفض ربط العلامة',         en: 'Brand Link Rejected' },      urgency: 'info',      category: 'team' },
 
+  // ── P3 — admin + owner platform lifecycle
+  provider_submission_new:        { icon: ClipboardList, colorClass: 'bg-warning/10 text-warning',      label: { ar: 'منشأة جديدة بانتظار المراجعة', en: 'New Provider Submission' }, urgency: 'important', category: 'system' },
+  business_verification_changed:  { icon: Shield,        colorClass: 'bg-info/10 text-info',            label: { ar: 'تحديث توثيق المنشأة',           en: 'Business Verification Updated' }, urgency: 'important', category: 'system' },
+  account_contact_updated:        { icon: Bell,          colorClass: 'bg-muted text-muted-foreground',  label: { ar: 'تحديث بيانات الاتصال',          en: 'Account Contact Updated' },       urgency: 'info',      category: 'system' },
+
   // Legacy generic types
   contract:    { icon: FileText,      colorClass: 'bg-info/10 text-info dark:text-info',     label: { ar: 'العقود', en: 'Contracts' }, urgency: 'important', category: 'contracts' },
   installment: { icon: CreditCard,    colorClass: 'bg-success/10 text-success dark:text-success', label: { ar: 'الأقساط', en: 'Installments' }, urgency: 'important', category: 'contracts' },
