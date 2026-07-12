@@ -14,6 +14,118 @@ import type {
   UpdateOpportunityBidDraftInput,
 } from './types';
 
+/**
+ * R1 — Toggle shortlist state on a bid (client/admin action).
+ * shortlisted=true  → status 'shortlisted'
+ * shortlisted=false → status 'under_review'
+ * Also emits an audit event and a best-effort provider notification.
+ */
+export async function setBidShortlisted(
+  bidId: string,
+  shortlisted: boolean,
+): Promise<OpportunityBidRow> {
+  const next = shortlisted ? 'shortlisted' : 'under_review';
+  const { data, error } = await supabase
+    .from('opportunity_bids')
+    .update({ status: next })
+    .eq('id', bidId)
+    .select('*')
+    .single();
+  if (error) throw error;
+
+  // Best-effort audit event.
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    await supabase.from('quote_request_events').insert({
+      quote_request_id: data.opportunity_id,
+      event_type: shortlisted ? 'bid.shortlisted' : 'bid.unshortlisted',
+      actor_user_id: auth?.user?.id ?? null,
+      metadata: { bid_id: bidId },
+    });
+  } catch {
+    /* best-effort audit */
+  }
+
+  // Best-effort provider notification (only on positive shortlist).
+  try {
+    if (data?.submitted_by && shortlisted) {
+      await createNotification({
+        user_id: data.submitted_by,
+        notification_type: 'opportunity_bid_shortlisted',
+        title_ar: 'تم إدراج عرضك في القائمة القصيرة',
+        title_en: 'Your bid has been shortlisted',
+        body_ar: 'العميل أدرج عرضك ضمن القائمة القصيرة للمقارنة النهائية.',
+        body_en: 'The client shortlisted your bid for final comparison.',
+        reference_id: data.id,
+        reference_type: 'opportunity_bid',
+      });
+    }
+  } catch {
+    /* best-effort */
+  }
+  return data;
+}
+
+/**
+ * R1 — Fan out polite-decline in-app notifications to every losing
+ * bidder after the award RPC flips them to `rejected`. Idempotent enough
+ * for our purposes — one notification per unique losing submitter.
+ */
+export async function notifyLosingBiddersAfterAward(
+  opportunityId: string,
+  winningBidId: string,
+  opts?: { refId?: string | null },
+): Promise<number> {
+  const { data: losers, error } = await supabase
+    .from('opportunity_bids')
+    .select('id, submitted_by')
+    .eq('opportunity_id', opportunityId)
+    .neq('id', winningBidId)
+    .eq('status', 'rejected');
+  if (error || !losers?.length) return 0;
+
+  const uniqueUsers = Array.from(
+    new Set(losers.map((b) => b.submitted_by).filter(Boolean)),
+  ) as string[];
+  const refSuffix = opts?.refId ? ` (${opts.refId})` : '';
+  await Promise.allSettled(
+    uniqueUsers.map((uid) =>
+      createNotification({
+        user_id: uid,
+        notification_type: 'opportunity_bid_declined',
+        title_ar: 'شكراً لتقديم عرضك',
+        title_en: 'Thank you for your bid',
+        body_ar: `تم اختيار عرض آخر لهذه الفرصة${refSuffix}. نقدّر مشاركتك ونرحّب بك في الفرص القادمة.`,
+        body_en: `Another bid was selected for this opportunity${refSuffix}. We appreciate your participation and welcome you on upcoming opportunities.`,
+        reference_id: opportunityId,
+        reference_type: 'opportunity',
+      }),
+    ),
+  );
+  return uniqueUsers.length;
+}
+
+/**
+ * R1 — Persist award reason in the RFQ audit trail (no schema change).
+ * Stored as an event on `quote_request_events` — column `award_reason`
+ * will land in R2 as a proper field.
+ */
+export async function recordAwardReason(
+  opportunityId: string,
+  bidId: string,
+  reason: string,
+): Promise<void> {
+  const trimmed = reason.trim();
+  if (!trimmed) return;
+  const { data: auth } = await supabase.auth.getUser();
+  await supabase.from('quote_request_events').insert({
+    quote_request_id: opportunityId,
+    event_type: 'rfq.award_reason_set',
+    actor_user_id: auth?.user?.id ?? null,
+    metadata: { bid_id: bidId, reason: trimmed },
+  });
+}
+
 /** Client view: all bids on a given opportunity (RLS gates to the owner). */
 export async function listOpportunityBidsForClient(
   opportunityId: string,
