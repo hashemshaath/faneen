@@ -93,14 +93,20 @@ describe('opportunity_bids — Phase 5B security closeout', () => {
     }
   });
 
-  it('no Award / Convert-to-Contract UI is exposed in Phase 5B', () => {
-    for (const src of [PROVIDER_SECTION, CLIENT_SECTION]) {
-      expect(src).not.toMatch(/awardBid|convertToContract|ترسية|اعتماد العرض|تحويل إلى عقد/);
-    }
+  // R1 lifted the Phase-5B "no award UI" freeze on the client side: the
+  // client bids section now owns the award + revise-request actions so
+  // clients can complete the opportunity lifecycle without an admin
+  // handoff. The freeze remains for the *provider* bid section.
+  it('provider section still has no Award / Convert-to-Contract UI (Phase 5B invariant preserved for providers post-R1)', () => {
+    expect(PROVIDER_SECTION).not.toMatch(/awardBid|convertToContract|ترسية|اعتماد العرض|تحويل إلى عقد/);
   });
 
-  it('client section does NOT expose withdraw/edit controls', () => {
-    expect(CLIENT_SECTION).not.toMatch(/withdrawOpportunityBid|updateDraftOpportunityBid|سحب العرض|تعديل العرض/);
+  // R1 also introduced client-side "request revision" — the client
+  // section may reference «تعديل العرض» via that CTA. The withdraw/edit
+  // controls (which would let a *client* mutate a provider's bid) are
+  // still forbidden.
+  it('client section does NOT expose provider-side withdraw/edit controls (R1 keeps «طلب تعديل العرض» allowed)', () => {
+    expect(CLIENT_SECTION).not.toMatch(/withdrawOpportunityBid|updateDraftOpportunityBid|سحب العرض/);
   });
 
   it('provider section shows the submit form CTA', () => {
