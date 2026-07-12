@@ -3854,36 +3854,62 @@ export type Database = {
       }
       business_service_areas: {
         Row: {
+          branch_id: string | null
           business_id: string
           city: string
+          city_id: string | null
           country_id: string | null
           created_at: string
           district: string | null
+          district_ids: string[]
           id: string
           is_primary: boolean
+          region_id: string | null
           updated_at: string
         }
         Insert: {
+          branch_id?: string | null
           business_id: string
           city: string
+          city_id?: string | null
           country_id?: string | null
           created_at?: string
           district?: string | null
+          district_ids?: string[]
           id?: string
           is_primary?: boolean
+          region_id?: string | null
           updated_at?: string
         }
         Update: {
+          branch_id?: string | null
           business_id?: string
           city?: string
+          city_id?: string | null
           country_id?: string | null
           created_at?: string
           district?: string | null
+          district_ids?: string[]
           id?: string
           is_primary?: boolean
+          region_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "business_service_areas_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_areas_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "business_service_areas_business_id_fkey"
             columns: ["business_id"]
@@ -3899,10 +3925,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "business_service_areas_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "business_service_areas_country_id_fkey"
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_areas_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
             referencedColumns: ["id"]
           },
         ]
@@ -5021,6 +5061,7 @@ export type Database = {
           is_active: boolean
           name_ar: string
           name_en: string
+          region_id: string | null
           updated_at: string
         }
         Insert: {
@@ -5030,6 +5071,7 @@ export type Database = {
           is_active?: boolean
           name_ar: string
           name_en: string
+          region_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -5039,6 +5081,7 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          region_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -5047,6 +5090,13 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cities_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
             referencedColumns: ["id"]
           },
         ]
@@ -8987,6 +9037,7 @@ export type Database = {
           city: string
           city_ar: string | null
           city_en: string | null
+          city_id: string | null
           country_code: string
           created_at: string
           district_ar: string
@@ -8996,6 +9047,7 @@ export type Database = {
           region: string
           region_ar: string | null
           region_en: string | null
+          region_id: string | null
           source: string
           updated_at: string
         }
@@ -9003,6 +9055,7 @@ export type Database = {
           city: string
           city_ar?: string | null
           city_en?: string | null
+          city_id?: string | null
           country_code?: string
           created_at?: string
           district_ar: string
@@ -9012,6 +9065,7 @@ export type Database = {
           region: string
           region_ar?: string | null
           region_en?: string | null
+          region_id?: string | null
           source?: string
           updated_at?: string
         }
@@ -9019,6 +9073,7 @@ export type Database = {
           city?: string
           city_ar?: string | null
           city_en?: string | null
+          city_id?: string | null
           country_code?: string
           created_at?: string
           district_ar?: string
@@ -9028,10 +9083,26 @@ export type Database = {
           region?: string
           region_ar?: string | null
           region_en?: string | null
+          region_id?: string | null
           source?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "districts_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "districts_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_deliverability_alerts: {
         Row: {
@@ -15916,6 +15987,7 @@ export type Database = {
           budget_amount: number | null
           budget_note: string | null
           city: string
+          city_id: string | null
           closed_at: string | null
           created_at: string
           customer_email: string | null
@@ -15923,6 +15995,7 @@ export type Database = {
           customer_phone: string
           customer_type: string
           district: string | null
+          district_id: string | null
           execution_timeline: string
           has_budget: boolean
           id: string
@@ -15937,6 +16010,7 @@ export type Database = {
           quantity: string | null
           ref_id: string | null
           region: string | null
+          region_id: string | null
           requester_entity_id: string | null
           requires_sample: boolean
           sector: string
@@ -15962,6 +16036,7 @@ export type Database = {
           budget_amount?: number | null
           budget_note?: string | null
           city: string
+          city_id?: string | null
           closed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -15969,6 +16044,7 @@ export type Database = {
           customer_phone: string
           customer_type: string
           district?: string | null
+          district_id?: string | null
           execution_timeline: string
           has_budget?: boolean
           id?: string
@@ -15983,6 +16059,7 @@ export type Database = {
           quantity?: string | null
           ref_id?: string | null
           region?: string | null
+          region_id?: string | null
           requester_entity_id?: string | null
           requires_sample?: boolean
           sector: string
@@ -16008,6 +16085,7 @@ export type Database = {
           budget_amount?: number | null
           budget_note?: string | null
           city?: string
+          city_id?: string | null
           closed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -16015,6 +16093,7 @@ export type Database = {
           customer_phone?: string
           customer_type?: string
           district?: string | null
+          district_id?: string | null
           execution_timeline?: string
           has_budget?: boolean
           id?: string
@@ -16029,6 +16108,7 @@ export type Database = {
           quantity?: string | null
           ref_id?: string | null
           region?: string | null
+          region_id?: string | null
           requester_entity_id?: string | null
           requires_sample?: boolean
           sector?: string
@@ -16064,10 +16144,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quote_requests_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quote_requests_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "saudi_regions"
             referencedColumns: ["id"]
           },
           {
@@ -17240,6 +17341,39 @@ export type Database = {
           label_ar?: string
           label_en?: string
           scope?: string
+        }
+        Relationships: []
+      }
+      saudi_regions: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
