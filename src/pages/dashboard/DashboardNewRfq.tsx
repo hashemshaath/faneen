@@ -282,7 +282,7 @@ const DashboardNewRfq: React.FC = () => {
                       <SelectContent>
                         {mySites.map((s) => (
                           <SelectItem key={s.id} value={s.id}>
-                            {s.name}{s.city ? ` — ${s.city}` : ''}
+                            {s.site_name || s.id}{s.city_name ? ` — ${s.city_name}` : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
