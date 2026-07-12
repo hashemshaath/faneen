@@ -464,6 +464,9 @@ Deno.serve(async (req) => {
       success: true,
       quote_request_id: inserted.id,
       ref_id: (inserted as { ref_id?: string | null }).ref_id ?? null,
+      // Q4 — surface match summary so the client can render honest copy.
+      matched_count: matchSummary.matched_count,
+      match_source: matchSummary.match_source,
       message: 'تم استلام طلبك بنجاح',
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
