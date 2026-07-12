@@ -94,7 +94,7 @@ const cases: HubCase[] = [
     // `entities` was merged into the `business` tab
     // (see DashboardBusinessProfileMerged), so the canonical hub now
     // exposes 4 tabs, not 5.
-    tabKeys: ['business', 'branches', 'credentials', 'visibility'],
+    tabKeys: ['business', 'branches', 'coverage', 'credentials', 'visibility'],
     firstTabLabelAr: 'بيانات المنشأة',
     secondTabLabelAr: 'الفروع',
     secondTabKey: 'branches',
