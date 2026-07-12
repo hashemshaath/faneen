@@ -91,16 +91,27 @@ const SearchV3 = () => {
   // ── Data ────────────────────────────────────────────
   const { data: categories } = useCategories();
   const { data: cities } = useCities();
-  const { data: businesses, isLoading, isError, refetch } = useBusinesses();
+  const { data: businesses, isLoading: businessesLoading, isError, refetch } = useBusinesses();
   useDirectoryRealtimeInvalidation();
 
-  const { data: taxonomyCtx } = useSearchTaxonomyContext({
+  const { data: taxonomyCtx, isLoading: taxonomyLoading } = useSearchTaxonomyContext({
     q: debouncedQuery,
     sector: searchParams.get('sector'),
     category: filters.categoryId !== 'all' ? filters.categoryId : null,
     service: filters.serviceCategoryId !== 'all' ? filters.serviceCategoryId : null,
   });
   const taxonomyBusinessIds = taxonomyCtx?.taxonomyBusinessIds;
+
+  // P1-sector — when a category/service filter is active, filterAndSort returns
+  // an empty list until `taxonomyBusinessIds` resolves. Fold that into the
+  // shared `isLoading` so SearchResultsV3 shows the 12-card skeleton instead
+  // of the "no results" empty state during the taxonomy roundtrip. The
+  // taxonomy query is now persisted + 5-min-stale, so on repeat clicks this
+  // stays instant.
+  const categoryFilterActive =
+    filters.categoryId !== 'all' || filters.serviceCategoryId !== 'all';
+  const isLoading =
+    businessesLoading || (categoryFilterActive && taxonomyLoading && !taxonomyBusinessIds);
 
   const { data: serviceCategoryBusinessIds } = useServiceCategoryBusinessIds(
     filters.serviceCategoryId,
