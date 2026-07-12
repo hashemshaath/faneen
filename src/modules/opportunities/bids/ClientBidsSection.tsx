@@ -351,7 +351,28 @@ export const ClientBidsSection: React.FC<Props> = ({
                         تعميد العرض
                       </Button>
                     )}
+                    {canRevise && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setReviseTarget(bid);
+                          setReviseReason('');
+                        }}
+                        disabled={reviseMut.isPending}
+                        className="min-h-[36px]"
+                      >
+                        طلب تعديل العرض
+                      </Button>
+                    )}
                   </div>
+                  </div>
+                  <ClarificationThread
+                    opportunityId={opportunityId}
+                    bidId={bid.id}
+                    authorRole="client"
+                    notifyUserId={bid.submitted_by}
+                  />
                 </li>
               );
             })}
