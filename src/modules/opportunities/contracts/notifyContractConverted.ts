@@ -7,6 +7,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/modules/notifications';
+import { sendOpportunityContractCreatedEmails } from '@/modules/opportunities/emails/sendOpportunityEmails';
 
 export async function notifyContractConvertedBothParties(
   opportunityId: string,
@@ -60,6 +61,25 @@ export async function notifyContractConvertedBothParties(
       );
     }
     await Promise.all(tasks);
+
+    // P2.1 — Best-effort email fan-out to BOTH parties (client + winning provider).
+    // Idempotency keyed on contractId; safe against retries + double-clicks.
+    let contractRef: string | null = null;
+    try {
+      const { data: c } = await supabase
+        .from('contracts')
+        .select('contract_number')
+        .eq('id', contractId)
+        .maybeSingle();
+      contractRef = (c as { contract_number?: string | null } | null)?.contract_number ?? null;
+    } catch {
+      /* best-effort */
+    }
+    void sendOpportunityContractCreatedEmails({
+      opportunityId,
+      contractId,
+      contractRef,
+    });
   } catch {
     /* best-effort */
   }

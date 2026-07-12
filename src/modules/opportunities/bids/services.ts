@@ -8,6 +8,11 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/modules/notifications';
+import {
+  sendOpportunityBidSubmittedEmail,
+  sendOpportunityAwardEmails,
+  sendOpportunityLossEmail,
+} from '@/modules/opportunities/emails/sendOpportunityEmails';
 import type {
   OpportunityBidRow,
   SubmitOpportunityBidInput,
@@ -243,6 +248,20 @@ export async function notifyLosingBiddersAfterAward(
       }),
     ),
   );
+  // P2.1 — Best-effort email fan-out to each losing bidder.
+  // One idempotent send per losing bid (not per user) so re-run of the
+  // award flow does not re-send.
+  void Promise.allSettled(
+    losers.map((b) =>
+      sendOpportunityLossEmail({
+        opportunityId,
+        losingBidId: b.id as string,
+        submittedBy: (b as { submitted_by?: string | null }).submitted_by ?? null,
+        providerBusinessId: (b as { provider_business_id?: string | null }).provider_business_id ?? null,
+        refId: opts?.refId ?? null,
+      }),
+    ),
+  );
   return uniqueUsers.length;
 }
 
@@ -374,6 +393,15 @@ export async function submitOpportunityBid(
     /* notification is best-effort */
   }
 
+  // P2.1 — Best-effort email to the RFQ owner.
+  void sendOpportunityBidSubmittedEmail({
+    opportunityId: input.opportunityId,
+    bidId: data.id,
+    providerBusinessId: input.providerBusinessId ?? null,
+    priceAmount: (data as { price_amount?: number | null }).price_amount ?? input.priceAmount,
+    currency: (data as { currency?: string | null }).currency ?? input.currency ?? 'SAR',
+  });
+
   return data;
 }
 
@@ -446,6 +474,9 @@ export async function awardOpportunityBid(
   } catch {
     /* best-effort */
   }
+  // P2.1 — Best-effort winner email. Losing-bidder emails ship inside
+  // notifyLosingBiddersAfterAward which callers already invoke.
+  void sendOpportunityAwardEmails({ opportunityId, winningBidId: bidId });
   return (data as string) ?? bidId;
 }
 

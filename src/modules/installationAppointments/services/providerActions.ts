@@ -3,6 +3,7 @@
  * All calls go through SECURITY DEFINER functions; no direct table writes.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { dispatchCustomerProjectNotification } from '@/modules/operations/customerCommunications/dispatcher';
 import type { InstallationAppointmentRow } from '../types';
 
 function err(code: string): { ok: false; error: Error } {
@@ -31,6 +32,26 @@ export async function createInstallationAppointment(input: {
   if (error) return { ok: false, error: new Error('create_failed') };
   const row = data as unknown as { id: string; ref_id: string } | null;
   if (!row) return err('create_failed');
+  // P2.2 — Best-effort customer-facing "installation.scheduled" dispatch.
+  // Business id + customer email are resolved by the caller elsewhere; we
+  // rely on the dispatcher to no-op gracefully when data is missing.
+  try {
+    const { data: wo } = await supabase
+      .from('work_orders')
+      .select('business_id')
+      .eq('id', input.workOrderId)
+      .maybeSingle();
+    const businessId = (wo as { business_id?: string | null } | null)?.business_id ?? null;
+    if (businessId) {
+      void dispatchCustomerProjectNotification({
+        eventType: 'installation.scheduled',
+        businessId,
+        workOrderId: input.workOrderId,
+        customerEmail: null,
+        idempotencyKey: `install-scheduled-${row.id}`,
+      }).catch(() => undefined);
+    }
+  } catch { /* best-effort */ }
   return { ok: true, id: row.id, refId: row.ref_id };
 }
 
