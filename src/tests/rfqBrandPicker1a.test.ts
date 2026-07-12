@@ -191,6 +191,11 @@ describe('RFQ-BRAND-PICKER-1A — scope discipline (no live wiring this phase)',
       'src/pages/Quote.tsx',
       'src/components/workOrders/WorkOrderBoqSection.tsx',
       'src/pages/dashboard/DashboardProcurementDetail.tsx',
+      // STALE-ASSERTION UPDATE: R5.2 introduced the client-side "New RFQ"
+      // wizard (DashboardNewRfq.tsx), which reuses ApprovedBrandPicker as
+      // the brand selector — same approved-only service wrapper, same
+      // component, no supplier-quote wiring. Explicitly allowlisted.
+      'src/pages/dashboard/DashboardNewRfq.tsx',
     ]);
     const offenders = matches.filter(
       (m) =>
