@@ -577,7 +577,7 @@ const DashboardMyRequests: React.FC = () => {
                   <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
                 </Button>
                 <Button asChild size="sm" className="min-h-[40px] shadow-md shadow-primary/20">
-                  <Link to="/quote">
+                  <Link to="/dashboard/my-requests/new">
                     <Plus />
                     <span>{isRTL ? 'طلب جديد' : 'New request'}</span>
                   </Link>
