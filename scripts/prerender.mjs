@@ -130,14 +130,34 @@ function breadcrumb(items) {
   };
 }
 
+// PASS-L / L1 — env-only Supabase config. No hard-coded anon-key
+// fallback: the previous fallback silently pinned prerender to the
+// dev project even when the workspace was pointed at a different
+// Supabase, and shipped a rotating credential in the checked-in
+// source. Behavior on missing env: warn loudly and skip the
+// Supabase-dependent portion of prerender (static routes still ship);
+// main build continues, exit code stays 0.
 const SUPABASE_URL =
-  process.env.SUPABASE_URL || "https://hckpxwhjycmdflaneihd.supabase.co";
+  process.env.SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  "";
 const SUPABASE_KEY =
   process.env.SUPABASE_PUBLISHABLE_KEY ||
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhja3B4d2hqeWNtZGZsYW5laWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDgxMDgsImV4cCI6MjA5MTMyNDEwOH0.YDxBd4rKzjvD3OA6nKMu48Am2wbIlG3pqFIZgKLI2CQ";
+  process.env.SUPABASE_ANON_KEY ||
+  "";
+const SUPABASE_READY = Boolean(SUPABASE_URL && SUPABASE_KEY);
+if (!SUPABASE_READY) {
+  console.warn(
+    "\n[prerender] ⚠️  SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY not set in env.\n" +
+      "            Skipping dynamic (sector/blog/provider) prerender.\n" +
+      "            Static routes will still be prerendered. The SPA continues\n" +
+      "            to serve dynamic routes at runtime.\n",
+  );
+}
 
 async function sbFetch(path) {
+  if (!SUPABASE_READY) throw new Error("Supabase env not configured");
   const url = `${SUPABASE_URL}/rest/v1/${path}`;
   const res = await fetch(url, {
     headers: {
