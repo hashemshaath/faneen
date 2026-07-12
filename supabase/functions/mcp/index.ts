@@ -3,7 +3,7 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineMcp, auth } from "npm:@lovable.dev/mcp-js@0.20.0";
 
 // src/lib/mcp/tools/search-providers.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
@@ -79,6 +79,14 @@ var mcp_default = defineMcp({
   title: "Qitaat Directory MCP",
   version: "0.1.0",
   instructions: "Read-only access to the Qitaat industrial B2B directory. Use `search_providers` to find providers by keyword and `list_categories` to browse the taxonomy.",
+  // Require OAuth so the MCP server is not publicly callable once published.
+  // Tokens are minted by Supabase GoTrue; the `authenticated` audience is the
+  // project-wide audience for signed-in end users.
+  auth: auth.oauth.issuer({
+    issuer: "https://hckpxwhjycmdflaneihd.supabase.co/auth/v1",
+    acceptedAudiences: ["authenticated"],
+    resourceName: "Qitaat Directory MCP"
+  }),
   tools: [search_providers_default, list_categories_default]
 });
 
