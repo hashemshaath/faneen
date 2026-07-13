@@ -134,6 +134,11 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   business_verification_changed:  { icon: Shield,        colorClass: 'bg-info/10 text-info',            label: { ar: 'تحديث توثيق المنشأة',           en: 'Business Verification Updated' }, urgency: 'important', category: 'system' },
   account_contact_updated:        { icon: Bell,          colorClass: 'bg-muted text-muted-foreground',  label: { ar: 'تحديث بيانات الاتصال',          en: 'Account Contact Updated' },       urgency: 'info',      category: 'system' },
 
+  // ── Phase E — post-award cancellation request lifecycle
+  rfq_cancellation_requested:     { icon: XCircle,       colorClass: 'bg-warning/10 text-warning',      label: { ar: 'طلب إلغاء بعد الترسية',         en: 'Cancellation Requested' },        urgency: 'important', category: 'requests' },
+  rfq_cancellation_accepted:      { icon: CheckCircle2,  colorClass: 'bg-success/10 text-success',      label: { ar: 'قبول إلغاء التعاقد',             en: 'Cancellation Accepted' },         urgency: 'important', category: 'requests' },
+  rfq_cancellation_rejected:      { icon: ThumbsDown,    colorClass: 'bg-destructive/10 text-destructive', label: { ar: 'رفض إلغاء التعاقد',              en: 'Cancellation Rejected' },         urgency: 'important', category: 'requests' },
+
   // Legacy generic types
   contract:    { icon: FileText,      colorClass: 'bg-info/10 text-info dark:text-info',     label: { ar: 'العقود', en: 'Contracts' }, urgency: 'important', category: 'contracts' },
   installment: { icon: CreditCard,    colorClass: 'bg-success/10 text-success dark:text-success', label: { ar: 'الأقساط', en: 'Installments' }, urgency: 'important', category: 'contracts' },
