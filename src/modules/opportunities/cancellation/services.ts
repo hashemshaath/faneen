@@ -55,16 +55,16 @@ export async function cancelRfqPreAward(input: CancelRfqPreAwardInput): Promise<
   // Fan-out to providers that have OPEN leads on this RFQ.
   const { data: leads } = await supabase
     .from('quote_request_leads')
-    .select('business_id, provider_user_id, status')
+    .select('provider_id, provider_user_id, status')
     .eq('quote_request_id', quoteRequestId);
 
-  const openLeads = (leads ?? []).filter(
+  const openLeads = ((leads ?? []) as unknown as Array<{ provider_id: string | null; provider_user_id: string | null; status: string | null }>).filter(
     (l) => !['closed', 'rejected', 'cancelled', 'lost'].includes(String(l?.status ?? '')),
-  ) as Array<{ business_id: string | null; provider_user_id: string | null }>;
+  );
 
   const seenBiz = new Set<string>();
   for (const l of openLeads) {
-    const businessId = l.business_id;
+    const businessId = l.provider_id;
     if (!businessId || seenBiz.has(businessId)) continue;
     seenBiz.add(businessId);
 
