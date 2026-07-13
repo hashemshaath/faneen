@@ -58,6 +58,8 @@ const fmtCompact = (n: number) =>
 
 const STATUS_LABEL: Record<RentalOrderStatus, { ar: string; en: string; color: string }> = {
   draft:         { ar: 'مسودة',        en: 'Draft',     color: '#94a3b8' },
+  pending_provider_review: { ar: 'بانتظار المراجعة', en: 'Pending review', color: '#f59e0b' },
+  declined:      { ar: 'مرفوض',        en: 'Declined',  color: '#f43f5e' },
   active:        { ar: 'نشط',          en: 'Active',    color: '#10b981' },
   expiring_soon: { ar: 'قرب الانتهاء', en: 'Expiring',  color: '#f59e0b' },
   expired:       { ar: 'منتهي',        en: 'Expired',   color: '#ef4444' },
@@ -67,7 +69,7 @@ const STATUS_LABEL: Record<RentalOrderStatus, { ar: string; en: string; color: s
   cancelled:     { ar: 'ملغى',         en: 'Cancelled', color: '#f43f5e' },
 };
 const STATUS_KEYS: RentalOrderStatus[] =
-  ['draft','active','expiring_soon','expired','extended','renewed','closed','cancelled'];
+  ['draft','pending_provider_review','declined','active','expiring_soon','expired','extended','renewed','closed','cancelled'];
 
 type Range = '30' | '90' | '180' | '365';
 const RANGE_DAYS: Record<Range, number> = { '30': 30, '90': 90, '180': 180, '365': 365 };
