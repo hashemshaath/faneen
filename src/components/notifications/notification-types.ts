@@ -139,6 +139,11 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   rfq_cancellation_accepted:      { icon: CheckCircle2,  colorClass: 'bg-success/10 text-success',      label: { ar: 'قبول إلغاء التعاقد',             en: 'Cancellation Accepted' },         urgency: 'important', category: 'requests' },
   rfq_cancellation_rejected:      { icon: ThumbsDown,    colorClass: 'bg-destructive/10 text-destructive', label: { ar: 'رفض إلغاء التعاقد',              en: 'Cancellation Rejected' },         urgency: 'important', category: 'requests' },
 
+  // ── T1 — rental customer request path
+  rental_request_new:             { icon: Package,       colorClass: 'bg-info/10 text-info',            label: { ar: 'طلب تأجير جديد',                en: 'New Rental Request' },            urgency: 'important', category: 'requests' },
+  rental_request_accepted:        { icon: CheckCircle2,  colorClass: 'bg-success/10 text-success',      label: { ar: 'قبول طلب التأجير',              en: 'Rental Request Accepted' },       urgency: 'important', category: 'contracts' },
+  rental_request_declined:        { icon: XCircle,       colorClass: 'bg-destructive/10 text-destructive', label: { ar: 'رفض طلب التأجير',              en: 'Rental Request Declined' },       urgency: 'important', category: 'requests' },
+
   // Legacy generic types
   contract:    { icon: FileText,      colorClass: 'bg-info/10 text-info dark:text-info',     label: { ar: 'العقود', en: 'Contracts' }, urgency: 'important', category: 'contracts' },
   installment: { icon: CreditCard,    colorClass: 'bg-success/10 text-success dark:text-success', label: { ar: 'الأقساط', en: 'Installments' }, urgency: 'important', category: 'contracts' },
