@@ -16775,6 +16775,12 @@ export type Database = {
           currency: string
           customer_business_id: string | null
           customer_user_id: string | null
+          decline_reason: string | null
+          delivery_address_text: string | null
+          delivery_city_id: string | null
+          delivery_district_id: string | null
+          delivery_fee: number | null
+          delivery_required: boolean
           deposit_amount: number
           end_date: string
           id: string
@@ -16784,6 +16790,7 @@ export type Database = {
           quantity: number
           ref_id: string
           rental_item_id: string
+          request_notes: string | null
           start_date: string
           status: Database["public"]["Enums"]["rental_order_status"]
           terms_snapshot: Json
@@ -16800,6 +16807,12 @@ export type Database = {
           currency?: string
           customer_business_id?: string | null
           customer_user_id?: string | null
+          decline_reason?: string | null
+          delivery_address_text?: string | null
+          delivery_city_id?: string | null
+          delivery_district_id?: string | null
+          delivery_fee?: number | null
+          delivery_required?: boolean
           deposit_amount?: number
           end_date: string
           id?: string
@@ -16809,6 +16822,7 @@ export type Database = {
           quantity?: number
           ref_id?: string
           rental_item_id: string
+          request_notes?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["rental_order_status"]
           terms_snapshot?: Json
@@ -16825,6 +16839,12 @@ export type Database = {
           currency?: string
           customer_business_id?: string | null
           customer_user_id?: string | null
+          decline_reason?: string | null
+          delivery_address_text?: string | null
+          delivery_city_id?: string | null
+          delivery_district_id?: string | null
+          delivery_fee?: number | null
+          delivery_required?: boolean
           deposit_amount?: number
           end_date?: string
           id?: string
@@ -16834,6 +16854,7 @@ export type Database = {
           quantity?: number
           ref_id?: string
           rental_item_id?: string
+          request_notes?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["rental_order_status"]
           terms_snapshot?: Json
@@ -16856,6 +16877,20 @@ export type Database = {
             columns: ["customer_business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_orders_delivery_city_id_fkey"
+            columns: ["delivery_city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_orders_delivery_district_id_fkey"
+            columns: ["delivery_district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
             referencedColumns: ["id"]
           },
           {
@@ -24837,6 +24872,8 @@ export type Database = {
         | "renewed"
         | "closed"
         | "cancelled"
+        | "pending_provider_review"
+        | "declined"
       rental_unit: "day" | "hour" | "piece" | "m" | "m2" | "unit"
       service_request_status:
         | "pending"
@@ -25205,6 +25242,8 @@ export const Constants = {
         "renewed",
         "closed",
         "cancelled",
+        "pending_provider_review",
+        "declined",
       ],
       rental_unit: ["day", "hour", "piece", "m", "m2", "unit"],
       service_request_status: [
