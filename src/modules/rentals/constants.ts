@@ -11,6 +11,8 @@ export const RENTAL_UNITS: ReadonlyArray<{ value: RentalUnit; ar: string; en: st
 
 export const ORDER_STATUS_TONES: Record<RentalOrderStatus, 'primary' | 'amber' | 'red' | 'emerald' | 'muted'> = {
   draft: 'muted',
+  pending_provider_review: 'amber',
+  declined: 'red',
   active: 'emerald',
   expiring_soon: 'amber',
   expired: 'red',
@@ -22,6 +24,8 @@ export const ORDER_STATUS_TONES: Record<RentalOrderStatus, 'primary' | 'amber' |
 
 export const ORDER_STATUS_LABELS: Record<RentalOrderStatus, { ar: string; en: string }> = {
   draft: { ar: 'مسودة', en: 'Draft' },
+  pending_provider_review: { ar: 'بانتظار مراجعة المزوّد', en: 'Pending provider review' },
+  declined: { ar: 'مرفوض من المزوّد', en: 'Declined by provider' },
   active: { ar: 'نشط', en: 'Active' },
   expiring_soon: { ar: 'يقترب الانتهاء', en: 'Expiring soon' },
   expired: { ar: 'منتهي', en: 'Expired' },
