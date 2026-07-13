@@ -492,6 +492,11 @@ const Quote: React.FC = () => {
       brand_notes: form.preferredBrandIds.length && form.brandNotes.trim()
         ? form.brandNotes.trim()
         : null,
+      // Phase E — client-chosen RFQ validity duration.
+      valid_until: (() => {
+        const days = Math.max(1, Math.min(365, Number(form.validityDays) || 30));
+        return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+      })(),
     };
 
     try {
@@ -944,6 +949,30 @@ const Quote: React.FC = () => {
                           onChange={(e) => update('quantity', e.target.value)}
                         />
                       </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="q-validity">
+                        <Bi ar="مدة صلاحية الطلب" en="Request validity" />
+                      </Label>
+                      <select
+                        id="q-validity"
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        className="mt-1.5 h-12 w-full rounded-xl border border-border bg-background px-3 text-sm tech-content"
+                        value={form.validityDays}
+                        onChange={(e) => update('validityDays', Number(e.target.value))}
+                      >
+                        {[7, 14, 30, 60, 90].map((d) => (
+                          <option key={d} value={d}>
+                            {bi(`${d} أيام`, `${d} days`)}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        <Bi
+                          ar="بعد انتهاء المدة يتحول الطلب تلقائيًا إلى منتهي الصلاحية ولن يتلقى عروضًا جديدة."
+                          en="After this date the request auto-expires and stops accepting new bids."
+                        />
+                      </p>
                     </div>
                     <div>
                       <Label><Bi ar="صور أو مخططات (اختياري)" en="Photos or plans (optional)" /></Label>
