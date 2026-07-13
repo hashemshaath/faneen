@@ -16770,6 +16770,7 @@ export type Database = {
       rental_orders: {
         Row: {
           client_site_id: string | null
+          contract_id: string | null
           created_at: string
           created_by: string
           currency: string
@@ -16783,6 +16784,7 @@ export type Database = {
           delivery_required: boolean
           deposit_amount: number
           end_date: string
+          extension_daily_rate: number | null
           id: string
           notes: string | null
           project_id: string | null
@@ -16802,6 +16804,7 @@ export type Database = {
         }
         Insert: {
           client_site_id?: string | null
+          contract_id?: string | null
           created_at?: string
           created_by?: string
           currency?: string
@@ -16815,6 +16818,7 @@ export type Database = {
           delivery_required?: boolean
           deposit_amount?: number
           end_date: string
+          extension_daily_rate?: number | null
           id?: string
           notes?: string | null
           project_id?: string | null
@@ -16834,6 +16838,7 @@ export type Database = {
         }
         Update: {
           client_site_id?: string | null
+          contract_id?: string | null
           created_at?: string
           created_by?: string
           currency?: string
@@ -16847,6 +16852,7 @@ export type Database = {
           delivery_required?: boolean
           deposit_amount?: number
           end_date?: string
+          extension_daily_rate?: number | null
           id?: string
           notes?: string | null
           project_id?: string | null
@@ -16865,6 +16871,13 @@ export type Database = {
           work_order_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "rental_orders_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rental_orders_customer_business_id_fkey"
             columns: ["customer_business_id"]
@@ -22720,6 +22733,10 @@ export type Database = {
       create_project_closure: {
         Args: { _completion_date?: string; _work_order_id: string }
         Returns: Json
+      }
+      create_rental_contract: {
+        Args: { p_rental_order_id: string }
+        Returns: string
       }
       create_temporary_login_code: {
         Args: { _identifier: string; _purpose?: string; _user_id?: string }

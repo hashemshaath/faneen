@@ -66,10 +66,11 @@ const STATUS_LABEL: Record<RentalOrderStatus, { ar: string; en: string; color: s
   extended:      { ar: 'ممدد',         en: 'Extended',  color: '#0ea5e9' },
   renewed:       { ar: 'مجدد',         en: 'Renewed',   color: '#6366f1' },
   closed:        { ar: 'مغلق',         en: 'Closed',    color: '#71717a' },
+  overdue:       { ar: 'متأخر',        en: 'Overdue',   color: '#b91c1c' },
   cancelled:     { ar: 'ملغى',         en: 'Cancelled', color: '#f43f5e' },
 };
 const STATUS_KEYS: RentalOrderStatus[] =
-  ['draft','pending_provider_review','declined','active','expiring_soon','expired','extended','renewed','closed','cancelled'];
+  ['draft','pending_provider_review','declined','active','expiring_soon','expired','extended','renewed','closed','overdue','cancelled'];
 
 type Range = '30' | '90' | '180' | '365';
 const RANGE_DAYS: Record<Range, number> = { '30': 30, '90': 90, '180': 180, '365': 365 };

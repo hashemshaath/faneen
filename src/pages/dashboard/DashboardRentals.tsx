@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X, ChevronDown, Wand2, Info, Check, AlertCircle } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentUser } from '@/modules/identity/services/session';
 import {
@@ -2126,6 +2127,7 @@ const OrdersPanel: React.FC<{
             </div>
             {isOpen && (
               <div className="mt-3">
+                <OrderContractLink order={o} onChanged={onChanged} />
                 <RentalExtensionPanel order={o} asProvider onChanged={onChanged} />
                 <div className="mt-3">
                   <RentalOrderAssetLinks rentalOrderId={o.id} canManage />
@@ -2135,6 +2137,56 @@ const OrdersPanel: React.FC<{
           </Card>
         );
       })}
+    </div>
+  );
+};
+
+/**
+ * T4.3 — Contract bridge action on the provider order card.
+ * - If linked contract exists → «عرض العقد» link.
+ * - Else → «إنشاء العقد» button (idempotent RPC).
+ */
+const OrderContractLink: React.FC<{
+  order: RentalOrder;
+  onChanged?: () => void | Promise<void>;
+}> = ({ order, onChanged }) => {
+  const [busy, setBusy] = useState(false);
+  const [contractId, setContractId] = useState<string | null>(order.contract_id ?? null);
+  const eligible = ['active', 'expiring_soon', 'expired', 'overdue', 'extended', 'renewed', 'closed'].includes(order.status);
+  if (!eligible && !contractId) return null;
+
+  const create = async () => {
+    setBusy(true);
+    const r = await RentalCustomerRequests.createRentalContract(order.id);
+    setBusy(false);
+    if (r.error) { toast.error(r.error.message || 'تعذّر إنشاء العقد'); return; }
+    if (r.data) {
+      setContractId(r.data);
+      toast.success('تم إنشاء العقد');
+      await onChanged?.();
+    }
+  };
+
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 p-3">
+      <div className="flex items-center gap-2 text-sm">
+        <FileText className="h-4 w-4 text-primary" />
+        {contractId
+          ? <Bi ar="يوجد عقد مرتبط بهذا الطلب." en="A contract is linked to this order." />
+          : <Bi ar="لا يوجد عقد مرتبط بعد." en="No contract linked yet." />}
+      </div>
+      {contractId ? (
+        <Button asChild size="sm" variant="outline">
+          <Link to={`/contracts/${contractId}`}>
+            <Bi ar="عرض العقد" en="View contract" />
+          </Link>
+        </Button>
+      ) : (
+        <Button size="sm" onClick={create} disabled={busy}>
+          {busy && <Loader2 className="h-4 w-4 me-1 animate-spin" />}
+          <Bi ar="إنشاء العقد" en="Create contract" />
+        </Button>
+      )}
     </div>
   );
 };

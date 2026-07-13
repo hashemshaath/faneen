@@ -178,6 +178,16 @@ export async function providerAcceptRentalRequest(
     });
   } catch { /* best-effort */ }
 
+  // T4.2 — best-effort auto-create draft contract linking both parties.
+  try {
+    const { data: contractId } = await supabase.rpc('create_rental_contract' as never, {
+      p_rental_order_id: order.id,
+    } as never);
+    if (contractId && typeof contractId === 'string') {
+      order.contract_id = contractId;
+    }
+  } catch { /* best-effort — provider can retry from UI */ }
+
   if (order.customer_user_id) {
     try {
       await createNotification({
@@ -195,6 +205,20 @@ export async function providerAcceptRentalRequest(
   }
 
   return { data: order, error: null };
+}
+
+/**
+ * T4.2 — manual retry / fallback for provider when auto-create failed.
+ * Idempotent (RPC returns the existing contract_id if already linked).
+ */
+export async function createRentalContract(
+  rentalOrderId: string,
+): Promise<ServiceResult<string>> {
+  const { data, error } = await supabase.rpc('create_rental_contract' as never, {
+    p_rental_order_id: rentalOrderId,
+  } as never);
+  if (error) return { data: null, error: error as Error };
+  return { data: (data as unknown as string) ?? null, error: null };
 }
 
 export async function providerDeclineRentalRequest(

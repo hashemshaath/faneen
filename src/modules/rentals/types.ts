@@ -12,6 +12,7 @@ export type RentalOrderStatus =
   | 'extended'
   | 'renewed'
   | 'closed'
+  | 'overdue'
   | 'cancelled';
 export type RentalExtensionType = 'full' | 'partial' | 'duration_only' | 'quantity_only';
 export type RentalExtensionStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
@@ -96,6 +97,9 @@ export interface RentalOrder {
   delivery_address_text?: string | null;
   request_notes?: string | null;
   decline_reason?: string | null;
+  // T4 — rentals ↔ contracts bridge.
+  contract_id?: string | null;
+  extension_daily_rate?: number | null;
 }
 
 export interface RentalExtension {

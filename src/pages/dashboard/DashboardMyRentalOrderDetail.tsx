@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Bi } from '@/components/common/Bilingual';
 import {
   ArrowLeft, ArrowRight, Calendar, Truck, Package, Clock, MapPin, StickyNote, Loader2, AlertTriangle,
+  FileText,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,6 +43,7 @@ const EVENT_LABEL: Record<string, { ar: string; en: string }> = {
   'request.accepted': { ar: 'قبول الطلب',       en: 'Request accepted' },
   'request.declined': { ar: 'رفض الطلب',        en: 'Request declined' },
   'order.closed':     { ar: 'إغلاق الطلب',       en: 'Order closed' },
+  'contract.created': { ar: 'إنشاء العقد',      en: 'Contract created' },
 };
 
 const DashboardMyRentalOrderDetail: React.FC = () => {
@@ -174,6 +176,22 @@ const DashboardMyRentalOrderDetail: React.FC = () => {
         </Card>
 
         {/* Declined reason */}
+        {order.contract_id && (
+          <Card>
+            <CardContent className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="h-4 w-4 text-primary" />
+                <Bi ar="تم إنشاء عقد تأجير مرتبط بهذا الطلب." en="A rental contract is linked to this order." />
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/contracts/${order.contract_id}`}>
+                  <Bi ar="عرض العقد" en="View contract" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {order.status === 'declined' && order.decline_reason && (
           <Card className="border-destructive/40 bg-destructive/5">
             <CardContent className="p-4">
