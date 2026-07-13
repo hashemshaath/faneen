@@ -76,6 +76,8 @@ interface QuoteForm {
   preferredBrandIds: string[];
   brandPreferenceMode: BrandPreferenceMode | '';
   brandNotes: string;
+  /** Phase E — client-chosen RFQ validity duration in days (7/14/30/60/90). Default 30. */
+  validityDays: number;
 }
 
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
@@ -89,6 +91,7 @@ const emptyForm: QuoteForm = {
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
   preferredBrandIds: [], brandPreferenceMode: '', brandNotes: '',
+  validityDays: 30,
 };
 
 /**
