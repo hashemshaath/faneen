@@ -21,3 +21,11 @@ export { RentalOpsQueueCard } from './components/RentalOpsQueueCard';
 export * as RentalCustomerRequests from './services/customerRequests';
 export { computeRentalPricePreview } from './utils/pricing';
 export type { RentalPricePreview, RentalPricePreviewInput } from './utils/pricing';
+
+/* T5 — returns / pickup / damages */
+export * as RentalReturns from './services/returns';
+export { RentalReturnForm } from './components/RentalReturnForm';
+export { RentalReturnCustomerCard } from './components/RentalReturnCustomerCard';
+export type {
+  RentalReturn, RentalReturnCondition, RentalReturnPhoto,
+} from './services/returns';

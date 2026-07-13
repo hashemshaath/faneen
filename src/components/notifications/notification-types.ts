@@ -3,7 +3,7 @@ import {
   AlertTriangle, CheckCircle2, Star, Shield, Clock, Send, PenLine, Eye,
   Gavel, Archive, Undo2, RotateCcw, Rocket,
   Trophy, XCircle, Handshake, UserPlus, Tag, Link2, HelpCircle, ClipboardList,
-  Award, DollarSign, Users, ThumbsDown, RefreshCcw, Package,
+  Award, DollarSign, Users, ThumbsDown, RefreshCcw, Package, PackageCheck,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -152,6 +152,10 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   rental_extension_requested:     { icon: RefreshCcw,    colorClass: 'bg-info/10 text-info',            label: { ar: 'طلب تمديد التأجير',              en: 'Rental Extension Requested' },    urgency: 'important', category: 'contracts' },
   rental_extension_approved:      { icon: CheckCircle2,  colorClass: 'bg-success/10 text-success',      label: { ar: 'اعتماد تمديد التأجير',           en: 'Rental Extension Approved' },     urgency: 'important', category: 'contracts' },
   rental_closed:                  { icon: Archive,       colorClass: 'bg-muted text-muted-foreground',  label: { ar: 'إغلاق التأجير',                  en: 'Rental Closed' },                 urgency: 'info',      category: 'contracts' },
+
+  // ── T5 — rental returns / pickup / damages
+  rental_return_recorded:         { icon: PackageCheck,  colorClass: 'bg-info/10 text-info',            label: { ar: 'تسجيل إرجاع التأجير',            en: 'Rental Return Recorded' },        urgency: 'important', category: 'contracts' },
+  rental_return_disputed:         { icon: AlertTriangle, colorClass: 'bg-destructive/10 text-destructive', label: { ar: 'اعتراض على إرجاع التأجير',       en: 'Rental Return Disputed' },        urgency: 'urgent',    category: 'contracts' },
 
   // Legacy generic types
   contract:    { icon: FileText,      colorClass: 'bg-info/10 text-info dark:text-info',     label: { ar: 'العقود', en: 'Contracts' }, urgency: 'important', category: 'contracts' },

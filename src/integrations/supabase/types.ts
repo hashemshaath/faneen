@@ -16929,6 +16929,68 @@ export type Database = {
           },
         ]
       }
+      rental_returns: {
+        Row: {
+          condition: string
+          created_at: string
+          created_by: string
+          customer_ack: boolean
+          customer_ack_at: string | null
+          customer_dispute_note: string | null
+          damage_amount: number
+          damage_description: string | null
+          deposit_refunded: number | null
+          id: string
+          photos: Json
+          provider_notes: string | null
+          rental_order_id: string
+          returned_at: string
+          updated_at: string
+        }
+        Insert: {
+          condition: string
+          created_at?: string
+          created_by: string
+          customer_ack?: boolean
+          customer_ack_at?: string | null
+          customer_dispute_note?: string | null
+          damage_amount?: number
+          damage_description?: string | null
+          deposit_refunded?: number | null
+          id?: string
+          photos?: Json
+          provider_notes?: string | null
+          rental_order_id: string
+          returned_at?: string
+          updated_at?: string
+        }
+        Update: {
+          condition?: string
+          created_at?: string
+          created_by?: string
+          customer_ack?: boolean
+          customer_ack_at?: string | null
+          customer_dispute_note?: string | null
+          damage_amount?: number
+          damage_description?: string | null
+          deposit_refunded?: number | null
+          id?: string
+          photos?: Json
+          provider_notes?: string | null
+          rental_order_id?: string
+          returned_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_returns_rental_order_id_fkey"
+            columns: ["rental_order_id"]
+            isOneToOne: true
+            referencedRelation: "rental_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rental_term_templates: {
         Row: {
           category_id: string
@@ -21376,6 +21438,32 @@ export type Database = {
         }[]
       }
       accept_staff_invitation: { Args: { _token: string }; Returns: Json }
+      acknowledge_rental_return: {
+        Args: { p_dispute_note?: string; p_return_id: string }
+        Returns: {
+          condition: string
+          created_at: string
+          created_by: string
+          customer_ack: boolean
+          customer_ack_at: string | null
+          customer_dispute_note: string | null
+          damage_amount: number
+          damage_description: string | null
+          deposit_refunded: number | null
+          id: string
+          photos: Json
+          provider_notes: string | null
+          rental_order_id: string
+          returned_at: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rental_returns"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       add_business_sub_service: {
         Args: { p_business_id: string; p_sub_service_id: string }
         Returns: undefined
