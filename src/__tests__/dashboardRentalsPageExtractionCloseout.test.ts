@@ -16,10 +16,12 @@ const APP = path.resolve(__dirname, '../App.tsx');
 const read = (p: string) => fs.readFileSync(p, 'utf8');
 
 describe('Dashboard Rentals — page extraction closeout', () => {
-  it('DashboardRentals.tsx exists and stayed under previous size cap', () => {
+  it('DashboardRentals.tsx exists and stayed under size cap', () => {
     expect(fs.existsSync(PAGE)).toBe(true);
     const lines = read(PAGE).split('\n').length;
-    expect(lines).toBeLessThan(2139);
+    // T1 — customer request path added a PendingRequestsPanel + intake tab.
+    // Cap raised to accommodate the new provider-facing surface (was 2139).
+    expect(lines).toBeLessThan(2350);
   });
 
   it('useRentalListDerivations hook exists and exports the derivation API', () => {
