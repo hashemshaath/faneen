@@ -135,6 +135,11 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   rfq_cancellation_accepted:     { ar: 'قبول إلغاء التعاقد',               en: 'Cancellation Accepted' },
   rfq_cancellation_rejected:     { ar: 'رفض إلغاء التعاقد',                en: 'Cancellation Rejected' },
 
+  // ── T1 — rental customer request lifecycle
+  rental_request_new:            { ar: 'طلب تأجير جديد',                   en: 'New Rental Request' },
+  rental_request_accepted:       { ar: 'قبول طلب التأجير',                 en: 'Rental Request Accepted' },
+  rental_request_declined:       { ar: 'رفض طلب التأجير',                  en: 'Rental Request Declined' },
+
   // ── Maintenance / warranty
   maintenance_request:           { ar: 'طلب صيانة',                 en: 'Maintenance Request' },
   maintenance_update:            { ar: 'تحديث صيانة',               en: 'Maintenance Update' },

@@ -55,6 +55,9 @@ export const DashboardClients = lazyRetry(() => import("../pages/dashboard/Dashb
 export const DashboardBadge = lazyRetry(() => import("../pages/dashboard/DashboardBadge"));
 export const DashboardMyRequests = lazyRetry(() => import("../pages/dashboard/DashboardMyRequests"));
 export const DashboardNewRfq = lazyRetry(() => import("../pages/dashboard/DashboardNewRfq"));
+// T1 — customer rental orders surface
+export const DashboardMyRentals = lazyRetry(() => import("../pages/dashboard/DashboardMyRentals"));
+export const DashboardMyRentalOrderDetail = lazyRetry(() => import("../pages/dashboard/DashboardMyRentalOrderDetail"));
 export const DashboardAccountDiagnostics = lazyRetry(() => import("../pages/dashboard/DashboardAccountDiagnostics"));
 export const ProviderJoin = lazyRetry(() => import("../pages/ProviderJoin"));
 export const ProviderJoinEdit = lazyRetry(() => import("../pages/ProviderJoinEdit"));

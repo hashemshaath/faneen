@@ -136,6 +136,8 @@ export const userNavGroups: DashboardNavGroup[] = [
     items: [
       { label: UNIFIED_ITEM_LABELS.overview, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: UNIFIED_ITEM_LABELS.myRequests, url: '/dashboard/my-requests', icon: Inbox },
+      // T1 — customer rental orders surface.
+      { label: { ar: 'طلباتي التأجيرية', en: 'My Rentals' }, url: '/dashboard/my-rentals', icon: Truck },
       { label: UNIFIED_ITEM_LABELS.messages, url: '/dashboard/messages', icon: MessageSquare },
       // MEMBERSHIP-CURRENT-SCOPE-FIX: membership is business-scoped today,
       // so hide the link for users who don't own/manage a business entity.

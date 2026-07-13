@@ -8,6 +8,7 @@ import type { RentalItem } from '@/modules/rentals';
 import { useSeoPage } from '@/modules/seo/useSeoPage';
 import { buildBreadcrumbList, buildService } from '@/lib/seo/structured-data';
 import { Loader2 } from 'lucide-react';
+import { RentalRequestInlineForm } from '@/components/rentals/RentalRequestInlineForm';
 
 const RentalItemPublic: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -61,6 +62,15 @@ const RentalItemPublic: React.FC = () => {
         {item.late_terms && <div><div className="text-sm font-medium mb-1"><Bi ar="شروط التأخير" en="Late terms" /></div><div className="text-sm text-muted-foreground">{item.late_terms}</div></div>}
         {item.penalty_terms && <div><div className="text-sm font-medium mb-1"><Bi ar="شروط جزائية" en="Penalty terms" /></div><div className="text-sm text-muted-foreground">{item.penalty_terms}</div></div>}
       </Card>
+
+      {/* T1 — inline customer request form (no modal). Guests see a login prompt. */}
+      <RentalRequestInlineForm item={item} />
+
+      <div className="text-center pt-2">
+        <Link to="/rentals" className="text-primary underline text-sm">
+          <Bi ar="عودة للتأجير" en="Back to rentals" />
+        </Link>
+      </div>
     </main>
   );
 };
