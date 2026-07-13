@@ -52,6 +52,8 @@ const sameDay = (a: Date, b: Date) =>
 /* --------------------------- Status mapping --------------------------- */
 const STATUS_COLORS: Record<RentalOrderStatus, { bar: string; chip: string; dot: string; label: { ar: string; en: string } }> = {
   draft:          { bar: 'bg-slate-400/70',     chip: 'bg-slate-500/15 text-slate-700 dark:text-slate-300',     dot: 'bg-slate-400',  label: { ar: 'مسودة', en: 'Draft' } },
+  pending_provider_review: { bar: 'bg-amber-500/80', chip: 'bg-amber-500/15 text-amber-700 dark:text-amber-300', dot: 'bg-amber-500', label: { ar: 'بانتظار المراجعة', en: 'Pending review' } },
+  declined:       { bar: 'bg-rose-500/80',      chip: 'bg-rose-500/15 text-rose-700 dark:text-rose-300',        dot: 'bg-rose-500',   label: { ar: 'مرفوض', en: 'Declined' } },
   active:         { bar: 'bg-emerald-500/80',   chip: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500', label: { ar: 'نشط', en: 'Active' } },
   expiring_soon:  { bar: 'bg-amber-500/85',     chip: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',     dot: 'bg-amber-500',  label: { ar: 'قرب الانتهاء', en: 'Expiring' } },
   expired:        { bar: 'bg-red-500/85',       chip: 'bg-red-500/15 text-red-700 dark:text-red-300',           dot: 'bg-red-500',    label: { ar: 'منتهي', en: 'Expired' } },
