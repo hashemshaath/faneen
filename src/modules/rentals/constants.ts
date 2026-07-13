@@ -19,6 +19,7 @@ export const ORDER_STATUS_TONES: Record<RentalOrderStatus, 'primary' | 'amber' |
   extended: 'primary',
   renewed: 'primary',
   closed: 'muted',
+  overdue: 'red',
   cancelled: 'muted',
 };
 
@@ -32,6 +33,7 @@ export const ORDER_STATUS_LABELS: Record<RentalOrderStatus, { ar: string; en: st
   extended: { ar: 'مُمَدد', en: 'Extended' },
   renewed: { ar: 'مُجدد', en: 'Renewed' },
   closed: { ar: 'مغلق', en: 'Closed' },
+  overdue: { ar: 'متأخر', en: 'Overdue' },
   cancelled: { ar: 'ملغي', en: 'Cancelled' },
 };
 
