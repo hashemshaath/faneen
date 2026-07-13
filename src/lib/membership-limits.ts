@@ -43,7 +43,7 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'search_priority',
     label: { ar: 'أولوية الظهور في البحث', en: 'Search Priority Boost' },
     description: { ar: 'مستوى أولوية الظهور في نتائج البحث (0=عادي، 1-10=مرتفع)', en: 'Search result ranking boost (0=normal, 1-10=high)' },
-    type: 'number', defaultValue: 0, icon: 'TrendingUp', category: 'visibility', confirmed: false,
+    type: 'number', defaultValue: 0, icon: 'TrendingUp', category: 'visibility', confirmed: true,
   },
   {
     key: 'suggested_services',
@@ -81,7 +81,13 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'max_blog_posts',
     label: { ar: 'مقالات المدونة', en: 'Blog Posts' },
     description: { ar: 'عدد المقالات المسموح بنشرها شهرياً', en: 'Number of blog posts allowed per month' },
-    type: 'number', defaultValue: 0, icon: 'Newspaper', category: 'content', confirmed: false,
+    type: 'number', defaultValue: 0, icon: 'Newspaper', category: 'content', confirmed: true,
+  },
+  {
+    key: 'max_rfqs_monthly',
+    label: { ar: 'طلبات عروض الأسعار الشهرية', en: 'Monthly RFQs' },
+    description: { ar: 'الحد الأقصى لطلبات عروض الأسعار شهرياً (0=غير محدود)', en: 'Max RFQs per month (0=unlimited)' },
+    type: 'number', defaultValue: 5, icon: 'FileQuestion', category: 'content', confirmed: true,
   },
 
   // ── Operations ──
@@ -89,7 +95,7 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'max_contracts',
     label: { ar: 'العقود الشهرية', en: 'Monthly Contracts' },
     description: { ar: 'الحد الأقصى للعقود الجديدة شهرياً (0=غير محدود)', en: 'Max new contracts per month (0=unlimited)' },
-    type: 'number', defaultValue: 3, icon: 'FileText', category: 'operations', confirmed: false,
+    type: 'number', defaultValue: 3, icon: 'FileText', category: 'operations', confirmed: true,
   },
   {
     key: 'max_branches',
@@ -101,7 +107,7 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'max_staff',
     label: { ar: 'أعضاء الفريق', en: 'Team Members' },
     description: { ar: 'عدد أعضاء الفريق المسموح بإضافتهم للحساب', en: 'Number of team members that can be added' },
-    type: 'number', defaultValue: 1, icon: 'Users', category: 'operations', confirmed: false,
+    type: 'number', defaultValue: 1, icon: 'Users', category: 'operations', confirmed: true,
   },
   {
     key: 'max_bookings_daily',
@@ -235,4 +241,23 @@ export function getPlanLimitDisplayValue(
   const n = typeof value === 'number' ? value : Number(value ?? 0);
   if (field.key.startsWith('max_') && n === 0) return { kind: 'num', text: '∞' };
   return { kind: 'num', text: String(n) };
+}
+
+/**
+ * Format a quota progress label such as `3 من 10` (RTL) or `3 / 10` (LTR).
+ * `limit === 0` → unlimited ("غير محدود" / "Unlimited").
+ * Negative or non-finite inputs are clamped to 0.
+ * Pure function — safe to unit test.
+ */
+export function formatQuotaLabel(
+  used: number,
+  limit: number,
+  isRTL: boolean = true,
+): string {
+  const u = Number.isFinite(used) && used > 0 ? Math.floor(used) : 0;
+  const l = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 0;
+  if (l === 0) {
+    return isRTL ? `${u} / غير محدود` : `${u} / Unlimited`;
+  }
+  return isRTL ? `${u} من ${l}` : `${u} / ${l}`;
 }
