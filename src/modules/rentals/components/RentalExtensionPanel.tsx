@@ -39,6 +39,19 @@ export const RentalExtensionPanel: React.FC<RentalExtensionPanelProps> = ({
   const [reason, setReason] = React.useState('');
   const [extType, setExtType] = React.useState<RentalExtensionType>('duration_only');
 
+  // T4.4 — extension pricing preview. Uses `extension_daily_rate` when set
+  // on the order, otherwise falls back to the order's `unit_price` (the
+  // rate captured at request time from the item's base_price).
+  const dailyRate = React.useMemo(
+    () => Number(order.extension_daily_rate ?? order.unit_price ?? 0),
+    [order.extension_daily_rate, order.unit_price],
+  );
+  const previewDays = Number(days) || 0;
+  const previewCost = Math.max(0, previewDays * dailyRate);
+  const rateSource: 'override' | 'base' =
+    order.extension_daily_rate != null && Number(order.extension_daily_rate) > 0
+      ? 'override' : 'base';
+
   const refresh = async () => { setMode('idle'); await onChanged?.(); };
 
   const submitExtension = async () => {
@@ -53,6 +66,7 @@ export const RentalExtensionPanel: React.FC<RentalExtensionPanelProps> = ({
       additional_days: Number(days) || 0,
       additional_quantity: Number(qty) || 0,
       reason: reason || undefined,
+      cost: previewCost > 0 ? previewCost : undefined,
     });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
@@ -135,6 +149,23 @@ export const RentalExtensionPanel: React.FC<RentalExtensionPanelProps> = ({
               <Input value={reason} onChange={e => setReason(e.target.value)} dir="auto" />
             </div>
           </div>
+          {previewDays > 0 && dailyRate > 0 && (
+            <div className="rounded-lg bg-muted/40 border border-border/60 p-2 text-xs flex flex-wrap items-center justify-between gap-2">
+              <span className="text-muted-foreground">
+                <Bi ar="السعر اليومي للتمديد" en="Extension daily rate" />:
+                <span className="tech-content ms-1" dir="ltr">{dailyRate.toFixed(2)} {order.currency}</span>
+                <span className="ms-2 text-[10px] opacity-70">
+                  {rateSource === 'override'
+                    ? bi('(سعر تمديد مخصص)', '(custom extension rate)')
+                    : bi('(السعر الأساسي)', '(base rate)')}
+                </span>
+              </span>
+              <span className="font-semibold">
+                <Bi ar="التكلفة التقديرية" en="Estimated cost" />:
+                <span className="tech-content ms-1" dir="ltr">{previewCost.toFixed(2)} {order.currency}</span>
+              </span>
+            </div>
+          )}
           <div className="flex gap-2">
             <Button size="sm" onClick={submitExtension} disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Bi ar="إرسال" en="Submit" />}
