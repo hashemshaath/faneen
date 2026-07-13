@@ -12,6 +12,8 @@ export interface RentalOrderStats {
   active: RentalOrder[];
   expiring: RentalOrder[];
   overdue: RentalOrder[];
+  /** T1 — customer requests awaiting provider accept/decline. */
+  pending: RentalOrder[];
 }
 
 export interface UseRentalListDerivationsInput {
@@ -35,6 +37,7 @@ export function useRentalListDerivations(
     active: orders.filter(o => o.status === 'active'),
     expiring: orders.filter(o => o.status === 'expiring_soon'),
     overdue: orders.filter(o => o.status === 'expired'),
+    pending: orders.filter(o => o.status === 'pending_provider_review'),
   }), [orders]);
 
   const filteredItems = useMemo<RentalItem[]>(() => {
