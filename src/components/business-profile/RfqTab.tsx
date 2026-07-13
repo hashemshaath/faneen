@@ -287,6 +287,28 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
           </Label>
           <Input type="date" value={form.deadline} onChange={update("deadline")} className="h-11 rounded-xl tech-content" />
         </div>
+        <div className="sm:col-span-2">
+          <Label className="text-xs">{bi("مدة صلاحية الطلب", "Request validity")}</Label>
+          <Select
+            value={String(form.validity_days)}
+            onValueChange={(v) => setForm((p) => ({ ...p, validity_days: Number(v) || 30 }))}
+          >
+            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[7, 14, 30, 60, 90].map((d) => (
+                <SelectItem key={d} value={String(d)}>
+                  {bi(`${d} أيام`, `${d} days`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {bi(
+              "بعد انتهاء المدة يُعتبر الطلب منتهي الصلاحية تلقائيًا.",
+              "After this period the request auto-expires.",
+            )}
+          </p>
+        </div>
       </div>
 
       <div className="mt-4 flex items-center justify-end gap-2">
