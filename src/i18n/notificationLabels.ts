@@ -140,6 +140,15 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   rental_request_accepted:       { ar: 'قبول طلب التأجير',                 en: 'Rental Request Accepted' },
   rental_request_declined:       { ar: 'رفض طلب التأجير',                  en: 'Rental Request Declined' },
 
+  // ── T2 — rental lifecycle events
+  rental_started:                { ar: 'بدء التأجير',                       en: 'Rental Started' },
+  rental_expiring_soon:          { ar: 'التأجير يقترب من الانتهاء',         en: 'Rental Expiring Soon' },
+  rental_expired:                { ar: 'انتهاء التأجير',                    en: 'Rental Expired' },
+  rental_overdue:                { ar: 'تأجير متأخر',                       en: 'Rental Overdue' },
+  rental_extension_requested:    { ar: 'طلب تمديد التأجير',                 en: 'Rental Extension Requested' },
+  rental_extension_approved:     { ar: 'اعتماد تمديد التأجير',              en: 'Rental Extension Approved' },
+  rental_closed:                 { ar: 'إغلاق التأجير',                     en: 'Rental Closed' },
+
   // ── Maintenance / warranty
   maintenance_request:           { ar: 'طلب صيانة',                 en: 'Maintenance Request' },
   maintenance_update:            { ar: 'تحديث صيانة',               en: 'Maintenance Update' },
