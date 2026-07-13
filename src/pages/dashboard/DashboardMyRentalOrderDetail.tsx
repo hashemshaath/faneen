@@ -27,6 +27,8 @@ import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_TONES,
   RentalExtensionPanel,
+  RentalReturns,
+  RentalReturnCustomerCard,
   type RentalItem,
 } from '@/modules/rentals';
 
@@ -44,6 +46,9 @@ const EVENT_LABEL: Record<string, { ar: string; en: string }> = {
   'request.declined': { ar: 'رفض الطلب',        en: 'Request declined' },
   'order.closed':     { ar: 'إغلاق الطلب',       en: 'Order closed' },
   'contract.created': { ar: 'إنشاء العقد',      en: 'Contract created' },
+  'return.recorded':     { ar: 'تسجيل الإرجاع',    en: 'Return recorded' },
+  'return.acknowledged': { ar: 'تأكيد الاستلام',  en: 'Return acknowledged' },
+  'return.disputed':     { ar: 'اعتراض على الإرجاع', en: 'Return disputed' },
 };
 
 const DashboardMyRentalOrderDetail: React.FC = () => {
@@ -88,7 +93,29 @@ const DashboardMyRentalOrderDetail: React.FC = () => {
         .select('id, name_ar, name_en')
         .eq('id', order!.provider_business_id)
         .maybeSingle();
-      return data as { name_ar?: string | null; name_en?: string | null } | null;
+      return data as { name_ar?: string | null; name_en?: string | null; user_id?: string | null } | null;
+    },
+  });
+
+  const { data: rentalReturn, refetch: refetchReturn } = useQuery({
+    queryKey: ['rental-return', order?.id],
+    enabled: !!order?.id,
+    queryFn: async () => {
+      const r = await RentalReturns.getReturnForOrder(order!.id);
+      return r.data;
+    },
+  });
+
+  const { data: providerOwner } = useQuery({
+    queryKey: ['rental-order-provider-owner', order?.provider_business_id],
+    enabled: !!order?.provider_business_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('businesses')
+        .select('user_id')
+        .eq('id', order!.provider_business_id)
+        .maybeSingle();
+      return (data as { user_id?: string | null } | null)?.user_id ?? null;
     },
   });
 
@@ -241,6 +268,16 @@ const DashboardMyRentalOrderDetail: React.FC = () => {
         {/* Extension panel — only meaningful on active orders */}
         {(order.status === 'active' || order.status === 'expiring_soon' || order.status === 'extended') && (
           <RentalExtensionPanel order={order} onChanged={() => { /* React Query auto-refetches on window focus */ }} />
+        )}
+
+        {/* T5 — return card (visible whenever a return exists) */}
+        {rentalReturn && (
+          <RentalReturnCustomerCard
+            order={order}
+            ret={rentalReturn}
+            providerOwnerUserId={providerOwner ?? null}
+            onChanged={() => refetchReturn()}
+          />
         )}
 
         {/* Timeline */}
