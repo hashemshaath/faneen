@@ -3,7 +3,7 @@ import {
   AlertTriangle, CheckCircle2, Star, Shield, Clock, Send, PenLine, Eye,
   Gavel, Archive, Undo2, RotateCcw, Rocket,
   Trophy, XCircle, Handshake, UserPlus, Tag, Link2, HelpCircle, ClipboardList,
-  Award, DollarSign, Users, ThumbsDown, RefreshCcw,
+  Award, DollarSign, Users, ThumbsDown, RefreshCcw, Package,
   type LucideIcon,
 } from 'lucide-react';
 
