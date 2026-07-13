@@ -68,7 +68,20 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (existing) continue;
 
-      const recipients = [o.customer_user_id].filter(
+      // Include the provider owner alongside the customer so both sides see
+      // expiring/expired rentals in the notification center (T2).
+      const { data: providerRow } = await supabase
+        .from('businesses')
+        .select('user_id')
+        .eq('id', o.provider_business_id)
+        .maybeSingle();
+      const providerOwnerId = (providerRow as { user_id?: string } | null)?.user_id ?? null;
+
+      const recipients = Array.from(
+        new Set([o.customer_user_id, providerOwnerId].filter(
+          (v): v is string => typeof v === 'string' && v.length > 0,
+        )),
+      ).filter(
         (v): v is string => typeof v === 'string' && v.length > 0,
       );
       const daysDelta = Math.floor(
