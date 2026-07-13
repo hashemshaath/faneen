@@ -21319,6 +21319,10 @@ export type Database = {
       }
       _gen_client_site_qr_token: { Args: never; Returns: string }
       _membership_free_defaults: { Args: never; Returns: Json }
+      _resolve_active_plan_limits: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: Json
+      }
       _resolve_customer_tracking_link: {
         Args: { _token: string; _tracking_ref: string }
         Returns: {

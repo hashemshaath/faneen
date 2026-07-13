@@ -36,6 +36,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
+import { QuotaMeter } from '@/components/membership/QuotaMeter';
+import { useQuotaToast } from '@/hooks/useQuotaToast';
 import { promotionCatalog, promotionDemoSeed, type PromotionTemplate } from '@/components/dashboard/promotions-catalog';
 import { PageHeader } from '@/components/shared';
 
@@ -212,6 +214,7 @@ SortablePromoCard.displayName = 'SortablePromoCard';
 const DashboardPromotions = () => {
   useNoIndex();
   const { isRTL: rtl } = useLanguage();
+  const notifyQuota = useQuotaToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLDivElement>(null);
@@ -313,7 +316,7 @@ const DashboardPromotions = () => {
       }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); closeForm(); toast.success(editingId ? (rtl ? 'تم التحديث' : 'Updated') : (rtl ? 'تمت الإضافة' : 'Added')); },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => { if (notifyQuota(err)) return; toast.error(err.message); },
   });
 
   const deleteMut = useMutation({
@@ -334,6 +337,7 @@ const DashboardPromotions = () => {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم النسخ' : 'Duplicated'); },
+    onError: (err: Error) => { if (notifyQuota(err)) return; toast.error(err.message); },
   });
 
   const reorderMut = useMutation({
@@ -565,6 +569,7 @@ const DashboardPromotions = () => {
         />
 
         <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="promotions" />
+        <QuotaMeter userId={user?.id} businessId={businessId} metric="promotions" />
 
         {/* Demo data alert */}
         {stats.demos > 0 && (
