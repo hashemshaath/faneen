@@ -2140,3 +2140,140 @@ const OrdersPanel: React.FC<{
 };
 
 export default DashboardRentals;
+
+/**
+ * T1 — Provider intake surface for `pending_provider_review` rental
+ * orders. Inline قبول/رفض actions (no modals). Decline requires a short
+ * reason (≥ 3 chars) that is stored on `rental_orders.decline_reason` and
+ * mirrored to the customer notification body.
+ */
+const PendingRequestsPanel: React.FC<{
+  orders: RentalOrder[];
+  items: RentalItem[];
+  onChanged?: () => void | Promise<void>;
+}> = ({ orders, items, onChanged }) => {
+  const { isRTL } = useLanguage();
+  const [openReasonId, setOpenReasonId] = useState<string | null>(null);
+  const [reason, setReason] = useState<string>('');
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  if (orders.length === 0) {
+    return (
+      <Card className="p-8 text-center text-muted-foreground">
+        <Bi ar="لا توجد طلبات جديدة بانتظار المراجعة." en="No new requests awaiting your review." />
+      </Card>
+    );
+  }
+
+  const accept = async (id: string) => {
+    setBusyId(id);
+    const r = await RentalCustomerRequests.providerAcceptRentalRequest(id);
+    setBusyId(null);
+    if (r.error) {
+      toast.error(r.error.message || (isRTL ? 'تعذّر قبول الطلب' : 'Could not accept'));
+      return;
+    }
+    toast.success(isRTL ? 'تم قبول الطلب' : 'Request accepted');
+    await onChanged?.();
+  };
+  const decline = async (id: string) => {
+    if (reason.trim().length < 3) {
+      toast.error(isRTL ? 'يرجى كتابة سبب الرفض (٣ أحرف على الأقل)' : 'Please add a reason (min 3 chars)');
+      return;
+    }
+    setBusyId(id);
+    const r = await RentalCustomerRequests.providerDeclineRentalRequest(id, reason.trim());
+    setBusyId(null);
+    if (r.error) {
+      toast.error(r.error.message || (isRTL ? 'تعذّر رفض الطلب' : 'Could not decline'));
+      return;
+    }
+    toast.success(isRTL ? 'تم رفض الطلب' : 'Request declined');
+    setOpenReasonId(null);
+    setReason('');
+    await onChanged?.();
+  };
+
+  return (
+    <div className="space-y-3">
+      {orders.map((o) => {
+        const it = items.find((i) => i.id === o.rental_item_id);
+        const isReasonOpen = openReasonId === o.id;
+        return (
+          <Card key={o.id} className="p-4 border-amber-500/30 bg-amber-500/5">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium truncate">
+                    {it ? (isRTL ? it.name_ar : (it.name_en || it.name_ar)) : '—'}
+                  </span>
+                  <Badge variant="outline" className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px]">
+                    <Bi ar="بانتظار المراجعة" en="Pending review" />
+                  </Badge>
+                  {o.delivery_required && (
+                    <Badge variant="outline" className="text-[10px]">
+                      <Bi ar="توصيل مطلوب" en="Delivery required" />
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground tech-content mt-1">
+                  {o.ref_id} · {o.start_date} → {o.end_date} · {o.total_days}d · {Number(o.total_amount).toFixed(2)} {o.currency}
+                </div>
+                {o.request_notes && (
+                  <p className="text-xs text-foreground/80 mt-2 whitespace-pre-wrap">
+                    <span className="text-muted-foreground me-1">{isRTL ? 'ملاحظة العميل:' : 'Customer note:'}</span>
+                    {o.request_notes}
+                  </p>
+                )}
+                {o.delivery_required && o.delivery_address_text && (
+                  <p className="text-xs text-foreground/80 mt-1">
+                    <span className="text-muted-foreground me-1">{isRTL ? 'عنوان التسليم:' : 'Delivery address:'}</span>
+                    {o.delivery_address_text}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 shrink-0">
+                <Button size="sm" onClick={() => accept(o.id)} disabled={busyId === o.id}>
+                  {busyId === o.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                  <span className="ms-1"><Bi ar="قبول" en="Accept" /></span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setOpenReasonId(isReasonOpen ? null : o.id); setReason(''); }}
+                  disabled={busyId === o.id}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  <span className="ms-1"><Bi ar="رفض" en="Decline" /></span>
+                </Button>
+              </div>
+            </div>
+            {isReasonOpen && (
+              <div className="mt-3 rounded-lg border border-border bg-background p-3 space-y-2">
+                <label className="text-xs text-muted-foreground">
+                  <Bi ar="سبب الرفض (يظهر للعميل)" en="Decline reason (visible to the customer)" />
+                </label>
+                <textarea
+                  className="w-full min-h-[70px] rounded-md border border-border bg-background p-2 text-sm"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder={isRTL ? 'اذكر السبب باختصار…' : 'Briefly explain the reason…'}
+                />
+                <div className="flex items-center justify-end gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => { setOpenReasonId(null); setReason(''); }}>
+                    <Bi ar="إلغاء" en="Cancel" />
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => decline(o.id)} disabled={busyId === o.id}>
+                    {busyId === o.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    <span className="ms-1"><Bi ar="إرسال الرفض" en="Send decline" /></span>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
