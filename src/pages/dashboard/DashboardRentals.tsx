@@ -24,6 +24,7 @@ import { useRentalListDerivations } from '@/hooks/useRentalListDerivations';
 import { RentalStatusBadge } from '@/modules/rentals/components/RentalStatusBadge';
 import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter';
 import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
+import { RentalReturnForm } from '@/modules/rentals/components/RentalReturnForm';
 import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { RentalCustomerRequests } from '@/modules/rentals';
@@ -2129,6 +2130,7 @@ const OrdersPanel: React.FC<{
               <div className="mt-3">
                 <OrderContractLink order={o} onChanged={onChanged} />
                 <RentalExtensionPanel order={o} asProvider onChanged={onChanged} />
+                <RentalReturnForm order={o} onDone={onChanged} />
                 <div className="mt-3">
                   <RentalOrderAssetLinks rentalOrderId={o.id} canManage />
                 </div>

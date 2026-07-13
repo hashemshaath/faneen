@@ -148,6 +148,8 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   rental_extension_requested:    { ar: 'طلب تمديد التأجير',                 en: 'Rental Extension Requested' },
   rental_extension_approved:     { ar: 'اعتماد تمديد التأجير',              en: 'Rental Extension Approved' },
   rental_closed:                 { ar: 'إغلاق التأجير',                     en: 'Rental Closed' },
+  rental_return_recorded:        { ar: 'تسجيل إرجاع التأجير',               en: 'Rental Return Recorded' },
+  rental_return_disputed:        { ar: 'اعتراض على إرجاع التأجير',          en: 'Rental Return Disputed' },
 
   // ── Maintenance / warranty
   maintenance_request:           { ar: 'طلب صيانة',                 en: 'Maintenance Request' },
