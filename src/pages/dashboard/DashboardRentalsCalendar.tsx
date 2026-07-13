@@ -60,6 +60,7 @@ const STATUS_COLORS: Record<RentalOrderStatus, { bar: string; chip: string; dot:
   extended:       { bar: 'bg-sky-500/80',       chip: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',           dot: 'bg-sky-500',    label: { ar: 'ممدد', en: 'Extended' } },
   renewed:        { bar: 'bg-indigo-500/80',    chip: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300',  dot: 'bg-indigo-500', label: { ar: 'مجدد', en: 'Renewed' } },
   closed:         { bar: 'bg-zinc-400/70',      chip: 'bg-zinc-500/15 text-zinc-700 dark:text-zinc-300',        dot: 'bg-zinc-400',   label: { ar: 'مغلق', en: 'Closed' } },
+  overdue:        { bar: 'bg-red-700/85',       chip: 'bg-red-700/15 text-red-800 dark:text-red-300',           dot: 'bg-red-700',    label: { ar: 'متأخر', en: 'Overdue' } },
   cancelled:      { bar: 'bg-rose-400/70',      chip: 'bg-rose-500/15 text-rose-700 dark:text-rose-300',        dot: 'bg-rose-400',   label: { ar: 'ملغى', en: 'Cancelled' } },
 };
 
