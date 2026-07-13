@@ -158,6 +158,8 @@ import {
   DashboardBadge,
   DashboardMyRequests,
   DashboardNewRfq,
+  DashboardMyRentals,
+  DashboardMyRentalOrderDetail,
   DashboardAccountDiagnostics,
   ProviderJoin,
   ProviderJoinEdit,
@@ -498,6 +500,9 @@ const AppRoutes = () => (
           <Route path="/dashboard/my-requests" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests/new" element={<ProtectedRoute><DashboardNewRfq /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
+          {/* T1 — customer rental orders (must be registered before any catch-all). */}
+          <Route path="/dashboard/my-rentals" element={<ProtectedRoute><DashboardMyRentals /></ProtectedRoute>} />
+          <Route path="/dashboard/my-rentals/:id" element={<ProtectedRoute><DashboardMyRentalOrderDetail /></ProtectedRoute>} />
           {/* OPPORTUNITIES PHASE 2 — UI-only route aliases. Internal naming
               (`quote_requests`, `provider_leads`) is preserved; old routes
               remain registered above. No DB / edge / RPC changes. */}
