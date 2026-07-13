@@ -276,7 +276,7 @@ const DashboardMyRentalOrderDetail: React.FC = () => {
             order={order}
             ret={rentalReturn}
             providerOwnerUserId={providerOwner ?? null}
-            onChanged={() => refetchReturn()}
+            onChanged={async () => { await refetchReturn(); }}
           />
         )}
 
