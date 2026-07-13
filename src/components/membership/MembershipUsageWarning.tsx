@@ -119,8 +119,8 @@ export const MembershipUsageWarning: React.FC<Props> = ({
         <p className="text-[10.5px] opacity-80 mt-0.5">
           {isOver
             ? (isRTL
-                ? 'لن يتم فرض المنع تلقائيًا حالياً، لكن يُنصح بالترقية للحصول على مساحة أكبر.'
-                : 'No automatic blocking yet, but upgrading is recommended for more headroom.')
+                ? 'لن تتمكن من إضافة المزيد حتى ترقية باقتك.'
+                : 'You cannot add more until you upgrade your plan.')
             : (isRTL
                 ? 'يمكنك الترقية للحصول على مساحة أكبر.'
                 : 'Upgrade for more headroom.')}

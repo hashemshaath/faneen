@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuotaToast } from '@/hooks/useQuotaToast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { Bi, useBi } from '@/components/common/Bilingual';
@@ -2154,6 +2155,7 @@ const OrderContractLink: React.FC<{
 }> = ({ order, onChanged }) => {
   const [busy, setBusy] = useState(false);
   const [contractId, setContractId] = useState<string | null>(order.contract_id ?? null);
+  const notifyQuota = useQuotaToast();
   const eligible = ['active', 'expiring_soon', 'expired', 'overdue', 'extended', 'renewed', 'closed'].includes(order.status);
   if (!eligible && !contractId) return null;
 
@@ -2161,7 +2163,11 @@ const OrderContractLink: React.FC<{
     setBusy(true);
     const r = await RentalCustomerRequests.createRentalContract(order.id);
     setBusy(false);
-    if (r.error) { toast.error(r.error.message || 'تعذّر إنشاء العقد'); return; }
+    if (r.error) {
+      if (notifyQuota(r.error)) return;
+      toast.error(r.error.message || 'تعذّر إنشاء العقد');
+      return;
+    }
     if (r.data) {
       setContractId(r.data);
       toast.success('تم إنشاء العقد');

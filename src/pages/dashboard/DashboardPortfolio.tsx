@@ -40,6 +40,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
+import { QuotaMeter } from '@/components/membership/QuotaMeter';
+import { useQuotaToast } from '@/hooks/useQuotaToast';
 
 interface PortfolioItem {
   id: string; business_id: string; title_ar: string; title_en: string | null;
@@ -245,6 +247,7 @@ const DashboardPortfolio = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   const { user } = useAuth();
+  const notifyQuota = useQuotaToast();
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLDivElement>(null);
   const [, startTransition] = useTransition();
@@ -368,7 +371,7 @@ const DashboardPortfolio = () => {
       }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-portfolio'] }); closeForm(); toast.success(editingItem ? (pickBi(isRTL, 'تم التحديث', 'Updated')) : (pickBi(isRTL, 'تم الإضافة', 'Added'))); },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => { if (notifyQuota(err)) return; toast.error(err.message); },
   });
 
   const deleteMut = useMutation({
@@ -544,6 +547,7 @@ const DashboardPortfolio = () => {
         />
 
         <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="portfolio" />
+        <QuotaMeter userId={user?.id} businessId={businessId} metric="portfolio" />
 
         {/* ═══ Stats ═══ */}
         {items.length > 0 && (

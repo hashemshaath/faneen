@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
+import { useQuotaToast } from '@/hooks/useQuotaToast';
 import { pickBi } from '@/components/common/Bilingual';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { getAdminBusinessById } from '@/modules/businesses/services/getAdminBusinessById';
@@ -99,6 +100,7 @@ const DashboardEntityDetail: React.FC = () => {
   const { id: routeParam = '' } = useParams<{ id: string }>();
   const { user, isAdmin } = useAuth();
   const { language } = useLanguage();
+  const notifyQuota = useQuotaToast();
   const isRTL = language === 'ar';
   const queryClient = useQueryClient();
 
@@ -269,6 +271,7 @@ const DashboardEntityDetail: React.FC = () => {
       refetchStaff();
       queryClient.invalidateQueries({ queryKey: ['entity-staff-profiles'] });
     } catch (err) {
+      if (notifyQuota(err)) return;
       toast({ title: pickBi(isRTL, 'تعذّر الإضافة', 'Failed to add'), description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setSubmitting(false);

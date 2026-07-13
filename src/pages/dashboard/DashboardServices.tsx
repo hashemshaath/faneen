@@ -8,6 +8,8 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/shared';
+import { QuotaMeter } from '@/components/membership/QuotaMeter';
+import { useQuotaToast } from '@/hooks/useQuotaToast';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -106,6 +108,7 @@ const DashboardServices: React.FC = () => {
     noindex: true,
   });
   const { user } = useAuth();
+  const notifyQuota = useQuotaToast();
   const qc = useQueryClient();
 
   const { active_entity_id, entities } = useActiveWorkspace();
@@ -340,7 +343,7 @@ const DashboardServices: React.FC = () => {
       qc.invalidateQueries({ queryKey: ['business-services-sync', businessId] });
       toast.success(isRTL ? 'تم الحفظ' : 'Saved');
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
+    onError: (err: unknown) => { if (notifyQuota(err)) return; toast.error(err instanceof Error ? err.message : 'Error'); },
   });
 
   // Quick active toggle
@@ -374,7 +377,7 @@ const DashboardServices: React.FC = () => {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['business-services-sync', businessId] }),
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
+    onError: (err: unknown) => { if (notifyQuota(err)) return; toast.error(err instanceof Error ? err.message : 'Error'); },
   });
 
   // Bidirectional sync — add a sub_service to the business catalog.
@@ -392,7 +395,7 @@ const DashboardServices: React.FC = () => {
       qc.invalidateQueries({ queryKey: ['business-edit'] });
       toast.success(isRTL ? 'تمت الإضافة' : 'Added');
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
+    onError: (err: unknown) => { if (notifyQuota(err)) return; toast.error(err instanceof Error ? err.message : 'Error'); },
   });
 
   // Bidirectional sync — remove a sub_service (and its business_services row).
@@ -594,6 +597,8 @@ const DashboardServices: React.FC = () => {
             </>
           }
         />
+
+        <QuotaMeter userId={user?.id} businessId={businessId} metric="services" />
 
         {/* Stats */}
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">

@@ -124,6 +124,7 @@ import { ContractFilters } from '@/components/contracts/dashboard/ContractFilter
 import { ContractRoleSplitHero } from '@/components/contracts/dashboard/ContractRoleSplitHero';
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
 import { ContractPageHeader } from '@/components/contracts/dashboard/ContractPageHeader';
+import { QuotaMeter } from '@/components/membership/QuotaMeter';import { useQuotaToast } from '@/hooks/useQuotaToast';
 import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractStatsSummary';
 import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
 import { ContractCompactRow } from '@/components/contracts/dashboard/ContractCompactRow';
@@ -194,7 +195,7 @@ type ViewSection = 'list' | 'create' | 'templates' | 'template-preview' | 'impor
 const DashboardContracts = () => {
   useNoIndex();
   const { isRTL, language } = useLanguage();
-  const { user, profile, isAdmin, isProvider } = useAuth();
+  const { user, profile, isAdmin, isProvider } = useAuth();const notifyQuota = useQuotaToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -1124,8 +1125,8 @@ const DashboardContracts = () => {
       }
     },
     onError: (err: Error) => {
-      const mapped = mapContractCreateError(err, isRTL);
-      toast.error(mapped.message);
+      if (notifyQuota(err)) return;
+      toast.error(mapContractCreateError(err, isRTL).message);
     },
   });
   const saveBlocked = !form.title_ar || !form.total_amount || Number(form.total_amount) <= 0 || (!editingId && !selectedClient && !guestClient && !form.client_email) || (!editingId && !contractParties.isEligible) || (!editingId && !contractPricingChoice) || createContractMutation.isPending;
@@ -1788,6 +1789,7 @@ const DashboardContracts = () => {
         />
 
         {viewSection === 'list' && <ContractStatsSummary stats={stats} isRTL={isRTL} />}
+        {viewSection === 'list' && <QuotaMeter userId={user?.id} businessId={businessId ?? null} metric="contracts" />}
 
         {/* ═══ Templates Browser ═══ */}
         {viewSection === 'templates' && (
