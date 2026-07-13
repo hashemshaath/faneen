@@ -144,6 +144,15 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   rental_request_accepted:        { icon: CheckCircle2,  colorClass: 'bg-success/10 text-success',      label: { ar: 'قبول طلب التأجير',              en: 'Rental Request Accepted' },       urgency: 'important', category: 'contracts' },
   rental_request_declined:        { icon: XCircle,       colorClass: 'bg-destructive/10 text-destructive', label: { ar: 'رفض طلب التأجير',              en: 'Rental Request Declined' },       urgency: 'important', category: 'requests' },
 
+  // ── T2 — rental lifecycle (started, expiring, expired, overdue, extensions, closed)
+  rental_started:                 { icon: Rocket,        colorClass: 'bg-info/10 text-info',            label: { ar: 'بدء التأجير',                    en: 'Rental Started' },                urgency: 'info',      category: 'contracts' },
+  rental_expiring_soon:           { icon: Clock,         colorClass: 'bg-warning/10 text-warning',      label: { ar: 'التأجير يقترب من الانتهاء',      en: 'Rental Expiring Soon' },          urgency: 'important', category: 'contracts' },
+  rental_expired:                 { icon: AlertTriangle, colorClass: 'bg-warning/10 text-warning',      label: { ar: 'انتهاء التأجير',                 en: 'Rental Expired' },                urgency: 'important', category: 'contracts' },
+  rental_overdue:                 { icon: AlertTriangle, colorClass: 'bg-destructive/10 text-destructive', label: { ar: 'تأجير متأخر',                   en: 'Rental Overdue' },                urgency: 'urgent',    category: 'contracts' },
+  rental_extension_requested:     { icon: RefreshCcw,    colorClass: 'bg-info/10 text-info',            label: { ar: 'طلب تمديد التأجير',              en: 'Rental Extension Requested' },    urgency: 'important', category: 'contracts' },
+  rental_extension_approved:      { icon: CheckCircle2,  colorClass: 'bg-success/10 text-success',      label: { ar: 'اعتماد تمديد التأجير',           en: 'Rental Extension Approved' },     urgency: 'important', category: 'contracts' },
+  rental_closed:                  { icon: Archive,       colorClass: 'bg-muted text-muted-foreground',  label: { ar: 'إغلاق التأجير',                  en: 'Rental Closed' },                 urgency: 'info',      category: 'contracts' },
+
   // Legacy generic types
   contract:    { icon: FileText,      colorClass: 'bg-info/10 text-info dark:text-info',     label: { ar: 'العقود', en: 'Contracts' }, urgency: 'important', category: 'contracts' },
   installment: { icon: CreditCard,    colorClass: 'bg-success/10 text-success dark:text-success', label: { ar: 'الأقساط', en: 'Installments' }, urgency: 'important', category: 'contracts' },
