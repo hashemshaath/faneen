@@ -24874,6 +24874,7 @@ export type Database = {
         | "cancelled"
         | "pending_provider_review"
         | "declined"
+        | "overdue"
       rental_unit: "day" | "hour" | "piece" | "m" | "m2" | "unit"
       service_request_status:
         | "pending"
@@ -25244,6 +25245,7 @@ export const Constants = {
         "cancelled",
         "pending_provider_review",
         "declined",
+        "overdue",
       ],
       rental_unit: ["day", "hour", "piece", "m", "m2", "unit"],
       service_request_status: [

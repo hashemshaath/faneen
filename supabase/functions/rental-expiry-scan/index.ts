@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     const { data: targets } = await supabase
       .from('rental_orders')
       .select('id, ref_id, provider_business_id, customer_user_id, end_date, status')
-      .in('status', ['expiring_soon', 'expired'])
+      .in('status', ['expiring_soon', 'expired', 'overdue'])
       .returns<OrderRow[]>();
 
     let notified = 0;
@@ -88,19 +88,29 @@ Deno.serve(async (req) => {
         (new Date(o.end_date).getTime() - new Date(todayIso).getTime()) /
           (1000 * 60 * 60 * 24),
       );
+      const overdueDays = Math.max(0, -daysDelta);
       const titleAr =
-        o.status === 'expired'
-          ? `طلب التأجير ${o.ref_id} انتهى`
-          : `طلب التأجير ${o.ref_id} يقترب من الانتهاء`;
+        o.status === 'overdue'
+          ? `طلب التأجير ${o.ref_id} متأخر بـ ${overdueDays} يوم`
+          : o.status === 'expired'
+            ? `طلب التأجير ${o.ref_id} انتهى`
+            : `طلب التأجير ${o.ref_id} يقترب من الانتهاء`;
       const titleEn =
-        o.status === 'expired'
-          ? `Rental ${o.ref_id} expired`
-          : `Rental ${o.ref_id} expiring soon`;
+        o.status === 'overdue'
+          ? `Rental ${o.ref_id} overdue by ${overdueDays} day(s)`
+          : o.status === 'expired'
+            ? `Rental ${o.ref_id} expired`
+            : `Rental ${o.ref_id} expiring soon`;
+      const notificationType =
+        o.status === 'overdue'
+          ? 'rental_overdue'
+          : o.status === 'expired'
+            ? 'rental_expired'
+            : 'rental_expiring_soon';
 
       const notifications: EdgeNotificationPayload[] = recipients.map((uid) => ({
         user_id: uid,
-        notification_type:
-          o.status === 'expired' ? 'rental_expired' : 'rental_expiring_soon',
+        notification_type: notificationType,
         title_ar: titleAr,
         title_en: titleEn,
         body_ar: `تاريخ الانتهاء: ${o.end_date}`,
