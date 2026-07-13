@@ -25,6 +25,9 @@ import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter'
 import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
 import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
+import { RentalCustomerRequests } from '@/modules/rentals';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 import { ImageUploader, type UploadedImageRow } from '@/components/common/ImageUploader';
 import {
   listActiveTermTemplates,
@@ -636,7 +639,7 @@ const DashboardRentals: React.FC = () => {
   }, [user?.id, workspace.isLoading, businessId]);
 
   const { stats: orderStats } = useRentalListDerivations({ items: [], orders, listQuery: '', listStatus: 'all' });
-  const { active: activeOrders, expiring: expiringOrders, overdue: overdueOrders } = orderStats;
+  const { active: activeOrders, expiring: expiringOrders, overdue: overdueOrders, pending: pendingOrders } = orderStats;
 
   // Stable refresh callbacks — avoid recreating closures on every render.
   const refreshItems = useCallback(async () => {
