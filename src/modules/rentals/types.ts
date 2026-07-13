@@ -3,8 +3,16 @@
 export type RentalUnit = 'day' | 'hour' | 'piece' | 'm' | 'm2' | 'unit';
 export type RentalItemStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived';
 export type RentalOrderStatus =
-  | 'draft' | 'active' | 'expiring_soon' | 'expired'
-  | 'extended' | 'renewed' | 'closed' | 'cancelled';
+  | 'draft'
+  | 'pending_provider_review'
+  | 'declined'
+  | 'active'
+  | 'expiring_soon'
+  | 'expired'
+  | 'extended'
+  | 'renewed'
+  | 'closed'
+  | 'cancelled';
 export type RentalExtensionType = 'full' | 'partial' | 'duration_only' | 'quantity_only';
 export type RentalExtensionStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
@@ -80,6 +88,14 @@ export interface RentalOrder {
   terms_snapshot: unknown;
   created_at: string;
   updated_at: string;
+  // T1.1 — customer request / delivery fields.
+  delivery_required?: boolean | null;
+  delivery_fee?: number | null;
+  delivery_city_id?: string | null;
+  delivery_district_id?: string | null;
+  delivery_address_text?: string | null;
+  request_notes?: string | null;
+  decline_reason?: string | null;
 }
 
 export interface RentalExtension {
