@@ -195,8 +195,7 @@ type ViewSection = 'list' | 'create' | 'templates' | 'template-preview' | 'impor
 const DashboardContracts = () => {
   useNoIndex();
   const { isRTL, language } = useLanguage();
-  const { user, profile, isAdmin, isProvider } = useAuth();const notifyQuota = useQuotaToast();
-  const navigate = useNavigate();
+  const { user, profile, isAdmin, isProvider } = useAuth();const notifyQuota = useQuotaToast();const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
