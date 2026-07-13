@@ -15,6 +15,7 @@ export type RfqJourneyState =
   | 'awarded'
   | 'sample_pending'
   | 'converted'
+  | 'expired'
   | 'closed';
 
 export interface JourneyRequestInput {
@@ -49,6 +50,7 @@ export function computeRfqJourneyState(
   hasContract: boolean,
 ): RfqJourneyState {
   if (hasContract) return 'converted';
+  if (request.status === 'expired') return 'expired';
   if (request.status === 'cancelled' || request.status === 'completed') return 'closed';
   if (request.awarded_bid_id) {
     if (request.requires_sample && latestSampleStatus !== 'approved') {
@@ -70,6 +72,7 @@ export const RFQ_JOURNEY_STATE_LABEL_AR: Record<RfqJourneyState, string> = {
   awarded: 'معمّد',
   sample_pending: 'عينة قيد الاعتماد',
   converted: 'محوّل لعقد',
+  expired: 'منتهي الصلاحية',
   closed: 'مغلق',
 };
 
@@ -85,6 +88,7 @@ export const RFQ_JOURNEY_STATE_TONE: Record<
   awarded: 'primary',
   sample_pending: 'warning',
   converted: 'success',
+  expired: 'warning',
   closed: 'muted',
 };
 

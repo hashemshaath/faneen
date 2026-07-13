@@ -130,6 +130,11 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   business_verification_changed: { ar: 'تحديث توثيق المنشأة',           en: 'Business Verification Updated' },
   account_contact_updated:       { ar: 'تحديث بيانات الاتصال',          en: 'Account Contact Updated' },
 
+  // ── Phase E — post-award cancellation
+  rfq_cancellation_requested:    { ar: 'طلب إلغاء بعد الترسية',           en: 'Cancellation Requested' },
+  rfq_cancellation_accepted:     { ar: 'قبول إلغاء التعاقد',               en: 'Cancellation Accepted' },
+  rfq_cancellation_rejected:     { ar: 'رفض إلغاء التعاقد',                en: 'Cancellation Rejected' },
+
   // ── Maintenance / warranty
   maintenance_request:           { ar: 'طلب صيانة',                 en: 'Maintenance Request' },
   maintenance_update:            { ar: 'تحديث صيانة',               en: 'Maintenance Update' },

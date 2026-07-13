@@ -122,6 +122,8 @@ interface Body {
   region_id?: string | null;
   city_id?: string | null;
   district_id?: string | null;
+  // Phase E — client-chosen RFQ validity (ISO timestamp).
+  valid_until?: string | null;
 }
 
 function err(msg: string, status = 400) {
@@ -295,6 +297,26 @@ Deno.serve(async (req) => {
     brand_preference_mode: brandMode,
     brand_notes: brandNotes,
     taxonomy_category_id: taxonomyCategoryId,
+    // Phase E — RFQ validity (capped at the admin-tunable max).
+    valid_until: await (async () => {
+      const raw = body.valid_until ? String(body.valid_until) : null;
+      if (!raw) return null;
+      const t = new Date(raw).getTime();
+      if (!Number.isFinite(t) || t <= Date.now()) return null;
+      // Look up admin max (fallback to 90 days).
+      let maxDays = 90;
+      try {
+        const { data: setting } = await admin
+          .from('platform_settings')
+          .select('setting_value')
+          .eq('setting_key', 'rfq_max_validity_days')
+          .maybeSingle();
+        const parsed = Number((setting as { setting_value?: string } | null)?.setting_value);
+        if (Number.isFinite(parsed) && parsed > 0) maxDays = Math.min(365, parsed);
+      } catch { /* fall back to default */ }
+      const capMs = Date.now() + maxDays * 24 * 60 * 60 * 1000;
+      return new Date(Math.min(t, capMs)).toISOString();
+    })(),
   };
 
   const { data: inserted, error } = await admin

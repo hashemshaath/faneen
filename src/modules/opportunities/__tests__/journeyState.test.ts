@@ -98,6 +98,25 @@ describe('computeRfqJourneyState', () => {
     expect(computeRfqJourneyState(req({ status: 'cancelled' }), [], null, false)).toBe('closed');
     expect(computeRfqJourneyState(req({ status: 'completed' }), [], null, false)).toBe('closed');
   });
+
+  it('Phase E — returns expired when request status is expired (and no contract)', () => {
+    expect(computeRfqJourneyState(req({ status: 'expired' }), [], null, false)).toBe('expired');
+    // Even with prior bids present, expired wins.
+    expect(
+      computeRfqJourneyState(
+        req({ status: 'expired' }),
+        [{ id: 'b1', status: 'submitted' }],
+        null,
+        false,
+      ),
+    ).toBe('expired');
+  });
+
+  it('Phase E — contract-converted still overrides expired', () => {
+    expect(
+      computeRfqJourneyState(req({ status: 'expired' }), [], null, true),
+    ).toBe('converted');
+  });
 });
 
 describe('computeProviderBidState', () => {

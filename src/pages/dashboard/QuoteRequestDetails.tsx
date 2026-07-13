@@ -36,6 +36,7 @@ import { OpportunityContractSection } from '@/modules/opportunities/contracts';
 import { OpportunityTimeline } from '@/modules/opportunities/timeline';
 import { SampleTrackerClient } from '@/modules/opportunities/samples';
 import { ClarificationThread } from '@/modules/opportunities/clarifications';
+import { RfqCancellationActions } from '@/modules/opportunities/cancellation/RfqCancellationActions';
 
 interface QuoteRow {
   id: string;
@@ -61,6 +62,8 @@ interface QuoteRow {
   metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  valid_until?: string | null;
+  awarded_bid_id?: string | null;
 }
 
 interface FileRow {
@@ -513,6 +516,18 @@ const QuoteRequestDetails: React.FC = () => {
           <OpportunityTimeline
             createdAt={quote.created_at}
             status={quote.status}
+          />
+        )}
+
+        {/* Phase E — cancellation controls (inline, no dialogs). */}
+        {quoteUuid && (
+          <RfqCancellationActions
+            quoteRequestId={quoteUuid}
+            status={quote.status}
+            awardedBidId={quote.awarded_bid_id ?? null}
+            validUntil={quote.valid_until ?? null}
+            isRTL={isRTL}
+            refId={quote.ref_id}
           />
         )}
       </div>

@@ -45,6 +45,8 @@ interface RfqFormState {
   contact_method: ContactMethod;
   timeline: Timeline;
   service_location: ServiceLocation;
+  /** Phase E — RFQ validity duration in days (7/14/30/60/90). */
+  validity_days: number;
 }
 
 const INITIAL_FORM: RfqFormState = {
@@ -59,6 +61,7 @@ const INITIAL_FORM: RfqFormState = {
   contact_method: "whatsapp",
   timeline: "1_3_months",
   service_location: "project_site",
+  validity_days: 30,
 };
 
 export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) => {
@@ -121,11 +124,15 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
         budget_amount: budgetMax ?? budgetMin,
         budget_note: budgetMin && budgetMax ? `${budgetMin} - ${budgetMax}` : null,
         source: "business_profile_rfq",
+        valid_until: new Date(
+          Date.now() + Math.max(1, Math.min(365, form.validity_days)) * 24 * 60 * 60 * 1000,
+        ).toISOString(),
         metadata: {
           title: form.title.trim(),
           budget_min: budgetMin,
           budget_max: budgetMax,
           deadline: form.deadline || null,
+          validity_days: form.validity_days,
         },
       });
     },
@@ -279,6 +286,28 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             {bi("الموعد المطلوب", "Required by")}
           </Label>
           <Input type="date" value={form.deadline} onChange={update("deadline")} className="h-11 rounded-xl tech-content" />
+        </div>
+        <div className="sm:col-span-2">
+          <Label className="text-xs">{bi("مدة صلاحية الطلب", "Request validity")}</Label>
+          <Select
+            value={String(form.validity_days)}
+            onValueChange={(v) => setForm((p) => ({ ...p, validity_days: Number(v) || 30 }))}
+          >
+            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[7, 14, 30, 60, 90].map((d) => (
+                <SelectItem key={d} value={String(d)}>
+                  {bi(`${d} أيام`, `${d} days`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {bi(
+              "بعد انتهاء المدة يُعتبر الطلب منتهي الصلاحية تلقائيًا.",
+              "After this period the request auto-expires.",
+            )}
+          </p>
         </div>
       </div>
 

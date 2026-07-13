@@ -344,6 +344,25 @@ export async function submitOpportunityBid(
   input: SubmitOpportunityBidInput,
 ): Promise<OpportunityBidRow> {
   const nowIso = new Date().toISOString();
+
+  // Phase E — refuse to submit on expired / closed opportunities.
+  const { data: gate } = await supabase
+    .from('quote_requests')
+    .select('status, valid_until')
+    .eq('id', input.opportunityId)
+    .maybeSingle();
+  const gateStatus = (gate as { status?: string | null } | null)?.status ?? null;
+  const gateValidUntil = (gate as { valid_until?: string | null } | null)?.valid_until ?? null;
+  if (gateStatus === 'expired') {
+    throw new Error('انتهت مدة صلاحية هذه الفرصة — لا يمكن تقديم عرض عليها.');
+  }
+  if (gateStatus === 'cancelled') {
+    throw new Error('تم إلغاء هذه الفرصة — لا يمكن تقديم عرض عليها.');
+  }
+  if (gateValidUntil && new Date(gateValidUntil).getTime() < Date.now()) {
+    throw new Error('انتهت مدة صلاحية هذه الفرصة — لا يمكن تقديم عرض عليها.');
+  }
+
   const { data, error } = await supabase
     .from('opportunity_bids')
     .insert({

@@ -37,6 +37,8 @@ export interface SubmitQuoteRequestPayload {
   region_id?: string | null;
   city_id?: string | null;
   district_id?: string | null;
+  // Phase E — client-chosen RFQ validity (ISO timestamp).
+  valid_until?: string | null;
 }
 
 export interface SubmitQuoteRequestResult {
