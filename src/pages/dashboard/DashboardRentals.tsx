@@ -688,6 +688,10 @@ const DashboardRentals: React.FC = () => {
               <Bi ar="الأصناف" en="My items" />
               <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{items.length}</Badge>
             </TabsTrigger>
+            <TabsTrigger value="pending" className="gap-2">
+              <Bi ar="طلبات جديدة" en="New requests" />
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300">{pendingOrders.length}</Badge>
+            </TabsTrigger>
             <TabsTrigger value="active" className="gap-2">
               <Bi ar="عقود نشطة" en="Active orders" />
               <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{activeOrders.length}</Badge>
@@ -713,6 +717,9 @@ const DashboardRentals: React.FC = () => {
               termTemplates={termTemplates}
               />
             </div>
+          </TabsContent>
+          <TabsContent value="pending" className="mt-4">
+            <PendingRequestsPanel orders={pendingOrders} items={items} onChanged={refreshOrders} />
           </TabsContent>
           <TabsContent value="active" className="mt-4">
             <OrdersPanel orders={activeOrders} items={items} onChanged={refreshOrders} />
