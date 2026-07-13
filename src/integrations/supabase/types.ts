@@ -16022,6 +16022,7 @@ export type Database = {
           taxonomy_category_id: string | null
           updated_at: string
           user_id: string | null
+          valid_until: string | null
         }
         Insert: {
           approx_dimensions?: string | null
@@ -16071,6 +16072,7 @@ export type Database = {
           taxonomy_category_id?: string | null
           updated_at?: string
           user_id?: string | null
+          valid_until?: string | null
         }
         Update: {
           approx_dimensions?: string | null
@@ -16120,6 +16122,7 @@ export type Database = {
           taxonomy_category_id?: string | null
           updated_at?: string
           user_id?: string | null
+          valid_until?: string | null
         }
         Relationships: [
           {
@@ -17033,6 +17036,53 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_cancellation_requests: {
+        Row: {
+          created_at: string
+          id: string
+          penalty_note: string | null
+          provider_response: string | null
+          quote_request_id: string
+          reason: string | null
+          requested_by: string
+          responded_at: string | null
+          responded_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          penalty_note?: string | null
+          provider_response?: string | null
+          quote_request_id: string
+          reason?: string | null
+          requested_by: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          penalty_note?: string | null
+          provider_response?: string | null
+          quote_request_id?: string
+          reason?: string | null
+          requested_by?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_cancellation_requests_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
             referencedColumns: ["id"]
           },
         ]
