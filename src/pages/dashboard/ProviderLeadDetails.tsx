@@ -37,6 +37,7 @@ import { OpportunityContractSection } from '@/modules/opportunities/contracts';
 import { OpportunityTimeline } from '@/modules/opportunities/timeline';
 import { SampleTrackerProvider } from '@/modules/opportunities/samples';
 import { ClarificationThread } from '@/modules/opportunities/clarifications';
+import { ProviderCancellationRequestPanel } from '@/modules/opportunities/cancellation/ProviderCancellationRequestPanel';
 
 interface LeadDetailRow {
   id: string;
@@ -330,6 +331,10 @@ const ProviderLeadDetails: React.FC = () => {
         )}
 
         {/* OPPORTUNITIES PHASE 5 — provider bid surface */}
+        {/* Phase E closeout — surface a pending client cancellation request ABOVE bid/contract sections. */}
+        {q.id && (
+          <ProviderCancellationRequestPanel opportunityId={q.id} isRTL={isRTL} />
+        )}
         {q.id && (
           <ProviderBidSection
             opportunityId={q.id}

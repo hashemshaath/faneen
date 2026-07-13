@@ -93,6 +93,8 @@ const DashboardNewRfq: React.FC = () => {
   const [warranty, setWarranty] = useState('');
   const [specialConditions, setSpecialConditions] = useState('');
   const [requiresSample, setRequiresSample] = useState(false);
+  // Phase-E — client-chosen RFQ validity (days). Default 30; capped by admin platform max.
+  const [validityDays, setValidityDays] = useState<number>(30);
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
 
   // Optional: load registered sites owned by the user for linking.
@@ -152,6 +154,12 @@ const DashboardNewRfq: React.FC = () => {
         preferred_brand_ids: preferredBrandIds.length ? preferredBrandIds : null,
         brand_preference_mode: preferredBrandIds.length ? brandPreferenceMode : null,
         brand_notes: brandNotes.trim() || null,
+        valid_until: (() => {
+          const days = Math.max(1, Math.min(365, Number(validityDays) || 30));
+          const d = new Date();
+          d.setDate(d.getDate() + days);
+          return d.toISOString();
+        })(),
         metadata: {
           source: 'dashboard_wizard_v1',
           site_id: siteId || null,
@@ -425,6 +433,22 @@ const DashboardNewRfq: React.FC = () => {
                   />
                   أرغب بطلب عينة قبل التعاقد
                 </label>
+                <div className="space-y-1">
+                  <Label>مدة صلاحية الطلب</Label>
+                  <select
+                    dir="rtl"
+                    className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
+                    value={validityDays}
+                    onChange={(e) => setValidityDays(Number(e.target.value))}
+                  >
+                    {[7, 14, 30, 60, 90].map((d) => (
+                      <option key={d} value={d}>{d} أيام</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    بعد انتهاء المدة يتحول الطلب تلقائيًا إلى منتهي الصلاحية ولن يتلقى عروضًا جديدة.
+                  </p>
+                </div>
               </>
             )}
 
