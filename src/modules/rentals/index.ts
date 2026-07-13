@@ -16,3 +16,8 @@ export type { RentalEvent, RentalNotifyArgs } from './services/notifications';
 export { RentalExtensionPanel } from './components/RentalExtensionPanel';
 export { RentalImageUploader } from './components/RentalImageUploader';
 export { RentalOpsQueueCard } from './components/RentalOpsQueueCard';
+
+/* T1 — customer request path */
+export * as RentalCustomerRequests from './services/customerRequests';
+export { computeRentalPricePreview } from './utils/pricing';
+export type { RentalPricePreview, RentalPricePreviewInput } from './utils/pricing';
