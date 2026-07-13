@@ -25,14 +25,21 @@ capabilities. The TypeScript canonical schema lives in
 | `dedicated_manager` | boolean | ✅ | seed (Premium, Enterprise) |
 | `performance_reports` | boolean | ✅ | seed (Premium only) |
 | `max_featured_ads` | number | ❌ deferred | no enforcement, no seed |
-| `search_priority` | number | ❌ deferred | no enforcement, no seed |
-| `max_blog_posts` | number | ❌ deferred | no enforcement, no seed |
-| `max_contracts` | number | ❌ deferred | UI fallback only |
-| `max_staff` | number | ❌ deferred | UI fallback only |
+| `search_priority` | number | ✅ | seed (Free 0 / Basic 1 / Premium 2 / Enterprise 3) — enforcement lands in M2 |
+| `max_blog_posts` | number | ✅ | seed (Free 2 / Basic 10 / Premium ∞ / Enterprise ∞) — enforcement lands in M2 |
+| `max_contracts` | number | ✅ | seed (Free 3 / Basic 20 / Premium 100 / Enterprise ∞) — enforcement lands in M2 |
+| `max_staff` | number | ✅ | seed (Free 1 / Basic 5 / Premium 25 / Enterprise ∞) — enforcement lands in M2 |
+| `max_rfqs_monthly` | number | ✅ | seed (Free 5 / Basic 25 / Premium 100 / Enterprise ∞) — enforcement lands in M2 |
 | `max_bookings_daily` | number | ❌ deferred | no enforcement, no seed |
 
 `0` on a `max_*` numeric key means **unlimited** (legacy convention preserved
 by `getPlanLimitDisplayValue` → `∞`).
+
+> **M1 note (2026-07-13):** The five keys above are now seeded with default
+> starting values. Admins can tune them at any time via the plan editor in
+> `/admin/memberships` — the seed is a baseline, not a hardcoded contract.
+> Write-path enforcement (BEFORE INSERT triggers + RPC checks) is scheduled
+> for M2; today `check_membership_quota()` exists as a read-only helper.
 
 ## Display rules
 
