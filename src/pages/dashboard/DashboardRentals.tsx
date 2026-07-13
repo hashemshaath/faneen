@@ -26,8 +26,6 @@ import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensi
 import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { RentalCustomerRequests } from '@/modules/rentals';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
 import { ImageUploader, type UploadedImageRow } from '@/components/common/ImageUploader';
 import {
   listActiveTermTemplates,
