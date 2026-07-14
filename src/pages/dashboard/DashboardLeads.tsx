@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge, type LeadStatus } from '@/components/leads/LeadStatusBadge';
 import { LeadDetailPanel, type LeadRow } from '@/components/leads/LeadDetailPanel';
+import { ActivationChecklist } from '@/components/providers/ActivationChecklist';
 import { trackEvent } from '@/lib/analytics-events';
 import { listProviderLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
@@ -563,12 +564,26 @@ const DashboardLeads: React.FC = () => {
         )}
 
         {!isLoading && ids.length > 0 && filtered.length === 0 && (
-          <Card><CardContent className="py-12 text-center">
-            <Inbox className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">
-              {isRTL ? 'لا توجد طلبات مطابقة' : 'No matching requests'}
-            </p>
-          </CardContent></Card>
+          <>
+            {/* F1 — Activation Checklist as empty-state nudge. Only renders
+                when the provider is not yet fully active (matcher-eligible). */}
+            {ids[0] && (leads?.length ?? 0) === 0 && (
+              <ActivationChecklist
+                businessId={ids[0]}
+                variant="hide-when-active"
+                emptyStateLine={{
+                  ar: 'أكمل تفعيل حسابك ليصلك أول طلب.',
+                  en: 'Complete activation to receive your first request.',
+                }}
+              />
+            )}
+            <Card><CardContent className="py-12 text-center">
+              <Inbox className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">
+                {isRTL ? 'لا توجد طلبات مطابقة' : 'No matching requests'}
+              </p>
+            </CardContent></Card>
+          </>
         )}
 
         <div className="space-y-3">

@@ -33,6 +33,7 @@ import { ProviderSmartActionFooter } from '@/components/dashboard/ProviderSmartA
 import { ProviderStatsOverview } from '@/components/dashboard/ProviderStatsOverview';
 import { FreeLaunchBadge } from '@/components/dashboard/FreeLaunchBadge';
 import { ProviderAnalyticsCharts } from '@/components/dashboard/ProviderAnalyticsCharts';
+import { ActivationChecklist } from '@/components/providers/ActivationChecklist';
 import { listOverdueInstallmentPayments } from '@/modules/contracts';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
@@ -290,6 +291,10 @@ export default function ProviderDashboardView({
           </Button>
         )}
       </div>
+
+      {/* F1 — Activation Checklist (matcher-aligned). Full card while
+          incomplete; collapses to a compact green strip once fully active. */}
+      <ActivationChecklist businessId={businessId} variant="strip" />
 
       {/* Action Center — role-aware provider CTAs (Phase B2) */}
       {/* AUTH-14E · State-aware "Next Step" guidance header above the
