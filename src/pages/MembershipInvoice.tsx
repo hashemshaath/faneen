@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { Loader2, Printer, ArrowLeft, Receipt, Download, RefreshCw } from 'lucide-react';
-import { getMembershipPaymentIntentForInvoice } from '@/modules/memberships';
+import {
+  getMembershipPaymentIntentForInvoice,
+  getMembershipInvoiceExtras,
+  getBillingSellerSettings,
+  getInvoiceBuyerProfile,
+} from '@/modules/memberships';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { supabase } from '@/integrations/supabase/client';
 import { useMembershipInvoicePdf } from '@/hooks/useMembershipInvoicePdf';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -31,12 +35,6 @@ interface InvoiceIntent {
   amount: number | string | null;
   currency: string | null;
   invoice_id: string | null;
-  invoice_number: string | null;
-  invoice_pdf_path: string | null;
-  billing_cycle: string | null;
-  provider: string | null;
-  provider_intent_id: string | null;
-  user_id: string | null;
   confirmed_at: string | null;
   created_at: string;
   updated_at: string | null;
@@ -63,7 +61,7 @@ interface InvoiceIntent {
 }
 
 const SAFE_SELECT =
-  'id, ref_id, subscription_id, status, amount, currency, invoice_id, invoice_number, invoice_pdf_path, billing_cycle, provider, provider_intent_id, user_id, confirmed_at, created_at, updated_at, metadata, plan:membership_plans(name_ar, name_en, tier), subscription:membership_subscriptions(id, ref_id, tier, starts_at, expires_at, business:businesses(id, name_ar, name_en, ref_id, legacy_ref_id))';
+  'id, ref_id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata, plan:membership_plans(name_ar, name_en, tier), subscription:membership_subscriptions(id, ref_id, tier, starts_at, expires_at, business:businesses(id, name_ar, name_en, ref_id, legacy_ref_id))';
 
 function readRefundedAt(metadata: Record<string, unknown> | null): string | null {
   if (!metadata || typeof metadata !== 'object') return null;
@@ -94,34 +92,29 @@ const MembershipInvoice = () => {
     },
   });
 
-  // M5.1 — billing platform settings for seller identity on the PDF.
-  const { data: sellerSettings } = useQuery({
-    queryKey: ['platform-settings-billing'],
+  // M5.1 — extras (numbering, storage path, provider ref) come through a
+  // dedicated service wrapper so this page keeps its supabase-free contract.
+  const { data: extras } = useQuery({
+    queryKey: ['membership-invoice-extras', paymentIntentId],
+    enabled: !!paymentIntentId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('platform_settings')
-        .select('setting_key, setting_value')
-        .eq('category', 'billing');
-      if (error) return {} as Record<string, string>;
-      const map: Record<string, string> = {};
-      for (const row of data ?? []) map[row.setting_key] = row.setting_value ?? '';
-      return map;
+      const { data: extra } = await getMembershipInvoiceExtras(paymentIntentId as string);
+      return extra;
     },
+  });
+
+  // Seller identity read from platform settings.
+  const { data: seller } = useQuery({
+    queryKey: ['membership-invoice-seller'],
+    queryFn: async () => await getBillingSellerSettings(),
     staleTime: 10 * 60 * 1000,
   });
 
   // Buyer display name — profile lookup for the intent owner.
   const { data: buyerProfile } = useQuery({
-    queryKey: ['membership-invoice-buyer', data?.user_id],
-    enabled: !!data?.user_id,
-    queryFn: async () => {
-      const { data: p } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('user_id', data!.user_id as string)
-        .maybeSingle();
-      return p ?? null;
-    },
+    queryKey: ['membership-invoice-buyer', extras?.user_id],
+    enabled: !!extras?.user_id,
+    queryFn: async () => await getInvoiceBuyerProfile(extras!.user_id as string),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -142,8 +135,8 @@ const MembershipInvoice = () => {
       const result = await getInvoice({
         paymentIntentId: data.id,
         subscriptionId: data.subscription_id,
-        existingPath: data.invoice_pdf_path ?? null,
-        existingInvoiceNumber: data.invoice_number ?? null,
+        existingPath: extras?.invoice_pdf_path ?? null,
+        existingInvoiceNumber: extras?.invoice_number ?? null,
         regenerate,
         data: {
           isRTL,
@@ -151,13 +144,10 @@ const MembershipInvoice = () => {
           issuedAt: data.created_at,
           paidAt: data.confirmed_at,
           seller: {
-            legalNameAr: sellerSettings?.seller_legal_name_ar
-              || 'شركة بيانات للتقنية — منصة قطاعات',
-            legalNameEn: sellerSettings?.seller_legal_name_en
-              || 'Bayanat Technology Company — Qitaat Platform',
-            vatNumber: (sellerSettings?.vat_registration_number || '').trim() || null,
-            commercialRegistration:
-              (sellerSettings?.seller_commercial_registration || '').trim() || null,
+            legalNameAr: seller?.legalNameAr ?? 'منصة قطاعات',
+            legalNameEn: seller?.legalNameEn ?? 'Qitaat Platform',
+            vatNumber: seller?.vatNumber ?? null,
+            commercialRegistration: seller?.commercialRegistration ?? null,
           },
           buyer: {
             displayName: buyerProfile?.full_name ?? null,
@@ -171,13 +161,13 @@ const MembershipInvoice = () => {
             nameEn: data.plan?.name_en ?? null,
             tier: data.plan?.tier ?? null,
           },
-          billingCycle: data.billing_cycle ?? null,
+          billingCycle: extras?.billing_cycle ?? null,
           periodStart: data.subscription?.starts_at ?? null,
           periodEnd: data.subscription?.expires_at ?? null,
           amount: amountNum,
           currency: data.currency ?? 'SAR',
-          paymentProvider: data.provider ?? null,
-          paymentReference: data.provider_intent_id ?? data.invoice_id ?? null,
+          paymentProvider: extras?.provider ?? null,
+          paymentReference: extras?.payment_ref ?? data.invoice_id ?? null,
         },
       });
       window.open(result.signedUrl, '_blank', 'noopener,noreferrer');
@@ -225,7 +215,7 @@ const MembershipInvoice = () => {
   const subRef = data.subscription?.ref_id ?? null;
   const periodStart = data.subscription?.starts_at ?? null;
   const periodEnd = data.subscription?.expires_at ?? null;
-  const vatConfigured = !!(sellerSettings?.vat_registration_number || '').trim();
+  const vatConfigured = !!seller?.vatNumber;
 
   return (
     <div className="container max-w-3xl py-8 print:py-2">
@@ -277,13 +267,13 @@ const MembershipInvoice = () => {
                 <h1 className="font-heading font-bold text-2xl">{title}</h1>
                 <p className="text-xs text-muted-foreground mt-1">
                   {isRTL
-                    ? (sellerSettings?.seller_legal_name_ar || 'منصة قطاعات')
-                    : (sellerSettings?.seller_legal_name_en || 'Qitaat Platform')}
+                    ? (seller?.legalNameAr || 'منصة قطاعات')
+                    : (seller?.legalNameEn || 'Qitaat Platform')}
                 </p>
                 {vatConfigured && (
                   <p className="text-[11px] text-muted-foreground tech-content">
                     {isRTL ? 'الرقم الضريبي: ' : 'VAT No: '}
-                    {sellerSettings?.vat_registration_number}
+                    {seller?.vatNumber}
                   </p>
                 )}
                 {!vatConfigured && isPaid && (
@@ -315,7 +305,7 @@ const MembershipInvoice = () => {
                 {isRTL ? 'رقم الوثيقة' : 'Document ID'}
               </dt>
               <dd className="tech-content font-mono text-foreground">
-                {data.invoice_number ?? data.ref_id ?? data.id}
+                {extras?.invoice_number ?? data.ref_id ?? data.id}
               </dd>
             </div>
             {data.invoice_id && (
