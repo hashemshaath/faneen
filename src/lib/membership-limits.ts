@@ -23,6 +23,13 @@ export interface LimitField {
    *   See docs/membership-plan-limits-source-of-truth.md
    */
   confirmed: boolean;
+  /**
+   * When true, this benefit is intentionally advertised as *coming soon* and
+   * has no active enforcement/UX behind it yet. Public surfaces render a
+   * neutral "قريباً / Soon" chip instead of a real value so we don't
+   * over-promise. Kept in the catalog for admin visibility + forward compat.
+   */
+  soon?: boolean;
 }
 
 export const LIMIT_FIELDS: LimitField[] = [
