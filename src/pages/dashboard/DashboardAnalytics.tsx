@@ -967,6 +967,7 @@ const DashboardAnalytics = () => {
             <ProviderTipsCard businessId={business?.id} />
           </>
         )}
+        </>)}
       </div>
     </DashboardLayout>
   );
