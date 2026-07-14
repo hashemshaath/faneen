@@ -33,6 +33,7 @@ import { ProviderSmartActionFooter } from '@/components/dashboard/ProviderSmartA
 import { ProviderStatsOverview } from '@/components/dashboard/ProviderStatsOverview';
 import { FreeLaunchBadge } from '@/components/dashboard/FreeLaunchBadge';
 import { ProviderAnalyticsCharts } from '@/components/dashboard/ProviderAnalyticsCharts';
+import { ActivationChecklist } from '@/components/providers/ActivationChecklist';
 import { listOverdueInstallmentPayments } from '@/modules/contracts';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
