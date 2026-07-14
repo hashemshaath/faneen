@@ -119,6 +119,7 @@ describe('ADMIN-DIRECT-TOGGLE-INTEGRATION-1 — toggle scenarios', () => {
       bypassMembership: false,
       actingUserId: 'admin_u',
       businessId: 'biz_1',
+      reason: '[admin direct] scope check',
     });
     expect(res.ok).toBe(false);
     expect(res.blocked_by_membership).toBe(true);
@@ -139,6 +140,7 @@ describe('ADMIN-DIRECT-TOGGLE-INTEGRATION-1 — toggle scenarios', () => {
       bypassMembership: true,
       actingUserId: 'admin_u',
       businessId: 'biz_1',
+      reason: '[admin direct] user scope',
     });
     expect(res.ok).toBe(true);
     expect(rpcMock.mock.calls.some(c => c[0] === 'admin_set_module_override')).toBe(true);

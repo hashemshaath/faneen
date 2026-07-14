@@ -99,12 +99,17 @@ export async function setModuleOverride(params: {
   enabled: boolean;
   reason?: string | null;
 }): Promise<void> {
+  // M6.2 — reason is mandatory for accountability in the audit log.
+  const reason = (params.reason ?? '').trim();
+  if (!reason) {
+    throw new Error('reason required for module override (M6.2)');
+  }
   const { error } = await (supabase as any).rpc('admin_set_module_override', {
     _module_key: params.moduleKey,
     _scope_type: params.scopeType,
     _scope_value: params.scopeValue,
     _enabled: params.enabled,
-    _reason: params.reason ?? null,
+    _reason: reason,
   });
   if (error) throw error;
 }

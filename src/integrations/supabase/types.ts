@@ -22443,6 +22443,10 @@ export type Database = {
       }
       bump_help_article_view: { Args: { _slug: string }; Returns: undefined }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
+      business_is_missing_plan_module: {
+        Args: { _business_id: string; _module_key: string }
+        Returns: boolean
+      }
       calculate_contract_line_item_total: {
         Args: {
           _formula_inputs: Json
@@ -24206,6 +24210,10 @@ export type Database = {
           _site_ref: string
         }
         Returns: Json
+      }
+      require_super_admin_or_bootstrap: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
       resolve_auth_user_id_by_email: {
