@@ -62,7 +62,11 @@ export async function listTopPublicProviders<T = unknown>(
     .order('rating_avg', { ascending: false })
     .limit(fetchLimit);
   const rows = (data ?? []) as ProviderRow[];
-  if (!preferHomepageVisibility) return rows.slice(0, limit) as unknown as T[];
+  if (!preferHomepageVisibility) {
+    // R4B contract: preserve verbatim `return (data ?? [])` shape when the
+    // caller opts out of tier-driven reordering.
+    return (data ?? []) as unknown as T[];
+  }
 
   const visibleTiers = await loadHomepageVisibleTiers();
   const preferred: ProviderRow[] = [];
