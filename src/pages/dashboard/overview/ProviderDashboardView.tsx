@@ -292,6 +292,10 @@ export default function ProviderDashboardView({
         )}
       </div>
 
+      {/* F1 — Activation Checklist (matcher-aligned). Full card while
+          incomplete; collapses to a compact green strip once fully active. */}
+      <ActivationChecklist businessId={businessId} variant="strip" />
+
       {/* Action Center — role-aware provider CTAs (Phase B2) */}
       {/* AUTH-14E · State-aware "Next Step" guidance header above the
           existing action center. Pure presentation; readiness/approval
