@@ -33,6 +33,7 @@ import { ProviderAnalyticsCharts } from '@/components/dashboard/ProviderAnalytic
 import { listOverdueInstallmentPayments } from '@/modules/contracts';
 import { exportAnalyticsPdf } from '@/lib/analytics-pdf-export';
 import '@/styles/dashboard-emerald.css';
+import { FeatureGate } from '@/components/membership/FeatureGate';
 
 // Brand-aligned chart palette — sourced from central design tokens.
 const CHART_COLORS = [
@@ -89,6 +90,28 @@ const DashboardAnalytics = () => {
     gcTime: 30 * 60_000,
   });
 
+  // M4.3 — Server-verified analytics gate.
+  //
+  // The FeatureGate wrapper we render at the bottom of this page is a UX
+  // upsell only; a determined user could still bypass it by e.g. loading the
+  // route with the flag toggled. This RPC re-checks the plan on the server
+  // (SECURITY DEFINER, admin bypass built in) and returns a boolean. When it
+  // resolves `false`, we short-circuit the analytics data query below so no
+  // provider-scoped rows are ever fetched for gated tiers.
+  const { data: analyticsGate, isLoading: gateLoading } = useQuery({
+    queryKey: ['analytics-server-gate', user?.id, business?.id],
+    enabled: !!user && !!business,
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<boolean> => {
+      const { data, error } = await supabase.rpc('assert_provider_analytics_access', {
+        _business_id: business!.id,
+      });
+      if (error) return false;
+      return Boolean(data);
+    },
+  });
+  const analyticsAllowed = analyticsGate !== false; // treat undefined as "not decided yet"
+
   const dateRange = useMemo(() => {
     const end = new Date();
     let start: Date;
@@ -118,6 +141,9 @@ const DashboardAnalytics = () => {
     queryKey: ['provider-analytics', business?.id, period],
     queryFn: async () => {
       if (!business) return null;
+      // Hard-stop the fetch when the server gate denied access. FeatureGate
+      // handles the friendly upsell in the render tree below.
+      if (analyticsGate === false) return null;
       const { start } = dateRange;
       const prevStart = prevRange.start;
       const prevEnd = prevRange.end;
@@ -185,7 +211,7 @@ const DashboardAnalytics = () => {
         },
       };
     },
-    enabled: !!business,
+    enabled: !!business && analyticsGate !== false,
     // Aggressive caching: 5 min fresh, 30 min in cache.
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
