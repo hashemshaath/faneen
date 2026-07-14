@@ -23,12 +23,12 @@ export const RenewalStatusBanner: React.FC<Props> = ({ isRTL, status, graceUntil
         <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm font-medium text-destructive mb-1">
-            {isRTL ? 'فشل تجديد الاشتراك' : 'Subscription renewal failed'}
+            {isRTL ? 'انتهى اشتراكك — فترة سماح للتجديد اليدوي' : 'Subscription expired — manual renewal grace period'}
           </p>
           <p className="text-xs text-foreground/80 leading-relaxed mb-2">
             {isRTL
-              ? `لديك ${graceDays} يوم/أيام كفترة سماح قبل الانتقال التلقائي للباقة المجانية. جدد الآن للاحتفاظ بمزاياك.`
-              : `You have ${graceDays} day(s) grace period before automatic downgrade to Free. Renew now to keep your benefits.`}
+              ? `التجديد التلقائي بالخصم غير متاح حاليًا. لديك ${graceDays} يوم/أيام لتجديد اشتراكك يدويًا قبل تحويل الحساب للباقة المجانية.`
+              : `Automatic card charging is not available yet. You have ${graceDays} day(s) to renew manually before your account moves to Free.`}
           </p>
           {onRenew && (
             <Button size="sm" variant="destructive" className="h-8 text-xs gap-1.5" onClick={onRenew} disabled={isRenewing}>
