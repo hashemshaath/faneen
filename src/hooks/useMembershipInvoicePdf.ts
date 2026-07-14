@@ -16,14 +16,17 @@
  * itself is never at risk since this is triggered on-demand from the UI.
  */
 import { useCallback, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import {
   buildMembershipInvoicePdf,
   type MembershipInvoiceData,
 } from '@/lib/membership-invoice-pdf';
-
-const BUCKET = 'membership-invoices';
-const SIGNED_URL_TTL_SECONDS = 300;
+import {
+  assignInvoiceNumberRpc,
+  membershipInvoiceStoragePath,
+  recordInvoicePathRpc,
+  signInvoicePath,
+  uploadInvoicePdf,
+} from '@/modules/memberships/services/payments/invoicePdf';
 
 export interface MembershipInvoiceContext {
   paymentIntentId: string;
@@ -84,12 +87,12 @@ export function useMembershipInvoicePdf() {
       setIsBusy(true);
       setError(null);
       try {
-        const path = storagePath(ctx.subscriptionId, ctx.paymentIntentId);
+        const path = membershipInvoiceStoragePath(ctx.subscriptionId, ctx.paymentIntentId);
 
         // Fast path — reuse the stored PDF unless the caller asked to
         // regenerate (admin retry).
         if (ctx.existingPath && !ctx.regenerate) {
-          const url = await signPath(ctx.existingPath);
+          const url = await signInvoicePath(ctx.existingPath);
           return {
             path: ctx.existingPath,
             invoiceNumber: ctx.existingInvoiceNumber
@@ -101,10 +104,8 @@ export function useMembershipInvoicePdf() {
 
         // 1) Reserve/reuse invoice number
         const invoiceNumber = ctx.existingInvoiceNumber
-          ?? (await assignInvoiceNumber(
-            ctx.paymentIntentId,
-            ctx.data.documentRef ?? ctx.paymentIntentId,
-          ));
+          ?? (await assignInvoiceNumberRpc(ctx.paymentIntentId))
+          ?? (ctx.data.documentRef ?? ctx.paymentIntentId);
 
         // 2) Build the PDF client-side
         const bytes = await buildMembershipInvoicePdf({
@@ -115,23 +116,17 @@ export function useMembershipInvoicePdf() {
         });
 
         // 3) Upload (upsert — idempotent regeneration)
-        const uploadRes = await supabase.storage
-          .from(BUCKET)
-          .upload(path, new Blob([bytes as BlobPart], { type: 'application/pdf' }), {
-            contentType: 'application/pdf',
-            upsert: true,
-          });
-        if (uploadRes.error) throw uploadRes.error;
+        await uploadInvoicePdf(path, bytes);
 
         // 4) Record path (fail-soft — signed URL still works if this fails)
         try {
-          await recordPath(ctx.paymentIntentId, path);
+          await recordInvoicePathRpc(ctx.paymentIntentId, path);
         } catch (recErr) {
           console.warn('[useMembershipInvoicePdf] record_path failed', recErr);
         }
 
         // 5) Signed URL for download
-        const url = await signPath(path);
+        const url = await signInvoicePath(path);
         return { path, invoiceNumber, signedUrl: url };
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
