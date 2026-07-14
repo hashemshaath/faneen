@@ -94,12 +94,13 @@ export const PlanFeatureTabs = React.memo(({ limits, isRTL, emphasized = false, 
           const Icon = ICON_MAP[field.icon] ?? Zap;
           const v = formatValue(field);
           const isOff = (v.kind === 'bool' && !v.on) || (v.kind === 'num' && v.text === '0');
+          const isSoon = !!field.soon;
           return (
             <li
               key={field.key}
               className={cn(
                 'flex items-center gap-2.5 text-[12.5px] leading-snug',
-                isOff && 'opacity-55',
+                !isSoon && isOff && 'opacity-55',
               )}
             >
               <div className={cn(
@@ -111,7 +112,11 @@ export const PlanFeatureTabs = React.memo(({ limits, isRTL, emphasized = false, 
               <span className="flex-1 text-foreground/85 truncate">
                 {isRTL ? field.label.ar : field.label.en}
               </span>
-              {v.kind === 'bool' ? (
+              {isSoon ? (
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20 shrink-0">
+                  {isRTL ? 'قريباً' : 'Soon'}
+                </span>
+              ) : v.kind === 'bool' ? (
                 v.on ? (
                   <Check className={cn('w-4 h-4', emphasized ? 'text-accent' : 'text-success')} strokeWidth={3} />
                 ) : (

@@ -23,6 +23,13 @@ export interface LimitField {
    *   See docs/membership-plan-limits-source-of-truth.md
    */
   confirmed: boolean;
+  /**
+   * When true, this benefit is intentionally advertised as *coming soon* and
+   * has no active enforcement/UX behind it yet. Public surfaces render a
+   * neutral "قريباً / Soon" chip instead of a real value so we don't
+   * over-promise. Kept in the catalog for admin visibility + forward compat.
+   */
+  soon?: boolean;
 }
 
 export const LIMIT_FIELDS: LimitField[] = [
@@ -49,7 +56,7 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'suggested_services',
     label: { ar: 'خدمات مقترحة', en: 'Suggested Services' },
     description: { ar: 'إظهار الخدمات في قسم "الخدمات المقترحة" للعملاء', en: 'Show services in "Suggested Services" section for clients' },
-    type: 'boolean', defaultValue: false, icon: 'Sparkles', category: 'visibility', confirmed: true,
+    type: 'boolean', defaultValue: false, icon: 'Sparkles', category: 'visibility', confirmed: true, soon: true,
   },
   {
     key: 'profile_badge',
@@ -131,7 +138,7 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'api_access',
     label: { ar: 'الوصول إلى الواجهة البرمجية (API)', en: 'API Access' },
     description: { ar: 'صلاحية استخدام واجهة قِطاعات البرمجية للتكامل', en: 'Permission to use the Qitaat API for integrations' },
-    type: 'boolean', defaultValue: false, icon: 'Code2', category: 'operations', confirmed: true,
+    type: 'boolean', defaultValue: false, icon: 'Code2', category: 'operations', confirmed: true, soon: true,
   },
 
   // ── Support ──
@@ -139,19 +146,19 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'priority_support',
     label: { ar: 'دعم ذو أولوية', en: 'Priority Support' },
     description: { ar: 'الحصول على دعم فني بأولوية مرتفعة', en: 'Get priority technical support' },
-    type: 'boolean', defaultValue: false, icon: 'Headphones', category: 'support', confirmed: true,
+    type: 'boolean', defaultValue: false, icon: 'Headphones', category: 'support', confirmed: true, soon: true,
   },
   {
     key: 'dedicated_manager',
     label: { ar: 'مدير حساب مخصص', en: 'Dedicated Account Manager' },
     description: { ar: 'تعيين مدير حساب مخصص للمتابعة', en: 'Assign a dedicated account manager' },
-    type: 'boolean', defaultValue: false, icon: 'UserCheck', category: 'support', confirmed: true,
+    type: 'boolean', defaultValue: false, icon: 'UserCheck', category: 'support', confirmed: true, soon: true,
   },
   {
     key: 'performance_reports',
     label: { ar: 'تقارير الأداء الدورية', en: 'Performance Reports' },
     description: { ar: 'استلام تقارير أداء دورية شهرية', en: 'Receive monthly performance reports' },
-    type: 'boolean', defaultValue: false, icon: 'TrendingUp', category: 'support', confirmed: true,
+    type: 'boolean', defaultValue: false, icon: 'TrendingUp', category: 'support', confirmed: true, soon: true,
   },
 ];
 

@@ -121,10 +121,18 @@ export const PlanFeatureMatrix: React.FC<PlanFeatureMatrixProps> = ({
                       className="border-t border-border/30 hover:bg-muted/10 transition-colors"
                     >
                       <td className="p-3 font-medium text-foreground/80">
-                        {isRTL ? field.label.ar : field.label.en}
+                        <span className="inline-flex items-center gap-2">
+                          {isRTL ? field.label.ar : field.label.en}
+                          {field.soon && (
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20">
+                              {isRTL ? 'قريباً' : 'Soon'}
+                            </span>
+                          )}
+                        </span>
                       </td>
                       {tiers.map((tier) => {
                         const display = getPlanLimitDisplayValue(field, planLimits[tier]?.[field.key]);
+                        const isSoon = !!field.soon;
                         return (
                           <td
                             key={tier}
@@ -133,7 +141,11 @@ export const PlanFeatureMatrix: React.FC<PlanFeatureMatrixProps> = ({
                               tier === highlightTier && 'bg-accent/5',
                             )}
                           >
-                            {display.kind === 'bool' ? (
+                            {isSoon ? (
+                              <span className="text-[10px] font-medium text-warning/80">
+                                {isRTL ? 'قريباً' : 'Soon'}
+                              </span>
+                            ) : display.kind === 'bool' ? (
                               display.on ? (
                                 <Check className="w-4 h-4 text-success mx-auto" />
                               ) : (

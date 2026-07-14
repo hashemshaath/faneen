@@ -36,12 +36,11 @@ describe('PLAN-FEATURE-MATRIX-1 — limits source of truth', () => {
   });
 
   it('known deferred keys remain marked confirmed=false', () => {
+    // Post-M1/M2/M4: max_contracts, max_staff, max_blog_posts, and
+    // search_priority are now enforced/consumed in code. Only truly
+    // unwired numeric keys remain deferred.
     const deferred = [
       'max_featured_ads',
-      'search_priority',
-      'max_blog_posts',
-      'max_contracts',
-      'max_staff',
       'max_bookings_daily',
     ];
     for (const key of deferred) {

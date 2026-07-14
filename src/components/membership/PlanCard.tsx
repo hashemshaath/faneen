@@ -65,7 +65,7 @@ export const PlanCard = React.memo(({
   const TOP_KEYS = [
     'homepage_visibility',
     'profile_badge',
-    'suggested_services',
+    'max_contracts',
     'max_services',
     'max_projects',
   ];
