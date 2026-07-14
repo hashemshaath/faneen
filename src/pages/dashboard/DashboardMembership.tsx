@@ -50,6 +50,7 @@ type Sub = {
   auto_renew: boolean | null;
   payment_provider: string | null;
   last_paid_at: string | null;
+  grace_period_until: string | null;
   plan: {
     id: string;
     tier: string;
@@ -180,7 +181,7 @@ const DashboardMembership: React.FC = () => {
       const { data, error } = await getCurrentMembershipSubscription<Sub>({
         userId: user!.id,
         select:
-          'id, status, billing_cycle, starts_at, expires_at, cancelled_at, auto_renew, payment_provider, last_paid_at, plan:membership_plans!plan_id(id, tier, name_ar, name_en, limits)',
+          'id, status, billing_cycle, starts_at, expires_at, cancelled_at, auto_renew, payment_provider, last_paid_at, grace_period_until, plan:membership_plans!plan_id(id, tier, name_ar, name_en, limits)',
         statuses: ['active', 'trialing', 'past_due', 'pending'],
       });
       if (error) throw error;
@@ -334,6 +335,25 @@ const DashboardMembership: React.FC = () => {
                       <Crown className="w-3 h-3" /> {planName}
                     </Badge>
                     <StatusBadge status={sub.status} isRTL={isRTL} />
+                    {sub.status === 'past_due' && sub.grace_period_until && (() => {
+                      const graceDays = Math.max(
+                        0,
+                        Math.ceil((new Date(sub.grace_period_until).getTime() - Date.now()) / 86400000),
+                      );
+                      return (
+                        <>
+                          <Badge variant="outline" className="text-[11px] h-6 px-2 gap-1 border-warning/40 bg-warning/10 text-warning">
+                            <AlertTriangle className="w-3 h-3" />
+                            {isRTL ? `فترة سماح — ${graceDays} يوم` : `Grace — ${graceDays} day(s)`}
+                          </Badge>
+                          {upgradeHref && (
+                            <Button asChild size="sm" variant="destructive" className="h-6 px-2 text-[11px] gap-1">
+                              <Link to={upgradeHref}>{isRTL ? 'جدد الآن' : 'Renew now'}</Link>
+                            </Button>
+                          )}
+                        </>
+                      );
+                    })()}
                     {isFreeLaunch && (
                       <Badge variant="outline" className="border-success/30 bg-success/5 text-success text-[11px] h-6 px-2 gap-1">
                         <Sparkles className="w-3 h-3" />

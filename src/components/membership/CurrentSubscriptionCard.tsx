@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Clock, AlertTriangle, Loader2, Ban, Zap, Undo2, Check, RotateCcw, CalendarClock } from 'lucide-react';
+import { Clock, AlertTriangle, Loader2, Ban, Zap, Undo2, Check, RotateCcw, CalendarClock, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons, tierGradients } from '@/lib/membership-tiers';
 
@@ -86,7 +86,7 @@ export const CurrentSubscriptionCard = ({
                     disabled={cancelMutation.isPending}
                   >
                     <Ban className="w-3 h-3" />
-                    {isRTL ? 'إلغاء التجديد التلقائي' : 'Cancel auto-renewal'}
+                    {isRTL ? 'إيقاف تذكير التجديد' : 'Turn off renewal reminders'}
                   </Button>
                 ) : resumeMutation ? (
                   <Button
@@ -96,9 +96,17 @@ export const CurrentSubscriptionCard = ({
                     disabled={resumeMutation.isPending}
                   >
                     {resumeMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
-                    {isRTL ? 'استئناف التجديد' : 'Resume renewal'}
+                    {isRTL ? 'استئناف التذكير' : 'Resume reminders'}
                   </Button>
                 ) : null}
+                {autoRenew && (
+                  <p className="text-[10px] text-muted-foreground flex items-start gap-1 leading-relaxed max-w-xs">
+                    <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                    {isRTL
+                      ? 'التجديد بالتذكير — سنذكرك قبل الانتهاء وخلال فترة السماح 7 أيام. الخصم التلقائي بالبطاقة غير متاح حاليًا.'
+                      : 'Reminder-based renewal — we notify you before expiry and during the 7-day grace period. Automatic card charging is not enabled yet.'}
+                  </p>
+                )}
               </div>
             ) : (
               <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-2.5">

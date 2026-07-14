@@ -229,6 +229,7 @@ Deno.serve(async (req) => {
   const REF_TYPES = [
     'membership_subscription_expired',
     'membership_renewal_failed',
+    'membership_subscription_expiring_1d',
     'membership_subscription_expiring_3d',
     'membership_subscription_expiring_7d',
   ];
@@ -264,6 +265,9 @@ Deno.serve(async (req) => {
     } else if (refType === 'membership_renewal_failed') {
       templateName = 'membership-renewal-failed';
       dispatchKey = `membership-renewal-failed-${subId}`;
+    } else if (refType === 'membership_subscription_expiring_1d') {
+      templateName = 'membership-renewal-reminder';
+      daysBefore = 1;
     } else if (refType === 'membership_subscription_expiring_3d') {
       templateName = 'membership-renewal-reminder';
       daysBefore = 3;
