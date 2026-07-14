@@ -50,6 +50,7 @@ type Sub = {
   auto_renew: boolean | null;
   payment_provider: string | null;
   last_paid_at: string | null;
+  grace_period_until: string | null;
   plan: {
     id: string;
     tier: string;
@@ -180,7 +181,7 @@ const DashboardMembership: React.FC = () => {
       const { data, error } = await getCurrentMembershipSubscription<Sub>({
         userId: user!.id,
         select:
-          'id, status, billing_cycle, starts_at, expires_at, cancelled_at, auto_renew, payment_provider, last_paid_at, plan:membership_plans!plan_id(id, tier, name_ar, name_en, limits)',
+          'id, status, billing_cycle, starts_at, expires_at, cancelled_at, auto_renew, payment_provider, last_paid_at, grace_period_until, plan:membership_plans!plan_id(id, tier, name_ar, name_en, limits)',
         statuses: ['active', 'trialing', 'past_due', 'pending'],
       });
       if (error) throw error;
