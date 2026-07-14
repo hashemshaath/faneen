@@ -22384,6 +22384,10 @@ export type Database = {
       }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
+      assert_provider_analytics_access: {
+        Args: { _business_id?: string }
+        Returns: boolean
+      }
       asset_apply_override: {
         Args: {
           _asset_id: string
