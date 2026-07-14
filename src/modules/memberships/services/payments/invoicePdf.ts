@@ -30,15 +30,15 @@ export interface MembershipInvoiceExtras {
 export async function getMembershipInvoiceExtras(
   paymentIntentId: string,
 ): Promise<{ data: MembershipInvoiceExtras | null; error: unknown }> {
-  const { data, error } = await supabase
-    .from('membership_payment_intents')
-    // Fields not yet reflected in the generated Database types.
-    // Using an explicit whitelist keeps runtime safe.
-    .select('id, user_id, billing_cycle, provider, invoice_pdf_path, invoice_number, provider_intent_id, invoice_id' as string)
+  // Cast the query builder to any because `invoice_pdf_path` and
+  // `invoice_number` are not yet reflected in the generated types.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('membership_payment_intents') as any)
+    .select('id, user_id, billing_cycle, provider, invoice_pdf_path, invoice_number, provider_intent_id, invoice_id')
     .eq('id', paymentIntentId)
     .maybeSingle();
   if (error) return { data: null, error };
-  const row = data as Record<string, unknown> | null;
+  const row = (data as Record<string, unknown> | null) ?? null;
   if (!row) return { data: null, error: null };
   return {
     data: {
