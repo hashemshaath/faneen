@@ -1,10 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Printer, ArrowLeft, Receipt } from 'lucide-react';
-import { getMembershipPaymentIntentForInvoice } from '@/modules/memberships';
+import { Loader2, Printer, ArrowLeft, Receipt, Download, RefreshCw } from 'lucide-react';
+import {
+  getMembershipPaymentIntentForInvoice,
+  getMembershipInvoiceExtras,
+  getBillingSellerSettings,
+  getInvoiceBuyerProfile,
+} from '@/modules/memberships';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useMembershipInvoicePdf } from '@/hooks/useMembershipInvoicePdf';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +76,8 @@ const fmt = (d: string | null) => (d ? new Date(d).toLocaleString() : '—');
 const MembershipInvoice = () => {
   const { paymentIntentId } = useParams<{ paymentIntentId: string }>();
   const { isRTL } = useLanguage();
+  const { isAdmin } = useAuth();
+  const { getInvoice, isBusy: isGenerating } = useMembershipInvoicePdf();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['membership-invoice', paymentIntentId],
@@ -82,13 +92,93 @@ const MembershipInvoice = () => {
     },
   });
 
+  // M5.1 — extras (numbering, storage path, provider ref) come through a
+  // dedicated service wrapper so this page keeps its supabase-free contract.
+  const { data: extras } = useQuery({
+    queryKey: ['membership-invoice-extras', paymentIntentId],
+    enabled: !!paymentIntentId,
+    queryFn: async () => {
+      const { data: extra } = await getMembershipInvoiceExtras(paymentIntentId as string);
+      return extra;
+    },
+  });
+
+  // Seller identity read from platform settings.
+  const { data: seller } = useQuery({
+    queryKey: ['membership-invoice-seller'],
+    queryFn: async () => await getBillingSellerSettings(),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Buyer display name — profile lookup for the intent owner.
+  const { data: buyerProfile } = useQuery({
+    queryKey: ['membership-invoice-buyer', extras?.user_id],
+    enabled: !!extras?.user_id,
+    queryFn: async () => await getInvoiceBuyerProfile(extras!.user_id as string),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isRefunded = data?.status === 'refunded';
+  const isPaid = data?.status === 'succeeded';
   const title = isRefunded
     ? isRTL ? 'إشعار دائن' : 'Credit Note'
     : isRTL ? 'فاتورة عضوية' : 'Membership Invoice';
 
   usePageMeta({ title });
   useNoIndex();
+
+  const downloadInvoicePdf = async (regenerate = false) => {
+    if (!data || !data.subscription_id) return;
+    try {
+      const amountNum = typeof data.amount === 'string'
+        ? parseFloat(data.amount) : (data.amount ?? 0);
+      const result = await getInvoice({
+        paymentIntentId: data.id,
+        subscriptionId: data.subscription_id,
+        existingPath: extras?.invoice_pdf_path ?? null,
+        existingInvoiceNumber: extras?.invoice_number ?? null,
+        regenerate,
+        data: {
+          isRTL,
+          documentRef: data.ref_id ?? null,
+          issuedAt: data.created_at,
+          paidAt: data.confirmed_at,
+          seller: {
+            legalNameAr: seller?.legalNameAr ?? 'منصة قطاعات',
+            legalNameEn: seller?.legalNameEn ?? 'Qitaat Platform',
+            vatNumber: seller?.vatNumber ?? null,
+            commercialRegistration: seller?.commercialRegistration ?? null,
+          },
+          buyer: {
+            displayName: buyerProfile?.full_name ?? null,
+            businessNameAr: data.subscription?.business?.name_ar ?? null,
+            businessNameEn: data.subscription?.business?.name_en ?? null,
+            businessRef: data.subscription?.business?.ref_id ?? null,
+            email: buyerProfile?.email ?? null,
+          },
+          plan: {
+            nameAr: data.plan?.name_ar ?? null,
+            nameEn: data.plan?.name_en ?? null,
+            tier: data.plan?.tier ?? null,
+          },
+          billingCycle: extras?.billing_cycle ?? null,
+          periodStart: data.subscription?.starts_at ?? null,
+          periodEnd: data.subscription?.expires_at ?? null,
+          amount: amountNum,
+          currency: data.currency ?? 'SAR',
+          paymentProvider: extras?.provider ?? null,
+          paymentReference: extras?.payment_ref ?? data.invoice_id ?? null,
+        },
+      });
+      window.open(result.signedUrl, '_blank', 'noopener,noreferrer');
+      toast.success(isRTL ? 'تم تجهيز الفاتورة' : 'Invoice ready');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(
+        isRTL ? `تعذر إنشاء الفاتورة: ${msg}` : `Could not generate invoice: ${msg}`,
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -125,6 +215,7 @@ const MembershipInvoice = () => {
   const subRef = data.subscription?.ref_id ?? null;
   const periodStart = data.subscription?.starts_at ?? null;
   const periodEnd = data.subscription?.expires_at ?? null;
+  const vatConfigured = !!seller?.vatNumber;
 
   return (
     <div className="container max-w-3xl py-8 print:py-2">
@@ -135,10 +226,34 @@ const MembershipInvoice = () => {
             {isRTL ? 'العودة للعضوية' : 'Back to membership'}
           </Link>
         </Button>
-        <Button size="sm" onClick={() => window.print()}>
-          <Printer className="w-4 h-4 me-1" />
-          {isRTL ? 'طباعة' : 'Print'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {isPaid && (
+            <Button size="sm" onClick={() => downloadInvoicePdf(false)} disabled={isGenerating}>
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 me-1 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 me-1" />
+              )}
+              {isRTL ? 'تحميل الفاتورة PDF' : 'Download invoice PDF'}
+            </Button>
+          )}
+          {isPaid && isAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => downloadInvoicePdf(true)}
+              disabled={isGenerating}
+              title={isRTL ? 'إعادة إنشاء الفاتورة' : 'Regenerate invoice'}
+            >
+              <RefreshCw className="w-4 h-4 me-1" />
+              {isRTL ? 'إعادة إنشاء' : 'Regenerate'}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => window.print()}>
+            <Printer className="w-4 h-4 me-1" />
+            {isRTL ? 'طباعة' : 'Print'}
+          </Button>
+        </div>
       </div>
 
       <Card className="border-border">
@@ -151,8 +266,23 @@ const MembershipInvoice = () => {
               <div>
                 <h1 className="font-heading font-bold text-2xl">{title}</h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {isRTL ? 'منصة قطاعات' : 'Qitaat Platform'}
+                  {isRTL
+                    ? (seller?.legalNameAr || 'منصة قطاعات')
+                    : (seller?.legalNameEn || 'Qitaat Platform')}
                 </p>
+                {vatConfigured && (
+                  <p className="text-[11px] text-muted-foreground tech-content">
+                    {isRTL ? 'الرقم الضريبي: ' : 'VAT No: '}
+                    {seller?.vatNumber}
+                  </p>
+                )}
+                {!vatConfigured && isPaid && (
+                  <p className="text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? 'الرقم الضريبي غير مُسجَّل — لا تُطبَّق ضريبة القيمة المضافة.'
+                      : 'VAT registration number not set — VAT is not applied.'}
+                  </p>
+                )}
               </div>
             </div>
             <Badge
@@ -174,7 +304,9 @@ const MembershipInvoice = () => {
               <dt className="text-xs text-muted-foreground mb-1">
                 {isRTL ? 'رقم الوثيقة' : 'Document ID'}
               </dt>
-              <dd className="tech-content font-mono text-foreground">{data.ref_id ?? data.id}</dd>
+              <dd className="tech-content font-mono text-foreground">
+                {extras?.invoice_number ?? data.ref_id ?? data.id}
+              </dd>
             </div>
             {data.invoice_id && (
               <div>

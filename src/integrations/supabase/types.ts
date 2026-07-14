@@ -11083,6 +11083,8 @@ export type Database = {
           id: string
           idempotency_key: string
           invoice_id: string | null
+          invoice_number: string | null
+          invoice_pdf_path: string | null
           metadata: Json
           plan_id: string | null
           provider: string
@@ -11105,6 +11107,8 @@ export type Database = {
           id?: string
           idempotency_key: string
           invoice_id?: string | null
+          invoice_number?: string | null
+          invoice_pdf_path?: string | null
           metadata?: Json
           plan_id?: string | null
           provider: string
@@ -11127,6 +11131,8 @@ export type Database = {
           id?: string
           idempotency_key?: string
           invoice_id?: string | null
+          invoice_number?: string | null
+          invoice_pdf_path?: string | null
           metadata?: Json
           plan_id?: string | null
           provider?: string
@@ -22416,6 +22422,12 @@ export type Database = {
       }
       assets_ops_counts: { Args: never; Returns: Json }
       assets_roll_status: { Args: never; Returns: Json }
+      assign_membership_invoice_number: {
+        Args: { _intent_id: string }
+        Returns: {
+          invoice_number: string
+        }[]
+      }
       award_opportunity_bid: {
         Args: { p_bid_id: string; p_opportunity_id: string }
         Returns: string
@@ -24038,6 +24050,10 @@ export type Database = {
         Returns: undefined
       }
       record_email_open: { Args: { _message_id: string }; Returns: undefined }
+      record_membership_invoice_pdf_path: {
+        Args: { _intent_id: string; _path: string }
+        Returns: boolean
+      }
       record_portfolio_view: {
         Args: {
           _event_type?: string
