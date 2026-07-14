@@ -28,6 +28,7 @@ import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { SiteGovernmentDataPanel } from '@/components/contracts/SiteGovernmentDataPanel';
 import { SelfClientCard } from '@/components/contracts/SelfClientCard';
 import { SectorPlaceholderNotice, FirstPartyNotice } from '@/components/contracts/dashboard/create/ContractCreationOrderNotices';
+import { StaffCapabilityBanner } from '@/components/rbac/StaffCapabilityBanner';
 import { ContractPartiesPanel, type ContractAccountKind } from '@/components/contracts/dashboard/create/ContractPartiesPanel';
 import { ContractProviderSearchPicker, type SelectedProviderBusiness } from '@/components/contracts/dashboard/create/ContractProviderSearchPicker';
 import {
@@ -1788,6 +1789,11 @@ const DashboardContracts = () => {
 
         {viewSection === 'list' && <ContractStatsSummary stats={stats} isRTL={isRTL} />}
         {viewSection === 'list' && <QuotaMeter userId={user?.id} businessId={businessId ?? null} metric="contracts" />}
+
+        {/* M6.3 — staff without contract permission see a friendly notice. */}
+        {businessId && (
+          <StaffCapabilityBanner businessId={businessId} capability="contracts" />
+        )}
 
         {/* ═══ Templates Browser ═══ */}
         {viewSection === 'templates' && (

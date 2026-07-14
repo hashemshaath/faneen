@@ -14,6 +14,7 @@ import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { getCurrentMembershipSubscription, getMembershipUsage } from '@/modules/memberships';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { parseLimits } from '@/lib/membership-limits';
+import { StaffCapabilityBanner } from '@/components/rbac/StaffCapabilityBanner';
 import {
   Crown, Calendar, ArrowUpRight, Sparkles, ShieldCheck, AlertTriangle,
   Building2, Wallet, Info, Check, X, CircleArrowUp, Plus,
@@ -262,6 +263,11 @@ const DashboardMembership: React.FC = () => {
         </Card>
 
         {loading && <Skeleton className="h-40 w-full" />}
+
+        {/* M6.3 — staff without membership permission see a friendly notice. */}
+        {!loading && !showNoBusiness && businessId && (
+          <StaffCapabilityBanner businessId={businessId} capability="membership" />
+        )}
 
         {/* CASE A — user has no business */}
         {showNoBusiness && (

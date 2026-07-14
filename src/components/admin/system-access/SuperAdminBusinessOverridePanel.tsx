@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Building2, Search, ShieldAlert, Loader2, Lock } from 'lucide-react';
+import { Building2, Search, ShieldAlert, Loader2, Lock, AlertTriangle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,23 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
 
   const selectedModule: SystemModule | undefined =
     modulesQuery.data?.find((m) => m.key === selectedModuleKey);
+
+  // M6.2 — Warn (do not block) when the selected module is NOT included
+  // in the business's currently active plan.
+  const planMismatchQuery = useQuery({
+    queryKey: ['business-module-plan-mismatch', selectedBizId, selectedModuleKey],
+    enabled: !!selectedBizId && !!selectedModuleKey && enabled,
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc(
+        'business_is_missing_plan_module',
+        { _business_id: selectedBizId, _module_key: selectedModuleKey },
+      );
+      if (error) return false;
+      return !!data;
+    },
+  });
+  const showPlanMismatchWarning = enabled && planMismatchQuery.data === true;
 
   const canSubmit =
     !!selectedBizId && !!selectedModule && !submitting && reason.trim().length > 0;
@@ -244,6 +262,21 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
             {submitting && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
             {isRTL ? 'تطبيق الاستثناء' : 'Apply Override'}
           </Button>
+
+          {showPlanMismatchWarning && (
+            <div
+              role="alert"
+              data-testid="plan-mismatch-warning"
+              className="rounded-lg border border-warning/40 bg-warning/10 p-2.5 flex items-start gap-2 text-xs text-warning"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>
+                {isRTL
+                  ? 'تجاوز لباقة العضوية — هذا النظام غير مضمّن في باقة الجهة الحالية.'
+                  : 'Plan override — this module is not included in the business\'s current plan.'}
+              </span>
+            </div>
+          )}
 
           {selectedBiz && selectedModule && (
             <p className="text-xs text-muted-foreground">

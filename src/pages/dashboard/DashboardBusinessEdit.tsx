@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { PermissionHint } from '@/components/workspace/PermissionGate';
 import { usePermissionParity } from '@/hooks/usePermissionParity';
+import { StaffCapabilityBanner } from '@/components/rbac/StaffCapabilityBanner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -556,6 +557,13 @@ const DashboardBusinessEdit: React.FC = () => {
             </Button>
           </PermissionHint>
         </header>
+
+        {/* M6.3 — staff without identity-edit permission see a friendly notice. */}
+        <StaffCapabilityBanner
+          businessId={form.id}
+          capability="business_identity"
+          className="mb-4"
+        />
 
         {/* Two-column layout: form (primary) + helper sidebar (secondary).
             On mobile, the helper collapses below the form. */}

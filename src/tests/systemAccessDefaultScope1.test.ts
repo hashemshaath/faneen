@@ -19,6 +19,8 @@ const baseArgs = {
   enabled: true,
   isAdmin: true,
   actingUserId: 'admin-user',
+  // M6.2 — reason is now required for every override write.
+  reason: '[test] scope-aware membership check',
 } as const;
 
 describe('SYSTEM-ACCESS-DEFAULT-SCOPE-1 — scope-aware membership check', () => {

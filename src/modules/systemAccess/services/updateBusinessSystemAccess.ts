@@ -50,6 +50,8 @@ const MEMBERSHIP_BLOCK_AR = 'لا يمكن تفعيل هذا النظام لأن
 const MEMBERSHIP_BLOCK_EN = 'This system cannot be enabled because the current plan does not include it.';
 const NOT_ADMIN_AR = 'يتطلب صلاحية مسؤول.';
 const NOT_ADMIN_EN = 'Admin permission required.';
+const REASON_REQUIRED_AR = 'السبب مطلوب لتفعيل الاستثناء (يُسجَّل في سجل التدقيق).';
+const REASON_REQUIRED_EN = 'A reason is required to apply this override (recorded in the audit log).';
 
 /**
  * The canonical audit + observability sink for system-access changes is
@@ -78,6 +80,14 @@ export async function updateBusinessSystemAccess(
 
   if (!args.isAdmin) {
     return { ...base, reason_ar: NOT_ADMIN_AR, reason_en: NOT_ADMIN_EN };
+  }
+
+  // M6.2 — non-reset writes must carry a non-empty reason.
+  if (!args.reset) {
+    const rsn = (args.reason ?? '').trim();
+    if (!rsn) {
+      return { ...base, reason_ar: REASON_REQUIRED_AR, reason_en: REASON_REQUIRED_EN };
+    }
   }
 
   // SYSTEM-ACCESS-DEFAULT-SCOPE-1 — Membership pre-check is ONLY valid for
