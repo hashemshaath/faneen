@@ -494,6 +494,14 @@ const DashboardAnalytics = () => {
           (scoped in dashboard-emerald.css). Without it, .dash-bento /
           .dash-tile / .bento-feature lose their grid + surface styles. */}
       <div className="dash-emerald space-y-5">
+        {/* M4.3 — When the server gate says no, render the friendly upsell
+            instead of the whole analytics surface. The data query above is
+            already short-circuited so no rows have been fetched. */}
+        {!gateLoading && analyticsGate === false ? (
+          <FeatureGate feature="analytics_enabled" businessId={business?.id ?? null} mode="upgrade">
+            {null}
+          </FeatureGate>
+        ) : (<>
         {/* Brand-aligned hero (Qitaat: primary green + info blue, no off-brand gold) */}
         <section
           aria-label={pickBi(isRTL, 'مركز التحليلات', 'Analytics center')}
