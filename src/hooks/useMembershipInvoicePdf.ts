@@ -44,40 +44,6 @@ interface GenerateResult {
   signedUrl: string;
 }
 
-function storagePath(subscriptionId: string, intentId: string): string {
-  return `invoices/${subscriptionId}/${intentId}.pdf`;
-}
-
-async function assignInvoiceNumber(intentId: string, fallback: string): Promise<string> {
-  // Types have not been regenerated yet for the new RPCs; cast to any.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.rpc as any)(
-    'assign_membership_invoice_number', { _intent_id: intentId },
-  );
-  if (error) throw error;
-  const rows = Array.isArray(data) ? data : [];
-  const first = rows[0] as { invoice_number?: string } | undefined;
-  return first?.invoice_number ?? fallback;
-}
-
-async function recordPath(intentId: string, path: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.rpc as any)(
-    'record_membership_invoice_pdf_path',
-    { _intent_id: intentId, _path: path },
-  );
-  if (error) throw error;
-}
-
-async function signPath(path: string): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
-  if (error) throw error;
-  if (!data?.signedUrl) throw new Error('signed_url_missing');
-  return data.signedUrl;
-}
-
 export function useMembershipInvoicePdf() {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
