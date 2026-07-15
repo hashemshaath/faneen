@@ -47,6 +47,17 @@
 
     <link rel="dns-prefetch" href="https://hckpxwhjycmdflaneihd.supabase.co" />
     <link rel="preconnect" href="https://hckpxwhjycmdflaneihd.supabase.co" crossorigin />
+    <!-- PERF-FONT-CRIT-1 — preload the ONE Arabic weight rendered by the
+         hero LCP heading. Stable /public/fonts/* URL (matches the
+         @font-face declared in src/styles/fonts.css). All other weights
+         load post-FCP via src/styles/fonts-deferred.css. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/ibm-plex-sans-arabic-700.woff2"
+      crossorigin
+    />
     <!-- P1.5 — LCP hero preload. Stable /public/hero/* path (same URL that
          HeroV2's slide 1 renders), so the browser can start fetching the
          hero WebP in parallel with the main JS/CSS bundles. imagesrcset
