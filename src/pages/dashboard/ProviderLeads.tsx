@@ -153,7 +153,7 @@ const ProviderLeads: React.FC = () => {
           </div>
           <div className="flex gap-2 shrink-0">
             <Button asChild size="sm" variant="outline" className="min-h-[36px]">
-              <Link to="/dashboard/provider/service-areas">مناطق الخدمة</Link>
+              <Link to="/dashboard/business/coverage">مناطق التغطية</Link>
             </Button>
             <Button asChild size="sm" className="min-h-[36px]">
               <Link to="/dashboard/business-edit">تحديث الملف</Link>
@@ -174,7 +174,7 @@ const ProviderLeads: React.FC = () => {
             </p>
             <div className="flex justify-center gap-2 pt-1">
               <Button asChild variant="outline" className="min-h-[40px]">
-                <Link to="/dashboard/provider/service-areas">تحديث مناطق الخدمة</Link>
+                <Link to="/dashboard/business/coverage">تحديث مناطق التغطية</Link>
               </Button>
             </div>
           </CardContent></Card>
