@@ -6,6 +6,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import { DashboardViewSkeleton } from '@/components/dashboard/overview/shared';
 import { UnverifiedEmailBanner } from '@/components/dashboard/UnverifiedEmailBanner';
+import { ApprovalStatusBanner } from '@/components/dashboard/ApprovalStatusBanner';
 import { EntityWelcomeCard } from '@/components/dashboard/EntityWelcomeCard';
 import { lazyRetry } from '@/lib/lazyRetry';
 import '@/styles/dashboard-emerald.css';
@@ -30,6 +31,7 @@ const DashboardOverview = () => {
     <DashboardLayout>
       <div className="dash-emerald">
         <UnverifiedEmailBanner />
+        <ApprovalStatusBanner />
         <EntityWelcomeCard />
         <Suspense fallback={<DashboardViewSkeleton />}>
           {isAdmin ? (
