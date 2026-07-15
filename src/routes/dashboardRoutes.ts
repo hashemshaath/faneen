@@ -5,7 +5,6 @@ import { lazyRetry } from "@/lib/lazyRetry";
 export const DashboardHelpCenter = lazyRetry(() => import("../pages/dashboard/DashboardHelpCenter"));
 export const ProviderLeads = lazyRetry(() => import("../pages/dashboard/ProviderLeads"));
 export const ProviderLeadDetails = lazyRetry(() => import("../pages/dashboard/ProviderLeadDetails"));
-export const ProviderServiceAreas = lazyRetry(() => import("../pages/dashboard/ProviderServiceAreas"));
 export const ProviderMembership = lazyRetry(() => import("../pages/dashboard/ProviderMembership"));
 export const DashboardMembership = lazyRetry(() => import("../pages/dashboard/DashboardMembership"));
 export const DashboardShowcase = lazyRetry(() => import("../pages/dashboard/DashboardShowcase"));

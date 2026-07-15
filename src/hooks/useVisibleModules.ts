@@ -41,7 +41,7 @@ const EMPTY: EffectiveVisibility[] = [];
 
 export const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
   business_info: ['/dashboard/business-edit', '/dashboard/business'],
-  service_areas: ['/dashboard/provider/service-areas', '/dashboard/service-areas'],
+  service_areas: ['/dashboard/business/coverage', '/dashboard/provider/service-areas', '/dashboard/service-areas'],
   verification_badge: ['/dashboard/badge', '/dashboard/verification'],
   customers: ['/dashboard/clients', '/dashboard/customers'],
   quote_requests: ['/dashboard/rfq', '/dashboard/quote-requests'],
