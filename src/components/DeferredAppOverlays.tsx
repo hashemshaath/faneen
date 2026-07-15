@@ -4,6 +4,17 @@ import { lazyRetry } from "@/lib/lazyRetry";
 const ConsentBanner = lazyRetry(() => import("./consent/ConsentBanner"));
 const BuildVersionWatcher = lazyRetry(() => import("./BuildVersionWatcher"));
 const HelpLauncherFloating = lazyRetry(() => import("./help/HelpLauncherFloating"));
+// PERF-DEFER-APPLIERS-1 — ThemeApplier / IdentityTokensApplier /
+// BrandFaviconApplier each fire a Supabase query (`platform_settings`,
+// `admin_identity_tokens`) as soon as they mount. Rendering them at the
+// App root put those requests in the pre-LCP chain and delayed hero
+// paint by ~1.3–2s. They only apply admin OVERRIDES on top of the
+// build-time defaults, so deferring them until after `load` + idle just
+// swaps in overrides slightly later (imperceptible in the common case
+// where no overrides exist).
+const ThemeApplier = lazyRetry(() => import("./ThemeApplier"));
+const IdentityTokensApplier = lazyRetry(() => import("./IdentityTokensApplier"));
+const BrandFaviconApplier = lazyRetry(() => import("./BrandFaviconApplier"));
 
 /**
  * Defers all non-critical app overlays (consent banner, help launcher,
@@ -40,6 +51,9 @@ export const DeferredAppOverlays = () => {
 
   return (
     <>
+      <Suspense fallback={null}><ThemeApplier /></Suspense>
+      <Suspense fallback={null}><IdentityTokensApplier /></Suspense>
+      <Suspense fallback={null}><BrandFaviconApplier /></Suspense>
       <Suspense fallback={null}><ConsentBanner /></Suspense>
       <Suspense fallback={null}><BuildVersionWatcher /></Suspense>
       <Suspense fallback={null}><HelpLauncherFloating /></Suspense>
