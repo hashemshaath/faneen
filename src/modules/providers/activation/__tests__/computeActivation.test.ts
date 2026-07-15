@@ -17,7 +17,7 @@ describe('computeProviderActivation', () => {
     expect(r.completedCount).toBe(0);
     expect(r.percent).toBe(0);
     expect(r.isFullyActive).toBe(false);
-    expect(r.steps.find((s) => s.key === 'coverage_set')?.hintAr).toContain('التغطية');
+    expect(r.steps.find((s) => s.key === 'coverage_set')?.hintAr).toContain('تغطية');
   });
 
   it('partial (approved + coverage only)', () => {
