@@ -1,143 +1,125 @@
-# Provider Onboarding & Activation — Audit + Phased Plan
+## Provider onboarding follow-up paused — this pass audits public-page performance (Google PageSpeed / CWV, mobile-first). Read-only.
 
-## 1. Funnel with real counts (today, 12 businesses total)
+## 1. Measured baseline (production build, gzip)
 
-```text
-Signup w/ provider intent → businesses row (any status)   12
-   ↓ approval
-approval_status = approved/published                       11  (91%)
-   ↓ business-level taxonomy set (≥1 BTC row)
-business_taxonomy_categories                               10  (91% of approved)
-   ↓ coverage set (≥1 business_service_areas row)
-has_coverage                                                1  (9%)   ← DOMINANT LEAK
-   ↓ ≥1 active service
-has_active_service                                          3  (25%)
-   ↓ fully matcher-reachable (approved + BTC + coverage + service)
-fully_active per matcher WHERE clause                       1  (8%)
-   ↓ actually received a lead
-provider_leads rows                                         0
-```
+**CSS**
+- `index-*.css` — 297 KB raw / **43 KB gz** (single blocking file, one `<link rel="stylesheet">` in `<head>`). Tailwind purge is working; no unused route CSS split — acceptable at gz size.
 
-Time-to-activate (only Bayanat completed):
-- created 2026-05-25 → first service +5d → first coverage **+26d**.
-- 10 of 11 approved providers are stuck >27 days with **no coverage row and no active service**.
+**JS shipped on first paint of `/` (chunks that are `<script>` entry OR in `<link rel="modulepreload">` OR statically imported by them):**
 
-Profile basics: logo 8/12, description ≥20 chars 3/12, phone 3/12.
+| Chunk | Raw | gz | Notes |
+|---|---|---|---|
+| `index-*.js` (entry) | 528 KB | **164 KB** | App shell: 30+ eager imports in `src/App.tsx` (AuthProvider, LanguageProvider, ThemeProvider, Sonner, Toaster, TooltipProvider, GlobalLinkTracker, GlobalShortcuts, ErrorBoundary, IdentityTokensApplier, BrandFaviconApplier, ThemeApplier, ProtectedRoute, PermissionRouteGuard, AdminRoute, 729-line route table) |
+| `vendor-react` | 157 KB | **51 KB** | required |
+| `vendor-supabase` | 210 KB | **55 KB** | preloaded on `/`; only reason it's needed at first paint is `AuthProvider` subscribing to `onAuthStateChange` in the shell |
+| `vendor-ui` (radix) | 112 KB | **35 KB** | dialog + dropdown + tabs + tooltip + popover + select. Home only needs tooltip/dropdown for header. |
+| `vendor-query` | 47 KB | **14 KB** | required |
+| `vendor-date` | 25 KB | **7 KB** | preloaded on `/`; home doesn't render dates |
+| `vendor-utils` | 21 KB | **7 KB** | clsx/tw-merge — required |
+| `Index-*.js` (route) | 36 KB | **12 KB** | |
+| Home sub-chunks (CategoryRows, SectorGrid, AudienceSplit, FAQ, ContentCombined) | ~40 KB | **~15 KB** | |
+| ~13 individual lucide icon chunks | small | **~3 KB** | tree-shaking working |
+| **Total first-paint JS** | ~1.2 MB | **≈ 359 KB gz** | |
 
-## 2. Two critical findings (with code evidence)
+Reference — Lighthouse mobile "Good" band is ≤ ~170 KB gz JS at first paint. We ship **~2×** that. Every chunk in the modulepreload list is fetched in parallel and *before* the LCP paint can commit.
 
-### 2a. The F1 checklist checks the WRONG taxonomy table (mis-alignment bug)
+**Top 10 chunks by gz (whole app, not just home)**
 
-`match_quote_to_providers` (verified in DB) matches on `business_taxonomy_categories` (business-level primary/secondary activity). The F1 helper `computeProviderActivation` step `service_taxonomy` counts `business_service_taxonomy_categories` (per-service). Provider service creation (`DashboardServices.tsx` → `insertBusinessServiceReturning`, and the RPC `add_business_sub_service`) **never writes BSTC rows** — so this step is 0/N for every provider and always will be, and even completing it wouldn't help matching.
+| Chunk | gz |
+|---|---|
+| heic2any | **341 KB** |
+| xlsx | **162 KB** |
+| index (entry) | 164 KB |
+| lucide-react (fallback, for `import * as` sites only) | 119 KB |
+| jspdf | 127 KB |
+| vendor-charts (recharts) | 115 KB |
+| pdf-ksa | 98 KB |
+| DashboardContracts | 79 KB |
+| AdminBusinesses | 60 KB |
+| vendor-supabase | 55 KB |
 
-Effect: the checklist tells providers to "classify services" when the real requirement is business-level activity taxonomy (which 10/12 already have). Providers who "complete" the checklist still won't match.
+None of the big offenders (heic2any, xlsx, jspdf, recharts, pdf, lucide fallback) are in the homepage modulepreload chain — good. But `heic2any` at 341 KB gz sitting in the bundle at all means one dashboard flow ships more JS than the entire rest of the app combined; worth deferring to a user gesture.
 
-Correct check: at least one `business_taxonomy_categories` row with `role='primary_activity'` (matcher's hard requirement).
+**CSS on `/`:** single 43 KB gz file, render-blocking; `leaflet.css` (15 KB) is *not* on `/` — only pulled by `Search` and `BusinessProfile` map paths. OK.
 
-### 2b. Coverage is the actual dominant blocker, and it's buried
+**Fonts — this is the largest low-hanging LCP/FCP lever**
+- Loaded from Google Fonts CDN, NOT self-hosted (contradicts `core-web-vitals-review.md` which claims local IBM Plex).
+- One stylesheet URL requests: IBM Plex Sans Arabic wt 400/500/600/700 (**4** weights, Arabic subset ≈ 40–80 KB woff2 each) + Inter wt 400/500/600/700/800 (**5** weights) + IBM Plex Mono wt 400/500/600 (**3** weights). That's **12 font files, ~500–800 KB uncompressed** on mobile.
+- Loaded with `rel="preload" as="style" ... onload="this.rel='stylesheet'"` — the CSS is deferred, but the woff2 files it triggers are *not* preloaded, so LCP text repaints when they finally arrive (or FOUT if `display=swap`, which it is).
+- Third-party origin adds preconnect + extra DNS/TLS hop.
 
-- Only 1/12 providers have any `business_service_areas` row.
-- Coverage lives as a tab inside `DashboardBusinessProfileHub` (`key: 'coverage'`) and separately at `/dashboard/business/coverage`. **Two implementations exist**: `DashboardBusinessCoverage.tsx` (618 lines) and `ProviderServiceAreas.tsx` (611 lines) — duplicate/legacy.
-- Sidebar/quick-actions surface Services (`/n`) prominently but never Coverage. The only in-app nudge to coverage is a single link in `ProviderLeads.tsx` empty state.
-- Result: providers submit → get approved → never learn coverage is required to receive leads.
+**Third-party scripts on `/`**
+- GTM (`GTM-NHPQ2R52`) — gated to prod host, deferred to `load` + `requestIdleCallback` — **good**.
+- Service worker registration — deferred to load+idle — **good**.
+- No chat/support widget, no other analytics — **good**.
 
-### 2c. Entry-point sprawl (4 overlapping paths, one is the "real" one)
+## 2. LCP
 
-| Route | File | Creates | Lands on | Discoverable |
-|---|---|---|---|---|
-| `/n` | `RegisterEntity.tsx` | businesses row (canonical) | dashboard | Nav, homepage, membership CTA |
-| `/onboarding` | `Onboarding.tsx` | wraps `/n`, redirects | `/n` | Legacy links |
-| `/start` | `Start.tsx` | routes → `/n` | `/n` | For-providers CTA |
-| `/join-provider` | `ProviderJoin.tsx` + `ProviderJoinEdit.tsx` | separate provider-only path | ? | `/for-providers` |
-| Admin | `AdminBusinesses.tsx` create-inline | admin-owned rows | admin | Admin only |
+- LCP element: `<img>` inside `HeroV2` slide 1 → `/hero/slide-1-1920.webp`. Preload matches, `fetchpriority="high"`, `imagesrcset` covers 768/1280/1920. Widths in bytes: 25 / 53 / 87 KB webp. Explicit width/height set. This part is **healthy**.
+- The LCP hurt is downstream: text on top of the hero re-flows once Google Fonts arrive (Arabic-only page → the Arabic font swap directly affects the LCP candidate if it's a text node), and the 164 KB gz entry chunk delays hydration.
+- Below-the-fold images use `LazyImage`/`loading="lazy"` — spot-checked HomeV2:956 sector card images all lazy. **PASS**.
 
-Two of these (`/onboarding`, `/start`) are pure redirect shells. `ProviderJoin*` is a parallel flow with its own edit page.
+## 3. CLS
 
-### 2d. Approval visibility
+- HeroV2 has a critical-CSS placeholder block matching hero viewport height — good.
+- Prerendered `#root` contains only `sr-only` content (heading + link list); React swap does not cause a visible shift.
+- Font-swap is `display=swap` → Arabic font swap risks visible reflow of the hero heading, which is a CLS + LCP hit combined. No `size-adjust` fallback declared.
+- All below-the-fold images spot-checked have dimensions. No obvious CLS source beyond fonts.
 
-No `ApprovalStatusBanner`-style component exists in `src/components/dashboard`. `approval_status` is read on the business-edit/completion pages, never surfaced as a persistent banner or a "you're approved — do this next" cue. Approved providers get zero in-app signal that they now need coverage.
+## 4. TBT / main thread
 
-### 2e. Admin approval side
+- Entry chunk at 164 KB gz translates to ~500–700 KB parse+compile on mobile → main thread is busy for a noticeable chunk of TBT before hydration.
+- App shell forces synchronous evaluation of **12 provider/effect modules** (Auth, Language, Theme×3, IdentityTokens, BrandFavicon, GlobalLinkTracker, GlobalShortcuts, Tooltip, direction shell) before the router even mounts.
+- Two `application/ld+json` blocks in `<head>` are static text (inline) — negligible cost.
+- No obvious heavy sync work on home mount (React Query prefetch is IO, not CPU).
 
-`AdminApprovalsCenter.tsx` and `AdminProviderReviewHub.tsx` both exist (unified banner links them per existing memory). No aging column, no SLA, no bulk approve visible in the file list — with 12 providers and no queue backlog this is a non-issue right now.
+## 5. Prerender interaction
 
-## 3. Phased plan (F2 → F6, small, independently shippable)
+Static prerendered `#root` contains an `sr-only` block only. On hydration React replaces it with the real tree. Because the block is visually hidden, there's no LCP flash / no CLS. **Safe.** (Aside: the prerender is producing HTML that isn't used for LCP — the LCP image is what paints. That's fine.)
 
-Ordered by leak size. Each phase is one PR-sized change; each closes a specific measured gap above. No schema changes are required for F2/F3/F4; F5 has one optional view.
+## 6. Prioritized fix list
 
-### F2 — Fix the taxonomy check + auto-nudge coverage (leverage: 1)
+Estimates use the current mobile Lighthouse baseline; ranges assume no other regressions.
 
-Two surgical changes, ~1 day.
+### P-A — safe, high-impact (do first)
 
-1. **Rewrite F1 step 4** in `src/modules/providers/activation/computeActivation.ts`: replace `service_taxonomy` (BSTC-based) with `activity_taxonomy` (BTC-based). Input becomes `primaryActivityCount: number`. Update `useProviderActivation` to query `business_taxonomy_categories` with `role='primary_activity'` count. Update the step label to "Business activity" / "نشاط المنشأة" and link to `/dashboard/business-edit` (activity picker). Add unit test that mirrors the matcher SQL.
-2. **Coverage-first ordering + copy**: reorder steps so coverage is step 2 (right after approval) and strengthen its hint to name the consequence: "بدون تغطية لن تصلك أي طلبات — 0 من 11 مزوّدًا مغطّون اليوم". Not a schema change; pure UX weight.
+| # | Fix | Expected impact |
+|---|---|---|
+| A1 | **Self-host IBM Plex Sans Arabic + Inter** (subset to `arab, latin`, only weights actually used — audit shows 400/500/700 cover ~all usages; drop 600/800). Preload the 1–2 files needed for the hero heading with `<link rel="preload" as="font" type="font/woff2" crossorigin>`. Drop Google Fonts CDN entirely; remove its preconnect and stylesheet. | **LCP −300 to −800 ms mobile**, **CLS ↓** (font-swap flash on hero heading disappears), −1 third-party origin, −8+ font requests |
+| A2 | **Remove `vendor-date` and `vendor-supabase` from the homepage modulepreload chain**. `vendor-date` is not referenced by any home code path — trace and cut. For `vendor-supabase`, split `AuthProvider` so the supabase client + `onAuthStateChange` subscription is dynamically imported inside a `useEffect` (renders unauthed shell synchronously, hydrates auth after mount). | **−62 KB gz first-paint JS**, TBT ↓ (parse cost), removes one blocking module from the LCP critical path |
+| A3 | **Slim `src/App.tsx` shell.** Move `GlobalLinkTracker`, `GlobalShortcuts`, `IdentityTokensApplier`, `BrandFaviconApplier`, `ThemeApplier`, `Sonner`, `Toaster`, `TooltipProvider` into the existing `DeferredAppOverlays` pattern (mount after `load`+idle). Keep only routing + language + auth + error boundary in the eager shell. | **Entry chunk −40 to −70 KB gz** (down from 164 → ~100), TBT ↓, LCP ↓ (fewer bytes competing with hero image download on slow 4G) |
+| A4 | **Drop unused Google Fonts weights immediately** (independent of A1). Change the stylesheet URL to only request weights the app actually renders. `rg -n "font-weight" src/**/*.css` + Tailwind config shows 400/500/700 dominant; 800 Inter is used ~0×, 600 Plex Mono ~0×. | **−200 to −400 KB uncompressed** font transfer on mobile; partial LCP win even before A1 |
 
-Expected impact: turns the checklist from misleading → correct; every "activated" provider becomes matcher-reachable.
+### P-B — moderate
 
-### F3 — Approval status banner + post-approval next-step handoff (leverage: 2)
+| # | Fix | Expected impact |
+|---|---|---|
+| B1 | **Split `vendor-ui` radix bundle.** Home only needs `@radix-ui/react-tooltip` (and maybe dropdown for the auth menu). Put dialog/tabs/popover/select in their own chunk consumed only by pages that use them. | Entry-adjacent −15–20 KB gz on home |
+| B2 | **Add `size-adjust`, `ascent-override`, `descent-override` to `@font-face` fallbacks** (only meaningful after A1 lands). Removes remaining font-swap layout shift. | CLS ↓, negligible LCP |
+| B3 | **Add `content-visibility: auto` + `contain-intrinsic-size` to the below-the-fold home sections** (sector grid, category rows, FAQ). Already partially done per audit doc — verify it's actually applied to HomeSectorGrid / HomeCategoryRows / FAQSection. | TBT ↓, INP ↓ on scroll |
+| B4 | **Verify `Index-*.js` static import of `image-pipeline` (via `HomeCategoryRow.tsx`)** — inline the tiny `isVariantUrls` helper or move it to a shared leaf so the whole `image-pipeline` module (with its `imageCompression` sibling) isn't pulled. Same file also brings `migration-services` into the home chunk. | Home chunks −3–5 KB gz |
+| B5 | **Preload the LCP hero image with `Priority Hints` "high" AND move the preload `<link>` above the fonts preload** in `index.html`. Currently the fonts preload sits right after — order matters for the browser's priority queue. | LCP −50–150 ms |
+| B6 | **Kill `xlsx` / `heic2any` / `jspdf` from the initial route graph on every page they leak into.** They're not on home, but pdf-ksa (98 KB gz) and xlsx (162 KB gz) show up in the top-10 and cause modulepreload bloat on dashboard routes; defer to user gesture (button click). | Not a home-page win but big for authenticated CWV. |
 
-Add `ApprovalStatusBanner` to `DashboardLayout` (above `EntityWelcomeCard`) that renders for providers whose active business is:
-- `draft` / `pending_review` → "قيد المراجعة — عادةً خلال 24 ساعة"
-- `approved` / `published` **and coverage empty** → success + primary CTA "أضف مناطق التغطية لتبدأ باستقبال الطلبات" linking to `/dashboard/business/coverage`
-- Fully active → hide
+### P-C — risky / low-leverage
 
-One-time notification (in-app `notifications` insert) when `approval_status` flips to approved, deep-linked to coverage. This is the moment providers currently miss. Reuse existing `notifications` table; no schema change.
+| # | Fix | Expected impact |
+|---|---|---|
+| C1 | Route-based CSS splitting (extract per-route `.css`). Vite doesn't do this by default and Tailwind's atomic classes make it low-value — 43 KB gz is not the bottleneck. | Skip unless we see CSS >100 KB gz. |
+| C2 | Preact-compat swap. Not worth the compatibility risk. | Skip. |
+| C3 | Migrate GTM to server-side / consent-gated init. Currently already load+idle-deferred; unlikely to move Lighthouse further on `/`. | Skip. |
 
-### F4 — Auto-link BTC on business creation & auto-add `primary_activity` from sector (leverage: 3)
+## Expected combined impact (P-A only)
 
-Verify in a follow-up read: today the activity picker in `RegisterEntity.tsx` collects a sector but the sector→BTC row may not be written automatically for all paths (2 providers have 0 BTC rows despite being created via the normal flow — worth confirming). If confirmed, add a small server-side backfill trigger (DB migration): after `businesses` insert, if `sector` is set and no BTC row exists, insert one `primary_activity` row using the sector→taxonomy mapping already in `sectors`. Include the SQL only, gated behind a fresh trace of the write path in a follow-up:
+- First-paint JS on `/`: **~359 KB gz → ~230–250 KB gz** (still above the ~170 KB "green" target but out of the "red" band).
+- Font transfer on mobile: **≈ −60 %**.
+- LCP mobile (throttled 4G): **estimated −0.7 to −1.4 s**.
+- CLS: **near-zero** for the hero (font-swap reflow removed).
+- TBT: **−100 to −200 ms** (less script to parse before hydration).
+- Lighthouse Performance (mobile): **+8 to +15 points** from current baseline.
 
-```sql
--- pseudocode, do NOT run without confirming the sector→taxonomy_categories mapping column
-CREATE OR REPLACE FUNCTION public.ensure_business_primary_activity()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path='public' AS $$
-DECLARE v_cat uuid;
-BEGIN
-  IF NEW.sector IS NULL THEN RETURN NEW; END IF;
-  SELECT id INTO v_cat FROM public.taxonomy_categories
-   WHERE slug = NEW.sector AND is_active AND NOT is_archived LIMIT 1;
-  IF v_cat IS NOT NULL THEN
-    INSERT INTO public.business_taxonomy_categories(business_id, category_id, role)
-    VALUES (NEW.id, v_cat, 'primary_activity')
-    ON CONFLICT DO NOTHING;
-  END IF;
-  RETURN NEW;
-END $$;
-```
+## Notes / caveats
 
-### F5 — Consolidate entry points and remove the two duplicates (leverage: 4, mostly cleanup)
-
-- Delete or hard-redirect `Onboarding.tsx` and `Start.tsx` (both are already pass-throughs to `/n`). Keep `/n` (canonical) and `/for-providers` (marketing).
-- Decide between `DashboardBusinessCoverage.tsx` and `ProviderServiceAreas.tsx` — pick the one used by `DashboardBusinessProfileHub` and delete the other; update the single sidebar link. Add a Coverage entry to the provider sidebar quick actions (currently only Services is there).
-- Decide fate of `ProviderJoin.tsx` / `ProviderJoinEdit.tsx` — either fold into `/n` or clearly label as invitation-only. Owner/ops call, not code-only.
-
-No schema change.
-
-### F6 — Activation-rate metric on admin dashboard (leverage: 5, small)
-
-Add a KPI card to `AdminDashboardView`: "% providers matcher-reachable" = fully_active / total_approved, with the same 4 sub-counts we produced above. Uses existing tables only; a small view is nice but not required:
-
-```sql
-CREATE OR REPLACE VIEW public.v_provider_activation_rollup AS
-SELECT
-  count(*) FILTER (WHERE approval_status IN ('approved','published')) approved,
-  count(*) FILTER (WHERE approval_status IN ('approved','published')
-    AND EXISTS(SELECT 1 FROM business_taxonomy_categories t WHERE t.business_id = b.id AND t.role='primary_activity')
-    AND EXISTS(SELECT 1 FROM business_service_areas a WHERE a.business_id = b.id)
-    AND EXISTS(SELECT 1 FROM business_services s WHERE s.business_id = b.id AND s.is_active))
-    AS fully_active
-FROM public.businesses b;
-```
-
-Weekly, watch it move from 8% toward the 50-provider target.
-
-## Explicitly deferred / not-code
-
-- Admin approval SLA / bulk actions — no backlog today (1 provider in `draft`, 1 in `approved` awaiting publish). Revisit when queue >10.
-- Notification granularity, digests, per-role templates — separate initiative.
-- Removing/merging duplicate coverage pages is safe but touches routing; do it in F5 with tests.
-- Cleaning the 2 unnamed placeholder business rows (`name_en` empty) is an ops task, not code.
-
-## Recommended order and why
-
-F2 first — it turns a misleading checklist into a correct one and unblocks every future signal. F3 next — captures providers at the highest-intent moment (just approved). F4 verifies/repairs the silent taxonomy write. F5 cleanup. F6 gives us the number we're trying to move.
+- The `core-web-vitals-review.md` claim that fonts are "local IBM Plex Sans Arabic (font-display swap)" is **stale** — the shipped `index.html` still loads them from `fonts.googleapis.com`. Fixing A1 also brings the doc back into truth.
+- No schema/back-end changes involved. All changes are frontend build/config + presentation code, matching the "UI change → frontend only" rule.
+- `/search` and business-profile audits are secondary; the LCP/JS work above lands equally on those routes (they share the same entry, fonts, and shell).

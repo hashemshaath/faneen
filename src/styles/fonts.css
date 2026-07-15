@@ -1,0 +1,32 @@
+/*
+ * Self-hosted webfonts (P-A1 in performance plan).
+ *
+ * Replaces the previous fonts.googleapis.com stylesheet (which shipped
+ * ~12 files including Plex Mono + all Inter weights + full Arabic subsets
+ * from a third-party origin, adding a preconnect + font-swap FOUT on the
+ * hero LCP text).
+ *
+ * Self-hosted trade-offs:
+ * - Only the weights actually rendered by the UI are imported.
+ * - Arabic subset only for Plex Sans Arabic (no latin duplication).
+ * - Latin subset only for Inter.
+ * - IBM Plex Mono was dropped entirely — decorative `font-mono` usage
+ *   falls back to the system monospace stack in tailwind.config.
+ *
+ * All @font-face declarations use font-display: swap (fontsource default).
+ * The existing size-adjust fallback in src/index.css keeps CLS at zero
+ * during the swap.
+ */
+
+/* IBM Plex Sans Arabic — used for headings and Arabic body copy. */
+@import "@fontsource/ibm-plex-sans-arabic/arabic-400.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-500.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-600.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-700.css";
+
+/* Inter — used for Latin/English UI (font-sans in tailwind). */
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
+@import "@fontsource/inter/latin-800.css";
