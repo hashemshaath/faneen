@@ -9,6 +9,30 @@ import { captureAttribution } from "./lib/analytics-attribution";
 
 validateEnv();
 
+// Load the non-critical font weights AFTER the app boots. The critical
+// Arabic 700 weight ships in the main CSS bundle + is preloaded from
+// index.html; everything else (Arabic 400/500/600 + all Inter Latin
+// weights) lives in a separate CSS chunk that must NOT block first
+// paint. Fire-and-forget: any failure is a cosmetic FOUT only.
+const loadDeferredFonts = () => {
+  import("./styles/fonts-deferred.css").catch(() => {
+    /* deferred fonts are best-effort — never break boot */
+  });
+};
+type IdleWin = Window & {
+  requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+};
+const scheduleDeferredFonts = () => {
+  const w = window as IdleWin;
+  if (typeof w.requestIdleCallback === "function") {
+    w.requestIdleCallback(loadDeferredFonts, { timeout: 3000 });
+  } else {
+    window.setTimeout(loadDeferredFonts, 1500);
+  }
+};
+if (document.readyState === "complete") scheduleDeferredFonts();
+else window.addEventListener("load", scheduleDeferredFonts, { once: true });
+
 // Install in-browser diagnostics buffer (console errors, network failures,
 // unhandled rejections). Exposed at /diagnostics for developers.
 installDiagnostics();
