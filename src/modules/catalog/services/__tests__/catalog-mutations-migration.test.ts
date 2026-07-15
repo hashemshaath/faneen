@@ -77,21 +77,9 @@ describe('DashboardServices ownership: providerServices for activation, no catal
   });
 });
 
-describe('CAT-3 ProviderServiceAreas migrated provider writes', () => {
-  const src = read('src/pages/dashboard/ProviderServiceAreas.tsx');
-
-  it('uses the new catalog mutation services and the CAT-2 read wrapper', () => {
-    expect(src).toContain('listServiceAreasByBusiness');
-    expect(src).toContain('insertServiceArea');
-    expect(src).toContain('deleteServiceAreaById');
-    expect(src).toContain('clearPrimaryServiceAreasForBusiness');
-    expect(src).toContain('setServiceAreaPrimaryById');
-  });
-
-  it('no longer touches business_service_areas via supabase.from directly', () => {
-    expect(src).not.toMatch(/supabase\.from\(['"]business_service_areas['"]\)/);
-  });
-});
+// F5.2 — legacy ProviderServiceAreas.tsx deleted; canonical coverage editor
+// is DashboardBusinessCoverage.tsx (Q2-UI). Coverage-write behavior is
+// enforced by the mutation wrappers' own unit tests.
 
 describe('CAT-3 DashboardBookings availability replace flow migrated', () => {
   const src = read('src/pages/dashboard/DashboardBookings.tsx');

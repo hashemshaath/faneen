@@ -119,14 +119,9 @@ describe('P-18 owner-list migration', () => {
     expect(src).toContain('listActiveStaffBusinessesForUser');
   });
 
-  it('ProviderServiceAreas owner list uses listOwnerBusinesses', () => {
-    const src = read('src/pages/dashboard/ProviderServiceAreas.tsx');
-    expect(src).toContain('listOwnerBusinesses');
-    expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]*?eq\(['"]user_id['"]/);
-    expect(src).toContain("'id, name_ar'");
-    expect(src).toContain("['my-businesses', user?.id]");
-    expect(src).toContain('enabled: !!user');
-  });
+  // F5.2 — legacy ProviderServiceAreas.tsx deleted; coverage now lives in
+  // DashboardBusinessCoverage which reads the active business from
+  // useActiveWorkspace rather than listing owner businesses.
 
   it('Membership owner list-style uses listOwnerBusinesses; preserves owned.data[0] semantics', () => {
     const src = read('src/pages/Membership.tsx');
