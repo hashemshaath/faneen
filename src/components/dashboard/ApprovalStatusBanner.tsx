@@ -26,7 +26,14 @@ export const ApprovalStatusBanner: React.FC = () => {
     queryKey: ['owner-business-for-banner', user?.id],
     enabled: !!user && isProvider,
     staleTime: 60_000,
-    queryFn: async () => (user ? getOwnerBusiness(user.id) : null),
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await getOwnerBusiness<{ id: string; approval_status: string | null }>({
+        userId: user.id,
+        select: 'id, approval_status',
+      });
+      return data;
+    },
   });
 
   const businessId = business?.id ?? null;
