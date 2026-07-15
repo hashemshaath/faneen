@@ -47,8 +47,6 @@
 
     <link rel="dns-prefetch" href="https://hckpxwhjycmdflaneihd.supabase.co" />
     <link rel="preconnect" href="https://hckpxwhjycmdflaneihd.supabase.co" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- P1.5 — LCP hero preload. Stable /public/hero/* path (same URL that
          HeroV2's slide 1 renders), so the browser can start fetching the
          hero WebP in parallel with the main JS/CSS bundles. imagesrcset
@@ -61,8 +59,11 @@
       imagesizes="100vw"
       fetchpriority="high"
     />
-     <link rel="preload" as="style" crossorigin href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'" fetchpriority="high" />
-     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" /></noscript>
+    <!-- Fonts are now self-hosted via src/styles/fonts.css (see P-A1). No
+         third-party CDN, no font-swap FOUT from a late-arriving remote
+         stylesheet. The @font-face declarations ship inside the main CSS
+         bundle, and the size-adjust fallback in src/index.css keeps CLS
+         at zero during the swap. -->
     <!-- LCP hero preload is now injected by the HeroSection module itself
          (so the URL matches the hashed /assets/* asset and no extra script
          is needed in the document head). -->

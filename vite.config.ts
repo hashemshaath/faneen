@@ -52,7 +52,12 @@ export default defineConfig(({ mode }) => ({
           'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           'vendor-sanitize': ['dompurify'],
           'vendor-charts': ['recharts'],
-          'vendor-date': ['date-fns'],
+          // 'vendor-date' bucket removed (P-A2): forcing date-fns into a
+          // named manual chunk caused Vite to statically preload it on the
+          // homepage even though no home code path uses it. Letting Rollup
+          // fold date-fns into the dashboard/admin route chunks that
+          // actually import it keeps ~7 KB gz off the home first-paint
+          // modulepreload chain.
           // P1.6 — 'vendor-icons' bucket removed. It forced every lucide icon
           // in the app into one 780 KB (138 KB gz) chunk that loaded on hot
           // paths. Per-icon named imports are tree-shaken into route chunks by
