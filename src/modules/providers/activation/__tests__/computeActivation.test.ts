@@ -4,8 +4,8 @@ import { computeProviderActivation } from '../computeActivation';
 const base = {
   approvalStatus: 'draft',
   coverageCount: 0,
+  primaryActivityCount: 0,
   activeServicesCount: 0,
-  servicesWithTaxonomyCount: 0,
   logoUrl: null,
   descriptionAr: null,
   descriptionEn: null,
@@ -17,7 +17,7 @@ describe('computeProviderActivation', () => {
     expect(r.completedCount).toBe(0);
     expect(r.percent).toBe(0);
     expect(r.isFullyActive).toBe(false);
-    expect(r.steps.find((s) => s.key === 'coverage_set')?.hintAr).toContain('التغطية');
+    expect(r.steps.find((s) => s.key === 'coverage_set')?.hintAr).toContain('تغطية');
   });
 
   it('partial (approved + coverage only)', () => {
@@ -33,26 +33,34 @@ describe('computeProviderActivation', () => {
     expect(r.steps.find((s) => s.key === 'has_service')?.done).toBe(false);
   });
 
-  it('partial taxonomy hint (2 of 3 classified)', () => {
+  it('activity_taxonomy step mirrors matcher (business_taxonomy_categories primary_activity)', () => {
     const r = computeProviderActivation({
       ...base,
       approvalStatus: 'approved',
       coverageCount: 1,
       activeServicesCount: 3,
-      servicesWithTaxonomyCount: 2,
+      primaryActivityCount: 0,
     });
-    const tax = r.steps.find((s) => s.key === 'service_taxonomy')!;
+    const tax = r.steps.find((s) => s.key === 'activity_taxonomy')!;
     expect(tax.done).toBe(false);
-    expect(tax.hintAr).toBe('2 من 3 خدمات مصنّفة');
-    expect(tax.hintEn).toBe('2 of 3 services classified');
+    expect(tax.hintEn).toContain('primary business activity');
+    // Flipping the count to ≥1 (matcher's requirement) marks the step done.
+    const r2 = computeProviderActivation({
+      ...base,
+      approvalStatus: 'approved',
+      coverageCount: 1,
+      activeServicesCount: 3,
+      primaryActivityCount: 1,
+    });
+    expect(r2.steps.find((s) => s.key === 'activity_taxonomy')?.done).toBe(true);
   });
 
   it('all done → isFullyActive', () => {
     const r = computeProviderActivation({
       approvalStatus: 'approved',
       coverageCount: 1,
+      primaryActivityCount: 1,
       activeServicesCount: 3,
-      servicesWithTaxonomyCount: 3,
       logoUrl: 'https://x/logo.png',
       descriptionAr: 'وصف كافٍ للنشاط التجاري المتخصص',
       descriptionEn: null,

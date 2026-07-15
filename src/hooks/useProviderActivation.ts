@@ -46,34 +46,29 @@ export function useProviderActivation({
       // Active services (id list — we need ids to count taxonomy coverage).
       const servicesPromise = supabase
         .from('business_services')
-        .select('id')
+        .select('id', { count: 'exact', head: true })
         .eq('business_id', businessId)
         .eq('is_active', true);
 
-      const [{ data: biz }, coverageRes, servicesRes] = await Promise.all([
+      // Primary-activity taxonomy rows — this is what the matcher joins on.
+      const activityPromise = supabase
+        .from('business_taxonomy_categories')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', businessId)
+        .eq('role', 'primary_activity');
+
+      const [{ data: biz }, coverageRes, servicesRes, activityRes] = await Promise.all([
         bizPromise,
         coveragePromise,
         servicesPromise,
+        activityPromise,
       ]);
-
-      const serviceIds = (servicesRes.data ?? []).map((r) => r.id as string);
-
-      let servicesWithTaxonomyCount = 0;
-      if (serviceIds.length > 0) {
-        const { data: taxRows } = await supabase
-          .from('business_service_taxonomy_categories')
-          .select('service_id')
-          .in('service_id', serviceIds);
-        const uniq = new Set<string>();
-        for (const r of taxRows ?? []) uniq.add(r.service_id as string);
-        servicesWithTaxonomyCount = uniq.size;
-      }
 
       return computeProviderActivation({
         approvalStatus: biz?.approval_status ?? null,
         coverageCount: coverageRes.count ?? 0,
-        activeServicesCount: serviceIds.length,
-        servicesWithTaxonomyCount,
+        activeServicesCount: servicesRes.count ?? 0,
+        primaryActivityCount: activityRes.count ?? 0,
         logoUrl: biz?.logo_url ?? null,
         descriptionAr: biz?.description_ar ?? null,
         descriptionEn: biz?.description_en ?? null,
