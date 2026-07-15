@@ -70,7 +70,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   // by RLS on `projects`.
   '/dashboard/projects':                     { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/promotions':                   { permissions: ['services.manage'],                        scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'manage' },
-  '/dashboard/provider/service-areas':       { permissions: ['locations.view'],                         scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  '/dashboard/business/coverage':            { permissions: ['locations.view'],                         scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/private-sectors':              { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/reviews':                      { permissions: ['entity.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/badge':                        { permissions: ['entity.manage'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'manage' },

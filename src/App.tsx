@@ -108,7 +108,6 @@ import {
   DashboardHelpCenter,
   ProviderLeads,
   ProviderLeadDetails,
-  ProviderServiceAreas,
   ProviderMembership,
   DashboardMembership,
   DashboardShowcase,
@@ -515,7 +514,10 @@ const AppRoutes = () => (
           <Route path="/dashboard/provider/leads/:id" element={<ProtectedRoute requireProvider><ProviderLeadDetails /></ProtectedRoute>} />
           <Route path="/dashboard/provider/membership" element={<ProtectedRoute requireProvider><ProviderMembership /></ProtectedRoute>} />
           <Route path="/dashboard/membership" element={<ProtectedRoute><DashboardMembership /></ProtectedRoute>} />
-          <Route path="/dashboard/provider/service-areas" element={<ProtectedRoute requireProvider><ProviderServiceAreas /></ProtectedRoute>} />
+          {/* F5.2 — legacy coverage editor deleted. Canonical page is
+              /dashboard/business/coverage (Q2-UI). Redirect preserves
+              any external bookmarks. */}
+          <Route path="/dashboard/provider/service-areas" element={<Navigate to="/dashboard/business/coverage" replace />} />
           {/* Phase C audit — NAMING DEBT (rename deferred to Phase D):
               /admin/ai-center mounts DashboardAiCenter. The component is a
               generic AI writing/chat surface with no provider-only mutations,

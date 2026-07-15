@@ -45,12 +45,16 @@ export const providerNavGroups: DashboardNavGroup[] = [
     items: [
       { label: UNIFIED_ITEM_LABELS.businessProfile, url: '/dashboard/business-edit', icon: Building2 },
       { label: UNIFIED_ITEM_LABELS.services, url: '/dashboard/services', icon: Wrench },
+      // F5.1 — coverage discoverability. Canonical route is
+      // `/dashboard/business/coverage` (Q2-UI, id-based columns the
+      // matcher joins on). Positioned directly after Services so
+      // providers see it as part of the core setup flow.
+      { label: { ar: 'مناطق التغطية', en: 'Coverage Areas' }, url: '/dashboard/business/coverage', icon: MapPin },
       { label: { ar: 'العلامات التجارية', en: 'Brands' }, url: '/dashboard/brands', icon: Award },
       { label: UNIFIED_ITEM_LABELS.portfolio, url: '/dashboard/portfolio', icon: Image },
       { label: UNIFIED_ITEM_LABELS.projects, url: '/dashboard/projects', icon: FolderOpen },
       { label: UNIFIED_ITEM_LABELS.branches, url: '/dashboard/branches', icon: Building2 },
       { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
-      { label: { ar: 'مناطق الخدمة', en: 'Service Areas' }, url: '/dashboard/provider/service-areas', icon: MapPin },
       { label: UNIFIED_ITEM_LABELS.sites, url: '/dashboard/sites', icon: MapPin },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/dashboard/private-sectors', icon: Layers },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },

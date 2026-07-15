@@ -80,7 +80,7 @@ const EXPECTED_ACTIVE_MODULES: Record<string, string> = {
   rentals: '/dashboard/rentals',
   reviews: '/dashboard/reviews',
   rewards_store: '/dashboard/loyalty/store',
-  service_areas: '/dashboard/provider/service-areas',
+  service_areas: '/dashboard/business/coverage',
   services: '/dashboard/services',
   settings: '/dashboard/settings',
   showcase: '/dashboard/showcase',

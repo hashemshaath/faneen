@@ -64,7 +64,7 @@ export const REGISTERED_DASHBOARD_ROUTES: ReadonlySet<string> = new Set([
   '/dashboard/promotions',
   '/dashboard/provider/leads',
   '/dashboard/provider/membership',
-  '/dashboard/provider/service-areas',
+  '/dashboard/business/coverage',
   '/dashboard/rentals',
   '/dashboard/rentals/analytics',
   '/dashboard/rentals/calendar',

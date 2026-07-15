@@ -354,8 +354,8 @@ export default function ProviderDashboardView({
           },
           {
             id: 'service-areas',
-            label: { ar: 'حدّث مناطق الخدمة', en: 'Update service areas' },
-            to: '/dashboard/provider/service-areas',
+            label: { ar: 'حدّث مناطق التغطية', en: 'Update coverage areas' },
+            to: '/dashboard/business/coverage',
             icon: MapPin,
           },
         ] satisfies DashboardAction[]}

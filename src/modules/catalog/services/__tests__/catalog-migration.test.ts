@@ -48,11 +48,9 @@ describe('CAT-2 mixed read+write files: reads migrated, writes intentionally def
     expect(src).not.toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)/);
   });
 
-  it('ProviderServiceAreas: read + writes fully migrated (CAT-2 read, CAT-3 writes)', () => {
-    const src = read('src/pages/dashboard/ProviderServiceAreas.tsx');
-    expect(src).toContain('listServiceAreasByBusiness');
-    expect(src).not.toMatch(/supabase\.from\(['"]business_service_areas['"]\)/);
-  });
+  // F5.2 — legacy ProviderServiceAreas.tsx deleted; DashboardBusinessCoverage
+  // is now the canonical coverage editor. Its migration coverage is exercised
+  // by the DashboardBusinessCoverage-focused tests elsewhere.
 
   it('DashboardBookings: availability read + replace-pattern writes fully migrated', () => {
     const src = read('src/pages/dashboard/DashboardBookings.tsx');
