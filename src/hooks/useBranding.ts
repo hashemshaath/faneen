@@ -7,8 +7,12 @@ import { usePlatformSettingsCore } from '@/hooks/usePlatformSettingsCore';
 // ~140px, so the full-size 512/1449px sources used to ship 5–10× more
 // pixels than the screen consumed. Larger originals are still imported
 // where they are actually rendered big (auth, OG previews).
-import logoFullDefault from '@/assets/logo-full-320.png';
-import logoFullLightDefault from '@/assets/logo-full-light-320.png';
+// PERF-LOGO-WEBP-1 — WebP variants (~65% smaller than the 320.png sources)
+// generated once at 160w / 320w and committed alongside the PNG originals.
+// Navbar/footer render the logo at ≤ ~150px so 160w is the true LCP-safe
+// pick; 320w stays as the retina upgrade in <img srcSet>.
+import logoFullDefault from '@/assets/logo-full-160.webp';
+import logoFullLightDefault from '@/assets/logo-full-light-160.webp';
 import logoMarkDefault from '@/assets/logo-mark-128.png';
 
 export interface BrandingConfig {

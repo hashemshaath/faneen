@@ -25,9 +25,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
 import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { BrandLogo } from "@/components/common/BrandLogo";
-import { ThemeApplier } from "@/components/ThemeApplier";
-import { IdentityTokensApplier } from "@/components/IdentityTokensApplier";
-import { BrandFaviconApplier } from "@/components/BrandFaviconApplier";
+// ThemeApplier / IdentityTokensApplier / BrandFaviconApplier are lazy-mounted
+// via <DeferredAppOverlays> AFTER load+idle so their Supabase queries never
+// sit on the pre-LCP critical chain (PERF-DEFER-APPLIERS-1).
 import {
   Index,
   DeferredAppOverlays,
@@ -712,9 +712,6 @@ const App = () => (
         <LanguageProvider>
           <AuthProvider>
             <TooltipProvider>
-              <ThemeApplier />
-              <IdentityTokensApplier />
-              <BrandFaviconApplier />
               <Toaster />
               <Sonner />
               <AppRoutes />

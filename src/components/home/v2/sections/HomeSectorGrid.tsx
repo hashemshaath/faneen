@@ -159,7 +159,12 @@ const HomeSectorGrid = () => {
                   <img
                     src={img.image}
                     srcSet={img.srcSet}
-                    sizes="25vw"
+                    /* PERF-SECTOR-SIZES-1 — grid is always 4 columns, but the
+                       container is padded and the previous flat "25vw" made
+                       the browser pick a 480w image for a ~200px tile on
+                       mobile. Tightened per breakpoint so mobile picks the
+                       smallest srcset entry. */
+                    sizes="(max-width: 640px) 22vw, (max-width: 1024px) 24vw, 25vw"
                     alt={bi(s.titleAr, s.titleEn)}
                     width={1024}
                     height={640}
