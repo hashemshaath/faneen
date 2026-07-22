@@ -452,6 +452,7 @@ const RegisterEntity: React.FC = () => {
                   isRTL={isRTL}
                   showPassword={showPassword}
                   onToggleShow={() => setShowPassword(!showPassword)}
+                  autoComplete="new-password"
                 />
               )}
               {isSignedIn && (
