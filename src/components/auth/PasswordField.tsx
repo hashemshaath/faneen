@@ -12,11 +12,17 @@ interface PasswordFieldProps {
   isRTL: boolean;
   showPassword: boolean;
   onToggleShow: () => void;
+  /**
+   * Override the input `autoComplete` value. Registration flows should pass
+   * `'new-password'` to prevent browsers from auto-filling saved credentials
+   * from previous sessions into a fresh signup form.
+   */
+  autoComplete?: string;
 }
 
 export const PasswordField: React.FC<PasswordFieldProps> = ({
   password, onChange, label, showStrength = false, isRTL,
-  showPassword, onToggleShow,
+  showPassword, onToggleShow, autoComplete = 'current-password',
 }) => {
   const strength = checkPasswordStrength(password);
 
@@ -29,6 +35,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
           style={{ paddingInlineStart: '40px', paddingInlineEnd: '40px' }}
         />
         <button

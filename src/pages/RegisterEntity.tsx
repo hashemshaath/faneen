@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,6 +71,24 @@ const RegisterEntity: React.FC = () => {
   });
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // FRESH-REGISTRATION HYGIENE — clear every field on mount so a new signup
+  // never inherits data left over from a previous session or from browser
+  // autofill. When the visitor is already signed in, the effect below will
+  // still prefill the manager identity from their profile.
+  const didResetRef = useRef(false);
+  useEffect(() => {
+    if (didResetRef.current) return;
+    didResetRef.current = true;
+    setEntityNameAr('');
+    setEntityNameEn('');
+    setUnifiedNumber('');
+    setEntityEmail('');
+    setManagerName('');
+    setManagerEmail('');
+    setManagerPhone({ countryCode: '+966', national: '' });
+    setPassword('');
+  }, []);
 
   // When the visitor is already authenticated, prefill the manager fields
   // from their profile and skip the password requirement entirely. The
@@ -251,7 +269,7 @@ const RegisterEntity: React.FC = () => {
                   placeholder={bi(isRTL, 'مثال: مصنع الواجهة الحديثة', 'e.g. Modern Facade Factory')}
                   dir="auto"
                   className="h-12 rounded-xl"
-                  autoComplete="organization"
+                  autoComplete="off"
                 />
               </div>
 
@@ -266,6 +284,7 @@ const RegisterEntity: React.FC = () => {
                   placeholder="Modern Facade Factory"
                   dir="ltr"
                   className="h-12 rounded-xl"
+                  autoComplete="off"
                 />
               </div>
 
@@ -308,7 +327,8 @@ const RegisterEntity: React.FC = () => {
                     dir="ltr"
                     style={{ paddingInlineStart: '42px' }}
                     className="h-12 rounded-xl"
-                    autoComplete="email"
+                    autoComplete="off"
+                    name="entity-new-email"
                   />
                 </div>
                 <FieldError message={errors.email} />
@@ -386,7 +406,7 @@ const RegisterEntity: React.FC = () => {
                   onChange={(e) => setManagerName(e.target.value)}
                   dir="auto"
                   className="h-12 rounded-xl"
-                  autoComplete="name"
+                  autoComplete="off"
                 />
               </div>
 
@@ -407,7 +427,8 @@ const RegisterEntity: React.FC = () => {
                     dir="ltr"
                     style={{ paddingInlineStart: '42px' }}
                     className="h-12 rounded-xl"
-                    autoComplete="email"
+                    autoComplete="off"
+                    name="mgr-new-email"
                   />
                 </div>
                 <FieldError message={errors.email} />
@@ -419,6 +440,7 @@ const RegisterEntity: React.FC = () => {
                 onBlur={() => { if (managerPhone.national) validatePhoneField(managerPhone.national); }}
                 optional
                 error={errors.phone}
+                autoComplete="off"
               />
 
               {!isSignedIn && (
@@ -430,6 +452,7 @@ const RegisterEntity: React.FC = () => {
                   isRTL={isRTL}
                   showPassword={showPassword}
                   onToggleShow={() => setShowPassword(!showPassword)}
+                  autoComplete="new-password"
                 />
               )}
               {isSignedIn && (

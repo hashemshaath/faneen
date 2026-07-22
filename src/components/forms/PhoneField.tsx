@@ -38,6 +38,12 @@ export interface PhoneFieldProps {
   ariaLabel?: string;
   id?: string;
   onBlur?: () => void;
+  /**
+   * Override the input `autoComplete` value. Registration flows should pass
+   * `'off'` to prevent browsers from restoring a previously typed phone
+   * number into a fresh signup form.
+   */
+  autoComplete?: string;
 }
 
 const DEFAULT_CC = '+966';
@@ -86,6 +92,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   ariaLabel,
   id,
   onBlur,
+  autoComplete = 'tel-national',
 }) => {
   const { isRTL } = useLanguage();
   const labelText = label ?? (isRTL ? 'رقم الجوال' : 'Phone Number');
@@ -129,7 +136,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
             id={id}
             type="tel"
             inputMode="numeric"
-            autoComplete="tel-national"
+            autoComplete={autoComplete}
             disabled={disabled}
             value={value.national}
             onChange={(e) => handleNational(e.target.value)}

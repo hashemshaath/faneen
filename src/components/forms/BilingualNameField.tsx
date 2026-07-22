@@ -57,6 +57,12 @@ export interface BilingualNameFieldProps {
    * Off by default to keep current behaviour for existing consumers.
    */
   enableTranslate?: boolean;
+  /**
+   * Override the `autoComplete` attribute on both name inputs. Registration
+   * flows should pass `'off'` so browsers don't auto-fill saved names from
+   * previous sessions into a fresh signup form.
+   */
+  autoComplete?: string;
 }
 
 export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
@@ -74,6 +80,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   usernameServerError = null,
   subject = 'person',
   enableTranslate = false,
+  autoComplete = 'given-name',
 }) => {
   const { isRTL } = useLanguage();
   const { settings } = useAiSettings();
@@ -199,7 +206,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
             id={arId}
             name="full_name_ar"
             lang="ar"
-            autoComplete="given-name"
+            autoComplete={autoComplete}
             inputMode="text"
             aria-required={required || undefined}
             aria-invalid={arError ? true : undefined}
@@ -260,7 +267,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
             id={enId}
             name="full_name_en"
             lang="en"
-            autoComplete="given-name"
+            autoComplete={autoComplete}
             inputMode="text"
             aria-required={required || undefined}
             aria-invalid={enError ? true : undefined}

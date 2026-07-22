@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [email, setEmail] = useState('');
   const [phoneParts, setPhoneParts] = useState<{ countryCode: string; national: string }>({ countryCode: '+966', national: '' });
   const [password, setPassword] = useState('');
+
+  // FRESH-REGISTRATION HYGIENE — defeat browser autofill from prior sessions.
+  // Some browsers ignore `autoComplete="off"` on registration inputs and
+  // silently pre-fill saved credentials / names / phones. Reset every field
+  // to empty on mount so a new signup always starts blank.
+  const didResetRef = useRef(false);
+  useEffect(() => {
+    if (didResetRef.current) return;
+    didResetRef.current = true;
+    setFullNameAr('');
+    setFullNameEn('');
+    setEmail('');
+    setPhoneParts({ countryCode: '+966', national: '' });
+    setPassword('');
+  }, []);
 
   const passwordStrength = checkPasswordStrength(password);
   const fullName = (fullNameAr.trim() || fullNameEn.trim());
@@ -166,6 +181,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           onChange={(v) => { setFullNameAr(v.full_name_ar); setFullNameEn(v.full_name_en); }}
           showUsername={false}
           required
+          autoComplete="off"
         />
 
         <div className="space-y-2">
@@ -179,7 +195,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
               onChange={(e) => { setEmail(e.target.value); clearError('email'); setEmailExists(false); }}
               onBlur={handleEmailBlur}
               dir="ltr" style={{ paddingInlineStart: '42px' }}
-              autoComplete="email"
+              autoComplete="off"
+              name="new-email"
               className={`h-12 rounded-xl ${errors.email || emailExists ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             />
           </div>
@@ -223,12 +240,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           onBlur={() => { if (phoneParts.national) validatePhoneField(phoneParts.national); }}
           optional
           error={errors.phone}
+          autoComplete="off"
         />
 
         <PasswordField
           password={password} onChange={setPassword} label={t('auth.password')}
           showStrength isRTL={isRTL} showPassword={showPassword}
           onToggleShow={() => setShowPassword(!showPassword)}
+          autoComplete="new-password"
         />
 
         <Button
