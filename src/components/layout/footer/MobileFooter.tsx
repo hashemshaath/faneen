@@ -49,6 +49,8 @@ export const MobileFooter = () => {
         { label: isRTL ? "الأدلة الفنية" : "Technical Guides", to: "/guides" },
         { label: isRTL ? "الأسعار والمقارنة" : "Prices & Compare", to: "/services" },
         { label: isRTL ? "العروض" : "Offers", to: "/offers" },
+        { label: isRTL ? "التأجير" : "Rentals", to: "/rentals" },
+        { label: isRTL ? "العلامات التجارية" : "Brands", to: "/brands" },
         { label: t("footer.contracts"), to: "/contracts" },
         { label: isRTL ? "العضويات" : "Membership", to: "/membership" },
         { label: isRTL ? "انضم كمزود خدمة" : "For Providers", to: "/for-providers" },
