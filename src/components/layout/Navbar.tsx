@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
-import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut, ShieldAlert, Shield, ChevronDown, LifeBuoy, Store, GraduationCap, Sparkles, LayoutGrid, Send } from "lucide-react";
+import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut, ShieldAlert, Shield, ChevronDown, LifeBuoy, Store, GraduationCap, Sparkles, LayoutGrid, Send, Truck, Tag, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -90,10 +90,22 @@ export const Navbar = () => {
           desc: language === 'ar' ? 'أحدث العروض والتخفيضات' : 'Latest deals and promos',
         },
         {
+          to: '/rentals',
+          label: language === 'ar' ? 'التأجير' : 'Rentals',
+          icon: Truck,
+          desc: language === 'ar' ? 'معدّات وأصول متاحة للإيجار' : 'Equipment and assets to rent',
+        },
+        {
           to: '/projects',
           label: language === 'ar' ? 'المشاريع' : 'Projects',
           icon: FolderOpen,
           desc: language === 'ar' ? 'مشاريع منجزة من مزوّدي الخدمات' : 'Completed work by providers',
+        },
+        {
+          to: '/brands',
+          label: language === 'ar' ? 'العلامات التجارية' : 'Brands',
+          icon: Tag,
+          desc: language === 'ar' ? 'تصفّح العلامات والمنتجات' : 'Explore brands and products',
         },
         {
           to: '/compare',
@@ -357,6 +369,12 @@ export const Navbar = () => {
                     {t('nav.register')}
                   </Button>
                 </PrefetchLink>
+                <PrefetchLink to="/register-entity">
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" />
+                    {language === 'ar' ? 'سجّل منشأتك' : 'Register a business'}
+                  </Button>
+                </PrefetchLink>
               </div>
             )}
           </div>
@@ -501,6 +519,12 @@ export const Navbar = () => {
               <>
                 <Link to="/auth?mode=register" onClick={closeMobile}>
                   <Button variant="primary" size="sm" className="w-full">{t('nav.register')}</Button>
+                </Link>
+                <Link to="/register-entity" onClick={closeMobile}>
+                  <Button variant="outline" size="sm" className="w-full gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" />
+                    {language === 'ar' ? 'سجّل منشأتك' : 'Register a business'}
+                  </Button>
                 </Link>
                 <Link to="/auth" onClick={closeMobile}>
                   <Button variant="ghost" className="text-sm w-full">
