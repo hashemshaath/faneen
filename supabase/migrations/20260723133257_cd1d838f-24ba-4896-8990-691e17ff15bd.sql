@@ -1,0 +1,1 @@
+REVOKE SELECT (token_hash) ON public.customer_tracking_links FROM authenticated, anon, PUBLIC;
