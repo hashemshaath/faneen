@@ -9,6 +9,8 @@ import { useSeoPage } from '@/modules/seo/useSeoPage';
 import { buildBreadcrumbList, buildService } from '@/lib/seo/structured-data';
 import { Loader2 } from 'lucide-react';
 import { RentalRequestInlineForm } from '@/components/rentals/RentalRequestInlineForm';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 const RentalItemPublic: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -42,16 +44,20 @@ const RentalItemPublic: React.FC = () => {
     ].filter(Boolean) as Record<string, unknown>[],
   });
 
-  if (loading) return <main className="container mx-auto py-10 flex justify-center"><Loader2 className="size-5 animate-spin" /></main>;
+  if (loading) return (
+    <><Navbar /><main className="container mx-auto pt-24 pb-16 flex justify-center"><Loader2 className="size-5 animate-spin" /></main><Footer /></>
+  );
   if (!item) return (
-    <main className="container mx-auto py-10">
+    <><Navbar /><main className="container mx-auto pt-24 pb-16">
       <Card className="p-8 text-center text-muted-foreground"><Bi ar="العنصر غير متاح." en="Item not available." /></Card>
       <div className="mt-4 text-center"><Link to="/rentals" className="text-primary underline"><Bi ar="عودة للتأجير" en="Back to rentals" /></Link></div>
-    </main>
+    </main><Footer /></>
   );
 
   return (
-    <main className="container mx-auto px-4 py-10 space-y-6 pb-16">
+    <>
+      <Navbar />
+      <main className="container mx-auto px-4 pt-24 pb-16 space-y-6">
       <h1 className="text-3xl font-bold">{name}</h1>
       <div className="text-sm text-muted-foreground tech-content">{item.ref_id}</div>
       <Card className="p-6 space-y-3">
@@ -71,7 +77,9 @@ const RentalItemPublic: React.FC = () => {
           <Bi ar="عودة للتأجير" en="Back to rentals" />
         </Link>
       </div>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 };
 
