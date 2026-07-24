@@ -14,8 +14,8 @@ import { authService } from '@/services/auth';
 import { checkPasswordStrength, validateEmail, validatePhone } from '@/lib/password-strength';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 import { FieldError } from '@/components/auth/FieldError';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 /**
  * ENTITY REGISTRATION SIMPLIFICATION — basic entity + account manager only.
