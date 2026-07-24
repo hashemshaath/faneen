@@ -8,6 +8,8 @@ import type { RentalCategory, RentalItem } from '@/modules/rentals';
 import { useSeoPage } from '@/modules/seo/useSeoPage';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { Loader2, Package } from 'lucide-react';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 /** Public rentals catalog — approved & published only. */
 const RentalsCatalog: React.FC = () => {
@@ -45,7 +47,9 @@ const RentalsCatalog: React.FC = () => {
   });
 
   return (
-    <main className="container mx-auto px-4 py-10 space-y-8 pb-16">
+    <>
+      <Navbar />
+      <main className="container mx-auto px-4 pt-24 pb-16 space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl md:text-4xl font-bold">
           <Bi ar="تأجير معدات وخدمات التشييد" en="Construction Equipment & Services Rental" />
@@ -96,7 +100,9 @@ const RentalsCatalog: React.FC = () => {
           </div>
         )}
       </section>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 };
 
