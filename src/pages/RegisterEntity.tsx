@@ -14,6 +14,8 @@ import { authService } from '@/services/auth';
 import { checkPasswordStrength, validateEmail, validatePhone } from '@/lib/password-strength';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 import { FieldError } from '@/components/auth/FieldError';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 /**
  * ENTITY REGISTRATION SIMPLIFICATION — basic entity + account manager only.
@@ -196,7 +198,8 @@ const RegisterEntity: React.FC = () => {
 
   return (
     <div className="min-h-dvh bg-background flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
-      <main className="flex-1 flex items-start justify-center px-5 py-10">
+      <Navbar />
+      <main className="flex-1 flex items-start justify-center px-5 py-10 pt-24">
         <div
           className="w-full max-w-xl space-y-6"
           data-feature="register-entity-basic"
@@ -500,6 +503,7 @@ const RegisterEntity: React.FC = () => {
           </p>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
