@@ -23351,7 +23351,6 @@ export type Database = {
         Returns: {
           address: string
           business_number: number
-          category_id: string
           city_id: string
           country_id: string
           cover_url: string
